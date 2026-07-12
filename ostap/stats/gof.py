@@ -44,16 +44,20 @@ logger.debug ( 'Simple utilities for goodness-of-fit studies' )
 ## class AGoF(object) :
 class AGoF(abc.ABC) :
     """ An abstract base class for family of methods to probe Goodness-of-Fit
-    There are two abstract methods
+    
+    There are three abstract methods
     - `__call__` to evaluate t-value, the value of GoF estimator 
-    - `pvalue` to evaluate (t,p)-vaues
+    - `tvalue` to evaluate t-value 
+    - `pvalue` to evaluate (t,p)-values
     
     >>> gof  = ...
     >>> pdf  = 
     >>> data = ...
     >>> pdf.fitTo ( data , ... ) 
     >>> t_value            = gof        ( pdf , data )
+    >>> t_value            = gof.tvalue ( pdf , data )
     >>> t_value , p_value  = gof.pvalue ( pdf , data )
+    
     """
     # =========================================================================
     ## Calculate T-value for Goodness-of-Fit test
@@ -110,32 +114,41 @@ class AGoF(abc.ABC) :
         return NotImplemented
     
     # ==========================================================================
-    ## Get results in form of the table 
-    def the_table ( self             ,
-                    tvalue    = None ,
-                    pvalue    = None ,
-                    ecdf      = None ,
-                    counter   = None ,
-                    precision = 4    ,
-                    width     = 6    , 
-                    title     = ''   ,
-                    prefix    = ''   ,
-                    style     = ''   ) :
-        """ Get results in form of the table 
+    ## Get GoF results in form of the table
+    #  @code
+    #  gof = ....
+    #  table = gof.table  ()
+    #  table = gof.report () ## ditto
+    #  @endcode 
+    def report ( self             ,
+                 tvalue    = None ,
+                 pvalue    = None ,
+                 ecdf      = None ,
+                 counter   = None ,
+                 precision = 4    ,
+                 width     = 6    , 
+                 title     = ''   ,
+                 prefix    = ''   ,
+                 style     = ''   ) :
+        """ Get results in form of the table
+        >>> gof = ....
+        >>> table = gof.report () ## ditto
+        
         """
         from ostap.stats.gof_utils import format_table
+        from ostap.utils.basic     import typename 
         return format_table  ( tvalue    = tvalue    ,
                                pvalue    = pvalue    ,
                                ecdf      = ecdf      ,
                                counter   = counter   ,
                                precision = precision ,
                                width     = width     ,
-                               title     = title     ,
+                               title     = title if title else '%s report' % typename ( self ) , 
                                prefix    = prefix    ,
                                style     = style     )
     
     # ==========================================================================
-    ## Get results in form of the row in the table
+    ## Get results in form of the row in the summary table
     #  @code
     #  gof = ...
     #  header , row = gof.the_row ( ... ) 
@@ -170,8 +183,9 @@ class AGoF(abc.ABC) :
 #  @code
 #  gof = ...
 #  ds1, ds2 = ...
-#  t    = god        ( ds1 , ds2 , normalize = True )
-#  t,p  = god.pvalue ( ds1 , ds2 , normalize = True )
+#  t    = gof        ( ds1 , ds2 , normalize = True )
+#  t    = gof.tvalue ( ds1 , ds2 , normalize = True )
+#  t,p  = gof.pvalue ( ds1 , ds2 , normalize = True )
 #  @endcode
 ## class AGoF(abc.ABC) :
 class AGoFnp(abc.ABC) :
@@ -260,6 +274,68 @@ class AGoFnp(abc.ABC) :
         """`weghts_supported`: Are weights supported by this estimator?
         """
         return NotImplemented
+
+    # =========================================================================
+    ## Good for two-samples comparison?
+    #  Can this estimator be used for comparison of two samples?
+    @property 
+    @abc.abstractmethod
+    def two_samples ( self ) :
+        """`two_samples`: Can this estimator be used for comparison of two samples?
+        """
+        return NotImplemented
+    
+    # ==========================================================================
+    ## Get results in form of the table 
+    def report ( self             ,
+                 tvalue    = None ,
+                 pvalue    = None ,
+                 ecdf      = None ,
+                 counter   = None ,
+                 precision = 4    ,
+                 width     = 6    , 
+                 title     = ''   ,
+                 prefix    = ''   ,
+                 style     = ''   ) :
+        """ Get results in form of the table 
+        """
+        from ostap.stats.gof_utils import format_table
+        from ostap.utils.basic     import typename 
+        return format_table  ( tvalue    = tvalue    ,
+                               pvalue    = pvalue    ,
+                               ecdf      = ecdf      ,
+                               counter   = counter   ,
+                               precision = precision ,
+                               width     = width     ,
+                               title     = title if title else '%s report' % typename ( self ) , 
+                               prefix    = prefix    ,
+                               style     = style     )
+
+    # ==========================================================================
+    ## Get results in form of the row in the table
+    #  @code
+    #  gof = ...
+    #  header , row = gof.the_row ( ... ) 
+    #  @endcode `
+    def the_row ( self             ,
+                  tvalue    = None ,
+                  pvalue    = None ,
+                  ecdf      = None ,
+                  counter   = None ,                  
+                  precision = 4    ,
+                  width     = 6    ) : 
+        
+        """ Get results in form of the table 
+        >>> gof = ...
+        >>> header , row = gof.the_row ( ... ) 
+        """
+        from ostap.stats.gof_utils import format_row 
+        return format_row ( tvalue    = tvalue    ,
+                            pvalue    = pvalue    ,
+                            ecdf      = ecdf      ,  
+                            counter   = counter   ,
+                            precision = precision ,
+                            width     = width     )
     
 # =============================================================================
 if '__main__' == __name__ :

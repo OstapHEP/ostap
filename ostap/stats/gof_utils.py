@@ -13,10 +13,13 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2023-12-06"
 __all__     = (
-    'mean_var'    , ## mean and variance for (weighted) arrays
-    'nEff'        , ## get number of effective entries
-    'normalize'   , ## "normalize" variables in dataset/structured array
-    'clip_pvalue' , ## clip-value 
+    'mean_var'           , ## mean and variance for (weighted) arrays
+    'nEff'               , ## get number of effective entries
+    'normalize'          , ## "normalize" variables in dataset/structured array
+    'normalize_pooled'   , ## "normalize" variables in pooled dataset 
+    'clip_pvalue'        , ## clip-value
+    'pairwise_distances' , ## get array of all pair-wise distances between two datasets
+    's2u'                , ## convert structured numpy array into non-structured 
 )
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
@@ -65,15 +68,15 @@ njobs_kwords = ( 'num_threads'  , 'num_thread'  ,
                  'njobs'        , 'njob'        ,
                  'thread_count' , 'threadcount' )
 # ==============================================================================
-## get the value of "n_jobs" parameter 
+## get the value of "n_jobs/num_threads/thread_count" parameter 
 def num_jobs ( params , defval = -2 ) :
-    """ get the value of "n_jobs" parameter
+    """ Get the value of "n_jobs/num_threads/thread_count" parameter
     """
     nj = params.pop ( njobs_kwords [ 0 ] , defval   )
-    for kw in njobs_kwords[1:] :  nj = params.pop ( kw , nj )
+    for kw in njobs_kwords[1:] : nj = params.pop ( kw , nj )
     return nj
 # ==============================================================================
-## allow parallel run
+## allow parallel run ? 
 #  - check "OMP_NUM_THREADS"
 #  - check "MKL_NUM_THREADS"
 #  - check "OPENBLAS_NUM_THREADS"
@@ -86,18 +89,18 @@ def run_parallel ( parallel ) :
     ##
     if not parallel : return False
     ## 
-    if   '1' != os.environ.get ( "OMP_NUM_THREADS"      , "" ) : return False 
-    elif '1' != os.environ.get ( "MKL_NUM_THREADS"      , "" ) : return False 
-    elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ) : return False
+    if   '1' != os.environ.get ( "OMP_NUM_THREADS"      , "" ).strip () : return False 
+    elif '1' != os.environ.get ( "MKL_NUM_THREADS"      , "" ).strip () : return False 
+    elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ).strip () : return False
     ## 
     return True 
 # =============================================================================
-## Trvial weight
+## Trvial weight ? 
 #  - None
 #  - positive constant
 #  - all ones
 def weight_trivial ( weight ) :
-    """ Trvial weight
+    """ Trvial weight ? 
     - None
     - positive constant
     - all ones
@@ -106,7 +109,58 @@ def weight_trivial ( weight ) :
     elif  isinstance ( weight , num_types     ) : return 0 < weight 
     elif  isinstance ( weight , numpy.ndarray ) : return numpy.all ( weight == 1 ) 
     return False
+# =============================================================================
+## pair-wise distances between two datasets 
+pairwise_distance = None # ====================================================
+# =============================================================================
+## (1) use cdist from scipy.spatial
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    from scipy.spatial.distance import cdist as _scipy_pw_distances
+    ## Calculate all pair-wise distances using scipy 
+    def pairwise_distances ( data1  ,
+                             data2  ,
+                             metric = 'sqeuclidean'   , *  ,
+                             n_jobs = None            , **kwargs ) : 
+        """ Calculate all pair-wise distances using scipy 
+        """
+        return _scipy_pw_distances ( data1 , data2 , metric , **kwargs ).flatten()
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    pass
+# =============================================================================
+## (2) make a try to use more-efficient (?) pair-wise distances from scikit-learn
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    from sklearn.metrics import pairwise_distances as _sk_pw_distances    
+    ## Calculate all pair-wise distances   using sklearn/scikit-learn 
+    def pairwise_distances ( data1  ,
+                             data2  ,
+                             metric = 'sqeuclidean' , **kwargs ) : 
+        """ Calculate all pair-wise distances using scikit-learn 
+        """
+        return _sk_pw_distances ( data1 , data2 , metric , **kwargs ).flatten()
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    pass
 
+# =============================================================================
+## transfrm structured array to unstructured one
+s2u = None
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================  
+    from numpy.lib.recfunctions import structured_to_unstructured as s2u
+    # =========================================================================
+except ImportError :
+    # =========================================================================
+    s2u = None 
+
+#
 # =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
 #  @code
@@ -130,7 +184,7 @@ def mean_var ( data , weight = None ) :
     >>> mean, cov2 = mean_var ( ds ['x'] , ds['weight'] )
     """
     #
-    if weight is None :
+    if weight_trivial ( weight ) :
         mean = numpy.mean ( data , axis = 0 , dtype = float ) 
         var  = numpy.var  ( data , axis = 0 , dtype = float ) 
         return mean , var
@@ -666,7 +720,7 @@ class TOYS(object) :
         if parameters : self.parameters = parameters
         else          : self.parameters = pdf.params() 
                     
-        self.__ecdf  = None 
+        self.__ecdf    = None 
 
     ## serialize the object 
     def __getstate__ ( self ) :
@@ -769,9 +823,10 @@ class TOYS(object) :
                 cnt , ecdf = result
                 
                 counter += cnt
-                if not self.ecdf : self.__ecdf =   ecdf 
-                else             : self.ecdf.add ( ecdf )                
-         
+                
+                if not self.__ecdf    : self.__ecdf    =  ecdf 
+                else                  : self.__ecdf.add ( ecdf )
+                
         return counter 
 
     @property 
@@ -779,8 +834,7 @@ class TOYS(object) :
         """`ecdf` : empirical CDF for t-values from toys/pseudoexperiments 
         """
         return self.__ecdf
-
-
+    
 # =============================================================================
 pvalue_types = num_types + ( VE , ) 
 # =============================================================================
@@ -936,14 +990,16 @@ def format_table ( tvalue    = None ,
 #  tvalue = ...
 #  result = draw_ecdf ( ecdf , tvalue = tvalue ) 
 #  @endcode 
-def draw_ecdf ( ecdf , tvalue = None , option = '' , *options , **kwargs ) :
+def draw_ecdf ( ecdf          ,
+                tvalue = None ,
+                option = ''   , *options , **kwargs ) :
     """ Draw ECDF + 2 lines when/if t-value specified
     >>> ecdf   = ...
     >>> tvalue = ...
     >>> result = draw_ecdf ( ecdf , tvalue = tvalue ) 
     """
 
-    has_tvalue = not tvalue is None and isinstance ( tvalue , num_types )
+    has_tvalue  = isinstance ( tvalue , num_types )
     
     xmin , xmax = ecdf.xmin () , ecdf.xmax ()
     
@@ -952,18 +1008,23 @@ def draw_ecdf ( ecdf , tvalue = None , option = '' , *options , **kwargs ) :
         xmin    = min ( xmin , tvalue )
         xmax    = max ( xmax , tvalue )
 
-    xmin , xmax = axis_range ( xmin , xmax , delta = 0.30 )
+    delta  = xmax - xmin
+    xmin  -= 0.10 * delta 
+    xmax  += 0.10 * delta 
+ 
+    xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
 
     ## some transformation  
     kw = cidict ( transform = cidict_fun , **kwargs )
-
+        
     kw [ 'xmin'      ] = kw.pop ( 'xmin'       , xmin   ) 
     kw [ 'xmax'      ] = kw.pop ( 'xmax'       , xmax   )
     kw [ 'color'     ] = kw.pop ( 'linecolor'  , Orange )
     kw [ 'linewidth' ] = kw.pop ( 'linewidth'  , 2      )
     kw [ 'maxvalue'  ] = kw.pop ( 'maxvalue'   , 1.1    )
+    kw [ 'minvalue'  ] = kw.pop ( 'minvalue'   , 1e-6   )
     kw [ 'copy'      ] = kw.pop ( 'copy'       , True   )
-    
+
     result = ecdf.draw  ( option = option , *options , **kw )
     
     ## draw ECDF 
@@ -975,7 +1036,7 @@ def draw_ecdf ( ecdf , tvalue = None , option = '' , *options , **kwargs ) :
     ## horisontal line 
     xmin      = kw [ 'xmin' ]
     xmax      = kw [ 'xmax' ]
-    dx        = ( xmax - xmin ) / 100 
+    dx        = ( xmax - xmin ) / 200.0 
     e         = ecdf ( tvalue )
     hline     = ROOT.TLine ( xmin + dx , e , xmax - dx , e )
 

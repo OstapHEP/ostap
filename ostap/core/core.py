@@ -92,7 +92,7 @@ from   ostap.core.ostap_types import integer_types, sequence_types, string_types
 from   ostap.utils.basic      import NoContext, loop_items, typename
 import ostap.core.ostap_setup 
 import ostap.plotting.color   
-import ROOT, cppyy, math, sys, os, re  
+import ROOT, cppyy, ctypes, math, sys, os, re  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -442,6 +442,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         elif 'MaxValue'    in kw and hasattr ( obj , 'SetMaximum' ) :
             obj.SetMaximum     ( kw.pop ( 'MaxValue' ) )
 
+
         if 'LabelSize' in kw or 'LabelFont' in kw or 'LabelScale' in kw  :
 
             axis = [] 
@@ -480,6 +481,36 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             if za : za.SetLabelOffset ( kw.pop  ( 'ZaxisLabelOffset' ) ) 
                                         
         # =====================================================================
+        ## Xmin/Xmax : mainly for 1D-functions/ROOT.TF1
+        # =====================================================================
+        if 'minx' in kw : kw [ 'xmin' ] = kw.pop ( 'xmin' , kw.pop ( 'minx' ) ) 
+        if 'maxx' in kw : kw [ 'xmax' ] = kw.pop ( 'xmax' , kw.pop ( 'maxx' ) ) 
+        ## 
+        xminmax     = () 
+        if isinstance ( obj , ROOT.TF1 ) :
+            if  'xmin' in kw or 'xmax' in kw : 
+
+                xmn  = ctypes.c_double ( +1e+9 )
+                xmx  = ctypes.c_double ( -1e+9 )
+                
+                obj.GetRange ( xmn , xmx )
+                
+                xmn  = float ( xmn.value )
+                xmx  = float ( xmx.value )
+                
+                if xmn < xmx :
+                    
+                    xmin = kw.pop ( 'xmin' , xmn  )
+                    xmax = kw.pop ( 'xmax' , xmx  )
+                    
+                    if xmin < xmax and ( xmn != xmin or xmx != xmax ) :
+                        
+                        ## set new range
+                        obj.SetRange ( xmin , xmax  )
+                        xminmax = xmn , xmx 
+                        
+            
+        # =====================================================================
         ## finally, draw it!        
         with rootWarning() , rooSilent ( 2 )  :
             
@@ -487,7 +518,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
             if copy : result = obj.DrawCopy ( option ) ## *args )
             else    : result = obj.Draw     ( option ) ## *args )
-                
+
             result = obj
 
         # =====================================================================
@@ -518,7 +549,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         # =====================================================================
         # =====================================================================
-        if kw or options : # =====================================================
+        if kw or options : # ==================================================
             # =================================================================
             from ostap.logger.utils import print_args
             title  = kw.pop ( 'title'  , '' )
@@ -529,7 +560,12 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             prefix = '# '
             table  = print_args ( *options , title  = title , prefix = prefix , **kw )
             logger.warning ( '%s:\n%s' % ( title , table ) )
+
+
             
+        ## restore the X-range, if needed 
+        if xminmax : obj.SetRange ( *xminmax )
+        
         return result 
 
     ROOT.TObject.draw       = _TO_draw_

@@ -362,7 +362,7 @@ for klass in ( ROOT.TFitResult    ,
     klass.corMtrx      = _fit_corm_ 
     klass.GetParNumber = _fit_parnum_ 
     klass.parnum       = _fit_parnum_ 
-    klass.table           = _fit_table_ 
+    klass.table        = _fit_table_ 
 
 # =============================================================================
 _decorated_classes_ = (

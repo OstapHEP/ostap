@@ -43,7 +43,7 @@ __all__     = (
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
 from   ostap.core.cpu_info      import HAS_AVX2 
 from   ostap.utils.basic        import typename  
-from   ostap.stats.gof          import AGoF
+from   ostap.stats.gof          import AGoF, AGoFnp 
 from   ostap.core.core          import Ostap, VE 
 from   ostap.math.math_base     import axis_range
 from   ostap.fitting.ds2numpy   import ds2numpy
@@ -72,32 +72,58 @@ class GoF(AGoF) :
     """ A base class for family of methods to probe goodness-of-fit
     """
     def __init__ ( self             ,
-                   gof              , ## actual GoF-evaluator
+                   estimator        , ## actual GoF-evaluator
                    mcFactor = 20    ,
                    sample   = False ) : 
-        
-        assert isinstance ( mcFactor, int ) and 1 <= mcFactor , "Invalid `mcFactor':%s" % mcFactor
         ## 
-        self.__gof        = gof
+        assert isinstance ( mcFactor  , int ) and 1 <= mcFactor , "Invalid `mcFactor':%s" % mcFactor
+        assert isinstance ( estimator , AGoFnp ) , "Invalid `estmator':%s" % typename ( estimator ) 
+        ## 
+        self.__estimator  = estimator 
         self.__mcFactor   = mcFactor 
         self.__sample     = True if sample else False
         
-        self.__the_tvalue = None
-        self.__the_pvalue = None
-        
-    @property
-    def gof      ( self ) :
-        """`gof` : Actual Goodness-of-Fit evaluator for numpy-arrays"""
-        return self.__gof 
+    # =======================================================================
+    ## get all configration parameters
+    @property 
+    def config ( self ) :
+        return { 'estimator' : self.estimator ,
+                 'mcFactor'  : self.mcFactor  ,
+                 'sample'    : self.sample    } 
+    
+    # =========================================================================
+    ## self-print get the configuration 
+    def table (  self , prefix = '# ' ) : 
+        """ print configuration """
+        from ostap.logger.utils import map2table_ex
+        title = "%s configuration " % typename ( self )
+        return map2table_ex ( self.config , 
+                              header      = ( 'Parameter' , 'type' , 'value' ) ,
+                              alignment   = 'rcw'  , 
+                              prefix      = prefix ,
+                              title       = title  )
+    
+    def __str__  ( self ) : return self.table ( prefix = '' ) 
+    def __repr__ ( self ) : return self.__str__ ()
     
     @property
+    def estimator( self ) :
+        """`estimator` : Actual Goodness-of-Fit estimator, same as `gof`"""
+        return self.__estimator
+    
+    @property
+    def gof      ( self ) :
+        """`gof`       : Actual Goodness-of-Fit estimator, same as `estimator`"""
+        return self.estimator    
+        
+    @property
     def mcFactor ( self ) :
-        """`mcFactor` : scale-factor for the size of MC-dataset"""
+        """`mcFactor` : scale-factor for the size of MC-dataset,  O(10)"""
         return self.__mcFactor
     
     @property
     def nToys ( self )  :
-        """`nToys` : number of toys/permutations for toys (or permutations) test"""
+        """`nToys` : number of toys/permutations for toys/permutations test"""
         return self.gof.nToys
 
     @property
@@ -127,35 +153,13 @@ class GoF(AGoF) :
         return self.gof.method
 
     @property
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-values 
-        """
-        return self.gof.ecdf 
-    @ecdf.setter
-    def ecdf ( self , value ) :
-        self.gof.ecdf = value
-
+    def t_value ( self ) : return self.gof.t_value
     @property
-    def the_tvalue ( self ) :
-        """`the_tvalue`: the saved t-value
-        """
-        return self.__the_tvalue
-    @the_tvalue.setter
-    def the_tvalue ( self , value ) :
-        """`the_tvalue`: the saved t-value
-        """
-        self.__the_tvalue = value
-
+    def p_value ( self ) : return self.gof.p_value
     @property
-    def the_pvalue ( self ) :
-        """`the_pvalue`: the saved p-value
-        """
-        return self.__the_pvalue
-    @the_pvalue.setter
-    def the_pvalue ( self , value ) :
-        """`the_pvalue`: the saved p-value
-        """
-        self.__the_pvalue = value
+    def ecdf    ( self ) : return self.gof.ecdf 
+    @property
+    def counter ( self ) : return self.gof.counter 
         
     # =========================================================================
     # serialize it (for parallelization) 
@@ -164,9 +168,7 @@ class GoF(AGoF) :
         """
         return { 'gof'      : self.gof          ,
                  'mcFactor' : self.mcFactor     ,
-                 'sample'   : self.sample       ,
-                 'tvalue'   : self.__the_tvalue , 
-                 'pvalue'   : self.__the_pvalue }
+                 'sample'   : self.sample       } 
     
     # =========================================================================
     # De-serialize it (for parallelization) 
@@ -176,8 +178,6 @@ class GoF(AGoF) :
         self.__gof        = state.pop ( 'gof'              )
         self.__mcFactor   = state.pop ( 'mcFactor' , 20    )
         self.__sample     = state.pop ( 'sample'   , False )
-        self.__the_tvalue = state.pop ( 'tvalue'   , None  )
-        self.__the_pvalue = state.pop ( 'pvalue'   , None  )
         
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 
@@ -198,8 +198,7 @@ class GoF(AGoF) :
         ## estimate the t-value 
         t = self.gof ( ds1 , ds2 , normalize = True )
         ## 
-        self.__the_tvalue = float ( t ) 
-        return self.the_tvalue 
+        return self.t_value 
 
     # =========================================================================
     ## Calculate the t & p-values
@@ -217,9 +216,9 @@ class GoF(AGoF) :
         >>> t , p = gof.pvalue ( pdf , data ) 
         """
         ds1 , ds2 = self.transform ( pdf , data )         
-        ## estimate t&p-values 
-        self.__the_tvalue , self.__the_pvalue = self.gof.pvalue ( ds1 , ds2  )        
-        return self.the_tvalue , self.the_pvalue
+        ## estimate t&p-values
+        tv , pv = self.gof.pvalue ( ds1 , ds2  )        
+        return tv , pv 
     
     # =========================================================================
     ## Calculate t-value for Goodness-of-Fit test
@@ -334,6 +333,7 @@ class GoF(AGoF) :
             
         return ds1 , ds2 , w1 
 
+    
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
     def draw  ( self , tvalue = None , option = '' , *args , **kwargs ) :
@@ -354,19 +354,65 @@ class GoF(AGoF) :
         ##
         return result, vline, hline   
 
+
     # =========================================================================
     ## Get results in a form of the table 
-    def table ( self , title = '' , prefix = '' ) :
+    def report ( self           ,
+                 tvalue  = None ,
+                 pvalue  = None ,
+                 ecdf    = None ,
+                 counter = None ,
+                 title   = ''   ,
+                 prefix  = ''   ,
+                 style   = None ) :
         """ Get results in a for of the table 
         """
-        return self.the_table ( tvalue = self.the_tvalue ,
-                                pvalue = self.the_pvalue ,
-                                ecdf   = self.ecdf       , 
-                                title  = title ,
-                                prefix = prefx ) 
-    __str__  = table
-    __repr__ = table
-
+        return self.gof.report ( tvalue  = tvalue  , 
+                                 pvalue  = pvalue  , 
+                                 ecdf    = ecdf    , 
+                                 counter = counter , 
+                                 title   = title  if title else '%s GoF-report' % typename ( self ) , 
+                                 prefix  = prefix  ,
+                                style   = style   )
+    
+    # ========================================================================
+    ## Get results in form of the row in the table
+    #  @code
+    #  gof = ...
+    #  header , row = gof.the_row ( ... ) 
+    #  @endcode `
+    def the_row ( self             ,
+                  tvalue    = None ,
+                  pvalue    = None ,
+                  ecdf      = None ,
+                  counter   = None ,                  
+                  precision = 4    ,
+                  width     = 6    ) :         
+        """ Get results in form of the table 
+        >>> gof = ...
+        >>> header , row = gof.the_row ( ... ) 
+        """
+        return self.gof.the_row ( tvalue  = tvalue  ,
+                                  pvalue  = pvalue  , 
+                                  ecdf    = ecdf    ,
+                                  counter = counter , 
+                                  title   = title  if title else '%s GoF-report' % typename ( self ) , 
+                                  prefix  = prefix  ,
+                                  style   = style   )
+    
+    
+    # =========================================================================
+    ## Get results in a form of the table 
+    def report ( self          ,
+                 title  = ''   ,
+                 prefix = ''   ,
+                 style  = None ) :
+        """ Get results in a for of the table 
+        """
+        return self.gof.report ( title  = title  if title else '%s GoF-report' % typename ( self ) , 
+                                 prefix = prefix ,
+                                 style  = style  )
+    
 # =============================================================================
 ## @class MIX
 #  Implementation of "Mixed samples" method 
@@ -404,7 +450,6 @@ class MIX(GoF) :
                    silent      = False  ,
                    parallel    = False  ,
                    n_neighbors = 10     ,
-                   analytic    = True   , 
                    mcFactor    = 20     , **params ) : 
         """ Create Mixed Sample Estimator
     
@@ -415,13 +460,12 @@ class MIX(GoF) :
         """
         
         GoF.__init__ ( self ,
-                       gof = GNP.MIXnp ( nToys       = nToys       ,
-                                         parallel    = parallel    ,
-                                         n_neighbors = n_neighbors ,
-                                         analytic    = True if analytic else False , 
-                                         silent      = silent      , **params ) ,                          
+                       estimator = GNP.MIXnp ( nToys       = nToys       ,
+                                               parallel    = parallel    ,
+                                               n_neighbors = n_neighbors ,
+                                               silent      = silent      , **params ) ,                          
                        mcFactor = mcFactor )
-        
+                
 # =============================================================================
 ## @class PPD
 #  Implementation of concrete method "Point-To-Point Dissimilarity"
@@ -496,12 +540,12 @@ class PPD(GoF) :
         """
         
         GoF.__init__ ( self ,
-                       gof = GNP.PPDnp ( mc2mc    = mc2mc    ,
-                                         nToys    = nToys    ,
-                                         psi      = psi      ,
-                                         sigma    = sigma    ,
-                                         parallel = parallel ,
-                                         silent   = silent   , **params ) ,                          
+                       estimator = GNP.PPDnp ( mc2mc    = mc2mc    ,
+                                               nToys    = nToys    ,
+                                               psi      = psi      ,
+                                               sigma    = sigma    ,
+                                               parallel = parallel ,
+                                               silent   = silent   , **params ) ,                          
                          mcFactor = mcFactor )
 
     
@@ -541,22 +585,14 @@ class DNN(GoF) :
         
         ## initialize the base 
         GoF.__init__ ( self             ,
-                       gof      = GNP.DNNnp ( histo    = histo    ,
-                                              nToys    = nToys    ,
-                                              parallel = parallel , 
-                                              silent   = silent   ,
-                                              progress = progress ) ,
+                       estimator = GNP.DNNnp ( histo    = histo    ,
+                                               nToys    = nToys    ,
+                                               parallel = parallel , 
+                                               silent   = silent   ,
+                                               progress = progress ) ,
                        mcFactor = 1      , 
                        sample   = sample )
         
-        self.__ecdf   = None 
-        
-    @property
-    def dnn ( self ) :
-        """`dnn` : Distance-to-Nearest-Neighbour calculator for numpy data
-        """
-        return self.gof  
-
     # =========================================================================
     ## (internal method) Transform pdf&data
     def transform ( self , pdf , data ) :
@@ -601,8 +637,7 @@ class DNN(GoF) :
         ds1 , vpdf = self.transform ( pdf , data ) 
 
         ## call underlying method 
-        t_value = self.dnn ( ds1 , vpdf )
-
+        t_value = self.gof.tvalue ( ds1 , vpdf )
 
         ## ## save the histogram (do not override it!)
         ## if   self.__histo   : pass
@@ -621,12 +656,13 @@ class DNN(GoF) :
         else             : counter = toys     ( self.nToys , progress = self.progress )
         
         ## get ECDF from toys
-        self.ecdf = toys.ecdf
+        self.gof.ecdf    = toys.ecdf
+        self.gof.counter = counter 
         
         p_value   = 1 - counter.eff
         
-        self.the_tvalue = t_value 
-        self.the_pvalue = p_value 
+        self.gof.t_value = t_value 
+        self.gof.p_value = p_value 
 
         return t_value, p_value
     
@@ -663,7 +699,37 @@ class NLL(AGoF) :
         self.__nToys     = nToys 
         self.__fitresult = fitresult 
         self.__ecdf      = None
+        self.__counter   = None
+        self.__tvalue    = None
+        self.__pvalue    = None
+        
+    # =======================================================================
+    ## get all configration parameters
+    @property 
+    def config ( self ) :
+        return { 'fitresult' : self.fitresult , 
+                 'fitconf'   : self.fitconf   , 
+                 'nToys'     : self.nToys     , 
+                 'sample'    : self.sample    , 
+                 'parallel'  : self.parallel  , 
+                 'silent'    : self.silent    , 
+                 'progress'  : self.progress  }
     
+    # =========================================================================
+    ## self-print get the configuration 
+    def table (  self , prefix = '# ') : 
+        """ print configuration """
+        from ostap.logger.utils import map2table_ex
+        title = "%s configuration " % typename ( self )
+        return map2table_ex ( self.config , 
+                              header      = ( 'Parameter' , 'type' , 'value' ) ,
+                              alignment   = 'rcw'  , 
+                              prefix      = prefix ,
+                              title       = title  )
+    
+    def __str__  ( self ) : return self.table ( prefix = '' ) 
+    def __repr__ ( self ) : return self.__str__ ()
+        
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object
@@ -675,8 +741,11 @@ class NLL(AGoF) :
                  'fitconf'   : self.fitconf   ,
                  'fitresult' : self.fitresult ,
                  'nToys'     : self.nToys     ,
-                 'ecdf'      : self.ecdf      }
-    
+                 'ecdf'      : self.ecdf      ,
+                 'tvalue'    : self.__tvalue  , 
+                 'pvalue'    : self.__pvalue  ,
+                 'counter'   : self.__conuter }
+                     
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
         """ De-serialize the object
@@ -689,6 +758,9 @@ class NLL(AGoF) :
         self.__fitresult = state.pop ( 'fitresult' )        
         self.__nToys     = state.pop ( 'nToys'     )
         self.__ecdf      = state.pop ( 'ecdf'      )
+        self.__counter   = state.pop ( 'counter'   )
+        self.__tvalue    = state.pop ( 'tvalue'    )
+        self.__pvalue    = state.pop ( 'pvalue'    )
     
     # =========================================================================
     @property
@@ -750,7 +822,7 @@ class NLL(AGoF) :
     
     # =========================================================================
     ## get the actual t-value from the fit-result 
-    def t_value   ( self , fitresult ) :
+    def the_tvalue   ( self , fitresult ) :
         return fitresult.minNll () 
         
     # ===========================================================================
@@ -763,8 +835,10 @@ class NLL(AGoF) :
 
         r , _ = pdf.fitTo ( data , **self.fitconf )
         
-        tv = self.t_value ( r ) 
+        tv = self.the_tvalue ( r ) 
         del r
+        
+        self.__tvalue = tv 
         
         return tv
 
@@ -784,7 +858,7 @@ class NLL(AGoF) :
         >>> t_value , p_value = gof.pvalue ( pdf , data ) 
         """
 
-        t_value   = self.t_value ( self.fitresult ) 
+        t_value   = self.the_tvalue ( self.fitresult ) 
 
         ## prepare toys
         toys = TOYS ( self                        ,
@@ -799,7 +873,8 @@ class NLL(AGoF) :
         else             : counter = toys     ( self.nToys , progress = self.progress )
                  
         ## get ECDF from toys
-        self.__ecdf = toys.ecdf
+        self.__ecdf    = toys.ecdf
+        self.__counter = counter
         
         p_value       = 1 - counter.eff
         
@@ -828,6 +903,51 @@ class NLL(AGoF) :
         ## 
         return result, vline, hline   
 
+    # =========================================================================
+    ## Get results in a form of the table 
+    def report ( self           ,
+                 tvalue  = None ,
+                 pvalue  = None ,
+                 ecdf    = None ,
+                 counter = None ,
+                 title   = ''   ,
+                 prefix  = ''   ,
+                 style   = None ) :
+        """ Get results in a for of the table 
+        """
+        return super().report ( tvalue  = tvalue  if not tvalue  is None else self.__tvalue  ,
+                                pvalue  = pvalue  if not pvalue  is None else self.__pvalue  ,
+                                ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
+                                counter = counter if not counter is None else self.__counter ,
+                                title   = title  if title else '%s GoF-report' % typename ( self ) , 
+                                prefix  = prefix ,
+                                style   = style  )
+    
+    # ========================================================================
+    ## Get results in form of the row in the table
+    #  @code
+    #  gof = ...
+    #  header , row = gof.the_row ( ... ) 
+    #  @endcode `
+    def the_row ( self             ,
+                  tvalue    = None ,
+                  pvalue    = None ,
+                  ecdf      = None ,
+                  counter   = None ,                  
+                  precision = 4    ,
+                  width     = 6    ) :         
+        """ Get results in form of the table 
+        >>> gof = ...
+        >>> header , row = gof.the_row ( ... ) 
+        """
+        return super().the_row ( tvalue  = tvalue  if not tvalue  is None else self.__tvalue  ,
+                                 pvalue  = pvalue  if not pvalue  is None else self.__pvalue  ,
+                                 ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
+                                 counter = counter if not counter is None else self.__counter ,
+                                 title   = title  if title else '%s GoF-report' % typename ( self ) , 
+                                 prefix  = prefix ,
+                                 style   = style  )
+    
 # =============================================================================
 ## @class AikaikeIC
 #  Use Aikaike information criterion as `estimate` for Goodness-of-Fit
@@ -838,7 +958,7 @@ class AikaikeIC(NLL) :
     """
     # =========================================================================
     ## get the actual t-value from the fit-result 
-    def t_value   ( self , fitresult ) : return fitresult.aic () 
+    def the_tvalue   ( self , fitresult ) : return fitresult.aic () 
 
 # =============================================================================
 ## @class BayesianIC
@@ -877,7 +997,7 @@ class BayesianIC(NLL) :
         self.__ndata = data 
 
     ## get the actual t-value from the fit-result 
-    def t_value   ( self , fitresult ) : return fitresult.bic ( self.__ndata ) 
+    def the_tvalue   ( self , fitresult ) : return fitresult.bic ( self.__ndata ) 
 
     # ===========================================================================
     ## get the t-value 
@@ -922,21 +1042,18 @@ class ADVAL_LightGBM(GoF) :
     
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of permutations/toys 
-    - n_splits : (int)   number of splits for cross-validation 
     
     """
     # =========================================================================
     ## create the estimator
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     #  @param nToys    : (int)  number of permutations/toys 
-    #  @param n_splits : (int) number of splits for cross-validation 
     def __init__ ( self               ,
                    mcFactor   = 20    , 
                    nToys      = 400   ,
                    parallel   = False ,
                    silent     = False ,
                    progress   = True  ,
-                   n_splits   = 8     ,
                    ADVAL_TYPE = None  , **params ) : 
     
         """ Create the Adversarial Validation estimator 
@@ -945,7 +1062,6 @@ class ADVAL_LightGBM(GoF) :
 
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
-        - n_splits : (int) number of splits for cross-validation 
         """
         
         if ADVAL_TYPE is None : 
@@ -955,17 +1071,21 @@ class ADVAL_LightGBM(GoF) :
         assert issubclass ( ADVAL_TYPE , ADVAL_base ) , "Invalid ADVAL_TYPE %s" % ADVAL_TYPE 
             
         GoF.__init__ ( self ,
-                       gof = ADVAL_TYPE ( nToys    = nToys    ,
-                                          parallel = parallel ,
-                                          silent   = silent   , 
-                                          progress = progress ,
-                                          n_splits = n_splits , **params ) ,                       
+                       estimator = ADVAL_TYPE ( nToys    = nToys    ,
+                                                parallel = parallel ,
+                                                silent   = silent   , 
+                                                progress = progress , **params ) ,                       
                        mcFactor = mcFactor )
         
-        self.__ecdf   = None
-        self.__tvalue = None
-        self.__pvalue = None
-    
+    @property
+    def t_value ( self ) : return self.gof.t_value
+    @property
+    def p_value ( self ) : return self.gof.p_value
+    @property
+    def ecdf    ( self ) : return self.gof.ecdf 
+    @property
+    def counter ( self ) : return self.gof.counter 
+
     # =========================================================================
     ## Calculate T-value for Goodness-of-Fit 
     #  @code
@@ -983,14 +1103,11 @@ class ADVAL_LightGBM(GoF) :
         """
         ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
         ## estimate the t-value 
-        t = self.gof ( ds1              ,
-                       ds2              ,
-                       weight1   = w1   ,
-                       weight2   = None ,
-                       normalize = True )
-        ## 
-        self.__tvalue = float ( t ) 
-        return self.__tvalue 
+        return self.gof ( ds1              ,
+                          ds2              ,
+                          weight1   = w1   ,
+                          weight2   = None ,
+                          normalize = True )
 
     # =========================================================================
     ## Calculate the t & p-values
@@ -1009,28 +1126,12 @@ class ADVAL_LightGBM(GoF) :
         """
         ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
         ## estimate t&p-values 
-        self.__tvalue , self.__pvalue = self.gof.pvalue ( ds1              ,
-                                                          ds2              ,
-                                                          weight1   = w1   , 
-                                                          weight2   = None )        
-        return self.__tvalue , self.__pvalue
+        return self.gof.pvalue ( ds1              ,
+                                 ds2              ,
+                                 weight1   = w1   , 
+                                 weight2   = None )        
 
-    # =========================================================================
-    ## Get results in a form of the table
-    #  @code
-    #  @endcode 
-    def table ( self , title = '' , prefix = '' ) :
-        """ Get results in a for of the table 
-        """
-        return self.the_table ( tvalue = self.__tvalue ,
-                                pvalue = self.__pvalue ,
-                                ecdf   = self.__ecdf   , 
-                                title  = title ,
-                                prefix = prefx )
-    report   = table 
-    __str__  = table
-    __repr__ = table
-
+    
 # =============================================================================
 ## @class ADVAL_HistoGBoost
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
@@ -1045,21 +1146,18 @@ class ADVAL_HistoGBoost(ADVAL_LightGBM) :
     
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of permutations/toys 
-    - n_splits : (int)   number of splits for cross-validation 
     
     """
     # =========================================================================
     ## create the estimator
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     #  @param nToys    : (int)  number of permutations/toys 
-    #  @param n_splits : (int) number of splits for cross-validation 
     def __init__ ( self               ,
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
                    silent    = False  ,
-                   progress  = True   ,
-                   n_splits  = 8      , **params ) : 
+                   progress  = True   , **params ) : 
     
         """ Create the Adversarial Validation estimator 
 
@@ -1067,7 +1165,6 @@ class ADVAL_HistoGBoost(ADVAL_LightGBM) :
 
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
-        - n_splits : (int) number of splits for cross-validation 
         """
         from ostap.stats.adversarial_validation import ADVAL_HGBC as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
@@ -1075,7 +1172,6 @@ class ADVAL_HistoGBoost(ADVAL_LightGBM) :
                                   nToys      = nToys    ,
                                   parallel   = parallel ,
                                   silent     = silent   ,
-                                  n_splits   = n_splits ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
 
 # =============================================================================
@@ -1092,21 +1188,18 @@ class ADVAL_GBoost(ADVAL_LightGBM) :
     
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of permutations/toys 
-    - n_splits : (int)   number of splits for cross-validation 
     
     """
     # =========================================================================
     ## create the estimator
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     #  @param nToys    : (int)  number of permutations/toys 
-    #  @param n_splits : (int) number of splits for cross-validation 
     def __init__ ( self               ,
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
                    silent    = False  ,
-                   progress  = True   ,
-                   n_splits  = 8      , **params ) : 
+                   progress  = True   , **params ) : 
     
         """ Create the Adversarial Validation estimator 
 
@@ -1114,7 +1207,6 @@ class ADVAL_GBoost(ADVAL_LightGBM) :
 
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
-        - n_splits : (int) number of splits for cross-validation 
         """
         from ostap.stats.adversarial_validation import ADVAL_GBC as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
@@ -1122,7 +1214,6 @@ class ADVAL_GBoost(ADVAL_LightGBM) :
                                   nToys      = nToys    ,
                                   parallel   = parallel ,
                                   silent     = silent   ,
-                                  n_splits   = n_splits ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
         
 
@@ -1140,21 +1231,18 @@ class ADVAL_XGBoost(ADVAL_LightGBM) :
     
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of permutations/toys 
-    - n_splits : (int)   number of splits for cross-validation 
     
     """
     # =========================================================================
     ## create the estimator
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     #  @param nToys    : (int)  number of permutations/toys 
-    #  @param n_splits : (int) number of splits for cross-validation 
     def __init__ ( self               ,
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
                    silent    = False  ,
-                   progress  = True   ,
-                   n_splits  = 8      , **params ) : 
+                   progress  = True   , **params ) : 
     
         """ Create the Adversarial Validation estimator 
 
@@ -1162,7 +1250,6 @@ class ADVAL_XGBoost(ADVAL_LightGBM) :
 
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
-        - n_splits : (int) number of splits for cross-validation 
         """
         from ostap.stats.adversarial_validation import ADVAL_XGB as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
@@ -1170,7 +1257,6 @@ class ADVAL_XGBoost(ADVAL_LightGBM) :
                                   nToys      = nToys    ,
                                   parallel   = parallel ,
                                   silent     = silent   ,
-                                  n_splits   = n_splits ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
 
 # =============================================================================
@@ -1187,21 +1273,18 @@ class ADVAL_RandomForest(ADVAL_LightGBM) :
     
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of permutations/toys 
-    - n_splits : (int)   number of splits for cross-validation 
     
     """
     # =========================================================================
     ## create the estimator
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     #  @param nToys    : (int)  number of permutations/toys 
-    #  @param n_splits : (int) number of splits for cross-validation 
     def __init__ ( self               ,
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
                    silent    = False  ,
-                   progress  = True   ,
-                   n_splits  = 8      , **params ) : 
+                   progress  = True   , **params ) : 
     
         """ Create the Adversarial Validation estimator 
 
@@ -1209,7 +1292,6 @@ class ADVAL_RandomForest(ADVAL_LightGBM) :
 
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
-        - n_splits : (int) number of splits for cross-validation 
         """
         from ostap.stats.adversarial_validation import ADVAL_RF as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
@@ -1217,10 +1299,7 @@ class ADVAL_RandomForest(ADVAL_LightGBM) :
                                   nToys      = nToys      ,
                                   parallel   = parallel   ,
                                   silent     = silent     ,
-                                  n_splits   = n_splits   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
-        
-
         
 # ==============================================================================
 if HAS_AVX2 : 
@@ -1238,21 +1317,18 @@ if HAS_AVX2 :
         
         - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int)   number of permutations/toys 
-        - n_splits : (int)   number of splits for cross-validation 
         
         """
         # =========================================================================
         ## create the estimator
         #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
         #  @param nToys    : (int)  number of permutations/toys 
-        #  @param n_splits : (int) number of splits for cross-validation 
         def __init__ ( self               ,
                        mcFactor  = 20     , 
                        nToys     = 400    ,
                        parallel  = False  ,
                        silent    = False  ,
-                       progress  = True   ,
-                       n_splits  = 8      , **params ) : 
+                       progress  = True   , **params ) : 
             
             """ Create the Adversarial Validation estimator 
 
@@ -1260,7 +1336,6 @@ if HAS_AVX2 :
             
             - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
             - nToys    : (int) number of permutations/toys 
-            - n_splits : (int) number of splits for cross-validation            
             """
             from ostap.stats.adversarial_validation import ADVAL_CATB as ADVAL_TYPE 
             ADVAL_LightGBM.__init__ ( self ,
@@ -1268,7 +1343,6 @@ if HAS_AVX2 :
                                       nToys      = nToys    ,
                                       parallel   = parallel ,
                                       silent     = silent   ,
-                                      n_splits   = n_splits ,
                                       ADVAL_TYPE = ADVAL_TYPE , **params )
             
     __all__ += ( 'ADVAL_CatBoost' , )

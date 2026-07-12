@@ -62,21 +62,34 @@ rgood , _ = pdf.fitTo  ( data_good , quiet = True , refit = 5 )
 rbad  , _ = pdf.fitTo  ( data_bad  , quiet = True , refit = 5 )
 
 
+keep_it = [] 
 # ===============================================================================
 def probe_GOF ( gof1 , gof2, tag ) :
 
     logger = getLogger ("test_GOF/%s" % tag )
 
+    if gof1 is gof2 :  logger.info ( 'Testing %s (GOOD&BAD) \n%s' % ( tag , gof1.table ( prefix = '# ' ) ) )
+    
     ## presumably good fit
     with timing ( "Good fit GOF/%s" % tag , logger = logger ) :
+        if not gof1 is gof2 : logger.info ( 'Testing %s (GOOD)\n%s' % ( tag , gof1.table ( prefix = '# ' ) ) )
         pdf.load_params ( rgood , silent = True ) 
-        tgood, pgood = gof1.pvalue ( pdf , data_good )
+        tgood, pgood = gof1.pvalue ( pdf , data_good )        
+        logger.info ( 'Report %s (GOOD)\n%s' % ( tag , gof1.report ( prefix = '# ' ) ) )
+        
+    with use_canvas ( 'GoF-toys %s/%s (GOOD)'  % ( typename ( gof1 ) , tag  ) ) :
+        keep_it.append ( gof1.draw ( tvalue = tgood ) )
         
     ## presumably bad fit 
     with timing ( "Bad  fit GOF/%s" % tag  , logger = logger ) : 
+        if not gof1 is gof2 : logger.info ( 'Testing %s (BAD)\n%s' % ( tag , gof2.table ( prefix = '# ' ) ) )
         pdf.load_params ( rbad  , silent = True ) 
         tbad, pbad  = gof2.pvalue ( pdf , data_bad )
-        
+        logger.info ( 'Report %s (BAD)\n%s' % ( tag , gof2.report ( prefix = '# ' )  ) )
+
+    with use_canvas ( 'GoF-toys %s/%s (BAD)'  % ( typename ( gof2 ) , tag  ) ) :
+        keep_it.append ( gof2.draw ( tvalue = tbad ) ) 
+    
     gp = pgood * 100 
     bp = pbad  * 100
     
@@ -107,16 +120,16 @@ def test_GOF () :
     ## very small number of toys     
 
     nToys =  40 if small else 500
-    
+
     ## nToys = 400 
     
     tconf = { 'nToys' : nToys , 'parallel' : True }
-
+    
     # ===========================================================================
     ## MIX 
     # ===========================================================================
     mix   = GnD.MIX  ( **tconf )
-    entry = mix , mix, 'Mix Sample'
+    entry = mix , mix, 'MIX-Sample'
     to_test.append ( entry )
 
 
@@ -144,7 +157,7 @@ def test_GOF () :
                  ) : 
         
         tag = 'PPD:%s' % conf['psi']
-        if 'sigma' in conf : tag = '%s[%s=%s]' % ( tag , greek_lower_sigma , conf['sigma'] ) 
+        if 'sigma' in conf : tag = '%s/%s=%s' % ( tag , greek_lower_sigma , conf['sigma'] ) 
         conf.update ( tconf )        
         ppd = GnD.PPD ( **conf )
         entry = ppd , ppd , tag
@@ -185,18 +198,21 @@ def test_GOF () :
     except ImportError : # ======================================================
         # =======================================================================
         logger.error  ( "LightGBM is not available, skip the test" )
-
+        
     # ===========================================================================
     try : # =====================================================================
         # =======================================================================
         import sklearn
-        from   ostap.stats.gofnd import ADVAL_HistoGBoost as GOF 
-        ## 
-        gof    = GOF ( **config )
-        test   = gof , gof , 'ADVAL:HistGradientBoost'
-        ## 
-        if not small : to_test.append ( test ) 
-        ## 
+        if  not '1.6' <= sklearn.__version__ < '1.7' :
+            ## 
+            from   ostap.stats.gofnd import ADVAL_HistoGBoost as GOF 
+            ##            
+            gof    = GOF ( **config )
+            test   = gof , gof , 'ADVAL:HistGradientBoost'
+            ## 
+            if not small : to_test.append ( test )
+        else :
+            logger.warning ( "The version %s of scikit-learn is not supported, skip the test" % sklearn.__version__)            
         ## 
         # ======================================================================
     except ImportError : # =====================================================
@@ -207,13 +223,17 @@ def test_GOF () :
     try : # ====================================================================
         # ======================================================================
         import sklearn
-        from   ostap.stats.gofnd import ADVAL_GBoost as GOF 
-        ## 
-        gof    = GOF ( **config )
-        test   = gof , gof , 'ADVAL:GrandientBoost'
-        ## 
-        if not small : to_test.append ( test ) 
-        ## 
+        if  not '1.6' <= sklearn.__version__ < '1.7' :
+            ## 
+            from   ostap.stats.gofnd import ADVAL_GBoost as GOF 
+            ## 
+            gof    = GOF ( **config )
+            test   = gof , gof , 'ADVAL:GrandientBoost'
+            ## 
+            if not small : to_test.append ( test ) 
+            ## 
+        else :
+            logger.warning ( "The version %s of scikit-learn is not supported, skip the test" % sklearn.__version__)            
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
@@ -223,13 +243,16 @@ def test_GOF () :
     try : # =====================================================================
         # =======================================================================
         import sklearn
-        from   ostap.stats.gofnd import ADVAL_RandomForest as GOF 
-        ## 
-        gof    = GOF (  **config   )
-        test   = gof , gof , 'ADVAL:RandomForest'
-        ## 
-        if not small : to_test.append ( test ) 
-        ## 
+        if  not '1.6' <= sklearn.__version__ < '1.7' :
+            from   ostap.stats.gofnd import ADVAL_RandomForest as GOF 
+            ## 
+            gof    = GOF (  **config   )
+            test   = gof , gof , 'ADVAL:RandomForest'
+            ## 
+            if not small : to_test.append ( test ) 
+            ##
+        else :
+            logger.warning ( "The version %s of scikit-learn is not supported, skip the test" % sklearn.__version__)
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
@@ -238,9 +261,8 @@ def test_GOF () :
     # ===========================================================================
     try : # =====================================================================
         # =======================================================================
-        import xgboost
-        
-        if xgboost.__version__  >=  '1.0.0' :
+        import xgboost        
+        if "1.0" <= xgboost.__version__ :
             
             from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
             ## 
@@ -258,11 +280,10 @@ def test_GOF () :
         logger.error  ( "XGBoost is not available, skip the test" )
 
     # ===========================================================================
-    from   ostap.core.cpu_info      import HAS_AVX2
-    # ===========================================================================
-    if HAS_AVX2 :
+    try : # =====================================================================
         # =======================================================================
-        try : # =================================================================
+        from   ostap.core.cpu_info      import HAS_AVX2
+        if HAS_AVX2 :
             # ===================================================================
             import catboost
             from   ostap.stats.gofnd import ADVAL_CatBoost as GOF 
@@ -271,11 +292,11 @@ def test_GOF () :
             test   = gof , gof , 'ADVAL:CatBoost'
             to_test.append ( test ) 
             ## 
-            # ===================================================================
-        except ImportError : # ==================================================
-            # ===================================================================
-            logger.error  ( "CatBoost is not available, skip the test" )
-            
+            # ==================================================================
+    except ImportError : # =====================================================
+        # ======================================================================
+        logger.error  ( "CatBoost is not available, skip the test" )
+        
     # ===========================================================================
     ## -log L 
     # ===========================================================================
@@ -325,7 +346,6 @@ def test_GOF () :
 if '__main__' == __name__ :
 
     test_GOF  ()    
-
 
 # ===============================================================================
 ##                                                                        The END 

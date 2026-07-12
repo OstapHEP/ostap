@@ -167,8 +167,8 @@ try : # =======================================================================
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    message = """numpy cannot be imported! 
-    Numpy 'is needed for Fast Fourier Transform used for function/histogram parameterisation.
+    message = """ numpy cannot be imported! 
+    - numpy 'is needed for Fast Fourier Transform used for function/histogram parameterisation.
     and for (almost all) Googness-of-Fit methods 
     - There is no local replacement!
     - see http://numpy.org"""
@@ -191,9 +191,9 @@ try : # =======================================================================
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    message = """scipy cannot be imported!
-    Scipy is needed for (almost all) Goodness-of-Fit methods and 
-    Scipy is used for an efficient alternative for 
+    message = """ scipy cannot be imported!
+    - scipy is needed for (almost all) Goodness-of-Fit methods and 
+    also scipy is used for an efficient alternative for 
     - numerical integration
     - root findings
     - function minimization
@@ -219,7 +219,7 @@ try : # =======================================================================
 except ImportError : # ========================================================
     # =========================================================================
     message = """numba cannot be imported!
-    Numba is useful for better C++/pytini intercommunications 
+    - numba is useful for better C++/pytini intercommunications 
     """
     ## missing.append ( 'numba' ) 
     logger.warning ( message )
@@ -240,8 +240,8 @@ try : # =======================================================================
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    message = """cffi cannot be imported!
-    Cffi  is useful for better C++/python intercommunucations
+    message = """ cffi cannot be imported!
+    - cffi  is useful for better C++/python intercommunucations
     """
     missing.append ( 'cffi' ) 
     logger.error ( message )
@@ -253,7 +253,6 @@ except : # ====================================================================
     missing.append ( 'cffi' ) 
     logger.error ( 'cffi  cannot be imported!' )
 # =========================================================================
-# =============================================================================
 try : # =======================================================================
     # =========================================================================
     import cpuinfo # ==========================================================
@@ -854,6 +853,32 @@ except : # ====================================================================
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
+    import sklearn # ==========================================================
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    subprocess.run ( [ sys.executable , "-m" ,  "pip" , "install" , "--user" , "scikit-learn" ] )    
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import sklearn # ==========================================================
+    # =========================================================================
+    version = getattr ( sklearn , '__version__' , unknown ) 
+    row = 'sklearn/scikit-learn' , version , sklearn.__file__
+    rows.append  ( row )
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    logger.warning  ( 'sklean/scikit-learn cannot be imported!' )
+    row = attention ( 'sklearn/scikit-learn' ) , attention ( '---' ) , ''
+    rows.append  ( row )
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    logger.error ( 'sklearn/scikit-learn cannot be imported!' )
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
     import lightgbm
     version = getattr ( lightgbm , '__version__' , unknown ) 
     row = 'lightgbm' , version , lightgbm.__file__
@@ -875,7 +900,6 @@ except : # ====================================================================
     logger.error ( 'lightgbm  cannot be imported!' )
 # =============================================================================
 
-
 # =============================================================================
 from   ostap.core.cpu_info    import HAS_AVX2
 # =============================================================================
@@ -890,8 +914,8 @@ if HAS_AVX2 : # ===============================================================
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
-        message = """catboost cannot be imported!
-        catboost  is useful for comparison of datasets  
+        message = """ catboost cannot be imported!
+        - catboost  is useful for comparison of datasets  
         """
         missing.append ( 'catboost' ) 
         logger.error ( message )
@@ -915,7 +939,7 @@ if True or ( 3 , 12 ) <= python_info : # ======================================
     except ImportError : # ====================================================
         # =====================================================================
         message = """ xgboost cannot be imported!
-        xgboost  is useful for comparison of datasets & goodness-of-fit 
+        - xgboost  is useful for comparison of datasets & goodness-of-fit 
         """
         missing.append ( 'xgboost' ) 
         logger.error ( message )
@@ -937,7 +961,7 @@ try : # =======================================================================
 except ImportError : # ========================================================
     # =========================================================================
     message = """ hep_ml cannot be imported! 
-    hep_ml is recommended for very efficient  multidimensional reweighting
+    - hep_ml is recommended for very efficient  multidimensional reweighting
     """
     missing.append ( 'hep_ml' ) 
     logger.error ( message ) 

@@ -26,21 +26,24 @@ __all__     = (
     'DNNnp' , ## Distance-to-Nearest-Neighbour Goodness-of-Fit method 
 )
 # =============================================================================
-from   ostap.core.ostap_types   import string_types
+from   ostap.core.ostap_types   import string_types, num_types 
 from   ostap.stats.gof_utils    import PERMUTATOR
 from   ostap.core.core          import SE, VE, Ostap, hID  
+from   ostap.stats.counters     import EffCounter
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu, typename  
 from   ostap.stats.gof          import AGoFnp
-from   ostap.stats.gof_utils    import ( run_parallel     ,
-                                         num_jobs         ,
-                                         weight_trivial   ,
-                                         normalize_pooled ) 
+from   ostap.stats.gof_utils    import ( run_parallel       ,
+                                         num_jobs           , 
+                                         weight_trivial     ,
+                                         normalize_pooled   ,
+                                         pairwise_distances ,
+                                         draw_ecdf          , s2u ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf 
 import ostap.math.math_base           
-import ROOT, os, abc, numpy, scipy 
+import ROOT, os, abc, numpy
 # =============================================================================
 # logging 
 # =============================================================================
@@ -49,38 +52,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof_np' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
-# =============================================================================
-## scipy-version 
-scipy_version = tuple ( int ( i ) for i in scipy.__version__.split ( '.' ) )
-# =============================================================================    
-s2u , cdist = None , None
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================  
-    from numpy.lib.recfunctions import structured_to_unstructured as s2u
-    from scipy.spatial.distance import cdist                      as cdist
-    ## ========================================================================
-    if ( 1 , 6 , 0 ) <= scipy_version :
-        # =====================================================================
-        qconf = { 'k' : [ 2 ] , 'workers' : -1 }
-        def neighbour_distances ( tree , data ) :
-            dist , xx = tree.query ( data , **qconf )
-            del xx 
-            return dist.flatten()
-        # ====================================================================
-    else : # =================================================================
-        # ====================================================================
-        qconf = { 'k' :   2                    }
-        def neighbour_distances ( tree , data ) :
-            dist , xx = tree.query ( data , **qconf )
-            del xx 
-            return numpy.delete ( dist , 0 , axis = 1 ).flatten()         
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    s2u        = None
-    cdist      = None
-
 # =============================================================================
 ## @class GoFnp 
 #  A base class for numpy-related family of methods to probe goodness-of-fit
@@ -109,8 +80,11 @@ class GoFnp (AGoFnp) :
         self.__params    = params
 
         ## Empirical CDF for t-value distribution from permutations/toys"""
-        self.__ecdf    = None
-
+        self.__ecdf      = None
+        self.__counter   = None
+        self.__tvalue    = None
+        self.__pvalue    = None
+                
         if self.__parallel :
             mratio = memory_enough () / numcpu () 
             if mratio < 1 :
@@ -130,30 +104,34 @@ class GoFnp (AGoFnp) :
     # ==================================================================================
     @property
     def config ( self ) :
-        """`config` : get all configuratino parameters"""
+        """`config` : get all configuration parameters"""
         conf = {} 
         conf.update ( self.params )
         conf [ 'nToys'            ] = self.nToys
         conf [ 'silent'           ] = self.silent
         conf [ 'progress'         ] = self.progress
         conf [ 'parallel'         ] = self.parallel
-        conf [ 'normalize'        ] = self.normalize 
+        conf [ 'normalize'        ] = self.normalize
+        conf [ 'method'           ] = self.method  
         conf [ 'weight_supported' ] = self.weights_supported
         return conf 
-        
+    
     # =========================================================================
     ## self-print get the configuration 
-    def __str__ ( self ) :        
-        ## print configuration 
+    def table (  self , prefix = '# ') : 
+        """ print configuration """
         from ostap.logger.utils import map2table_ex
-        title = "%s configuration " % typename ( self ) 
-        return map2table_ex ( self.config              , 
-                              header = ( 'Parameter' , 'type' , 'value' ) ,
-                              prefix = '# '  ,
-                              title  = title )
-    ## ditto ...
+        title = "%s configuration " % typename ( self )
+        conf  = self.config 
+        return map2table_ex ( self.config , 
+                              header      = ( 'Parameter' , 'type' , 'value' ) ,
+                              ailgnment   = 'rcw'  , 
+                              prefix      = prefix ,
+                              title       = title  )
+    
+    def __str__  ( self ) : return self.table ( prefix = '' ) 
     def __repr__ ( self ) : return self.__str__ ()
-
+    
     # =========================================================================
     @property 
     def nToys ( self ) :
@@ -197,7 +175,7 @@ class GoFnp (AGoFnp) :
         ## transform ?  
         structured1 = True if ds1.dtype.fields else False
         structured2 = True if ds2.dtype.fields else False
-        ## 
+        ##
         ## convert to unstructured datasets 
         data1 = s2u ( ds1 , copy = False ) if structured1 else ds1
         data2 = s2u ( ds2 , copy = False ) if structured2 else ds2
@@ -276,7 +254,7 @@ class GoFnp (AGoFnp) :
         
         ## normalize ? 
         if self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
-        
+
         ### get t-value 
         t_value    = self.tvalue ( uds1      ,
                                    uds2      ,
@@ -295,9 +273,6 @@ class GoFnp (AGoFnp) :
         if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
         else                                : counter = permutator     ( self.nToys , progress = self.progress )
 
-        ## get the t-value distribution from permutator 
-        self.__ecdf = permutator.ecdf
-
         # ==================================================
         ## @see Phipson, Belinda; Smyth, Gordon K (2010).
         #       "Permutation p-values should never be zero:
@@ -305,12 +280,17 @@ class GoFnp (AGoFnp) :
         #       Statistical Applications in Genetics and Molecular Biology. 9 (1) 39.
         #       arXiv:1603.05766. doi:10.2202/1544-6115.1585. PMID 21044043. S2CID 10735784.
         # counter += True
-        
+
+        ## get the t-value distribution from permutator: ECDF & COUNTER 
+                
         ## get the efficiency/p-value from the counter
-        p_value  = counter.eff
+        p_value      = counter.eff
 
-        ## if self.__increasing : p_value = 1 - p_value
-
+        self.ecdf    = permutator.ecdf
+        self.counter = counter
+        self.t_value = t_value
+        self.p_value = p_value 
+        
         return t_value , p_value
     
     @property
@@ -320,13 +300,113 @@ class GoFnp (AGoFnp) :
     @ecdf.setter
     def ecdf ( self , value ) :
         assert value is None or isinstance ( value , Ostap.Math.ECDF ) , \
-            "Invaild type for ECDF: %s" % typename ( value )
+            "Invalid type for ECDF: %s" % typename ( value )
         self.__ecdf = value 
 
+    @property
+    def counter ( self ) :
+        """`counter` : get the efficiency counter from toys"""
+        return self.__counter
+    @counter.setter
+    def counter ( self , value ) :
+        assert value is None or isinstance ( value , EffCounter ) , \
+            "Invalid counter type %s" % typename ( value ) 
+        self.__counter = value
+        
+    ## access the calculated t-value 
+    @property 
+    def t_value ( self ) :
+        """`t_value` : get the calculated t-value """
+        return self.__tvalue
+    @t_value.setter
+    def t_value ( self , value ) :
+        assert value is None or isinstance ( value , num_types ) , \
+            "Invalid t-value type %s" % typename ( value ) 
+        self.__tvalue = value
+
+    # ========================================================================
+    ## access the calculated p-value 
+    @property 
+    def p_value ( self ) :
+        """`p_value` : get the calculated p-value """
+        return self.__pvalue
+    @p_value.setter
+    def p_value ( self , value ) :
+        assert value is None or isinstance ( value , num_types ) or isinstance ( value , VE ) , \
+            "Invalid p-value type %s" % typename ( value ) 
+        self.__pvalue = value
+
+    # =========================================================================
+    ## Get results in a form of the table 
+    def report ( self           ,
+                 tvalue  = None ,
+                 pvalue  = None ,
+                 ecdf    = None ,
+                 counter = None ,
+                 title   = ''   ,
+                 prefix  = ''   ,
+                 style   = None ) :
+        """ Get results in a for of the table 
+        """
+        return super().report ( tvalue  = tvalue  if not tvalue  is None else self.__tvalue  ,
+                                pvalue  = pvalue  if not pvalue  is None else self.__pvalue  ,
+                                ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
+                                counter = counter if not counter is None else self.__counter ,
+                                title   = title  if title else '%s GoF-report' % typename ( self ) , 
+                                prefix  = prefix ,
+                                style   = style  )
+
+    # ========================================================================
+    ## Get results in form of the row in the table
+    #  @code
+    #  gof = ...
+    #  header , row = gof.the_row ( ... ) 
+    #  @endcode `
+    def the_row ( self             ,
+                  tvalue    = None ,
+                  pvalue    = None ,
+                  ecdf      = None ,
+                  counter   = None ,                  
+                  precision = 4    ,
+                  width     = 6    ) :         
+        """ Get results in form of the table 
+        >>> gof = ...
+        >>> header , row = gof.the_row ( ... ) 
+        """
+        return super().the_row ( tvalue  = tvalue  if not tvalue  is None else self.__tvalue  ,
+                                 pvalue  = pvalue  if not pvalue  is None else self.__pvalue  ,
+                                 ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
+                                 counter = counter if not counter is None else self.__counter ,
+                                 title   = title  if title else '%s GoF-report' % typename ( self ) , 
+                                 prefix  = prefix ,
+                                 style   = style  )
+    
+
+    # =========================================================================
+    ## Draw the empirical CDF from permutations or toys  
+    def draw  ( self , tvalue = None , option = '' , *args , **kwargs ) :
+        """ Draw empirical CDF from permutations or toys 
+        """
+        ## 
+        ecdf = self.ecdf 
+        if not ecdf : return ecdf 
+        ## 
+        tvalue     = self.t_value if tvalue is None else tvalue 
+        has_tvalue = isinstance ( tvalue , num_types ) 
+        ##
+        if not has_tvalue : return draw_ecdf (  ecdf , tvalue = None , option = option , **kwargs )
+        ## 
+        result , vline , hline = draw_ecdf (  ecdf , tvalue = tvalue , option = option , **kwargs )
+        ## 
+        self._vline = vline 
+        self._hline = hline 
+        ##
+        return result, vline, hline   
+    
 # ============================================================================
 ## define configuration for psi-function for PPD method
 #   - distance type of <code>cdist</code>
-#   - transformation function for cdist output
+#   - transformation function for `pairwise_distance' soutput
 #   - increasing function ?
 #   @code
 #   distance_type , transform, increasing = psi_conf ( 'linear' )
@@ -335,13 +415,13 @@ def psi_conf ( psi , scale = 1.0 ) :
     """ Define configuration for psi-function for PPD method
     """
 
-    if   psi in ( 'euclidean'   , 'linear'   ) :                            ## psi = x 
+    if   psi in ( 'euclidean'   , 'linear'   ) :                           ## psi = x 
         return 'euclidean'      , None                                   , True 
-    elif psi in ( 'sqeuclidean' , 'squared'  ) :                            ## psi = x**2 
+    elif psi in ( 'sqeuclidean' , 'squared'  ) :                           ## psi = x**2 
         return 'sqeuclidean'    , None                                   , True 
     elif psi in ( 'inverse'     , 'coulomb'  ) :                           ## psi = 1/x 
         return 'euclidean'      , lambda x : -1.0 / ( x [ 0 < x ] )      , True  
-    elif psi in ( 'inverse2'    , 'coulomb2' ) :                            ## psi = 1/x**2 
+    elif psi in ( 'inverse2'    , 'coulomb2' ) :                           ## psi = 1/x**2 
         return 'sqeuclidean'    , lambda x : -1.0 / ( x [ 0 < x ] )      , True  
     elif psi in ( 'log'         , 'logarithm'    ) :                       ## psi = log(x)
         return 'sqeuclidean'    , lambda x :   numpy.log ( x [ 0 < x ] ) , True  
@@ -354,8 +434,7 @@ def psi_conf ( psi , scale = 1.0 ) :
 
 # =============================================================================
 ## @class MIXnp
-#  Implementation of "Mixed Sample"
-#  for probing of Goodness-Of-Fit
+#  Implementation of `Mixed Sample' method for probing the Goodness-Of-Fit
 #  @see M.Williams, "How good are your fits?
 #       Unbinned multivariate goodness-of-fit tests in high energy physics"
 #  @see https://doi.org/10.1088/1748-0221/5/09/P09004
@@ -367,8 +446,7 @@ def psi_conf ( psi , scale = 1.0 ) :
 #     at rejecting small omnipresent ones.  The p-values can be calculated analytically.
 #     This method would make a nice addition to the high energy physics g.o.f. toolkit.
 class MIXnp(GoFnp) :
-    """ Implementation of "Mixed Sample"
-    for probing of Goodness-Of-Fit
+    """ Implementation of `Mixed Sample' for probing the Goodness-Of-Fit
     - see M.Williams, "How good are your fits?
        Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004
@@ -386,7 +464,6 @@ class MIXnp(GoFnp) :
                    parallel    = False , 
                    silent      = False ,
                    progress    = True  ,
-                   analytic    = True  ,
                    n_neighbors = 10    , **params ) : 
         
         # =================================================================================
@@ -396,13 +473,14 @@ class MIXnp(GoFnp) :
             
         ## Attention!
         assert isinstance ( n_neighbors , int ) and 2 <= n_neighbors , \
-            "Invaild `n_neighbors`: %s" % n_neighbors 
-        
+            "Invalid `n_neighbors`: %s" % n_neighbors 
+
+        ## store it
+        self._k_max = n_neighbors 
+        ## 
         n_jobs = num_jobs ( params , numcpu() - 1 )
         if parallel : n_jobs = 1 
-        
-        self.__analytic = True if analytic else False
-        
+
         ## initialize the base 
         GoFnp.__init__ ( self                          , 
                          nToys        = nToys          ,
@@ -411,7 +489,7 @@ class MIXnp(GoFnp) :
                          progress     = progress       ,                         
                          method       = 'Mixed Sample' ,
                          normalize    = True           , 
-                         n_neighbors  = n_neighbors    ,
+                         n_neighbors  = self.k_max     ,
                          n_jobs       = n_jobs         , **params )
 
     # =========================================================================
@@ -420,32 +498,24 @@ class MIXnp(GoFnp) :
     def weights_supported ( self ) :
         """`weights_supported` : Are weights supported by this estimator?
         """
+        return True
+    
+    # =========================================================================
+    ## Good for two-samples comparison?
+    #  Can this estimator be used for comparison of two samples?
+    @property 
+    def two_samples ( self ) :
+        """`two_samples`: Can this estimator be used for comparison of two samples?
+        """
         return True 
-
+    
     # =========================================================================
     ## k_max` : number fo nearest neighbors to test
     @property
     def k_max ( self ) :
-        """`k_max` : number fo nearest neighbors to test
+        """`k_max` : number of nearest neighbors to test
         """
-        return self.params [ 'n_neighbors' ]
-    
-    # =========================================================================
-    ## use analytcal p-value ?
-    @property
-    def analytic ( self ) :
-        """`analytic` : use analytical p-value?
-        """
-        return self.__analytic
-
-    # =========================================================================
-    ## full configuration
-    @property
-    def config ( self ) :
-        """`config` : full configuration"""
-        conf = super().config
-        conf [ 'analytic' ] = self.analytic
-        return conf 
+        return self._k_max 
     
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -503,11 +573,10 @@ class MIXnp(GoFnp) :
 
         # I(i, k) = 1 
         
-        I_ik = ( source_labels == neighbor_labels).astype ( int )
-
+        I_ik = ( source_labels == neighbor_labels ) . astype ( int )
         
         if weights is None :
-            result = numpy.sum ( I_ik ) / ( 1.0 * self.k_max * ( n1 + n1) )
+            result = numpy.sum ( I_ik ) / ( 1.0 * self.k_max * ( n1 + n2 ) )
             return float ( result ) 
 
         w_i = weights [ :, numpy.newaxis ]  ## (N, 1)
@@ -516,91 +585,11 @@ class MIXnp(GoFnp) :
         pair_weights = w_i * w_k            ## (N, K)
         
         weighted_numerator = numpy.sum ( I_ik * pair_weights)
-        total_weight_sum   = numpy.sum ( pair_weights)
+        total_weight_sum   = numpy.sum ( pair_weights )
         
         result = weighted_numerator / total_weight_sum
 
         return float ( result ) 
-    
-    # =========================================================================
-    ## Calculate the t & p-values
-    #  @code
-    #  gof = ...
-    #  data1 , data2 = ...
-    #  t , p = gof.pvalue ( data1 , data2 , normalize = False ) 
-    #  @endcode 
-    def pvalue ( self              , 
-                 data1             ,
-                 data2             , * ,
-                 weight1   = None  ,
-                 weight2   = None  ) :
-                
-        """ Calculate the t & p-values
-        >>> gof  = ...
-        >>> data1 , data2 = ...
-        >>> t   , p = gof.pvalue ( ds1 , ds2 ) 
-        """
-        
-        ## transform?
-        uds1 , uds2 = self.unpack ( data1 , data2 ) 
-        
-        ## normalize ? 
-        if self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
-
-        ### get t-value 
-        t_value    = self.tvalue ( uds1      ,
-                                   uds2      ,
-                                   weight1   = weight1 ,
-                                   weight2   = weight2 ,
-                                   normalize = False   )
-        
-        if self.analytic and weight_trivial ( weight1 ) and weight_trivial ( weight2 ) : 
-
-            n1     = len ( uds1 )
-            n2     = len ( uds2  )
-            
-            nt     = 1.0 * n1 + 1.0 * n2 
-            mu     = n1 * ( n1 - 1.0 ) + n2 * ( n2 - 1.0 ) 
-            mu    /= nt * ( nt - 1.0 ) 
-
-            m1     = n1 * 1.0 / nt
-            m2     = n2 * 1.0 / nt
-            mm     = m1 * m2
-            
-            sigma2 = mm * ( 1.0 + 4 * mm ) / ( nt * self.k_max )
-            sigma  = sigma2 ** 0.5
-            
-            pv = gauss_cdf ( t_value , mu , sigma )
-            print ( 'ANALYTIC P_VALUE' , pv , mu , sigma , t_value , ( t_value - mu ) / sigma ) 
-
-        ## use permutations to get the p-value 
-        permutator = PERMUTATOR ( self    ,
-                                  t_value ,
-                                  uds1    ,
-                                  uds2    ,
-                                  weight1 = weight1 ,
-                                  weight2 = weight2 )
-        
-        if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
-        else                                : counter = permutator     ( self.nToys , progress = self.progress )
-
-        ## get the t-value distribution from permutator 
-        self.__ecdf = permutator.ecdf
-
-        # ==================================================
-        ## @see Phipson, Belinda; Smyth, Gordon K (2010).
-        #       "Permutation p-values should never be zero:
-        #       calculating exact p-values when permutations are randomly drawn".
-        #       Statistical Applications in Genetics and Molecular Biology. 9 (1) 39.
-        #       arXiv:1603.05766. doi:10.2202/1544-6115.1585. PMID 21044043. S2CID 10735784.
-        counter += True
-        
-        ## get the efficiency/p-value from the counter
-        p_value  = counter.eff
-
-        ## if self.__increasing : p_value = 1 - p_value
-
-        return t_value , p_value
     
 # =============================================================================
 ## @class PPDnp
@@ -674,6 +663,17 @@ class PPDnp(GoFnp) :
         scale = -0.5 / ( self.sigma ** 2 ) 
         self.__distance_type , _ , _ = psi_conf ( psi , scale )
 
+    # ==================================================================================
+    @property
+    def config ( self ) :
+        """`config` : get all configuration parameters"""
+        conf = super().config 
+        conf [ 'mc2mc'            ] = self.mc2mc
+        conf [ 'psi'              ] = self.__psi        
+        conf [ 'sigma'            ] = self.sigma
+        conf [ 'maxsize'          ] = self.__maxsize 
+        return conf 
+            
     # =========================================================================
     ## Are weights supported by this estimator?
     @property
@@ -682,6 +682,15 @@ class PPDnp(GoFnp) :
         """
         return False
     
+    # =========================================================================
+    ## Good for two-samples comparison?
+    #  Can this estimator be used for comparison of two samples?
+    @property 
+    def two_samples ( self ) :
+        """`two_samples`: Can this estimator be used for comparison of two samples?
+        """
+        return True 
+
     # =========================================================================
     @property
     def mc2mc ( self ) :
@@ -708,7 +717,7 @@ class PPDnp(GoFnp) :
         n2     = len ( data2 )
         ## if too many distances, process them in chunks
         nnmax  = self.__maxsize 
-        if n1 * n2 > nnmax  :
+        if 0 < nnmax < n1 * n2 :
             # ================================================================
             if n1 > n2 : ## swap datasets 
                 data1 , data2 = data2 , data1
@@ -726,14 +735,8 @@ class PPDnp(GoFnp) :
         distance_type , transform , _ = psi_conf ( self.psi , scale )
         ##
         
-        ## calculate all pair-wise distances    
-        ## distances = cdist ( data1 , data2 , distance_type ) .flatten () ## data <-> data
-
-        ## ## calculate all pair-wise distances
-        from sklearn.metrics import pairwise_distances        
-        distances = pairwise_distances ( data1                  ,
-                                         data2                  ,
-                                         metric = distance_type , **self.params ) .flatten () ## data <-> data
+        ## calculate all pair-wise distances
+        distances = pairwise_distances ( data1 , data2 , metric = distance_type , **self.params )
 
         distances = distances [ distances > 0 ]
         if transform : distances  = transform ( distances )        
@@ -780,7 +783,10 @@ class PPDnp(GoFnp) :
         if self.mc2mc : result += self.sum_distances ( uds2 , uds2 ) / ( n2 * ( n2 - 1 ) )
         
         ## 
-        return float ( result )
+        result = float ( result )
+        self.t_value = result
+        ## 
+        return result
 
     # =========================================================================    
     ## Calculate t-value for two (structured) datasets 
@@ -813,9 +819,7 @@ class PPDnp(GoFnp) :
         if 1 == len ( shape2 ) : uds2.reshape ( -1 , shape2 [ 0 ] ) 
         ## 
         ## normalize
-        if normalize and self.normalize :
-            uds1 , uds2 = normalize_pooled ( uds1 , uds2 )
-            
+        if normalize and self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 )            
         ##        
         return self.tvalue ( uds1      ,
                              uds2      ,
@@ -884,7 +888,16 @@ class DNNnp(GoFnp) :
         """ Are weights are supported by this estimators?
         """
         return True 
-    
+
+    # =========================================================================
+    ## Good for two-samples comparison?
+    #  Can this estimator be used for comparison of two samples?
+    @property 
+    def two_samples ( self ) :
+        """`two_samples`: Can this estimator be used for comparison of two samples?
+        """
+        return False 
+
     # =========================================================================
     ## Calculate the t-value
     #  @see Eqs. (3.16) in M.Williams' paper
@@ -924,7 +937,7 @@ class DNNnp(GoFnp) :
         ## normalize
         jacobian = 1.0  
         if normalize and self.normalize :
-            jacobian = numpy.prod ( numpy.std  ( uds1  , axis = 0 , keepdims = True ) ) 
+            jacobian = numpy.prod ( numpy.std  ( uds1 , axis = 0 , keepdims = True ) ) 
             uds1     = normalize_pooled ( uds1  )     
 
         from sklearn.neighbors import NearestNeighbors   
@@ -960,8 +973,11 @@ class DNNnp(GoFnp) :
             for u in uvalues : self.__histo.Fill ( u ) 
             
         ## t-value as Gemini AI suggests: (modified Anderson-Darling criteria)
-        return - numpy.mean ( numpy.log ( uvalues ) + numpy.log ( 1.0 - uvalues ) )
-
+        result = - numpy.mean ( numpy.log ( uvalues ) + numpy.log ( 1.0 - uvalues ) )
+        result = float ( result )
+        self.t_value = result
+        return result
+    
     # ===========================================================================
     ## Calculate the t-value
     #  @see Eqs. (3.16) in M.Williams' paper
@@ -1020,11 +1036,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
-    if not s2u   : logger.warning ( 's2u    is not available' ) 
-    if not cdist : logger.warning ( 'cdist  is not available' )
-    if scipy_version < ( 1 , 6 , 0 ) : 
-        logger.warning ( 'very ancient version of scipy: %s' % str ( scipy_version ) )
     
 # =============================================================================
 ##                                                                      The END 

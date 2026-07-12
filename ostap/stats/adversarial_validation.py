@@ -96,10 +96,11 @@ class ADVAL_base (GoFnp):
                    parallel = False ,
                    silent   = False ,
                    progress = True  ,
-                   method   = "Adversarial Validation" ,
-                   n_splits = 5     , ##  number of splits for cross-validation 
-                   **params         ) :
-
+                   method   = "Adversarial Validation" , **params ) :
+        
+        n_splits = params.pop ( 'n_splits' , 5 ) 
+        assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
+        
         GoFnp.__init__ ( self                 ,
                          nToys     = nToys    ,
                          parallel  = parallel , 
@@ -107,8 +108,7 @@ class ADVAL_base (GoFnp):
                          progress  = progress ,
                          normalize = False    , 
                          method    = method   , **params )
-        
-        assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
+
         self.__n_splits = n_splits 
 
     # ============================================================================
@@ -131,7 +131,16 @@ class ADVAL_base (GoFnp):
     def weights_supported ( self ) :
         """`weights_supported` : Are weigths supported by this estimator?"""
         return True 
-    
+
+    # =========================================================================
+    ## Good for two-samples comparison?
+    #  Can this estimator be used for comparison of two samples?
+    @property 
+    def two_samples ( self ) :
+        """`two_samples`: Can this estimator be used for comparison of two samples?
+        """
+        return True 
+        
     # ==========================================================================
     ## Calculate t-value for two non-structured (weighted) datasets 
     #   @param data1   the first dataset
@@ -223,8 +232,7 @@ class ADVAL_LGBM (ADVAL_base) :
                    nToys    = 400   ,
                    parallel = False ,
                    silent   = False ,
-                   progress = True  ,
-                   n_splits = 5     , **params ) :
+                   progress = True  , **params ) :
         
         config = {
             'objective'        : 'binary' ,
@@ -253,10 +261,7 @@ class ADVAL_LGBM (ADVAL_base) :
                               parallel = parallel ,
                               silent   = silent   , 
                               progress = progress , 
-                              method   = "Adversarial Validation/LightGBM" ,
-                              n_splits = n_splits , **config   ) 
-
-        ##        
+                              method   = "Adversarial Validation/LightGBM" , **config   ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -296,8 +301,7 @@ class ADVAL_XGB (ADVAL_base) :
                    nToys    = 400   ,
                    parallel = False ,
                    silent   = False ,
-                   progress = True  ,
-                   n_splits = 5     , **params ) :
+                   progress = True  , **params ) :
                 
         config = {
             'objective'     : 'binary:logistic' ,
@@ -320,8 +324,7 @@ class ADVAL_XGB (ADVAL_base) :
                               parallel = parallel ,
                               silent   = silent   , 
                               progress = progress , 
-                              method   = "Adversarial Validation/XGBoost" ,
-                              n_splits = n_splits , **config   ) 
+                              method   = "Adversarial Validation/XGBoost" , **config ) 
 
 
     # ==================================================================================
@@ -365,8 +368,7 @@ if HAS_AVX2 :
                        nToys    = 400   ,
                        parallel = False ,
                        silent   = False ,
-                       progress = True  ,
-                       n_splits = 5     , **params ) :
+                       progress = True  , **params ) :
             
             config = { 'iterations'    : 500    ,
                        'learning_rate' : 0.05   ,
@@ -382,7 +384,11 @@ if HAS_AVX2 :
 
             ## Attention! 
             params [ 'thread_count' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )  
-           
+
+            
+            if   'random_seed'  in params :                            params.pop ( 'random_state'      )
+            elif 'random_state' in params : params [ 'random_seed' ] = params.pop ( 'random_state' , 42 )
+            
             ## 
             import catboost as CatBoost 
             config.update ( params ) 
@@ -391,11 +397,8 @@ if HAS_AVX2 :
                                   parallel = parallel ,
                                   silent   = silent   , 
                                   progress = progress , 
-                                  method   = "Adversarial Validation/CatBoost" ,
-                                  n_splits = n_splits , **config   ) 
+                                  method   = "Adversarial Validation/CatBoost" , **config   ) 
             
-            if 'random_seed' in self.params :      self.params.pop ( 'random_state' )
-            else : self.params [ 'random_seed' ] = self.params.pop ( 'random_state' , 42 )
                 
         # ==================================================================================
         ## Train the model and make predictions
@@ -433,8 +436,7 @@ class ADVAL_HGBC (ADVAL_base) :
                    nToys    = 400   ,
                    parallel = False ,
                    silent   = False ,
-                   progress = True  ,
-                   n_splits = 5     , **params ) :
+                   progress = True  , **params ) :
         
         config =  { 'learning_rate'    : 0.05  ,
                     'max_depth'        : 5     ,
@@ -455,8 +457,7 @@ class ADVAL_HGBC (ADVAL_base) :
                               parallel = parallel ,
                               silent   = silent   , 
                               progress = progress , 
-                              method   = "Adversarial Validation/HGBC" ,
-                              n_splits = n_splits  , **config   ) 
+                              method   = "Adversarial Validation/HGBC" , **config   ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -486,8 +487,7 @@ class ADVAL_GBC (ADVAL_base) :
                    nToys    = 400   ,
                    parallel = False ,
                    silent   = False ,
-                   progress = True  ,
-                   n_splits = 5     , **params   ) :
+                   progress = True  , **params   ) :
         
         config =  { 'learning_rate'       : 0.05 ,
                     'max_depth'           : 5    ,
@@ -508,8 +508,7 @@ class ADVAL_GBC (ADVAL_base) :
                               parallel = parallel ,
                               silent   = silent   , 
                               progress = progress , 
-                              method   = "Adversarial Validation/GBC" ,
-                              n_splits = n_splits , **config   ) 
+                              method   = "Adversarial Validation/GBC" , **config   ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -540,12 +539,11 @@ class ADVAL_RF (ADVAL_base) :
                    nToys    = 400   ,
                    parallel = False ,
                    silent   = False ,
-                   progress = True  ,
-                   n_splits = 5     , **params   ) :
+                   progress = True  , **params   ) :
 
         config =  {
             'n_estimators' : 100 ,
-            'max_depth'    :   6 ,       # Для состязательной валидации лучше брать неглубокие деревья
+            'max_depth'    :   6 ,  
             }
         
         # =================================================================================
@@ -564,8 +562,7 @@ class ADVAL_RF (ADVAL_base) :
                               parallel = parallel ,
                               silent   = silent   , 
                               progress = progress , 
-                              method   = "Adversarial Validation/RandomForest" ,
-                              n_splits = n_splits , **config   ) 
+                              method   = "Adversarial Validation/RandomForest" , **config  ) 
 
     # ==================================================================================
     ## Train the model and make predictions

@@ -286,7 +286,31 @@ class USTAT(AGoF) :
         self.__tvalue  = None
         self.__ecdf    = None
         self.__counter = None
-
+        
+    # =======================================================================
+    ## get all configration parameters
+    @property 
+    def config ( self ) :
+        return { 'nToys'    : self.__nToys    ,  
+                 'sample'   : self.__sample   , 
+                 'parallel' : self.__parallel , 
+                 'sample'   : self.__sample   }
+    
+    # =========================================================================
+    ## self-print get the configuration 
+    def table (  self , prefix = '# ' ) : 
+        """ print configuration """
+        from ostap.logger.utils import map2table_ex
+        title = "%s configuration " % typename ( self )
+        return map2table_ex ( self.config , 
+                              header      = ( 'Parameter' , 'type' , 'value' ) ,
+                              alignment   = 'rcw'  , 
+                              prefix      = prefix ,
+                              title       = title  )
+    
+    def __str__  ( self ) : return self.table ( prefix = '' ) 
+    def __repr__ ( self ) : return self.__str__ ()
+    
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 
     #  @code
@@ -428,17 +452,19 @@ class USTAT(AGoF) :
         return result, vline, hline  
 
     # =========================================================================
-    ## Get results in a for of the table 
-    def table ( self , title = '' , prefix = '' ) :
-        """ Get results in a for of the table 
+    ## Get results in a form of the table 
+    def report ( self   ,
+                 title  = ''   ,
+                 prefix = ''   ,
+                 style  = None ) :
+        """ Get results in a form of the table 
         """
-        return self.the_table ( tvalue = self.__tvalue ,
+        return super().report ( tvalue = self.__tvalue ,
                                 pvalue = self.__pvalue ,
                                 ecdf   = self.__ecdf   , 
-                                title  = title  ,
-                                prefix = prefix ) 
-    __str__  = table
-    __repr__ = table
+                                title  = title         ,
+                                prefix = prefix        ,
+                                style  = style         ) 
     
 # ===========================================================================
 
