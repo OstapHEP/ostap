@@ -744,7 +744,7 @@ class NLL(AGoF) :
                  'ecdf'      : self.ecdf      ,
                  'tvalue'    : self.__tvalue  , 
                  'pvalue'    : self.__pvalue  ,
-                 'counter'   : self.__conuter }
+                 'counter'   : self.__counter }
                      
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
