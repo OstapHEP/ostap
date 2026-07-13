@@ -37,7 +37,12 @@ RemoveTopics = Plotting            ,
 [Tables]
 Style = default
 
+
 [Pathos]
+
+[Futures]
+
+[Joblib]
 
 [IPyparallel]
 

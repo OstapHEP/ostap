@@ -471,8 +471,8 @@ def _cleanup_ () :
 
     for k in base_tmp_pid_dirs :
         d = base_tmp_pid_dirs [ k ]
-        CleanUp.remove_dir ( d )
-        dn = os.path.dirname ( f ) 
+        CleanUp.remove_dir   ( d )
+        dn = os.path.dirname ( d ) ## was "f" here 
         if os.path.exists ( dn ) and os.path.isdir ( dn ) : hdirs.add ( dn )
         
     base_tmp_pid_dirs = {}

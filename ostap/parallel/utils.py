@@ -123,10 +123,10 @@ def get_remote_conf ( section , remote ) :
 #  - the global configuration section `<SECTION>'
 #  - the environment variable <code>VARIABLE</code>
 #
-#  Infornartion is taken  form node <code>workers</code> of the section
+#  Informartion is taken  form node <code>workers</code> of the section
 #  and the list is entended from the envirnment variable
 #  @code
-#  ppservers = get_workers ( 'Pathos' , env_bvar = 'OSTAP_PPSERVERS' ) 
+#  ppservers = get_workers ( 'Pathos' , env_var = 'OSTAP_PPSERVERS' ) 
 #  @endcode
 def get_workers ( section , envvar = '' , local_host = '' ) :
     """ Get the defined list of workers through the following scan:
@@ -137,7 +137,7 @@ def get_workers ( section , envvar = '' , local_host = '' ) :
     >>> ppservers = get_workers ('Pathos' , envvar = 'OSTAP_PPSERVERS' )
 
     Information is taken  form node `workers` of the section
-    and th elist is entended from the envirnment variable
+    and the list is entended from the envirnment variable
 
     """
     import socket, string 
@@ -156,7 +156,7 @@ def get_workers ( section , envvar = '' , local_host = '' ) :
         domain = klow [ nl: ].strip()
         if domain and local_host.endswith ( domain ) and domain != local_host :
             node   = CONFIG.config[ k ]
-            pp     = node.get( 'workers' , '()' )
+            pp     = node.get ( 'workers' , '()' )
             ppsvc1 = tuple ( i.strip ( ws ) for i in pp.split ( ',' ) if i.strip ( ws ) )  
 
     if not ppsvc1 and CONFIG.config.has_section  ( sections ) :

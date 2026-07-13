@@ -68,8 +68,8 @@ def test_func ( *args , **kwargs ) :
 
 # =============================================================================
 config  = {}
-if   joblib and '1.4.0' <= joblib.version : config [ 'return_as' ] = 'generator_unordered'
-elif joblib and '1.3.0' <= joblib.version : config [ 'return_as' ] = 'generator'
+if   joblib and '1.4.0' <= joblib.__version__ : config [ 'return_as' ] = 'generator_unordered'
+elif joblib and '1.3.0' <= joblib.__version__ : config [ 'return_as' ] = 'generator'
 
 # =============================================================================
 ## test joblib python with with plain function 

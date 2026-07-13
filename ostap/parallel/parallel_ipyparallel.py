@@ -50,16 +50,15 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
         using other nodes in the local cluster """
         
         def __init__( self ,
-                      ncpus      = 'autodetect',
-                      silent     = False ,
-                      progress   = True  ,
-                      balanced   = False ,
-                      use_dill   = True  ,
-                      chunk_size = -1    , 
-                      dump_dbase = None  ,
-                      dump_jobs  = 0     ,
-                      dump_freq  = 0     ,                             
-                      **kwargs ) :
+                      ncpus      = 'autodetect' , * ,
+                      silent     = False        ,
+                      progress   = True         ,
+                      balanced   = False        ,
+                      use_dill   = True         ,
+                      chunk_size = -1           , 
+                      dump_dbase = None         ,
+                      dump_jobs  = 0            ,
+                      dump_freq  = 0            , **kwargs ) :
 
             if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
                 from ostap.utils.basic import numcpu 
@@ -71,6 +70,8 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
 
             if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
                 chunk_size = 5 * ( ncpus + 1 )
+                
+            if 'ppservers' in kwargs : kwarsg.pop ( 'ppservers' )
               
             ## initialize the base class 
             TaskManager.__init__  ( self ,
@@ -80,7 +81,7 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                                     chunk_size = chunk_size , 
                                     dump_dbase = dump_dbase ,
                                     dump_jobs  = dump_jobs  ,
-                                    dump_freq  = dump_freq  ) 
+                                    dump_freq  = dump_freq  , **kwargs ) 
             
             if self.silent :
                 import logging 

@@ -828,7 +828,9 @@ class TaskManager(object) :
                     dump_dbase  = None  ,
                     dump_jobs   = 0     ,
                     dump_freq   = 0     , **kwargs ) :
-     
+
+        print ( 'TASK-MANAGER' , kwargs )
+        
         self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else numcpu()
         
         if not isinstance ( chunk_size , int ) or chunk_size <= 1 :

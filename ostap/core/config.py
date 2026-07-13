@@ -162,6 +162,8 @@ config [ 'RooFit'      ] = {} ## RooFit configuration
 
 config [ 'Pathos'      ] = {} ## PATHOS configuration  
 config [ 'IPyparallel' ] = {} ## ipyparallel configuration 
+config [ 'Futures'     ] = {} ## concurrent.futures configuration 
+config [ 'Joblib'      ] = {} ## joblib configuration 
 
 # ============================================================================
 ## the list of config files to be processed

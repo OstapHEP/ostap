@@ -37,14 +37,14 @@ except ImportError : # ========================================================
 class WorkManager(TaskManager) :
     """ Class to in charge of managing the tasks and distributing them to the workers.
     """
-    def __init__( self ,
-                  ncpus      = 'autodetect',
-                  silent     = False ,
-                  progress   = True  ,
-                  chunk_size = -1    , 
-                  dump_dbase = None  ,
-                  dump_jobs  = 0     ,
-                  dump_freq  = 0     ,  **kwargs ) :
+    def __init__( self       ,
+                  ncpus      = 'autodetect', * , 
+                  silent     = False       ,
+                  progress   = True        ,
+                  chunk_size = -1          , 
+                  dump_dbase = None        ,
+                  dump_jobs  = 0           ,
+                  dump_freq  = 0           , **kwargs ) :
 
         ##
         if   joblib and "1.4.0" <= joblib.__version__ : 
@@ -54,9 +54,10 @@ class WorkManager(TaskManager) :
         else : 
             kwargs.pop ( 'return_as' )
             if not joblib : logger.error ( "No joblib is available!" ) 
-            
+
+        if 'ppservers' in kwargs : kwargs.pop ( 'ppservers' )
         ## initialize the base class 
-        TaskManager.__init__  ( self ,
+        TaskManager.__init__  ( self       ,
                                 ncpus      = ncpus      ,
                                 silent     = silent     ,
                                 progress   = progress   ,
@@ -64,6 +65,7 @@ class WorkManager(TaskManager) :
                                 dump_dbase = dump_dbase ,
                                 dump_jobs  = dump_jobs  ,
                                 dump_freq  = dump_freq  , **kwargs ) 
+        
         
         if not self.silent : logger.info ( 'WorkManager is joblib'  )
                 
@@ -99,7 +101,7 @@ class WorkManager(TaskManager) :
         """
 
         if not joblib:
-            logger.error ( "No joblib module is available, return" )
+            logger.error ( "No joblib module is available, processing is disabled" )
             return
         
         njobs    = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) ) 
@@ -110,7 +112,7 @@ class WorkManager(TaskManager) :
 
         with joblib.Parallel ( n_jobs = self.ncpus , **self.params )  as executor:
             
-            results = executor ( joblib.delayed ( job ) ( a ) for a in job_args ) 
+            results = executor ( joblib.delayed ( job ) ( a ) for a in jobs_args ) 
             for result in progress_bar ( results                            ,
                                          max_value   = njobs                ,
                                          description = kwargs.pop ( 'description' , "Jobs:" ) ,

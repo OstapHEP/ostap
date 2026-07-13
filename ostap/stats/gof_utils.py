@@ -732,7 +732,9 @@ if False : # ==================================================================
     try : # ===================================================================
         # =====================================================================
         import joblib as jl
-        jl_version = tuple ( int ( i ) for i in jl.__version__.split('.') )
+        jl_conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
+        if   '1.4.0' <= jl.__version__ : conf [ 'return_as' ] = 'unordered_generator'
+        elif '1.3.0' <= jl.__version__ : conf [ 'return_as' ] = 'generator'           
         # =====================================================================
         ## Run NN-permutations in parallel using joblib 
         def joblib_run ( self , NN , silent = False , progress = True ) :
@@ -745,14 +747,10 @@ if False : # ==================================================================
             njobs = len ( [ k for k in splitter ( NN , nj ) ] )
             if not silent : logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with joblib' % njobs ) 
             ## 
-            conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
-            if    (1,3,0) <= jl_version < (1,4,0) : conf [ 'return_as' ] = 'generator'           
-            elif  (1,4,0) <= jl_version           : conf [ 'return_as' ] = 'unordered_generator'
-            ##
             input   = ( jl.delayed (self.run_toys)( N ) for N in lst )
             counter = EffCounter()
             tvalues = () 
-            results = jl.Parallel ( **conf ) ( input )
+            results = jl.Parallel ( **jl_conf ) ( input )
             for r in progress_bar ( results , max_value = njobs , silent = not progress , description = 'Permutations:') :
                 cnt , tvals = r 
                 counter += cnt

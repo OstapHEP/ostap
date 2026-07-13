@@ -78,6 +78,8 @@ class WorkManager(TaskManager) :
         ## if pp        : logger.warning ( "WorkManager: option ``pp'' is ignored" )
         ## if ppservers : logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
         
+        if 'ppservers' in kwargs : kwarsg.pop ( 'ppservers' )
+        
         ## initialize the base class 
         TaskManager.__init__  ( self ,
                                 ncpus      = ncpus      ,
@@ -86,7 +88,7 @@ class WorkManager(TaskManager) :
                                 chunk_size = chunk_size , 
                                 dump_dbase = dump_dbase ,
                                 dump_jobs  = dump_jobs  ,
-                                dump_freq  = dump_freq  ) 
+                                dump_freq  = dump_freq  , **kwargs ) 
         
         ## self.pool   = MP.Pool ( self.ncpus )
         

@@ -16,7 +16,7 @@ from   itertools                    import repeat , count
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager 
 from   ostap.io.checker             import PickleChecker as Checker
-from   ostap.core.ostap_types       import sized_types 
+from   ostap.core.ostap_types       import sized_types
 import concurrent.futures
 import sys
 #  =============================================================================
@@ -31,14 +31,16 @@ class WorkManager(TaskManager) :
     """ Class to in charge of managing the tasks and distributing them to the workers.
     """
     def __init__( self ,
-                  ncpus      = 'autodetect',
-                  silent     = False ,
-                  progress   = True  ,
-                  chunk_size = -1    , 
-                  dump_dbase = None  ,
-                  dump_jobs  = 0     ,
-                  dump_freq  = 0     ,  **kwargs ) :
+                  ncpus      = 'autodetect', * , 
+                  silent     = False       ,
+                  progress   = True        ,
+                  chunk_size = -1          , 
+                  dump_dbase = None        ,
+                  dump_jobs  = 0           ,
+                  dump_freq  = 0           ,  **kwargs ) :
 
+        ## 
+        if 'ppservers' in kwargs: conf.pop ( 'ppservers' )        
         ## initialize the base class 
         TaskManager.__init__  ( self ,
                                 ncpus      = ncpus      ,
@@ -47,7 +49,7 @@ class WorkManager(TaskManager) :
                                 chunk_size = chunk_size , 
                                 dump_dbase = dump_dbase ,
                                 dump_jobs  = dump_jobs  ,
-                                dump_freq  = dump_freq  ) 
+                                dump_freq  = dump_freq  , **kwargs ) 
         
         if not self.silent :
             logger.info ( 'WorkManager is concurrent.futures'  )
