@@ -15,8 +15,10 @@ __date__    = "2024-09-16"
 __all__     = (
     'GoFSimFit1D'      , ## helper utility for GoF estimate 
     'GoFSimFit1DToys'  , ## helper utility for GoF estimate with toys
-    'PPDSimFit'        , ## use PPD for sll fit components 
-    'DNNSimFit'        , ## use DNN for sll fit components 
+    'MIXSimFit'        , ## use MIX   for all fit components 
+    'PPDSimFit'        , ## use PPD   for all fit components 
+    'DNNSimFit'        , ## use DNN   for all fit components 
+    'USTATSimFit'      , ## use USTAT for all fit components 
     'GoFSimFit'        , ## helper utility for generic GoF estimate 
 )
 # =============================================================================
@@ -107,18 +109,21 @@ class GoFSimFitBase(object) :
         """
         return self.__N 
 
+    # =============================================================================
     ## serialize the object 
     def __getstate__ ( self ) :
-        """ Serialize the object"""
+        """ Serialize the object
+        """
         if self.parameters : self.pdf.load_params ( self.parameters , silent = True )
         return { 'pdf'         : self.pdf        ,
                  'parameters'  : self.parameters , 
                  'gofs'        : self.gofs       ,
                  'N'           : self.N          }
-    
+    # ============================================================================
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
-        """ De-serialize the object """         
+        """ De-serialize the object\
+        """         
         self.__pdf         = state.pop ( 'pdf'  )
         self.__parameters  = state.pop ( 'parameters' , {} ) 
         self.__gofs        = state.pop ( 'gofs'       , {} )
@@ -296,7 +301,7 @@ class GoFSimFit1D(GoFSimFitBase) :
 ## @class GoFSimFitToys
 #  Check Goodness of 1D (Sim)Fits using toys 
 class GoFSimFit1DToys(GoFSimFit1D) :
-    """ Check Goodness-of-Fit with toys (Simfit caase)
+    """ Check Goodness-of-Fit with toys (SimFit case)
     """
     ## result of GoF-toys 
     Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
@@ -810,7 +815,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
 # ==============================================================================
 ## Another helper base class for Goodness-of-fit estimator for SimFit
 class GoFSimFitType(GoFSimFitBase) :
-    """ Another helper base class for Goodness-of-fit estimator for SimFit
+    """ Another helper base class for Goodness-of-Fit estimator for SimFit
     """
     def __init__ ( self               ,
                    GOF_type           , 
@@ -1001,6 +1006,24 @@ class GoFSimFitType(GoFSimFitBase) :
         return self.__cmp 
     
 # =============================================================================
+## Goodness-of-fit estimator for SimFit using MIX method
+#  - use PPD method for all components 
+class MIXSimFit(GoFSimFitType) :
+    """ Goodness-of-fit estimator for SimFit using MIX method
+    - use MIX method for all components 
+    """
+    def __init__ ( self               ,
+                   pdf                ,
+                   dataset            , * , 
+                   parameters  = None , **config ) :
+        
+        GoFSimFitType.__init__ ( self ,
+                                 GOF_type   = GoFnD.MIX  , 
+                                 pdf        = pdf        ,
+                                 dataset    = dataset    ,
+                                 parameters = parameters , **config ) 
+
+# =============================================================================
 ## Goodness-of-fit estimator for SimFit using PPD method
 #  - use PPD method for all components 
 class PPDSimFit(GoFSimFitType) :
@@ -1009,7 +1032,7 @@ class PPDSimFit(GoFSimFitType) :
     """
     def __init__ ( self               ,
                    pdf                ,
-                   dataset            ,
+                   dataset            , * , 
                    parameters  = None , **config ) :
         
         GoFSimFitType.__init__ ( self ,
@@ -1018,6 +1041,7 @@ class PPDSimFit(GoFSimFitType) :
                                  dataset    = dataset    ,
                                  parameters = parameters , **config ) 
 
+        
 # =============================================================================
 ## Goodness-of-fit estimator for SimFit using DNN method
 #  - use DNN method for all components 
@@ -1027,7 +1051,7 @@ class DNNSimFit(GoFSimFitType) :
     """    
     def __init__ ( self               ,
                    pdf                ,
-                   dataset            ,
+                   dataset            , * , 
                    parameters  = None , **config ) :
         
         GoFSimFitType.__init__ ( self ,
@@ -1045,6 +1069,7 @@ class DNNSimFit(GoFSimFitType) :
         for key , gof  in self.gofs.items () : uvalues [ key ] = gof.histo 
         return uvalues
 
+
 # =============================================================================
 ## Goodness-of-fit estimator for SimFit using USTAT method
 class USTATSimFit(GoFSimFitType) :
@@ -1052,14 +1077,14 @@ class USTATSimFit(GoFSimFitType) :
     """    
     def __init__ ( self               ,
                    pdf                ,
-                   dataset            ,
+                   dataset            , * , 
                    parameters  = None , **config ) :
         
         GoFSimFitType.__init__ ( self ,
                                  GOF_type   = GoFnD.USTAT , 
-                                 pdf        = pdf        ,
-                                 dataset    = dataset    ,
-                                 parameters = parameters , **config ) 
+                                 pdf        = pdf         ,
+                                 dataset    = dataset     ,
+                                 parameters = parameters  , **config ) 
         
     # ==========================================================================
     ## Get dictionary of histograms with u-value distribution
@@ -1069,7 +1094,8 @@ class USTATSimFit(GoFSimFitType) :
         uvalues = {}
         for key , gof  in self.gofs.items () : uvalues [ key ] = gof.histo 
         return uvalues
-   
+
+    
 # =============================================================================
 ## @class GoFSimFit
 #  Goodness-of-fit for simultaneous fits

@@ -210,8 +210,8 @@ try : # =======================================================================
     def nearest_distances ( data , n_jobs = -1 , **config ) :
         """ Get nearest distances using sklearn 
         """
-        nn = sklearn.neighbors.NearestNeighbors ( n_jobs     = n_jobs ,
-                                                  n_neigbors = 2      , **config )
+        nn = sklearn.neighbors.NearestNeighbors ( n_jobs      = n_jobs ,
+                                                  n_neighbors = 2      , **config )
         nn.fit ( data )
         distances ,  _  = nn.kneighbors( data )
         distances       = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 

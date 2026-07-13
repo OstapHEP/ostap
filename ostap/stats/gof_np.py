@@ -879,7 +879,6 @@ class DNNnp(GoFnp) :
                          progress    = progress    ,
                          normalize   = True        ,                          
                          method      = 'Distance-to-Nearest-Neighbor' ,
-                         n_neighbors = 2           , 
                          n_jobs      = n_jobs      , **params )
         
 
