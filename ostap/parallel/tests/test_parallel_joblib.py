@@ -65,7 +65,12 @@ inputs = NN * [ 100 ]
 
 def test_func ( *args , **kwargs ) :
     print ( 'ARGS' , args , kwargs )
-    
+
+# =============================================================================
+config  = {}
+if   joblib and '1.4.0' <= joblib.version : config [ 'return_as' ] = 'generator_unordered'
+elif joblib and '1.3.0' <= joblib.version : config [ 'return_as' ] = 'generator'
+
 # =============================================================================
 ## test joblib python with with plain function 
 def test_joblib_function () :
@@ -81,7 +86,7 @@ def test_joblib_function () :
     
     result = None
 
-    with joblib.Parallel ( return_as = "generator_unordered" )  as executor:
+    with joblib.Parallel ( **config )  as executor:
         
         result = None 
         for histo in executor ( joblib.delayed ( make_histo )( ( i , a ) ) for i,a in enumerate ( inputs ) ) : 
@@ -106,9 +111,9 @@ def test_joblib_method() :
     if not joblib :
         logger.error ( "No joblib module is available" )
         return 
-        
 
-    with joblib.Parallel ( return_as = "generator_unordered" )  as executor:
+    
+    with joblib.Parallel ( **config )  as executor:
         
         result = None 
         for histo in executor ( joblib.delayed ( mh.process )( ( i , a ) ) for i,a in enumerate ( inputs ) ) : 
@@ -135,7 +140,7 @@ def test_joblib_callable1 () :
         logger.error ( "No joblib module is available" )
         return 
     
-    with joblib.Parallel ( return_as = "generator_unordered" )  as executor:
+    with joblib.Parallel ( **config )  as executor:
         
         result = None 
         for histo in executor ( joblib.delayed ( mh )( ( i , a ) ) for i,a in enumerate ( inputs ) ) : 
@@ -158,7 +163,7 @@ def test_joblib_callable2 () :
         logger.error ( "No joblib module is available" )
         return 
     
-    with joblib.Parallel ( return_as = "generator_unordered" )  as executor:
+    with joblib.Parallel ( **config )  as executor:
         
         result = None 
         for histo in executor ( joblib.delayed ( mh.__call__ )( ( i , a ) ) for i,a in enumerate ( inputs ) ) : 

@@ -46,9 +46,15 @@ class WorkManager(TaskManager) :
                   dump_jobs  = 0     ,
                   dump_freq  = 0     ,  **kwargs ) :
 
-        ## 
-        kwargs [ 'return_as' ] = kargs.pop ( 'return_as' , 'generator_unordered' )
-        
+        ##
+        if   joblib and "1.4.0" <= joblib.__version__ : 
+            kwargs [ 'return_as' ] = kwargs.pop ( 'return_as' , 'generator_unordered' )
+        elif joblib and "1.3.0" <= joblib.__version__ : 
+            kwargs [ 'return_as' ] = kwargs.pop ( 'return_as' , 'generator' )
+        else : 
+            kwargs.pop ( 'return_as' )
+            if not joblib : logger.error ( "No joblib is available!" ) 
+            
         ## initialize the base class 
         TaskManager.__init__  ( self ,
                                 ncpus      = ncpus      ,
