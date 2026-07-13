@@ -456,7 +456,7 @@ class ADVAL_HGBC (ADVAL_base) :
             parallel = False 
                 
         config.update ( params )
-        
+
         import sklearn.ensemble 
         ADVAL_base.__init__ ( self, 
                               nToys    = nToys    ,

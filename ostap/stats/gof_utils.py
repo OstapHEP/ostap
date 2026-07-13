@@ -202,6 +202,7 @@ except ImportError : # ========================================================
 try : # =======================================================================
     # =========================================================================
     import sklearn
+    import sklearn.neighbors 
     # =========================================================================
     ## Get nearest distances using sklearn 
     def nearest_distances ( data , n_jobs = -1 , **config ) :
@@ -254,6 +255,7 @@ except ImportError : # =====================================================
 try : # =======================================================================
     # =========================================================================
     import sklearn
+    import sklearn.neighbors 
     # =========================================================================
     ## Get nearest neighbors using scipy.spatial.cKDTree 
     def nearest_neighbors ( data , n_jobs = -1 , n_neighbors = 10 , **config ) :            
@@ -286,7 +288,7 @@ def mean_var ( data , weight = None ) :
     """ Get the mean and variance for 1D-data array with optional 1D-weight array
 
     >>> ds = ... ## dataset as structured array
-    >>> mean, cov2 = mean_var ( ds ['x'] )
+    >>> mean, cov2 = mean_var( ds ['x'] )
     
     - with weight 
     
