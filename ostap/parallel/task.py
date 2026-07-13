@@ -827,7 +827,7 @@ class TaskManager(object) :
                     chunk_size  = -1    ,   
                     dump_dbase  = None  ,
                     dump_jobs   = 0     ,
-                    dump_freq   = 0     ) :
+                    dump_freq   = 0     , **kwargs ) :
      
         self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else numcpu()
         
@@ -862,7 +862,10 @@ class TaskManager(object) :
                 # =============================================================
                 logger.error ( 'DBASE cannot be used %s' % dump_dbase , exc_info = True ) 
                 self.__dump_dbase = None
-                
+
+        ## addtional parameetrs 
+        self.__params = kwargs 
+        
     # =========================================================================
     ## process Task or callable object :
     #  - process <code>Task</code>:
@@ -1121,6 +1124,11 @@ class TaskManager(object) :
         """`dump_freq` : frequency to dump processed merged results into database
         """
         return self.__dump_freq
+
+    @property
+    def params ( self ) :
+        """`params`: additional parameters for actual work-manager """
+        return self.__params
     
     # =========================================================================
     ## get PP-statistics if/when posssible  

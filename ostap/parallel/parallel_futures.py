@@ -104,18 +104,19 @@ class WorkManager(TaskManager) :
         """ Get PP-statistics if/when possible 
         """
         return None
-    
+
+    # =========================================================================
     ## context protocol
     def __enter__  ( self ) :
         sys.stdout .flush ()
         sys.stderr .flush ()
         return self
     
+    # =========================================================================
     ## context protocol
     def __exit__   ( self , *_ ) :        
         sys.stdout .flush ()
-        sys.stderr .flush ()
-        
+        sys.stderr .flush ()        
 
 # =============================================================================
 if '__main__' == __name__ : # =================================================
