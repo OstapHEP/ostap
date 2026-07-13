@@ -180,8 +180,8 @@ try : # =======================================================================
             """
             config [ 'workers' ] = n_jobs 
             tree          = scipy.spatial.cKDTree ( data )
-            distances , _ = tree.query ( data , k = [ 2 ] , **config )
-            distances     = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 
+            distances , _ = tree.query ( data , k = [ 2 ]  , **config )
+            ## distances     = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 
             return distances.flatten() 
         # ====================================================================
     else : # =================================================================

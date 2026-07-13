@@ -216,7 +216,7 @@ def test_GOF () :
             ## 
             if not small : to_test.append ( test )
         else :
-            logger.warning ( "The version %s of scikit-learn is not supported, skip the test" % sklearn.__version__)            
+            logger.warning ( "No scikit-learn is available" )            
         ## 
         # ======================================================================
     except ImportError : # =====================================================
@@ -232,12 +232,12 @@ def test_GOF () :
             from   ostap.stats.gofnd import ADVAL_GBoost as GOF 
             ## 
             gof    = GOF ( **config )
-            test   = gof , gof , 'ADVAL:GrandientBoost'
+            test   = gof , gof , 'ADVAL:GradientBoost'
             ## 
             if not small : to_test.append ( test ) 
             ## 
         else :
-            logger.warning ( "The version %s of scikit-learn is not supported, skip the test" % sklearn.__version__)            
+            logger.warning ( "No scikit-learn is available" )            
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
@@ -257,7 +257,7 @@ def test_GOF () :
             if not small : to_test.append ( test ) 
             ##
         else :
-            logger.warning ( "The version %s of scikit-learn is not supported, skip the test" % sklearn.__version__)
+            logger.warning ( "No scikit-learn is available" )            
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
