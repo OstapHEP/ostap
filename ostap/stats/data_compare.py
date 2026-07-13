@@ -10,13 +10,13 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2026-07-05"
 __all__     = (
-    'numpy_compare' , ## compare two numpy arrays 
-    'data_compare'  , ## compare two data sets 
+    'numpy_compare' , ## compare two (numpy) arrays 
+    'data_compare'  , ## compare two datasets 
 )
 # =============================================================================
 from   ostap.math.math_base  import FIRST_ENTRY , LAST_ENTRY
 from   ostap.stats.gof       import AGoFnp 
-from   ostap.stats.gof_uitls import weight_trivial 
+from   ostap.stats.gof_utils import weight_trivial 
 import ROOT 
 # =============================================================================
 # logging 
@@ -35,19 +35,21 @@ else                       : logger = getLogger ( __name__                   )
 #  @endcode 
 def numpy_compare ( comparator ,
                     data1      ,
-                    data2      , * , weight1 = None , weigth2 = None ) :
+                    data2      , *    ,
+                    weight1    = None ,
+                    weight2    = None ) :
     """ Compare two numpy arrays
     >>> nd1 = ...
     >>> nd2 = ...
     >>> t_value , p_value = numpy_compare ( nd1 , nd2 )
     """
     assert isinstance ( comparator , AGoFnp ) and comparator.two_samples , \
-        "Invalid comparator type: %s" % typename ( comparator ) )
+        "Invalid comparator type: %s" % typename ( comparator ) 
     
     w1_trivial = weight_trivial ( weight1 )
     w2_trivial = weight_trivial ( weight2 )
 
-    assert comparator.weight_supported or ( w1_trivial and w2_trivial ) , \
+    assert comparator.weights_supported or ( w1_trivial and w2_trivial ) , \
         "Comparator does not support weights!"
     
     ## return t and p-values  
@@ -66,11 +68,11 @@ def numpy_compare ( comparator ,
 #  comparator = ... 
 #  t_value , p_value = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' )
 #  @endcode 
-def data_compare ( data         ,
+def data_compare ( comparator   ,  
+                   data         ,
                    data2        ,
-                   comparator   ,  
                    expressions  ,                       ## variables in data1 
-                   cuts         = ''           , *    , ## cuts for data1
+                   cuts         = ''          , *    , ## cuts for data1
                    expressions2 = None        ,
                    cuts2        = None        ,                            
                    first        = FIRST_ENTRY ,
@@ -116,7 +118,8 @@ def data_compare ( data         ,
     
     assert varlst1 and len ( varlst1 ) == len ( varlst2 ) , \
         "Different lenghts for variable lists!"
-    
+
+    print ( 'SLICE-1' ) 
     ## (1) create numpy datasets 
     nd1 , weight1 = data_slice ( data                   ,
                                  varlst1                , 
@@ -130,6 +133,7 @@ def data_compare ( data         ,
                                  use_frame  = use_frame , 
                                  parallel   = parallel  )
     
+    print ( 'SLICE-2' ) 
     nd2 , weight2 = data_slice ( data2                   ,
                                  varlst2                 , 
                                  cuts       = cuts2      ,

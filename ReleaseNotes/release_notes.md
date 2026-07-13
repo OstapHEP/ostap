@@ -7,6 +7,7 @@
   1. Add `joblib`-based version for `WorkManager` (for parallelisation)
   1. Add set of Adversarial Validation method for the Goodness-of-Fit and Two-Samples tests
   1. Improve existing Goodness-of-Fit methods
+  1. Add `ostap.stats.data_compare` nmodule with two functions for comparison of datasets (and numpy arrays)
   
 ## Bug fixes
 

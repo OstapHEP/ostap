@@ -1966,7 +1966,7 @@ def data_center ( data       ,
     if cuts : logger.warning ( "selection cuts      will be used only as boolean!" )
     if isinstance ( data , ROOT.RooAbsData ) and data.isWeighted () :
         logger.warning ( "Weight from dataset will be used only as boolean!" )
-
+        
     npdata , weights = data_slice  ( data                   ,
                                      expression             ,
                                      cuts       = cuts      ,
@@ -2317,7 +2317,7 @@ def data_slice ( data        ,
     >>> data = ...
     >>> arr , weight = data_slice ( data , "x,y,x" , "pt>1" ) 
     """
-    
+
     ## (1) decode expressions & cuts
     var_lst , cuts, _  = vars_and_cuts ( expressions , cuts )
     

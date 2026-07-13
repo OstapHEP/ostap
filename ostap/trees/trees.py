@@ -1216,7 +1216,6 @@ def tree_slice ( tree                       ,
     >>> varr , _  = tree.slice ( ['Pt','mass'] , 'eta>3' )
     >>> print ( varr )  
     """
-    
     ## adjust first/last indices 
     first , last = evt_range ( tree , first , last ) 
     if last <= first :
@@ -1299,7 +1298,7 @@ def tree_slice ( tree                       ,
         result  = result [:-1]
         ## remove totally trivial weights 
         if numpy.all ( weights == 1 ) : weights = None 
-
+    
     if structured :
         
         dt   = numpy.dtype ( [ ( v , float ) for v in varlst ] )

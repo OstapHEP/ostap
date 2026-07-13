@@ -981,7 +981,7 @@ def evt_range ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
     ##
     size = sized
     if isinstance ( sized , sized_types ) : size  = len ( sized )
-    assert isinstance ( size , int ) and 0 <= size , 'Invalid size!'
+    assert isinstance ( size , int ) and 0 <= size , 'Invalid size %s' % size 
     ##
     if not size : return 0 , 0   ## empty range
     ##
