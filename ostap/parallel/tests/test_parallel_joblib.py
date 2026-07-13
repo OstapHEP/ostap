@@ -11,7 +11,6 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.parallel.utils     import uimap, fix_ppsrv 
 from   ostap.utils.root_utils   import batch_env 
 import ostap.histos.histos
-import joblib 
 import ROOT, random, time, sys
 # =============================================================================
 # logging 
