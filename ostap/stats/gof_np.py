@@ -867,6 +867,10 @@ class DNNnp(GoFnp) :
         
         n_jobs = num_jobs ( params , numcpu() - 1 )
         if parallel : n_jobs = 1 
+
+        ## 
+        if 'metric' in params : params.pop ( 'metric' )
+        if 'p'      in params : params.pop ( 'p'      )
         
         GoFnp.__init__ ( self                      ,
                          nToys       = nToys       ,
@@ -875,7 +879,6 @@ class DNNnp(GoFnp) :
                          progress    = progress    ,
                          normalize   = True        ,                          
                          method      = 'Distance-to-Nearest-Neighbor' ,
-                         metric      = 'euclidean' , 
                          n_neighbors = 2           , 
                          n_jobs      = n_jobs      , **params )
         
