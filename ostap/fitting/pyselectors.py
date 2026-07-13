@@ -105,12 +105,13 @@ __all__ = (
 from   ostap.core.meta_info       import root_info 
 from   ostap.core.ostap_types     import num_types, string_types, integer_types
 from   ostap.core.core            import ( cpp  , Ostap ,
-                                           dsID , valid_pointer , binomEff ) 
+                                           dsID , valid_pointer , binomEff )
 from   ostap.fitting.variables    import make_formula
 from   ostap.utils.progress_conf  import progress_conf 
 from   ostap.utils.basic          import items_loop 
 from   ostap.math.reduce          import root_factory 
 from   ostap.trees.utils          import Chain 
+from   ostap.trees.cuts           import expression_types, vars_and_cuts 
 import ostap.fitting.roofit 
 import ROOT, os, cppyy, math, sys
 # =============================================================================
@@ -445,7 +446,7 @@ class Variables(object) :
 
         names = set()
         vset  = ROOT.RooArgSet()
-        
+
         for v in variables :
 
             if   isinstance   ( v , str              ) : vv = Variable (   v ) 
@@ -720,7 +721,7 @@ class SelectorWithVars(SelectorWithCuts) :
     ## constructor 
     def __init__ ( self                            ,
                    variables                       ,  ## list of variables  
-                   selection                       ,  ## Tree-selection 
+                   selection     = ''              ,  ## Tree-selection 
                    cuts          = None            ,  ## python function  
                    roo_cuts      = ''              ,  ## selection based on dataset variables (RooFormula)  
                    name          = ''              ,
@@ -730,6 +731,10 @@ class SelectorWithVars(SelectorWithCuts) :
                    tree          = ROOT.nullptr    ,
                    logger        = logger          ) :
 
+        ## a tiny simplification 
+        if isinstance ( variables , expression_types ) or all ( isinstance ( v , expression_types ) for v  in variables ) :         
+            variables , selection , _  = vars_and_cuts ( variables , selection )    
+            
         if not name     : name     = dsID ()            
         if not fullname : fullname = name 
 
@@ -1413,8 +1418,6 @@ class SelectorWithVarsCached(SelectorWithVars) :
 
         return 1
 
-
-
 # =============================================================================
 ## Create RooDataset from the tree using Tree->Frame->Dataset transformation 
 #  @code 
@@ -1436,14 +1439,16 @@ def make_dataset ( tree              ,
     if not title : title = 'Dataset from %s' % tree.GetName()
 
     if isinstance ( selection , ROOT.TCut ) : selection = str ( selection )
-        
+    
+    if isinstance ( variables , expression_types ) or all ( isinstance ( v , expression_types ) for v  in variables ) :         
+        variables , selection , _  = vars_and_cuts ( variables , selection )    
+    
     import ostap.trees.cuts
     import ostap.fitting.roofit
 
     from ostap.frames.frames import DataFrame, report_print, frame_columns   
     total = len ( tree ) 
     frame = DataFrame ( tree , progress = total if progress or not silent else False )
-
 
     columns = set ( frame_columns ( frame  ) )
 
@@ -1501,7 +1506,6 @@ def make_dataset ( tree              ,
                        tuple ( v.name for v in vars ) )
     
     ds   = rds.GetValue()
-
 
     selcuts  = None
     roocuts  = None
@@ -1869,6 +1873,10 @@ def fill_dataset1 ( tree                 ,
     >>> tree = ...
     >>> ds = tree.fill_dataset1 ( [ 'px , 'py' , 'pz' ] ) 
     """
+    
+    if isinstance ( variables , expression_types ) or all ( isinstance ( v , expression_types ) for v  in variables ) :         
+        variables , selection , _  = vars_and_cuts ( variables , selection )    
+
     selector = SelectorWithVars ( variables ,
                                   selection = selection ,
                                   cuts      = cuts      , 
@@ -1910,7 +1918,6 @@ fill_dataset.__doc__ += '\n' + fill_dataset2.__doc__
 fill_dataset.__doc__ += '\n' + fill_dataset2.__doc__
 
 ROOT.TTree.fill_dataset = fill_dataset
-
 
 # =============================================================================
 ## define the helper function for proper decoration of ROOT.TTree/TChain
