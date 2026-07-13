@@ -1064,9 +1064,9 @@ class ADVAL_LightGBM(GoF) :
         """
         
         if ADVAL_TYPE is None : 
-            from ostap.stats.adversarial_validation import ADVAL_LGBM as ADVAL_TYPE
+            from ostap.stats.adval import ADVAL_LGBM as ADVAL_TYPE
             
-        from ostap.stats.adversarial_validation import ADVAL_base
+        from ostap.stats.adval import ADVAL_base
         assert issubclass ( ADVAL_TYPE , ADVAL_base ) , "Invalid ADVAL_TYPE %s" % ADVAL_TYPE 
             
         GoF.__init__ ( self ,
@@ -1165,7 +1165,7 @@ class ADVAL_HistoGBoost(ADVAL_LightGBM) :
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
         """
-        from ostap.stats.adversarial_validation import ADVAL_HGBC as ADVAL_TYPE 
+        from ostap.stats.adval import ADVAL_HGBC as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
                                   mcFactor   = mcFactor ,
                                   nToys      = nToys    ,
@@ -1207,7 +1207,7 @@ class ADVAL_GBoost(ADVAL_LightGBM) :
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
         """
-        from ostap.stats.adversarial_validation import ADVAL_GBC as ADVAL_TYPE 
+        from ostap.stats.adval import ADVAL_GBC as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
                                   mcFactor   = mcFactor ,
                                   nToys      = nToys    ,
@@ -1250,7 +1250,7 @@ class ADVAL_XGBoost(ADVAL_LightGBM) :
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
         """
-        from ostap.stats.adversarial_validation import ADVAL_XGB as ADVAL_TYPE 
+        from ostap.stats.adval import ADVAL_XGB as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
                                   mcFactor   = mcFactor ,
                                   nToys      = nToys    ,
@@ -1292,7 +1292,7 @@ class ADVAL_RandomForest(ADVAL_LightGBM) :
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
         """
-        from ostap.stats.adversarial_validation import ADVAL_RF as ADVAL_TYPE 
+        from ostap.stats.adval import ADVAL_RF as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
                                   mcFactor   = mcFactor   ,
                                   nToys      = nToys      ,
@@ -1336,7 +1336,7 @@ if HAS_AVX2 :
             - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
             - nToys    : (int) number of permutations/toys 
             """
-            from ostap.stats.adversarial_validation import ADVAL_CATB as ADVAL_TYPE 
+            from ostap.stats.adval import ADVAL_CATB as ADVAL_TYPE 
             ADVAL_LightGBM.__init__ ( self ,
                                       mcFactor   = mcFactor ,
                                       nToys      = nToys    ,

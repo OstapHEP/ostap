@@ -14,6 +14,9 @@
 #
 #  As t-value \f$ 100 \times \left( 1 - 2 \times AUC \right)^2\f$ is used
 #  To estimate the~p-value permutations are used.
+#
+#  This adversarial validation pipeline and LightGBM multiprocessing
+#  architecture were co-developed and optimized with Gemini (Google AI). 
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2026-07-04
@@ -30,6 +33,9 @@
 
 As t-value 100 * ( 1 - 2 * AUC AUC )**2  is used
 To estimate the~p-value permutations are used. 
+
+  This adversarial validation pipeline and LightGBM multiprocessing
+  architecture were co-developed and optimized with Gemini (Google AI).
 
 """
 # =============================================================================
@@ -54,10 +60,10 @@ import ROOT, numpy, abc, os
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.adversarial_validation' )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.adval' )
 else                       : logger = getLogger ( __name__ )
 # =============================================================================
-logger.debug ( 'Implement adversarial validation for Goodness-of-fit & Two-Samples test' )
+logger.debug ( 'Implement Adversarial Validation for Goodness-of-fit & Two-Samples test' )
 # =============================================================================
 ## t-value from A
 #  t-value is defined as \f$  100 \times \left( 1 - 2 \times AUC \right)^2 \f$ 

@@ -39,6 +39,8 @@ from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          weight_trivial     ,
                                          normalize_pooled   ,
                                          pairwise_distances ,
+                                         nearest_distances  ,
+                                         nearest_neighbors  , 
                                          draw_ecdf          , s2u ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf 
@@ -559,17 +561,20 @@ class MIXnp(GoFnp) :
             if weight2 is None : weight2 = numpy.ones ( n2 )            
             weights = numpy.concatenate ( [ weight1 , weight2 ] )
 
-        ## 
-        from sklearn.neighbors import NearestNeighbors
-        nn = NearestNeighbors ( **self.params )
-        
-        nn.fit ( data )
-        _  , indices      = nn.kneighbors ( data )
-        
-        actual_neighbors = indices[ : , 1: ]
+        ##
 
-        source_labels    = labels [ : , numpy.newaxis   ] # (N, 1)
-        neighbor_labels  = labels [ actual_neighbors ] # (N, K)
+        
+        ## from sklearn.neighbors import NearestNeighbors
+        ## nn = NearestNeighbors ( **self.params )
+        ## nn.fit ( data )
+        ## _  , indices      = nn.kneighbors ( data )        
+        ## actual_neighbors = indices[ : , 1: ]
+        
+        actual_neighbors = nearest_neighbors ( data , **self.params )
+        
+        
+        source_labels    = labels [ : , numpy.newaxis ] # (N, 1)
+        neighbor_labels  = labels [ actual_neighbors  ] # (N, K)
 
         # I(i, k) = 1 
         
@@ -940,13 +945,17 @@ class DNNnp(GoFnp) :
             jacobian = numpy.prod ( numpy.std  ( uds1 , axis = 0 , keepdims = True ) ) 
             uds1     = normalize_pooled ( uds1  )     
 
+        """
         from sklearn.neighbors import NearestNeighbors   
-        nn = NearestNeighbors ( **self.params )
-        
-        nn.fit ( uds1 )
-        
+        nn = NearestNeighbors ( **self.params )        
+        nn.fit ( uds1 )        
         distances ,  _  = nn.kneighbors( uds1 )
-        distances       = distances [ : , 1]  # DNN (Distance to Nearest Neighbor)        
+        distances       = distances [ : , 1]  # DNN (Distance to Nearest Neighbor)
+        """
+        
+        distances = nearest_distances ( uds1 , **self.params ) 
+
+        
         if  1 != D : distances = distances ** D
     
         ## volume of the ball in D-dimensions 

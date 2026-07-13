@@ -19,6 +19,8 @@ __all__     = (
     'normalize_pooled'   , ## "normalize" variables in pooled dataset 
     'clip_pvalue'        , ## clip-value
     'pairwise_distances' , ## get array of all pair-wise distances between two datasets
+    'nearest_distances'  , ## get array of all nearest distances for the dataset 
+    'nearest_neighbors'  , ## get all nearest neigbours
     's2u'                , ## convert structured numpy array into non-structured 
 )
 # =============================================================================
@@ -110,6 +112,17 @@ def weight_trivial ( weight ) :
     elif  isinstance ( weight , numpy.ndarray ) : return numpy.all ( weight == 1 ) 
     return False
 # =============================================================================
+## transform structured array to unstructured one
+s2u = None 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================  
+    from numpy.lib.recfunctions import structured_to_unstructured as s2u
+    # =========================================================================
+except ImportError :
+    # =========================================================================
+    s2u = None 
+# =============================================================================
 ## pair-wise distances between two datasets 
 pairwise_distance = None # ====================================================
 # =============================================================================
@@ -133,6 +146,8 @@ except ImportError : # ========================================================
 # =============================================================================
 ## (2) make a try to use more-efficient (?) pair-wise distances from scikit-learn
 # =============================================================================
+has_sklearn = True # ==========================================================
+# =============================================================================
 try : # =======================================================================
     # =========================================================================
     from sklearn.metrics import pairwise_distances as _sk_pw_distances    
@@ -146,21 +161,116 @@ try : # =======================================================================
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    pass
-
+    has_sklearn = False # =====================================================
+    # =========================================================================
 # =============================================================================
-## transfrm structured array to unstructured one
-s2u = None
+## (1) use scipy 
 # =============================================================================
 try : # =======================================================================
-    # =========================================================================  
-    from numpy.lib.recfunctions import structured_to_unstructured as s2u
     # =========================================================================
-except ImportError :
+    import scipy # ============================================================
+    # =========================================================================   
+    if "1.6.0" <=  scipy.__version__ : # ======================================
+        # =====================================================================
+        ## Get nearest distances using scipy.spatial.cKDTree 
+        def nearest_distances ( data , n_jobs = -1 , **config ) :
+            """ Get nearest distances using scipy.spatial.cKDTree 
+            """
+            config [ 'workers' ] = n_jobs 
+            tree          = scipy.spatial.cKDTree ( data )
+            distances , _ = tree.query ( data , k = [ 2 ] , **config )
+            distances     = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 
+            return distances.flatten() 
+        # ====================================================================
+    else : # =================================================================
+        # ====================================================================
+        ## Get nearest distances using scipy.spatial.cKDTree         
+        def nearest_distances ( data , n_jobs = -1 , **config ) :
+            """ Get nearest distances using scipy.spatial.cKDTree 
+            """
+            tree          = scipy.spatial.cKDTree ( data )
+            distances , _ = tree.query ( data , k = 2 , **config )
+            distances     = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 
+            return distances.flatten() 
+        # =====================================================================
+except ImportError : # ========================================================
     # =========================================================================
-    s2u = None 
+    pass # ====================================================================
+# =============================================================================
+## (2) make a try to use NearestNeighbours from sklearn 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import sklearn
+    # =========================================================================
+    ## Get nearest distances using sklearn 
+    def nearest_distances ( data , n_jobs = -1 , **config ) :
+        """ Get nearest distances using sklearn 
+        """
+        nn = sklearn.neighbors.NearestNeighbors ( n_jobs = n_jobs , **config )
+        nn.fit ( data )
+        distances ,  _  = nn.kneighbors( data )
+        distances       = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 
+        return distances.flatten()
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    has_sklearn = False # =====================================================
+    # =========================================================================
+# =============================================================================
+## (1) use scipy
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import scipy 
+    if "1.6.0" <=  scipy.__version__ : # ======================================
+        # =====================================================================
+        ## Get nearest neighbors using scipy.spatial.cKDTree 
+        def nearest_neighbors ( data , n_jobs = -1 , n_neighbors = 10 , **config ) :            
+            """ Get nearest neighbors using scipy.spatial.cKDTree
+            """
+            config [ 'workers' ] = n_jobs 
+            tree        = scipy.spatial.cKDTree ( data )
+            _ , indices = tree.query ( data , k = n_neighbors + 1 , **config )
+            return indices [:, 1: ]
+        # ====================================================================
+    else : # =================================================================
+        # ====================================================================
+        ## Get nearest neighbors using scipy.spatial.cKDTree 
+        def nearest_neighbors ( data , n_jobs = -1 , n_neighbors = 10 , **config ) :            
+            """ Get nearest neighbors using scipy.spatial.cKDTree
+            """
+            config [ 'workers' ] = n_jobs 
+            tree        = scipy.spatial.cKDTree ( data )
+            _ , indices = tree.query ( data , k = n_neighbors + 1 , **config )
+            return indices [:, 1: ]
+    # ======================================================================
+except ImportError : # =====================================================
+    # ======================================================================
+    pass
+# =============================================================================
+## (2) make try to use sklearn 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import sklearn
+    # =========================================================================
+    ## Get nearest neighbors using scipy.spatial.cKDTree 
+    def nearest_neighbors ( data , n_jobs = -1 , n_neighbors = 10 , **config ) :            
+        """ Get nearest neighbors using scipy.spatial.cKDTree
+        """
+        nn = sklearn.neighbors.NearestNeighbors ( n_jobs = n_jobs , n_neighbors = n_neighbors , **config )
+        nn.fit ( data )
+        _ , indices  = nn.kneighbors( data )
+        return indices [ :, 1: ]
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    has_sklearn = False # =====================================================
+    # =========================================================================
+    
+  
 
-#
 # =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
 #  @code
@@ -1063,8 +1173,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
-    if not jl : logger.warning ("Joblib is not avalaille!") 
 
 # =============================================================================
 ##                                                                      The END 
