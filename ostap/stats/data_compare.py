@@ -14,7 +14,9 @@ __all__     = (
     'data_compare'  , ## compare two data sets 
 )
 # =============================================================================
-from   ostap.math.math_base import FIRST_ENTRY , LAST_ENTRY 
+from   ostap.math.math_base  import FIRST_ENTRY , LAST_ENTRY
+from   ostap.stats.gof       import AGoFnp 
+from   ostap.stats.gof_uitls import weight_trivial 
 import ROOT 
 # =============================================================================
 # logging 
@@ -22,8 +24,6 @@ import ROOT
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.data_compare' )
 else                       : logger = getLogger ( __name__                   )
-# =============================================================================
-
 # =============================================================================
 ## Compare two numpy arrays
 #  @code
@@ -41,7 +41,16 @@ def numpy_compare ( comparator ,
     >>> nd2 = ...
     >>> t_value , p_value = numpy_compare ( nd1 , nd2 )
     """
-    ## retrun t and p-values  
+    assert isinstance ( comparator , AGoFnp ) and comparator.two_samples , \
+        "Invalid comparator type: %s" % typename ( comparator ) )
+    
+    w1_trivial = weight_trivial ( weight1 )
+    w2_trivial = weight_trivial ( weight2 )
+
+    assert comparator.weight_supported or ( w1_trivial and w2_trivial ) , \
+        "Comparator does not support weights!"
+    
+    ## return t and p-values  
     return comparator.pvalue ( data1   ,
                                data2   ,
                                weight1 = weight1 ,
@@ -52,18 +61,18 @@ def numpy_compare ( comparator ,
 #  Each dataset is converted to numpy and then `numpy_compare` is invoked 
 #  @see numpy_compare 
 #  @code
-#  data1 = ...
-#  data2 = ...
-#  ## get t-value and p-value:
-#  t_value , p_value = data_compare ( nd1 , nd2 , 'X,y,z' , 'pt>1' )
+#  data1      = ...
+#  data2      = ...
+#  comparator = ... 
+#  t_value , p_value = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' )
 #  @endcode 
 def data_compare ( data         ,
                    data2        ,
-                   comparator   , 
-                   expressions  ,     ## variables in data1 
-                   cuts         = ''   , * , ## cust for data1
-                   expressions2 = None ,
-                   cuts2        = None ,                            
+                   comparator   ,  
+                   expressions  ,                       ## variables in data1 
+                   cuts         = ''           , *    , ## cuts for data1
+                   expressions2 = None        ,
+                   cuts2        = None        ,                            
                    first        = FIRST_ENTRY ,
                    last         =  LAST_ENTRY ,                                                                      
                    first2       = FIRST_ENTRY ,
@@ -76,7 +85,15 @@ def data_compare ( data         ,
                    parallel2    = None        , 
                    progress     = False       ,
                    progress2    = None        , **config ) :
-                
+    """ Compare two datasets:
+    Each dataset is converted to numpy and then `numpy_compare` is invoked 
+    - see numpy_compare 
+    >>> data1      = ...
+    >>> data2      = ...
+    >>> comparator = ... 
+    >>> t_value , p_value = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' )
+    """
+    
     if expressions2 is None : expressions2 = expressions
     if cuts2        is None : cuts2        = cuts
     
@@ -97,7 +114,8 @@ def data_compare ( data         ,
     varlst2 , cuts2 , _  = vars_and_cuts ( expressions2 , cuts2 )
     varlst2 = tuple ( sorted ( varlst2 ) )
     
-    assert varlst1 and len ( varlst1 ) == len ( varlst2 ) , "Different lengths for variable lists!"
+    assert varlst1 and len ( varlst1 ) == len ( varlst2 ) , \
+        "Different lenghts for variable lists!"
     
     ## (1) create numpy datasets 
     nd1 , weight1 = data_slice ( data                   ,
@@ -124,11 +142,11 @@ def data_compare ( data         ,
                                  use_frame  = use_frame2 , 
                                  parallel   = parallel2  )
 
-    return numpy_compare ( comparator   ,
-                           nd1          ,
-                           nd2          ,
-                           weigth1 = w1 ,
-                           weigth2 = w2 )
+    return numpy_compare ( comparator        ,
+                           nd1               ,
+                           nd2               ,
+                           weight1 = weight1 ,
+                           weight2 = weight2 )
 
 # =============================================================================
 if '__main__' == __name__ :

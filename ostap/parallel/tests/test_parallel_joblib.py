@@ -22,7 +22,17 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-batch_env ( logger ) 
+batch_env ( logger )
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import joblib # ===========================================================
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    joblib = None # ===========================================================
+    logger.warning ( "No joblib module is available!" ) 
+
 # =============================================================================    
 ## simple    function that creates and fills a histogram 
 def make_histo  ( item ) :
@@ -64,6 +74,11 @@ def test_joblib_function () :
     logger =    getLogger ("test_joblib_function")
     logger.info ('Test job submission with %s' % joblib  ) 
 
+    if not joblib :
+        logger.error ( "No joblib module is available" )
+        return 
+        
+    
     result = None
 
     with joblib.Parallel ( return_as = "generator_unordered" )  as executor:
@@ -88,6 +103,10 @@ def test_joblib_method() :
     """
     logger =    getLogger ("test_joblib_method")
     logger.info ('Test job submission with %s' % joblib ) 
+    if not joblib :
+        logger.error ( "No joblib module is available" )
+        return 
+        
 
     with joblib.Parallel ( return_as = "generator_unordered" )  as executor:
         
@@ -112,7 +131,10 @@ def test_joblib_callable1 () :
     """
     logger =    getLogger ("test_jobilb_callable1")
     logger.info ('Test job submission with %s' %  joblib  ) 
-
+    if not joblib :
+        logger.error ( "No joblib module is available" )
+        return 
+    
     with joblib.Parallel ( return_as = "generator_unordered" )  as executor:
         
         result = None 
@@ -132,7 +154,10 @@ def test_joblib_callable2 () :
     """
     logger =    getLogger ("test_joblib_callable2")
     logger.info ('Test job submission with %s' % joblib  ) 
-
+    if not joblib :
+        logger.error ( "No joblib module is available" )
+        return 
+    
     with joblib.Parallel ( return_as = "generator_unordered" )  as executor:
         
         result = None 

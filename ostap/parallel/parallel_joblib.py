@@ -17,11 +17,18 @@ from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager 
 from   ostap.io.checker             import PickleChecker as Checker
 from   ostap.core.ostap_types       import sized_types 
-import joblib
 import sys
-#  =============================================================================
+# =============================================================================
 from   ostap.logger.logger          import getLogger
 logger  = getLogger('ostap.parallel.parallel_joblib')
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import joblib # ===========================================================
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    joblib = None # ===========================================================
 # =============================================================================
 ## @class WorkManager
 #  Class to in charge of managing the tasks and distributing them to
@@ -83,7 +90,12 @@ class WorkManager(TaskManager) :
         - no statistics
         - no summary print
         - no merging of results  
-        """        
+        """
+
+        if not joblib:
+            logger.error ( "No joblib module is available, return" )
+            return
+        
         njobs    = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) ) 
         ## 
         progress = progress    or self.progress        
@@ -127,7 +139,8 @@ if '__main__' == __name__ : # =================================================
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )    
-
+    
+    if not joblib : logger.warning ( "No joblib moduel is available!" ) 
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
