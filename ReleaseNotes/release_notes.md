@@ -1,6 +1,8 @@
+# v3.7.3.0
+
 ## New features
 
- 1. Add `importance_features` and `importance_table` methods for adversatial vaildation Goodness-of-Fit tests
+ 1. Add `importance_features` and `importance_table` methods for adversarial vaildation Goodness-of-Fit tests
  1. fix an issue with `pypdf.clone` method 
  
 ## Bug fixes
