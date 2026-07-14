@@ -49,7 +49,7 @@ message ( " ********************************************************************
 set(OSTAP_VERSION_MAJOR  3)
 set(OSTAP_VERSION_MINOR  7)
 set(OSTAP_VERSION_PATCH  2)
-set(OSTAP_VERSION_TWEAK  0)
+set(OSTAP_VERSION_TWEAK  1)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
@@ -57,8 +57,6 @@ message ( "----> OSTAP           version    : " ${OSTAP_VERSION} )
 message ( "----> OSTAP           timestamp  : " ${OSTAP_BUILD_TIMESTAMP} )
 
 set(OSTAP_PYTHON_SITE_DIR "")
-
-
 
 cmake_host_system_information(RESULT OSTAP_HOSTNAME QUERY HOSTNAME)
 cmake_host_system_information(RESULT OSTAP_DOMAIN   QUERY FQDN    )
