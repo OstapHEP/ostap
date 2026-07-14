@@ -40,7 +40,7 @@ batch_env ( logger )
 ## make simple test mass 
 xvar       = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 3.0 , 3.2 )
 
-## referece Gaussian
+## reference Gaussian
 gauss_ref = Gauss_pdf ( "G"                               ,
                         xvar  = xvar                      , 
                         mean  = ( 3.100 , 3.050 , 3.150 ) ,
@@ -72,21 +72,27 @@ class MyGauss1(PyPDF) :
     - see `evaluate`
     """
     
-    def __init__ ( self , name , title , xvar , mean , sigma , clone = None ) :
+    def __init__ ( self         ,
+                   name         ,
+                   title        ,
+                   xvar         ,
+                   mean         ,
+                   sigma        ,
+                   clone = None ) :
 
-        assert not clone or isinstance ( clone , MyGauss1 ) , \
-            "MyGauss1: nivalid `clone` type %s" % typename ( clone )
-
+        assert clone is None or isinstance ( clone , MyGauss1 ) , \
+            "MyGauss1: invalid `clone` type %s" % typename ( clone )
+        
         ## order of variables 
-        self._variables = ( xvar , mean , sigma )
+        variables = ( xvar , mean , sigma )
         
         if clone : super(MyGauss1,self).__init__ ( clone = clone , name = name )
-        else     : super(MyGauss1,self).__init__ ( name  = name  , title = title , variables = self._variables )
+        else     : super(MyGauss1,self).__init__ ( name  = name  , title = title , variables = variables )
 
     ## mandatory clone method 
     def clone ( self , newname = '' ) :
         cloned = MyGauss1 ( newname if newname else self.name , self.title , None , None , None , clone = self )
-        ROOT.SetOwnership ( cloned  , False )
+        ## ROOT.SetOwnership ( cloned  , False )
         return cloned
 
     ## mandatory evaluate method 
@@ -95,7 +101,8 @@ class MyGauss1(PyPDF) :
         return Ostap.Math.gauss_pdf ( float ( x ) , float ( mean ) , float ( sigma ) )
 
     def __reduce__  ( self ) :
-        return mg1_factory , ( self.name , self.title ) + tuple ( v for v in self.variables ) 
+        return mg1_factory , ( self.name , self.title ) + tuple ( v for v in self.variables )
+    
 # ==============================================================================
 ## @class MyGauss3
 #  A bit mor ecomplicated methpod using analystical integrals 
@@ -106,21 +113,30 @@ class MyGauss2(PyPDF) :
     - see `clone`
     - see `evaluate`
     """
-    def __init__ ( self , name , title , xvar , mean , sigma , clone = None ) :
+    def __init__ ( self  ,
+                   name  ,
+                   title ,
+                   xvar  ,
+                   mean  ,
+                   sigma ,
+                   clone = None ) :
         
-        assert not clone or isinstance ( clone , MyGauss2 ) , \
-            "MyGauss2: nivalid `clone` type %s" % typename ( clone )
-
+        assert clone is None or isinstance ( clone , MyGauss2 ) , \
+            "MyGauss2: invalid `clone` type %s" % typename ( clone )
+        
         ## order of variables 
-        self._variables = ( xvar , mean , sigma )
+        variables = ( xvar , mean , sigma )
         
         if clone : super(MyGauss2,self).__init__ ( clone = clone , name = name )
-        else     : super(MyGauss2,self).__init__ ( name  = name  , title = title , variables = self._variables )
+        else     : super(MyGauss2,self).__init__ ( name  = name  , title = title , variables = variables )
 
+        ## VB 2026 
+        ## if ( 6 , 41 ) <= root_info : ROOT.SetOwnership ( self , False )
+        
     ## mandatory clone method 
     def clone ( self , newname = '' ) :
         cloned  = MyGauss2 ( newname if newname else self.name , self.title , None , None , None , clone = self )
-        ROOT.SetOwnership ( cloned  , False )
+        ## ROOT.SetOwnership ( cloned  , False )
         return cloned
 
     ## mandatory evaluate method 
@@ -166,36 +182,36 @@ def test_PyPDF1() :
     logger = getLogger("test_PyPDF1")
     logger.info ( 'Use plain PyPDF' ) 
     
-    mygauss = MyGauss1 ( 'MyGauss1'                           ,
+    mygauss1 = MyGauss1 ( 'MyGauss1'                           ,
                           title    = "local pure python PDF" ,
                           xvar     = gauss_ref.xvar          ,
                           mean     = gauss_ref.mean          ,
                           sigma    = gauss_ref.sigma         ) 
     
-    signal = Generic1D_pdf ( pdf = mygauss , xvar = xvar )
-    model  = Fit1D ( signal = signal  , background = None , suffix = '_P1' )
+    signal1 = Generic1D_pdf ( pdf = mygauss1 , xvar = xvar )
+    model1  = Fit1D ( signal = signal1  , background = None , suffix = '_P1' )
 
     ##  fit!
     with use_canvas ( "test_PyPDF1: plain PyPDF" , wait = 2 ) : 
-        r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
+        r1, _ = model1.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
 
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
         with tmpdb ( )as db :
-            db [ mygauss.name ] = mygauss
-            db ['signal'      ] = signal 
-            db ['gauss_ref'   ] = gauss_ref
-            db ['model_ref'   ] = model_ref        
+            db [ mygauss1.name ] = mygauss1
+            db ['signal1'      ] = signal1 
+            db ['gauss_ref'    ] = gauss_ref
+            db ['model_ref'    ] = model_ref        
             db.ls()
         # =====================================================================
     except : # ================================================================
         # =====================================================================
         logger.error ( "Cannot serialize!" , exc_info = True )
         
-    del model
-    del signal
-    del mygauss
+    del model1
+    del signal1
+    del mygauss1
         
 # =============================================================================
 ## Test pure python PDF: <code>PyPDF</code> with analytical integration 
@@ -210,43 +226,53 @@ def test_PyPDF2() :
     logger = getLogger("test_PyPDF2")
     logger.info ('Use PyPDF with analytical integrals' )
     
-    mygauss = MyGauss2 ( 'MyGauss2'                           ,
-                         title    = "local pure python PDF" ,
-                         xvar     = gauss_ref.xvar          ,
-                         mean     = gauss_ref.mean          ,
-                         sigma    = gauss_ref.sigma         ) 
+    mygauss2 = MyGauss2 ( 'MyGauss2'                           ,
+                          title    = "local pure python PDF" ,
+                          xvar     = gauss_ref.xvar          ,
+                          mean     = gauss_ref.mean          ,
+                          sigma    = gauss_ref.sigma         ) 
     
-    signal = Generic1D_pdf ( pdf = mygauss , xvar = xvar )
-    model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
+    signal2 = Generic1D_pdf ( pdf = mygauss2 , xvar = xvar )
+    model2  = Fit1D ( signal = signal2 , background = None , suffix = '_P2' )
     
     ##  fit!
     with use_canvas ( "test_PyPDF2: use analytical integrals" , wait = 2 ) : 
-        r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
+        r2, _ = model2.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
 
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
         with tmpdb ( )as db :
-            db [ mygauss.name ] = mygauss
-            db ['signal'      ] = signal 
-            db ['gauss_ref'   ] = gauss_ref
-            db ['model_ref'   ] = model_ref        
+            db [ mygauss2.name ] = mygauss2
+            db ['signal'       ] = signal2 
+            db ['gauss_ref'    ] = gauss_ref
+            db ['model_ref'    ] = model_ref        
             db.ls()
         # =====================================================================
     except : # ================================================================
         # =====================================================================
         logger.error ( "Cannot serialize!" , exc_info = True )
 
+    del model2
+    del signal2
+    del mygauss2
+
 # =============================================================================
 gauss_cpp = Ostap.Math.gauss_pdf
 
 def gauss_fun ( x , mean , sigma ) :
-    return gauss_cpp ( x , mean , sigma ) 
+    fx , fm, fs = float ( x ) , float ( mean ) , float ( sigma )  
+    value = gauss_cpp (  fx , fm , fs )
+    ## print ( 'gauss_fun' , fx , fm , fs , value ) 
+    return value
 
 class GaussPdf ( object) :
     def __call__ ( self , x , mean , sigma ) :
-        return gauss_fun ( x , mean , sigma )
-
+        fx , fm, fs = float ( x ) , float ( mean ) , float ( sigma )  
+        value = gauss_cpp ( fx , fm , fs )
+        ## print ( 'GaussPdf' , fx , fm , fs , value )         
+        return value
+    
 gauss_obj = GaussPdf()
 
 # =============================================================================
@@ -260,7 +286,7 @@ def test_PyPDFLite1() :
     """
 
     logger   = getLogger("test_PyPDFLite1")
-    logger.info ( "Use `light' PDF:  global funtion" )
+    logger.info ( "Use `light' PDF:  global (python) function" )
         
     function  = gauss_fun 
 
@@ -275,7 +301,7 @@ def test_PyPDFLite1() :
     model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
     
     ##  fit!
-    with use_canvas ( "test_PyPDFLite1: global function " , wait = 2 ) : 
+    with use_canvas ( "test_PyPDFLite1: global (python) function " , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
         del r 
 
@@ -293,7 +319,6 @@ def test_PyPDFLite1() :
         # =====================================================================
         logger.error ( "Cannot serialize!" , exc_info = True )
 
-
 # =============================================================================
 ## Test pure python PDF: <code>PyPDFLite</code
 #  @see ostap.fitting.pypdf.PyPDFLifgt 
@@ -305,7 +330,7 @@ def test_PyPDFLite2() :
     """
 
     logger   = getLogger("test_PyPDFLite2")
-    logger.info ( "Use `light' PDF:  global c++ function" )
+    logger.info ( "Use `light' PDF:  global C++ (overload) function" )
         
     function  = gauss_cpp 
 
@@ -320,7 +345,7 @@ def test_PyPDFLite2() :
     model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
     
     ##  fit!
-    with use_canvas ( "test_PyPDFLite1: global function " , wait = 2 ) : 
+    with use_canvas ( "test_PyPDFLite2: global C++ (overload) function " , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
         del r
     
@@ -350,7 +375,7 @@ def test_PyPDFLite3() :
     model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
     
     ##  fit!
-    with use_canvas ( "test_PyPDFLite1: global object" , wait = 2 ) : 
+    with use_canvas ( "test_PyPDFLite3: global object" , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
         del r 
     # =========================================================================
@@ -367,7 +392,6 @@ def test_PyPDFLite3() :
         # =====================================================================
         logger.error ( "Cannot serialize!" , exc_info = True )
 
-
 # =============================================================================
 ## Test pure python PDF: <code>PyPDFLite</code
 #  @see ostap.fitting.pypdf.PyPDFLifgt 
@@ -381,7 +405,12 @@ def test_PyPDFLite4 () :
     logger   = getLogger("test_PyPDFLite4")
     logger.info ( "Use `light' PDF: local function" )
 
-    def local_fun ( *args ) : return gauss_cpp ( *args )
+    def local_fun ( *args ) :
+        x , mean , sigma = args
+        fx , fm, fs = float ( x ) , float ( mean ) , float ( sigma )  
+        value = gauss_cpp (  fx , fm , fs )
+        ## print ( 'local_fun' , fx , fm , fs , value ) 
+        return value
     
     function  = local_fun 
 
@@ -396,14 +425,15 @@ def test_PyPDFLite4 () :
     model  = Fit1D ( signal = signal  , background = None , suffix = '_P2' )
     
     ##  fit!
-    with use_canvas ( "test_PyPDFLite1: local function" , wait = 2 ) : 
+    with use_canvas ( "test_PyPDFLite4: local function" , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
-        del r 
+        del r
+        
 # =============================================================================
 if '__main__' == __name__ :
     
     test_PyPDF1     () 
-    test_PyPDF2     () 
+    test_PyPDF2     ()    
 
     test_PyPDFLite1 () 
     test_PyPDFLite2 () 

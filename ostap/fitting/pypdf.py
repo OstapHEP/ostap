@@ -18,6 +18,7 @@ __all__     = (
     'PyPDFLite' , ## 'pythonic' PDF for RooFit 
     )
 # =============================================================================
+from   ostap.core.meta_info         import root_info 
 from   ostap.core.ostap_types       import sequence_types 
 from   ostap.core.core              import Ostap
 from   ostap.utils.basic            import typename, prntrf  
@@ -37,7 +38,7 @@ else                       : logger = getLogger ( __name__              )
 #  - <code>evaluate</code> method 
 #  - method <code>__reduce__</code> for serialization (if needed)
 # 
-# Twomore methods arte needed if one needs analystical integrals :
+# Two more methods are needed if one needs analystical integrals :
 #  - `get_analytical_integral`
 #  - `analytical_integral`
 class PyPDF(Ostap.Models.PyPdf) :
@@ -51,7 +52,7 @@ class PyPDF(Ostap.Models.PyPdf) :
     def __init__ ( self , name , title = '' , variables = () , clone = None ) :
         """ Constructor that accepts `clone` argument 
         """
-        assert not clone or isinstance ( clone , PyPDF ), \
+        assert clone is None or isinstance ( clone , PyPDF ), \
             "PyPDF: invalid `clone` type:%s " % typename ( clone ) 
         
         assert clone or ( variables                                and \
@@ -59,7 +60,8 @@ class PyPDF(Ostap.Models.PyPdf) :
                           all ( isinstance ( v , ROOT.RooAbsReal ) for v in variables ) ) , \
                           "PyPDF: invalid `variables`: %s/%s" %  ( typename ( variables ) , str ( variables ) )      
         if clone :
-            super ( PyPDF , self ) .__init__ ( clone , name if name else clone.name )            
+            ## super ( PyPDF , self ) .__init__ ( clone , name if name else clone.name )            
+            super ( PyPDF , self ) .__init__ ( clone , name if name else ROOT.nullptr  )            
         else     :
             vv = ROOT.RooArgList () ;
             for v in variables : vv.add ( v ) 
@@ -67,6 +69,11 @@ class PyPDF(Ostap.Models.PyPdf) :
 
         self._keep = variables, 
         if clone : self._keep += clone._keep
+
+        ## Global ownership 
+        if clone                     : ROOT.SetOwnership ( self , False )
+        ## VB 2026 
+        elif ( 6 , 41 ) <= root_info : ROOT.SetOwnership ( self , False )
         
     ## redefine 
     def matchArgs ( self , *vars ) :
