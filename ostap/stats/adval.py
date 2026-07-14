@@ -52,9 +52,9 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import string_types
 from   ostap.core.cpu_info      import HAS_AVX2
-from   ostap.utils.basic        import typename , numcpu 
+from   ostap.utils.basic        import typename , numcpu
 from   ostap.stats.gof_np       import GoFnp 
-from   ostap.stats.gof_utils    import num_jobs, weight_trivial
+from   ostap.stats.gof_utils    import num_jobs, weight_trivial, run_parallel 
 import ROOT, numpy, abc, os   
 # =============================================================================
 # logging 
@@ -67,45 +67,26 @@ logger.debug ( 'Implement Adversarial Validation for Goodness-of-fit & Two-Sampl
 # =============================================================================
 ## t-value from A
 #  t-value is defined as \f$  100 \times \left( 1 - 2 \times AUC \right)^2 \f$ 
-def tvaleu_from_AUC ( auc ) :
+def tvalue_from_AUC ( auc ) :
     """ t-value is defined as 100 * abs(1-2*AUC)**2
     """
     return 100 * ( 1.0 - 2.0 * auc ) ** 2 
 # =============================================================================
-## allow parallel run
-#  - check "OMP_NUM_THREADS"
-#  - check "MKL_NUM_THREADS"
-#  - check "OPENBLAS_NUM_THREADS"
-def run_parallel ( parallel ) : 
-    """ Allow parallel run
-    - check "OMP_NUM_THREADS"
-    - check "MKL_NUM_THREADS"
-    - check "OPENBLAS_NUM_THREADS"
-    """
-    ##
-    if not parallel : return False
-    ## 
-    if   '1' != os.environ.get ( "OMP_NUM_THREADS"      , "" ) : return False 
-    elif '1' != os.environ.get ( "MKL_NUM_THREADS"      , "" ) : return False 
-    elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ) : return False
-    ## 
-    return True 
-
-# ==============================================================================
 ## @class ADVAL_base 
 #  Base class for adversarial validation for the difference between two (weighted) dataset
 class ADVAL_base (GoFnp):
     """ Base class for Adversarial validation for the differece between two (weighted) dataset
     """
-    def __init__ ( self             ,
-                   nToys    = 400   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  ,
-                   method   = "Adversarial Validation" , **params ) :
+    def __init__ ( self               ,
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   progress   = True  ,
+                   method     = "Adversarial Validation" , **params ) :
         
         n_splits = params.pop ( 'n_splits' , 5 ) 
         assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
+
         
         GoFnp.__init__ ( self                 ,
                          nToys     = nToys    ,
@@ -114,9 +95,10 @@ class ADVAL_base (GoFnp):
                          progress  = progress ,
                          normalize = False    , 
                          method    = method   , **params )
-
-        self.__n_splits = n_splits 
-
+        
+        self.__n_splits            = n_splits 
+        self.__importance_features = {}
+        
     # ============================================================================
     @property
     def n_splits ( self ) :
@@ -127,8 +109,9 @@ class ADVAL_base (GoFnp):
     @property
     def config ( self ) :
         """`config` : get all configuratino parameters"""
-        conf = super().config
-        conf [ 'n_splits' ] = self.n_splits 
+        conf = {}
+        conf.update ( super().config ) 
+        conf [ 'n_splits'   ] = self.n_splits 
         return conf
     
     # =========================================================================
@@ -146,6 +129,49 @@ class ADVAL_base (GoFnp):
         """`two_samples`: Can this estimator be used for comparison of two samples?
         """
         return True 
+
+    # ==========================================================================
+    ## importance features ?
+    @property 
+    def importance_featured ( self ) :
+        """`importance_featired` : dictionary of importance features"""
+        return self.__importance_features
+    
+    # ==========================================================================
+    ## get the table of importance features 
+    def importance_table  ( self ,
+                            title  = '' ,
+                            prefix = '' ,
+                            style  = '' ) : 
+        """ get table of importance features
+        """
+        rows  = [ ( 'Feature/#' , 'Importance [%]' ) ]
+        rows += [ ( str ( feature  ) , '%.1f' % gain ) for feature, gain in self.__importance_features.items () ] 
+        title = title if title else "%s importance" % typename ( self )
+        import ostap.logger.table as T
+        return T.table ( rows               ,
+                         title     = title  ,
+                         prefix    = prefix ,
+                         alignment = 'cc'   ,  
+                         style     = style  )
+    
+    # ==================================================================================
+    ## Train the model and make predictions
+    #  @code
+    #  gof = ...
+    #  pred , imps = gof.work ( .... ) 
+    #  @endcode 
+    #  @return predictions and importance
+    @abc.abstractmethod 
+    def work ( self    ,
+               X_train , Y_train , W_train ,
+               X_val   , Y_val   , W_val   , importance = False ) :
+        """ Train the model and make predictions
+        - return predictions and importance
+        >>> gof  = ...
+        >>> pred , imps = gof.work ( .... ) 
+        """
+        return NotImplemented 
         
     # ==========================================================================
     ## Calculate t-value for two non-structured (weighted) datasets 
@@ -154,12 +180,13 @@ class ADVAL_base (GoFnp):
     #   @param weight1 the first array of weights 
     #   @param weight3 the second array of weights
     #   tvalue is defined as \f$  100 \times \left( 1 - 2 \times AUC \right)^2 \f$ 
-    def tvalue ( self              ,
-                 data1             ,
-                 data2             ,  * , 
-                 weight1   = None  ,
-                 weight2   = None  ,
-                 normalize = False ) :
+    def tvalue ( self               ,
+                 data1              ,
+                 data2              ,  * , 
+                 weight1    = None  ,
+                 weight2    = None  ,
+                 normalize  = False ,
+                 importance = False ) :        
         """ Calculate t-value for two non-structured (weighted) arrays 
         - data1   : the first dataset
         - data2   : the second dataset
@@ -211,20 +238,54 @@ class ADVAL_base (GoFnp):
         cv           = StratifiedKFold ( n_splits = self.n_splits , shuffle = True , random_state = random_state )
         oof_preds    = numpy.zeros( N )
 
+        
+        ## feature imporances 
+        importances = numpy.zeros( X.shape [ 1 ] , dtype = float ) if importance else None 
+
         ## 
         for fold , ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
 
             X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ] if weights else None 
             X_val   , Y_val   , W_val   = X.iloc [ val_idx   ] , Y.iloc [ val_idx   ] , W.iloc [ val_idx   ] if weights else None 
                             
-            ## train model and make predictions & predict 
-            oof_preds [ val_idx ] = self.work ( X_train , Y_train , W_train , X_val  , Y_val , W_val   )
+            ## train model and make predictions & predict
+            fold_predictions , fold_importances = self.work ( X_train ,
+                                                              Y_train ,
+                                                              W_train ,
+                                                              X_val   ,
+                                                              Y_val   ,
+                                                              W_val   , importance = importance )
+            oof_preds [ val_idx ] = fold_predictions 
             
-        ## (weighted) ROC-AUC
-        auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
+            ##     fold_auc       = roc_auc_score   ( Y_val, fold_predictions , sample_weight = W_val )
+            ##    ft             = tvalue_from_AUC ( fold_auc ) 
+            ##    self.__t_fold += ft
+                
+            if importance and not importances is None and not fold_importances is None :
+                importances += fold_importances
 
-        ## 
-        return tvaleu_from_AUC ( auc_score )
+        # ================================================================================
+        ## importance ?
+        # ================================================================================
+        if importance and not importances is None :
+            
+            self.__importance_features = {} 
+            imp_sum = numpy.sum ( importances ) 
+            if 0 < imp_sum : importances *= 100.0 / imp_sum
+            ## 
+            df_imp = pd.DataFrame ( { 'feature'    : X.columns.tolist() , 
+                                      'importance' : importances        } )
+            df_imp = df_imp.sort_values ( by = 'importance', ascending = False ) . reset_index ( drop = True ) 
+            
+            self.__importance_features = { row.feature : row.importance for row in df_imp.itertuples ( index = True ) }
+            
+        # =============================================================================
+        ## (weighted) global ROC-AUC
+        # =============================================================================
+        auc_score = roc_auc_score   ( Y , oof_preds , sample_weight = W )
+        tv        = tvalue_from_AUC ( auc_score )
+        
+        return tv 
         
 # =======================================================================================
 ## @class ADVAL_LGBM
@@ -271,10 +332,18 @@ class ADVAL_LGBM (ADVAL_base) :
 
     # ==================================================================================
     ## Train the model and make predictions
+    #  @code
+    #  gof = ...
+    #  pred , imps = gof.work ( .... ) 
+    #  @endcode 
+    #  @return predictions and importance 
     def work ( self    ,
                X_train , Y_train , W_train ,
-               X_val   , Y_val   , W_val   ) :
-        """" Train the model and make predictions
+               X_val   , Y_val   , W_val   , importance = False ) :
+        """ Train the model and make predictions
+        - return predictions and importances
+        >>> gof  = ...
+        >>> pred , imps = gof.work ( .... )         
         """
         
         ## 
@@ -293,8 +362,14 @@ class ADVAL_LGBM (ADVAL_base) :
         )
         
         ## predict the results 
-        return model.predict ( X_val , num_iteration = model.best_iteration )
-    
+        predictions = model.predict ( X_val , num_iteration = model.best_iteration )
+
+        if not importance : return predictions, None ## RETURN
+        
+        ## predictions & importances 
+        return predictions, model.feature_importance ( importance_type = 'gain' )
+
+        
 # =======================================================================================
 ## @class ADVAL_XGB
 #  XGBoost-based lass for Adversarial Validation for the difference between two (weighted) dataset
@@ -335,10 +410,18 @@ class ADVAL_XGB (ADVAL_base) :
 
     # ==================================================================================
     ## Train the model and make predictions
+    #  @code
+    #  gof = ...
+    #  pred , imps = gof.work ( .... ) 
+    #  @endcode 
+    #  @return predictions and importance     
     def work ( self ,
                X_train , Y_train , W_train ,
-               X_val   , Y_val   , W_val   ) :
-        """" Train the model and make predictions
+               X_val   , Y_val   , W_val   , importance = False ) :
+        """ Train the model and make predictions
+        >>> gof  = ...
+        >>> pred , imps = gof.work ( .... )         
+        
         """
 
         ## 
@@ -357,9 +440,16 @@ class ADVAL_XGB (ADVAL_base) :
             verbose_eval = False 
         )
         
-        # predict 
-        return model.predict ( dval ) ## , iteration_range= ( 0 , model.best_iteration + 1 ) )
+        # predict
+        
+        predictions = model.predict ( dval ) ## , iteration_range= ( 0 , model.best_iteration + 1 ) )
+        
+        if not importance : return predictions, None ## RETURN
+        
+        importance_dict  = model.get_score ( importance_type = 'gain' )
 
+        return predictions , nump.array( [ importance_dict.get(col, 0.0) for col in dval.feature_names ] )
+        
 # ======================================================================================
 if HAS_AVX2 : 
     # ==================================================================================
@@ -410,7 +500,7 @@ if HAS_AVX2 :
         ## Train the model and make predictions
         def work ( self ,
                    X_train , Y_train , W_train ,
-                   X_val   , Y_val   , W_val   ) :
+                   X_val   , Y_val   , W_val   , importance = False ) :
             """ Train the model and make predictions
             """
             
@@ -425,7 +515,12 @@ if HAS_AVX2 :
             # train it 
             model.fit ( train_pool , eval_set=val_pool, early_stopping_rounds = 20 )
             
-            return model.predict_proba(X_val)[:, 1]
+            predictions = model.predict_proba(X_val)[:, 1]
+
+            if not importance : return predictions, None ## RETURN
+            
+            return predictions , model.get_feature_importance ()
+
         
     __all__ += ( 'ADVAL_CATB' , )
         
@@ -467,10 +562,17 @@ class ADVAL_HGBC (ADVAL_base) :
 
     # ==================================================================================
     ## Train the model and make predictions
+    #  @code
+    #  gof = ...
+    #  pred , imps = gof.work ( .... ) 
+    #  @endcode 
+    #  @return predictions and importance   
     def work ( self ,
                X_train , Y_train , W_train ,
-               X_val   , Y_val   , W_val   ) :
-        """" Train the model and make predictions
+               X_val   , Y_val   , W_val   , importance = False ) :
+        """ Train the model and make predictions
+        >>> gof  = ...
+        >>> pred , imps = gof.work ( .... )                 
         """
         
         from sklearn.ensemble import HistGradientBoostingClassifier as CLASSIFIER
@@ -478,7 +580,7 @@ class ADVAL_HGBC (ADVAL_base) :
         model = CLASSIFIER ( **self.params )
         model.fit ( X_train , Y_train , sample_weight = W_train )
         
-        return model.predict_proba ( X_val ) [ : , 1 ]
+        return model.predict_proba ( X_val ) [ : , 1 ] , None 
             
 # =============================================================================
 ## @class ADVAL_GBC
@@ -518,10 +620,17 @@ class ADVAL_GBC (ADVAL_base) :
 
     # ==================================================================================
     ## Train the model and make predictions
+    #  @code
+    #  gof = ...
+    #  pred , imps = gof.work ( .... ) 
+    #  @endcode 
+    #  @return predictions and importance 
     def work ( self ,
                X_train , Y_train , W_train ,
-               X_val   , Y_val   , W_val   ) :
-        """" Train the model and make predictions
+               X_val   , Y_val   , W_val   , importance = False ) :
+        """ Train the model and make predictions
+        >>> gof  = ...
+        >>> pred , imps = gof.work ( .... )                 
         """
         ## 
         from sklearn.ensemble import GradientBoostingClassifier as CLASSIFIER 
@@ -530,7 +639,7 @@ class ADVAL_GBC (ADVAL_base) :
         ##
         model.fit ( X_train , Y_train , sample_weight = W_train )
         ## 
-        return model.predict_proba ( X_val ) [ : , 1 ]
+        return model.predict_proba ( X_val ) [ : , 1 ] , None 
 
 # =============================================================================
 ## @class ADVAL_RF
@@ -572,20 +681,29 @@ class ADVAL_RF (ADVAL_base) :
 
     # ==================================================================================
     ## Train the model and make predictions
+    #  @code
+    #  gof = ...
+    #  pred , imps = gof.work ( .... ) 
+    #  @endcode 
+    #  @return predictions and importance 
     def work ( self ,
                X_train , Y_train , W_train ,
-               X_val   , Y_val   , W_val   ) :
-        """" Train the model and make predictions
+               X_val   , Y_val   , W_val   , importance = False ) :
+        """ Train the model and make predictions
+        >>> gof  = ...
+        >>> pred , imps = gof.work ( .... )                 
         """
         
         from sklearn.ensemble import RandomForestClassifier as CLASSIFIER 
         ## 
         model = CLASSIFIER ( **self.params )
         model.fit ( X_train , Y_train , sample_weight = W_train )
+        ##
+        predictions = model.predict_proba ( X_val ) [ : , 1 ] 
+        if not importance : return predictions, None ## RETURN
         ## 
-        return model.predict_proba ( X_val ) [ : , 1 ]
-
-
+        return predictions , model.feature_importances_
+    
 # =============================================================================
 if '__main__' == __name__ :
     

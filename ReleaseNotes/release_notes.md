@@ -1,5 +1,8 @@
 ## New features
 
+ 1. Add `importance_features` and `importance_table` methods for adversatial vaildation Goodness-of-Fit tests
+ 1. fix an issue with `pypdf.clone` method 
+ 
 ## Bug fixes
 
 ## Backward incompatible 
@@ -24,7 +27,7 @@
 
 ## New features
 
-  1. few steps toward duckdb 
+  1. few steps towards duckdb 
   1. full implementation of duckdb-based backend for shelve-like databases. To provide some concurrency control, 
      the `fasteners` module is used with explicit Read/Write locks.
      It results in some sizeable performance penalty, but provides reasonaly safety, 

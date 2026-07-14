@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file pretty.py
-#  Helper functions for pretty prints  of some object
+#  Helper functions for pretty prints  of some objects
 #   - float value 
 #   - loat varules with errors 
 #   - float values with asymmetric values
@@ -10,7 +10,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07 
 # =============================================================================
-""" Helper functions for pretty prints of some object
+""" Helper functions for pretty prints of some objects
    - float value 
    - loat varules with errors 
    - float values with asymmetric values
@@ -57,7 +57,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.pretty' )
 else                       : logger = getLogger( __name__                )
 # =============================================================================
-logger.debug ( "Helper functions for pretty prints of some object" )
+logger.debug ( "Helper functions for pretty prints of some objects" )
 # =============================================================================
 
 # =============================================================================

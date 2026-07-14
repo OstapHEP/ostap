@@ -42,7 +42,7 @@ else                       : logger = getLogger( __name__             )
 #  Helper class to implement "TTree-function"
 #  @see Ostap::Functions::PyFuncTree
 class FuncTree(Ostap.Functions.PyFuncTree) :
-    """ Helper class to implement ``TTree-function'' in python 
+    """ Helper class to implement `TTree-function' in python 
     """
     def __init__ ( self , tree = None , clone = None ) :
         ## initialize the base class
@@ -55,6 +55,7 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
         ## 
         if clone  : super (FuncTree,self).__init__ ( clone )
         else      : super (FuncTree,self).__init__ ( tree  )
+        ##
         
     @property
     def the_tree ( self ) :
@@ -193,15 +194,16 @@ class PyDataFunction(FuncData) :
     def __init__ ( self , the_function , data = None , clone = None  ) :        
         if data is None : data = ROOT.nullptr
 
-        assert not clone or isinstance ( clone , PyDataFunction ) , \
-            "PyDataFunction: Invalid 'clone' type!" % typename ( clone )
+        assert clone is None or isinstance ( clone , PyDataFunction ) , \
+            "PyDataFunction: Invalid `clone' type!" % typename ( clone )
         assert clone or callable  ( the_function ), \
             'PyDataFunction: Invalid callable %s' % typename ( the_function )
         ## 
         super(PyDataFunction,self).__init__ ( data = data , clone = clone )
         ## 
         if clone : self.__function = clone.the_function
-        else     : self.__function = the_function
+        else     : self.__function =       the_function
+        ##
         
     ## clone function 
     def clone ( self , name = "" ) :

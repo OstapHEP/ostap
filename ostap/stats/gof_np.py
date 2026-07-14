@@ -124,7 +124,6 @@ class GoFnp (AGoFnp) :
         """ print configuration """
         from ostap.logger.utils import map2table_ex
         title = "%s configuration " % typename ( self )
-        conf  = self.config 
         return map2table_ex ( self.config , 
                               header      = ( 'Parameter' , 'type' , 'value' ) ,
                               ailgnment   = 'rcw'  , 
