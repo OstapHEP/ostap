@@ -9,6 +9,5 @@ cd    build
 ## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 ## cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install
 
-source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source ../.aux/.build-ostap ../ ./INSTALL 
-
+## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+source ../.aux/.build-lcg ${LCG} ${CMTCONFIG} ../ ./INSTALL 
