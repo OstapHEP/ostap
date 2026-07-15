@@ -2,11 +2,11 @@
 LCG=$1
 CMTCONFIG=$2
 cd ./build
-source ../.aux/build_with_lcg ${LCG} ${CMTCONFIG}
 
-## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-## source ./build/INSTALL/thisostap.sh 
-##  cd build
+##  source ../.aux/build_with_lcg ${LCG} ${CMTCONFIG}
+
+source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh 
 
 check-dependencies 
 
