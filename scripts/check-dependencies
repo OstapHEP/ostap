@@ -887,7 +887,7 @@ try : # =======================================================================
 except ImportError : # ========================================================
     # =========================================================================
     message = """lightgbm cannot be imported!
-    lightgbm  is useful for comparison of datasets  
+    lightgbm  is useful for comparison of datasets & Goodness-of-Fit tests
     """
     missing.append ( 'lightgbm' ) 
     logger.error ( message )

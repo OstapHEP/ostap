@@ -10,9 +10,11 @@ source ./INSTALL/thisostap.sh
 echo 'PATH='${PATH}
 echo 'PYTHONPATH='${PYTHONPATH}
 
+python -c "import lightgbm; print ('LIGHTGBM_VERSION-1: %s' % lightgbm.__version__)"
+
 check-dependencies
 
-python -m " import lightgbm; print ('LIGHTGBM_VERSION-2: %s' % lightgbm.__version__) "
+python -c "import lightgbm; print ('LIGHTGBM_VERSION-2: %s' % lightgbm.__version__)"
 
 ## ( ctest -N && OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R '(rewe|gof)' --output-on-failure --test-output-size-failed 5000000 )
 
