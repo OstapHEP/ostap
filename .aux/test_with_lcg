@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 LCG=$1
 CMTCONFIG=$2
-source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source ./build/INSTALL/thisostap.sh 
-cd build
+cd ./build
+source ../.aux/build_with_lcg ${LCG} ${CMTCONFIG}
+
+## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+## source ./build/INSTALL/thisostap.sh 
+##  cd build
+
+check-dependencies 
 
 ( ctest -N &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
-  OSTAP_BATCH=True COLUMNS=200 PYTHONNOUSERSITE= ctest -j4 -R '(rewe|gof)' --output-on-failure --test-output-size-failed 5000000 )
+  OSTAP_BATCH=True COLUMNS=200 PYTHONNOUSERSITE=   ctest -j4 -R '(rewe|gof)' --output-on-failure --test-output-size-failed 5000000 )
 
 
