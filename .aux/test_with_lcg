@@ -2,25 +2,18 @@
 LCG=$1
 CMTCONFIG=$2
 
-echo ${PWD}
-ls -al 
-
 cd ./build
-
-echo ${PWD}
-ls -al 
 
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source ./INSTALL/thisostap.sh 
 
-ls -al 
+echo 'PATH='${PATH}
+echo 'PYTHONPATH='${PYTHONPATH}
 
-check-dependencies 
+check-dependencies
 
-( ctest -N &&
-  cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
-  cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
-  cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
-  OSTAP_BATCH=True COLUMNS=200 PYTHONNOUSERSITE=   ctest -j4 -R '(rewe|gof)' --output-on-failure --test-output-size-failed 5000000 )
+python -m " import lightgbm; print ('LIGHTGBM_VERSION-2: %s' % lightgbm.__version__) "
+
+( ctest -N && OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R '(rewe|gof)' --output-on-failure --test-output-size-failed 5000000 )
 
 
