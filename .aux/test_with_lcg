@@ -5,7 +5,7 @@ CMTCONFIG=$2
 cd ./build
 
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source ./INSTALL/thisostap.sh 
+source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh 
 
 echo 'PATH='${PATH}
 echo 'PYTHONPATH='${PYTHONPATH}
