@@ -639,7 +639,6 @@ def data_statistic ( data               ,
                                     progress   = progress  ,
                                     use_frame  = use_frame )
 
-    
     ## display progress bar? 
     progress = progress_conf ( progress )
 

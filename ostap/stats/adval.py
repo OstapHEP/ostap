@@ -133,8 +133,8 @@ class ADVAL_base (GoFnp):
     # ==========================================================================
     ## importance features ?
     @property 
-    def importance_featured ( self ) :
-        """`importance_featired` : dictionary of importance features"""
+    def importance_features ( self ) :
+        """`importance_features` : dictionary of importance features"""
         return self.__importance_features
     
     # ==========================================================================
@@ -146,7 +146,7 @@ class ADVAL_base (GoFnp):
         """ get table of importance features
         """
         rows  = [ ( 'Feature/#' , 'Importance [%]' ) ]
-        rows += [ ( str ( feature  ) , '%.1f' % gain ) for feature, gain in self.__importance_features.items () ] 
+        rows += [ ( str ( feature  ) , '%.1f' % gain ) for feature, gain in self.importance_features.items () ] 
         title = title if title else "%s importance" % typename ( self )
         import ostap.logger.table as T
         return T.table ( rows               ,
@@ -194,6 +194,8 @@ class ADVAL_base (GoFnp):
         - weight3 : the second array of weights 
          t-value is defined as 100 * abs(1-2*AUC)**2
         """
+        ##
+        data1 , data2 = self.unpack ( data1 , data2 )
         ## 
         sh1 = data1.shape 
         sh2 = data2.shape
@@ -284,7 +286,7 @@ class ADVAL_base (GoFnp):
         # =============================================================================
         auc_score = roc_auc_score   ( Y , oof_preds , sample_weight = W )
         tv        = tvalue_from_AUC ( auc_score )
-        
+
         return tv 
         
 # =======================================================================================

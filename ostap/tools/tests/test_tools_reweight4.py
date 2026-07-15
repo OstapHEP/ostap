@@ -296,10 +296,10 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 ## Configuration of reweighting plots 
 # =============================================================================
 plots  = [
-    WeightingPlot ( 'r1'       , 'weight' , 'r1-reweight'  , hr1_data , mc_r1  ) , ## ignore = True ) ,  
-    WeightingPlot ( 'r2'       , 'weight' , 'r2-reweight'  , hr2_data , mc_r2  ) , ## ignore = True ) ,  
-    WeightingPlot ( 'r3'       , 'weight' , 'r3-reweight'  , hr3_data , mc_r3  ) , ## ignore = True ) ,  
-    WeightingPlot ( 'r1,r2,r3' , 'weight' , 'r-reweight'   , hr_data  , mc_r   ) ,   
+    WeightingPlot ( 'r1'       , how = 'weight' , address = 'r1-reweight' , data = hr1_data , mc = mc_r1  ) , ## ignore = True ) ,  
+    WeightingPlot ( 'r2'       , how = 'weight' , address = 'r2-reweight' , data = hr2_data , mc = mc_r2  ) , ## ignore = True ) ,  
+    WeightingPlot ( 'r3'       , how = 'weight' , address = 'r3-reweight' , data = hr3_data , mc = mc_r3  ) , ## ignore = True ) ,  
+    WeightingPlot ( 'r1,r2,r3' , how = 'weight' , address = 'r-reweight'  , data = hr_data  , mc = mc_r   ) ,   
     ]
 
 memory_init = memory_usage() 

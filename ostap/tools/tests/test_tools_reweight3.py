@@ -336,13 +336,13 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 ## Configuration of reweighting plots 
 # =============================================================================
 plots  = [
-    WeightingPlot ( 'x:y:z' , 'weight' , '3D-reweight' , h3d_data , mc_3d ) , 
-    WeightingPlot ( 'x:z'   , 'weight' , 'XZ-reweight' , hxz_data , mc_xz ) , 
-    WeightingPlot ( 'y:z'   , 'weight' , 'YZ-reweight' , hyz_data , mc_yz ) , 
-    WeightingPlot ( 'x:y'   , 'weight' , 'XY-reweight' , hxy_data , mc_xy ) , 
-    WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hx_data  , mc_x  ) ,  
-    WeightingPlot ( 'z'     , 'weight' , 'z-reweight'  , hz_data  , mc_z  ) ,  
-    WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hy_data  , mc_y  ) ,  
+    WeightingPlot ( 'x:y:z' , how = 'weight' , address = '3D-reweight' , data = h3d_data , mc = mc_3d ) , 
+    WeightingPlot ( 'x:z'   , how = 'weight' , address = 'XZ-reweight' , data = hxz_data , mc = mc_xz ) , 
+    WeightingPlot ( 'y:z'   , how = 'weight' , address = 'YZ-reweight' , data = hyz_data , mc = mc_yz ) , 
+    WeightingPlot ( 'x:y'   , how = 'weight' , address = 'XY-reweight' , data = hxy_data , mc = mc_xy ) , 
+    WeightingPlot ( 'x'     , how = 'weight' , address = 'x-reweight'  , data = hx_data  , mc = mc_x  ) ,  
+    WeightingPlot ( 'z'     , how = 'weight' , address = 'z-reweight'  , data = hz_data  , mc = mc_z  ) ,  
+    WeightingPlot ( 'y'     , how = 'weight' , address = 'y-reweight'  , data = hy_data  , mc = mc_y  ) ,  
     ]
 
 

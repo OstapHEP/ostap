@@ -65,9 +65,10 @@ tag_reweightings = 'REWEIGHTINGS'
 tag_comparisons  = 'COMPARISON_PLOTS'
 ## tag in DBASE for convergency graphs
 tag_graphs       = 'CONVERGENCY_GRAPHS'
+## tag in DBASE for p-values graph 
+tag_pvalues      = 'P_VALUES_GRAPHS'
 ## suffix for reweighting address 
 tag_rw_suffix    = 'REWEIGHTING'
-
 # =============================================================================
 ## Try to normalize  
 def normalize_data ( data , another = None  ) :
@@ -638,11 +639,11 @@ class Weight(object) :
 
 # =============================================================================
 ## default function to make MC projection
-#  @param daatset dataset MC  dataset (typically TTree)
+#  @param dataset dataset MC  dataset (typically TTree)
 #  @param histo   histogram template
 #  @param what    histogram varibales
-#  @param how     histogram template 
-def mc_data_projector  ( dataset , histo , what , how ) :
+#  @param how     cuts/weights 
+def mc_data_projector  ( dataset , histo , what , how = '' ) :
     """ Default function to make MC projection
     """
     dataset.project ( histo , what , cuts = how )
@@ -668,7 +669,7 @@ class WeightingPlot(object) :
     
     Typically it refers to `weight' variable in the dataset
     
-    - `address' : the addres in `weighting-database'
+    - `address' : the address in `weighting-database'
     where to store the obtained weights
     
     - `data' : the `data' object, or  the `target' for the reweighting procedure
@@ -680,11 +681,11 @@ class WeightingPlot(object) :
     >>> dataset.project ( MCHISTO , what , how , ... )             
     """
     def __init__ ( self              ,
-                   what              ,  
-                   how               ,
+                   what              , * , 
                    address           ,
                    data              ,
-                   mc_histo  = None  ,
+                   how       = ''    ,
+                   mc        = None  ,
                    w         = 1.0   ,
                    projector = None  ,
                    ignore    = False ) :
@@ -710,7 +711,7 @@ class WeightingPlot(object) :
         - `data' : the `data' object, or the `target' for the reweighting procedure
         Typically it is a histotgram. But it could be any kind of callable 
         
-        - `mc_histo' : template/shape for the mc-histogram, to be used for reweighting.
+        - `mc' : template/shape for the mc-histogram, to be used for reweighting.
         It is used as the  first argument of `dataset.project' method
         
         >>> dataset.project ( MCHISTO , what , how , ... )         
@@ -718,10 +719,12 @@ class WeightingPlot(object) :
 
         assert data and callable ( data ) , "WeightingPlot: `data' object must be callable!"
         
-        self.__what      = str(what)     if isinstance ( what , str ) else what 
-        self.__how       = str(how )     if isinstance ( how  , str ) else how 
-        self.__address   = str(address)
+        self.__what      = str ( what ).strip() if isinstance ( what , str ) else what 
+        self.__how       = str ( how  ).strip() if isinstance ( how  , str ) else how 
+        self.__address   = str ( address)
 
+        if not self.how : logger.warning ( "WeightingPlot(%s): `how' is empty! Be sure that your data carry the weight!" % self.what )
+        
         ## (1) make a try to normalize input data
         ndata = normalize_data  ( data ) 
         if not ndata is data :
@@ -740,7 +743,7 @@ class WeightingPlot(object) :
                                                                                                               float ( mn ) ,
                                                                                                               float ( mx ) ) )
                 
-        self.__mc       = mc_histo if mc_histo else data.clone()
+        self.__mc       = mc if mc else data.clone()
         self.__w        = w
 
         assert projector is None or callable ( projector ) , \
@@ -779,14 +782,14 @@ class WeightingPlot(object) :
         """
         return self.__data 
     @property
-    def  mc_histo ( self ) :
-        """`mc_histo` : template/shape for the mc-histogram, to be used for reweighting.
+    def  mc ( self ) :
+        """`mc` : template/shape for the mc-histogram, to be used for reweighting.
         It is used as the  first argument of `dataset.project' method 
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
         return self.__mc
-    @mc_histo.setter
-    def mc_histo ( self , value ) :
+    @mc.setter
+    def mc ( self , value ) :
         self.__mc = value
         
     @property
@@ -1047,7 +1050,7 @@ def makeWeights  ( dataset                      ,
                    power        = None          , ## auto-determination
                    debug        = True          , ## save intermediate information in DB
                    make_plots   = True          , ## make comparison plots (and draw them)
-                   wtruncate    = ( 0.5 , 1.5 ) , ## truncate too small or too large weights
+                   wtruncate    = ( 0.1 , 2.0 ) , ## truncate too small or too large weights
                    force_update = False         , ## force DB update even for "good" results 
                    tag          = "Reweighting" ) :
     """ The main  function: perform one re-weighting iteration 
@@ -1106,7 +1109,7 @@ def makeWeights  ( dataset                      ,
         how       = wplot.how        ## weight and/or additional cuts 
         address   = wplot.address    ## address in database 
         hdata0    = wplot.data       ## original "DATA" object 
-        hmc0      = wplot.mc_histo   ## original "MC"   histogram 
+        hmc0      = wplot.mc         ## original "MC"   histogram 
         ww        = wplot.w          ## relative weight
         projector = wplot.projector  ## projector for MC data
         ignore    = wplot.ignore     ## ignore for weight building?
@@ -1121,14 +1124,16 @@ def makeWeights  ( dataset                      ,
         # =====================================================================
         ## make a plot on (MC) data with the weight
         # =====================================================================
-        hmc0 = projector ( dataset , hmc0 , what , how )
+        if   how                                                               : pass
+        elif isinstance ( dataset , ROOT.RooDataSet ) and dataset.isWeighted() : pass
+        else : logger.warning ( "Confusing setting of `dataset&how': `%s' & `%s'" % ( typename ( dataset ) , how ) ) 
+            
+        hmc0 = projector ( dataset , hmc0 , what , how ) 
         
         st   = hmc0.stat()
         mnmx = st.minmax()
-        if  iszero ( mnmx [ 0 ] ) :
-            logger.warning ( "%s: MC statistic goes to zero %s/`%s'" % ( tag , st , address ) )            
-        elif mnmx [ 0 ] <= 0    :
-            logger.warning ( "%s: MC statistic is negative  %s/`%s'" % ( tag , st , address ) ) 
+        if  iszero ( mnmx [ 0 ] ) : logger.warning ( "%s: MC statistic goes to zero %s/`%s'" % ( tag , st , address ) )            
+        elif mnmx [ 0 ] <= 0      : logger.warning ( "%s: MC statistic is negative  %s/`%s'" % ( tag , st , address ) ) 
             
         # =====================================================================
 
@@ -1320,7 +1325,7 @@ def makeWeights  ( dataset                      ,
     import ostap.logger.table as Table
     table = Table.remove_empty_columns ( table ) 
     table = Table.table ( table , title = tag , prefix = '# ' , alignment = 'lccccccc' )
-    logger.info ( '%s: %d active reweightings\n%s' % ( tag , nactive , table ) ) 
+    logger.info ( '%s: %d active reweightings\n%s' % ( tag , nactive, table ) ) 
 
     cmp_plots = tuple ( cmp_plots )
 

@@ -1613,7 +1613,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         chi2, prob = h1.cmp_chi2 ( h2 , density = density )
         value = chi2
         v , n = pretty_float ( value )
-        row   = chi2ndf + ' [1 %s 2]' % rightarrow, v , '[10^%d]' %n if  n  else  '' , '~ Sum_i chi2_i (h1*-f2*) '
+        row   = chi2ndf + ' [1 %s 2]' % rightarrow, v , '[10^%d]' % n if  n  else  '' , '~ Sum_i chi2_i (h1*-f2*) '
         rows.append ( row  )
 
     if chi2ndf and histo2 :
@@ -1622,16 +1622,16 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = chi2
         v , n = pretty_float ( value )
-        row   = chi2ndf+ ' [2 %s 1]' % rightarrow , v , '[10^%d]' %n if  n  else  '' , '~ Sum_i chi2_i (h2*-f1*) '
+        row   = chi2ndf+ ' [2 %s 1]' % rightarrow , v , '[10^%d]' % n if  n  else  '' , '~ Sum_i chi2_i (h2*-f1*) '
         rows.append ( row  )        
         
     val_prchi_1 = -1 
     if probchi2 : 
         chi2, prob = h1.cmp_chi2 ( h2 , density = density )
 
-        value = prob 
+        value = prob * 100 
         v , n = pretty_float ( value )
-        row   = probchi2 + ' [1 %s 2]' % rightarrow , v , '[10^%d]' % n if  n  else  ''  , 'Probability chi2(h1,f2)'
+        row   = probchi2 + ' [1 %s 2]' % rightarrow , v , '[10^%d%%]' % n if  n  else  '[%]'  , 'Probability chi2(h1,f2)'
         rows.append ( row  )
         val_prchi_1 = prob  
 
@@ -1639,9 +1639,9 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
     if probchi2 and histo2 :        
         chi2, prob = h2.cmp_chi2 ( h1 , density = density )
         
-        value = prob 
+        value = prob * 100 
         v , n = pretty_float ( value )
-        row   = probchi2 + ' [2 %s 1]' % rightarrow , v , '[10^%d]' %n if  n  else  '' , 'Probability chi2(h2,f1)'
+        row   = probchi2 + ' [2 %s 1]' % rightarrow , v , '[10^%d%%]' %n if  n  else  '[%]' , 'Probability chi2(h2,f1)'
         rows.append ( row  )        
         val_prchi_2 = prob  
 
@@ -1650,17 +1650,17 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         rf1   = h1.cmp_fit ( h2 , density = density ) 
         prob  = rf1.Prob()
         
-        value = prob
+        value = prob * 100 
         v , n = pretty_float ( value )
-        row   = probfit + ' [1 %s 2]' % rightarrow, v , '[10^%d]' %n if  n  else  '' , 'Fit probability f2.Fit (h1) '
+        row   = probfit + ' [1 %s 2]' % rightarrow, v , '[10^%d%%]' %n if  n  else  '[%]' , 'Fit probability f2.Fit (h1) '
         rows.append ( row  )                
         
         rf2   = h2.cmp_fit ( h1 , density = density ) 
         prob  = rf2.Prob()
         
-        value = prob 
+        value = prob * 100  
         v , n = pretty_float ( value )
-        row   = probfit + ' [1 %s 2]' % rightarrow, v , '[10^%d]' %n if  n  else  '' , 'Fit probability f1.Fit (h2) '
+        row   = probfit + ' [1 %s 2]' % rightarrow, v , '[10^%d%%]' %n if  n  else  '[%]' , 'Fit probability f1.Fit (h2) '
         rows.append ( row  )
         
     import ostap.logger.table as T

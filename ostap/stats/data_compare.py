@@ -14,9 +14,10 @@ __all__     = (
     'data_compare'  , ## compare two datasets 
 )
 # =============================================================================
-from   ostap.math.math_base  import FIRST_ENTRY , LAST_ENTRY
-from   ostap.stats.gof       import AGoFnp 
-from   ostap.stats.gof_utils import weight_trivial 
+from   ostap.core.ostap_types import sequence_types 
+from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
+from   ostap.stats.gof        import AGoFnp 
+from   ostap.stats.gof_utils  import weight_trivial 
 import ROOT 
 # =============================================================================
 # logging 
@@ -31,33 +32,48 @@ else                       : logger = getLogger ( __name__                   )
 #  nd2 = ...
 #  comparator = ...
 #  ## get t-value and p-value:
-#  t_value , p_value = numpy_compare ( comparator , nd1 , nd2 ) 
+#  t_value , p_value , importance = numpy_compare ( comparator , nd1 , nd2 , importance = True ) 
 #  @endcode 
 def numpy_compare ( comparator ,
                     data1      ,
-                    data2      , *    ,
-                    weight1    = None ,
-                    weight2    = None ) :
+                    data2      , *     ,
+                    weight1    = None  ,
+                    weight2    = None  ,
+                    importance = False ) :
     """ Compare two numpy arrays
     >>> nd1 = ...
     >>> nd2 = ...
-    >>> t_value , p_value = numpy_compare ( nd1 , nd2 )
-    """
+    >>> t_value , p_value , importance = numpy_compare ( nd1 , nd2 )
+    """ 
     assert isinstance ( comparator , AGoFnp ) and comparator.two_samples , \
         "Invalid comparator type: %s" % typename ( comparator ) 
-    
+   
     w1_trivial = weight_trivial ( weight1 )
     w2_trivial = weight_trivial ( weight2 )
 
     assert comparator.weights_supported or ( w1_trivial and w2_trivial ) , \
         "Comparator does not support weights!"
-    
-    ## return t and p-values  
-    return comparator.pvalue ( data1   ,
-                               data2   ,
-                               weight1 = weight1 ,
-                               weight2 = weight2 ) 
 
+    importance_features = None
+    tvalue              = None 
+    if importance and hasattr ( comparator , 'importance_features' ) :
+        tvalue = comparator.tvalue ( data1      ,
+                                     data2      ,
+                                     weight1    = weight1    ,
+                                     weight2    = weight2    ,
+                                     importance = importance )        
+        importance_features = {} 
+        importance_features.update ( comparator.importance_features )
+        
+    ## get t&p-values 
+    tvalue , pvalue  = comparator.pvalue ( data1   ,
+                                           data2   ,
+                                           tvalue  = tvalue  ,
+                                           weight1 = weight1 ,
+                                           weight2 = weight2 )
+
+    return tvalue , pvalue , importance_features 
+    
 # =============================================================================
 ## Compare two datasets:
 #  Each dataset is converted to numpy and then `numpy_compare` is invoked 
@@ -66,13 +82,13 @@ def numpy_compare ( comparator ,
 #  data1      = ...
 #  data2      = ...
 #  comparator = ... 
-#  t_value , p_value = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' )
+#  t_value , p_value , importance = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' , importance = True )
 #  @endcode 
 def data_compare ( comparator   ,  
                    data         ,
                    data2        ,
-                   expressions  ,                       ## variables in data1 
-                   cuts         = ''          , *    , ## cuts for data1
+                   expressions  ,                   ## variables in data1 
+                   cuts         = ''          , * , ## cuts for data1
                    expressions2 = None        ,
                    cuts2        = None        ,                            
                    first        = FIRST_ENTRY ,
@@ -86,14 +102,15 @@ def data_compare ( comparator   ,
                    parallel     = False       , 
                    parallel2    = None        , 
                    progress     = False       ,
-                   progress2    = None        , **config ) :
+                   progress2    = None        ,
+                   importance   = False       , **config ) :
     """ Compare two datasets:
     Each dataset is converted to numpy and then `numpy_compare` is invoked 
     - see numpy_compare 
     >>> data1      = ...
     >>> data2      = ...
     >>> comparator = ... 
-    >>> t_value , p_value = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' )
+    >>> t_value , p_value, importance  = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' )
     """
     
     if expressions2 is None : expressions2 = expressions
@@ -119,7 +136,6 @@ def data_compare ( comparator   ,
     assert varlst1 and len ( varlst1 ) == len ( varlst2 ) , \
         "Different lenghts for variable lists!"
 
-    print ( 'SLICE-1' ) 
     ## (1) create numpy datasets 
     nd1 , weight1 = data_slice ( data                   ,
                                  varlst1                , 
@@ -133,7 +149,6 @@ def data_compare ( comparator   ,
                                  use_frame  = use_frame , 
                                  parallel   = parallel  )
     
-    print ( 'SLICE-2' ) 
     nd2 , weight2 = data_slice ( data2                   ,
                                  varlst2                 , 
                                  cuts       = cuts2      ,
@@ -146,11 +161,22 @@ def data_compare ( comparator   ,
                                  use_frame  = use_frame2 , 
                                  parallel   = parallel2  )
 
-    return numpy_compare ( comparator        ,
-                           nd1               ,
-                           nd2               ,
-                           weight1 = weight1 ,
-                           weight2 = weight2 )
+    
+    ## if seevral comparators  are provdes 
+    if isinstance ( comparator , sequence_types ) :
+        return tuple ( numpy_compare ( cmp        ,
+                                       nd1        ,
+                                       nd2        ,
+                                       weight1    = weight1 ,
+                                       weight2    = weight2 ,
+                                       importance = importance ) for cmp in comparator )
+    
+    return numpy_compare ( comparator ,
+                           nd1        ,
+                           nd2        ,
+                           weight1    = weight1    ,
+                           weight2    = weight2    ,
+                           importance = importance ) 
 
 # =============================================================================
 if '__main__' == __name__ :

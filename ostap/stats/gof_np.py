@@ -20,10 +20,15 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
-    'GoFnp' , ## A base class for numpy-related family of methods to probe goodness-of-fit
-    'MIXnp' , ## Mixed samples                 Goodness-of-Fit method 
-    'PPDnp' , ## Point-to-Point Dissimilarity  Goodness-of-Fit method 
-    'DNNnp' , ## Distance-to-Nearest-Neighbour Goodness-of-Fit method 
+    'GoFnp'           , ## A base class for numpy-related family of methods to probe goodness-of-fit
+    ##
+    'MIXnp'           , ## Mixed samples                 Goodness-of-Fit method 
+    'PPDnp'           , ## Point-to-Point Dissimilarity  Goodness-of-Fit method 
+    'DNNnp'           , ## Distance-to-Nearest-Neighbour Goodness-of-Fit method
+    ##
+    'Mahalanobis'     , ## Very crude estiamtor based on Mahalanobis' disatnce
+    'KullbackLeibler' , ## Very crude estimator based on Kullback-Leibler's divergency 
+    'Hotelling'       , ## Very crude estimator based on Hotelling's distance 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types, num_types 
@@ -45,7 +50,7 @@ from   ostap.stats.gof_utils    import ( run_parallel       ,
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf 
 import ostap.math.math_base           
-import ROOT, os, abc, numpy
+import ROOT, os, abc, numpy, math 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -232,11 +237,12 @@ class GoFnp (AGoFnp) :
     #  data1 , data2 = ...
     #  t , p = gof.pvalue ( data1 , data2 , normalize = False ) 
     #  @endcode 
-    def pvalue ( self              , 
-                 data1             ,
-                 data2             , * ,
-                 weight1   = None  ,
-                 weight2   = None  ) : 
+    def pvalue ( self             , 
+                 data1            ,
+                 data2            , * ,
+                 tvalue    = None , 
+                 weight1   = None ,
+                 weight2   = None ) : 
                 
         """ Calculate the t & p-values
         >>> gof  = ...
@@ -256,12 +262,12 @@ class GoFnp (AGoFnp) :
         ## normalize ? 
         if self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
 
-        ### get t-value 
-        t_value    = self.tvalue ( uds1      ,
-                                   uds2      ,
-                                   weight1   = weight1 ,
-                                   weight2   = weight2 ,
-                                   normalize = False   )
+        ### calculate t-value
+        t_value    = tvalue if not tvalue is None else self.tvalue ( uds1      ,
+                                                                     uds2      ,
+                                                                     weight1   = weight1 ,
+                                                                     weight2   = weight2 ,
+                                                                    normalize = False   )
         
         ## use permutations to get the p-value 
         permutator = PERMUTATOR ( self              ,
@@ -1040,7 +1046,236 @@ class DNNnp(GoFnp) :
     def histo ( self ) :
         """`histo` : the histogram with distribution of U-values"""
         return self.__histo
+
+# =============================================================================
+## @class Mahalanobis
+#  Use Mahalanobis distance to discriminiate the dataset
+#  @attention it is *VERY* crude "estimator"
+class Mahalanobis(GoFnp) :
+    """ Use Mahalanobis distance to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self ,
+                   nToys       = 400   ,
+                   parallel    = False , 
+                   silent      = False ,
+                   progress    = True  , **params ) :         
+        
+        ## initialize the base 
+        GoFnp.__init__ ( self                          , 
+                         nToys        = nToys          ,
+                         parallel     = parallel       , 
+                         silent       = silent         ,
+                         progress     = progress       ,                         
+                         method       = 'Mahalanobis'  ,
+                         normalize    = True           , **params )
+
+    # =========================================================================
+    ## Are weights supported by this estimator?
+    @property
+    def weights_supported ( self ) :
+        """`weights_supported` : Are weights supported by this estimator?
+        """
+        return True
     
+    # =========================================================================
+    ## Good for two-samples comparison?
+    #  Can this estimator be used for comparison of two samples?
+    @property 
+    def two_samples ( self ) :
+        """`two_samples`: Can this estimator be used for comparison of two samples?
+        """
+        return True 
+
+    # =========================================================================
+    ## Convert numpy-array statictics into Ostap::SVectorWithError
+    #  @see Ostap::Math::SVectorWithError
+    def np2vstat ( self , data , weight = None ) :
+        """ Convert numpy-array statictics into `Ostap.Math.SVectorWithError`
+        - see `Ostap.Math.SVectorWithError`
+        """
+        
+        shape     = data.shape
+        n , N     = shape 
+
+        w_trivial = weight_trivial ( weight )
+        w         = None if w_trivial else weight 
+        wsum      = n    if w_trivial else numpy.sum ( w )
+        
+        mean      = numpy.average ( data , axis = 0 , weights = w )
+        centered  = data - mean
+        weighted  = centered if w_trivial else centered * w [ : , numpy.newaxis ]
+        covmtrx   = numpy.dot ( centered.T , weighted ) / wsum 
+
+        ## prepare output 
+        RT        = Ostap.Math.SVectorWithError [ N ]
+        values    = RT.Value      () 
+        covs      = RT.Covariance () 
+
+        for i in range ( N  ) :
+            values [ i ] = float ( mean [ i ] )
+            for j in range ( i , N ) :
+                cij = float ( covmtrx [ i ] [ j ]  )
+                if i == j : covs [ i , j ] = cij
+                else : 
+                    cij = 0.5 * ( cij + float ( covmtrx [ j ] [ i ]  ) )
+                    covs [ i, j ] = cij
+                    covs [ j, i ] = cij 
+                    
+        return RT ( values ,  covs ) 
+                        
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ##
+
+        shape1 = data1.shape
+        shape2 = data2.shape
+        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
+            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
+
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## normalize
+        if normalize and self.normalize : uds1, uds2  = normalize_pooled ( uds1 , uds2  ) 
+            
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+        
+        return v1.mahalanobis ( v2 )
+    
+# ============================================================================
+## @class KullbackLeibler 
+#  Use KullbackLeibler divergency to discriminiate the dataset
+#  @attention it is *VERY* crude "estimator"
+class KullbackLeibler(Mahalanobis) :
+    """ Use Kullback-Leibler divergency to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self ,
+                   nToys       = 400   ,
+                   parallel    = False , 
+                   silent      = False ,
+                   progress    = True  ,
+                   symmetric   = True  , **params ) :         
+        
+        self.__symmetric = True if symmetric else False
+        
+        ## initialize the base 
+        GoFnp.__init__ ( self                            , 
+                         nToys        = nToys            ,
+                         parallel     = parallel         , 
+                         silent       = silent           ,
+                         progress     = progress         ,                           
+                         method       = 'Kullback-Leibler/symmetric' if self.__symmetric else 'Kullback-Leibler',
+                         symmetric    = self.__symmetric , 
+                         normalize    = True             , **params )
+                                        
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ##
+
+        shape1 = data1.shape
+        shape2 = data2.shape
+        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
+            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
+
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = normalize_pooled ( uds1 , uds2  ) 
+            
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+        
+        return v1.kullback_leibler ( v2 ) if self.__symmetric else v1.asymmetric_kullback_leibler ( v2 )
+
+# ============================================================================
+## @class Hotelling  
+#  Use Hotelling's tsquared statistics to discriminiate the datasets
+#  @attention it is *VERY* crude "estimator"
+class Hotelling(Mahalanobis) :
+    """ UseHotelling's t-squared statistics to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self ,
+                   nToys       = 400   ,
+                   parallel    = False , 
+                   silent      = False ,
+                   progress    = True  , **params ) :         
+        
+        ## initialize the base 
+        GoFnp.__init__ ( self                            , 
+                         nToys        = nToys            ,
+                         parallel     = parallel         , 
+                         silent       = silent           ,
+                         progress     = progress         ,                           
+                         method       = 'Hotelling'      , 
+                         normalize    = True             , **params )
+                                        
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ##
+
+        shape1 = data1.shape
+        shape2 = data2.shape
+        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
+            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
+
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = normalize_pooled ( uds1 , uds2  ) 
+
+        w1_trivial = weight_trivial ( weight1 )
+        w2_trivial = weight_trivial ( weight2 )
+
+        nw1 = len ( uds1 )
+        nw2 = len ( uds2 )
+        
+        if not w1_trivial :
+            sumw  = numpy.sum ( weight1 )
+            sumw2 = numpy.sum ( weight1 * weight1 )
+            nw1   = math.floor ( float ( sumw * sumw / sumw2) )
+            
+        if not w2_trivial :
+            sumw  = numpy.sum ( weight2 )
+            sumw2 = numpy.sum ( weight2 * weight2 )
+            nw2   = math.floor ( float ( sumw * sumw / sumw2) )
+        
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+
+        return Ostap.Math.hotelling ( v1 , int ( nw1 ) , v2 , int ( nw2 ) )
+
 # =============================================================================
 if '__main__' == __name__ :
     

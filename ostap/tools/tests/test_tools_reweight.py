@@ -128,8 +128,7 @@ weighting = ( Weight.Var     ( 'x'       ,  address = 'x-reweight'  ) , )
 ## variables to be used in MC-dataset 
 variables = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
 
-plots      = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
-
+plots      = [ WeightingPlot( 'x'   , how = 'weight' , address = 'x-reweight'  , data = hdata , mc = hmc ) ]    
 
 ## once... 
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
@@ -139,7 +138,8 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     
 converged   = False
 active      = len ( plots )
-memory_init = memory_usage () 
+memory_init = memory_usage ()
+
 # =============================================================================
 ## start iterations:
 for iter in range ( 1 , maxIter + 1  ) :    
