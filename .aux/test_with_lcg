@@ -4,17 +4,19 @@ CMTCONFIG=$2
 
 cd ./build
 
-source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh 
+## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+## source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh 
+
+source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}  
 
 echo 'PATH='${PATH}
 echo 'PYTHONPATH='${PYTHONPATH}
 
-python -c "import lightgbm; print ('LIGHTGBM_VERSION-1: %s' % lightgbm.__version__)"
+## python -c "import lightgbm; print ('LIGHTGBM_VERSION-1: %s' % lightgbm.__version__)"
 
 check-dependencies
 
-python -c "import lightgbm; print ('LIGHTGBM_VERSION-2: %s' % lightgbm.__version__)"
+Ppython -c "import lightgbm; print ('LIGHTGBM_VERSION-2: %s' % lightgbm.__version__)"
 
 ## ( ctest -N && OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R '(rewe|gof)' --output-on-failure --test-output-size-failed 5000000 )
 
