@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 LCG=$1
 CMTCONFIG=$2
+
+echo ${PWD}
+ls -al 
+
 cd ./build
 
-##  source ../.aux/build_with_lcg ${LCG} ${CMTCONFIG}
+echo ${PWD}
+ls -al 
 
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh 
+
+ls -al 
 
 check-dependencies 
 
