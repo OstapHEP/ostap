@@ -11,7 +11,7 @@ echo ${PWD}
 ls -al 
 
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh 
+source ./INSTALL/thisostap.sh 
 
 ls -al 
 
