@@ -736,7 +736,7 @@ foreach(filename ${allfiles})
 
    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${filename} )
 
-   set_tests_properties(${testname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS};PYTHONNOUSERSITE=" )
+   set_tests_properties(${testname} PROPERTIES TIMEOUT 6000 ENVIRONMENT PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS} )
 
 endforeach() 
 
