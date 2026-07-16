@@ -7,18 +7,12 @@ echo 'test-with-lcg CMTCONFIG =' ${CMTCONFIG}
 echo 'test-with-lcg       PWD =' ${PWD}
 
 
-echo 'LS/1' $PWD 
-ls -al
-
 cd ./build
-
-echo 'LS/2' $PWD 
-ls -al
 
 if [[ ${LCG}                                                       &&
       ${CMTCONFIG}                                                 &&                        
-      -f ./INSTALL/${LCG}/${CMTCONGIG}/thisostap.sh                &&
-      -f /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh ]] 
+      -f /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh &&
+      -f ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh                ]]
 then
     
     source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
