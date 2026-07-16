@@ -14,7 +14,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.core          import Ostap, VE 
+from   ostap.core.core          import Ostap 
 from   ostap.utils.timing       import timing
 from   ostap.utils.basic        import numcpu 
 from   ostap.logger.colorized   import attention, allright  
@@ -49,7 +49,7 @@ testdata      = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-
 tag_data      = 'DATA2_histogram'
 tag_datax     = 'DATAX_histogram'
 tag_datay     = 'DATAY_histogram'
-tag_mc        = 'MC_tree'
+tag_mc        = 'MC2_tree'
 tag_data_tree = 'DATA_tree'
 dbname        = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight2-'   )
  
@@ -58,7 +58,7 @@ if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
 import ostap.parallel.kisa
 
-if 8 < numcpu () : 
+if 8 <= numcpu () : 
 
     N1 = 1000000
     N2 =   50000
@@ -68,8 +68,8 @@ if 8 < numcpu () :
     
 else :
     
-    N1 = 1000 
-    N2 = 1000 
+    N1 = 2000 
+    N2 = 2000 
 
 xmax     = 20.0
 ymax     = 15.0 
@@ -278,19 +278,15 @@ assert hmc .ymax() == ymax , 'YMAX is invalid!'
 assert hmcx.xmax() == xmax , 'XMAX is invalid!'
 assert hmcy.xmax() == ymax , 'XMAX is invalid!'
 
+## prepare re-weighting machinery 
+maxIter = 15
 
-# ==============================================================================
-## check database # ============================================================
-if not os.path.exists( dbname ) : # ============================================
-    # ==========================================================================
-    ## create new  dbase # =====================================================
-    with DBASE.open ( dbname , 'c' ) : logger.info ( "Create new weights DBASE '%s'" % dbname )
-    # ==========================================================================
-else : # =======================================================================
-    # ==========================================================================
-    ## use existing dbase # ====================================================
-    logger.info ( "Existing weights DBASE '%s' will be used" % dbname )
-    # ==========================================================================
+## check database 
+if not os.path.exists( dbname ) :
+    with DBASE.open ( dbname , 'c' ) : ##  create new empty db 
+        logger.info("Create new weights DBASE '%s'" % dbname ) 
+else :
+    logger.info("Existing weights DBASE '%s' will be used" % dbname ) 
 
 
 # =============================================================================
@@ -299,7 +295,6 @@ weight_name = 'weight'
 
 # =============================================================================
 ## make reweighting iterations
-# =============================================================================
 
 from   ostap.tools.reweight           import Weight, makeWeights,  WeightingPlot, W2Data  
 from   ostap.fitting.pyselectors      import Variable 
@@ -308,7 +303,7 @@ import ostap.parallel.parallel_fill
 # =============================================================================
 ## configuration of reweighting 
 weightings = (
-    ## variable               address in DB    
+    ## variable          address in DB    
     Weight.Var (  'x'      , 'x-reweight'  ) , 
     Weight.Var (  'y'      , 'y-reweight'  ) , 
     Weight.Var ( ('x','y') , '2D-reweight' ) , 
@@ -317,56 +312,46 @@ weightings = (
 # =============================================================================
 ## variables to be used in MC-dataset 
 variables  = [
-    ##        name        descriptiom    limits 
-    Variable ( 'x'      , 'x-var'      , 0  , 20 ) , 
-    Variable ( 'y'      , 'y-var'      , 0  , 15 ) ,
+    Variable ( 'x' , 'x-var'  , 0  , 20 ) , 
+    Variable ( 'y' , 'y-var'  , 0  , 15 ) ,
     ]
 
-# =============================================================================
-with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :    
+with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
+    
     mctree       = ROOT.TChain ( tag_mc  , files = testdata ) 
     mcds_ini , _ = mctree.make_dataset ( variables = variables      ,
                                          selection = '0<x && x<20 && 0<y && y<20' ,
                                          silent    = True           ) 
-    
+
+
 # ==============================================================================
-## Compare datasets using several methods 
-# ==============================================================================
-from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
-from ostap.stats.gof_np       import  ( MIXnp           as COMPARATOR4 , 
-                                        KullbackLeibler as COMPARATOR3 , 
-                                        Mahalanobis     as COMPARATOR2 , 
-                                        Hotelling       as COMPARATOR1 )
-
-from ostap.stats.data_compare import data_compare     
-comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR2 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR3 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR4 ( parallel = True , nToys = 100 ) , 
-                COMPARATOR5 ( parallel = True , nToys = 100 ) )
-
-if numcpu () <= 8 : comparators = comparators[ :3 ]
+from ostap.stats.adval        import ADVAL_LGBM as COMPARATOR 
+## from ostap.stats.gof_np       import MIXnp      as COMPARATOR 
+from ostap.stats.data_compare import data_compare 
     
-
-alignment = 'rr' + 'c' * len ( comparators )           
-# ============================================================================
-## The table of global comparison statistics 
-glob_stat   = [ ( '#' , '#eff' ) + tuple ( c.method for c in comparators ) ]
+comparator = COMPARATOR ( parallel = True , nToys = 400 ) 
     
 # =============================================================================
 ## Configuration of reweighting plots 
+# =
 plots  = [
     WeightingPlot ( 'x'     , address = 'x-reweight'  , data = hxdata , mc = hmcx ) ,  
     WeightingPlot ( 'y'     , address = 'y-reweight'  , data = hydata , mc = hmcy ) , 
     WeightingPlot ( 'x:y'   , address = '2D-reweight' , data = hdata  , mc = hmc  ) , 
-]
+    ]
 
 # ============================================================================
 datatree = ROOT.TChain ( tag_data_tree , files = testdata ) 
 mctree   = ROOT.TChain ( tag_mc        , files = testdata ) 
 
+vct_data = datatree .statVct ( 'x,y' )
+n_data   = len ( datatree )
 
-maxIter = 5 if numcpu () <= 8 else 20 
+# ============================================================================
+## table of global statistics 
+glob_stat   = [ ( '#' , '#eff' , 'Mahalanobis' , 'Hotelling' , 'KL/S-C' , 'KL/C-S' , 'KL-sym' , 'p-value [%]') ]
+
+maxIter = 3 
 verbose = False 
 
 memory_init = memory_usage() 
@@ -403,14 +388,14 @@ for iter in range ( 1 , maxIter + 1 ) :
         
     # =========================================================================
     ## 2) update weights
-
+    
     if    iter <=  3 : power = 0.75
     elif  iter <= 10 : power = lambda nactive : 1.5 / nactive if 1 < nactive else 1.05
     elif  iter <= 15 : power = lambda nactive : 1.3 / nactive if 1 < nactive else 1.05 
-    else             : power = lambda nactive : 1.1 / nactive if 1 < nactive else 1.05
+    else             : power = lambda nactive : 1.1 / nactive if 1 < nactive else 1.05 
     
     # =============================================================================
-    ## make actual reweighting 
+    ## make acual reweighting 
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
         # =========================================================================
@@ -425,30 +410,38 @@ for iter in range ( 1 , maxIter + 1 ) :
             power      = power , ## tune: effective power
             make_plots = True  , 
             tag        = tag   ) ## tag for printout
- 
+
     # =============================================================================
-    if 1 == iter % 3  : 
+    with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
         
-        with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
-            
-            ## 3) compare control and signal samples        
-            datatree    = ROOT.TChain ( tag_data_tree , files = testdata ) 
-            comparisons = data_compare ( comparators  ,
-                                         datatree    ,
-                                         mcds        ,
-                                         expressions =  ( 'x' , 'y' ) ,
-                                         importance  = True )
-            ## effective MC statistics at this step 
-            n_eff   = mcds.nEff() 
-            trow    = ( '%d'    % iter  , '%.1f'  % n_eff )
-            pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
-            trow   += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
-            glob_stat.append ( trow )
-            
-            title = 'Global DATA/MC similarity p-values [%]'
-            table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
-            logger.info ( '%s\n%s' % ( title , table ) )
-                   
+        ## 3) compare control and signal samples
+        datatree = ROOT.TChain ( tag_data_tree , files = testdata ) 
+        tvalue , pvalue , importance = data_compare ( comparator  ,
+                                                      datatree    ,
+                                                      mcds        ,
+                                                      expressions =  ( 'x' , 'y' ) ,
+                                                      importance  = True )
+        pv100 = pvalue * 100 
+        ##         
+        vct_i    = mcds.statVct ( 'x,y' ) 
+        n_eff    = mcds.nEff() 
+        n_mc  = int ( n_eff )
+        
+        trow  = ( '%d'    % iter  ,
+                  '%.1f'  % n_eff , 
+                  '%+.4g' % vct_i   .mahalanobis                 ( vct_data ) ,
+                  '%+.4g' % Ostap.Math.hotelling ( vct_i , n_mc  , vct_data , n_data ) ,         
+                  '%+.4g' % vct_i   .asymmetric_kullback_leibler ( vct_data ) , 
+                  '%+.4g' % vct_data.asymmetric_kullback_leibler ( vct_i    ) , 
+                  '%+.4g' % vct_data.           kullback_leibler ( vct_i    ) , 
+                  '%.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )        
+        glob_stat.append ( trow )
+        
+        title = 'Global DATA/MC similarity'
+        table = T.table ( glob_stat , title = title , prefix = '# ' ) 
+        logger.info ( '%s\n%s' % ( title , table ) )
+
+        
     if verbose :
         
         with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :
@@ -522,27 +515,33 @@ with timing ( "Add weight column to MC-tree" , logger = logger ) :
     
 # =============================================================================
 datatree = ROOT.TChain  ( tag_data_tree , files = testdata ) 
-mctree   = ROOT.TChain  ( tag_mc        , files = testdata )
+mctree   = ROOT.TChain  ( tag_mc        , files = testdata ) 
 
 # =============================================================================
-## Final statistics 
-comparisons = data_compare ( comparators                  ,
-                             datatree                     ,
-                             mcree                        ,
-                             expressions =  ( 'x' , 'y' ) ,
-                             cuts2       = weight_name    )
+tvalue , pvalue , importance = data_compare ( comparator  ,
+                                              datatree    ,
+                                              mctree      ,
+                                              expressions =  ( 'x' , 'y' ) ,
+                                              cuts2       = 'weight'       , 
+                                              importance  = True )
+pv100 = pvalue * 100
 
-## effectiive MC statistics 
-n_eff   = mctree.nEff( weight_name )
-    
-trow    = ( '*'  , '%.1f'  % n_eff )
-pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
-trow   += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
+vct_final = mctree.statVct ( 'x,y' , 'weight' )
+n_eff     = mctree.nEff ( 'weight' ) 
+trow      = ( '*'   ,
+              '%.1f'  % n_eff , 
+              '%+.4g' % vct_final .mahalanobis                 ( vct_data  ) , 
+              '%+.4g' % Ostap.Math.hotelling ( vct_final , n_mc ,  vct_data  , n_data ) ,         
+              '%+.4g' % vct_final .asymmetric_kullback_leibler ( vct_data  ) , 
+              '%+.4g' % vct_data  .asymmetric_kullback_leibler ( vct_final ) , 
+              '%+.4g' % vct_data  .           kullback_leibler ( vct_final ) , 
+              '%.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
+
 glob_stat.append ( trow )
 
-title = 'Global DATA/MC similarity p-values [%]'
-table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment ) 
-logger.info ( '%s\n%s' % ( title , table ) )
+title = 'Global DATA/MC similarity'
+table = T.table ( glob_stat , title = title , prefix = '# ' ) 
+logger.info ( '%s\n%s' % ( title , table ) ) 
 
 # =============================================================================
 title = 'Data/target dataset'
