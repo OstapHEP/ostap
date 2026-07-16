@@ -416,12 +416,12 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         ## 3) compare control and signal samples
         datatree = ROOT.TChain ( tag_data_tree , files = testdata ) 
-        tvalue , pvalue , importance = data_compare ( comparator  ,
-                                                      datatree    ,
-                                                      mcds        ,
-                                                      expressions =  ( 'x' , 'y' ) ,
-                                                      importance  = True )
-        pv100 = pvalue * 100 
+        cmp = data_compare ( comparator  ,
+                             datatree    ,
+                             mcds        ,
+                             expressions =  ( 'x' , 'y' ) ,
+                             importance  = True )
+        pv100 = cmp.pvalue * 100 
         ##         
         vct_i    = mcds.statVct ( 'x,y' ) 
         n_eff    = mcds.nEff() 
@@ -518,13 +518,13 @@ datatree = ROOT.TChain  ( tag_data_tree , files = testdata )
 mctree   = ROOT.TChain  ( tag_mc        , files = testdata ) 
 
 # =============================================================================
-tvalue , pvalue , importance = data_compare ( comparator  ,
-                                              datatree    ,
-                                              mctree      ,
-                                              expressions =  ( 'x' , 'y' ) ,
-                                              cuts2       = 'weight'       , 
-                                              importance  = True )
-pv100 = pvalue * 100
+cmp = data_compare ( comparator  ,
+                     datatree    ,
+                     mctree      ,
+                     expressions =  ( 'x' , 'y' ) ,
+                     cuts2       = 'weight'       , 
+                     importance  = True )
+pv100 = cmp.pvalue * 100
 
 vct_final = mctree.statVct ( 'x,y' , 'weight' )
 n_eff     = mctree.nEff ( 'weight' ) 
