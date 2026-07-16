@@ -12,6 +12,16 @@ cd    build
 ## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
 
+echo 'BUILD-WITH-LCG:     python ' $(which python)
+echo 'BUILD-WITH-LCG:     python ' $(python --versino)
+
+user_site=$(python -m site --user-site)
+if [[ ${user_site} && -d ${user_site} ]]
+then
+    echo 'BUILD-WITH-LCG:     USER-SITE directory ' ${user_site}
+elif [[ ! -d ${user_site}
+    echo 'BUILD-WITH-LCG:  no USER-SITE directory ' ${user_site}  
+fi
 
 which python
 

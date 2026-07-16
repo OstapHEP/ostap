@@ -15,13 +15,10 @@ if [[ ${LCG}                                                       &&
 	  -f ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh                ]]
 then
     
-    echo 'sourcing LCG & OSTAP'
-    
-    echo 'sourcing ' /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-    
+    echo 'TEST-WITH-LCG: sourcing ' /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh    
     source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
     
-    echo 'sourcing ' ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
+    echo 'TEST-WITH-LCG: sourcing ' ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
     source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
     
 else
@@ -31,8 +28,20 @@ else
         
 fi
 
+
+echo 'TEST-WITH-LCG:      python ' $(which python)
+echo 'TEST-WITH-LCG:      python ' $(python --version)
+
+## 
 user_site=$(python -m site --user-site)
-echo 'USER-SITE python directory: ' ${user_site}
+if [[ ${user_site} && -d ${user_site} ]]
+then
+    echo 'TEST-WITH-LCG:      USER-SITE directory ' ${user_site}
+elif [[ ! -d ${user_site}
+    echo 'TEST-WITH-LCG:   no USER-SITE directory ' ${user_site}  
+fi
+
+
 ls -al ${user_site}
 
 if command -v pip &> /dev/null
