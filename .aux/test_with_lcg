@@ -9,30 +9,31 @@ echo 'test-with-lcg       PWD =' ${PWD}
 
 cd ./build
 
-## if [[ ${LCG}                                                       &&
-##      ${CMTCONFIG}                                                 &&                        
-##      -f /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh &&
-##      -f ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh                ]]
-## then
-##
-##    echo 'sourcing LCG & OSTAP'
-##    
-##    echo 'sourcing ' /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-##    
-##    source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-##
-##    echo 'sourcing ' ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
-##    source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
-##    
-## else
-##
-echo '(re)source .build-lcg'
-source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
-##    
-## fi
+if [[ ${LCG}                                                       &&
+	  ${CMTCONFIG}                                                 &&                        
+	  -f /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh &&
+	  -f ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh                ]]
+then
+    
+    echo 'sourcing LCG & OSTAP'
+    
+    echo 'sourcing ' /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+    
+    source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+    
+    echo 'sourcing ' ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
+    source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
+    
+else
+    
+    echo '(re)source .build-lcg'
+    source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
+        
+fi
 
 user_site=$(python -m site --user-site)
 echo 'USER-SITE python directory: ' ${user_site}
+ls -al ${user_site}
 
 if command -v pip &> /dev/null
 then

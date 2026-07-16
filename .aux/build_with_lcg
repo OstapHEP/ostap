@@ -13,8 +13,11 @@ cd    build
 source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
 
 
-
 which python
+
+user_site=$(python -m site --user-site)
+echo 'USER-SITE python directory: ' ${user_site}
+ls -al ${user_site}
 
 if command -v pip &> /dev/null
 then
