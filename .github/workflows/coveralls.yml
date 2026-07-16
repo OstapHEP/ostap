@@ -14,11 +14,11 @@ jobs:
       matrix:
         build: [1,2,3,4,5]  
         include:
-            - { build: 1, lcg: dev3/latest, platform: x86_64-el9-gcc13-opt   }
-            - { build: 2, lcg: dev3/latest, platform: x86_64-el9-gcc14-opt   }
-            - { build: 3, lcg: dev3/latest, platform: x86_64-el9-gcc15-opt   }
-            - { build: 4, lcg: dev3/latest, platform: x86_64-el9-gcc16-opt   }
-            - { build: 5, lcg: dev3/latest, platform: x86_64-el9-clang22-opt }
+            - { build: 1, lcg: dev3/latest, platform: x86_64-el9-gcc13-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+            - { build: 2, lcg: dev3/latest, platform: x86_64-el9-gcc14-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+            - { build: 3, lcg: dev3/latest, platform: x86_64-el9-gcc15-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+            - { build: 4, lcg: dev3/latest, platform: x86_64-el9-gcc16-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+            - { build: 5, lcg: dev3/latest, platform: x86_64-el9-clang22-opt , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
     
       fail-fast: false
      runs-on: ubuntu-latest 
@@ -33,12 +33,12 @@ jobs:
           ls /cvmfs/sft.cern.ch 
           docker create -v /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest 
           docker cp  /home/runner/work/ostap/ostap/  ostap-build:/osya
-          docker run -v /cvmfs:/cvmfs:shared -u:0 --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest /bin/bash -c "cd /osya/ostap && dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install tkrzw python-tkrzw-doc libdb-devel libdb-cxx-devel libdb-utils -y "
-          docker run -v /cvmfs:/cvmfs:shared -u:0 --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest /bin/bash -c "cd /osya/ostap && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
+          docker run -v /cvmfs:/cvmfs:shared -u:0 --volumes-from ostap-build  --security-opt seccomp=unconfined ${{ matrix.registry }} /bin/bash -c "cd /osya/ostap && dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install tkrzw python-tkrzw-doc libdb-devel libdb-cxx-devel libdb-utils -y "
+          docker run -v /cvmfs:/cvmfs:shared -u:0 --volumes-from ostap-build  --security-opt seccomp=unconfined ${{ matrix.registry }} /bin/bash -c "cd /osya/ostap && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
        - name: Test
          run: |
           ls /cvmfs/sft.cern.ch 
-          docker run -v /cvmfs:/cvmfs:shared -u:0 --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest /bin/bash -c "cd /osya/ostap && ./.aux/test_with_lcg  ${{ matrix.lcg }}  ${{ matrix.platform }}"
+          docker run -v /cvmfs:/cvmfs:shared -u:0 --volumes-from ostap-build  --security-opt seccomp=unconfined ${{ matrix.registry }} /bin/bash -c "cd /osya/ostap && ./.aux/test_with_lcg  ${{ matrix.lcg }}  ${{ matrix.platform }}"
        - name: copy artifacts
          if: always()
          run: |

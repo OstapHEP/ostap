@@ -142,7 +142,6 @@ else
     return 113
 fi
 
-
 OSTAP_SOURCE=${3:-${OSTAP_SOURCE}}
 
 source_found=
