@@ -107,10 +107,11 @@ hmc = ROOT.TH1D('hMC','histo-template for MC', 77 ,0,100 ) ; hmc.Sumw2()
 ## prepare re-weighting machinery 
 maxIter = 10  
 
-## check database 
+# =============================================================================
+## check the database 
 if not os.path.exists ( dbname ) :
     with DBASE.open   ( dbname , 'c' ) :
-        logger.info("Create new weights DBASE '%s'" % dbname ) 
+        logger.info ( "Create new weights DBASE '%s'" % dbname ) 
 else :
     logger.info("Existing weights DBASE '%s' will be used" % dbname ) 
 

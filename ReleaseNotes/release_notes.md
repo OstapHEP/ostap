@@ -2,8 +2,10 @@
 
 ## Bug fixes
 
-## Backward incompatible 
+## Backward incompatible
 
+  1. `ostap.tools.reweight.WeightingPlot` from now gets  only one positional `what`-argument, others are keyword-only
+  
 # v3.7.3.0
 
 ## New features

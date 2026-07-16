@@ -10,10 +10,12 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2026-07-05"
 __all__     = (
-    'numpy_compare' , ## compare two (numpy) arrays 
-    'data_compare'  , ## compare two datasets 
+    'numpy_compare'    , ## compare two (numpy) arrays 
+    'data_compare'     , ## compare two datasets
+    'ComparisonResult' , ## helper class to report the comparison resuts 
 )
 # =============================================================================
+from   collections            import namedtuple 
 from   ostap.core.ostap_types import sequence_types 
 from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
 from   ostap.stats.gof        import AGoFnp 
@@ -26,6 +28,13 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.data_compare' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
+## comparison result  
+ComparisonResult = namedtuple ( 'ComparisonResult'  ,
+                                ( 'method'     ,
+                                  'tvalue'     ,
+                                  'pvalue'     ,
+                                  'importance' ) , defaults = ( 'UNKNOWN' , -1e+9 , -1 , None ) )  
+# ===============================================================================
 ## Compare two numpy arrays
 #  @code
 #  nd1 = ...
@@ -71,9 +80,12 @@ def numpy_compare ( comparator ,
                                            tvalue  = tvalue  ,
                                            weight1 = weight1 ,
                                            weight2 = weight2 )
-
-    return tvalue , pvalue , importance_features 
     
+    return ComparisonResult ( method     = comparator.method   ,
+                              tvalue     = tvalue              ,
+                              pvalue     = pvalue              ,
+                              importance = importance_features ) 
+
 # =============================================================================
 ## Compare two datasets:
 #  Each dataset is converted to numpy and then `numpy_compare` is invoked 
