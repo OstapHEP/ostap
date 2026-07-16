@@ -410,7 +410,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     else             : power = lambda nactive : 1.1 / nactive if 1 < nactive else 1.05
     
     # =============================================================================
-    ## make acual reweighting 
+    ## make actual reweighting 
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
         # =========================================================================
@@ -425,29 +425,30 @@ for iter in range ( 1 , maxIter + 1 ) :
             power      = power , ## tune: effective power
             make_plots = True  , 
             tag        = tag   ) ## tag for printout
-
+ 
     # =============================================================================
-    with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
+    if 1 == iter % 3  : 
         
-        ## 3) compare control and signal samples
-        datatree    = ROOT.TChain ( tag_data_tree , files = testdata ) 
-        comparisons = data_compare ( comparators  ,
-                                     datatree    ,
-                                     mcds        ,
-                                     expressions =  ( 'x' , 'y' ) ,
-                                     importance  = True )
-        ## effectiive MC statistics at this step 
-        n_eff   = mcds.nEff() 
-        trow    = ( '%d'    % iter  , '%.1f'  % n_eff )
-        pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
-        trow   += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
-        glob_stat.append ( trow )
-        
-        title = 'Global DATA/MC similarity p-values [%]'
-        table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
-        logger.info ( '%s\n%s' % ( title , table ) )
-
-        
+        with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
+            
+            ## 3) compare control and signal samples        
+            datatree    = ROOT.TChain ( tag_data_tree , files = testdata ) 
+            comparisons = data_compare ( comparators  ,
+                                         datatree    ,
+                                         mcds        ,
+                                         expressions =  ( 'x' , 'y' ) ,
+                                         importance  = True )
+            ## effective MC statistics at this step 
+            n_eff   = mcds.nEff() 
+            trow    = ( '%d'    % iter  , '%.1f'  % n_eff )
+            pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
+            trow   += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
+            glob_stat.append ( trow )
+            
+            title = 'Global DATA/MC similarity p-values [%]'
+            table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
+            logger.info ( '%s\n%s' % ( title , table ) )
+                   
     if verbose :
         
         with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :
