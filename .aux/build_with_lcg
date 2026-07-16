@@ -12,10 +12,19 @@ cd    build
 ## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
 source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
 
+
+
+which python
+
 if command -v pip &> /dev/null
 then
     python -m pip list --user 
 fi
-    
-user_site=$(python -m site --user-site)
-echo 'USER-SITE python directory: ' ${user_site}
+
+## (re)check all dependencies
+if command -v check-dependencies  &> /dev/null
+then
+    check-dependencies 
+fi
+
+
