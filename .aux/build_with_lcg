@@ -10,12 +10,12 @@ cd    build
 ## cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install
 
 ## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source ../.aux/.build-lcg ${LCG} ${CMTCONFIG} ../ ./INSTALL 
+source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
 
 if command -v pip &> /dev/null
 then
     python -m pip list --user 
 fi
     
-user_site $(python -m site --user-site)
+user_site=$(python -m site --user-site)
 echo 'USER-SITE python directory: ' ${user_site}

@@ -6,10 +6,14 @@ echo 'test-with-lcg       LCG =' ${LCG}
 echo 'test-with-lcg CMTCONFIG =' ${CMTCONFIG}
 echo 'test-with-lcg       PWD =' ${PWD}
 
+
+echo 'LS/1' $PWD 
 ls -al
 
 cd ./build
 
+echo 'LS/2' $PWD 
+ls -al
 
 if [[ ${LCG}                                                       &&
       ${CMTCONFIG}                                                 &&                        
@@ -32,7 +36,7 @@ then
     python -m pip list --user 
 fi
     
-user_site $(python -m site --user-site)
+user_site=$(python -m site --user-site)
 echo 'USER-SITE python directory: ' ${user_site}
 
 python -c "import lightgbm; print ('LIGHTGBM_VERSION-1: %s' % lightgbm.__version__)"

@@ -48,7 +48,8 @@ if(DEFINED ENV{VIRTUAL_ENV} OR DEFINED ENV{CONDA_PREFIX})
 else()
   set(PIP_ARGS "--user")
 endif()
-message ( "PIP_ARGS are " ${PIP_ARGS})
+
+## message ( "PIP_ARGS are " ${PIP_ARGS})
 
 # ========================================================================================
 ## NumPy & scipy
