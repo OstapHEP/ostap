@@ -9,27 +9,27 @@ echo 'test-with-lcg       PWD =' ${PWD}
 
 cd ./build
 
-## if [[ ${LCG}                                                       &&
-##	  ${CMTCONFIG}                                                 &&                        
-##	  -f /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh &&
-##	  -f ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh                ]]
-## then
-##    
-##    echo 'TEST-WITH-LCG: sourcing ' /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh    
-##    source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-##    
-##    echo 'TEST-WITH-LCG: sourcing ' ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
-##    source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
-##    
-## else
-##    
-##    echo '(re)source .build-lcg'
-##    source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
-##        
-## fi
+if [[ ${LCG}                                                       &&
+	  ${CMTCONFIG}                                                 &&                        
+	  -f /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh &&
+	  -f ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh                ]]
+then
+    
+    echo 'TEST-WITH-LCG: sourcing ' /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh    
+    source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+    
+    echo 'TEST-WITH-LCG: sourcing ' ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
+    source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
+    
+else
+    
+    echo '(re)source .build-lcg'
+    source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
+        
+fi
 
-echo '(re)source .build-lcg'
-source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
+## echo '(re)source .build-lcg'
+## source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
 
 echo 'TEST-WITH-LCG:      python ' $(which python)
 echo 'TEST-WITH-LCG:      python ' $(python --version)
@@ -41,6 +41,7 @@ then
     echo 'TEST-WITH-LCG:      USER-SITE directory ' ${user_site}
     ls ${user_site}
 elif [[ ! -d ${user_site} ]] 
+then 
     echo 'TEST-WITH-LCG:   no USER-SITE directory ' ${user_site}  
 fi
 
