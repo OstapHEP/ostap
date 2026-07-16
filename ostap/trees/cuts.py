@@ -17,6 +17,7 @@ __all__     = (
     'expression_types' , ## valid types for expressions/selections/weights
     'vars_and_cuts'    , ## helper routibe to treat expressions
     'expression_types' , ## valid cut-types 
+    'prescale'         , ## simple "prescale" cut
 )
 # =============================================================================
 from   ostap.core.meta_info   import ostap_info
@@ -1078,6 +1079,19 @@ ROOT.TCut. __ge__       = _tc_ge_
 ROOT.TCut. __eq__       = _tc_eq_
 ROOT.TCut. __ne__       = _tc_ne_
 
+# =============================================================================
+## simple "prescale" expression
+def prescale ( f ) :
+    """Simple 'prescale' expression
+    >>> cut = prescale ( 0.1 ) 
+    """
+    if   isinstance ( f , integer_types ) and 1 < f    : 
+        return prescale ( 1.0 / f )
+    elif isinstance ( f , float         ) and 0 < f < 1 : 
+        return ROOT.TCut ( 'rndm()' ) <= f 
+    ##
+    raise TypeError ( "Invalid prescale factor %s/%s" % ( f , typename ( f ) ) )
+    
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TCut ,
