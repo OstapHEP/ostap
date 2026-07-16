@@ -40,7 +40,7 @@ if [[ ${user_site} && -d ${user_site} ]]
 then
     echo 'TEST-WITH-LCG:      USER-SITE directory ' ${user_site}
     ls ${user_site}
-elif [[ ! -d ${user_site}
+elif [[ ! -d ${user_site} ]] 
     echo 'TEST-WITH-LCG:   no USER-SITE directory ' ${user_site}  
 fi
 

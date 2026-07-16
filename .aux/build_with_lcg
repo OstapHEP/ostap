@@ -13,14 +13,14 @@ cd    build
 source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
 
 echo 'BUILD-WITH-LCG:     python ' $(which python)
-echo 'BUILD-WITH-LCG:     python ' $(python --versino)
+echo 'BUILD-WITH-LCG:     python ' $(python --version)
 
 user_site=$(python -m site --user-site)
 if [[ ${user_site} && -d ${user_site} ]]
 then
     echo 'BUILD-WITH-LCG:     USER-SITE directory ' ${user_site}
     ls ${user_site}    
-elif [[ ! -d ${user_site}
+elif [[ ! -d ${user_site} ]] 
     echo 'BUILD-WITH-LCG:  no USER-SITE directory ' ${user_site}  
 fi
 
