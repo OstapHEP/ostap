@@ -31,26 +31,18 @@ source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
 ##    
 ## fi
 
-## which python
-
-
 user_site=$(python -m site --user-site)
 echo 'USER-SITE python directory: ' ${user_site}
 
 if command -v pip &> /dev/null
 then
     python -m pip list --user
-else
-    echo 'NO PIP IS FOUND!'
 fi
     
-python -c "import lightgbm; print ('LIGHTGBM_VERSION-1: %s' % lightgbm.__version__)"
-
 ## (re)check all dependencies 
-check-dependencies
+COLUMNS=200 check-dependencies
 
-python -c "import lightgbm; print ('LIGHTGBM_VERSION-2: %s' % lightgbm.__version__)"
-
-## OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R '(rewe|gof)' --output-on-failure --test-output-size-failed 5000000
+## run tests 
+OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R '(rewe|gof)' --output-on-failure --test-output-size-failed 5000000
 
 

@@ -357,7 +357,7 @@ n_data   = len ( datatree )
 ## table of global statistics 
 glob_stat   = [ ( '#' , '#eff' , 'Mahalanobis' , 'Hotelling' , 'KL/S-C' , 'KL/C-S' , 'KL-sym' , 'p-value [%]') ]
 
-maxIter = 3 
+maxIter = 100 
 verbose = False 
 
 memory_init = memory_usage() 
