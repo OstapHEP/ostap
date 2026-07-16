@@ -54,14 +54,14 @@ namespace Ostap
       /// full constructor from vector and covariance matrix 
       SVectorWithError 
       ( const Value&      value = Value()       , 
-        const Covariance& cov2  = Covariance () ) 
+        const Covariance& cov2  = Covariance ( ROOT::Math::SMatrixIdentity() ) ) 
         : m_value ( value ) 
         , m_cov2  ( cov2  ) 
       {}
       /// full constructor from vector and covariance matrix 
       SVectorWithError 
       ( const Covariance& cov2  , 
-	const Value&      value )
+	      const Value&      value )
         : m_value ( value ) 
         , m_cov2  ( cov2  ) 
       {}
@@ -100,7 +100,7 @@ namespace Ostap
       SVectorWithError 
       ( const ROOT::Math::VecExpr<B,SCALAR,N>& value ) 
         : m_value ( value )
-        , m_cov2  (       ) 
+        , m_cov2  ( ROOT::Math::SMatrixIdentity() ) 
       {}
       /// construct from expressions
       template <class B, class R>
@@ -144,10 +144,10 @@ namespace Ostap
       ( unsigned int i )       { return m_value [ i ] ; }
       inline const  SCALAR& operator()
       ( unsigned int i ,
-	unsigned int j ) const { return m_cov2 ( i , j ) ; }
+	      unsigned int j ) const { return m_cov2 ( i , j ) ; }
       inline        SCALAR& operator()
       ( unsigned int i ,
-	unsigned int j )       { return m_cov2 ( i , j ) ; }      
+	      unsigned int j )       { return m_cov2 ( i , j ) ; }      
       // ======================================================================
     public: // 
       // ======================================================================
@@ -178,7 +178,7 @@ namespace Ostap
        */
       inline SCALAR  corr
       ( const unsigned int i  ,
-	const unsigned int j  ) const ;
+	      const unsigned int j  ) const ;
       /** get the full correlation matrix 
        *  @return false for invalid setup 
        */
@@ -242,6 +242,13 @@ namespace Ostap
       // ======================================================================
     public:  // more functions 
       // ======================================================================
+      /** valid data?
+        * - all values are finite 
+        * - all elements of covariance matrix are finite 
+        * - diagonal elements of covariance matrix are positive
+        * - covariance matrix is positive-definite
+        */
+      inline bool valid   () const ;
       /// calculate the weighted average for two vectors 
       inline Self mean    ( const Self& right ) const ;
       /// calculate the weighted average for two vectors 
@@ -365,10 +372,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// the data 
-      Value      m_value  ;                                         // the data 
-      /// the covariance matrix
-      Covariance m_cov2   ;                           // the covarinance matrix  
+      /// data 
+      Value      m_value  ;                                         // data 
+      /// covariance matrix
+      Covariance m_cov2 { ROOT::Math::SMatrixIdentity() } ; //` covariance matrix  
       // ======================================================================
     } ;
     // ========================================================================
@@ -880,8 +887,8 @@ namespace Ostap
     ( const SVectorWithError<N,SCALAR>& vct )
     {
       return
-	Ostap::Math::isfinite ( vct.value () ) &&
-	Ostap::Math::isfinite ( vct.cov2  () ) ;	
+	      Ostap::Math::isfinite ( vct.value () ) &&
+	      Ostap::Math::isfinite ( vct.cov2  () ) ;	
     }
     // ========================================================================
   }

@@ -10,6 +10,10 @@
 #include <algorithm>
 #include <numeric>
 // ============================================================================
+// ROOT  
+// ============================================================================
+#include "Math/CholeskyDecomp.h"
+// ============================================================================
 // LHCbMath
 // ============================================================================
 #include "Ostap/SVectorWithError.h"
@@ -123,6 +127,33 @@ Ostap::Math::SVectorWithError<N,SCALAR>::toString   () const // conversion to st
   this->fillStream ( os ) ;
   return os.str() ;
 }
+// =========================================================================== 
+/* valid data?
+ * - all values are finite 
+ * - diagonal elements of covariance matrix are positive
+ * - covariance matrix is positive-definite
+ */
+// ============================================================================
+template <unsigned int N, typename SCALAR> 
+inline bool Ostap::Math::SVectorWithError<N,SCALAR>::valid () const  
+{ 
+  for ( unsigned int i = 0 ; i < N ; ++i )
+  {
+    if ( !std::isfinite ( this->m_value [ i ] )  ) { return false ; }
+    const SCALAR cii = this->m_cov2( i , i ) ;
+    if ( !std::isfinite ( cii ) ||  cii <= 0 ) { return false ; }
+    for ( unsigned j = 0 ; j < i ; ++j )
+    {
+      const SCALAR cij  = this->m_cov2 ( j , i ) ;
+      if ( !std::isfinite ( cij ) ) { return false  ; }
+    }
+  }
+  //
+  const ROOT::Math::CholeskyDecomp<SCALAR,N> decomp ( this->m_cov2 ) ;
+  return decomp.ok () ;
+}
+// ============================================================================
+
 // ============================================================================
 // printout 
 // ============================================================================
