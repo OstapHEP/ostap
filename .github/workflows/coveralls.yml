@@ -18,7 +18,7 @@ jobs:
             - { build: 2, lcg: dev3/latest, platform: x86_64-el9-gcc14-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
             - { build: 3, lcg: dev3/latest, platform: x86_64-el9-gcc15-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
             - { build: 4, lcg: dev3/latest, platform: x86_64-el9-gcc16-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
-            - { build: 5, lcg: dev3/latest, platform: x86_64-el9-clang22-opt , registry: gitlab-registry.cern.ch/linuxsupport/alma9-base } 
+            - { build: 5, lcg: dev3/latest, platform: x86_64-el9-clang22-opt , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
     
       fail-fast: false
      runs-on: ubuntu-latest 
@@ -35,7 +35,7 @@ jobs:
           docker create -v /cvmfs:/cvmfs:shared -u 0 --security-opt seccomp=unconfined --name ostap-build ${{ matrix.registry }} sleep infinity
           docker cp /home/runner/work/ostap ostap-build:/osya
           docker start ostap-build
-          ## docker exec ostap-build /bin/bash -c "dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install tkrzw python-tkrzw-doc libdb-devel libdb-cxx-devel libdb-utils -y"
+          docker exec ostap-build /bin/bash -c "dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install tkrzw python-tkrzw-doc libdb-devel libdb-cxx-devel libdb-utils -y"
           docker exec ostap-build /bin/bash -c "cd /osya/ostap && echo $PWD && ls -al && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
        - name: Test
          run: |
