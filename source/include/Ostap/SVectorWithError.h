@@ -178,7 +178,8 @@ namespace Ostap
        */
       inline SCALAR  corr
       ( const unsigned int i  ,
-	      const unsigned int j  ) const ;
+	const unsigned int j  ) const ;
+      // ======================================================================
       /** get the full correlation matrix 
        *  @return false for invalid setup 
        */
@@ -246,6 +247,7 @@ namespace Ostap
         * - all values are finite 
         * - all elements of covariance matrix are finite 
         * - diagonal elements of covariance matrix are positive
+	* - off-diagonal elements are not too large 	
         * - covariance matrix is positive-definite
         */
       inline bool valid   () const ;
@@ -257,7 +259,7 @@ namespace Ostap
     public:
       // ======================================================================
       /** Get symmetrized Kullback-Leibler divergency,
-       *  aka Jewffrey's divergency, for two objects 
+       *  aka Jeffrey's divergency, for two objects 
        *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
        *  @see Ostap::Math::kullback_leibler 
        *  @return symmetrised KL-divergency (-1 in case of error)
@@ -887,13 +889,13 @@ namespace Ostap
     ( const SVectorWithError<N,SCALAR>& vct )
     {
       return
-	      Ostap::Math::isfinite ( vct.value () ) &&
-	      Ostap::Math::isfinite ( vct.cov2  () ) ;	
+	Ostap::Math::isfinite ( vct.value () ) &&
+	Ostap::Math::isfinite ( vct.cov2  () ) ;	
     }
     // ========================================================================
-  }
+  } //                                         The end of namespace Ostap::Math
   // ==========================================================================
-} 
+} //                                                The end of namespace  Ostap 
 // ============================================================================
 //                                                                      The END
 // ============================================================================

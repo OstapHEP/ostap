@@ -1088,10 +1088,10 @@ class Mahalanobis(GoFnp) :
         return True 
 
     # =========================================================================
-    ## Convert numpy-array statictics into Ostap::SVectorWithError
+    ## Convert numpy-array statistics into Ostap::SVectorWithError
     #  @see Ostap::Math::SVectorWithError
     def np2vstat ( self , data , weight = None ) :
-        """ Convert numpy-array statictics into `Ostap.Math.SVectorWithError`
+        """ Convert numpy-array statistics into `Ostap.Math.SVectorWithError`
         - see `Ostap.Math.SVectorWithError`
         """
         
@@ -1122,7 +1122,11 @@ class Mahalanobis(GoFnp) :
                     covs [ i, j ] = cij
                     covs [ j, i ] = cij 
                     
-        return RT ( values ,  covs ) 
+        ## return RT ( values ,  covs ) 
+        result = RT ( values ,  covs )
+        if not result.valid() :
+            logger.error ( 'RESULT IS NOT VALID\n%s'% result ) 
+        return result 
                         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -1262,12 +1266,14 @@ class Hotelling(Mahalanobis) :
         nw2 = len ( uds2 )
         
         if not w1_trivial :
+            print ( 'W1-NOTRIVIAL/1' , typename ( self ) , numpy.min ( weight1 ) , numpy.max ( weight1 ) ) 
             sumw  = numpy.sum ( weight1 )
             sumw2 = numpy.sum ( weight1 * weight1 )
-            print ( 'W1-NOTRIVIAL' , typename ( self ) ,  sumw , sumw2 ) 
+            print ( 'W1-NOTRIVIAL/2' , typename ( self ) ,  sumw , sumw2 ) 
             nw1   = math.floor ( float ( sumw * sumw / sumw2) )
             
         if not w2_trivial :
+            print ( 'W2-NOTRIVIAL/1' , typename ( self ) , numpy.min ( weigh2 ) , numpy.max ( weight2 ) ) 
             sumw  = numpy.sum ( weight2 )
             sumw2 = numpy.sum ( weight2 * weight2 )
             print ( 'W2-NOTRIVIAL' , typename ( self ) ,  sumw , sumw2 ) 

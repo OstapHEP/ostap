@@ -1,5 +1,10 @@
 ## New features
 
+  1. Add `Ostap::Math::symmetric` function to check if (S)matrix is symmetric
+  1. Add `Ostap::Math::symmetric_positive_definite` function to check if (S)matrix is syemmtric & positive-definite
+  1. Add `Ostap::Math::covariance_matrix` function to check if (S)matrix can be valid covariance matrix
+   
+  
 ## Bug fixes
 
 ## Backward incompatible
