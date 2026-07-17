@@ -1264,12 +1264,14 @@ class Hotelling(Mahalanobis) :
         if not w1_trivial :
             sumw  = numpy.sum ( weight1 )
             sumw2 = numpy.sum ( weight1 * weight1 )
+            print ( 'W1-NOTRIVIAL' , typename ( self ) ,  sumw , sumw2 ) 
             nw1   = math.floor ( float ( sumw * sumw / sumw2) )
             
         if not w2_trivial :
             sumw  = numpy.sum ( weight2 )
             sumw2 = numpy.sum ( weight2 * weight2 )
-            nw2   = math.floor ( float ( sumw * sumw / sumw2) )
+            print ( 'W2-NOTRIVIAL' , typename ( self ) ,  sumw , sumw2 ) 
+            nw2   = math.floor ( float ( sumw * sumw / sumw2 ) )
         
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
