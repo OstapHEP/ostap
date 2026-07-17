@@ -23,10 +23,8 @@ jobs:
       fail-fast: false
      runs-on: ubuntu-latest 
      steps:
-       - uses: actions/checkout@v4
-       - name: Install dependencies
-         run: |
-          ls
+       - name: Checkout repository
+         uses: actions/checkout@v7
        - name: Install and Mount CVMFS
          uses: cvmfs-contrib/github-action-cvmfs@v5 
          with:
