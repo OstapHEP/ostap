@@ -490,7 +490,7 @@ with timing ( "Add `%s' column to initial MC-tree" % weight_name , logger = logg
     mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
     weighter = Weight ( dbname , weightings )
     mctree   = mctree.add_reweighting ( weighter ,  name = weight_name )
-    mctree   = ROOT.TChain ( tag_mc  , fils = testdata )  
+    mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
     
 # =============================================================================
 ## compare DATA  and MC before and after reweighting
