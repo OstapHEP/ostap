@@ -1,82 +1,54 @@
-
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: ostap
+name: ostap 
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
 jobs:
   test_docker:
-    runs-on: ubuntu-latest
-    strategy:
+     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6]  # Добавлена шестерка, чтобы включить последний элемент
+        build: [1,2,3,4,5]  
         include:
-          - build: 1
-            lcg: dev3/latest
-            platform: x86_64-el9-gcc13-opt
-            registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest
-          - build: 2
-            lcg: dev3/latest
-            platform: x86_64-el9-gcc14-opt
-            registry: gitlab-registry.cern.ch/linuxsupport/alma9-base
-          - build: 3
-            lcg: dev3/latest
-            platform: x86_64-el9-gcc15-opt
-            registry: gitlab-registry.cern.ch/linuxsupport/alma9-base
-          - build: 4
-            lcg: dev3/latest
-            platform: x86_64-el9-gcc16-opt
-            registry: gitlab-registry.cern.ch/linuxsupport/alma9-base
-          - build: 5
-            lcg: dev3/latest
-            platform: x86_64-el9-clang22-opt
-            registry: gitlab-registry.cern.ch/linuxsupport/alma9-base
-          - build: 6
-            lcg: dev3/latest
-            platform: x86_64-el10-gcc16-opt
-            registry: gitlab-registry.cern.ch/linuxsupport/alma10-base
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4 # Обновлено с v2 до v4
-
-      - name: Install dependencies
-        run: |
-          ls
-
-      - name: Mount CVMFS
-        uses: cvmfs-contrib/github-action-cvmfs@v4
-
-      - name: Build
-        run: |
-          ls /cvmfs/sft.cern.ch
-          echo $PWD
+            - { build: 1, lcg: dev3/latest, platform: x86_64-el9-gcc13-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+            - { build: 2, lcg: dev3/latest, platform: x86_64-el9-gcc14-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+            - { build: 3, lcg: dev3/latest, platform: x86_64-el9-gcc15-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+            - { build: 4, lcg: dev3/latest, platform: x86_64-el9-gcc16-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+            - { build: 5, lcg: dev3/latest, platform: x86_64-el9-clang22-opt , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
+    
+      fail-fast: false
+     runs-on: ubuntu-latest 
+     steps:
+       - uses: actions/checkout@v2
+       - name: Install dependencies
+         run: |
+          ls 
+       - uses: cvmfs-contrib/github-action-cvmfs@v4
+       - name: Build
+         run: |
+          ls /cvmfs/sft.cern.ch 
+          echo $PWD 
           docker create -v /cvmfs:/cvmfs:shared -u 0 --security-opt seccomp=unconfined --name ostap-build ${{ matrix.registry }} sleep infinity
           docker cp /home/runner/work/ostap ostap-build:/osya
           docker start ostap-build
           docker exec ostap-build /bin/bash -c "dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install tkrzw python-tkrzw-doc libdb-devel libdb-cxx-devel libdb-utils -y"
           docker exec ostap-build /bin/bash -c "cd /osya/ostap && echo $PWD && ls -al && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
-
-      - name: Test
-        run: |
-          ls /cvmfs/sft.cern.ch
+       - name: Test
+         run: |
+          ls /cvmfs/sft.cern.ch 
           docker exec ostap-build /bin/bash -c "cd /osya/ostap && echo $PWD && ls -al && ./.aux/test_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
-
-      - name: Copy artifacts
-        if: always()
-        run: |
-          docker cp ostap-build:/osya/ostap/build .
-
-      - name: Archive production artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
+       - name: copy artifacts
+         if: always()
+         run: |
+            docker cp  ostap-build:/osya/ostap/build .
+       - name: Archive production artifacts
+         if: always()
+         uses: actions/upload-artifact@v4
+         with:
           name: my-artifacts-${{ strategy.job-index }}
           path: build/Testing
 
