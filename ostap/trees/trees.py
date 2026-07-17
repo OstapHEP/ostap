@@ -53,13 +53,13 @@ from   ostap.logger.symbols      import branch         as branch_symbol
 from   ostap.logger.symbols      import leaves         as leaves_symbol
 from   ostap.logger.symbols      import tape_cartridge as files_symbol
 from   ostap.io.root_file        import ROOTCWD 
-# 
+from   ostap.utils.cleanup       import CleanUp
+#
 import ostap.trees.trees_base 
 import ostap.trees.treereduce 
 import ostap.trees.param
 import ostap.trees.funcs 
-import ostap.io.root_file 
-import ROOT, os, math, array, sys, numpy    
+import ROOT, os, math, array, sys, numpy
 # =============================================================================
 # logging 
 # =============================================================================
@@ -68,8 +68,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.trees' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for Tree/Chain objects')
-# =============================================================================
-
 # =============================================================================
 ## Iterator over ``good events'' in TTree/TChain:
 #  @code 
@@ -732,7 +730,6 @@ def _rt_print_ ( t ) :
     result = res.replace ('\n','\n# ')
     return result 
  
-
 ROOT.TTree.__repr__ = _rt_print_
 ROOT.TTree.__str__  = _rt_print_
 ROOT.TTree.pprint   = _rt_print_
@@ -1075,7 +1072,6 @@ def _tl_type_ ( leaf ) :
     type_name = type_name.replace ( 'Bool_t'   , 'bool'   )
     
     return type_name 
-
 
 # =============================================================================
 _short_types_ = {
@@ -1632,10 +1628,6 @@ def tree_active_branches ( tree ) :
 
 ROOT.TTree.active_branches = tree_active_branches
 
-from ostap.utils.cleanup  import CleanUp
-# =============================================================================
-        
-
 # =============================================================================
 ## Some decoration for Ostap.Trees.Branches
 # =============================================================================
@@ -2113,7 +2105,7 @@ except ImportError : # =========================================================
     # ==========================================================================
     numpy = None
     numpy_buffer_types = () 
-
+    
 # =========================================================================
 ## valid array-types for adding to TTree
 # =========================================================================
@@ -2660,7 +2652,9 @@ def use_aliases ( tree , **aliases ) :
     """
     return UseAliases ( tree , **aliases ) 
 
-## add sweetviz-based methods 
+
+# ==============================================================================
+## add some optional vizuailzation 
 import ostap.stats.sweet_viz
 
 # =============================================================================
@@ -2712,6 +2706,7 @@ _decorated_classes_ = (
     ROOT.TChain ,   
     ROOT.TLeaf      
 )
+
 # =============================================================================
 if '__main__' == __name__ :
     

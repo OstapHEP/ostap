@@ -1266,14 +1266,19 @@ class Hotelling(Mahalanobis) :
         nw2 = len ( uds2 )
         
         if not w1_trivial :
-            print ( 'W1-NOTRIVIAL/1' , typename ( self ) , numpy.min ( weight1 ) , numpy.max ( weight1 ) ) 
+            
+            print ( 'W1-NOTRIVIAL/1' , typename ( self ) , numpy.min ( weight1 ) , numpy.max ( weight1 ) )
+            print ( 'WEIGHT1' , weight1 )
+            
             sumw  = numpy.sum ( weight1 )
             sumw2 = numpy.sum ( weight1 * weight1 )
             print ( 'W1-NOTRIVIAL/2' , typename ( self ) ,  sumw , sumw2 ) 
             nw1   = math.floor ( float ( sumw * sumw / sumw2) )
             
         if not w2_trivial :
-            print ( 'W2-NOTRIVIAL/1' , typename ( self ) , numpy.min ( weigh2 ) , numpy.max ( weight2 ) ) 
+            
+            print ( 'W2-NOTRIVIAL/1' , typename ( self ) , numpy.min ( weight2 ) , numpy.max ( weight2 ) )  
+            print ( 'WEIGHT2' , weight2 )
             sumw  = numpy.sum ( weight2 )
             sumw2 = numpy.sum ( weight2 * weight2 )
             print ( 'W2-NOTRIVIAL' , typename ( self ) ,  sumw , sumw2 ) 

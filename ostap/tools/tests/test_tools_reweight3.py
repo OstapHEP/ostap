@@ -114,9 +114,9 @@ def prepare_data ( ) :
         datatree .SetDirectory ( mc_file ) 
         
         from array import array 
-        xvar = array    ( 'f', [0])
-        yvar = array    ( 'f', [0])
-        zvar = array    ( 'f', [0])
+        xvar = array    ( 'f',  [ 0 ] )
+        yvar = array    ( 'f',  [ 0 ] )
+        zvar = array    ( 'f',  [ 0 ] )
         datatree.Branch ( 'x' , xvar , 'x/F' )
         datatree.Branch ( 'y' , yvar , 'y/F' )
         datatree.Branch ( 'z' , zvar , 'z/F' )
@@ -257,11 +257,10 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
 if numcpu () <= 8 : comparators = comparators[ :3 ]
     
 
-alignment = 'rr' + 'c' * len ( comparators )           
 # ============================================================================
 ## The table of global comparison statistics 
-glob_stat   = [ ( '#' , '#eff' ) + tuple ( c.method for c in comparators ) ]
-
+glob_stat = [ ( '#' , '#eff' ) + tuple ( c.method for c in comparators ) ]
+alignment = 'lc' + 'c' * len ( comparators )           
 
 # =============================================================================
 ## Read data from DB
@@ -350,10 +349,6 @@ logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )
 
-vct_data  = datatree.statVct ( 'x,y,z' )
-n_data    = len ( datatree ) 
-## table of global statistics 
-glob_stat = [ ( '#' , 'Mahalanobis' , 'Hotelling' , 'KL/DATA-MC' , 'KL/MC-DATA' , 'KL-sym' ) ] 
 # =============================================================================
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )
@@ -439,10 +434,11 @@ for iter in range ( 1 , maxIter + 1 ) :
         break
 
     # =============================================================================
-    if 1 == iter % 3  : 
+    if 1 == iter % 3  or True : 
         
         with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
-            
+
+            print ( 'COMPARE_DATA' ) 
             ## 3) compare control and signal samples        
             datatree    = ROOT.TChain ( tag_data , files = testdata ) 
             comparisons = data_compare ( comparators  ,
@@ -451,10 +447,10 @@ for iter in range ( 1 , maxIter + 1 ) :
                                          expressions  =  ( 'x' , 'y' , 'z' ) ) 
             ## effective MC statistics at this step 
             n_eff   = mcds.nEff() 
-            trow    = ( '%d'    % iter  , '%.1f'  % n_eff )
+            row     = ( '%d'  % iter , '%.1f' % n_eff )
             pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
-            trow   += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
-            glob_stat.append ( trow )
+            row     += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
+            glob_stat.append ( row )
             
             title = 'Global DATA/MC similarity p-values [%]'
             table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
@@ -462,7 +458,7 @@ for iter in range ( 1 , maxIter + 1 ) :
                    
     
     ## explicitely clear and delete dataset
-    ## mcds.clear()
+    mcds.clear()
     del mcds
     
 else :
@@ -485,58 +481,57 @@ for key in graphs :
 # =============================================================================
 
 # =============================================================================
-if converged : # ==============================================================
-    # =========================================================================
-    with timing ( "Add weight column to initial MC-tree" , logger = logger ) : 
-        mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
-        weighter = Weight ( dbname , weightings )
-        mctree   = mctree.add_reweighting ( weighter ,  name = weight_name )
-        mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
-
-    # =======================================================================
-    ## compare DATA  and MC before and after reweighting
-    # ========================================================================
-
-    datatree   = ROOT.TChain ( tag_data , files = testdata )  
-    mctree     = ROOT.TChain ( tag_mc   , files = testdata )
-
-    with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
-        
-        ## 3) compare control and signal samples        
-        datatree    = ROOT.TChain ( tag_data     , files = testdata ) 
-        comparisons = data_compare ( comparators ,
-                                     datatree    ,
-                                     mctree      ,
-                                     expressions =  ( 'x' , 'y' , 'z' ) ,
-                                     cuts2       = weight_name ) 
-        ## effective MC statistics at this step 
-        n_eff   = mcds.nEff() 
-        trow    = ( '*' , '%.1f'  % n_eff )
-        pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
-        trow   += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
-        glob_stat.append ( trow )
-        
-        title = 'Global DATA/MC similarity p-values [%]'
-        table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
-        logger.info ( '%s\n%s' % ( title , table ) )
-        
+## Add obtained weight into MC-tree
+# =============================================================================
+with timing ( "Add `%s' column to initial MC-tree" % weight_name , logger = logger ) : 
+    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+    weighter = Weight ( dbname , weightings )
+    mctree   = mctree.add_reweighting ( weighter ,  name = weight_name )
+    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
     
-    # ========================================================================
-    title = 'Data/target dataset'
-    logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                          title     = title    ,
-                                                          prefix    = '# '     ) ) )
-    # =============================================================================
-    title = 'MC-tree before reweighting' 
-    logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                        title     = title    ,
-                                                          prefix    = '# '     ) ) )
-    # =============================================================================
-    title = 'MC-tree after reweighting' 
-    logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                          title     = title    ,
-                                                          cuts      = weight_name , 
-                                                          prefix    = '# '     ) ) )
+# =============================================================================
+## compare DATA  and MC before and after reweighting
+# =============================================================================
+
+datatree   = ROOT.TChain ( tag_data , files = testdata )  
+mctree     = ROOT.TChain ( tag_mc   , files = testdata )
+
+with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
+
+    datatree    = ROOT.TChain ( tag_data     , files = testdata ) 
+    comparisons = data_compare ( comparators ,
+                                 datatree    ,
+                                 mctree      ,
+                                 expressions = ( 'x' , 'y' , 'z' ) ,
+                                 cuts2       = weight_name ) 
+    ## effective MC statistics at this step 
+    n_eff   = mcds.nEff() 
+    row     = ( '*' , '%.1f'  % n_eff )
+    pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
+    row    += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
+    glob_stat.append ( row )
+    
+    title = 'Global DATA/MC similarity: p-values [%]'
+    table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
+    logger.info ( '%s\n%s' % ( title , table ) )
+    
+
+# ========================================================================
+title = 'Data/target dataset'
+logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                      title     = title    ,
+                                                      prefix    = '# '     ) ) )
+# =============================================================================
+title = 'MC-tree before reweighting' 
+logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                      title     = title    ,
+                                                      prefix    = '# '     ) ) )
+# =============================================================================
+title = 'MC-tree after reweighting' 
+logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                      title     = title    ,
+                                                      cuts      = weight_name , 
+                                                      prefix    = '# '     ) ) )
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

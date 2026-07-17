@@ -3360,14 +3360,22 @@ def ds_slice ( data                       ,
     import numpy
     from   collections import OrderedDict 
     
-    kwcopy = {}
-    if '2.2' <= numpy.__version__  : kwcopy[ 'copy' ] = True 
+    ## kwcopy = {}
+    ## kwcopy[ 'copy' ] = True
+    if '2.2' <= numpy.__version__  :
+        def np_copier ( data ) : return numpy.asarray ( data , dtype = float , copy = True )
+    else : 
+        def np_copier ( data ) : return numpy.array   ( data , dtype = float ) 
+    
     
     nEvents = 0    
     result  = OrderedDict()   ## ensure ordering! 
     for var in varlst :
         column         = table [ var ]
-        result [ var ] = numpy.asarray ( column , dtype = float , **kwcopy  )
+        
+        ## result [ var ] = numpy.asarray ( column , dtype = float , **kwcopy  )
+        result [ var ] = np_copier ( column )
+        
         ## check the size 
         n              = len ( column )
         if not nEvents : nEvents = n
@@ -3393,14 +3401,34 @@ def ds_slice ( data                       ,
     if weighted :
         assert 1 == table.size()  , "Here table *MUST* have size equal to 1!"
         column  = table [ wname ]
-        weights = numpy.asarray ( column , dtype = float , **kwcopy ) 
+
+        ## weights = numpy.asarray ( column , dtype = float , **kwcopy )
+        weights = np_copier ( column ) 
+
+        if numpy.all ( weights == 1 ) :
+            print ( 'ERASE TRIVIAL WEIGHTS!' )
+            ## weights = None
+        else :
+            print ( 'weights are not trivial!' )
+            
+            
+        print ( 'COLUMN:'  , [ v for v in column ] )
+        print ( 'WEIGHTS/1:' , weights )
+        
         column.clear ()
+
+        print ( 'WEIGHTS/2:' , weights )
+        
         table.erase ( wname )
 
     assert table.empty() , "At this moment the table *MUST* be empty!"
     
+    print ( 'WEIGHTS/3:' , weights )
+
     del table
 
+    print ( 'WEIGHTS/4:' , weights )
+    
     if structured :
         
         dt    = numpy.dtype ( [ ( str ( v ) , float ) for v in result ] )
@@ -3420,6 +3448,8 @@ def ds_slice ( data                       ,
     ## remove totally trivial weights 
     if not weights is None and numpy.all ( weights == 1 ) :
         weights = None 
+
+    print ( 'WEIGHTS/5:' , weights )
         
     return result, weights 
 
