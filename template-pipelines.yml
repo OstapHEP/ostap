@@ -23,8 +23,8 @@ jobs:
      sudo apt-get install libdb-dev libdb++-dev 
      sudo apt-get install cvmfs cvmfs-config-default
      sudo cvmfs_config setup
-     echo  "CVMFS_REPOSITORIES=lhcb.cern.ch,grid.cern.ch,sft.cern.ch,sft-nightlies.cern.ch" | sudo tee -a  /etc/cvmfs/default.local > /dev/null
-     echo  "CVMFS_HTTP_PROXY=DIRECT"  | sudo tee -a  /etc/cvmfs/default.local > /dev/null
+     echo "CVMFS_REPOSITORIES=lhcb.cern.ch,grid.cern.ch,sft.cern.ch,sft-nightlies.cern.ch" | sudo tee -a  /etc/cvmfs/default.local > /dev/null
+     echo "CVMFS_HTTP_PROXY=DIRECT"  | sudo tee -a  /etc/cvmfs/default.local > /dev/null
      sudo service autofs restart
      sudo cvmfs_config probe
     displayName: 'install cvmfs'
@@ -37,14 +37,14 @@ jobs:
   - script: |
       docker start ostap-build
       docker exec ostap-build /bin/bash -c "dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install tkrzw python-tkrzw-doc libdb-devel libdb-cxx-devel libdb-utils -y"
-      docker exec ostap-build /bin/bash -c "cd /osya/ostap && echo $PWD && ls -al && ./.aux/build_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
+      docker exec ostap-build /bin/bash -c "cd /osya/ && echo $PWD && ls -al && ./.aux/build_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
     displayName: 'build stage'
   - script: |
       ls /cvmfs/sft.cern.ch 
-      docker exec ostap-build /bin/bash -c "cd /osya/ostap && echo $PWD && ls -al && ./.aux/test_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
+      docker exec ostap-build /bin/bash -c "cd /osya/ && echo $PWD && ls -al && ./.aux/test_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
     displayName: 'test stage'
   - script: |
-     docker cp  ostap-build:/osya/ostap/build .
+     docker cp  ostap-build:/osya/build .
     condition: always()
     displayName: 'copy build result'
   - task: PublishPipelineArtifact@0
