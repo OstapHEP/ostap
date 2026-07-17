@@ -21,7 +21,6 @@ jobs:
             - { build: 5, lcg: dev3/latest, platform: x86_64-el9-clang22-opt , registry: gitlab-registry.cern.ch/linuxsupport/alma9-base  }
             - { build: 6, lcg: dev3/latest, platform: x86_64-el10-gcc16-opt  , registry: gitlab-registry.cern.ch/linuxsupport/alma10-base }
 	    
-      fail-fast: false
      runs-on: ubuntu-latest 
      steps:
        - uses: actions/checkout@v2
