@@ -174,19 +174,6 @@ def data_compare ( comparator   ,
                                  use_frame  = use_frame2 , 
                                  parallel   = parallel2  )
 
-    print ('DATA-COMPARE/W1'  , typename ( data  ) , cuts  , varlst1 , weight1 ) 
-    print ('DATA-COMPARE/W2'  , typename ( data2 ) , cuts2 , varlst2 , weight2 ) 
-
-    print ( 'DATA \n%s' % data .table ( varlst1 ) )
-    print ( 'DATA2\n%s' % data2.table ( varlst2 ) )
-
-
-    from ostap.stats.counters import SE
-    cw = SE() 
-    if isinstance ( data2 , ROOT.RooDataSet ) :
-        for _, ww in data2 : cw += ww
-    print ( 'counter\n' , cw )
-        
     ## if seevral comparators  are provdes 
     if isinstance ( comparator , sequence_types ) :
         return tuple ( numpy_compare ( cmp        ,

@@ -65,7 +65,7 @@ dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-rewe
 NDATA1      = 5000 ## 00
 NDATA2      = 4000 ## 00
 NDATA3      = 4000 ## 00
-NMC         = 5000 ## 00
+NMC         = 8000 ## 00
 
 xmax        = 15.0
 ymax        = 12.0 
@@ -353,8 +353,8 @@ logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
     mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )
     ## fill dataset from input MC tree
-    mcds_ , _ = mctree.make_dataset ( variables = variables ,
-                                      selection = '0<=x && x<%s && 0<=y && y<%s && 0<=z && z<%s' % ( xmax , ymax, zmax ) )
+    mcds_init , _ = mctree.make_dataset ( variables = variables ,
+                                          selection = '0<=x && x<%s && 0<=y && y<%s && 0<=z && z<%s' % ( xmax , ymax, zmax ) )
 
 # =============================================================================
 ## Configuration of reweighting plots 
@@ -384,7 +384,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     ## 0) The weighter object
     weighter = Weight ( dbname , weightings )
     ## 1a) create new "weighted" mcdataset
-    mcds = mcds_.copy()
+    mcds = mcds_init.copy()
     
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         # =========================================================================
@@ -410,7 +410,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     else          : the_plots = plots
 
     ## weight truncation: avoid very large change of weights for  single iteration 
-    wtruncate = ( 0.1 , 10 ) if iter < 4 else ( 0.5 , 2.0 )  
+    wtruncate = ( 0.1 , 3 ) if iter < 4 else ( 0.5 , 1.5 )  
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
@@ -428,10 +428,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             make_plots = True      , ## make control plots 
             tag        = tag       ) ## tag for printout
 
-    if not active and 5 <= iter : 
-        logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
-        converged = True 
-        break
+    
 
     # =============================================================================
     if 1 == iter % 3  or True : 
@@ -461,8 +458,14 @@ for iter in range ( 1 , maxIter + 1 ) :
     mcds.clear()
     del mcds
     
+    if not active and 5 <= iter : 
+        logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
+        converged = True 
+        break
+    
 else :
     
+    del mcds_init 
     converged = False 
     logger.error ( "No convergency!" )
 
@@ -484,10 +487,10 @@ for key in graphs :
 ## Add obtained weight into MC-tree
 # =============================================================================
 with timing ( "Add `%s' column to initial MC-tree" % weight_name , logger = logger ) : 
-    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+    mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
     weighter = Weight ( dbname , weightings )
     mctree   = mctree.add_reweighting ( weighter ,  name = weight_name )
-    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+    mctree   = ROOT.TChain ( tag_mc  , fils = testdata )  
     
 # =============================================================================
 ## compare DATA  and MC before and after reweighting
@@ -505,7 +508,7 @@ with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) 
                                  expressions = ( 'x' , 'y' , 'z' ) ,
                                  cuts2       = weight_name ) 
     ## effective MC statistics at this step 
-    n_eff   = mcds.nEff() 
+    n_eff   = mctree.nEff() 
     row     = ( '*' , '%.1f'  % n_eff )
     pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
     row    += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)

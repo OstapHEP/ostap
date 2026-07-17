@@ -24,7 +24,7 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights
     )
 # =============================================================================
-from   collections                  import defaultdict
+from   collections                  import OrderedDict
 from   ostap.core.meta_info         import root_info
 from   ostap.core.core              import ( Ostap          ,
                                              VE , SE , dsID , 
@@ -49,7 +49,7 @@ import ostap.fitting.roocollections
 import ostap.fitting.variables  
 import ostap.fitting.printable
 import ostap.io.root_file
-import ROOT, random, math, sys, ctypes  
+import ROOT, random, math, sys, ctypes, numpy   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -59,8 +59,12 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================
+if "2.2" <= numpy.__version__  : 
+    def copy2np  ( data ) : return numpy.asarray ( data , dtype = float , copy = True )
+else                           : 
+    def copy2np  ( data ) : return numpy.array   ( data , dtype = float )
+# ============================================================================
 DATA_PTR  = std.unique_ptr[ROOT.RooAbsData]
-
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
@@ -3291,7 +3295,9 @@ _new_methods_ += [
     ROOT.RooDataSet.toTree  ,
     ROOT.RooDataSet.asTree
     ]
-    
+  
+  
+  
 # =============================================================================d
 ## Get "slice" from <code>RooAbsData</code> in form of numpy array
 #  @code
@@ -3356,25 +3362,13 @@ def ds_slice ( data                       ,
     
     missing    = sorted ( v for v in varlst if not v in table  )    
     assert not missing , "Variables are not in the table: %s" % ','.join ( missing )
-
-    import numpy
-    from   collections import OrderedDict 
-    
-    ## kwcopy = {}
-    ## kwcopy[ 'copy' ] = True
-    if '2.2' <= numpy.__version__  :
-        def np_copier ( data ) : return numpy.asarray ( data , dtype = float , copy = True )
-    else : 
-        def np_copier ( data ) : return numpy.array   ( data , dtype = float ) 
-    
     
     nEvents = 0    
     result  = OrderedDict()   ## ensure ordering! 
     for var in varlst :
         column         = table [ var ]
         
-        ## result [ var ] = numpy.asarray ( column , dtype = float , **kwcopy  )
-        result [ var ] = np_copier ( column )
+        result [ var ] = copy2np ( column )
         
         ## check the size 
         n              = len ( column )
@@ -3403,32 +3397,17 @@ def ds_slice ( data                       ,
         column  = table [ wname ]
 
         ## weights = numpy.asarray ( column , dtype = float , **kwcopy )
-        weights = np_copier ( column ) 
+        weights = copy2np ( column ) 
 
-        if numpy.all ( weights == 1 ) :
-            print ( 'ERASE TRIVIAL WEIGHTS!' )
-            ## weights = None
-        else :
-            print ( 'weights are not trivial!' )
+        if numpy.all ( weights == 1 ) : weights = None
             
-            
-        print ( 'COLUMN:'  , [ v for v in column ] )
-        print ( 'WEIGHTS/1:' , weights )
-        
-        column.clear ()
-
-        print ( 'WEIGHTS/2:' , weights )
-        
+        column.clear ()        
         table.erase ( wname )
 
     assert table.empty() , "At this moment the table *MUST* be empty!"
     
-    print ( 'WEIGHTS/3:' , weights )
-
     del table
 
-    print ( 'WEIGHTS/4:' , weights )
-    
     if structured :
         
         dt    = numpy.dtype ( [ ( str ( v ) , float ) for v in result ] )
@@ -3448,8 +3427,6 @@ def ds_slice ( data                       ,
     ## remove totally trivial weights 
     if not weights is None and numpy.all ( weights == 1 ) :
         weights = None 
-
-    print ( 'WEIGHTS/5:' , weights )
         
     return result, weights 
 
