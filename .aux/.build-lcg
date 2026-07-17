@@ -6,6 +6,20 @@ PLATFORM=${2:-x86_64-el9-clang22-opt}
 prefix='<<OSTAP WITH LCG>>'
 prefix_error='<<OSTAP WITH LCG ERROR>>'
 
+# =========================================================================
+# Define a safe safe_safe_exit function
+# =========================================================================
+safe_exit()
+{
+    local exit_code="${1:-0}"
+    # Check if the script is being sourced
+    if [ "$0" = "$BASH_SOURCE" ]; then
+        exit   "$exit_code" # Safe to safe_safe_exit (running as a normal script)
+    else
+        return "$exit_code" # Safe to return (being run via 'source')
+    fi
+}
+
 COLORS=$(tput colors 2> /dev/null)
 if [[ $? = 0  && $COLORS -gt 2 ]]
 then    
@@ -94,7 +108,7 @@ then
     true
 else
     echo -e ${prefix_error}' Valid platforms are:' `ls /cvmfs/sft.cern.ch/lcg/views/$LCG`
-    return 111
+    safe_exit 111
 fi
 
 LCG_VIEWS=/cvmfs/sft.cern.ch/lcg/views
@@ -114,7 +128,7 @@ then
     source ${LCG_SETUP}
 else
     echo -e ${prefix_error}' No valid LCG/PLATFORM/setup script: ' ${LCG_SETUP}
-    return 112 
+    safe_exit 112 
 fi
 
 ## CLANG
@@ -139,7 +153,7 @@ then
     true
 else 
     echo -e ${prefix_error}' No valid ROOTSYS directory ' ${ROOTSYS}
-    return 113
+    safe_exit 113
 fi
 
 OSTAP_SOURCE=${3:-${OSTAP_SOURCE}}
@@ -184,7 +198,7 @@ then
 else
     
     echo -e ${prefix_error}' No ostap source drectory found!'
-    return 114 
+    safe_exit 114 
 fi
     
 ## parameter #4: build directory
@@ -240,7 +254,7 @@ then
 else
     
     echo -e ${prefix_error}' No valid build directory is found! '${OSTAP_BUILD}
-    return 115
+    safe_exit 115
 fi     
 
 ## check CMAKE & NINJA
@@ -251,7 +265,7 @@ then
     echo -e "${prefix}"' CMAKE version     : '$(cmake --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix_error}"' CMAKE is not found!'
-   return 116
+   safe_exit 116
 fi
 
 if command -v ctest &> /dev/null 
@@ -260,7 +274,7 @@ then
     echo -e "${prefix}"' CTEST version     : '$(ctest --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix_error}"' CTEST is not found!'
-   return 117 
+   safe_exit 117 
 fi
 
 if command -v cpack &> /dev/null 
@@ -269,7 +283,7 @@ then
     echo -e "${prefix}"' CPACK version     : '$(cpack --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix_error}"' CPACK is not found!'
-   return 118 
+   safe_exit 118 
 fi
 
 if command -v ninja &> /dev/null 
@@ -278,7 +292,7 @@ then
     echo -e "${prefix}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix_error}"' NINJA is not found!'
-   return 119 
+   safe_exit 119 
 fi 
 
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
@@ -312,7 +326,7 @@ elif [[     ${OSTAP_INSTALL} &&
 then
     
     echo -e ${prefix_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
-    return 120
+    safe_exit 120
     
 else
     
@@ -325,15 +339,15 @@ echo -e ${prefix}' LCG VERSION    : '${LCG}
 echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
 echo -e ${prefix}' LCG BUILD      : '${LCG_BUILD}
 
-
 echo -e ${prefix}' ROOTSYS        : '${ROOTSYS}
-
 
 echo -e ${prefix}' OSTAP_SOURCE   : '${OSTAP_SOURCE}
 echo -e ${prefix}' OSTAP_INSTALL  : '${OSTAP_INSTALL}
 echo -e ${prefix}' OSTAP_BUILD    : '${OSTAP_BUILD}
 
+# =======================================================================================
 ## the actual build-script 
+# =======================================================================================
 source ${OSTAP_SOURCE}/.aux/.build-ostap ${OSTAP_SOURCE} ${OSTAP_INSTALL} ${OSTAP_BUILD}
 
 result=$?
@@ -342,24 +356,6 @@ echo -e ${prefix}' LCG VERSION    : '${LCG}
 echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
 echo -e ${prefix}' LCG BUILD      : '${LCG_BUILD}
 
-if [[ -d ${ROOTSYS}/lib ]]
-then
-   a_libs=`find ${ROOTSYS}/lib  -name '*'.a | wc -l`
-   so_libs=`find ${ROOTSYS}/lib  -name '*'.so'*' | wc -l`
-   pcm_libs=`find ${ROOTSYS}/lib  -name '*'.pcm | wc -l`
-   rm_libs=`find ${ROOTSYS}/lib  -name '*'.rootmap | wc -l`
-   echo -e ${prefix}' ROOT-libs      : #a:'${a_libs}' #so:'${so_libs}' #pcm:'${pcm_libs}' #rootmap:'${rm_libs} 
-fi 
-
-## if [[ -d ${LCG_BUILD}/lib ]]
-##  then
-##    a_libs=`find ${LCG_BUILD}/lib  -name '*'.a | wc -l`
-##   so_libs=`find ${LCG_BUILD}/lib  -name '*'.so'*' | wc -l`
-##   pcm_libs=`find ${LCG_BUILD}/lib  -name '*'.pcm | wc -l`
-##   rm_libs=`find ${LCG_BUILD}/lib  -name '*'.rootmap | wc -l`
-##   echo -e ${prefix}' LCG-libs        : #a:'${a_libs}' #so:'${so_libs}' #pcm:'${pcm_libs}' #rootmap:'${rm_libs} 
-## fi 
-
 if [[ $result -eq 0 ]]
 then
     echo -e ${prefix}' RESULT         : 'SUCCESS
@@ -367,4 +363,11 @@ else
     echo -e ${prefix_error}' RESULT     : '${result}
 fi
 
-return ${result}
+# ===================================================================================
+safe_exit ${result} 
+
+
+# ===================================================================================
+##                                                                            The END 
+# ===================================================================================
+

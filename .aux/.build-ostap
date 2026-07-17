@@ -3,6 +3,19 @@
 prefix1='<<BUILD OSTAP>>'
 prefix1_error='<<BUILD OSTAP *ERROR*>>'
 
+# =========================================================================
+# Define a safe safe_exit function
+# =========================================================================
+safe_exit()
+{
+    local exit_code="${1:-0}"
+    # Check if the script is being sourced
+    if [ "$0" = "$BASH_SOURCE" ]; then
+        exit   "$exit_code" # Safe to exit (running as a normal script)
+    else
+        return "$exit_code" # Safe to return (being run via 'source')
+    fi
+}
 # ==========================================================================
 ## Color output ? 
 # ==========================================================================
@@ -45,7 +58,7 @@ then
     true
 else 
     echo -e ${prefix1_error}' No valid ROOTSYS directory:' ${ROOTSYS}
-    return 210
+    safe_exit 210
 fi
 
 # ==========================================================================
@@ -69,7 +82,7 @@ else
     echo -e ${prefix1_error}' No valid source directory is found! '${OSTAP_SOURCE}
     ## 
     unset OSTAP_SOURCE OSTAP_BUILD OSTAP_INSTALL		
-    return 211
+    safe_exit 211
 fi
 
 # ==========================================================================
@@ -89,7 +102,7 @@ then
     echo -e ${prefix1_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
     ## 
     unset OSTAP_BUILD OSTAP_INSTALL		
-    return 212
+    safe_exit 212
 fi
 
 echo -e "${prefix1}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
@@ -146,7 +159,7 @@ else
     echo -e ${prefix1_error}' No valid build directory is found! '${OSTAP_BUILD}
     ## 
     unset OSTAP_BUILD OSTAP_INSTALL		
-    return 213 
+    safe_exit 213 
 fi  
 
 if command -v python &> /dev/null 
@@ -155,7 +168,7 @@ then
     echo -e "${prefix1}"' PYTHON version    : '$(python --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix1_error}"'PYTHON in not found!'
-   return 214
+   safe_exit 214
 fi 
 
 if command -v cmake &> /dev/null 
@@ -164,7 +177,7 @@ then
     echo -e "${prefix1}"' CMAKE version     : '$(cmake --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix1_error}"' CMAKE is not found!'
-   return 215 
+   safe_exit 215 
 fi
 
 if command -v ctest &> /dev/null 
@@ -173,7 +186,7 @@ then
     echo -e "${prefix1}"' CTEST version     : '$(ctest --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix1_error}"' CTEST is not found!'
-   return 216 
+   safe_exit 216 
 fi
 
 if command -v ctest &> /dev/null 
@@ -182,7 +195,7 @@ then
     echo -e "${prefix1}"' CPACK version     : '$(cpack --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix1_error}"' CPACK is not found!'
-   return 217 
+   safe_exit 217 
 fi 
 
 make_command=
@@ -205,7 +218,7 @@ then
     echo -e "${prefix1}"' MAKE version      : '$(make --version | grep -Eo "[0-9]\.[0-9]+" )
 else         
     echo -e "${prefix1_error}"' neither NINJA nor (G)MAKE is found!'
-    return 218 
+    safe_exit 218 
 fi
 
 # ==========================================================================
@@ -231,7 +244,7 @@ then
 	echo -e "${prefix1_error}"' [1/7] failure: Cannot clean OSTAP_INSTALL' ${sc} ${OSTAP_INSTALL}
 	## 
 	## unset OSTAP_BUILD OSTAP_INSTALL		
-	## return ${sc}
+	## safe_exit ${sc}
     fi
 fi
 
@@ -250,7 +263,7 @@ then
 	echo -e "${prefix1_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${sc} ${OSTAP_BUILD}
 	## 
 	## unset OSTAP_BUILD OSTAP_INSTALL		
-	## return ${sc}
+	## safe_exit ${sc}
     fi
     
 elif [[ -f ${OSTAP_BUILD}/Makefile && "${make_command}" != "ninja" ]]
@@ -266,7 +279,7 @@ then
 	echo -e "${prefix1_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${sc} ${OSTAP_BUILD}
 	## 
 	## unset OSTAP_BUILD OSTAP_INSTALL		
-	## return ${sc}
+	## safe_exit ${sc}
     fi
     
 fi
@@ -284,11 +297,11 @@ then
     echo -e "${prefix1_error}"' [3/7] failure: Cannot remove OSTAP_BUILD ramnants&garbage' ${sc} ${OSTAP_BUILD}
     ## 
     ## unset OSTAP_BUILD OSTAP_INSTALL		
-    ## return ${sc}
+    ## safe_exit ${sc}
 fi
 
 # ==========================================================================
-## CMAKE suppors "--fresh" options from 3.24 
+## CMAKE supports "--fresh" options from 3.24 
 # ==========================================================================
 cmake_version=$(cmake --version | grep -Eo '[0-9]\.[0-9]+\.[0-9]+')
 if [[ "${cmake_version}" < "3.24.0" ]]
@@ -313,7 +326,7 @@ then
     echo -e "${prefix1_error}"' [4/7] failure: first pass of cmake&'${make_command}'&install' ${sc} ${OSTAP_BUILD}
     ## 
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return ${sc}
+    safe_exit ${sc}
 fi
 
 # =========================================================================
@@ -325,7 +338,7 @@ then
 else 
     echo -e "${prefix1_error}"' Missing install directory! '${OSTAP_INSTALL}
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return 219
+    safe_exit 219
 fi 
 
 # =========================================================================
@@ -342,7 +355,7 @@ if [[ ${sc} -ne 0 ]]
 then
     echo -e "${prefix1_error}"' [4/7] failure: second pass of cmake&'${make_command}'&install ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return ${sc}
+    safe_exit ${sc}
 fi
 
 # =========================================================================
@@ -356,7 +369,7 @@ else
     echo -e "${prefix1_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh
     ## 
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return 220
+    safe_exit 220
 fi
 
 # =========================================================================
@@ -373,12 +386,12 @@ if [[ ${sc} -ne 0 ]]
 then
     echo -e "${prefix1_error}"' [6/7] failure: third pass of cmake&'${make_command}'&install ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return ${sc}
+    safe_exit ${sc}
 fi
 
 ## ( echo -e "${prefix1}"' [7/7] Last   pass of cmake&'${make_command}'&package'                  && 
 ##      cd ${OSTAP_BUILD}                                                                        && 
-##      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_gtenerator} &&
+##      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_generator} &&
 ##      ${make_command} -j$(nproc --all)                                                         && 
 ##      ${make_command} -j$(nproc --all)  package )
 
@@ -387,7 +400,7 @@ if [[ ${sc} -ne 0 ]]
 then
     echo -e "${prefix1_error}"' [7/7] failure: last pass of cmake&'${make_command}'&package ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return ${sc}
+    safe_exit ${sc}
 fi
 
 OSTAP_BUILDER=${make_command}
@@ -407,17 +420,6 @@ echo -e "${prefix1}"' ostap           : '$(which ostap     )
 echo -e "${prefix1}"' ostap version   : '$(ostap    --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]+\.[0-9]+" )
 
 
-user_site = $(python -m site --user-site)
-if [[  ${user_site} && -d ${user_site} ]]
-then
-    echo -e "${prefix1}"' PYTHON-USER-SITE: '${user_site}
-    if command -v tree &> /dev/null
-    then
-	tree -d -L 3 --charset UTF-8 ${user_site}
-    else
-	ls ${user_site} 
-    fi  
-fi
 
 if command -v tree &> /dev/null
 then
@@ -435,3 +437,11 @@ export OSTAP_BUILDER
 export OSTAP_SOURCE
 export OSTAP_BUILD
 export OSTAP_INSTALL
+
+
+result=${sc} 
+safe_exit ${result} 
+
+# ===================================================================================
+##                                                                            The END 
+# ===================================================================================
