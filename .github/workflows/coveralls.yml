@@ -26,8 +26,15 @@ jobs:
        - uses: actions/checkout@v2
        - name: Install dependencies
          run: |
-          ls 
-       - uses: cvmfs-contrib/github-action-cvmfs@v4
+          ls
+       - name: Install and Mount CVMFS
+         uses: cvmfs-contrib/github-action-cvmfs@v5 
+         with:
+          cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
+       - name: Verify CVMFS Access /cvmfs/stf.cern.ch 
+         run: |
+          ls /cvmfs/sft.cern.ch
+          echo "/cvmfs/sft.cern.ch successfully mounted!"
        - name: Build
          run: |
           ls /cvmfs/sft.cern.ch 
