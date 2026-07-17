@@ -31,7 +31,7 @@ jobs:
           cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
        - name: Verify CVMFS Access /cvmfs/stf.cern.ch 
          run: |
-          ls /cvmfs/sft.cern.ch
+          ls /cvmfs/sft.cern.ch/lcg/vews/${{matrix.lcg}}/${{matrix.platform}}
           echo "/cvmfs/sft.cern.ch successfully mounted!"
        - name: Build
          run: |
