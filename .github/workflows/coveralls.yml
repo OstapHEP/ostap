@@ -40,7 +40,7 @@ jobs:
           docker create -v /cvmfs:/cvmfs:shared -u 0 --security-opt seccomp=unconfined --name ostap-build ${{ matrix.registry }} sleep infinity
           docker cp /home/runner/work/ostap ostap-build:/osya
           docker start ostap-build
-          docker exec ostap-build /bin/bash -c "dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install which tkrzw python-tkrzw-doc libdb-devel libdb-cxx-devel libdb-utils -y"
+          docker exec ostap-build /bin/bash -c "dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install which libdb-devel libdb-cxx-devel libdb-utils -y"
           docker exec ostap-build /bin/bash -c "cd /osya/ostap && echo $PWD && ls -al && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
        - name: Test
          run: |
