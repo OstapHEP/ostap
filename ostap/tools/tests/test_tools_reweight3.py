@@ -30,7 +30,7 @@ import ostap.logger.table       as     T
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
 import ostap.parallel.kisa
-import ROOT, random, math, os, time 
+import ROOT, random, math, os, numpy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -545,16 +545,20 @@ with timing ( "LGBM reweight" , logger = logger ) :
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-from ostap.tools.reweighters     import Reweighter_XGB     as XGB
-rw3 = DataReweighter ( XGB                         , ## reweighter type 
-                       original         = mctree   ,
-                       target           = datatree ,
-                       target_variables = 'x,y,z'  ) 
+import xgboost    
+if xgboost.__version__ < "1.0" and "2.0" <= numpy.__version__:
+    logger.warning ( "XGBoost version %s is not compatible with numpy %s" % ( xgboost.__version__ , numpy.__version__ ) )
+else :
+    from ostap.tools.reweighters     import Reweighter_XGB     as XGB
+    rw3 = DataReweighter ( XGB                         , ## reweighter type 
+                           original         = mctree   ,
+                           target           = datatree ,
+                           target_variables = 'x,y,z'  ) 
 
-weight_XGB = 'weight_XGB'
-with timing ( "XGB reweight" , logger = logger ) :    
-    rw3.reweight ( mctree , name = weight_XGB  ) 
-    weights.append ( weight_XGB )
+    weight_XGB = 'weight_XGB'
+    with timing ( "XGB reweight" , logger = logger ) :    
+        rw3.reweight ( mctree , name = weight_XGB  ) 
+        weights.append ( weight_XGB )
 
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
