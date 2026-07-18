@@ -3139,9 +3139,7 @@ Ostap.Math.Vector    =  staticmethod ( LinAlg.Vector    )
 Ostap.Math.VectorE   =  staticmethod ( LinAlg.VectorE   ) 
 Ostap.Math.Matrix    =  staticmethod ( LinAlg.Matrix    )
 Ostap.Math.SymMatrix =  staticmethod ( LinAlg.SymMatrix ) 
-
 # =============================================================================
-
 
 # =============================================================================
 if numpy : # ==================================================================
@@ -3223,8 +3221,6 @@ if numpy : # ==================================================================
     Ostap.Math.toSMatrix  = staticmethod ( LinAlg.toSMatrix ) 
     Ostap.Math.toSVector  = staticmethod ( LinAlg.toSVector )
     Ostap.Math.toSObject  = staticmethod ( LinAlg.toSObject )
-
-
 
 # =============================================================================
 ## factory for vectors

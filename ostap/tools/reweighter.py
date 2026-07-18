@@ -17,6 +17,7 @@ __all__     = (
     'Reweighter' , 
     ) 
 # =============================================================================
+from   ostap.math.math_base  import weight_trivial
 import numpy, os  
 # =============================================================================
 # logging 
@@ -30,7 +31,17 @@ try : # =======================================================================
     varname = 'NUMEXPR_MAX_THREADS'
     if not varname in os.environ :
         from ostap.utils.basic import numcpu 
-        os.environ[ varname ]  = '%d'% numcpu ()  
+        os.environ[ varname ]  = '%d'% numcpu ()
+    # =========================================================================
+    ## some patch 
+    import sklearn.tree._classes as _cl
+    if hasattr ( _cl , 'CRITERIA_REG' ) :
+        if 'mse' in _cl.CRITERIA_REG and 'squared_error' not in _cl.CRITERIA_REG:
+            _cl.CRITERIA_REG [ 'squared_error' ] = _cl.CRITERIA_REG [ 'mse']
+        elif 'squared_error' in _cl.CRITERIA_REG and 'mse' not in _cl.CRITERIA_REG:
+            _cl.CRITERIA_REG [ 'mse'] = _cl.CRITERIA_REG [ 'squared_error' ]
+
+    ## 
     from hep_ml.reweight import GBReweighter as GBRW 
     # =========================================================================
 except ImportError : # ========================================================
@@ -53,17 +64,28 @@ if GBRW : # ===================================================================
         """ Helper class for reweighting using `GBReweighter`
         - see hep_ml.reweight.GBReweighter
         """
-        def __init__ ( self ,
+        def __init__ ( self                    , * , 
                        original                ,
                        target                  ,
                        original_weight = None  ,
                        target_weight   = None  , 
-                       silent          = False , **kwargs ) :
+                       silent          = False , **params  ) :
             """ Helper class for reweighting using `GBReweighter`
             - see hep_ml.reweight.GBReweighter
             """
-            self.__kwargs     = kwargs 
-            self.__reweighter = GBRW ( **kwargs ) 
+            cnf = { 'n_estimators'     : 60  , 
+                    'learning_rate'    : 0.1 , 
+                    'max_depth'        : 3   , 
+                    'min_samples_leaf' : 100 }
+            
+            params .pop ( 'n_splits' , None )
+            params .pop ( 'parallel' , None )
+            params .pop ( 'progress' , None )
+            cnf.update ( params ) 
+            
+            self.__params     = cnf 
+            self.__silent     = True if silent else False 
+            self.__reweighter = GBRW ( **self.params  ) 
             shape1 = original.shape
             shape2 = target.shape 
             
@@ -77,11 +99,14 @@ if GBRW : # ===================================================================
             assert ( target_weight   is None ) or len ( target_weight   ) == len ( target   ) , \
                 "Invalid length of ``target weights''"
         
-            if not silent and kwargs : 
+            ## MC weights are used in training?
+            self.__weight_used = not weight_trivial ( original_weight )
+                
+            if not silent and self.params : 
                 title = '(GB)Reweighter configuration'
                 table = self.table ( title = title  , prefix = '# ' )
                 logger.info ( '%s:\n%s' %  ( title , table ) )
-                
+
             if silent : 
                 from ostap.logger.logger import logAttention as context
             else      : 
@@ -93,24 +118,56 @@ if GBRW : # ===================================================================
                                         original_weight = original_weight , 
                                         target_weight   = target_weight   )
                          
+
         @property
-        def kwargs ( self ) :
-            """`kwargs`: actual configuration usef for clreationn of `GBReweighter`"""
-            return self.__kwargs 
+        def method ( self ) :
+            """`method` : underlying method/engine"""
+            return "GBReweighter"
+    
+        @property
+        def params ( self ) :
+            """`kwargs`: actual configuration usef for clreation of `GBReweighter`"""
+            return self.__params
         
+        @property
+        def weight_used ( self ) :
+            """`weight_used` : was orignal weight used for training?"""
+            return self.__weight_used 
+        
+        @property
+        def silent ( self ) :
+            """`silent` : silent processing?"""
+            return self.__silent
+        
+        @property 
+        def config ( self ) :
+            """`config` : Reweighter configuraton"""
+            conf = {}
+            conf.update ( self.__params )
+            conf [ 'method'      ] = self.method
+            conf [ 'silent'      ] = self.silent 
+            conf [ 'weight_used' ] = self.weight_used
+            return conf 
+                    
         @property
         def reweighter ( self ) :
             """`reweighter' : get the underlying reweighter object"""
             return self.__reweighter
          
         # =========================================================================
-        def table    ( self , title = '' , prefix = '' ) :
-            title = title if title else 'Reweighter configuration'
-            from ostap.logger.utils import print_args 
-            return print_args ( title = title , prefix = prefix , **self.__kwargs )
+        ## self-print get the configuration 
+        def table (  self , title = '' , prefix = '# ') : 
+            """ print configuration """
+            from ostap.logger.utils import map2table_ex
+            title = title if title else "%s configuration " % typename ( self ) 
+            return map2table_ex ( self.config , 
+                                header      = ( 'Parameter' , 'type' , 'value' ) ,
+                                  ailgnment   = 'rcw'  , 
+                                  prefix      = prefix ,
+                                  title       = title  )
         
-        def __str__  ( self ) : return self.table () 
-        def __repr__ ( self ) : return self.table () 
+        def __str__  ( self ) : return self.table ( prefix = '' )
+        def __repr__ ( self ) : return self.__str__ () 
         
         # =========================================================================
         ## Get/predict new weights for (new) original
@@ -119,10 +176,14 @@ if GBRW : # ===================================================================
                      original_weight = None ) :
             """ Get/predict  new weights for (new) original
             """
+            if not self.silent and self.weight_used and weight_trivial ( original_weight ) :
+                logger.warning ( "Reweighter: `original-weight' was used for training but not provided for evaluation" ) 
+                
             return self.reweighter.predict_weights (
                 original        = original        ,
                 original_weight = original_weight )
-    
+
+        weights     = weight 
         new_weight  = weight
         new_weights = weight
     

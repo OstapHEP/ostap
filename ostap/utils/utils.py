@@ -169,7 +169,6 @@ def profiler( name = '' ) :
     # 
     """
     return Profiler ( name )
-            
 
 # =============================================================================
 ## context manager to keep the current working directory
@@ -1006,7 +1005,6 @@ class Singleton(type) :
 
         return cls 
 
-
 # ==============================================================================
 ## Copy file with the progress
 #  @code
@@ -1049,7 +1047,6 @@ def copy_with_progress ( source  , destination ) :
         "Invalid ``destination'' %s " % destination
     
     return os.path.realpath ( destination )
-
 
 # =============================================================================
 

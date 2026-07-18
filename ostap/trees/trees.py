@@ -22,10 +22,11 @@ __all__     = (
     'array_buffer_types' , ## allowed array buffer types 
   ) 
 # =============================================================================
-from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
-                                          string_types       , sequence_types ,
-                                          sized_types        , num_types      ,
-                                          dictlike_types     , list_types     )
+from   ostap.core.ostap_types    import ( integer_types      , long_type          ,
+                                          string_types       , sequence_types     ,
+                                          sized_types        , num_types          ,
+                                          dictlike_types     , list_types         ,
+                                          numpy_buffer_types , array_buffer_types )
 from   ostap.core.core_base      import ( std , Ostap   ,
                                           valid_pointer , 
                                           rootException , rootError ) 
@@ -2081,36 +2082,7 @@ def push_2chain ( chain , *config , progress = True , report = True ) :
     
     return chain
 
-# ==============================================================================
-try : # ========================================================================
-    # ==========================================================================
-    import numpy
-    numpy_buffer_types = ( numpy.float16 ,
-                           numpy.float32 ,
-                           numpy.float64 ,
-                           numpy.byte    ,   
-                           numpy.int8    , 
-                           numpy.int_    ,
-                           numpy.int16   ,
-                           numpy.int32   ,
-                           numpy.int64   ,
-                           numpy.ubyte   ,
-                           numpy.uint8   ,
-                           numpy.uint    ,
-                           numpy.uint16  ,
-                           numpy.uint32  ,
-                           numpy.uint64  )    
-    # ==========================================================================
-except ImportError : # =========================================================
-    # ==========================================================================
-    numpy = None
-    numpy_buffer_types = () 
     
-# =========================================================================
-## valid array-types for adding to TTree
-# =========================================================================
-array_buffer_types = ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' , 'b' , 'B' , 'q' , 'Q' )
-
 # ============================================================================
 ## Add new buffer to TTree
 #  @see Ostap::AddBuffer::add_buffer 

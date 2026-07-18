@@ -48,7 +48,7 @@ from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          nearest_neighbors  , 
                                          draw_ecdf          , s2u ) 
 from   ostap.utils.memory       import memory, memory_enough
-from   ostap.math.math_ve       import gauss_cdf 
+from   ostap.math.math_ve       import gauss_cdf
 import ostap.math.math_base           
 import ROOT, os, abc, numpy, math 
 # =============================================================================
@@ -565,9 +565,6 @@ class MIXnp(GoFnp) :
             if weight1 is None : weight1 = numpy.ones ( n1 )
             if weight2 is None : weight2 = numpy.ones ( n2 )            
             weights = numpy.concatenate ( [ weight1 , weight2 ] )
-
-        ##
-
         
         ## from sklearn.neighbors import NearestNeighbors
         ## nn = NearestNeighbors ( **self.params )
@@ -576,7 +573,6 @@ class MIXnp(GoFnp) :
         ## actual_neighbors = indices[ : , 1: ]
         
         actual_neighbors = nearest_neighbors ( data , **self.params )
-        
         
         source_labels    = labels [ : , numpy.newaxis ] # (N, 1)
         neighbor_labels  = labels [ actual_neighbors  ] # (N, K)
@@ -589,8 +585,8 @@ class MIXnp(GoFnp) :
             result = numpy.sum ( I_ik ) / ( 1.0 * self.k_max * ( n1 + n2 ) )
             return float ( result ) 
 
-        w_i = weights [ :, numpy.newaxis ]  ## (N, 1)
-        w_k = weights [ actual_neighbors ]  ## (N, K)
+        w_i = weights [ : , numpy.newaxis ]  ## (N, 1)
+        w_k = weights [ actual_neighbors  ]  ## (N, K)
         
         pair_weights = w_i * w_k            ## (N, K)
         
@@ -1096,37 +1092,34 @@ class Mahalanobis(GoFnp) :
         """
         
         shape     = data.shape
-        n , N     = shape 
-
-        w_trivial = weight_trivial ( weight )
-        w         = None if w_trivial else weight 
-        wsum      = n    if w_trivial else numpy.sum ( w )
+        n , N     = shape
         
-        mean      = numpy.average ( data , axis = 0 , weights = w )
-        centered  = data - mean
-        weighted  = centered if w_trivial else centered * w [ : , numpy.newaxis ]
-        covmtrx   = numpy.dot ( centered.T , weighted ) / wsum 
-
+        w         = None if weight_trivial ( weight ) else weight
+        
+        from statsmodels.stats.weightstats import DescrStatsW as DSW 
+        dsw       = DSW  ( data , weights = w )
+        mean      = dsw.mean
+        covmtrx   = dsw.cov
+        
         ## prepare output 
         RT        = Ostap.Math.SVectorWithError [ N ]
         values    = RT.Value      () 
         covs      = RT.Covariance () 
-
+        
         for i in range ( N  ) :
-            values [ i ] = float ( mean [ i ] )
-            for j in range ( i , N ) :
+            values [ i     ] = float ( mean    [ i ]       )
+            covs   [ i , i ] = float ( covmtrx [ i ] [ i ] )
+            for j in range (  0 , i  ) :
                 cij = float ( covmtrx [ i ] [ j ]  )
-                if i == j : covs [ i , j ] = cij
-                else : 
-                    cij = 0.5 * ( cij + float ( covmtrx [ j ] [ i ]  ) )
-                    covs [ i, j ] = cij
-                    covs [ j, i ] = cij 
-                    
-        ## return RT ( values ,  covs ) 
-        result = RT ( values ,  covs )
-        if not result.valid() :
-            logger.error ( 'RESULT IS NOT VALID\n%s'% result ) 
-        return result 
+                cji = float ( covmtrx [ j ] [ i ]  )                
+                cc  = 0.5 * ( cij + cji ) 
+                covs [ i , j ] = cc
+                covs [ j , i ] = cc  
+                
+        return RT ( values ,  covs ) 
+        ## result = RT ( values ,  covs )
+        ## if not result.valid() : logger.error ( 'RESULT IS NOT VALID\n%s'% result ) 
+        ## return result 
                         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays

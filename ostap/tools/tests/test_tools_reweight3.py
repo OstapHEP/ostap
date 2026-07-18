@@ -1,4 +1,4 @@
-1#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/tools/tests/test_tools_reweight3.py
@@ -61,12 +61,19 @@ tag_data    = 'DATA_tree'
 tag_mc      = 'MC_tree'
 
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
+dbname      = 'reweight3.db'
 
-NDATA1      = 5000 ## 00
-NDATA2      = 4000 ## 00
-NDATA3      = 4000 ## 00
-NMC         = 8000 ## 00
-
+if numcpu () <= 8 : 
+    NDATA1      = 2000 ## 00
+    NDATA2      = 2000 ## 00
+    NDATA3      = 2000 ## 00
+    NMC         = 2000 ## 00
+else : 
+    NDATA1      =  5000 ## 00
+    NDATA2      =  5000 ## 00
+    NDATA3      =  5000 ## 00
+    NMC         = 10000 ## 00
+    
 xmax        = 15.0
 ymax        = 12.0 
 zmax        = 10.0 
@@ -234,7 +241,7 @@ def prepare_data ( ) :
             
         mctree.Write()
 
-if not os.path.exists( testdata ) :
+if not os.path.exists ( testdata ) :
     with timing ( "Prepare input data" , logger = logger ) :
         prepare_data ()
 
@@ -259,7 +266,8 @@ if numcpu () <= 8 : comparators = comparators[ :3 ]
 
 # ============================================================================
 ## The table of global comparison statistics 
-glob_stat = [ ( '#' , '#eff' ) + tuple ( c.method for c in comparators ) ]
+header    = ( '#' , '#eff' ) + tuple ( c.method for c in comparators ) 
+glob_stat = [ header ]
 alignment = 'lc' + 'c' * len ( comparators )           
 
 # =============================================================================
@@ -304,11 +312,11 @@ maxIter = 15
 
 ## check database 
 if not os.path.exists( dbname ) :
-    logger.info('Create new weights DBASE') 
+    logger.attention ( "Create new weights DBASE `%s'" % dbname ) 
     with DBASE.open ( dbname , 'c' ) : ##  create new empty db 
         pass 
 else :
-    logger.info('Existing weights DBASE will be used') 
+    logger.attention ( "Existing weights DBASE `%s' will be (re)used" % dbname ) 
     with DBASE.open ( dbname , 'r' ) as db : 
         db.ls() 
 
@@ -370,7 +378,9 @@ plots  = [
     ]
 
 memory_init = memory_usage() 
-converged   = False 
+converged   = False
+
+maxIter = 2
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
@@ -409,8 +419,10 @@ for iter in range ( 1 , maxIter + 1 ) :
     elif iter < 4 : the_plots = plots [ : 4 ]
     else          : the_plots = plots
 
+    ## the_plots = plots
+    
     ## weight truncation: avoid very large change of weights for  single iteration 
-    wtruncate = ( 0.1 , 3 ) if iter < 4 else ( 0.5 , 1.5 )  
+    wtruncate = ( 0.05 , 3 ) if iter < 4 else ( 0.5 , 1.3 )  
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
@@ -428,14 +440,11 @@ for iter in range ( 1 , maxIter + 1 ) :
             make_plots = True      , ## make control plots 
             tag        = tag       ) ## tag for printout
 
-    
-
     # =============================================================================
     if 1 == iter % 3  or True : 
         
         with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
 
-            print ( 'COMPARE_DATA' ) 
             ## 3) compare control and signal samples        
             datatree    = ROOT.TChain ( tag_data , files = testdata ) 
             comparisons = data_compare ( comparators  ,
@@ -443,7 +452,7 @@ for iter in range ( 1 , maxIter + 1 ) :
                                          mcds         ,
                                          expressions  =  ( 'x' , 'y' , 'z' ) ) 
             ## effective MC statistics at this step 
-            n_eff   = mcds.nEff() 
+            n_eff   = mcds.nEff () 
             row     = ( '%d'  % iter , '%.1f' % n_eff )
             pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
             row     += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
@@ -453,7 +462,6 @@ for iter in range ( 1 , maxIter + 1 ) :
             table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
             logger.info ( '%s\n%s' % ( title , table ) )
                    
-    
     ## explicitely clear and delete dataset
     mcds.clear()
     del mcds
@@ -493,23 +501,97 @@ with timing ( "Add `%s' column to initial MC-tree" % weight_name , logger = logg
     mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
     
 # =============================================================================
-## compare DATA  and MC before and after reweighting
+## For comparison try to use "other" reweighters 
 # =============================================================================
 
 datatree   = ROOT.TChain ( tag_data , files = testdata )  
 mctree     = ROOT.TChain ( tag_mc   , files = testdata )
 
-with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
+from ostap.tools.data_reweighter import DataReweighter
 
-    datatree    = ROOT.TChain ( tag_data     , files = testdata ) 
+weights = [ '' , weight_name ]
+
+# =============================================================================
+## (1) GBReweighter by Alex Rogozhnikov from hep_ml 
+# =============================================================================
+from ostap.tools.reweighter      import Reweighter     as GBRW 
+rw1 = DataReweighter ( GBRW                        , ## reweighter type 
+                       original         = mctree   ,
+                       target           = datatree ,
+                       target_variables = 'x,y,z'  ) 
+
+weight_GBRW = 'weight_GBRW'
+with timing ( "GBRW reweight" , logger = logger ) :    
+    rw1.reweight ( mctree , name = weight_GBRW ) 
+    weights.append ( weight_GBRW )
+    
+# =============================================================================
+## (2) home-made reweighter based on LightGBM
+# =============================================================================
+from ostap.tools.reweighters     import Reweighter_LGBM     as LGBM
+rw2 = DataReweighter ( LGBM                        , ## reweighter type 
+                       original         = mctree   ,
+                       target           = datatree ,
+                       target_variables = 'x,y,z'  ) 
+
+weight_LGBM = 'weight_LGBM'
+with timing ( "LGBM reweight" , logger = logger ) :    
+    rw2.reweight ( mctree , name = weight_LGBM ) 
+    weights.append ( weight_LGBM )
+
+# =============================================================================
+## (3) home-made reweighter based on XGBoost  
+# =============================================================================
+from ostap.tools.reweighters     import Reweighter_XGB     as XGB
+rw3 = DataReweighter ( XGB                         , ## reweighter type 
+                       original         = mctree   ,
+                       target           = datatree ,
+                       target_variables = 'x,y,z'  ) 
+
+weight_XGB = 'weight_XGB'
+with timing ( "XGB reweight" , logger = logger ) :    
+    rw3.reweight ( mctree , name = weight_XGB  ) 
+    weights.append ( weight_XGB )
+
+# =============================================================================
+## (4) home-made reweighter based on CatBoost  
+# =============================================================================
+from ostap.core.cpu_info import HAS_AVX2 
+if HAS_AVX2 :
+    from ostap.tools.reweighters     import Reweighter_CAT     as CAT
+    rw3 = DataReweighter ( CAT                         , ## reweighter type 
+                           original         = mctree   ,
+                           target           = datatree ,
+                           target_variables = 'x,y,z'  ) 
+    
+    weight_XGB = 'weight_CAT'
+    with timing ( "XGB reweight" , logger = logger ) :    
+        rw3.reweight ( mctree , name = weight_CAT ) 
+        weights.append ( weight_CAT )
+
+# ============================================================================
+## Compare the quality of all reweighters 
+# ============================================================================
+glob_stat = [ header ]
+for weight in weights :
+    
+    mctree      = ROOT.TChain ( tag_mc   , files = testdata )
+    title       = "MC-tree after %s reweighting" %  ( weight if weight else "NO" ) 
+    logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                          title     = title    ,
+                                                          cuts      = weight   , 
+                                                          prefix    = '# '     ) ) )
+
+    datatree    = ROOT.TChain  ( tag_data    , files = testdata ) 
+    mctree      = ROOT.TChain  ( tag_mc      , files = testdata )
     comparisons = data_compare ( comparators ,
                                  datatree    ,
                                  mctree      ,
                                  expressions = ( 'x' , 'y' , 'z' ) ,
-                                 cuts2       = weight_name ) 
+                                 cuts2       = weight ) 
     ## effective MC statistics at this step 
-    n_eff   = mctree.nEff() 
-    row     = ( '*' , '%.1f'  % n_eff )
+    n_eff   = mctree.nEff ( weight ) 
+    row     = ( weight , '%.1f'  % n_eff )
     pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
     row    += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
     glob_stat.append ( row )
@@ -518,23 +600,6 @@ with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) 
     table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
     logger.info ( '%s\n%s' % ( title , table ) )
     
-
-# ========================================================================
-title = 'Data/target dataset'
-logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                      title     = title    ,
-                                                      prefix    = '# '     ) ) )
-# =============================================================================
-title = 'MC-tree before reweighting' 
-logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                      title     = title    ,
-                                                      prefix    = '# '     ) ) )
-# =============================================================================
-title = 'MC-tree after reweighting' 
-logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                      title     = title    ,
-                                                      cuts      = weight_name , 
-                                                      prefix    = '# '     ) ) )
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

@@ -45,16 +45,16 @@ __date__    = "2026-07-04"
 __all__     = (
     'ADVAL_LGBM' , ## LightGBM-based class for Adversarial Validation for the differecne between two (weighted) dataset
     'ADVAL_XGB'  , ## XGBoost-based class for Adversarial Validation for the difference between two (weighted) dataset
+    'ADVAL_CAT'  , ## CatBoost-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_HGBC' , ## HGBC-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_GBC'  , ## GBC-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_RF'   , ## RandomForst-based class for Adversarial Validation for the difference between two (weighted) dataset
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types
-from   ostap.core.cpu_info      import HAS_AVX2
-from   ostap.utils.basic        import typename , numcpu
+from   ostap.utils.basic        import typename , numcpu, num_jobs, run_parallel 
+from   ostap.math.math_base     import weight_trivial 
 from   ostap.stats.gof_np       import GoFnp 
-from   ostap.stats.gof_utils    import num_jobs, weight_trivial, run_parallel 
 import ROOT, numpy, abc, os   
 # =============================================================================
 # logging 
@@ -87,7 +87,6 @@ class ADVAL_base (GoFnp):
         n_splits = params.pop ( 'n_splits' , 5 ) 
         assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
 
-        
         GoFnp.__init__ ( self                 ,
                          nToys     = nToys    ,
                          parallel  = parallel , 
@@ -309,7 +308,7 @@ class ADVAL_LGBM (ADVAL_base) :
             'learning_rate'    :  0.05    , 
             'num_leaves'       : 24       ,
             'max_depth'        :  4       ,
-            'min_data_in_leaf' : 10       ,
+            'min_data_in_leaf' : 20       ,
             'verbose'          : -1       ,
         }
         ##
@@ -320,7 +319,7 @@ class ADVAL_LGBM (ADVAL_base) :
             parallel = False 
         
         ## Attention! 
-        params [ 'num_threads' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )
+        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )
         
         config.update ( params ) 
         ## 
@@ -453,79 +452,73 @@ class ADVAL_XGB (ADVAL_base) :
         return predictions , nump.array( [ importance_dict.get(col, 0.0) for col in dval.feature_names ] )
         
 # ======================================================================================
-if HAS_AVX2 : 
-    # ==================================================================================
-    ## @class ADVAL_CATB
-    #  CatBoost-based lass for Adversarial Validation for the difference between two (weighted) dataset
-    #  @see catboost 
-    class ADVAL_CATB (ADVAL_base) : 
-        """ CatBoost-based class for Adversarial Validation for the differece between two (weighted) dataset
+## @class ADVAL_CATB
+#  CatBoost-based lass for Adversarial Validation for the difference between two (weighted) dataset
+#  @see catboost 
+class ADVAL_CATB (ADVAL_base) : 
+    """ CatBoost-based class for Adversarial Validation for the differece between two (weighted) dataset
         - see Catboost
         """
-        def __init__ ( self             ,
-                       nToys    = 400   ,
-                       parallel = False ,
-                       silent   = False ,
-                       progress = True  , **params ) :
-            
-            config = { 'iterations'    : 500    ,
-                       'learning_rate' : 0.05   ,
-                       'depth'         : 5      ,
-                       'eval_metric'   : 'AUC'  ,
-                       'verbose'       : False  }
-            
-            
-            # =================================================================================
-            if parallel and not run_parallel ( parallel ) :
-                logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
-                parallel = False 
-
-            ## Attention! 
-            params [ 'thread_count' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )  
-
-            
-            if   'random_seed'  in params :                            params.pop ( 'random_state'      )
-            elif 'random_state' in params : params [ 'random_seed' ] = params.pop ( 'random_state' , 42 )
-            
-            ## 
-            import catboost as CatBoost 
-            config.update ( params ) 
-            ADVAL_base.__init__ ( self, 
-                                  nToys    = nToys    ,
-                                  parallel = parallel ,
-                                  silent   = silent   , 
-                                  progress = progress , 
-                                  method   = "Adversarial Validation/CatBoost" , **config   ) 
-            
-                
-        # ==================================================================================
-        ## Train the model and make predictions
-        def work ( self ,
-                   X_train , Y_train , W_train ,
-                   X_val   , Y_val   , W_val   , importance = False ) :
-            """ Train the model and make predictions
-            """
-            
-            import catboost as CatBoost 
-            
-            train_pool = CatBoost.Pool ( data = X_train , label = Y_train , weight = W_train )
-            val_pool   = CatBoost.Pool ( data = X_val   , label = Y_val   , weight = W_val   )
-            
-            ## create the model 
-            model = CatBoost.CatBoostClassifier( **self.params )
-            
-            # train it 
-            model.fit ( train_pool , eval_set=val_pool, early_stopping_rounds = 20 )
-            
-            predictions = model.predict_proba(X_val)[:, 1]
-
-            if not importance : return predictions, None ## RETURN
-            
-            return predictions , model.get_feature_importance ()
-
+    def __init__ ( self             ,
+                   nToys    = 400   ,
+                   parallel = False ,
+                   silent   = False ,
+                   progress = True  , **params ) :
         
-    __all__ += ( 'ADVAL_CATB' , )
+        config = { 'iterations'    : 500    ,
+                   'learning_rate' : 0.05   ,
+                   'depth'         : 5      ,
+                   'eval_metric'   : 'AUC'  ,
+                   'verbose'       : False  }
+    
         
+        # =================================================================================
+        if parallel and not run_parallel ( parallel ) :
+            logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
+            parallel = False 
+            
+        ## Attention! 
+        params [ 'thread_count' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )  
+        
+        
+        if   'random_seed'  in params :                            params.pop ( 'random_state'      )
+        elif 'random_state' in params : params [ 'random_seed' ] = params.pop ( 'random_state' , 42 )
+        
+        ## 
+        import catboost as CatBoost 
+        config.update ( params ) 
+        ADVAL_base.__init__ ( self, 
+                              nToys    = nToys    ,
+                              parallel = parallel ,
+                              silent   = silent   , 
+                              progress = progress , 
+                              method   = "Adversarial Validation/CatBoost" , **config   ) 
+    
+    # ==================================================================================
+    ## Train the model and make predictions
+    def work ( self ,
+               X_train , Y_train , W_train ,
+               X_val   , Y_val   , W_val   , importance = False ) :
+        """ Train the model and make predictions
+        """
+        
+        import catboost as CatBoost 
+        
+        train_pool = CatBoost.Pool ( data = X_train , label = Y_train , weight = W_train )
+        val_pool   = CatBoost.Pool ( data = X_val   , label = Y_val   , weight = W_val   )
+        
+        ## create the model 
+        model = CatBoost.CatBoostClassifier( **self.params )
+        
+        # train it 
+        model.fit ( train_pool , eval_set=val_pool, early_stopping_rounds = 20 )
+        
+        predictions = model.predict_proba(X_val)[:, 1]
+        
+        if not importance : return predictions, None ## RETURN
+        
+        return predictions , model.get_feature_importance ()
+    
 # =============================================================================
 ## @class ADVAL_HGBC
 #  Class for adversarial validation for the difference between two (weighted) dataset
@@ -748,6 +741,7 @@ if '__main__' == __name__ :
         # =====================================================================
         logger.error ( "xgboost cannot be imported!" ) # ======================
     # =========================================================================
+    from ostap.core.cpu import HAS_AVX2 
     if HAS_AVX2 : # ===========================================================
         # =====================================================================
         try : # ===============================================================

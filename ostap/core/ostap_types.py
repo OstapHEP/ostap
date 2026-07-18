@@ -14,35 +14,38 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     ##
-    'num_types'       , ## numerical types (real)
-    'integer_types'   , ## integer types
-    'string_types'    , ## string  types
-    'str_types'       , ## string  types (only string!)
-    'listlike_types'  , ## list-like types (list, tuple, set, collections.Iterable)
-    'list_types'      , ## list types (list, tuple)
-    'set_types'       , ## set types types (set&frzenset) 
-    'dict_types'      , ## dict types 
-    'dictlike_types'  , ## dict-like types 
-    'long_type'       , ## long-type
-    'generator_types' , ## generators 
-    'sequence_types'  , ## sequence types
-    'iterable_types'  , ## iterable 
-    'sized_types'     , ## sized types
-    'path_types'      , ## path-like types
-    'ordered_dict'    , ## normal/ordered dict 
+    'num_types'          , ## numerical types (real)
+    'integer_types'      , ## integer types
+    'string_types'       , ## string  types
+    'str_types'          , ## string  types (only string!)
+    'listlike_types'     , ## list-like types (list, tuple, set, collections.Iterable)
+    'list_types'         , ## list types (list, tuple)
+    'set_types'          , ## set types types (set&frzenset) 
+    'dict_types'         , ## dict types 
+    'dictlike_types'     , ## dict-like types 
+    'long_type'          , ## long-type
+    'generator_types'    , ## generators 
+    'sequence_types'     , ## sequence types
+    'iterable_types'     , ## iterable 
+    'sized_types'        , ## sized types
+    'path_types'         , ## path-like types
+    'numpy_buffer_types' , ## types for numpy buffers 
+    'arary_buffer_types' , ## types for array buffers
+    'numpy_floats'       , ## float types in numpy 
+    'ordered_dict'       , ## normal/ordered dict 
     ##
-    'is_integer'      , ## is a value of int-like type?
-    'is_number'       , ## is a value of numeric  type?
-    'is_good_number'  , ## is a value of numeric  type and not-NaN,no-Inf ?
+    'is_integer'         , ## is a value of int-like type?
+    'is_number'          , ## is a value of numeric  type?
+    'is_good_number'     , ## is a value of numeric  type and not-NaN,no-Inf ?
     ##
-    'is_string'       , ## is a value of str-type? 
-    'is_string_like'  , ## is a value of string-like type? 
-    'is_list'         , ## is a value of list/tuple type?
-    'is_list_like'    , ## is a value of list-like type?
+    'is_string'          , ## is a value of str-type? 
+    'is_string_like'     , ## is a value of string-like type? 
+    'is_list'            , ## is a value of list/tuple type?
+    'is_list_like'       , ## is a value of list-like type?
     ##
-    'all_integers'    , ## all arguments of integer types?
-    'all_numerics'    , ## all arguments of numeric types?
-    'all_strings'     , ## all arguments of string  types?
+    'all_integers'       , ## all arguments of integer types?
+    'all_numerics'       , ## all arguments of numeric types?
+    'all_strings'        , ## all arguments of string  types?
     )
 # =============================================================================
 from   collections.abc              import  ( Collection, Sequence  ,
@@ -75,6 +78,31 @@ set_types       = set , frozenset
 # =============================================================================
 path_types = string_types + ( os.PathLike , )
 # =============================================================================
+## numpy buffer types 
+numpy_buffer_types = ( numpy.float16 ,
+                       numpy.float32 ,
+                       numpy.float64 ,
+                       numpy.byte    ,   
+                       numpy.int8    , 
+                       numpy.int_    ,
+                       numpy.int16   ,
+                       numpy.int32   ,
+                       numpy.int64   ,
+                       numpy.ubyte   ,
+                       numpy.uint8   ,
+                       numpy.uint    ,
+                       numpy.uint16  ,
+                       numpy.uint32  ,
+                       numpy.uint64  )
+# =============================================================================
+## array buffer types 
+array_buffer_types = ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' , 'b' , 'B' , 'q' , 'Q' )
+# =============================================================================
+# float types in numpy
+numpy_floats = ( numpy.float16  ,
+                 numpy.float32  ,
+                 numpy.float64  ,
+                 numpy.float128 ) 
 ## sometimes we need to ensure that dictionary is ordered 
 ordered_dict = dict
 

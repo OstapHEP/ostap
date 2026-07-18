@@ -145,6 +145,7 @@ to_install =  ( 'numpy'            , 'scipy'            ,
                 'sortedcontainers' ,  ## 'pragmastat'   ,
                 'zstandard'        , 'lzma'             ,
                 'pandas'           ,
+                'statsmodels'      , 
                 'sweetviz'         , 
                 'lightgbm'         , 
                 'catboost'         ,                
@@ -782,6 +783,27 @@ except : # ====================================================================
     missing.append ( 'sortedcontainers' ) 
     logger.error   ( 'sortedcontainers cannot  be imported!' )
 # =============================================================================   
+try : # ======================================================================
+    # ========================================================================    
+    import statsmodels
+    version = getattr ( statsmodels , '__version__' , unknown ) 
+    row = 'statsmodels' , version , statsmodels.__file__
+    rows.append  ( row )
+    # ========================================================================
+except ImportError : # =======================================================
+    # ========================================================================
+    message = """ statsmodels cannot be imported! 
+    """
+    missing.append  ( 'statsmodels' ) 
+    logger.error ( message )
+    row = attention ( 'statsmodels' ) , attention ( '---' ) , ''
+    rows.append  ( row )   
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    missing.append ( 'statsmodels' ) 
+    logger.error   ( 'statsmodels cannot be imported!' )
+# ============================================================================
 try : # ======================================================================
     # ========================================================================    
     import pragmastat

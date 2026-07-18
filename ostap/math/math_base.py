@@ -119,11 +119,15 @@ __all__     = (
     'MAX_VALUE'      , ## maxinam float/double 
     'epsilon'        , ## float/double-epsilon
     ##
-    'np2raw'         , ## numpy array to raw C++ buffer 
+    'np2raw'         , ## numpy array to raw C++ buffer
+    'weight_trivial' , ## Is weight(1D numpy array) "trivial" ? 
+    ## 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import python_info
-from   ostap.core.ostap_types  import sequence_types, sized_types, integer_types
+from   ostap.core.ostap_types  import ( sequence_types , sized_types ,
+                                        integer_types  , num_types   ,
+                                        numpy_buffer_types           ) 
 from   ostap.core.core_base    import cpp, std, Ostap 
 import ROOT, sys, math, ctypes, array, numpy    
 # =============================================================================
@@ -726,6 +730,8 @@ def pretty_array ( values             ,
     >>> array = ...
     >>> result, expo = pretty_array ( array ) 
     """
+    from ostap.core.ostap_types import sequence_types, num_types
+    
     assert isinstance ( values , sequence_types ) , \
         "Invalid type of `values':%s" % type ( values )
     
@@ -1041,6 +1047,26 @@ def np2raw ( data ) :
     buffer = data.ctypes.data_as ( ctypes.POINTER ( ctype ) )
     # 
     return buffer , size      
+
+# =============================================================================
+## Trvial weight ? 
+#  - None
+#  - positive constant
+#  - all ones
+def weight_trivial ( weight ) :
+    """ Trvial weight ? 
+    - None
+    - positive constant
+    - all ones
+    """
+    ## 
+    if    weight is None                             : return True
+    elif  isinstance ( weight , num_types          ) : return 0 < weight 
+    elif  isinstance ( weight , numpy_buffer_types ) : return 0 < float ( weight ) 
+    elif  isinstance ( weight , numpy.ndarray      ) : return numpy.all ( weight == 1 ) 
+    return False
+# =============================================================================
+
 
 # =============================================================================
 ## Call a function of scalar argument with array-like argument

@@ -50,13 +50,13 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
     ## Convert dataset into numpy array using <code>ROOT.RooAbsData</code> interface 
     #  @see ROOT.RooAbsData.getBatches
     #  @see ROOT.RooAbsData.getCategoryBatches
-    #  @see ROOT.RooAbsData.getWeightBatche    
+    #  @see ROOT.RooAbsData.getWeightBatch    
     #  @see ROOT.RooAbsDataStore.getBatches
     #  @see ROOT.RooAbsDataStore.getCategoryBatches
-    #  @see ROOT.RooAbsDataStore.getWeightBatche
+    #  @see ROOT.RooAbsDataStore.getWeightBatch
     #  @attention conversion to ROOT.RooVectorDataStore is used!
     #
-    #  Unlike <code>to_numpy</code> method it allows more flexible outp
+    #  Unlike <code>to_numpy</code> method it allows more flexible output 
     #   - structured array (default) vs unstructured array
     #   - split data and weight columns     
     def ds2numpy ( dataset                , 

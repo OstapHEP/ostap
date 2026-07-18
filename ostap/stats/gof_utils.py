@@ -27,13 +27,14 @@ __all__     = (
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import VE, Ostap
 from   ostap.utils.cidict       import cidict, cidict_fun
-from   ostap.core.ostap_types   import string_types, num_types 
+from   ostap.core.ostap_types   import string_types, num_types, numpy_floats  
 from   ostap.math.math_base     import doubles, axis_range
 from   ostap.math.math_ve       import significance
 from   ostap.math.ve            import fmt_pretty_ve
-from   ostap.math.math_base     import pos_infinity     
+from   ostap.math.math_base     import pos_infinity, weight_trivial      
 from   ostap.stats.counters     import SE, WSE, EffCounter
-from   ostap.utils.basic        import numcpu, loop_items, typename  
+from   ostap.utils.basic        import ( numcpu   , num_jobs     , 
+                                         typename , run_parallel ) 
 from   ostap.utils.utils        import splitter
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.progress_bar import progress_bar
@@ -51,67 +52,9 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies' )#
 # =============================================================================
-# float types in numpy
-np_floats = ( numpy.float16  ,
-              numpy.float32  ,
-              numpy.float64  ,
-              numpy.float128 )
-# ============================================================================
 if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
 else                        : data2vct = lambda s : doubles ( s ) 
 # ============================================================================
-njobs_kwords = ( 'num_threads'  , 'num_thread'  ,
-                 'numthreads'   , 'numthread'   ,
-                 'n_threads'    , 'n_thread'    ,
-                 'nthreads'     , 'nthread'     ,
-                 'num_jobs'     , 'num_job'     ,
-                 'numjobs'      , 'numjob'      ,
-                 'n_jobs'       , 'n_job'       ,
-                 'njobs'        , 'njob'        ,
-                 'thread_count' , 'threadcount' )
-# ==============================================================================
-## get the value of "n_jobs/num_threads/thread_count" parameter 
-def num_jobs ( params , defval = -2 ) :
-    """ Get the value of "n_jobs/num_threads/thread_count" parameter
-    """
-    nj = params.pop ( njobs_kwords [ 0 ] , defval   )
-    for kw in njobs_kwords[1:] : nj = params.pop ( kw , nj )
-    return nj
-# ==============================================================================
-## allow parallel run ? 
-#  - check "OMP_NUM_THREADS"
-#  - check "MKL_NUM_THREADS"
-#  - check "OPENBLAS_NUM_THREADS"
-def run_parallel ( parallel ) : 
-    """ Allow parallel run
-    - check "OMP_NUM_THREADS"
-    - check "MKL_NUM_THREADS"
-    - check "OPENBLAS_NUM_THREADS"
-    """
-    ##
-    if not parallel : return False
-    ## 
-    if   '1' != os.environ.get ( "OMP_NUM_THREADS"      , "" ).strip () : return False 
-    elif '1' != os.environ.get ( "MKL_NUM_THREADS"      , "" ).strip () : return False 
-    elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ).strip () : return False
-    ## 
-    return True 
-# =============================================================================
-## Trvial weight ? 
-#  - None
-#  - positive constant
-#  - all ones
-def weight_trivial ( weight ) :
-    """ Trvial weight ? 
-    - None
-    - positive constant
-    - all ones
-    """
-    if    weight is None                        : return True
-    elif  isinstance ( weight , num_types     ) : return 0 < weight 
-    elif  isinstance ( weight , numpy.ndarray ) : return numpy.all ( weight == 1 ) 
-    return False
-# =============================================================================
 ## transform structured array to unstructured one
 s2u = None 
 # =============================================================================
@@ -484,7 +427,7 @@ def normalize ( ds , *others , weight = () , first = True ) :
     columns = []
     w0      = weight [ 0 ] 
     for n,t in ds.dtype.fields.items () :
-        if t [ 0 ] in np_floats  and n != w0 : columns.append ( n ) 
+        if t [ 0 ] in numpy_floats  and n != w0 : columns.append ( n ) 
         
     vmeans  = [] 
     for i , c in enumerate ( columns ) :

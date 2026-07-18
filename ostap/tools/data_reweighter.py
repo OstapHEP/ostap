@@ -16,29 +16,37 @@ __all__     = (
     'DataReweighter' , 
     ) 
 # =============================================================================
-from   ostap.utils.basic        import typename 
+from   ostap.utils.basic        import typename
+from   ostap.math.math_base     import weight_trivial
 from   ostap.stats.statvars     import data_slice 
 from   ostap.trees.cuts         import vars_and_cuts 
 from   ostap.utils.progress_bar import progress_bar 
 import ostap.trees.trees 
 import ROOT 
 # ============================================================================
-# ## @class DataReweighter
-# Helper class to perform the   reweigthing 
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighter' )
+else                       : logger = getLogger( __name__ )
+# =============================================================================
+## @class DataReweighter
+# Helper class to perform the reweighting using tree/source-interface
 class DataReweighter(object) : 
-    """ Helper class to perform (GB)reweighting using tree/source-innterface
+    """ Helper class to perform (GB)reweighting using tree/source-interface
     """
-    def __init__ ( self                           ,
-                    original                      ,     
-                    target                        ,  
-                    target_variables              ,
-                    original_variables = ()       , 
-                    target_weight      = ''       , 
-                    original_weight    = ''       , 
-                    silent             = False    , 
-                    progress           = True     , **kwargs ) :
+    def __init__ ( self                      , 
+                   reweighter_type           , * , 
+                   original                  ,     
+                   target                    ,  
+                   target_variables          ,
+                   original_variables = None , 
+                   target_weight      = ''   , 
+                   original_weight    = ''   , 
+                   silent             = True , 
+                   progress           = True , **params ) :
         
-        
+        ## 
         tvars, tweight, _ = vars_and_cuts ( target_variables , target_weight )
             
         ovars = original_variables if original_variables else tvars
@@ -50,18 +58,39 @@ class DataReweighter(object) :
         self.__ovars    = tuple ( ovars )
         self.__tweight  = tweight
         self.__oweight  = oweight 
-                
+
+        ## 
         tdata, tw = data_slice ( target  , tvars, tweight , structured = False , progress = self.progress )
         odata, ow = data_slice ( original, ovars, oweight , structured = False , progress = self.progress ) 
-            
-        ## create the reweighter
-        from ostap.tools.reweighter import Reweighter as RW
-        self.__rw = RW ( original        = odata , 
-                         target          = tdata , 
-                         original_weight = ow    , 
-                         target_weight   = tw    , 
-                         silent          = self.silent , **kwargs )
-                      
+
+        if not weight_trivial ( tw ) : tw /= numpy.sum ( tw )
+        if not weight_trivial ( ow ) : ow /= numpy.sum ( ow )
+        
+        ## create the actual reweighter
+        self.__rw = reweighter_type ( original        = odata , 
+                                      target          = tdata , 
+                                      original_weight = ow    , 
+                                      target_weight   = tw    , 
+                                      silent          = self.silent , **params  )
+
+    @property
+    def reweighter ( self ) :
+        """`reweighter` : get the ctual Reweighter object
+        """
+        return self.__rw
+    
+    @property 
+    def config ( self ) :
+        """`config` : Reweighter configuraton"""
+        conf = {} 
+        conf.update ( self.__rw.config )
+        conf [ 'progress'           ] = progress 
+        conf [ 'Reweighter type'    ] = typename ( self.__rw )
+        conf [ 'target-variables'   ] = self.__tvars
+        conf [ 'original-variables' ] = self.__ovars
+        if self.__tweight : conf [ 'target-weight'   ] = self.__tweight 
+        if self.__oweight : conf [ 'originam-weight' ] = self.__oweight 
+                   
     @property
     def silent ( self ) : 
         """`silent`: silent processing?
@@ -73,13 +102,20 @@ class DataReweighter(object) :
         """`progress` : show progress bar?
         """
         return self.__progress 
-    
-    ## get the weights for original, and add the weight back to original           
-    def reweight ( self , original , name = 'weight' ) :
+
+    # =======================================================================================
+    ## Get the weights for original, and add the weight back to original           
+    def reweight ( self      ,
+                   original  , * ,
+                   name      = 'weight' ,
+                   variables = None     ) :
+        """ Get the weights for original, and add the weight back to original
+        """
             
         assert isinstance ( original ,  ( ROOT.TTree , ROOT.RooDataSet ) ) , \
             "Invalid `original` type %s" % typename ( original ) 
-            
+
+        
         ## (1) processing  TChain with several files?    
         if isinstance ( original , ROOT.TChain ) and 1 < original.nFiles : 
             files         = original.files
@@ -118,23 +154,27 @@ class DataReweighter(object) :
             return chain 
             
         ## (2) processing single tree/source :
-       
+        
+        ovars = self.__ovars 
+        if not variables is None :
+            ovars , _ , _ = vars_and_cuts ( variables , ''  )
+            assert len ( ovars ) == len ( self.__ovars ) , "Invalid variables!"
+            if not silent and not ovars == self.__ovars :
+                logger.warning  (  "Variables to be used: [%s]" % ','.join ( ovars ) )
+                
         ## ATTENTION: no weight here!
-        odata, _ = data_slice ( original , self.__ovars, '' , structured = False , progress = self.progress ) 
+        odata, _ = data_slice ( original , ovars, '' , structured = False , progress = self.progress ) 
             
         the_weight = self.__rw ( odata ) 
-        return original.add_new_buffer ( the_weight , name = name , progress = self.progress and not self.silent , report = not self.silent )
-            
-    ## Calculate the weights for "original" ad add them to the tree/source
+        return original.add_new_buffer ( the_weight                 ,
+                                         name     = name            ,
+                                         report   = not self.silent , 
+                                         progress = self.progress and not self.silent ) 
+
+    # ===============================================================================================
+    ## Calculate the weights for "original" to add them to the tree/source
     def __call__  ( self , original , name = 'weight' )  : 
         """ Calculate weights for `original' add add tem to the tree/source
         """
         return self.reweight ( original , name = name  )
     
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighter' )
-else                       : logger = getLogger( __name__ )
-# =============================================================================

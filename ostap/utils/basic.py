@@ -340,6 +340,49 @@ def wm_print ( wm , with_category = True ) :
     if wm.line : msg += '%s' % wm.line    
     return msg
 
+
+
+
+# ==============================================================================
+## key-word arguments related to number of cores/threads to be used 
+njobs_kwords = ( 'num_threads'  , 'num_thread'  ,
+                 'numthreads'   , 'numthread'   ,
+                 'n_threads'    , 'n_thread'    ,
+                 'nthreads'     , 'nthread'     ,
+                 'num_jobs'     , 'num_job'     ,
+                 'numjobs'      , 'numjob'      ,
+                 'n_jobs'       , 'n_job'       ,
+                 'njobs'        , 'njob'        ,
+                 'thread_count' , 'threadcount' )
+# ==============================================================================
+## get the value of "n_jobs/num_threads/thread_count" parameter 
+def num_jobs ( params , defval = -2 ) :
+    """ Get the value of "n_jobs/num_threads/thread_count" parameter
+    """
+    nj = params.pop ( njobs_kwords [ 0 ] , defval   )
+    for kw in njobs_kwords[1:] : nj = params.pop ( kw , nj )
+    return nj
+
+# ==============================================================================
+## allow parallel run ? 
+#  - check "OMP_NUM_THREADS"
+#  - check "MKL_NUM_THREADS"
+#  - check "OPENBLAS_NUM_THREADS"
+def run_parallel ( parallel ) : 
+    """ Allow parallel run
+    - check "OMP_NUM_THREADS"
+    - check "MKL_NUM_THREADS"
+    - check "OPENBLAS_NUM_THREADS"
+    """
+    ##
+    if not parallel : return False
+    ## 
+    if   '1' != os.environ.get ( "OMP_NUM_THREADS"      , "" ).strip () : return False 
+    elif '1' != os.environ.get ( "MKL_NUM_THREADS"      , "" ).strip () : return False 
+    elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ).strip () : return False
+    ## 
+    return True 
+
 # =============================================================================
 if __name__ == '__main__' :
 

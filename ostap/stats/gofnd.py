@@ -317,7 +317,8 @@ class GoF(AGoF) :
         ds1 , w1 = data1.slice ( var_lst , silent = silent , structured = True , weight_name = data.wname() )
         ds2 , _  = data2.slice ( var_lst , silent = silent , structured = True )
 
-        
+        if not weight_trivial ( w1 ) : w1 /= numpy.sum ( w1 )
+                        
         ## scale the weights properly, such as sum(w) === N 
         if w1 is None                                 : pass
         elif isinstance ( w1 , num_types ) and 0 < w1 : w1 = numpy.ones ( len ( ds1 ) , dtype = float ) 
@@ -372,7 +373,7 @@ class GoF(AGoF) :
                                  counter = counter , 
                                  title   = title  if title else '%s GoF-report' % typename ( self ) , 
                                  prefix  = prefix  ,
-                                style   = style   )
+                                 style   = style   )
     
     # ========================================================================
     ## Get results in form of the row in the table

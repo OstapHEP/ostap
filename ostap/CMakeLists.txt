@@ -344,6 +344,19 @@ if ( NOT ${PY_sortedcontainers_FOUND} )
 endif()
 
 # ========================================================================================
+## statsmodels 
+# ========================================================================================
+## 
+find_python_module ( statsmodels QUIET )
+if ( NOT ${PY_statsmodels_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install statsmodels ${PIP_ARGS})
+endif()
+find_python_module ( statsmodels QUIET )
+if ( NOT ${PY_statsmodels_FOUND} )
+  message ( "----> warning                statsmodels is NOT found!" ) 
+endif()
+
+# ========================================================================================
 ## pragmastat 
 # ========================================================================================
 ## 
@@ -576,6 +589,11 @@ if ( ${PY_sortedcontainers_FOUND} )
   find_python_module_version ( sortedcontainers ) 
   message ( "----> sortedcontainers version    : " ${PY_sortedcontainers_VERSION} " \t" ${PY_SORTEDCONTAINERS} ) 
   endif()
+##
+if ( ${PY_statsmodels_FOUND} )
+  find_python_module_version ( statsmodels ) 
+  message ( "----> statsmodels      version    : " ${PY_statsmodels_VERSION} " \t" ${PY_STATSMODELS} ) 
+endif()
 ##
 if ( ${PY_pragmastat_FOUND} )
   find_python_module_version ( pragmastat ) 
