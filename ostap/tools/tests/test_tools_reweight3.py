@@ -61,18 +61,21 @@ tag_data    = 'DATA_tree'
 tag_mc      = 'MC_tree'
 
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
-dbname      = 'reweight3.db'
+## dbname      = 'reweight3.db'
 
 if numcpu () <= 8 : 
-    NDATA1      = 2000 ## 00
-    NDATA2      = 2000 ## 00
-    NDATA3      = 2000 ## 00
-    NMC         = 2000 ## 00
-else : 
+    
+    NDATA1      = 3000 ## 00
+    NDATA2      = 3000 ## 00
+    NDATA3      = 3000 ## 00
+    NMC         = 5000 ## 00
+    
+else :
+     
     NDATA1      =  5000 ## 00
     NDATA2      =  5000 ## 00
     NDATA3      =  5000 ## 00
-    NMC         = 10000 ## 00
+    NMC         = 20000 ## 00
     
 xmax        = 15.0
 ymax        = 12.0 
@@ -261,7 +264,7 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR4 ( parallel = True , nToys = 100 ) , 
                 COMPARATOR5 ( parallel = True , nToys = 100 ) )
 
-if numcpu () <= 8 : comparators = comparators[ :3 ]
+## if numcpu () <= 8 : comparators = comparators[ :3 ]
     
 
 # ============================================================================
@@ -380,7 +383,7 @@ plots  = [
 memory_init = memory_usage() 
 converged   = False
 
-maxIter = 2
+maxIter = 6
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
@@ -564,7 +567,7 @@ if HAS_AVX2 :
                            target           = datatree ,
                            target_variables = 'x,y,z'  ) 
     
-    weight_XGB = 'weight_CAT'
+    weight_CAT= 'weight_CAT'
     with timing ( "XGB reweight" , logger = logger ) :    
         rw3.reweight ( mctree , name = weight_CAT ) 
         weights.append ( weight_CAT )
