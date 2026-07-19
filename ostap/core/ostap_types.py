@@ -30,7 +30,7 @@ __all__     = (
     'sized_types'        , ## sized types
     'path_types'         , ## path-like types
     'numpy_buffer_types' , ## types for numpy buffers 
-    'arary_buffer_types' , ## types for array buffers
+    'array_buffer_types' , ## types for array buffers
     'numpy_floats'       , ## float types in numpy 
     'ordered_dict'       , ## normal/ordered dict 
     ##
