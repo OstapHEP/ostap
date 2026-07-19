@@ -13,7 +13,10 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
-    ) 
+    'Reweighter_LGBM' , ## LightGBM-based reweighter
+    'Reweighter_XGB'  , ## XGBoost-based reweighter
+    'Reweighter_CATB' , ## CatBoost-based reweighter
+) 
 # =============================================================================
 from   ostap.math.math_base  import weight_trivial
 from   ostap.utils.basic     import typename, numcpu, num_jobs 
@@ -360,9 +363,9 @@ class Reweighter_XGB(Reweighter_base):
         return model
     
 # ============================================================================
-## @class Reweighter_CAT
+## @class Reweighter_CATB
 #  Actual Reweighter class based on CatBoost
-class Reweighter_CAT(Reweighter_base):
+class Reweighter_CATB(Reweighter_base):
     """ Actual Reweighted class based on CatBoost
     """
     def __init__ ( self                   , * , 

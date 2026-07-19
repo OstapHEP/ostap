@@ -535,39 +535,67 @@ rw2 = DataReweighter ( LGBM                        , ## reweighter type
                        target_variables = 'x,y,z'  ) 
 
 weight_LGBM = 'weight_LGBM'
-with timing ( "LGBM reweight" , logger = logger ) :    
+with timing ( "LightGBM reweight" , logger = logger ) :    
     rw2.reweight ( mctree , name = weight_LGBM ) 
     weights.append ( weight_LGBM )
 
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-from ostap.tools.reweighters     import Reweighter_XGB     as XGB
-rw3 = DataReweighter ( XGB                         , ## reweighter type 
+use_xgboost = True 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import xgboost, numpy
+    use_xgboost = "1.0" <= xgboost.__version__ or numpy.__version__ < "2.0"
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    use_xgboost = False 
+
+# ============================================================================
+if use_xgboost : # ===========================================================
+    # ========================================================================
+    from ostap.tools.reweighters     import Reweighter_XGB     as XGB
+    rw3 = DataReweighter ( XGB                         , ## reweighter type 
                        original         = mctree   ,
                        target           = datatree ,
                        target_variables = 'x,y,z'  ) 
 
-weight_XGB = 'weight_XGB'
-with timing ( "XGB reweight" , logger = logger ) :    
-    rw3.reweight ( mctree , name = weight_XGB  ) 
-    weights.append ( weight_XGB )
+    weight_XGB = 'weight_XGB'
+    with timing ( "XGBoost reweight" , logger = logger ) :    
+        rw3.reweight ( mctree , name = weight_XGB  ) 
+        weights.append ( weight_XGB )
 
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
 # =============================================================================
-from ostap.core.cpu_info import HAS_AVX2 
-if HAS_AVX2 :
-    from ostap.tools.reweighters     import Reweighter_CAT     as CAT
-    rw3 = DataReweighter ( CAT                         , ## reweighter type 
+use_catboost = False 
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    from ostap.core.cpu_info import HAS_AVX2
+    if HAS_AVX2 :
+        import catboost
+        use_catboost = True 
+    # ========================================================================
+except ImportError : # ======================================================= 
+    # ========================================================================
+    use_catboost = False 
+
+# =============================================================================
+if use_catboost : # ===========================================================
+    # =========================================================================
+    from ostap.tools.reweighters     import Reweighter_CATB     as CATB
+    rw3 = DataReweighter ( CATB                        , ## reweighter type 
                            original         = mctree   ,
                            target           = datatree ,
                            target_variables = 'x,y,z'  ) 
     
-    weight_XGB = 'weight_CAT'
-    with timing ( "XGB reweight" , logger = logger ) :    
-        rw3.reweight ( mctree , name = weight_CAT ) 
-        weights.append ( weight_CAT )
+    weight_CATB = 'weight_CATB'
+    with timing ( "CatBoost reweight" , logger = logger ) :    
+        rw3.reweight ( mctree , name = weight_CATB ) 
+        weights.append ( weight_CATB )
 
 # ============================================================================
 ## Compare the quality of all reweighters 

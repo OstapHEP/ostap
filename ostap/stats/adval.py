@@ -45,7 +45,7 @@ __date__    = "2026-07-04"
 __all__     = (
     'ADVAL_LGBM' , ## LightGBM-based class for Adversarial Validation for the differecne between two (weighted) dataset
     'ADVAL_XGB'  , ## XGBoost-based class for Adversarial Validation for the difference between two (weighted) dataset
-    'ADVAL_CAT'  , ## CatBoost-based class for Adversarial Validation for the difference between two (weighted) dataset
+    'ADVAL_CATB' , ## CatBoost-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_HGBC' , ## HGBC-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_GBC'  , ## GBC-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_RF'   , ## RandomForst-based class for Adversarial Validation for the difference between two (weighted) dataset
@@ -258,7 +258,7 @@ class ADVAL_base (GoFnp):
                                                               W_val   , importance = importance )
             oof_preds [ val_idx ] = fold_predictions 
             
-            ##     fold_auc       = roc_auc_score   ( Y_val, fold_predictions , sample_weight = W_val )
+            ##    fold_auc       = roc_auc_score   ( Y_val, fold_predictions , sample_weight = W_val )
             ##    ft             = tvalue_from_AUC ( fold_auc ) 
             ##    self.__t_fold += ft
                 
@@ -470,8 +470,7 @@ class ADVAL_CATB (ADVAL_base) :
                    'depth'         : 5      ,
                    'eval_metric'   : 'AUC'  ,
                    'verbose'       : False  }
-    
-        
+            
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
             logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
@@ -642,8 +641,8 @@ class ADVAL_GBC (ADVAL_base) :
 #  based on RandomForestClassifier 
 #  @see RandomForestClassifier 
 class ADVAL_RF (ADVAL_base) : 
-    """ GBC-based class for Adversarial validation for the differece between two (weighted) dataset
-    @see GradientBoosterClassifier 
+    """ RandomForest-based class for Adversarial validation for the differece between two (weighted) dataset
+    @see RandomForestClassifier 
     """
     def __init__ ( self             ,
                    nToys    = 400   ,
@@ -741,7 +740,7 @@ if '__main__' == __name__ :
         # =====================================================================
         logger.error ( "xgboost cannot be imported!" ) # ======================
     # =========================================================================
-    from ostap.core.cpu import HAS_AVX2 
+    from ostap.core.cpu_info import HAS_AVX2 
     if HAS_AVX2 : # ===========================================================
         # =====================================================================
         try : # ===============================================================
