@@ -54,6 +54,6 @@ fi
 COLUMNS=200 check-dependencies
 
 ## run tests 
-OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R '(dup|type|adval)' --output-on-failure --test-output-size-failed 5000000
+OSTAP_BATCH=True COLUMNS=200 ctest -j4 --output-on-failure --test-output-size-failed 5000000
 
 

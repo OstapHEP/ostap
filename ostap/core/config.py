@@ -29,7 +29,7 @@
 -  The default of the most basic parameters are defined in 
    the `ostap.core.default_config` module 
 -  Parameters can be redefined/modified/updated via the set of configuration files.
-   The configuraiton files iles parsed using `configparser` module. 
+   The configuration files iles parsed using `configparser` module. 
    The default set of configuration files is also defined in
    the `ostap.core.default_config` module
    and it can be redefined using the `OSTAP_CONFIG` environment variable
