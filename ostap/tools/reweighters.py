@@ -407,7 +407,7 @@ class Reweighter_CATB(Reweighter_base):
         """
         import catboost as CatBoost
         ## 
-        model = CatBoost.CatClassifier ( **self.params )    
+        model = CatBoost.CatBoostClassifier ( **self.params )    
         model.fit ( CatBoost.Pool ( X , Y , weight = weight ) ) 
         ## 
         return model

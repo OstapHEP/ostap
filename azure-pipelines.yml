@@ -35,7 +35,7 @@ jobs:
    parameters:
     name: el9_LCG_110_clang22
     vmImage:  'ubuntu-latest'
-    dockername: 'gitlab-registry.cern.ch/linuxsupport/alma9-base'
+    dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
     LCG: 'LCG_110'
     CMTCONFIG: 'x86_64-el9-clang22-opt'
     artifact: 'test_al9_LCG_110_clang22'

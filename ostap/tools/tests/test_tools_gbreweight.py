@@ -46,7 +46,7 @@ testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-gbr
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'
 tag_datay  = 'DATAY_histogram'
-tag_mc     = 'MC2_tree'
+tag_mc     = 'MC_tree'
  
 if os.path.exists ( testdata ) : os.remove ( testdata ) 
 ## if os.path.exists ( dbname   ) : os.remove ( dbname   )
@@ -250,6 +250,7 @@ def test_gbreweight() :
     try : # ===================================================================
         # =====================================================================
         from ostap.tools.data_reweighter import DataReweighter
+        from ostap.tools.reweighter      import Reweighter as GBRW
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
@@ -285,7 +286,8 @@ def test_gbreweight() :
        ## (2) use smart wrapper 
        
        ## (2a) 
-       rw = DataReweighter ( original = mc.chain   , 
+       rw = DataReweighter ( GBRW     , 
+                             original = mc.chain   , 
                              target   = data.chain , 
                              target_variables = ['x','y'] ) 
        
