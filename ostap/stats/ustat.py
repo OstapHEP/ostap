@@ -286,7 +286,14 @@ class USTAT(AGoF) :
         self.__tvalue  = None
         self.__ecdf    = None
         self.__counter = None
-        
+
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def weights_supported ( self ) :
+        """`weghts_supported`: Are weights supported by this estimator?
+        """
+        return False 
+
     # =======================================================================
     ## get all configration parameters
     @property 
@@ -343,7 +350,9 @@ class USTAT(AGoF) :
         >>> data   = ... 
         >>> tvalue = ustat ( pdf , data ) 
         """
-
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s" % ( typename ( self ) )
+            
         ## get t-value 
         t_value , histo , _ = uPlot ( pdf  ,
                                       data , 
@@ -370,7 +379,9 @@ class USTAT(AGoF) :
         >>> data  = ... 
         >>> t , p = ustat.pvalue ( pdf , data ) 
         """
-
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s" % ( typename ( self ) )
+        
         silent = self.silent
         self.__silent = True
         

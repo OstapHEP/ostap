@@ -25,7 +25,7 @@ __all__     = (
 from   ostap.core.ostap_types   import string_types, dictlike_types 
 from   ostap.fitting.pdfbasic   import PDF1, APDF1
 from   ostap.core.core          import VE, Ostap
-from   ostap.math.math_base     import axis_range
+from   ostap.math.math_base     import axis_range, product 
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.basic        import loop_items, typename   
 from   ostap.stats.counters     import SE, EffCounter 
@@ -34,7 +34,7 @@ from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
 from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
 from   ostap.logger.colorized   import infostr
-from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue
+from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, combine_pvalues 
 from   ostap.fitting.simfit     import SimFit 
 from   ostap.stats.gof1d        import ( GoF1D , vct_clip      ,
                                          kolmogorov_smirnov    ,
@@ -180,7 +180,7 @@ class GoFSimFit1D(GoFSimFitBase) :
         return GoFSimFitBase.__setstate__ ( self , state )
 
     # =========================================================================
-    ## all estimators togather
+    ## all estimators together
     @property 
     def estimators ( self ) :
         """`estimators` : get all statistical estimators
@@ -660,6 +660,10 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                    '#%s' % greek_lower_sigma ) 
         
         rows = []
+
+        ## collect p-values to calculate the combined p-value 
+        to_combine = defaultdict(list)
+        
         for sample , ecdfs in self.ecdfs.items()  :
             for label in ecdfs :
                 result  = self.result ( sample , label )
@@ -667,10 +671,13 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                 the_label = Labels.get ( label , label )
                 row = self.row ( sample , the_label , result , width = width , precision = precision )
                 rows.append ( row ) 
-                    
+                to_combine[ the_label ].append ( result.pvalue ) 
+                
         if   not title and self.nToys : title = 'Goodness of 1D-fit with #%d toys' % self.nToys  
         elif not title                : title = 'Goodness of 1D-fit'
 
+        # ======================================================================
+        ## get the total from the toys 
         for e , cnt in self.total.items() :
 
             ## get the binomial efficiency 
@@ -683,9 +690,27 @@ class GoFSimFit1DToys(GoFSimFit1D) :
             sigma  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
 
             label = Labels.get( e , e ) 
-            row   = label , infostr ( '***' ) , '---' , '---' , '---' , '---' , ''  , pvalue , sigma 
+            row   = label , '*COMBINED*' , '' , '' , '' , '' , ''  , pvalue , sigma 
             rows.append ( row ) 
 
+        for label , pvs in to_combine.items () :
+            
+            clipped  = [ clip_pvalue ( p , 0.5 ) for p in pvs ]                 
+            for method in  ( 'fisher' , 'pearson' , 'tippett' , 'stouffer' ) :
+                
+                combined = combine_pvalues ( clipped , method = method )
+                
+                pvalue   = combined 
+                pv       = clip_pvalue ( pvalue , 0.5 )
+                
+                nsigma  = significance ( pv ) ## convert  it to significace            
+                pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+                sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+
+                mm      = method.upper() 
+                row     = label , '*%s*' % mm  , '' , '' , '' , '' , ''  , pvalue , sigma 
+                rows.append ( row )
+        
         rows  = [ header ] + sorted ( rows )
         rows  = T.remove_empty_columns ( rows ) 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lcccccccc' , style = style )
@@ -917,12 +942,11 @@ class GoFSimFitType(GoFSimFitBase) :
                 precision = 4    , 
                 width     = 6    ,
                 style     = None ) :
-        """ Print the summary as Table  (for SimFit)
+        """ Print the summary as table (for SimFit)
         """
         gof_type = typename ( self )             
         tvalues  = self.tvalues () 
         pvalues  = self.pvalues ()
-        title    = title if title else 'GoF:%s' % gof_type
         
         tvalues  = self.tvalues () 
         pvalues  = self.pvalues () 
@@ -935,7 +959,7 @@ class GoFSimFitType(GoFSimFitBase) :
                        'factor'            ,
                        'p-value [%]'       ,
                        '#%s' % greek_lower_sigma ) ] 
-                     
+
         for sample in sorted ( pvalues ) :
             
             tvalue , pvalue = pvalues [ sample ]
@@ -947,8 +971,9 @@ class GoFSimFitType(GoFSimFitBase) :
             ## ECDF ?
             gof  = self.gofs [ sample ]
             ecdf = gof.ecdf
-
+            
             if ecdf :
+                
                 counter    = ecdf   .counter ()
                 tmean      = counter.mean    ()
                 trms       = counter.rms     ()
@@ -979,7 +1004,6 @@ class GoFSimFitType(GoFSimFitBase) :
                 if expo : row +=  '%s10^%+d' % ( times , expo ) ,
                 else    : row +=  '' , 
                 
-            
             pv     = clip_pvalue ( pvalue , 0.5 ) 
             nsigma = significance ( pv ) ## convert  it to significace
             
@@ -988,17 +1012,38 @@ class GoFSimFitType(GoFSimFitBase) :
             n      = nsigma 
             nsigma = '%.2f %s %-.2f'   % ( n.value() , plus_minus , n.error () ) if float ( nsigma ) < 1000 else '+inf'
             
-            row +=  pvalue , nsigma
+            row    +=  pvalue , nsigma
             
             rows.append ( row ) 
 
+        # ====================================================================
+        ## combined information
+        # ====================================================================
+        
+        pvs          = ( p for ( t , p ) in pvalues.values() ) 
+        clipped      = [ clip_pvalue ( p , 0.5 ) for p in pvs ]
+        empty_cells  = ( '' , ) * ( len ( rows [ -1 ] ) - 3 )
+        for method in  ( 'fisher' , 'pearson' , 'tippett' , 'stouffer' ) :
+            
+            combined = combine_pvalues ( clipped , method = method )
+            
+            pvalue   = combined 
+            pv       = clip_pvalue ( pvalue , 0.5 )
+            
+            nsigma  = significance ( pv ) ## convert  it to significace            
+            pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+            sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+            
+            mm      = method.upper()                
+            row     = ( '*%s*' % mm  , ) + empty_cells + (  pvalue , sigma ) 
+            rows.append ( row )
+
         rows  = T.remove_empty_columns ( rows )
-        title = title if title else 'Goodness-Of-Fit %s for simfit' % gof_type  
+        title = title if title else 'Goodness-Of-Fit %s for SimFit' % gof_type  
         return T.table ( rows                 ,
                          title     = title    ,
                          prefix    = '# '     ,
-                         alignment = 'llcccc' ) 
-        
+                         alignment = 'llcccc' )         
     @property
     def cmp ( self ) :
         """`cmp` : helper dictionary { category : pdf, data}
@@ -1100,7 +1145,7 @@ class USTATSimFit(GoFSimFitType) :
 ## @class GoFSimFit
 #  Goodness-of-fit for simultaneous fits
 #  - It is a bit more  general and (a bit less efficient)  GoF estimator for 
-#    simulataneous fits
+#    simultaneous fits
 class GoFSimFit(GoFSimFitBase) :
     """ Generic Goodness-of-fit for simultaneous fits
     - It is a bit more generic and (a bit less CPU efficient) GoF estimator for 
@@ -1121,9 +1166,9 @@ class GoFSimFit(GoFSimFitBase) :
         assert isinstance ( estimators , dictlike_types ) , \
             "Invalid type for `estimators`: %s" % ( typename ( estimators ) ) 
         assert estimators and all ( k in self.sample for k in estimators ) , \
-            "Invalid keys in `estimators`: %s" % ( ',%s' % ( k for k in estimators ) ) 
+            "Invalid keys in `estimators`: %s"  % ( ',%s' % ( k for k in estimators ) ) 
         assert all ( l in estimators for l in self.sample.labels() ) , \
-            "Missing keys in `estimators`: %s" % ( ',%s' % ( k for k in estimators ) ) 
+            "Missing keys in `estimators`: %s"  % ( ',%s' % ( k for k in estimators ) ) 
         
         ## self.__dataset  = dataset
         
@@ -1205,7 +1250,8 @@ class GoFSimFit(GoFSimFitBase) :
         """`total` : total/global counters
         """
         return self.__total
-    
+
+    # =========================================================================
     ## get all t-values for fit-components
     def tvalues ( self ) : 
         """`tvalues` : dictionary { component : t-value }
@@ -1213,7 +1259,7 @@ class GoFSimFit(GoFSimFitBase) :
         return self.__tvalues
     
     # =========================================================================
-    ## merge two objects (needed for apralell execution):
+    ## merge two objects (needed for parallel execution):
     def merge ( self , other ) :
         """ Merge two GoF-toys objects
         - needed for paralell execution 
@@ -1287,7 +1333,7 @@ class GoFSimFit(GoFSimFitBase) :
                 
                 gof = self.gofs [ key ]                
                 tv  = gof.tvalue ( cmp , ds )
-                
+
                 if not key in self.__ecdfs : self.__ecdfs [ key ] = Ostap.Math.ECDF ( tv , True )
                 else                       : self.__ecdfs [ key ].add ( tv ) 
               
@@ -1346,7 +1392,8 @@ class GoFSimFit(GoFSimFitBase) :
             title = title if title else 'GoF T-values'
             return T.table  ( rows , title  = title , prefix = prefix , alignment = 'lcc' )
 
-        rows = [] 
+        rows    = []
+        pvalues = [] 
         for key, tv in self.tvalues().items()  :
             
             cnt  = self.counters.get ( key , None )
@@ -1391,15 +1438,34 @@ class GoFSimFit(GoFSimFitBase) :
                     nsig )  
 
             rows.append ( row )
-        
+            pvalues.append ( pvalue )
+
         ## global statistics
-        pvalue = self.total.eff
-        pv     = clip_pvalue   ( pvalue , 0.5 )
-        nsigma = significance  ( pv ) ## convert  it to significace
-        spv    = str ( ( 100 * pv  ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
-        nsig   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' )         
-        row    = '*COMBINED*' , '' , '' , '' , '', '' , ''  , spv , nsig  
+        pvalue  = self.total.eff        
+        pv      = clip_pvalue ( pvalue , 0.5 )        
+        nsigma  = significance ( pv ) ## convert  it to significance            
+        pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+        sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+        row     = '*COMBINED*' , '' , '' , '' , '', '' , ''  , pvalue , sigma  
         rows.append ( row )
+        
+        if len ( pvalues ) + 1 == len ( rows ) :
+            
+            clipped  = [ clip_pvalue ( p , 0.5 ) for p in pvalues ]            
+            for method in  ( 'fisher' , 'pearson' , 'tippett' , 'stouffer' ) :
+                
+                combined = combine_pvalues ( clipped , method = method )
+                
+                pvalue   = combined 
+                pv       = clip_pvalue ( pvalue , 0.5 )
+                
+                nsigma  = significance ( pv ) ## convert  it to significace            
+                pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+                sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+
+                mm      = method.upper()                
+                row    = '*%s*' % mm  , '' , '' , '' , '', '' , ''  , pvalue , sigma 
+                rows.append ( row )
 
         header = ( 'Component' , 't-value' , 't-mean' , 't-rms' , 't-min' , 't-max' , 'Factor' , 'p-value [%]' , '#%s' % greek_lower_sigma )
         rows   = [ header ] + rows 

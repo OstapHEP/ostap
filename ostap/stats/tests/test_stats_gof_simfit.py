@@ -15,9 +15,9 @@ __all__    = () ## nothing to import
 # =============================================================================
 ## ATTENTION! 
 import os 
-os.environ["OMP_NUM_THREADS"     ]  = "1"
-os.environ["MKL_NUM_THREADS"     ]  = "1"
-os.environ["OPENBLAS_NUM_THREADS"]  = "1"
+os.environ [ "OMP_NUM_THREADS"      ]  = "1"
+os.environ [ "MKL_NUM_THREADS"      ]  = "1"
+os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
 # ==============================================================================
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import dsID, rooSilent
@@ -30,6 +30,7 @@ from   ostap.fitting.simfit     import combined_data
 from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          GoFSimFit1D     , 
                                          GoFSimFit1DToys ,
+                                         MIXSimFit       ,
                                          PPDSimFit       ,
                                          DNNSimFit       ,
                                          USTATSimFit     )  
@@ -63,6 +64,10 @@ dataset1 = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset1 )
 ## book very simple data set:
 varset2  = ROOT.RooArgSet  ( mass2 )
 dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )  
+
+
+# ============================================================================
+small = numcpu () <= 8
 
 # =============================================================================
 ## high statistic, low-background "control channel"
@@ -138,10 +143,13 @@ model2  = Models.Fit1D ( suffix = 'MB' , signal = signal2 ,  background = model1
 model2.S = NS2
 model2.B = NB2 
 
+
+
+# ==================================================================================
 ## combine PDFs
 model_sim  = Models.SimFit ( sample , { 'A' : model1  , 'B' : model2 } , name = 'X' )
 
-# =============================================================================
+# ==================================================================================
 def test_gof_simfit () :
     
     logger = getLogger( 'test_gof_simfit' )
@@ -186,11 +194,9 @@ def test_gof_simfit () :
     results.append ( r2 ) 
     results.append ( r  ) 
 
-    """ 
     # =============================================================================
-    ## GOF/1D machinery
+    ## Use 1D GOF machinery
     # =============================================================================
-
     gof = GoFSimFit1D ( model_sim      ,
                         dataset        ,
                         parameters = r )
@@ -202,7 +208,7 @@ def test_gof_simfit () :
     logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )
 
     toys = GoFSimFit1DToys ( gof )
-    toys.run ( 500 , silent = False , parallel = True )
+    toys.run ( 100 , silent = False , parallel = True )
 
     title = 'GoF for 1D SimFit (%d toys)' % toys.nToys  
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
@@ -213,18 +219,29 @@ def test_gof_simfit () :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) ) :
                 toys .draw ( sample , k )
 
-    """
-    
-    if numcpu() <= 8 :
-        nToys    =  5 ## realistic values should be well in excess of 100
+    # =============================================================================
+    ## Use ND GoF machinery
+    # =============================================================================
+
+    # =============================================================================
+    if small : # ==================================================================
+        # =========================================================================
+        nToys    =  8 ## realistic values should be well in excess of 100
         mcFactor =  2 ## realistic values should be well in excess of 10
-    else :
+        # =========================================================================
+    else     : # ==================================================================
+        # =========================================================================
         nToys    = 20 ## realistic values should be well in excess of 100
-        mcFactor =  5 ## realistic values should be well in excess of 10  
+        mcFactor =  5 ## realistic values should be well in excess of 10                  
         
-    nToys    =  5 ## realistic values should be well in excess of 100
-    mcFactor =  2 ## realistic values should be well in excess of 10
-        
+    gof_mix  = MIXSimFit   ( model_sim             , 
+                             dataset               ,
+                             parameters = r        ,                          
+                             mcFactor   = mcFactor , 
+                             nToys      = nToys    ,
+                             ## parallel   = True     , 
+                             silent     = False    )
+    
     gof_ppd  = PPDSimFit   ( model_sim             , 
                              dataset               ,
                              parameters = r        ,                          
@@ -248,7 +265,8 @@ def test_gof_simfit () :
                               ## parallel   = True     , 
                               silent     = False    )
     
-    for gof in ( gof_ppd   ,
+    for gof in ( gof_mix   ,
+                 gof_ppd   ,                 
                  gof_dnn   ,
                  gof_ustat ) : 
         
@@ -261,10 +279,12 @@ def test_gof_simfit () :
             for sample  in gof.gofs :
                 with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) ) :
                     gof.draw ( sample  )
+
                     
     # =========================================================================
-    ## GoF-2
+    ## Use universal SimFit-GoF tool with 1D estiamtors 
     # =========================================================================
+
     estimators = { 'A'  : GoF_1D ( 'KS' ) , 'B' : GoF_1D ( 'KS' ) } 
     
     gof2       = GoFSimFit ( model_sim                ,
@@ -274,8 +294,26 @@ def test_gof_simfit () :
     
     gof2.run ( nToys , silent = False , parallel = True )
     
-    title = 'GoF for SimFit' 
-    logger.info ( '%s:\n%s' % ( title , gof2.table( title = title , prefix = '# ' ) ) ) 
+    title = 'GoF2 for SimFit' 
+    logger.info ( '%s:\n%s' % ( title , gof2.table ( title = title , prefix = '# ' ) ) ) 
+
+    # =========================================================================
+    ## Use universal SimFit-GoF tool with ND estimators 
+    # =========================================================================
+    from   ostap.stats.gofnd        import MIX 
+
+    estimators = { 'A'  : MIX () , 'B' : MIX ()  } 
+    
+    gof3       = GoFSimFit ( model_sim                ,
+                             dataset                  ,
+                             estimators  = estimators ,  
+                             parameters  = r          )
+    
+    gof3.run ( nToys , silent = False , parallel = True )
+    
+    title = 'GoF3 for SimFit' 
+    logger.info ( '%s:\n%s' % ( title , gof3.table ( title = title , prefix = '# ' ) ) ) 
+
     
 # =============================================================================
 ## check that everything is serializable
@@ -308,8 +346,7 @@ if '__main__' == __name__ :
         test_gof_simfit ()
         
     ## check finally that everything is serializeable:
-    with timing ('Save to DB:'     , logger ) :
-       test_db ()          
+    with timing ('Save to DB:'     , logger ) : test_db ()          
     
 # =============================================================================
 ##                                                                      The END 

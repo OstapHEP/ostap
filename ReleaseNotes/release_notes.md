@@ -4,6 +4,7 @@
   1. Add `Ostap::Math::symmetric_positive_definite` function to check if (S)matrix is syemmtric & positive-definite
   1. Add `Ostap::Math::covariance_matrix` function to check if (S)matrix can be valid covariance matrix
   1. Add "reweighters" based on `LigthGBM`, `XGBoost` and `CatBoost`. All of them are much faster than `GBReweighter` with similar perfomance
+  1. Add helper script `ostap-table` to convert table-like data from the input stream to pretty ostap's style tables
   
 ## Bug fixes
 

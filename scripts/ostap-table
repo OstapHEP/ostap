@@ -1,0 +1,121 @@
+#!/usr/bin/env python 
+# -*- coding: utf-8 -*-
+# =============================================================================
+## @file  ostap_table.py 
+#  Format input stream as nice table in ostap' style
+#  @attention Input stream *MUST* be a pipe-like! 
+#  @code
+#  cat txt.cvs | ostap-table
+#  echo  -e "1 1 1 \n 2 2 2 " | ostap-table
+#  ostap-table < txt.cvs 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch 
+#  @date   2026-07-19
+# =============================================================================
+""" Format input stream as nice table in ostap' style
+    Note: Input stream *MUST* be a pipe-like! 
+
+> cat text.csv | ostap-table
+> echo -e " A B C \\n 1 ,  2 , 3 " | ostap-table -s ' ,' --style latex 
+> ostap-table < txt.cvs 
+
+"""
+# =============================================================================
+__author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
+__date__    = "2026-07-19"
+__all__     = (
+)
+# =============================================================================
+if '__main__' == __name__ :
+
+    import sys, argparse 
+
+    ## 
+    argv = sys.argv[1:]
+
+    ## disable general ostap parsing 
+    sys.argv[1:] = []
+    import ostap.logger.table     as     T 
+    from   ostap.logger.colorized import attention 
+    ## (re)enable it again    
+    sys.argv[1:] = argv  
+
+    epilog = """ IMPORTANT: Input stream *MUST* be a pipe-like! """
+    
+    ## create the parser 
+    parser = argparse.ArgumentParser (
+        prog            = 'ostap-table' ,
+        description     = __doc__       ,
+        epilog          = attention ( epilog ) , 
+        formatter_class = argparse.RawDescriptionHelpFormatter
+    )
+    ## 
+    parser.add_argument ( 
+        "-t"    , "--title"     ,
+        dest    = 'Title'       ,
+        help    = "Table title [default: '%(default)s']" ,    
+        default = ''            )
+    ## 
+    parser.add_argument ( 
+        "-p"    , "--prefix"     ,
+        dest    = 'Prefix'       ,
+        help    = "Table prefix [default: '%(default)s']" ,   
+        default = ''             )
+    ## 
+    parser.add_argument ( 
+        "-a"    , "--alignment"      ,
+        dest    = 'Alignment'        ,
+        help    = "Column alignment [default: '%(default)s']" , 
+        default = ''                 )
+    ## 
+    parser.add_argument ( 
+        "-s"    , "--separators"      ,
+        dest    = 'Separators'        ,
+        help    = "Column separators [default: '%(default)s']" , 
+        default = ' ,;|'              )
+    ## 
+    parser.add_argument ( 
+        "-e"    , "--empty"    ,
+        dest    = 'Empty'      ,
+        action  = 'store_true' , 
+        help    = "Suppress empty columns [default: '%(default)s']" , 
+        default = False           )
+    ## 
+    parser.add_argument ( 
+        "--style"    ,
+        dest    = 'Style'         ,
+        choices = T.table_styles  , 
+        help    = "Style to be used [default: '%(default)s']" , 
+        default = T.default_style ) 
+
+
+    import sys 
+    args = sys.argv [ 1 : ]
+
+    v = [ a for a in args ]
+    if '--' in v : v.remove('--')
+    
+    parsed = parser.parse_args( v )
+    if sys.stdin.isatty() : sys.exit ( attention ( "Input stream *MUST* be a pipe-like!" ) ) 
+
+    
+    from   ostap.utils.strings import split_string 
+    separators = parsed.Separators
+    if not separators : separators = ' '
+
+    ## build the table content 
+    rows = []
+    for line in sys.stdin:
+        cleaned_line = line.strip('\r\n')
+        row  = split_string ( cleaned_line , separators , strip = True )
+        rows.append ( [ r.strip() for r in row ] )
+
+    if parsed.Empty : rows = T.remove_empty_columns ( rows )
+    
+    print ( T.table ( rows                         ,
+                      title     = parsed.Title     ,
+                      prefix    = parsed.Prefix    ,
+                      alignment = parsed.Alignment ,
+                      style     = parsed.Style     ) )
+
+    

@@ -448,7 +448,6 @@ if converged : # ==============================================================
     table = T.table ( glob_stat , title = title , prefix = '# ' ) 
     logger.info ( '%s\n%s' % ( title , table ) ) 
 
-
 # ===========================================================================
 ## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
 ##  root_file = backup_to_ROOT    ( dbname     )

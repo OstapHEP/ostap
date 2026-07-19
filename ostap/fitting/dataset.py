@@ -33,7 +33,7 @@ from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              num_types     , sequence_types ,
                                              sized_types   , dictlike_types )
 from   ostap.utils.basic            import loop_items  , typename            
-from   ostap.math.math_base         import std, evt_range, FIRST_ENTRY, LAST_ENTRY, isint  
+from   ostap.math.math_base         import std, evt_range, FIRST_ENTRY, LAST_ENTRY, isint, isequal   
 from   ostap.utils.random_seed      import random_seed
 from   ostap.fitting.variables      import valid_formula, make_formula 
 from   ostap.trees.cuts             import expression_types, vars_and_cuts, order_warning
@@ -2334,7 +2334,37 @@ _new_methods_ += [
     ]
 # =============================================================================
 
+# =============================================================================
+## trivial weight ?
+#  -   non-weighted 
+#  -   or all weights are constants
+#  @code
+#  data = ...
+#  if data.weight_trivial : ...
+#  @endcdode
+def _rds_wtrivial_  ( dataset ) :
+    """ Trivial weigth for dataset ?
+    -   non-weighted 
+    -   or all weights are equal to the same (positive) constants
+    >>> data = ...
+    >>> if data.weight_trivial : ...
+    """
+    if not dataset.isWeighted() : return True
+    wstat = dataset.statVar ( "1" )
+    if hasattr ( vstat , 'wminmax' ) :
+        wmin , wmax = wstat.wminmax()
+        return 0 < wmin < wmax and isequal ( wmin , wmax )
+    ## 
+    return isequal ( wstat.nEff ()  , len ( dataset ) ) 
 
+
+## define it as property 
+ROOT.RooDataSet.weight_trivial = property ( _rds_wtrivial_ , None , None , _rds_wtrivial_.__doc__ ) 
+
+_new_methods_ += [
+    ROOT.RooDataSet.weight_trivial , 
+    ]
+    
 RAD = ROOT.RooAbsData
 # =============================================================================
 ## change the default storage for RooDataSet 

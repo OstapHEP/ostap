@@ -41,7 +41,7 @@ batch_env ( logger )
 # =============================================================================
 
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-gbreweight-' )
-## dbname     = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-gbreweight-'   )
+dbname     = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-gbreweight-'   )
 
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'

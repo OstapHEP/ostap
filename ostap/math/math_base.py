@@ -120,8 +120,8 @@ __all__     = (
     'epsilon'        , ## float/double-epsilon
     ##
     'np2raw'         , ## numpy array to raw C++ buffer
-    'weight_trivial' , ## Is weight(1D numpy array) "trivial" ? 
-    ## 
+    'weight_trivial' , ## Is weight(1D numpy array) "trivial" ?
+    'product'        , ## Make a product over iterable `data`
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import python_info
@@ -129,7 +129,8 @@ from   ostap.core.ostap_types  import ( sequence_types , sized_types ,
                                         integer_types  , num_types   ,
                                         numpy_buffer_types           ) 
 from   ostap.core.core_base    import cpp, std, Ostap 
-import ROOT, sys, math, ctypes, array, numpy    
+from   functools               import reduce
+import ROOT, sys, math, ctypes, array, numpy, operator     
 # =============================================================================
 
 # =============================================================================
@@ -1066,7 +1067,17 @@ def weight_trivial ( weight ) :
     elif  isinstance ( weight , numpy.ndarray      ) : return numpy.all ( weight == 1 ) 
     return False
 # =============================================================================
-
+## Make a product over iterable `data`
+#  @code
+#  data = ..
+#  resulе = producr ( data ) 
+#  @endcode 
+def product ( data , init = 1 ) :
+    """  Make a product over iterable `data`
+    >>> data = ..
+    >>> result = producr ( data )
+    """
+    return  reduce ( operator.mul , data  , init )
 
 # =============================================================================
 ## Call a function of scalar argument with array-like argument

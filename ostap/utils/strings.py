@@ -41,7 +41,7 @@ dc_mark = '_SSPPLLIITT_'
 # =============================================================================
 ## split string using separators and respecting the (),[] and {} groups.
 #  - group can be nested
-def split_string_respect  ( text , separators = var_separators , strip = True ) :
+def split_string_respect ( text , separators = var_separators , strip = True ) :
     """ Split string using separators and respecting the (),[] and {} groups.
     - groups can be nested
     """

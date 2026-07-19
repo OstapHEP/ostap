@@ -438,12 +438,13 @@ def _ve_gauss_ ( s , accept = lambda a : True , nmax = 1000 ) :
     #
     if 0 >= s.cov2() or iszero ( s.cov2 () ) : return s.value() ## return
     #
-    v = s.value ()
-    e = s.error ()
+    v  = s.value ()
+    e  = s.error ()
+    c2 = s.cov2  () 
     #
     for i in range ( nmax  ) :
         r = _gauss  ( v , e ) 
-        if accept   ( r     ) : return r
+        if accept   ( r     ) : return r 
         
     logger.warning("Can'n generate proper random number %s" % s )
     return v

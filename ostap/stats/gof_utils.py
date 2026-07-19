@@ -21,11 +21,13 @@ __all__     = (
     'pairwise_distances' , ## get array of all pair-wise distances between two datasets
     'nearest_distances'  , ## get array of all nearest distances for the dataset 
     'nearest_neighbors'  , ## get all nearest neigbours
-    's2u'                , ## convert structured numpy array into non-structured 
+    's2u'                , ## convert structured numpy array into non-structured
+    'combine_pvalues'    , ## combine p-values 
+    
 )
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
-from   ostap.core.core          import VE, Ostap
+from   ostap.core.core          import Ostap, VE, SE 
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.core.ostap_types   import string_types, num_types, numpy_floats  
 from   ostap.math.math_base     import doubles, axis_range
@@ -1114,6 +1116,31 @@ def draw_ecdf ( ecdf          ,
     hline.draw ( 'same' , copy = True )
     ## 
     return result, vline, hline 
+
+
+# ==============================================================================
+## combine p-values 
+def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
+    """ combine p-values
+    """
+    from   scipy.stats              import combine_pvalues as _combine_pvs
+    ##
+    if any ( isinstance ( p , VE ) and 0 < p.cov2() and 0 <= p.value() <= 1 for p in pvalues ) :
+        pvs = [ clip_pvalue ( VE ( p ) , 0.5 ) for p in pvalues ]
+        ## toys
+        cnt = SE()
+        for i in range ( N )  :
+            ## sampled 
+            spv  = [ p.gauss ( accept = lambda v : 0 < v < 1 ) if 0 < p.cov2() else float ( p ) for p in pvs ]            
+            cnt += _combine_pvs ( spv , method = method ).pvalue 
+
+        rms = cnt.rms()        
+        return VE ( cnt.mean() , rms * rms ) 
+    
+    pvs = ( min ( max ( tol , float ( p ) ) , 1 - tol ) for p in pvalues )            
+    return _combine_pvs ( pvs , method = method ).pvalue 
+    
+    
 
 # =============================================================================
 if '__main__' == __name__ :

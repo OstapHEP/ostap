@@ -28,8 +28,12 @@ __all__     = (
     'align_column'          , ## align the certain column of the table  
     'add_prefix'            , ## add the prefix to each row of the table
     'empty_columns'         , ## find empty columns in the table 
-    'remove_empty_columns'  , ## remove empty columns from the table 
-    )
+    'remove_empty_columns'  , ## remove empty columns from the table
+    ##
+    'table_styles'          , ## available table styles
+    'ascii_styles'          , ## available ASCII table styles    
+    'default_style'         , ## available ASCII table styles    
+)
 # =============================================================================
 from   ostap.core.ostap_types import string_types 
 from   ostap.logger.colorized import infostr, allright, decolorize        
@@ -107,7 +111,8 @@ terminal_styles = ()
 tabulate_styles = () 
 # ==============================================================================
 if terminaltables : # ==========================================================
-    ## Vaild `style` arguments (case insensitive) 
+    # ==========================================================================
+    ## Valid `style` arguments (case insensitive) 
     terminal_styles += ( 'ascii'     , ## use `AsciiTable` 
                          'single'    , ## use `SingleTable` 
                          'porcelain' , ## use `PorcelainTable` 
@@ -143,6 +148,9 @@ except ImportError : # ========================================================
     ## no formats are available
     tabulate         = None
 
+# =============================================================================
+table_styles = tuple ( sorted ( set ( table_styles ) ) )
+ascii_styles = tuple ( sorted ( set ( ascii_styles ) ) )
 # =============================================================================
 ## default style
 default_style = 'default'
@@ -607,7 +615,7 @@ def get_item ( item ) :
     if   not item                             : yield ''
     elif plain_string ( item )                : yield str(item)
     elif isinstance   ( item , string_types ) :
-        ## spliting can hav ebad interference with colorization
+        ## spliting can have bad interference with colorization
         dcitem = decolorize ( item ) 
         for line in dcitem.split ( '\n' )      : yield str(line) 
     ## sequence ? 

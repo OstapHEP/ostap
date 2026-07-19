@@ -32,7 +32,7 @@ from   ostap.core.ostap_types   import string_types
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import VE, Ostap, hID 
-from   ostap.math.math_base     import axis_range, np2raw    
+from   ostap.math.math_base     import axis_range, np2raw, isequal     
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.basic        import loop_items, typename   
@@ -405,6 +405,19 @@ class GoF1D(object) :
         
         ## get the vectorized version of CDF 
         self.__vct_cdf = numpy.vectorize ( self.__cdf )
+
+        transformed = False 
+        if dataset.isWeighted () :
+            wstat      = dataset.statVar ( "1" )
+            wmin, wmax = wstat.wminmax()
+            ## the weigth is fake/trival, remove it
+            assert dataset.weight_trivial , \
+                "Non-trivial weights are not supported %s" % typename ( self )
+        
+            ## weight is trivial: remove it
+            dataset     = dataset.unWeight ()
+            ROOT.SetOwership ( dataset , True ) 
+            transformed = True
         
         ## data in a form of numpy sructured array
         varname = pdf.xvar.name 
@@ -439,6 +452,11 @@ class GoF1D(object) :
             self.__estimators [ 'AIC' ] = fitresult.aic    () 
             self.__estimators [ 'BIC' ] = fitresult.bic    ( dataset )  
             
+        ## clean&deleet auxiallary dataset 
+        if transformed :
+            dataset.clear () 
+            del dataset 
+        
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object
@@ -1160,7 +1178,7 @@ class GoF1DToys(GoF1D) :
 
 # =============================================================================
 ## @class GoF1D
-#  Implementation of 1D GoF estimator (AGoF innterface) 
+#  Implementation of 1D GoF estimator (AGoF interface) 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 class GoF_1D(AGoF) :
     """ Implementation of 1D GoF estimator (AGoF interface) 
@@ -1187,6 +1205,14 @@ class GoF_1D(AGoF) :
         return self.__kwargs 
        
     # =========================================================================
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def weights_supported ( self ) :
+        """`weghts_supported`: Are weights supported by this estimator?
+        """
+        return False 
+
+    # =========================================================================
     ## Calculate T-value for Goodness-of-Git
     #  @code
     #  gof    = ...
@@ -1201,6 +1227,10 @@ class GoF_1D(AGoF) :
         >>> data   = ...
         >>> tvalue = gof.tvalue ( pdf , data )
         """
+        ##
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s" % ( typename ( self ) )
+        ##
         gof = GoF1D ( pdf , data , cdf = self.__cdf , parameters = self.__parameters )
         return gof.estimators [ self.__what ]
     
@@ -1236,6 +1266,10 @@ class GoF_1D(AGoF) :
         >>> data = ... 
         >>> t_value , p_value = gof.pvalue ( pdf , data ) 
         """    
+        ##
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s" % ( typename ( self ) )
+        ##
         gof = GoF1D ( pdf , data , cdf = self.__cdf , parameters = self.__parameters )
 
         tval     = gof.etimators [ self.__what ]        
@@ -1245,7 +1279,6 @@ class GoF_1D(AGoF) :
         pval = gof_toys.result ( self.__what ).pvalue 
         
         return tval , pval 
-     
     
 # =============================================================================
 if '__main__' == __name__ :

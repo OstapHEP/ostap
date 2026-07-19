@@ -67,9 +67,9 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
 ## @class GoF
-#  A base class for family of methods to probe goodness-of-fit
+#  A base class for family of methods to probe Goodness-of-Git
 class GoF(AGoF) :
-    """ A base class for family of methods to probe goodness-of-fit
+    """ A base class for family of methods to probe Goodness-of-Fit
     """
     def __init__ ( self             ,
                    estimator        , ## actual GoF-evaluator
@@ -89,7 +89,7 @@ class GoF(AGoF) :
     def config ( self ) :
         return { 'estimator' : self.estimator ,
                  'mcFactor'  : self.mcFactor  ,
-                 'sample'    : self.sample    } 
+                 'sample'    : self.sample    }
     
     # =========================================================================
     ## self-print get the configuration 
@@ -152,6 +152,13 @@ class GoF(AGoF) :
         """
         return self.gof.method
 
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def weights_supported ( self ) :
+        """`weghts_supported`: Are weights supported by this estimator?
+        """
+        return self.gof.weights_supported 
+    
     @property
     def t_value ( self ) : return self.gof.t_value
     @property
@@ -163,24 +170,24 @@ class GoF(AGoF) :
         
     # =========================================================================
     # serialize it (for parallelization) 
-    def __getstate_ ( self ) :
+    def __getstate__ ( self ) :
         """ Serialize it (for parallelization)
         """
-        return { 'gof'      : self.gof          ,
-                 'mcFactor' : self.mcFactor     ,
-                 'sample'   : self.sample       } 
+        return { 'estimator': self.gof      ,
+                 'mcFactor' : self.mcFactor ,
+                 'sample'   : self.sample   } 
     
     # =========================================================================
     # De-serialize it (for parallelization) 
     def __setstate__ ( self , state ) :
         """ (De)Serialize it (for parallelization)
         """
-        self.__gof        = state.pop ( 'gof'              )
+        self.__estimator  = state.pop ( 'estimator'       )
         self.__mcFactor   = state.pop ( 'mcFactor' , 20    )
         self.__sample     = state.pop ( 'sample'   , False )
         
     # =========================================================================
-    ## Calculate T-value for Goodness-of-Git 
+    ## Calculate T-value for Goodness-of-Fit 
     #  @code
     #  ppd    = ...
     #  pdf    = ...  
@@ -194,11 +201,13 @@ class GoF(AGoF) :
         >>> data   = ... 
         >>> tvalue = gof.tvalue ( pdf , data ) 
         """
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
+                                                                       typename ( self.gof ) )
+        ## 
         ds1, ds2 = self.transform ( pdf , data )         
         ## estimate the t-value 
-        t = self.gof ( ds1 , ds2 , normalize = True )
-        ## 
-        return self.t_value 
+        return self.gof ( ds1 , ds2 , normalize = True )
 
     # =========================================================================
     ## Calculate the t & p-values
@@ -215,9 +224,13 @@ class GoF(AGoF) :
         >>> data  = ... 
         >>> t , p = gof.pvalue ( pdf , data ) 
         """
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
+                                                                       typename ( self.gof ) )
+        
         ds1 , ds2 = self.transform ( pdf , data )         
         ## estimate t&p-values
-        tv , pv = self.gof.pvalue ( ds1 , ds2  )        
+        tv ,  pv  = self.gof.pvalue ( ds1 , ds2  )        
         return tv , pv 
     
     # =========================================================================
@@ -263,6 +276,10 @@ class GoF(AGoF) :
         >>> data = ... ## as ROOT.RooAbsData
         >>> ds1, ds2 = gof.transform ( pdf , data ) 
         """
+        
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
+                                                                       typename ( self.gof ) )
         
         data1 = data
         data2 = self.generate ( pdf , data )
@@ -333,7 +350,6 @@ class GoF(AGoF) :
         del data2 
             
         return ds1 , ds2 , w1 
-
     
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
@@ -353,7 +369,6 @@ class GoF(AGoF) :
         self._hline = hline 
         ##
         return result, vline, hline   
-
 
     # =========================================================================
     ## Get results in a form of the table 
@@ -702,7 +717,14 @@ class NLL(AGoF) :
         self.__counter   = None
         self.__tvalue    = None
         self.__pvalue    = None
-        
+
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def weights_supported ( self ) :
+        """`weghts_supported`: Are weights supported by this estimator?
+        """
+        return False 
+    
     # =======================================================================
     ## get all configration parameters
     @property 
@@ -830,6 +852,10 @@ class NLL(AGoF) :
     def tvalue ( self, pdf , data ) :
         """ Get t-value: -log L here 
         """
+        ## 
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s/%s" % ( typename ( self  ) ) 
+        ## 
         ## to ensure consistency:
         pdf.load_params ( self.fitresult , silent = True )
 
@@ -838,8 +864,7 @@ class NLL(AGoF) :
         tv = self.the_tvalue ( r ) 
         del r
         
-        self.__tvalue = tv 
-        
+        self.__tvalue = tv         
         return tv
 
     # =========================================================================
@@ -1004,6 +1029,10 @@ class BayesianIC(NLL) :
     def tvalue ( self, pdf , data ) :
         """ Get t-value: -log L here 
         """
+        ## 
+        assert not data.isWeighted() or self.weights_supported , \
+            "Data is weighted but weights are not supported %s/%s" % ( typename ( self  ) ) 
+        ## 
         ## to ensure consistency:
         pdf.load_params ( self.fitresult , silent = True )
 

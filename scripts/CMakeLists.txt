@@ -9,6 +9,11 @@ install ( FILES       check-dependencies
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
+install ( FILES       ostap-table 
+          DESTINATION scripts  
+          COMPONENT   scripts 
+          PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
 install ( FILES       sync-dirs 
           DESTINATION scripts  
           COMPONENT   scripts 

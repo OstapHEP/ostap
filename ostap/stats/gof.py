@@ -173,6 +173,15 @@ class AGoF(abc.ABC) :
                             precision = precision ,
                             width     = width     )
 
+    # =========================================================================
+    ## Are weights supported by this GoF estimator?
+    @property 
+    @abc.abstractmethod
+    def weights_supported ( self ) :
+        """`weghts_supported`: Are weights supported by this estimator?
+        """
+        return NotImplemented
+
 # =============================================================================
 ## @class AGoFnp
 #  An absract base class for numpy-related family of methods to probe goodness-of fit
