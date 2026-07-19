@@ -10,6 +10,7 @@
 ## Backward incompatible
 
   1. `ostap.tools.reweight.WeightingPlot` from now gets  only one positional `what`-argument, others are keyword-only
+  1. `ostap.tools.data_reweighter.DataReweigher` gets the mandatory argumen - the type of the actual "reweighter"
   
 # v3.7.3.0
 

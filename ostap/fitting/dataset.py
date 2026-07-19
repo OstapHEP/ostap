@@ -24,7 +24,7 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights
     )
 # =============================================================================
-from   collections                  import OrderedDict
+from   collections                  import OrderedDict, defaultdict 
 from   ostap.core.meta_info         import root_info
 from   ostap.core.core              import ( Ostap          ,
                                              VE , SE , dsID , 
