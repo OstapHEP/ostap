@@ -8,7 +8,8 @@
   1. Add `packaging` for correct comparison of versions
   1. Disable `ipyparallel` tests if `python<3.10`
   1. Add some protection for `lightgbm` and `xgboost` usage 
-
+  1. Include `CatBoost` into GoF-tests
+  
 ## Bug fixes
 
 ## Backward incompatible

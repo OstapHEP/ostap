@@ -1155,7 +1155,7 @@ class GoFSimFit(GoFSimFitBase) :
                    pdf                ,
                    dataset            ,
                    estimators  = {}   , 
-                   parameters  = None ) :
+                   parameters  = None , **runconf ) :
         
         ## initialize the base class 
         GoFSimFitBase.__init__ ( self                    ,
@@ -1195,6 +1195,8 @@ class GoFSimFit(GoFSimFitBase) :
             self.gofs  [ key  ] = gof 
             self.N     [ key  ] = len ( ds ) 
 
+        ## run toys if requested
+        if runconf: self.run ( **runconf )
 
     ## serialize the object 
     def __getstate__ ( self ) :
@@ -1262,16 +1264,16 @@ class GoFSimFit(GoFSimFitBase) :
     ## merge two objects (needed for parallel execution):
     def merge ( self , other ) :
         """ Merge two GoF-toys objects
-        - needed for paralell execution 
+        - needed for parallel execution 
         """        
         self += other
         return self
 
     # =========================================================================
-    ## merge two objects (needed for apralell execution):
+    ## merge two objects (needed for parallel execution):
     def __iadd__ ( self , other ) :
         """ Merge two GoF-toys objects
-        - needed for paralell execution 
+        - needed for parallel execution 
         """        
         if not isinstance ( other , GoFSimFit  ) : return NotImplemented 
 
@@ -1302,8 +1304,9 @@ class GoFSimFit(GoFSimFitBase) :
               silent   = False  ,
               nSplit   = 0      ) :
         """ Run toys to get the p-value
-        """
-        
+        """        
+        assert  isinstance ( nToys , int ) and 0 < nToys , "Invalid number of toys: %s" % nToys
+
         if parallel :
             
             from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
@@ -1470,7 +1473,7 @@ class GoFSimFit(GoFSimFitBase) :
         header = ( 'Component' , 't-value' , 't-mean' , 't-rms' , 't-min' , 't-max' , 'Factor' , 'p-value [%]' , '#%s' % greek_lower_sigma )
         rows   = [ header ] + rows 
         rows   = T.remove_empty_columns ( rows ) 
-        title = title if title else 'GoF statistics'
+        title = title if title else 'SimFit-GoF statistics #%d' % self.nToys
         return T.table ( rows , title = title , prefix = prefix )     
 
     __str__  = table 

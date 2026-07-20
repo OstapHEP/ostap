@@ -36,6 +36,7 @@ __all__     = (
     'ADVAL_LightGBM'     , ## Use Adversarial Validation as GoF estimator 
     'ADVAL_HistoGBoost'  , ## Use Adversarial Validation as GoF estimator 
     'ADVAL_GBoost'       , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_CatBoost'     , ## Use Adversarial Validation as GoF estimator
     'ADVAL_XGBoost'      , ## Use Adversarial Validation as GoF estimator 
     'ADVAL_RandomForest' , ## Use Adversarial Validation as GoF estimator 
 )
@@ -1330,53 +1331,48 @@ class ADVAL_RandomForest(ADVAL_LightGBM) :
                                   silent     = silent     ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
         
-# ==============================================================================
-if HAS_AVX2 : 
-    # ==========================================================================
-    ## @class ADVAL_CatBoost
-    #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
-    #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
-    #  @see ADVAL_CATB 
-    class ADVAL_CatBoost(ADVAL_LightGBM) : 
-        """ Implementation of concrete method CatBoost-based Adversation Validation for probing of Goodness-Of-Fit
-        -   t-value is defined via AUC
-        -   p-value if defined via permutations
+# ============================================================================
+## @class ADVAL_CatBoost
+#  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+#  @see ADVAL_CATB 
+class ADVAL_CatBoost(ADVAL_LightGBM) : 
+    """ Implementation of concrete method CatBoost-based Adversation Validation for probing of Goodness-Of-Fit
+    -   t-value is defined via AUC
+    -   p-value if defined via permutations
         
-        Important parameters:
+    Important parameters:
         
-        - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
-        - nToys    : (int)   number of permutations/toys 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
         
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               ,
+                   mcFactor  = 20     , 
+                   nToys     = 400    ,
+                   parallel  = False  ,
+                   silent    = False  ,
+                   progress  = True   , **params ) : 
+            
+        """ Create the Adversarial Validation estimator 
+
+        Parameters  
+            
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
         """
-        # =========================================================================
-        ## create the estimator
-        #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
-        #  @param nToys    : (int)  number of permutations/toys 
-        def __init__ ( self               ,
-                       mcFactor  = 20     , 
-                       nToys     = 400    ,
-                       parallel  = False  ,
-                       silent    = False  ,
-                       progress  = True   , **params ) : 
+        from ostap.stats.adval import ADVAL_CATB as ADVAL_TYPE 
+        ADVAL_LightGBM.__init__ ( self ,
+                                  mcFactor   = mcFactor ,
+                                  nToys      = nToys    ,
+                                  parallel   = parallel ,
+                                  silent     = silent   ,
+                                  ADVAL_TYPE = ADVAL_TYPE , **params )
             
-            """ Create the Adversarial Validation estimator 
-
-            Parameters  
-            
-            - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
-            - nToys    : (int) number of permutations/toys 
-            """
-            from ostap.stats.adval import ADVAL_CATB as ADVAL_TYPE 
-            ADVAL_LightGBM.__init__ ( self ,
-                                      mcFactor   = mcFactor ,
-                                      nToys      = nToys    ,
-                                      parallel   = parallel ,
-                                      silent     = silent   ,
-                                      ADVAL_TYPE = ADVAL_TYPE , **params )
-            
-    __all__ += ( 'ADVAL_CatBoost' , )
-
-
 # =============================================================================
 if '__main__' == __name__ :
     

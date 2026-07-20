@@ -18,14 +18,12 @@ import os
 os.environ [ "OMP_NUM_THREADS"      ]  = "1"
 os.environ [ "MKL_NUM_THREADS"      ]  = "1"
 os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
-# ==============================================================================
-from   ostap.core.meta_info     import root_info 
-from   ostap.core.core          import dsID, rooSilent
+# ============================================================================== 
+from   ostap.core.core          import dsID
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.basic        import typename, numcpu 
-from   ostap.math.math_ve       import significance
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          GoFSimFit1D     , 
@@ -34,6 +32,7 @@ from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          PPDSimFit       ,
                                          DNNSimFit       ,
                                          USTATSimFit     )  
+from   ostap.stats.gof_utils    import useLightGBM, useXGBoost, useCatBoost
 from   ostap.stats.gof1d        import GoF_1D
 import ostap.logger.table       as     T 
 import ostap.io.zipshelve       as     DBASE
@@ -280,7 +279,6 @@ def test_gof_simfit () :
                 with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) ) :
                     gof.draw ( sample  )
 
-                    
     # =========================================================================
     ## Use universal SimFit-GoF tool with 1D estiamtors 
     # =========================================================================
@@ -294,7 +292,7 @@ def test_gof_simfit () :
     
     gof2.run ( nToys , silent = False , parallel = True )
     
-    title = 'GoF2 for SimFit' 
+    title = 'GoF/ID-KS for SimFit' 
     logger.info ( '%s:\n%s' % ( title , gof2.table ( title = title , prefix = '# ' ) ) ) 
 
     # =========================================================================
@@ -307,13 +305,81 @@ def test_gof_simfit () :
     gof3       = GoFSimFit ( model_sim                ,
                              dataset                  ,
                              estimators  = estimators ,  
-                             parameters  = r          )
+                             parameters  = r          , 
+                             nToys       = nToys      , 
+                             silent      = False      , 
+                             parallel    = True       )
     
-    gof3.run ( nToys , silent = False , parallel = True )
+    ## gof3.run ( nToys , silent = False , parallel = True )
     
-    title = 'GoF3 for SimFit' 
+    title = 'GoF/MIX for SimFit' 
     logger.info ( '%s:\n%s' % ( title , gof3.table ( title = title , prefix = '# ' ) ) ) 
 
+    # =========================================================================
+    ## LightGBM ?
+    # =========================================================================
+    if useLightGBM() :
+        from   ostap.stats.gofnd import ADVAL_LightGBM as GOF  
+
+        estimators = { 'A' : GOF ( parallel = True ) , 
+                       'B' : GOF ( parallel = True ) } 
+    
+        gof4       = GoFSimFit ( model_sim                ,
+                             dataset                  ,
+                             estimators  = estimators ,  
+                             parameters  = r          , 
+                             nToys       = nToys      , 
+                             silent      = False      , 
+                             parallel    = True       )
+    
+        ## gof4.run ( nToys , silent = False , parallel = True )
+    
+        title = 'GoF/LightGBM for SimFit ' 
+        logger.info ( '%s:\n%s' % ( title , gof4.table ( title = title , prefix = '# ' ) ) ) 
+ 
+    # =========================================================================
+    ## XGBoost?
+    # =========================================================================
+    if useXGBoost () :
+        from   ostap.stats.gofnd import ADVAL_XGBoost as GOF  
+
+        estimators = { 'A' : GOF ( parallel = True ) , 
+                       'B' : GOF ( parallel = True ) } 
+    
+        gof5       = GoFSimFit ( model_sim                ,
+                             dataset                  ,
+                             estimators  = estimators ,  
+                             parameters  = r          , 
+                             nToys       = nToys      , 
+                             silent      = False      , 
+                             parallel    = True       )
+    
+        ## gof5.run ( nToys , silent = False , parallel = True )
+    
+        title = 'GoF/XGBoost for SimFit ' 
+        logger.info ( '%s:\n%s' % ( title , gof5.table ( title = title , prefix = '# ' ) ) ) 
+    
+    # =========================================================================
+    ## CatBoost?
+    # =========================================================================
+    if useCatBoost () :
+        from   ostap.stats.gofnd import ADVAL_CatBoost as GOF  
+
+        estimators = { 'A' : GOF ( parallel = True ) , 
+                       'B' : GOF ( parallel = True ) } 
+    
+        gof6       = GoFSimFit ( model_sim                ,
+                             dataset                  ,
+                             estimators  = estimators ,  
+                             parameters  = r          , 
+                             nToys       = nToys      , 
+                             silent      = False      , 
+                             parallel    = True       )
+    
+        ## gof6.run ( nToys , silent = False , parallel = True )
+    
+        title = 'GoF/CatBoost for SimFit ' 
+        logger.info ( '%s:\n%s' % ( title , gof6.table ( title = title , prefix = '# ' ) ) ) 
     
 # =============================================================================
 ## check that everything is serializable
