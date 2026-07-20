@@ -635,7 +635,14 @@ endif()
 ##
 if ( ${PY_lightgbm_FOUND} )
   find_python_module_version ( lightgbm ) 
-  message ( "----> lightgbm         version    : " ${PY_lightgbm_VERSION} " \t" ${PY_LIGHTGBM} ) 
+  message ( "----> lightgbm         version    : " ${PY_lightgbm_VERSION} " \t" ${PY_LIGHTGBM} )
+  if ( ${PY_lightgbm_VERSION} VERSION_GREATER_EQUAL "4.7.0" )
+     find_python_module ( narwhals QUIET )
+     if ( ${PY_narwhals_FOUND} )
+       find_python_module_version ( narwhals ) 
+       message ( "----> narwhals         version    : " ${PY_narwhals_VERSION} " \t" ${PY_NARWHALS} )
+     endif ()     
+  endif () 
 endif()
 ##
 if ( ${PY_xgboost_FOUND} )
@@ -702,9 +709,9 @@ if ( OSTAP_TEST_PYWARNINGS )
   message ( "----> All tests will be executed with PYTHONWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  )
 endif()
 
-set ( TEST_ENV1                           "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
-set ( TEST_ENV2 "PYTHONBUFFERED=1"        "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
-set ( TEST_ENV3 "IPYTHONDIR=/tmp/.python" "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV1                    "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV2 "PYTHONBUFFERED=1" "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV3 "IPYTHONDIR=/tmp"  "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
 
 # ========================================================================================
 ## main tests
