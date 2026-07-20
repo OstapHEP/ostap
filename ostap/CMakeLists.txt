@@ -248,7 +248,20 @@ find_python_module ( more_itertools QUIET )
 if ( NOT ${PY_more_itertools_FOUND} )
   message ( "----> warning (optional)  more_itertools is NOT found!" ) 
 endif()
-    
+
+# ========================================================================================
+## packaging
+# ========================================================================================
+
+find_python_module ( packaging QUIET )
+if ( NOT ${PY_packaging_FOUND} ) 
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install packaging ${PIP_ARGS})
+endif()
+find_python_module ( packaging QUIET )
+if ( NOT ${PY_packaging_FOUND} ) 
+  message ( "----> warning                  packaging is NOT found!" ) 
+endif()
+
 # ========================================================================================
 ## psutil 
 # ========================================================================================
@@ -552,6 +565,11 @@ endif()
 if ( ${PY_more_itertools_FOUND} )
   find_python_module_version ( more_itertools ) 
   message ( "----> more_itertools   version    : " ${PY_more_itertools_VERSION} " \t" ${PY_MORE_ITERTOOLS} )                           
+endif()
+## 
+if ( ${PY_more_packaging_FOUND} )
+  find_python_module_version ( packaging ) 
+  message ( "----> packaging        version    : " ${PY_more_packaging_VERSION} " \t" ${PY_PACKAGING} )                           
 endif()
 ## 
 if ( ${PY_psutil_FOUND} )

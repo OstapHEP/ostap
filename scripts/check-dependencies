@@ -140,7 +140,7 @@ check_install ( *missing )
 to_install =  ( 'numpy'            , 'scipy'            ,
                 'cffi'             , ## 'numba'            ,
                 'pathos'           , 'multiprocess'     , 'ppft' , 'dill' ,
-                'psutil'           , 'more_itertools'   , 
+                'psutil'           , 'more_itertools'   , 'packaging'  ,  
                 'tabulate'         , 'pathvalidate'  ,  
                 'sortedcontainers' ,  ## 'pragmastat'   ,
                 'zstandard'        , 'lzma'             ,
@@ -642,7 +642,28 @@ except ImportError : # ========================================================
 except : # ====================================================================
     # =========================================================================
     missing.append ( 'more_itertools' ) 
-    logger.error ( 'more_itertools cannot be imported!' )
+    logger.error   ( 'more_itertools cannot be imported!' )
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import packaging
+    row = 'packaging' , '' , packaging.__file__
+    rows.append  ( row )
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    message = """ packaging cannot be imported! 
+    pacakging is used fro version comparison
+    """
+    missing.append ( 'packaging' ) 
+    logger.error ( message )
+    row = attention ( 'packaging' ) , attention ( '---' ) , ''
+    rows.append  ( row )
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    missing.append ( 'packaging' ) 
+    logger.error   ( 'packaging cannot be imported!' )
 # =============================================================================
 try : # =======================================================================
     # =========================================================================        

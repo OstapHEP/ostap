@@ -43,6 +43,7 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import times, plus_minus, greek_lower_sigma
 from   ostap.logger.pretty      import pretty_float
 from   ostap.plotting.color     import Orange, Green, Blue
+from   packaging                import Version 
 import ostap.logger.table       as     T 
 import ROOT, os, sys, math, numpy, scipy   
 # =============================================================================
@@ -116,7 +117,7 @@ try : # =======================================================================
     import scipy # ============================================================
     import scipy.spatial # ====================================================
     # =========================================================================   
-    if "1.6.0" <=  scipy.__version__ : # ======================================
+    if Version ( "1.6.0" ) <=  Version ( scipy.__version__ ) : # ==============
         # =====================================================================
         ## Get nearest distances using scipy.spatial.cKDTree 
         def nearest_distances ( data        ,
@@ -173,7 +174,7 @@ try : # =======================================================================
     # =========================================================================
     import scipy # ============================================================
     import scipy.spatial # ====================================================
-    if "1.6.0" <= scipy.__version__ : # =======================================
+    if Version ( "1.6.0" ) <= Version ( scipy.__version__  ) : # ==============
         # =====================================================================
         ## Get nearest neighbors using scipy.spatial.cKDTree 
         def nearest_neighbors ( data , n_jobs = -1 , n_neighbors = 10 , **config ) :            
@@ -678,8 +679,8 @@ if False : # ==================================================================
         # =====================================================================
         import joblib as jl
         jl_conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
-        if   '1.4.0' <= jl.__version__ : conf [ 'return_as' ] = 'unordered_generator'
-        elif '1.3.0' <= jl.__version__ : conf [ 'return_as' ] = 'generator'           
+        if   Version ( '1.4.0' ) <= Version ( jl.__version__ ) : conf [ 'return_as' ] = 'unordered_generator'
+        elif Version ( '1.3.0' ) <= Version ( jl.__version__ ) : conf [ 'return_as' ] = 'generator'           
         # =====================================================================
         ## Run NN-permutations in parallel using joblib 
         def joblib_run ( self , NN , silent = False , progress = True ) :
@@ -1120,7 +1121,7 @@ def draw_ecdf ( ecdf          ,
 # ==============================================================================
 from scipy.stats import combine_pvalues as _combine_pvs_ # =====================
 # ==============================================================================
-if "1.10" <= scipy.__version__ : # =============================================
+if Version ( "1.10" ) <= Version ( scipy.__version__ ) : # =====================
     # ==========================================================================
     ## combine p-values using certain method 
     def _combine_pvalues ( data , method = "fisher" ) :

@@ -5,7 +5,8 @@
   1. Add `Ostap::Math::covariance_matrix` function to check if (S)matrix can be valid covariance matrix
   1. Add "reweighters" based on `LigthGBM`, `XGBoost` and `CatBoost`. All of them are much faster than `GBReweighter` with similar perfomance
   1. Add helper script `ostap-table` to convert table-like data from the input stream to pretty ostap's style tables
-  
+  1. Add `packaging` for correct comparison of versions
+
 ## Bug fixes
 
 ## Backward incompatible

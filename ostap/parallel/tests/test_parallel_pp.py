@@ -26,7 +26,15 @@ else :
 batch_env ( logger ) 
 # =============================================================================
 fix_ppsrv ( pp.Server )
-    
+
+# =============================================================================
+disable_test = ( 3 , 13 ) <= sys.version_info and pp.__version__ < "1.7.8" 
+
+disable_test = False 
+if disable_test :
+    logger.warning ( "python & pp versions are in conflict, tests will be disabled!" )
+# ============================================================================
+
 ## simple    function that creates and fills a histogram 
 def make_histo  ( i , n ) :
     """ Simple    function that creates and  fills a histogram
@@ -62,6 +70,10 @@ def test_pp_function () :
     logger =    getLogger ("test_pp_function")
     logger.info ('Test job submission with %s' %  pp ) 
 
+    if disable_test :
+        logger.warning ( "python & pp versions are in conflict, test is disabled!" )
+        return
+    
     job_server = pp.Server()
     
     jobs = [ ( i , job_server.submit ( make_histo , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
@@ -92,6 +104,10 @@ def test_pp_method() :
     logger =    getLogger ("test_pp_method")
     logger.info ('Test job submission with %s' %  pp ) 
  
+    if disable_test :
+        logger.warning ( "python & pp versions are in conflict, test is disabled!" )
+        return
+
     job_server = pp.Server()    
     jobs = [ ( i , job_server.submit ( mh.process , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
 
@@ -121,8 +137,9 @@ def test_pp_callable1 () :
     logger = getLogger ("test_pp_callable1")
     logger.info ('Test job submission with %s' %  pp ) 
     
-    ## logger.warning ("test is disabled for UNKNOWN REASON")
-    ## return
+    if disable_test :
+        logger.warning ( "python & pp versions are in conflict, test is disabled!" )
+        return
 
     job_server = pp.Server()
     
@@ -152,8 +169,9 @@ def test_pp_callable2 () :
     logger = getLogger ("test_pp_callable2")
     logger.info ('Test job submission with %s' %  pp ) 
     
-    ## logger.warning ("test is disabled for UNKNOWN REASON")
-    ## return
+    if disable_test :
+        logger.warning ( "python & pp versions are in conflict, test is disabled!" )
+        return
 
     job_server = pp.Server()
     
@@ -178,9 +196,9 @@ def test_pp_callable2 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## test_pp_function  () 
-    ## test_pp_method    () 
-    ## test_pp_callable1 () 
+    test_pp_function  () 
+    test_pp_method    () 
+    test_pp_callable1 () 
     test_pp_callable2 () 
     
 # =============================================================================

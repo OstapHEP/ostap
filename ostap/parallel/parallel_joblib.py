@@ -13,6 +13,7 @@ __all__ = (
 )
 # =============================================================================
 from   itertools                    import repeat , count
+from   packaging                    import Version 
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager 
 from   ostap.io.checker             import PickleChecker as Checker
@@ -47,9 +48,9 @@ class WorkManager(TaskManager) :
                   dump_freq  = 0           , **kwargs ) :
 
         ##
-        if   joblib and "1.4.0" <= joblib.__version__ : 
+        if   joblib and Version ( "1.4.0" ) <= Version ( joblib.__version__ ) : 
             kwargs [ 'return_as' ] = kwargs.pop ( 'return_as' , 'generator_unordered' )
-        elif joblib and "1.3.0" <= joblib.__version__ : 
+        elif joblib and Version ( "1.3.0" ) <= Version ( joblib.__version__ ) : 
             kwargs [ 'return_as' ] = kwargs.pop ( 'return_as' , 'generator' )
         else : 
             kwargs.pop ( 'return_as' )
