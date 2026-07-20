@@ -26,7 +26,7 @@ from   ostap.logger.symbols     import iteration, plus_minus
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
-from   ostap.stats.gof_utils    import useLightGBM, useXGBoost  
+from   ostap.stats.gof_utils    import useLightGBM, useXGBoost, useCatBoost   
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.logger.table       as     T 
@@ -65,7 +65,11 @@ tag_mc      = 'MC_tree'
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
 ## dbname      = 'reweight3.db'
 
-if numcpu () <= 8 : 
+small = numcpu () <= 8
+
+## small = True
+
+if small : 
     
     NDATA1      = 3000 ## 00
     NDATA2      = 3000 ## 00
@@ -255,8 +259,12 @@ if use_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
 else            :  logger.warning   ( 'LightGBM is not available!' )
             
 use_xgboost  = useXGBoost  ()
-if use_xgboost :  logger.attention ( 'USE XGBoost!'              )
-else           :  logger.warning   ( 'XGBoost is not available!' )
+if use_xgboost  :  logger.attention ( 'USE XGBoost!'               )
+else            :  logger.warning   ( 'XGBoost is not available!'  )
+
+use_catboost  = useCatBoost  ()
+if use_catboost :  logger.attention ( 'USE CatBoost!'              )
+else            :  logger.warning   ( 'CatBoost is not available!' )
 
 # ==============================================================================
 ## Compare datasets using several methods 
@@ -272,15 +280,18 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR3 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR4 ( parallel = True , nToys = 100 ) )
 
-if use_lightgbm :  
+if False and use_lightgbm :  
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
-    comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) ) , )
+    comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) , ) 
 
-if use_xgboost:  
+if False and use_xgboost:  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
-    comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) ) , )
-    
+    comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) , ) 
 
+if False and use_catboost:  
+    from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
+    comparators += ( COMPARATOR7 ( parallel = True , nToys = 100 ) , ) 
+    
 # ============================================================================
 ## The table of global comparison statistics 
 header    = ( '#' , '#eff' ) + tuple ( c.method for c in comparators ) 
@@ -325,7 +336,6 @@ mc_y  = h1_axis ( [ ymax/iy*i for i in range ( iy + 1 ) ] )
 mc_z  = h1_axis ( [ zmax/iz*i for i in range ( iz + 1 ) ] )
 
 ## prepare re-weighting machinery 
-maxIter = 15
 
 ## check database 
 if not os.path.exists( dbname ) :
@@ -397,7 +407,8 @@ plots  = [
 memory_init = memory_usage() 
 converged   = False
 
-maxIter = 6
+maxIter     = 5 if small else 12
+
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
@@ -545,32 +556,23 @@ with timing ( "GBRW reweight" , logger = logger ) :
 # =============================================================================
 ## (2) home-made reweighter based on LightGBM
 # =============================================================================
-from ostap.tools.reweighters     import Reweighter_LGBM     as LGBM
-rw2 = DataReweighter ( LGBM                        , ## reweighter type 
-                       original         = mctree   ,
-                       target           = datatree ,
-                       target_variables = 'x,y,z'  ) 
+if  use_lightgbm : # ==========================================================
+    # =========================================================================
+    from ostap.tools.reweighters     import Reweighter_LGBM     as LGBM
+    rw2 = DataReweighter ( LGBM                        , ## reweighter type 
+                           original         = mctree   ,
+                           target           = datatree ,
+                           target_variables = 'x,y,z'  ) 
+    
+    weight_LGBM = 'weight_LGBM'
+    with timing ( "LightGBM reweight" , logger = logger ) :    
+        rw2.reweight ( mctree , name = weight_LGBM ) 
+        weights.append ( weight_LGBM )
 
-weight_LGBM = 'weight_LGBM'
-with timing ( "LightGBM reweight" , logger = logger ) :    
-    rw2.reweight ( mctree , name = weight_LGBM ) 
-    weights.append ( weight_LGBM )
-
+        
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-use_xgboost = False 
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import xgboost, numpy
-    use_xgboost = Version ( "1.0" ) <= Version ( xgboost.__version__ ) or Version ( numpy.__version__ )  < Version ( "2.0" ) 
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    use_xgboost = False 
-
-# ============================================================================
 if use_xgboost : # ===========================================================
     # ========================================================================
     from ostap.tools.reweighters     import Reweighter_XGB     as XGB
@@ -585,20 +587,6 @@ if use_xgboost : # ===========================================================
 
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
-# =============================================================================
-use_catboost = False 
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    from ostap.core.cpu_info import HAS_AVX2
-    if HAS_AVX2 :
-        import catboost
-        use_catboost = True 
-    # ========================================================================
-except ImportError : # ======================================================= 
-    # ========================================================================
-    use_catboost = False 
-
 # =============================================================================
 if use_catboost : # ===========================================================
     # =========================================================================

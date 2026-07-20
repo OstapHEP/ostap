@@ -6,6 +6,8 @@
   1. Add "reweighters" based on `LigthGBM`, `XGBoost` and `CatBoost`. All of them are much faster than `GBReweighter` with similar perfomance
   1. Add helper script `ostap-table` to convert table-like data from the input stream to pretty ostap's style tables
   1. Add `packaging` for correct comparison of versions
+  1. Disable `ipyparallel` tests if `python<3.10`
+  1. Add some protection for `lightgbm` and `xgboost` usage 
 
 ## Bug fixes
 

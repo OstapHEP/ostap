@@ -23,7 +23,7 @@ from   ostap.math.math_ve     import significance
 from   ostap.utils.root_utils import batch_env
 from   ostap.utils.basic      import numcpu, typename 
 from   ostap.logger.symbols   import plus_minus , greek_lower_sigma 
-from   ostap.stats.gof_utils  import clip_pvalue, useLightGBM, useXGBoost  
+from   ostap.stats.gof_utils  import clip_pvalue, useLightGBM, useXGBoost, useCatBoost 
 import ostap.fitting.models   as     M 
 import ostap.stats.gofnd      as     GnD
 import ostap.logger.table     as     T 
@@ -64,11 +64,14 @@ rbad  , _ = pdf.fitTo  ( data_bad  , quiet = True , refit = 5 )
 
 # ==============================================================================
 use_lightgbm = useLightGBM  ()
-if use_lightgbm : logger.attention ( 'USE LigthGBM!'              )
-else            : logger.warning   ( 'LightGBM is not available!' )
 use_xgboost  = useXGBoost ()
-if use_xgboost  : logger.attention ( 'USE XGBoost!'              )
-else            : logger.warning   ( 'XGBoost  is not available!' )
+use_catboost = useCatBoost ()
+if use_lightgbm : logger.attention ( 'USE LigthGBM!'               )
+else            : logger.warning   ( 'LightGBM is not available!'  )
+if use_xgboost  : logger.attention ( 'USE XGBoost!'                )
+else            : logger.warning   ( 'XGBoost  is not available!'  )
+if use_catboost : logger.attention ( 'USE CatBoost!'               )
+else            : logger.warning   ( 'CatBoost  is not available!' )
 
 keep_it = [] 
 # ===============================================================================
@@ -194,25 +197,38 @@ def test_GOF () :
     config  = { 'nToys' : nToys , 'parallel' : True , 'progress' : True }
 
     # ===========================================================================
-    try : # =====================================================================
-        # =======================================================================
-        if use_lightgbm : # =====================================================
-            # ===================================================================
-            import lightgbm
-            from   ostap.stats.gofnd import ADVAL_LightGBM as GOF 
+    if use_lightgbm : # =====================================================
+        # ===================================================================
+        import lightgbm
+        from   ostap.stats.gofnd import ADVAL_LightGBM as GOF 
+        ## 
+        gof    = GOF ( **config )
+        test   = gof , gof , 'ADVAL:LightGBM'
+        to_test.append ( test )
+
+    # ===========================================================================
+    if use_xgboost : # ======================================================
+        # ===================================================================
+            from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
             ## 
             gof    = GOF ( **config )
-            test   = gof , gof , 'ADVAL:LightGBM'
-            to_test.append ( test )
-        # =======================================================================
-    except ImportError : # ======================================================
-        # =======================================================================
-        logger.error  ( "LightGBM is not available, skip the test" )
-
+            test   = gof , gof , 'ADVAL:XBGoost'
+            to_test.append ( test )             
+            
+    # ===========================================================================
+    if use_catboost : 
+        # ===================================================================
+        import catboost
+        from   ostap.stats.gofnd import ADVAL_CatBoost as GOF 
+        ## 
+        gof    = GOF ( **config )
+        test   = gof , gof , 'ADVAL:CatBoost'
+        to_test.append ( test ) 
+        
     # ===========================================================================
     from ostap.stats.gof_utils import has_sklearn # =============================
     # ===========================================================================
-
+    
     """ 
     # ===========================================================================
     try : # =====================================================================
@@ -275,40 +291,8 @@ def test_GOF () :
         logger.error  ( "RandomForest is not available, skip the test" )
 
     """
-    
-    # ===========================================================================
-    try : # =====================================================================
-        # =======================================================================
-        if use_xgboost : # ======================================================
-            # ===================================================================
-            from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
-            ## 
-            gof    = GOF ( **config )
-            test   = gof , gof , 'ADVAL:XBGoost'
-            to_test.append ( test )             
-        # =======================================================================
-    except ImportError : # ======================================================
-        # =======================================================================
-        logger.error  ( "XGBoost is not available, skip the test" )
 
-    # ===========================================================================
-    try : # =====================================================================
-        # =======================================================================
-        from   ostap.core.cpu_info      import HAS_AVX2
-        if HAS_AVX2 :
-            # ===================================================================
-            import catboost
-            from   ostap.stats.gofnd import ADVAL_CatBoost as GOF 
-            ## 
-            gof    = GOF ( **config )
-            test   = gof , gof , 'ADVAL:CatBoost'
-            to_test.append ( test ) 
-            ## 
-            # ==================================================================
-    except ImportError : # =====================================================
-        # ======================================================================
-        logger.error  ( "CatBoost is not available, skip the test" )
-        
+    
     # ===========================================================================
     ## -log L 
     # ===========================================================================
@@ -333,7 +317,6 @@ def test_GOF () :
     entry    = bic_good , bic_bad , 'Bayesian IC'
     to_test.append ( entry )
     
-    """ 
     # ===========================================================================
     ## Run the test and build the table
     # ===========================================================================
