@@ -44,7 +44,7 @@ from   ostap.logger.symbols     import times, plus_minus, greek_lower_sigma
 from   ostap.logger.pretty      import pretty_float
 from   ostap.plotting.color     import Orange, Green, Blue
 import ostap.logger.table       as     T 
-import ROOT, os, sys, math, numpy  
+import ROOT, os, sys, math, numpy, scipy   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1117,11 +1117,28 @@ def draw_ecdf ( ecdf          ,
     ## 
     return result, vline, hline 
 
-
+# ==============================================================================
+from scipy.stats import combine_pvalues as _combine_pvs
+if "1.10" <= scipy.__version__ : # =============================================
+    # ==========================================================================
+    ## combine p-values using certain method 
+    def _combine_pvalues ( data , method = "fisher" ) :
+        """ Combine p-values using certain method """
+        return _combined_pvs_ ( data , method = method ).pvalue
+    # ==========================================================================
+else : # =======================================================================
+    # ==========================================================================
+    ## combine p-values using certain method 
+    def _combine_pvalues ( data , method = "fisher" ) :
+        """ Combine p-values using certain method """
+        return _combined_pvs_ ( data , method = method ) [ 1 ]
+    
 # ==============================================================================
 ## combine p-values 
+#  - use toys to propagate the uncertainties 
 def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
-    """ combine p-values
+    """ Combine p-values
+    - use toys to propagate the uncertainties 
     """
     from   scipy.stats              import combine_pvalues as _combine_pvs
     ##
@@ -1132,16 +1149,15 @@ def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
         for i in range ( N )  :
             ## sampled 
             spv  = [ p.gauss ( accept = lambda v : 0 < v < 1 ) if 0 < p.cov2() else float ( p ) for p in pvs ]            
-            cnt += _combine_pvs ( spv , method = method ).pvalue 
+            cnt += _combine_pvalues ( spv , method = method )
 
         rms = cnt.rms()        
         return VE ( cnt.mean() , rms * rms ) 
     
     pvs = ( min ( max ( tol , float ( p ) ) , 1 - tol ) for p in pvalues )            
-    return _combine_pvs ( pvs , method = method ).pvalue 
+    return _combine_pvalues ( pvs , method = method )
     
     
-
 # =============================================================================
 if '__main__' == __name__ :
     
