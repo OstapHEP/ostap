@@ -1118,20 +1118,21 @@ def draw_ecdf ( ecdf          ,
     return result, vline, hline 
 
 # ==============================================================================
-from scipy.stats import combine_pvalues as _combine_pvs
+from scipy.stats import combine_pvalues as _combine_pvs_ # =====================
+# ==============================================================================
 if "1.10" <= scipy.__version__ : # =============================================
     # ==========================================================================
     ## combine p-values using certain method 
     def _combine_pvalues ( data , method = "fisher" ) :
         """ Combine p-values using certain method """
-        return _combined_pvs_ ( data , method = method ).pvalue
+        return _combine_pvs_ ( data , method = method ).pvalue
     # ==========================================================================
 else : # =======================================================================
     # ==========================================================================
     ## combine p-values using certain method 
     def _combine_pvalues ( data , method = "fisher" ) :
         """ Combine p-values using certain method """
-        return _combined_pvs_ ( data , method = method ) [ 1 ]
+        return _combine_pvs_ ( data , method = method ) [ 1 ]
     
 # ==============================================================================
 ## combine p-values 
