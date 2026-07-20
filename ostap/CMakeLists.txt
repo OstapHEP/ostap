@@ -423,7 +423,7 @@ endif()
 ## 
 find_python_module ( lightgbm QUIET )
 if ( NOT ${PY_lightgbm_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lightgbm ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lightgbm[pandas,scikit-learn] ${PIP_ARGS})
 endif()
 find_python_module ( lightgbm QUIET )
 if ( NOT ${PY_lightgbm_FOUND} )
