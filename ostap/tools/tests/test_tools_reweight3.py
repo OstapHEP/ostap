@@ -14,6 +14,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-01-20"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
+from   packaging.version        import Version
 from   ostap.core.pyrouts       import Ostap, VE  
 from   ostap.histos.histos      import h1_axis, h2_axes, h3_axes 
 from   ostap.utils.timing       import timing
@@ -550,7 +551,7 @@ use_xgboost = False
 try : # =======================================================================
     # =========================================================================
     import xgboost, numpy
-    use_xgboost = "1.0" <= xgboost.__version__ or numpy.__version__ < "2.0"
+    use_xgboost = Version ( "1.0" ) <= Version ( xgboost.__version__ ) or Version ( numpy.__version__ )  < Version ( "2.0" ) 
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================

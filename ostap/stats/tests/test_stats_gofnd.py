@@ -14,6 +14,7 @@ os.environ["OMP_NUM_THREADS"     ]  = "1"
 os.environ["MKL_NUM_THREADS"     ]  = "1"
 os.environ["OPENBLAS_NUM_THREADS"]  = "1"
 # ==============================================================================
+from   packaging.version      import Version
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.timing     import timing
 from   ostap.logger.pretty    import pretty_float
@@ -22,9 +23,9 @@ from   ostap.math.math_ve     import significance
 from   ostap.utils.root_utils import batch_env
 from   ostap.utils.basic      import numcpu, typename 
 from   ostap.logger.symbols   import plus_minus , greek_lower_sigma 
+from   ostap.stats.gof_utils  import clip_pvalue
 import ostap.fitting.models   as     M 
 import ostap.stats.gofnd      as     GnD
-from   ostap.stats.gof_utils  import clip_pvalue 
 import ostap.logger.table     as     T 
 import ROOT, random   
 # ==============================================================================
@@ -267,7 +268,7 @@ def test_GOF () :
     try : # =====================================================================
         # =======================================================================
         import xgboost        
-        if "1.0" <= xgboost.__version__ :
+        if Version ( "1.0" ) <= Version ( xgboost.__version__ ) :
             
             from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
             ## 

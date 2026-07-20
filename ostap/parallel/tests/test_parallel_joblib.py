@@ -6,6 +6,7 @@
 """ Oversimplified script for parallel execution using joblib
 """
 # =============================================================================
+from   packaging.version        import Version 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.parallel.utils     import uimap, fix_ppsrv 
@@ -67,8 +68,8 @@ def test_func ( *args , **kwargs ) :
 
 # =============================================================================
 config  = {}
-if   joblib and '1.4.0' <= joblib.__version__ : config [ 'return_as' ] = 'generator_unordered'
-elif joblib and '1.3.0' <= joblib.__version__ : config [ 'return_as' ] = 'generator'
+if   joblib and Version ( '1.4.0' ) <= Version ( joblib.__version__ ) : config [ 'return_as' ] = 'generator_unordered'
+elif joblib and Version ( '1.3.0' ) <= Version ( joblib.__version__ ) : config [ 'return_as' ] = 'generator'
 
 # =============================================================================
 ## test joblib python with with plain function 
@@ -81,7 +82,6 @@ def test_joblib_function () :
     if not joblib :
         logger.error ( "No joblib module is available" )
         return 
-        
     
     result = None
 

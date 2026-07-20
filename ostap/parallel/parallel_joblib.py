@@ -13,7 +13,7 @@ __all__ = (
 )
 # =============================================================================
 from   itertools                    import repeat , count
-from   packaging                    import Version 
+from   packaging.version            import Version 
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager 
 from   ostap.io.checker             import PickleChecker as Checker

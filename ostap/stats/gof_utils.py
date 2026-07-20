@@ -43,7 +43,7 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import times, plus_minus, greek_lower_sigma
 from   ostap.logger.pretty      import pretty_float
 from   ostap.plotting.color     import Orange, Green, Blue
-from   packaging                import Version 
+from   packaging.version        import Version 
 import ostap.logger.table       as     T 
 import ROOT, os, sys, math, numpy, scipy   
 # =============================================================================
