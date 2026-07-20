@@ -702,8 +702,9 @@ if ( OSTAP_TEST_PYWARNINGS )
   message ( "----> All tests will be executed with PYTHONWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  )
 endif()
 
-set ( TEST_ENV1                    "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
-set ( TEST_ENV2 "PYTHONBUFFERED=1" "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV1                           "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV2 "PYTHONBUFFERED=1"        "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV3 "IPYTHONDIR=/tmp/.python" "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
 
 # ========================================================================================
 ## main tests
@@ -730,6 +731,7 @@ foreach(filename ${tests})
   string(FIND   ${tname}  parallel TEST_PARALLEL )
   string(FIND   ${tname}  _pp      TEST_PP       )
   string(FIND   ${tname}  _pathos  TEST_PATHOS   )
+  string(FIND   ${tname}  _ipypa   TEST_IPYPA    )
 
   if ( NOSE_EXECUTABLE AND TEST_PARALLEL LESS 0 )
     add_test (NAME ${tname}
@@ -751,12 +753,15 @@ foreach(filename ${tests})
 ##    set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "${TEST_ENV1}") 
 ##  endif  () 
 
-  if     ( TEST_PP     GREATER_EQUAL 0  )
+  if     ( TEST_IPYPA     GREATER_EQUAL 0  )
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "${TEST_ENV3}" ) 
+    message ( "----> Test will be executed with IPYTHONDIR=/tmp/.ipython : " ${tname} )    
+  elseif ( TEST_PP     GREATER_EQUAL 0  )
     set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "${TEST_ENV2}" ) 
-    message ( "----> Test will be executed with PYTHONBUFFERED=1 : " ${tname} )    
+    message ( "----> Test will be executed with PYTHONBUFFERED=1         : " ${tname} )    
   elseif ( TEST_PATHOS GREATER_EQUAL 0 )
     set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "${TEST_ENV2}" ) 
-    message ( "----> Test will be executed with PYTHONBUFFERED=1 : " ${tname} )    
+    message ( "----> Test will be executed with PYTHONBUFFERED=1         : " ${tname} )    
   else   () 
     set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "${TEST_ENV1}") 
   endif  () 
