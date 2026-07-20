@@ -427,7 +427,7 @@ if ( NOT ${PY_lightgbm_FOUND} )
 endif()
 find_python_module ( lightgbm QUIET )
 if ( NOT ${PY_lightgbm_FOUND} )
-  message ( "----> warning                   lightgbm is NOT found!" ) 
+  message ( "----> warning                   lightgbm is NOT found!" )
 endif()
 
 # ========================================================================================

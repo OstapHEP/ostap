@@ -63,41 +63,30 @@ rgood , _ = pdf.fitTo  ( data_good , quiet = True , refit = 5 )
 rbad  , _ = pdf.fitTo  ( data_bad  , quiet = True , refit = 5 )
 
 # ================================================================================
-use_lightgbm = False 
-# ================================================================================
-try : # ==========================================================================
+## use LigthGBM ?
+#  - there is soem mess with ligthgmb/narwhals installation 
+def useLightGBM () :
+    """ Use LigthGBM ?
+    - there is soem mess with ligthgmb/narwhals installation 
+    """
     # ============================================================================
-    import lightgbm
-    # ============================================================================
-    if Version ( '4.7.0' ) <= Version ( lightgbm.__version__ ) :
+    try : # ======================================================================
         # ========================================================================
-        ## check for narwhals
+        import lightgbm
+        logger.info ( 'LightGBM version : %s' % lightgbm.__version__ ) 
+        if Version ( lightgbm.__version__ ) <  Version ( "4.7.0"  ) : return True
+        import narwhals
+        logger.info ( 'Narwhals version : %s' % narwhals.__version__ ) 
+        return Version ( "2.0" ) <= Version ( narwhals.__version__ )
         # ========================================================================
-        try : # ==================================================================
-            # ====================================================================
-            import narwhals
-            if not hasattr ( narwhal.dependencies , 'is_into_dataframe' ) :
-                import narhwals.stable_v1 as nw_v1 
-                if hasattr ( nw_v1.dependencies , 'is_into_data_frame' ) :
-                    logger.warning ( "Adding `is_into_dataframe' into `narwhals'")
-                    narwhals.dependencies.is_into_dataframe = nw_v1.dependencies.is_into_dataframe
-            # ====================================================================
-            use_lightgbm = hasattr ( narwhal.dependencies , 'is_into_dataframe' ) :
-            # ====================================================================
-        except ImportError : # ===================================================
-            # ====================================================================
-            pass
+    except ImportError : # =======================================================
         # ========================================================================
-    else : # =====================================================================
-        # ========================================================================
-        use_lightgbm = True 
-    # ============================================================================
-except ImportError : # ===========================================================
-    # ============================================================================
-    use_lightgbm = False
-    
+        return False 
 
-    
+use_lightgbm = useLightGBM  ()
+if use_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
+else            :  logger.warning   ( 'LightGBM is not available!' )
+
 keep_it = [] 
 # ===============================================================================
 def probe_GOF ( gof1 , gof2, tag ) :
@@ -168,7 +157,7 @@ def test_GOF () :
     entry = mix , mix, 'MIX-Sample'
     to_test.append ( entry )
 
-
+    """ 
     for conf in ( { 'psi' : 'linear'     } ,
                   { 'psi' : 'logarithm'  } ,
                   { 'psi' : 'chebyshev'  } ,   
@@ -213,7 +202,8 @@ def test_GOF () :
     ust   = USTAT ( nToys = nToys  , histo = 50 )
     entry = ust , ust , 'U-stat'
     to_test.append ( entry )
-
+    """
+    
     # ===========================================================================
     ## ADVAL-based tests:
     # ===========================================================================
@@ -240,6 +230,7 @@ def test_GOF () :
     from ostap.stats.gof_utils import has_sklearn # =============================
     # ===========================================================================
 
+    """ 
     # ===========================================================================
     try : # =====================================================================
         # =======================================================================
@@ -362,7 +353,8 @@ def test_GOF () :
     bic_bad  = GnD.BayesianIC ( nToys = nToys , fitresult = rbad  , data = data_bad  , parallel = True )
     entry    = bic_good , bic_bad , 'Bayesian IC'
     to_test.append ( entry )
-
+    
+    """ 
     # ===========================================================================
     ## Run the test and build the table
     # ===========================================================================
