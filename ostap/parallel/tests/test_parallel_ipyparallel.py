@@ -80,7 +80,11 @@ def test_ipyparallel_function () :
 
     logger = getLogger ( "test_ipyparallel_function")    
     logger.info ('Test job submission with ipyparallel')
-    
+
+    if sys.version_info < ( 3 , 10 ) :
+        logger.error ( "require minimal pthon version of 3.10")
+        return
+        
     if not ipp :
         logger.error ( "ipyparallel module is not available")
         return
@@ -115,6 +119,10 @@ def test_ipyparallel_callable () :
     logger = getLogger ( "test_ipyparallel_callable")    
     logger.info ('Test job submission with ipyparallel')
     
+    if sys.version_info < ( 3 , 10 ) :
+        logger.error ( "require minimal pthon version of 3.10")
+        return
+
     if not ipp :
         logger.error ( "ipyparallel module is not available")
         return

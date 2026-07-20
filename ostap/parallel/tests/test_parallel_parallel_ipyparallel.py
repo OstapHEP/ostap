@@ -101,6 +101,10 @@ def test_parallel_ipyparallel_bare ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
+    if sys.version_info < ( 3 , 10 ) :
+        logger.error ( "require minimal pthon version of 3.10")
+        return
+            
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -133,6 +137,10 @@ def test_parallel_ipyparallel_task ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
     
+    if sys.version_info < ( 3 , 10 ) :
+        logger.error ( "require minimal pthon version of 3.10")
+        return
+            
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -162,6 +170,10 @@ def test_parallel_ipyparallel_func ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
+    if sys.version_info < ( 3 , 10 ) :
+        logger.error ( "require minimal pthon version of 3.10")
+        return
+            
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -188,6 +200,10 @@ def test_parallel_ipyparallel_generic ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
+    if sys.version_info < ( 3 , 10 ) :
+        logger.error ( "require minimal pthon version of 3.10")
+        return
+            
     ## create the manager 
     manager = WorkManager ( silent = False  )
 

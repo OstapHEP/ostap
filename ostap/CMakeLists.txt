@@ -709,9 +709,9 @@ if ( OSTAP_TEST_PYWARNINGS )
   message ( "----> All tests will be executed with PYTHONWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  )
 endif()
 
-set ( TEST_ENV1                    "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
-set ( TEST_ENV2 "PYTHONBUFFERED=1" "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
-set ( TEST_ENV3 "IPYTHONDIR=/tmp"  "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV1                              "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV2 "PYTHONBUFFERED=1"           "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV3 "IPYTHONDIR=/tmp/.iprofile"  "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
 
 # ========================================================================================
 ## main tests

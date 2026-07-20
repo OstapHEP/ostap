@@ -23,7 +23,7 @@ from   ostap.math.math_ve     import significance
 from   ostap.utils.root_utils import batch_env
 from   ostap.utils.basic      import numcpu, typename 
 from   ostap.logger.symbols   import plus_minus , greek_lower_sigma 
-from   ostap.stats.gof_utils  import clip_pvalue
+from   ostap.stats.gof_utils  import clip_pvalue, useLightGBM, useXGBoost  
 import ostap.fitting.models   as     M 
 import ostap.stats.gofnd      as     GnD
 import ostap.logger.table     as     T 
@@ -62,30 +62,13 @@ pdf       = gauss2
 rgood , _ = pdf.fitTo  ( data_good , quiet = True , refit = 5 )
 rbad  , _ = pdf.fitTo  ( data_bad  , quiet = True , refit = 5 )
 
-# ================================================================================
-## use LigthGBM ?
-#  - there is soem mess with ligthgmb/narwhals installation 
-def useLightGBM () :
-    """ Use LigthGBM ?
-    - there is soem mess with ligthgmb/narwhals installation 
-    """
-    # ============================================================================
-    try : # ======================================================================
-        # ========================================================================
-        import lightgbm
-        logger.info ( 'LightGBM version : %s' % lightgbm.__version__ ) 
-        if Version ( lightgbm.__version__ ) <  Version ( "4.7.0"  ) : return True
-        import narwhals
-        logger.info ( 'Narwhals version : %s' % narwhals.__version__ ) 
-        return Version ( "2.0" ) <= Version ( narwhals.__version__ )
-        # ========================================================================
-    except ImportError : # =======================================================
-        # ========================================================================
-        return False 
-
+# ==============================================================================
 use_lightgbm = useLightGBM  ()
-if use_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
-else            :  logger.warning   ( 'LightGBM is not available!' )
+if use_lightgbm : logger.attention ( 'USE LigthGBM!'              )
+else            : logger.warning   ( 'LightGBM is not available!' )
+use_xgboost  = useXGBoost ()
+if use_xgboost  : logger.attention ( 'USE XGBoost!'              )
+else            : logger.warning   ( 'XGBoost  is not available!' )
 
 keep_it = [] 
 # ===============================================================================
@@ -291,22 +274,18 @@ def test_GOF () :
         # =======================================================================
         logger.error  ( "RandomForest is not available, skip the test" )
 
+    """
+    
     # ===========================================================================
     try : # =====================================================================
         # =======================================================================
-        import xgboost        
-        if Version ( "1.0" ) <= Version ( xgboost.__version__ ) :
-            
+        if use_xgboost : # ======================================================
+            # ===================================================================
             from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
             ## 
             gof    = GOF ( **config )
             test   = gof , gof , 'ADVAL:XBGoost'
-            to_test.append ( test ) 
-            
-        else :
-            logger.warning ( "XGBoost version is too old, skip the test" )
-            
-        ## 
+            to_test.append ( test )             
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================

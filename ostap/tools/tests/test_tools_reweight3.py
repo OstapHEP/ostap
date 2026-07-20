@@ -26,6 +26,7 @@ from   ostap.logger.symbols     import iteration, plus_minus
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
+from   ostap.stats.gof_utils    import useLightGBM, useXGBoost  
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.logger.table       as     T 
@@ -249,6 +250,14 @@ if not os.path.exists ( testdata ) :
     with timing ( "Prepare input data" , logger = logger ) :
         prepare_data ()
 
+use_lightgbm = useLightGBM  ()
+if use_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
+else            :  logger.warning   ( 'LightGBM is not available!' )
+            
+use_xgboost  = useXGBoost  ()
+if use_xgboost :  logger.attention ( 'USE XGBoost!'              )
+else           :  logger.warning   ( 'XGBoost is not available!' )
+
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
@@ -257,15 +266,19 @@ from ostap.stats.gof_np       import  ( MIXnp           as COMPARATOR4 ,
                                         KullbackLeibler as COMPARATOR3 , 
                                         Mahalanobis     as COMPARATOR2 , 
                                         Hotelling       as COMPARATOR1 )
-
 from ostap.stats.data_compare import data_compare     
 comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR2 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR3 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR4 ( parallel = True , nToys = 100 ) , 
-                COMPARATOR5 ( parallel = True , nToys = 100 ) )
+                COMPARATOR4 ( parallel = True , nToys = 100 ) )
 
-## if numcpu () <= 8 : comparators = comparators[ :3 ]
+if use_lightgbm :  
+    from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
+    comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) ) , )
+
+if use_xgboost:  
+    from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
+    comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) ) , )
     
 
 # ============================================================================

@@ -26,7 +26,8 @@ from   ostap.histos.histos      import h1_axis, h2_axes
 from   ostap.logger.symbols     import iteration, plus_minus
 from   ostap.logger.pretty      import pretty_float 
 from   ostap.utils.memory       import memory_usage, delta_ram
-from   ostap.utils.progress_bar import progress_bar 
+from   ostap.utils.progress_bar import progress_bar
+from   ostap.stats.gof_utils    import useLightGBM 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T
 import ostap.core.pyrouts    
@@ -324,22 +325,22 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
                                          silent    = True           ) 
 
 
-# ==============================================================================
-try : # ========================================================================
+# ===============================================================================
+use_lightgbm = useLightGBM  ()
+if use_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
+else            :  logger.warning   ( 'LightGBM is not available!' )
+
+# ===============================================================================
+if use_lightgbm : # =============================================================
+    # ===========================================================================
+    from ostap.stats.adval        import ADVAL_LGBM as COMPARATOR
     # ==========================================================================
-    import lightgbm
-    ## 
-    if Version ( '4.7.0' ) <= Version ( lightgbm.__version__ ) :
-        ## check for narwahls
-        from narwhals.dependencies import is_into_dataframe as _idf
-    ## 
-    from ostap.stats.adval        import ADVAL_LGBM as COMPARATOR    
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    logger.warning ( "LightGBM is not available, use MIX" )
+else : # =======================================================================
+    # ==========================================================================
     from ostap.stats.gof_np       import MIXnp      as COMPARATOR
-    
+    # ==========================================================================
+
+# ==============================================================================
 comparator = COMPARATOR ( parallel = True , nToys = 200 )
 from ostap.stats.data_compare import data_compare 
         

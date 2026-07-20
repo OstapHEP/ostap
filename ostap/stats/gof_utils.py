@@ -1158,8 +1158,44 @@ def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
     
     pvs = ( min ( max ( tol , float ( p ) ) , 1 - tol ) for p in pvalues )            
     return _combine_pvalues ( pvs , method = method )
+
+
+# =============================================================================
+## use LigthGBM ?
+#  - there is some mess with lightgbm&narwhals installation 
+def useLightGBM () :
+    """ Use LigthGBM ?
+    - there is soem mess with ligthgbm&narwhals installation 
+    """
+    # ============================================================================
+    try : # ======================================================================
+        # ========================================================================
+        import lightgbm
+        logger.info ( 'LightGBM version : %s' % lightgbm.__version__ ) 
+        if Version ( lightgbm.__version__ ) <  Version ( "4.7.0"  ) : return True
+        import narwhals
+        logger.info ( 'Narwhals version : %s' % narwhals.__version__ ) 
+        return Version ( "2.0" ) <= Version ( narwhals.__version__ )
+        # ========================================================================
+    except ImportError : # =======================================================
+        # ========================================================================
+        return False 
     
-    
+# ===============================================================================
+## use XGBoost ?
+def useXGBoost () : 
+    """ Use XGBoost
+    """
+    # ==========================================================================
+    try : # ====================================================================
+        # ======================================================================
+        import xgboost        
+        return Version ( "1.0" ) <= Version ( xgboost.__version__ )
+        # ======================================================================
+    except ImportError : # =====================================================
+        # ======================================================================
+        return False 
+     
 # =============================================================================
 if '__main__' == __name__ :
     
