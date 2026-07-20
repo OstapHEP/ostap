@@ -14,6 +14,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
+from   packaging.version        import Version
 from   ostap.core.core          import Ostap 
 from   ostap.utils.timing       import timing
 from   ostap.utils.basic        import numcpu 
@@ -288,7 +289,6 @@ if not os.path.exists( dbname ) :
 else :
     logger.info("Existing weights DBASE '%s' will be used" % dbname ) 
 
-
 # =============================================================================
 ## the name of the weight-variable
 weight_name = 'weight'
@@ -325,12 +325,24 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 
 
 # ==============================================================================
-from ostap.stats.adval        import ADVAL_LGBM as COMPARATOR 
-## from ostap.stats.gof_np       import MIXnp      as COMPARATOR 
+try : # ========================================================================
+    # ==========================================================================
+    import lightgbm
+    ## 
+    if Version ( '4.7.0' ) <= Version ( lightgbm.__version__ ) :
+        ## check for narwahls
+        from narwhals.dependencies import is_into_dataframe as _idf
+    ## 
+    from ostap.stats.adval        import ADVAL_LGBM as COMPARATOR    
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    logger.warning ( "LightGBM is not available, use MIX" )
+    from ostap.stats.gof_np       import MIXnp      as COMPARATOR
+    
+comparator = COMPARATOR ( parallel = True , nToys = 200 )
 from ostap.stats.data_compare import data_compare 
-    
-comparator = COMPARATOR ( parallel = True , nToys = 400 ) 
-    
+        
 # =============================================================================
 ## Configuration of reweighting plots 
 # =
