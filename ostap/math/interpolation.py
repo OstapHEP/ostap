@@ -876,12 +876,9 @@ from operator import add as op_add
 
 # =============================================================================
 ## Base class for barycentric-like interpolation 
-class BaseInterpolant(object) :
+class BaseInterpolant(abc.ABC) :
     """Base class for barycentric-like interpolation 
     """
-    
-    __metaclass__ = abc.ABCMeta
-  
     def __init__ ( self             ,
                    data             ,
                    scaler  = op_mul , 

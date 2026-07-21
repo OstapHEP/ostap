@@ -1195,6 +1195,7 @@ class GoFSimFit(GoFSimFitBase) :
             self.gofs  [ key  ] = gof 
             self.N     [ key  ] = len ( ds ) 
 
+        print ( 'PARALLEL? CONFIGURATION:' , runconf ) 
         ## run toys if requested
         if runconf: self.run ( **runconf )
 
@@ -1307,17 +1308,25 @@ class GoFSimFit(GoFSimFitBase) :
         """        
         assert  isinstance ( nToys , int ) and 0 < nToys , "Invalid number of toys: %s" % nToys
 
+        print ( 'I AM RUN: ' , typename ( self ) , parallel )
+        
         if parallel :
             
+            print ( 'I AM PARALLEL!' , typename ( self ) , nToys )
+        
             from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
-            self += parallel_toys ( gof      = self       ,
-                                    nToys    = nToys      ,
-                                    nSplit   = nSplit     ,
-                                    fitconf  = {}         , 
-                                    silent   = True       ,
-                                    progress = not silent )
+            result = parallel_toys ( gof      = self       ,
+                                     nToys    = nToys      ,
+                                     nSplit   = nSplit     ,
+                                     fitconf  = {}         , 
+                                     silent   = True       ,
+                                     progress = not silent )
+            
+            if result : self += result
+            
             return self 
         
+        ## print ( 'I AM NOT PARALLEL!' , typename ( self ) , nToys  )
     
         from ostap.utils.progress_bar import progress_bar
         for t in progress_bar ( nToys , silent = silent , description = 'Toys:' ) : 
@@ -1325,29 +1334,32 @@ class GoFSimFit(GoFSimFitBase) :
             name = self.sample.name
             new_dataset = self.pdf.generate ( self.N , sample = True )
 
-            ttv       = self.tvalues()
-            all_above = True 
+            ttv      = self.tvalues()
+            ## above = True 
+            above    = False 
          
-            for key , cmp in self.pdf.categories.items ()  :
+            for sample , component in self.pdf.categories.items ()  :
                 
-                obs = cmp.pdf.getObservables ( new_dataset )
-                category = '%s==%s::%s' % ( name , name , key )
+                obs      = component.pdf.getObservables ( new_dataset )
+                category = '%s==%s::%s' % ( name , name , sample )
                 ds       = new_dataset.subset ( variables = obs , cuts = category )
                 
-                gof = self.gofs [ key ]                
-                tv  = gof.tvalue ( cmp , ds )
+                gof = self.gofs [ sample ]                
+                tv  = gof.tvalue ( component , ds )
 
-                if not key in self.__ecdfs : self.__ecdfs [ key ] = Ostap.Math.ECDF ( tv , True )
-                else                       : self.__ecdfs [ key ].add ( tv ) 
+                if not sample in self.__ecdfs : self.__ecdfs [ sample ] = Ostap.Math.ECDF ( tv , True )
+                else                          : self.__ecdfs [ sample ].add ( tv ) 
               
-                self.__counters [ key ] += tv 
+                self.__counters [ sample ] += tv 
                 
-                all_above = all_above and ttv [ key ] <= tv 
+                ## above = above and ttv [ sample ] <= tv 
+                above = above or  ttv [ sample ] <= tv
+                
                 ds.clear ()
                 del ds 
                 
             ## the global counter       
-            self.__total += all_above 
+            self.__total += above 
                     
             self.__nToys += 1 
      
@@ -1386,9 +1398,9 @@ class GoFSimFit(GoFSimFitBase) :
         
         ## no toys, no p-values, ...
         if not self.__ecdfs or not self.__counters : 
-            rows = [ ('Component' , 't-value' , 'Factor' ) ] 
+            rows = [ ('Category' , 't-value' , 'Factor' ) ] 
             for  key, tv in self.tvalues().items() :
-                tt , expo = pretty_value ( tv , precision = precision , width = width ) 
+                tt , expo = pretty_float ( tv , precision = precision , width = width ) 
                 row = key, tt , '10^{%d}' % expo if expo else ''
                 rows.append ( row )
             rows  = T.remove_empty_columns ( rows )
@@ -1470,7 +1482,7 @@ class GoFSimFit(GoFSimFitBase) :
                 row    = '*%s*' % mm  , '' , '' , '' , '', '' , ''  , pvalue , sigma 
                 rows.append ( row )
 
-        header = ( 'Component' , 't-value' , 't-mean' , 't-rms' , 't-min' , 't-max' , 'Factor' , 'p-value [%]' , '#%s' % greek_lower_sigma )
+        header = ( 'Category' , 't-value' , 't-mean' , 't-rms' , 't-min' , 't-max' , 'Factor' , 'p-value [%]' , '#%s' % greek_lower_sigma )
         rows   = [ header ] + rows 
         rows   = T.remove_empty_columns ( rows ) 
         title = title if title else 'SimFit-GoF statistics #%d' % self.nToys

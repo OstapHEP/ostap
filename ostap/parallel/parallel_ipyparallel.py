@@ -162,21 +162,25 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                         
             if kwargs : self.extra_arguments ( **kwargs ) 
                     
-        # ========================================================================-
+        # ========================================================================
         ## get PP-statistics if/when possible 
         def get_pp_stat ( self ) : 
             """ Get PP-statistics if/when possible 
             """
             return None
 
-        ## context protocol
-        def __enter__  ( self      ) :
+        # ========================================================================
+        ## Context protocol: ENTER 
+        def __enter__  ( self ) :
+            """ Context protocol: ENTER: """
             sys.stdout .flush ()
             sys.stderr .flush ()
             return self
     
-        ## context protocol
+        # ========================================================================
+        ## Context protocol: EXIT 
         def __exit__   ( self , *_ ) :        
+            """ Context protocol: EXIT: """
             sys.stdout .flush ()
             sys.stderr .flush ()
 

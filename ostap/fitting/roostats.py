@@ -629,10 +629,9 @@ class ModelConfig(object):
     
 # ================================================================================
 ## Helper (abstract) base class for the confidence intervals and limits 
-class CLInterval(ModelConfig)  :
-    """ Helper (abstract) base class for confidence intervals and limits"""
-    __metaclass__ = abc.ABCMeta
-    
+class CLInterval(ModelConfig,abc.ABC)  :
+    """ Helper (abstract) base class for confidence intervals and limits
+    """
     def __init__ ( self             ,
                    pdf              ,   ## pdf
                    poi              ,   ## parameter(s) of interest
@@ -1107,12 +1106,10 @@ class MCMCInterval(CLInterval) :
 # =============================================================================
 ## @class Calculator
 #  base class for Calculators 
-class Calculator (object) :
+class Calculator (abc.ABC) :
     """ Base class for Calculators 
     - see `ROOT.RooStats.AsymptoticCalculator`
     """
-    __metaclass__ = abc.ABCMeta
-    
     def __init__ ( self             ,
                    H1               ,   ## H1 model, e.g. background only
                    H0               ,   ## H0 model, e.g. signal+background

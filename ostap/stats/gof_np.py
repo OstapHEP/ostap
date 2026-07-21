@@ -267,7 +267,7 @@ class GoFnp (AGoFnp) :
                                                                      uds2      ,
                                                                      weight1   = weight1 ,
                                                                      weight2   = weight2 ,
-                                                                    normalize = False   )
+                                                                     normalize = False   )
         
         ## use permutations to get the p-value 
         permutator = PERMUTATOR ( self              ,
@@ -484,9 +484,9 @@ class MIXnp(GoFnp) :
 
         ## store it
         self._k_max = n_neighbors 
-        ## 
-        n_jobs = num_jobs ( params , numcpu() - 1 )
-        if parallel : n_jobs = 1 
+        ##
+        
+        n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
 
         ## initialize the base 
         GoFnp.__init__ ( self                          , 
@@ -644,9 +644,7 @@ class PPDnp(GoFnp) :
                    progress  = True       , 
                    maxsize   = 1000000    , **params ) :
 
-
-        n_jobs = num_jobs ( params , numcpu() - 1 )
-        if parallel : n_jobs = 1 
+        n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
         
         GoFnp.__init__ ( self                 ,
                          nToys     = nToys    ,
@@ -866,8 +864,7 @@ class DNNnp(GoFnp) :
                    silent   = False  ,
                    progress = True   , **params ) :
         
-        n_jobs = num_jobs ( params , numcpu() - 1 )
-        if parallel : n_jobs = 1 
+        n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
 
         ## 
         if 'metric' in params : params.pop ( 'metric' )

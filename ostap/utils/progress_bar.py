@@ -213,79 +213,81 @@ class ProgressBar(object):
                   width     = 110        ,
                   min_value = 0          ,
                   output    = sys.stdout , **kwargs ) :
-
+        
         ## tty ? 
         tty = isatty ( output )
         
-        self.silent   = kwargs.get ( 'silent' , not tty )
-        self.r        = '\r' ## '\r' if tty else '\n'
+        self.__silent = kwargs.get ( 'silent' , not tty )
+        self.__r      = '\r' ## '\r' if tty else '\n'
+        self.__min    = min_value
+        self.__max    = max_value
+        self.__span   = max ( max_value - min_value , 1 )
         
-        self.char = kwargs.get ( 'char' , '#'       ) ##
-        self.mode = kwargs.get ( 'mode' , 'fixed'   ) ## fixed or dynamic
-        if not self.mode in ( 'fixed' , 'dynamic' ) :
-            self.mode = 'fixed'
+        self.__char = kwargs.get ( 'char' , '#'       ) ##
+        self.__mode = kwargs.get ( 'mode' , 'fixed'   ) ## fixed or dynamic
+        if not self.__mode in ( 'fixed' , 'dynamic'   ) : self.__mode = 'fixed'
             
-        self.bar      = ''
-        self.min      = min_value
-        self.max      = max_value
-        self.span     = max ( max_value - min_value , 1 )
-        self.last     = '' 
-        ##
-        self.output   = output
-        ## 
+        self.__hashes = -1 
+        self.__last   = '' 
+        self.__output = output 
+        
         ncols         = columns () - 12
-        self.width    = ncols if ncols > 10 else width
+        self.__width  = ncols if ncols > 10 else width
         
-        self.prefix   = kwargs.get ( 'description' , '' )  ## description
-        self.width    = self.width - len ( self.prefix )
+        self.__prefix = kwargs.get ( 'description' , '' )  ## description
+        self.__width -= len ( self.__prefix )
         
-        ##  self.amount   = 0    
-        self.amount   = self.min ## ??    
+        ##  current amount 
+        self.__amount    = self.__min ## ??    
+        ## current bar 
+        self.__bar       = ''
+                
+        self.__the_end   = None 
+        self.__the_start = None 
 
-        self._hashes  = -1 
-        self.__end    = None 
-        
-        self.update_amount ( self.min )
+        self.update_amount ( self.__min )
         self.build_bar ()
         self.show      ()
-        self.__start  = time.time ()
-
+        
+        self.__the_start  = time.time ()
+        self.__done       = 0 
+        
     # =========================================================================
     ## Is this bar active?
     def __nonzero__ ( self ) :
         """ Is this bar active? """
-        return self.min <= self.amount < self.max
+        return self.__min <= self.__amount < self.__max
     
     # =========================================================================
     ## Is this bar active?
     def __bool__    ( self ) :
         """ Is this bar active? """
-        return self.min <= self.amount < self.max
+        return self.__min <= self.__amount < self.__max
 
     # =========================================================================
     ## Increment self.amount
     def increment_amount ( self , add_amount = 1 ) :
-        """ Incremeemt self.amount """ 
-        return self.update_amount ( self.amount + add_amount )
+        """ Incremeemt self.__amount """ 
+        return self.update_amount ( add_amount + self.__amount )
 
     # =========================================================================
     ## Update self.amount with 'new_amount', and then rebuild & show the bar
     def update_amount ( self , new_amount = None ):
         """ Update self.amount with 'new_amount', and then rebuild& show the bar
         """
-        if new_amount is None   : new_amount = self.amount
+        if new_amount is None   : new_amount = self.__amount
         ##
-        self.amount = min ( max ( new_amount , self.min ) , self.max )
+        self.__amount = min ( max ( new_amount , self.__min ) , self.__max )
         ##))
-        if self.silent : return self
+        if self.__silent : return self
         ##
-        if self.max == self.amount and self.__end is None :self.__end = time.time() 
+        if self.__max == self.__amount and self.__the_end is None : self.__the_end = time.time() 
         ##  
         if self.build_bar() : self.show()
         else :
-            dmin  = self.amount - self.min
-            dmax  = self.max    - self.amount
-            dspan = max ( 20 , 0.001 * self.span ) 
+            dmin  = self.__amount - self.__min
+            dmax  = self.__max    - self.__amount
+            dspan = max ( 20 , 0.001 * self.__span ) 
             if dmin < dspan or dmax < dspan : self.show ()
         ##
         return self
@@ -295,26 +297,25 @@ class ProgressBar(object):
     def build_bar ( self ) :
         """ Figure new percent complete, and rebuild the bar string base on self.amount.
         """
-        diff         = float ( self.amount - self.min )
-        done         =  ( diff / float ( self.span ) ) * 100.0
+        diff         = float ( self.__amount - self.__min )
+        done         =  ( diff / float ( self.__span ) ) * 100.0
         percent_done = int ( round ( done ) )
 
         # figure the proper number of 'character' make up the bar 
-        all_full     = self.width - 2
+        all_full     = self.__width - 2
         num_hashes   = int ( round ( ( percent_done * all_full ) / 100 ) )
 
-        if 100 <= done and self.__end is None :            
-            self.__end = time.time ()
+        if 100 <= done and self.__the_end is None : self.__the_end = time.time ()
             
-        if self.__end is None and num_hashes == self._hashes : return False 
+        if self.__the_end is None and num_hashes == self.__hashes : return False 
         
         eta  = ''
         leta = len ( eta )
         
-        if  self.__end is None and 7 < num_hashes and 1 < done :
+        if  self.__the_end is None and 7 < num_hashes and 1 < done :
             
             now   = time.time ()
-            feta  = int ( ( 100 - done ) *  ( now -  self.__start ) / done )
+            feta  = int ( ( 100 - done ) *  ( now -  self.__the_start ) / done )
             h , _ = divmod ( feta            , 3600 )
             m , s = divmod ( feta - h * 3600 ,   60 )
             if   h     : eta = '%02dh%02d\'%02d" ' % ( h , m , s )
@@ -325,10 +326,10 @@ class ProgressBar(object):
             eta  = 'ETA ' + eta 
             leta = len ( eta )
             
-        elif ( not self.__end is None ) and 6 < num_hashes :
+        elif ( not self.__the_end is None ) and 6 < num_hashes :
             
-            now   = self.__end 
-            feta  = int ( now -  self.__start ) 
+            now   = self.__the_end 
+            feta  = int ( now -  self.__the_start ) 
             h , _ = divmod ( feta            , 3600 )
             m , s = divmod ( feta - h * 3600 ,   60 )
             if   h     : eta = '%02dh%02d\'%02d" ' % ( h , m , s )
@@ -345,69 +346,70 @@ class ProgressBar(object):
             eta   = runner + ' ' + eta
             leta += 2
         
-        if self.mode == 'dynamic':
+        if self.__mode == 'dynamic':
             # build a progress bar with self.char (to create a dynamic bar
             # where the percent string moves along with the bar progress.            
             if eta and leta < num_hashes : 
-                self.bar = eta + allright ( self.char * ( num_hashes - leta ) )
+                self.__bar = eta + allright ( self.__char * ( num_hashes - leta ) )
             else :
-                self.bar = allright ( self.char * num_hashes ) 
+                self.__bar =       allright ( self.__char *   num_hashes          ) 
         else:
             # build a progress bar with self.char and spaces (to create a 
             # fixed bar (the percent string doesn't move)
             if eta and leta + 1 < num_hashes :
-                self.bar = eta + allright ( self.char * ( num_hashes - leta ) ) + ' ' * ( all_full - num_hashes )
+                self.__bar = eta + allright ( self.__char * ( num_hashes - leta ) ) + ' ' * ( all_full - num_hashes )
             else : 
-                self.bar = allright ( self.char * num_hashes ) + ' ' * ( all_full - num_hashes )
+                self.__bar =       allright ( self.__char * num_hashes ) + ' ' * ( all_full - num_hashes )
  
         percent_str  = str ( percent_done ) + "%"
         
-        self.bar     = '[ ' + self.bar + ' ] ' + infostr ( percent_str ) 
+        self.__bar     = '[ ' + self.__bar + ' ] ' + infostr ( percent_str ) 
         
-        self._hashes  = num_hashes
-        self._done    = done 
+        self.__hashes  = num_hashes
+        self.__done    = done 
 
         return True
 
     # =========================================================================
     ## Increment amount
     def __iadd__ ( self , i ) :
-        """ Incremen amount """ 
+        """ Increment amount """ 
         return self.increment_amount ( i )
 
     # ==========================================================================
     ## Show the bar 
     def __str__(self):
         """ Show hthe bar """
-        return str  ( self.bar )
+        return self.__bar
 
     # ==========================================================================
     ## Show the  bar 
     def show ( self ) :
         """ Show the bar """
-        if not self.silent and self.bar != self.last :   
-            if self.prefix : self.output.write( self.prefix ) 
-            self.output.write ( self.bar + self.r ) 
-            self.last = self.bar  
-            self.output.flush ()
+        if not self.__silent and self.__bar != self.__last : 
+            if self.__prefix : self.__output.write ( self.__prefix       ) 
+            self.__output.write ( self.__bar + self.__r ) 
+            self.__last = self.__bar  
+            self.__output.flush ()
             
     # =========================================================================
     ## The end 
     def end  ( self  ) :
-        if not self.silent :
-            if self.__end is None : self.__end = time.time () 
+        if not self.__silent :
+            if self.__the_end is None : self.__the_end = time.time () 
             self.build_bar()
-            if self.prefix : self.output.write( self.prefix ) 
-            self.output.write ( self.bar + '\n' ) 
-        self.output.flush()
-        self.silent = True
+            if self.__prefix : self.__output.write ( self.__prefix ) 
+            self.__output.write ( self.__bar + '\n' ) 
+        self.__output.flush()
+        self.__silent = True
 
     # =========================================================================
     ## Context manager: ENTER 
     def __enter__ ( self      ) : 
         """ Context manager: ENTER 
         """
-        self.__start  = time.time ()
+        self.__the_start  = time.time ()
+        self.__the_end    = None 
         self.show() 
         return self
         
@@ -417,9 +419,9 @@ class ProgressBar(object):
         """ Context manager EXIT 
         """
         self.end ()
-
-    def __del__   ( self      ) : self.end ()
-
+        
+    ## def __del__   ( self      ) : self.end ()
+    
 # =============================================================================
 _bar_  = tuple ( ( runner + ' ' + tick + ' '  + '\r' ) for tick in clock_ticks ) 
 _lbar_ = len ( _bar_ )

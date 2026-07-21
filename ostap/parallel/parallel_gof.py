@@ -20,7 +20,7 @@ __all__     = (
     'parallel_goftoys' , 
     )
 # =============================================================================
-from   ostap.parallel.parallel import Task, WorkManager
+from   ostap.parallel.parallel import Task , WorkManager
 from   ostap.core.ostap_types  import string_types, integer_types
 from   ostap.utils.basic       import numcpu , typename 
 import ROOT
@@ -136,6 +136,8 @@ def parallel_goftoys ( gof             ,
     wmgr  = WorkManager ( silent   = silent and not progress ,
                           progress = progress or not silent  , **kwargs )
 
+    print ( 'PARALLEL-GOF' , typename ( wmgr ) , type ( wmgr ) )
+    
     ## create the task 
     task  = GoFTask ( gof = gof )
 

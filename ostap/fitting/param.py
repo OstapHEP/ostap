@@ -159,8 +159,8 @@ class C1Fun(object) :
 
 # =============================================================================
 # @class HFit
-class HFIT(object) :
-    __metaclass__ = abc.ABCMeta
+class HFIT(abc.ABC) :
+    
     ## constructor from hfit and TF1 objects 
     def __init__ ( self , hfit , tf1 ) :
         

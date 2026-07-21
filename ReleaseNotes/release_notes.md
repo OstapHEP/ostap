@@ -11,6 +11,7 @@
   1. Disable `ipyparallel` tests if `python<3.10`
   1. Add some protection for `lightgbm` and `xgboost` usage 
   1. Include `CatBoost` into GoF-tests
+  1. Add smart treatment of Cntrl+C/KeyboardInterrup exception 
   
 ## Bug fixes
 

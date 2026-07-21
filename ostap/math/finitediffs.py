@@ -180,12 +180,10 @@ def get_hmax ( *h ) :
 # =============================================================================
 ## @class Rule
 #  Define the rule for numerical differentiation (abstract class) 
-class Rule(object):
+class Rule(abc.ABC):
     """Rule/algorithm
     Abstract base class for numeruical differentiation rule 
     """
-    __metaclass__ = abc.ABCMeta
-
     # =========================================================================
     ## initialize the rule
     #  @param D          derivative order

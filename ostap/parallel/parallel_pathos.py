@@ -44,10 +44,12 @@ from   ostap.parallel.task      import ( TaskManager   ,
                                          Task          , TaskMerger    , 
                                          Statistics    , StatMerger    ,
                                          task_executor , func_executor )
-from   ostap.utils.basic        import loop_items 
-from   ostap.utils.progress_bar import progress_bar
+from   ostap.utils.basic        import typename  
+from   ostap.utils.progress_bar import progress_bar, ProgressBar 
 from   ostap.core.ostap_types   import sized_types 
-from   ostap.parallel.utils     import get_local_port  , pool_context  
+from   ostap.parallel.utils     import get_local_port  , pool_context
+from   ostap.logger.colorized   import attention
+from   ostap.logger.mute        import mute_py as mute  
 import sys, os 
 # =============================================================================
 ## CORE pathos 
@@ -59,6 +61,8 @@ import pathos.core as PC
 from ostap.logger.logger        import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel_pathos' )
 else                      : logger = getLogger ( __name__                         ) 
+# =============================================================================
+keyboard_interrupt = attention ( 'Keyboard Interrupt' )
 # =============================================================================
 ## helper function to access the underlyng <code>pp.Server</code> object
 #  @attention It should not be abused! 
@@ -253,15 +257,20 @@ class WorkManager (TaskManager) :
         """`remotes' : list of (remote) tunnel ports"""
         return tuple (  ( p.remote for p in self.ppservers ) ) 
 
-    ## context protocol: restart the pool 
+    # =========================================================================
+    ## context protocol: ENTER, restart the pool 
     def __enter__  ( self      ) :
+        """ Context protocol: ENTER , restart the pool
+        """
         sys.stdout .flush ()
         sys.stderr .flush ()
         if self.pool : self.pool.restart ( True )                           
         return self
     
-    ## context protocol: close/join/clear the pool 
-    def __exit__   ( self , *_ ) :        
+    # =========================================================================
+    ## context protocol: EXIT, close/join/clear the pool 
+    def __exit__   ( self , *_ ) :         
+        """ Context protocol: EXIT, close/join/clear the pool"""
         if  self.pool :
             self.pool.close ()
             self.pool.join  ()
@@ -300,23 +309,64 @@ class WorkManager (TaskManager) :
         - no merging of results  
         """
         
+        for i in range ( 10 ) :  print ( 'I AM IEXECUTE!' )
+        
+        # =====================================================================
         with pool_context ( self.pool ) as pool :
+            # =================================================================
+            done = 0            
+            # =================================================================
+            try : # ===========================================================
+                # =============================================================
+                
+                ## create and submit jobs 
+                jobs     = pool.uimap ( job , jobs_args )
+                
+                njobs    = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+                
+                progress = progress    or self.progress 
+                silent   = self.silent or not progress
 
-            ## create and submit jobs 
-            jobs = pool.uimap ( job , jobs_args )
+                ## retrive (asynchronous) results from the jobs
+                for result in progress_bar ( jobs ,
+                                             max_value   = njobs                ,
+                                             description = kwargs.pop ( 'description' , "Jobs:" ) , 
+                                             silent      = silent               ) :
+                    ## generator! 
+                    yield result
+                    done += 1
+                # ============================================================
+            except KeyboardInterrupt : # =====================================
+                # ============================================================
+                logger.attention ( "%s only #%d jobs are processed" % ( keyboard_interrupt , done ) )
+                # ===========================================================
+                ## with mute ( cout = False , cerr = True ) :
+
+                import os, sys
+                try : 
+                    ## if hasattr ( jobs , '_items'    ) and hasattr ( jobs._items , 'clear' ) :jobs._items.clear() 
+                    ## if hasattr ( jobs , 'clear'     ) : jobs.clear() 
+                    ## if hasattr ( pool , 'terminate' ) : pool.terminate()
+                    ## if hasattr ( pool , '_state'    ) : pool._state = 2
+                    ## sys.stderr = open ( os.devnull , 'w' )
+                    with mute ( cout = False , cerr = True ) :
+                        if hasattr ( jobs , 'clear'     ) : jobs.clear      () 
+                        if hasattr ( pool , 'terminate' ) : pool.terminate  ()
+                        if hasattr ( pool , 'join'      ) : pool.join       ()                            
+                        if hasattr ( pool , '_state'    ) : pool._state = 2 
+                        
+                except  :                    
+                    pass
+                finally :
+                    pass
+                    ## sys.stderr = sys.__stderr__
+
+                return
             
-            njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
-
-            progress = progress    or self.progress 
-            silent   = self.silent or not progress
-            
-            ## retrive (asynchronous) results from the jobs
-            for result in progress_bar ( jobs ,
-                                         max_value   = njobs                ,
-                                         description = kwargs.pop ( 'description' , "Jobs:" ) , 
-                                         silent      = silent               ) :
-                yield result
-
+            except Exception as e :
+                
+                logger.error ('EXCEPTION!!!!!!!', exc_info = True ) 
+                
         if kwargs : self.extra_arguments ( **kwargs ) 
             
     # =========================================================================

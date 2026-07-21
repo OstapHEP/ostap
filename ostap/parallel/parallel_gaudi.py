@@ -143,19 +143,22 @@ class WorkManager(TaskManager) :
                 
         if kwargs : self.extra_arguments ( **kwargs ) 
             
-    # ========================================================================-
+    # ========================================================================
     ## get PP-statistics if/when possible 
     def get_pp_stat ( self ) : 
         """ Get PP-statistics if/when possible 
         """
         return None
-    
-    ## context protocol: restart the pool 
+
+
+    # =========================================================================
+    ## context protocol: ENTER 
     def __enter__  ( self      ) :
         sys.stdout .flush ()
         sys.stderr .flush ()
         return self
-    
+
+    # =========================================================================
     ## context protocol: close/join/clear the pool 
     def __exit__   ( self , *_ ) :        
         ##  if  self.pool :

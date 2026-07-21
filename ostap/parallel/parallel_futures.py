@@ -108,15 +108,17 @@ class WorkManager(TaskManager) :
         return None
 
     # =========================================================================
-    ## context protocol
+    ## context protocol: ENTER 
     def __enter__  ( self ) :
+        """ Context protocol: ENTER"""
         sys.stdout .flush ()
         sys.stderr .flush ()
         return self
     
     # =========================================================================
-    ## context protocol
+    ## context protocol: EXIT
     def __exit__   ( self , *_ ) :        
+        """ Context protocol: EXIT"""
         sys.stdout .flush ()
         sys.stderr .flush ()        
 

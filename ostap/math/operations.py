@@ -127,8 +127,8 @@ class _Fand(object) :
     def __call__ ( self , x , y ) : return x and y 
 # =============================================================================
 #  @class Function
-class Function(object) :
-    __metaclass__ = abc.ABCMeta
+class Function(abc.ABC) :
+    """ The function """
     @abc.abstractmethod
     def __call__ ( self , *args ) :
         """ Use the function! """

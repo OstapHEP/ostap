@@ -17,7 +17,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-02-23
 # =============================================================================
-"""Useful utilities for multiprocessing and parallel processing for Ostap
+""" Useful utilities for multiprocessing and parallel processing for Ostap
 
 Actualy it is just a little bit upgraded version of original
 GaudiMP.Parallel module developed by Pere MATO Pere.Mato@cern.ch
@@ -48,7 +48,7 @@ __all__     = (
 from   itertools          import repeat, count
 from   ostap.utils.basic  import numcpu 
 import ostap.io.zipshelve as     DBASE 
-import os, operator, abc  
+import os, operator, abc, signal   
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.task' )
@@ -70,7 +70,7 @@ else                      : logger = getLogger ( __name__              )
 #  - <code>prepend_to</code>: prepend some path-like environment varibales 
 #  - <code>dot_in_path</code>: shoud the '.' be added to sys.path?
 #  @author Pere MATO Pere.Meto@cern.ch
-class Task(object) :
+class Task(abc.ABC) :
     """ Basic base class to encapsulate any processing that is
     going to be processed in parallel.
     User class must inherit from it and implement the methods
@@ -85,8 +85,6 @@ class Task(object) :
     - prepend_to : prepend some path-like environment varibales 
     - dot_in_path : shoud the '.' be added to sys.path?
     """
-    __metaclass__ = abc.ABCMeta
-    
     ## @attention ensure that the important attributes are available even before __init__
     def __new__( cls , *args , **kwargs):
         obj = super( Task , cls).__new__( cls )
@@ -125,7 +123,8 @@ class Task(object) :
     def finalize          ( self )          :
         """ Finalization action: invoked once on local host for the main task (after merge)"""
         pass
-    
+
+    # =================================================================================
     ## Process the (secondary) task on remote host
     #  @attention must return the result
     #  @param jobid jobid 
@@ -136,18 +135,21 @@ class Task(object) :
         """
         return None 
 
+    # =================================================================================
     ## Collect and merge the results (invoked at local host)
     @abc.abstractmethod 
     def merge_results     ( self , result , jobid = -1 ) :
         """ Collect and merge the results (invoked at local host)"""
         pass
 
+    # =================================================================================
     ## get the final merged task results 
     @abc.abstractmethod 
     def results           ( self )          :
         """ Get the final merged task results"""
         return None 
 
+    # =================================================================================
     ## shortcut of <code>process</code> method
     #  @param jobid jobid 
     #  @param item  item 
@@ -155,44 +157,53 @@ class Task(object) :
         """ Shortcut of process method"""
         return self.process ( jobid , *params ) 
 
+    # =================================================================================
+    ## get a task output (internally it invokes the method `results` """
     @property
     def output  ( self ) :
         """`output' : get a task output (internally it invokes the method `results` """
         return self.results()
 
+    # =================================================================================
+    ## directory where job starts"""
     @property
     def directory ( self ) :
         """`Directory' : directory where job starts"""
-        return self.__directory
-    
+        return self.__directory    
     @directory.setter 
     def directory ( self , value ) :
         self.__directory = value 
 
+    # =================================================================================
+    ## additional environment for the job"""
     @property
     def environment ( self ) :
         """`environment' : additional environment for the job"""
-        return self.__environment
-    
+        return self.__environment    
     @environment.setter
     def environment ( self , value ) :
         self.__environment.update ( value ) 
     
+    # =================================================================================
+    ## dictionary of environment variables to be appended"""
     @property
     def append_to ( self ) :
         """`append_to' : a dictionary of environment variables to be appended"""
         return self.__append_to
-
+    
+    # =================================================================================
+    ## dictionary of environment variables to be appended"""
     @property
     def prepend_to ( self ) :
         """`prepend_to' : a dictionary of environment variables to be appended"""
         return self.__prepend_to
     
+    # =================================================================================
+    ## has a dot in sys.path?"""
     @property
     def dot_in_path ( self ) :
         """`dot in path' : has a dot in sys.path?"""
-        return  self.__dot_in_path
-    
+        return  self.__dot_in_path    
     @dot_in_path.setter 
     def dot_in_path ( self , value ) :
         self.__dot_in_path = value
@@ -202,16 +213,19 @@ class Task(object) :
         """`batch_set' : is `batch' property activated?"""
         return self.__batch_set
     
+    # =================================================================================
+    ## Batch mode for processing?"""
     @property
     def batch ( self ) :
         """`batch' : use Batch mode for processing?"""
         return self.__batch
-
     @batch.setter
     def batch ( self , value ) :
         self.__batch     = True if value else False
         self.__batch_set = True
 
+    # =================================================================================
+    ## use this as a build directory"""
     @property
     def build ( self ) :
         """`build': use this as a build directory"""
@@ -779,15 +793,25 @@ def task_executor ( item ) :
         from ostap.utils.cleanup  import CleanUpPID  as clean_context
     else : 
         from ostap.utils.basic    import NoContext   as clean_context 
-       
+        
     ## use clean, build & batch context 
-    with clean_context (),  build_context ( task.build ), batch_context ( task.batch ) : 
+    with clean_context () , build_context ( task.build ) , batch_context ( task.batch ) :         
+        ## perform remote  initialization (if needed) 
+        task.initialize_remote ( jobid )         
+        with Statistics ()  as stat :
+            # ================================================================
+            signal.signal ( signal.SIGINT , signal.SIG_IGN )         ## SIGNAL
+            # ================================================================
+            result = None
+            # ================================================================
+            try : # ==========================================================
+                # ============================================================
+                result = task.process ( jobid , *args )
+                # ============================================================
+            except KeyboardInterrupt : # =====================================
+                # ============================================================
+                pass
         
-        ## perform remote  inialization (if needed) 
-        task.initialize_remote ( jobid ) 
-        
-        with Statistics ()  as stat :    
-            result = task.process ( jobid , *args ) 
             return jobid , result , stat
         
 # =============================================================================
@@ -802,14 +826,26 @@ def func_executor ( item ) :
     ## unpack
     fun   = item [ 0  ]
     jobid = item [ 1  ] 
-    args  = item [ 2: ]
-    
+    args  = item [ 2: ]    
     ##
     from ostap.utils.cleanup    import CleanUpPID as clean_context
     from ostap.utils.root_utils import batch 
     with clean_context () , batch ( True ) :        
         with Statistics ()  as stat :
-            return jobid , fun ( jobid , *args ) , stat
+            # ================================================================
+            signal.signal ( signal.SIGINT , signal.SIG_IGN )         ## SIGNAL
+            # ================================================================
+            result = None
+            # ================================================================
+            try : # ==========================================================
+                # ============================================================
+                result = fun ( jobid , *args )
+                # ============================================================
+            except KeyboardInterrupt : # =====================================
+                # ============================================================
+                pass
+            
+            return jobid , result , stat
         
 # ============================================================================
 ## @class TaskManager
@@ -817,9 +853,8 @@ def func_executor ( item ) :
 class TaskManager(object) :
     """ Abstract base class for the work manager for parallel data processing 
     """
-    
     __metaclass__ = abc.ABCMeta
-
+    
     def __init__  ( self                ,
                     ncpus               , * , 
                     silent      = False ,
@@ -912,11 +947,11 @@ class TaskManager(object) :
         from ostap.utils.utils import chunked 
         chunks    = list ( chunked ( args , job_chunk ) )
 
-        if isinstance ( task , Task ) :
-            result = self.__process_task ( task , chunks , **kwargs )
-        else : 
-            result = self.__process_func ( task , chunks , **kwargs )
-        
+        # ===============================================================================
+        if isinstance ( task , Task ) : result = self.__process_task ( task , chunks , **kwargs )
+        else                          : result = self.__process_func ( task , chunks , **kwargs )
+        # ===============================================================================
+            
         return result 
 
     # ===================================================================================
@@ -1192,7 +1227,21 @@ class TaskManager(object) :
             from ostap.logger.utils import print_args
             title = 'Unused/extra arguments'
             logger.warning  ( '%s:\n%s' % ( title , print_args ( *args , prefix = '#' , **kwargs ) ) )
-            
+
+    # ========================================================================
+    ## context protocol: ENTER
+    @abc.abstractmethod 
+    def __enter__  ( self ) :
+        """ Context protocol: ENTER"""
+        return NotImplemented
+
+    # =========================================================================
+    ## context protocol: EXIT 
+    @abc.abstractmethod 
+    def __exit__   ( self , *_ ) :
+        """ Context protocol: EXIT"""
+        return NotImplemented
+
 # =============================================================================
 if '__main__' == __name__ :
     
