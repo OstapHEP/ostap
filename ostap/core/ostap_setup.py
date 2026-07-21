@@ -35,6 +35,7 @@ import ostap.core.config      as     config
 import ostap.core.build_dir
 import ostap.core.cache_dir
 import ostap.utils.cleanup
+import multiprocessing        as mp
 import ROOT, math, os, sys, ctypes, runpy     
 # =============================================================================
 from ostap.logger.logger import getLogger, enabledInfo, enabledDebug  
@@ -60,13 +61,17 @@ elif not implicitMT and     ROOT.ROOT.IsImplicitMTEnabled() :
     ROOT.ROOT.DisableImplicitMT  ()
     if not ROOT.ROOT.IsImplicitMTEnabled() : logger.debug ( 'ImplicitMT is disabled' )
     
+current_process = mp.current_process()
+main_process    = current_process and current_process.name == 'MainProcess'  
+
 # =============================================================================
 ## (2)  Batch processing ?
 # =============================================================================
 groot = ROOT.ROOT.GetROOT() 
 if   groot and     config.batch and not groot.IsBatch () :
     groot.SetBatch ( True  )
-    if     groot.IsBatch() : logger.attention ( "BATCH processing is activated!"   )
+    if     groot.IsBatch() :
+        if main_process : logger.attention ( "BATCH processing is activated!"   )
 elif groot and not config.batch and     groot.IsBatch () :
     groot.SetBatch ( False )
     if not groot.IsBatch() : logger.info      ( "BATCH processing is deactivated!" )

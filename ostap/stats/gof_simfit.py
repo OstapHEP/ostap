@@ -369,14 +369,14 @@ class GoFSimFit1DToys(GoFSimFit1D) :
         if parallel :
             
             from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
-            self += parallel_toys ( gof      = self       ,
-                                    nToys    = nToys      ,
-                                    nSplit   = nSplit     ,
-                                    fitconf  = fitconf    , 
-                                    silent   = True       ,
-                                    progress = not silent )
+            result = parallel_toys ( gof      = self       ,
+                                     nToys    = nToys      ,
+                                     nSplit   = nSplit     ,
+                                     fitconf  = fitconf    , 
+                                     silent   = True       ,
+                                     progress = not silent )
+            if result : self+= result  
             return self 
-
         
         results  = { k : defaultdict(list) for k in self.gofs } 
         counters = self.counters 
@@ -711,6 +711,18 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                 row     = label , '*%s*' % mm  , '' , '' , '' , '' , ''  , pvalue , sigma 
                 rows.append ( row )
         
+            minimal = min ( clipped , key = lambda p : float ( p ) )
+            pvalue  = minimal  
+            pv       = clip_pvalue ( pvalue , 0.5 )
+                
+            nsigma  = significance ( pv ) ## convert  it to significace            
+            pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+            sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+
+            mm      = 'MINIMAL' 
+            row     = label , '*%s*' % mm  , '' , '' , '' , '', '' , pvalue , sigma 
+            rows.append ( row )
+            
         rows  = [ header ] + sorted ( rows )
         rows  = T.remove_empty_columns ( rows ) 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lcccccccc' , style = style )
@@ -951,15 +963,16 @@ class GoFSimFitType(GoFSimFitBase) :
         tvalues  = self.tvalues () 
         pvalues  = self.pvalues () 
 
-        rows     = [ ( 'Sample'            , 
-                       't-value'           , 
-                       't-mean'            ,
-                       't-rms'             ,
-                       't-min/max'         ,
-                       'factor'            ,
-                       'p-value [%]'       ,
-                       '#%s' % greek_lower_sigma ) ] 
-
+        header = ( 'Sample'            , 
+                   't-value'           , 
+                   't-mean'            ,
+                   't-rms'             ,
+                   't-min/max'         ,
+                   'factor'            ,
+                   'p-value [%]'       ,
+                    '#%s' % greek_lower_sigma )  
+        rows = [] 
+        
         for sample in sorted ( pvalues ) :
             
             tvalue , pvalue = pvalues [ sample ]
@@ -1038,6 +1051,19 @@ class GoFSimFitType(GoFSimFitBase) :
             row     = ( '*%s*' % mm  , ) + empty_cells + (  pvalue , sigma ) 
             rows.append ( row )
 
+        minimal = min ( clipped , key = lambda p : float ( p ) )
+        pvalue  = minimal  
+        pv       = clip_pvalue ( pvalue , 0.5 )
+                
+        nsigma  = significance ( pv ) ## convert  it to significace            
+        pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+        sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+
+        mm      = 'MINIMAL' 
+        row     = ( '*%s*' % mm  , ) + empty_cells + (  pvalue , sigma ) 
+        rows.append ( row )
+
+        rows  = [ header ] + sorted ( rows )
         rows  = T.remove_empty_columns ( rows )
         title = title if title else 'Goodness-Of-Fit %s for SimFit' % gof_type  
         return T.table ( rows                 ,
@@ -1335,8 +1361,8 @@ class GoFSimFit(GoFSimFitBase) :
             new_dataset = self.pdf.generate ( self.N , sample = True )
 
             ttv      = self.tvalues()
-            ## above = True 
-            above    = False 
+            above = True 
+            ## above    = False 
          
             for sample , component in self.pdf.categories.items ()  :
                 
@@ -1352,8 +1378,8 @@ class GoFSimFit(GoFSimFitBase) :
               
                 self.__counters [ sample ] += tv 
                 
-                ## above = above and ttv [ sample ] <= tv 
-                above = above or  ttv [ sample ] <= tv
+                above = above and ttv [ sample ] <= tv 
+                ## above = above or  ttv [ sample ] <= tv
                 
                 ds.clear ()
                 del ds 
@@ -1464,7 +1490,7 @@ class GoFSimFit(GoFSimFitBase) :
         row     = '*COMBINED*' , '' , '' , '' , '', '' , ''  , pvalue , sigma  
         rows.append ( row )
         
-        if len ( pvalues ) + 1 == len ( rows ) :
+        if pvalues and len ( pvalues ) + 1 == len ( rows ) :
             
             clipped  = [ clip_pvalue ( p , 0.5 ) for p in pvalues ]            
             for method in  ( 'fisher' , 'pearson' , 'tippett' , 'stouffer' ) :
@@ -1481,9 +1507,21 @@ class GoFSimFit(GoFSimFitBase) :
                 mm      = method.upper()                
                 row    = '*%s*' % mm  , '' , '' , '' , '', '' , ''  , pvalue , sigma 
                 rows.append ( row )
+            
+            minimal = min ( clipped , key = lambda p : float ( p ) )
+            pvalue  = minimal  
+            pv       = clip_pvalue ( pvalue , 0.5 )
+                
+            nsigma  = significance ( pv ) ## convert  it to significace            
+            pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+            sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
 
+            mm      = 'MINIMAL' 
+            row    = '*%s*' % mm  , '' , '' , '' , '', '' , ''  , pvalue , sigma 
+            rows.append ( row )
+            
         header = ( 'Category' , 't-value' , 't-mean' , 't-rms' , 't-min' , 't-max' , 'Factor' , 'p-value [%]' , '#%s' % greek_lower_sigma )
-        rows   = [ header ] + rows 
+        rows   = [ header ] + sorted ( rows )
         rows   = T.remove_empty_columns ( rows ) 
         title = title if title else 'SimFit-GoF statistics #%d' % self.nToys
         return T.table ( rows , title = title , prefix = prefix )     

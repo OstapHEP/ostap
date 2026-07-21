@@ -12,10 +12,9 @@ __all__ = (
     'WorkManager' , ## Task-manager 
 )
 # =============================================================================
-from   itertools                    import repeat , count
 from   packaging.version            import Version 
 from   ostap.utils.progress_bar     import progress_bar
-from   ostap.parallel.task          import Task, TaskManager 
+from   ostap.parallel.task          import Task, TaskManager, keyboard_interrupt 
 from   ostap.io.checker             import PickleChecker as Checker
 from   ostap.core.ostap_types       import sized_types 
 import sys
@@ -110,16 +109,32 @@ class WorkManager(TaskManager) :
         progress = progress    or self.progress        
         silent   = self.silent or not progress
         ##
-
-        with joblib.Parallel ( n_jobs = self.ncpus , **self.params )  as executor:
-            
-            results = executor ( joblib.delayed ( job ) ( a ) for a in jobs_args ) 
-            for result in progress_bar ( results                            ,
-                                         max_value   = njobs                ,
-                                         description = kwargs.pop ( 'description' , "Jobs:" ) ,
-                                         silent      = silent               ) : 
-                yield result
-            
+        done = 0 
+        # ========================================================================
+        with joblib.Parallel ( n_jobs = self.ncpus , **self.params )  as executor: 
+            # ================================================================ 
+            try: # ===========================================================
+                # ============================================================
+                results = executor ( joblib.delayed ( job ) ( a ) for a in jobs_args ) 
+                # ================================================================ 
+                for result in progress_bar ( results                            ,
+                                             max_value   = njobs                ,
+                                             description = kwargs.pop ( 'description' , "Jobs:" ) ,
+                                             silent      = silent               ) : 
+                    yield result
+                    done += 1
+                # ============================================================
+            except KeyboardInterrupt : # =====================================
+                # ============================================================
+                logger.attention ( "%s only #%d jobs are processed" % ( keyboard_interrupt , done ) )
+                # ===========================================================
+                return
+                # ============================================================ 
+            except Exception : # =============================================
+                # ============================================================
+                    logger.error ( "Unexpected error occurred!" , exc_info = True )
+                    raise   
+       
         if kwargs : self.extra_arguments ( **kwargs ) 
         
     # ========================================================================-

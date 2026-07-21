@@ -38,17 +38,13 @@ __all__     = (
     'Checker'     , ## check of the object can be pickled/unpickled  
 )
 # =============================================================================
-from   collections.abc          import Sized
-from   itertools                import repeat , count
-from   ostap.parallel.task      import ( TaskManager   ,
-                                         Task          , TaskMerger    , 
-                                         Statistics    , StatMerger    ,
-                                         task_executor , func_executor )
-from   ostap.utils.basic        import typename  
-from   ostap.utils.progress_bar import progress_bar, ProgressBar 
+from   ostap.parallel.task      import ( TaskManager        ,
+                                         Task               , TaskMerger    , 
+                                         Statistics         , StatMerger    ,
+                                         keyboard_interrupt )
+from   ostap.utils.progress_bar import progress_bar  
 from   ostap.core.ostap_types   import sized_types 
 from   ostap.parallel.utils     import get_local_port  , pool_context
-from   ostap.logger.colorized   import attention
 from   ostap.logger.mute        import mute_py as mute  
 import sys, os 
 # =============================================================================
@@ -61,8 +57,6 @@ import pathos.core as PC
 from ostap.logger.logger        import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel_pathos' )
 else                      : logger = getLogger ( __name__                         ) 
-# =============================================================================
-keyboard_interrupt = attention ( 'Keyboard Interrupt' )
 # =============================================================================
 ## helper function to access the underlyng <code>pp.Server</code> object
 #  @attention It should not be abused! 
