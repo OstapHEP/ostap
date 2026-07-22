@@ -109,7 +109,7 @@ class WorkManager(TaskManager) :
         progress = progress    or self.progress        
         silent   = self.silent or not progress
         ##
-        done = 0 
+        done = 0
         # ========================================================================
         with joblib.Parallel ( n_jobs = self.ncpus , **self.params )  as executor: 
             # ================================================================ 
@@ -132,8 +132,8 @@ class WorkManager(TaskManager) :
                 # ============================================================ 
             except Exception : # =============================================
                 # ============================================================
-                    logger.error ( "Unexpected error occurred!" , exc_info = True )
-                    raise   
+                logger.error ( 'Exception caught after #%d jobs processed' % done , exc_info = True )
+                raise   
        
         if kwargs : self.extra_arguments ( **kwargs ) 
         

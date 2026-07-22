@@ -891,10 +891,10 @@ class TaskManager(object) :
                     dump_jobs   = 0     ,
                     dump_freq   = 0     , **kwargs ) :
 
-        self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else numcpu()
+        self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else max ( 1 , numcpu() - 1 ) 
         
         if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
-            chunk_size  = 5 * ( self.ncpus + 1 )
+            chunk_size  = 1 + 5 * ( self.ncpus + 1 )
             
         self.__chunk_size = chunk_size 
         self.__silent     = True if silent else False  

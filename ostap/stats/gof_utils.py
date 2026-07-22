@@ -645,8 +645,7 @@ class PERMUTATOR(object) :
     ## run N-toys 
     def run_toys ( self, N , silent = True , progress = False ) :
         """ Run N-toys
-        """
-        
+        """        
         counter = EffCounter()
         tvalues = []
 
@@ -669,79 +668,31 @@ class PERMUTATOR(object) :
             counter += bool  ( self.t_value < tv  )
 
         return counter, tuple ( tvalues )
-        
-# =============================================================================
-jl = None 
-# =============================================================================
-if False : # ==================================================================
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        import joblib as jl
-        jl_conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
-        if   Version ( '1.4.0' ) <= Version ( jl.__version__ ) : conf [ 'return_as' ] = 'unordered_generator'
-        elif Version ( '1.3.0' ) <= Version ( jl.__version__ ) : conf [ 'return_as' ] = 'generator'           
-        # =====================================================================
-        ## Run NN-permutations in parallel using joblib 
-        def joblib_run ( self , NN , silent = False , progress = True ) :
-            """ Run NN-permutations in parallel using joblib
-            """
 
-            me    = math.ceil ( memory_enough() ) + 1 
-            nj    = min ( 2 * numcpu () + 3 , me ) 
-            lst   = splitter ( NN , nj )
-            njobs = len ( [ k for k in splitter ( NN , nj ) ] )
-            if not silent : logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with joblib' % njobs ) 
-            ## 
-            input   = ( jl.delayed (self.run_toys)( N ) for N in lst )
-            counter = EffCounter()
-            tvalues = () 
-            results = jl.Parallel ( **jl_conf ) ( input )
-            for r in progress_bar ( results , max_value = njobs , silent = not progress , description = 'Permutations:') :
-                cnt , tvals = r 
-                counter += cnt
-                tvalues += tvals 
-                ##
-                
-            if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
-            else             : self.ecdf.add ( data2vct ( tvalues )  )
-
-            return counter
-        # =====================================================================
-        PERMUTATOR.run = joblib_run        
-        # =====================================================================
-        logger.debug ( 'Joblib will be  used for parallel permutations')
-        # =====================================================================        
-    except ImportError : # ====================================================
-        # =====================================================================
-        jl = None
-
-# =============================================================================
-if not jl : # =================================================================
     # =========================================================================
     ## Run NN-permutations in parallel using the default WorkManager
-    def pp_run ( self , NN , silent = False , progress  = True ) :
-        """ Run NN-permutations in parallel using WorkManager
+    def run ( self , nToys , silent = False , progress  = True ) :
+        """ Run permutations in parallel using WorkManager
         """
-        me    = math.ceil ( memory_enough() ) + 1 
-        nj    = min ( 2 * numcpu () + 3 , me ) 
-        lst   = splitter ( NN , nj )
-        njobs = len ( [ k for k in splitter ( NN , nj ) ] )
-
-        ## njobs = 2 * min ( NN // 2 + 1 , numcpu () + 1 ) 
+        me       = math.ceil ( memory_enough() ) + 1 
+        njobs    = min ( 2 * numcpu () + 3 , me ) 
+        the_list = [ n for n in splitter ( nToys , njobs ) ] 
+        njobs    = len ( the_list ) 
         
-        if not silent : logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with WorkManager' % njobs ) 
+        if not silent :
+            logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with WorkManager' % njobs )
+            
         counter = EffCounter()
         tvalues = () 
         ## 
-        ## use the bare interface 
+        ## use *BARE* interface here
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager : 
             for result in manager.iexecute ( self.run_toys ,
-                                             lst           ,
-                                             progress    = progress        ,
-                                             njobs       = njobs           ,
-                                             description = 'Permutations:' ) :
+                                             the_list      ,
+                                             progress      = progress        ,
+                                             njobs         = njobs           ,
+                                             description   = 'Permutations:' ) :
                 cnt , tvals = result 
                 counter += cnt
                 tvalues += tvals 
@@ -750,11 +701,6 @@ if not jl : # =================================================================
         else             : self.ecdf.add    ( data2vct ( tvalues )     )
         ##
         return counter
-    # =========================================================================
-    logger.debug ( 'Parallel will be  used for parallel permutations')
-    # =====================================================================        
-    PERMUTATOR.run = pp_run
-    # =========================================================================
 
 # =============================================================================
 ## @class TOYS
@@ -856,24 +802,27 @@ class TOYS(object) :
     # =========================================================================
     ## Run N-toys in parallel using WorkManager
     def run ( self , nToys , silent = False , progress = True ) :
-        """ Run N-toys in parallel using WorkManager
+        """ Run toys in parallel using WorkManager
         """
-        me       = math.ceil ( memory_enough() ) + 1
-        ## set aprpoximately 5 as a typical size of job
-        toys_per_job = 10 
-        nj       = min ( 2 * numcpu () + 3 , me , 5 + nToys // toys_per_job , 70 )        
-        the_list = splitter ( nToys , nj ) 
-        njobs    = min ( nToys , nj ) 
-        if not silent : logger.info ( 'toys: #%d parallel subjobs to be used' % njobs ) 
         ##
-
+        assert isinstance ( nToys , int ) and 1 <= nToys , "Invalid nToys: %s" % nToys
+        ##
+        ## how many processes fits into memory ?
+        me       = math.ceil ( memory_enough() ) + 1 
+        njobs    = min ( 2 * numcpu () + 3 , me ) 
+        the_list = [ n for n in splitter ( nToys , njobs ) ] 
+        njobs    = len ( the_list )
+        
+        if not silent :
+            logger.info ( 'GoF-toys: #%d parallel subjobs to be used' % njobs )
+            ##
+            
         counter = EffCounter()
         tvalues = ()
         ##        
-        ## use the bare interface 
+        ## use *BARE* interface here 
         from ostap.parallel.parallel import WorkManager
-        with WorkManager ( silent = silent ) as manager :
-
+        with WorkManager ( silent = silent ) as manager :            
             for result in manager.iexecute ( self.run_toys ,
                                              the_list      ,
                                              progress      = progress   ,

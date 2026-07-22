@@ -14,7 +14,7 @@ __all__ = (
 # =============================================================================
 from   itertools                    import repeat , count
 from   ostap.utils.progress_bar     import progress_bar
-from   ostap.parallel.task          import Task, TaskManager 
+from   ostap.parallel.task          import Task, TaskManager, keyboard_interrupt 
 from   ostap.io.checker             import PickleChecker as Checker
 from   ostap.core.ostap_types       import sized_types
 import concurrent.futures
@@ -52,8 +52,8 @@ class WorkManager(TaskManager) :
                                 dump_freq  = dump_freq  , **kwargs ) 
         
         if not self.silent :
-            logger.info ( 'WorkManager is concurrent.futures'  )
-                
+            logger.info ( 'WorkManager is concurrent.futures.ProcessPoolExecutor'  )
+            
     # =====================================================================
     ## process the bare <code>executor</code> function
     #  @param job   function to be executed
@@ -88,19 +88,42 @@ class WorkManager(TaskManager) :
         ## 
         progress = progress    or self.progress        
         silent   = self.silent or not progress
-        ## 
+        ##
+        done   = 0 
+        config = {}
+        ## avoid very long quees 
+        if  ( 3 , 14 ) <= sys.version_info : config [ 'buffersize' ] = 2 * self.ncpus
+        ## in case we have too many presumably small jobs, combine them into larger groups  
+        if  isinstance ( njobs , int ) and 5 * self.ncpus < njobs :
+            config [ 'chunksize' ] = 1 + njobs // ( 5 * self.ncpus )
+
         with concurrent.futures.ProcessPoolExecutor ( max_workers = self.ncpus ) as executor:
-            
-            results = executor.map ( job , jobs_args ) ## , chunksize = self.chunk_size )                
-            for result in progress_bar ( results                            ,
-                                         max_value   = njobs                ,
-                                         description = kwargs.pop ( 'description' , "Jobs:" ) ,
-                                         silent      = silent               ) : 
-                yield result
+
+            # =================================================================
+            try : # ===========================================================
+                # =============================================================                
+                results = executor.map ( job , jobs_args , **config )
+                for result in progress_bar ( results                            ,
+                                             max_value   = njobs                ,
+                                             description = kwargs.pop ( 'description' , "Jobs:" ) ,
+                                             silent      = silent               ) : 
+                    yield result
+                    done +=1
+                # ============================================================
+            except KeyboardInterrupt : # =====================================
+                # ============================================================
+                logger.attention ( "%s only #%d jobs are processed" % ( keyboard_interrupt , done ) )
+                # ===========================================================
+                return
+                # ============================================================ 
+            except Exception : # =============================================
+                # ============================================================
+                logger.error ( 'Exception caught after #%d jobs processed' % done , exc_info = True )
+                raise   
             
         if kwargs : self.extra_arguments ( **kwargs ) 
         
-    # ========================================================================-
+    # =========================================================================
     ## get PP-statistics if/when possible 
     def get_pp_stat ( self ) : 
         """ Get PP-statistics if/when possible 

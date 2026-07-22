@@ -1334,12 +1334,8 @@ class GoFSimFit(GoFSimFitBase) :
         """        
         assert  isinstance ( nToys , int ) and 0 < nToys , "Invalid number of toys: %s" % nToys
 
-        print ( 'I AM RUN: ' , typename ( self ) , parallel )
-        
         if parallel :
             
-            print ( 'I AM PARALLEL!' , typename ( self ) , nToys )
-        
             from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
             result = parallel_toys ( gof      = self       ,
                                      nToys    = nToys      ,
@@ -1352,8 +1348,6 @@ class GoFSimFit(GoFSimFitBase) :
             
             return self 
         
-        ## print ( 'I AM NOT PARALLEL!' , typename ( self ) , nToys  )
-    
         from ostap.utils.progress_bar import progress_bar
         for t in progress_bar ( nToys , silent = silent , description = 'Toys:' ) : 
               

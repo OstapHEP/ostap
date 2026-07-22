@@ -12,7 +12,7 @@ __all__ = ()
 import sys, os, time
 from   itertools                    import repeat , count
 from   ostap.utils.progress_bar     import progress_bar
-from   ostap.parallel.task          import Task, TaskManager 
+from   ostap.parallel.task          import Task, TaskManager, keyboard_interrupt 
 from   ostap.io.checker             import PickleChecker as Checker
 from   ostap.core.ostap_types       import sized_types 
 # =============================================================================
@@ -53,24 +53,14 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                       ncpus      = 'autodetect' , * ,
                       silent     = False        ,
                       progress   = True         ,
-                      balanced   = False        ,
+                      balanced   = True         ,
                       use_dill   = True         ,
                       chunk_size = -1           , 
                       dump_dbase = None         ,
                       dump_jobs  = 0            ,
                       dump_freq  = 0            , **kwargs ) :
 
-            if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
-                from ostap.utils.basic import numcpu 
-                ncpus = numcpu() 
-                
-            n = kwargs.get ( 'n' , ncpus )
-            if isinstance ( n , int ) and 1 <= n :    kwargs [ 'n' ] = n
-            elif 'n' in kwargs                  : del kwargs [ 'n' ]
 
-            if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
-                chunk_size = 5 * ( ncpus + 1 )
-                
             if 'ppservers' in kwargs : kwarsg.pop ( 'ppservers' )
               
             ## initialize the base class 
@@ -89,12 +79,9 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
 
             ##  ipp.Cluster arguments 
             self.__kwargs   = kwargs
-            self.__balanced = True if balanced else False 
-            self.__use_dill = True if use_dill else False
-            if self.__use_dill and not dill :
-                logger.warning ( "dill is not available, switch it off!" ) 
-                self.__use_dill = False
-
+            self.__balanced = True if          balanced else False 
+            self.__use_dill = True if dill and use_dill else False
+            
             if not self.silent :
                 logger.info ( 'WorkManager is ipyparallel'  )
                 if self.__kwargs :
@@ -142,24 +129,45 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
             
             progress = progress    or self.progress        
             silent   = self.silent or not progress
+            done     = 0
 
-            with ipp.Cluster ( **self.__kwargs ) as cluster :
+            with ipp.Cluster ( n = self.ncpus , **self.__kwargs ) as cluster :
 
                 if   self.__use_dill :
                     view = cluster[:]                    
                     view.use_dill ()
-                elif self.__balanced : 
-                    view = cluster.load_balanced_view()
-                else :
-                    view = cluster[:]                    
-                        
-                results = view.map_async ( job , jobs_args )                    
-                for result in progress_bar ( results                            ,
-                                             max_value   = njobs                ,
-                                             description = kwargs.pop ( 'description' , "Jobs:" ) ,
-                                             silent      = silent               ) : 
-                    yield result
-                        
+                    
+                ## BALANCED ? 
+                view = cluster.load_balanced_view() if self.__balanced else cluster[:]
+
+                # ================================================================
+                try : # ==========================================================
+                    # ============================================================                    
+                    ## results = view.map_async ( job , jobs_args )                    
+                    ## results = view.imap ( job , jobs_args , block = False )                    
+                    results = view.imap ( job , jobs_args )                    
+                    for result in progress_bar ( results                            ,
+                                                 max_value   = njobs                ,
+                                                 description = kwargs.pop ( 'description' , "Jobs:" ) ,
+                                                 silent      = silent               ) : 
+                        yield result
+                        done += 1                        
+                    # ============================================================
+                except KeyboardInterrupt : # =====================================
+                    # ============================================================
+                    logger.attention ( "%s only #%d jobs are processed" % ( keyboard_interrupt , done ) )
+                    # ===========================================================
+                    ## ABORT!! 
+                    view.abort()                    
+                    return
+                    # ============================================================ 
+                except Exception : # =============================================
+                    # ============================================================
+                    logger.error ( 'Exception caught after #%d jobs processed' % done , exc_info = True )
+                    ## ABORT!! 
+                    view.abort()                
+                    raise   
+           
             if kwargs : self.extra_arguments ( **kwargs ) 
                     
         # ========================================================================

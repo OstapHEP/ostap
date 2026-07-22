@@ -31,11 +31,11 @@ __all__     = (
 )
 # ============================================================================= 
 from   ostap.core.core_base   import rootException 
-import ostap.core.config      as     config 
+from   ostap.utils.basic      import main_process         
+import ostap.core.config      as     config
 import ostap.core.build_dir
 import ostap.core.cache_dir
 import ostap.utils.cleanup
-import multiprocessing        as mp
 import ROOT, math, os, sys, ctypes, runpy     
 # =============================================================================
 from ostap.logger.logger import getLogger, enabledInfo, enabledDebug  
@@ -61,9 +61,6 @@ elif not implicitMT and     ROOT.ROOT.IsImplicitMTEnabled() :
     ROOT.ROOT.DisableImplicitMT  ()
     if not ROOT.ROOT.IsImplicitMTEnabled() : logger.debug ( 'ImplicitMT is disabled' )
     
-current_process = mp.current_process()
-main_process    = current_process and current_process.name == 'MainProcess'  
-
 # =============================================================================
 ## (2)  Batch processing ?
 # =============================================================================

@@ -207,7 +207,7 @@ def test_gof_simfit () :
     logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )
 
     toys = GoFSimFit1DToys ( gof )
-    toys.run ( 100 , silent = False , parallel = True )
+    toys.run ( 900 , silent = False , parallel = True )
 
     title = 'GoF for 1D SimFit (%d toys)' % toys.nToys  
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )

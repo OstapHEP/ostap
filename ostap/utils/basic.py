@@ -44,15 +44,21 @@ __all__     = (
     'ismethod'             , ## is it a method?    
     ## 
     'counted'              , ## helper to count function calls 
-    'memoize'              , ## lightweigth cache
+    'memoize'              , ## lightweight cache
     ##
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
 from   ostap.core.meta_info import python_info, whoami  
 from   itertools            import zip_longest
+import multiprocessing      as     mp_
 import sys, os, datetime, shutil, functools
 # =============================================================================
+## current process 
+current_process = mp_.current_process()
+## main process ? 
+main_process    = current_process and current_process.name == 'MainProcess'  
+# ==============================================================================
 ## Interactive processing ?
 #  @see https://stackoverflow.com/questions/2356399/tell-if-python-is-in-interactive-mode
 def interactive () :

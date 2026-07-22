@@ -23,6 +23,7 @@ __all__     = (
 from   ostap.parallel.parallel import Task , WorkManager
 from   ostap.core.ostap_types  import string_types, integer_types
 from   ostap.utils.basic       import numcpu , typename 
+from   ostap.utils.utils       import splitter
 import ROOT
 # =============================================================================
 # logging 
@@ -111,15 +112,15 @@ def parallel_goftoys ( gof             ,
     assert isinstance ( gof ,  ( GoF1D, GoFSimFit , GoFSimFit1D ) ) , \
         'Invalid "gof" type : %s' % typename ( gof )
     
-    assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
+    assert isinstance ( nToys  , integer_types ) and 1 <= nToys  ,\
         'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
     
-    if not nSplit : nSplit = max ( 2 , 2 * numcpu() ) 
+    if not nSplit : nSplit = max ( 2 , 2 * numcpu () ) 
     
     assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
         'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
 
-    if nSplit < 2 or numcpu ()  < 2 :
+    if nSplit < 2 or numcpu () < 2 :
 
         if   isinstance ( gof , GoF1D       ) : toys = GoF1DToys     ( gof )
         elif isinstance ( gof , GoFSimFit1D ) : toys = GoFSimFitToys ( gof )
@@ -132,25 +133,16 @@ def parallel_goftoys ( gof             ,
         
         return toys
 
+    
     ## create work manager 
     wmgr  = WorkManager ( silent   = silent and not progress ,
                           progress = progress or not silent  , **kwargs )
 
-    print ( 'PARALLEL-GOF' , typename ( wmgr ) , type ( wmgr ) )
-    
     ## create the task 
     task  = GoFTask ( gof = gof )
 
-    ## create/split arguments
-    
-    if nToys <= nSplit : params = nToys * [ 1 ]
-    else : 
-        size , rem = divmod ( nToys , nSplit )
-        if rem : params = [ size + rem ] + ( nSplit - 1 ) * [ size ]
-        else   : params =                    nSplit       * [ size ]
-
     ## start parallel processing! 
-    wmgr.process ( task , params  )
+    wmgr.process ( task , splitter ( nToys , nSplit )  )
     
     return task.results () 
 

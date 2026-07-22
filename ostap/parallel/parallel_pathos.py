@@ -334,32 +334,25 @@ class WorkManager (TaskManager) :
                 # ============================================================
                 logger.attention ( "%s only #%d jobs are processed" % ( keyboard_interrupt , done ) )
                 # ===========================================================
-                ## with mute ( cout = False , cerr = True ) :
-
-                import os, sys
-                try : 
-                    ## if hasattr ( jobs , '_items'    ) and hasattr ( jobs._items , 'clear' ) :jobs._items.clear() 
-                    ## if hasattr ( jobs , 'clear'     ) : jobs.clear() 
-                    ## if hasattr ( pool , 'terminate' ) : pool.terminate()
-                    ## if hasattr ( pool , '_state'    ) : pool._state = 2
-                    ## sys.stderr = open ( os.devnull , 'w' )
-                    with mute ( cout = False , cerr = True ) :
-                        if hasattr ( jobs , 'clear'     ) : jobs.clear      () 
-                        if hasattr ( pool , 'terminate' ) : pool.terminate  ()
-                        if hasattr ( pool , 'join'      ) : pool.join       ()                            
-                        if hasattr ( pool , '_state'    ) : pool._state = 2 
-                        
-                except  :                    
-                    pass
-                finally :
-                    pass
-                    ## sys.stderr = sys.__stderr__
-
+                with mute ( cout = False , cerr = True ) :
+                    if hasattr ( jobs , 'clear'     ) : jobs.clear      () 
+                    if hasattr ( pool , 'terminate' ) : pool.terminate  ()
+                    if hasattr ( pool , 'join'      ) : pool.join       ()                            
+                    if hasattr ( pool , '_state'    ) : pool._state = 2
+                    
                 return
-            
-            except Exception as e :
-                
-                logger.error ('EXCEPTION!!!!!!!', exc_info = True ) 
+
+                # =============================================================
+            except Exception  : # =============================================
+                # =============================================================                
+                logger.error ( 'Exception caught after #%d jobs processed' % done , exc_info = True )
+                with mute ( cout = False , cerr = True ) :
+                    if hasattr ( jobs , 'clear'     ) : jobs.clear      () 
+                    if hasattr ( pool , 'terminate' ) : pool.terminate  ()
+                    if hasattr ( pool , 'join'      ) : pool.join       ()                            
+                    if hasattr ( pool , '_state'    ) : pool._state = 2
+                    
+                raise 
                 
         if kwargs : self.extra_arguments ( **kwargs ) 
             
