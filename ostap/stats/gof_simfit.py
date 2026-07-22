@@ -1221,7 +1221,6 @@ class GoFSimFit(GoFSimFitBase) :
             self.gofs  [ key  ] = gof 
             self.N     [ key  ] = len ( ds ) 
 
-        print ( 'PARALLEL? CONFIGURATION:' , runconf ) 
         ## run toys if requested
         if runconf: self.run ( **runconf )
 

@@ -23,7 +23,7 @@ __all__     = (
     'nearest_neighbors'  , ## get all nearest neigbours
     's2u'                , ## convert structured numpy array into non-structured
     'combine_pvalues'    , ## combine p-values 
-    
+    'np2vct'             , ## nmpy array into SVectorWithError
 )
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
@@ -1067,6 +1067,41 @@ def draw_ecdf ( ecdf          ,
     ## 
     return result, vline, hline 
 
+# ==============================================================================
+## Convert numpy-array statistics into Ostap::SVectorWithError
+#  @see Ostap::Math::SVectorWithError
+def np2vct ( data , weight = None ) :
+    """ Convert numpy-array statistics into `Ostap.Math.SVectorWithError`
+    - see `Ostap.Math.SVectorWithError`
+    """
+    
+    shape     = data.shape
+    n , N     = shape
+    
+    w         = None if weight_trivial ( weight ) else weight
+    
+    from statsmodels.stats.weightstats import DescrStatsW as DSW 
+    dsw       = DSW  ( data , weights = w )
+    mean      = dsw.mean
+    covmtrx   = dsw.cov
+    
+    ## prepare output 
+    RT        = Ostap.Math.SVectorWithError [ N ]
+    values    = RT.Value      () 
+    covs      = RT.Covariance () 
+    
+    for i in range ( N  ) :
+        values [ i     ] = float ( mean    [ i ]       )
+        covs   [ i , i ] = float ( covmtrx [ i ] [ i ] )
+        for j in range (  0 , i  ) :
+            cij = float ( covmtrx [ i ] [ j ]  )
+            cji = float ( covmtrx [ j ] [ i ]  )                
+            cc  = 0.5 * ( cij + cji ) 
+            covs [ i , j ] = cc
+            covs [ j , i ] = cc  
+        
+        return RT ( values ,  covs ) 
+        
 # ==============================================================================
 from scipy.stats import combine_pvalues as _combine_pvs_ # =====================
 # ==============================================================================

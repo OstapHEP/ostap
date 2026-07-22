@@ -302,9 +302,6 @@ class WorkManager (TaskManager) :
         - no summary prin
         - no merging of results  
         """
-        
-        for i in range ( 10 ) :  print ( 'I AM IEXECUTE!' )
-        
         # =====================================================================
         with pool_context ( self.pool ) as pool :
             # =================================================================

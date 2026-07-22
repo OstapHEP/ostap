@@ -46,7 +46,7 @@ from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          pairwise_distances ,
                                          nearest_distances  ,
                                          nearest_neighbors  , 
-                                         draw_ecdf          , s2u ) 
+                                         draw_ecdf          , s2u , np2vct ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf
 import ostap.math.math_base           
@@ -237,12 +237,12 @@ class GoFnp (AGoFnp) :
     #  data1 , data2 = ...
     #  t , p = gof.pvalue ( data1 , data2 , normalize = False ) 
     #  @endcode 
-    def pvalue ( self             , 
-                 data1            ,
-                 data2            , * ,
-                 tvalue    = None , 
-                 weight1   = None ,
-                 weight2   = None ) : 
+    def pvalue ( self           , 
+                 data1          ,
+                 data2          , * ,
+                 tvalue  = None , 
+                 weight1 = None ,
+                 weight2 = None ) : 
                 
         """ Calculate the t & p-values
         >>> gof  = ...
@@ -383,10 +383,7 @@ class GoFnp (AGoFnp) :
         return super().the_row ( tvalue  = tvalue  if not tvalue  is None else self.__tvalue  ,
                                  pvalue  = pvalue  if not pvalue  is None else self.__pvalue  ,
                                  ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
-                                 counter = counter if not counter is None else self.__counter ,
-                                 title   = title  if title else '%s GoF-report' % typename ( self ) , 
-                                 prefix  = prefix ,
-                                 style   = style  )
+                                 counter = counter if not counter is None else self.__counter )
     
 
     # =========================================================================
@@ -1087,36 +1084,7 @@ class Mahalanobis(GoFnp) :
         """ Convert numpy-array statistics into `Ostap.Math.SVectorWithError`
         - see `Ostap.Math.SVectorWithError`
         """
-        
-        shape     = data.shape
-        n , N     = shape
-        
-        w         = None if weight_trivial ( weight ) else weight
-        
-        from statsmodels.stats.weightstats import DescrStatsW as DSW 
-        dsw       = DSW  ( data , weights = w )
-        mean      = dsw.mean
-        covmtrx   = dsw.cov
-        
-        ## prepare output 
-        RT        = Ostap.Math.SVectorWithError [ N ]
-        values    = RT.Value      () 
-        covs      = RT.Covariance () 
-        
-        for i in range ( N  ) :
-            values [ i     ] = float ( mean    [ i ]       )
-            covs   [ i , i ] = float ( covmtrx [ i ] [ i ] )
-            for j in range (  0 , i  ) :
-                cij = float ( covmtrx [ i ] [ j ]  )
-                cji = float ( covmtrx [ j ] [ i ]  )                
-                cc  = 0.5 * ( cij + cji ) 
-                covs [ i , j ] = cc
-                covs [ j , i ] = cc  
-                
-        return RT ( values ,  covs ) 
-        ## result = RT ( values ,  covs )
-        ## if not result.valid() : logger.error ( 'RESULT IS NOT VALID\n%s'% result ) 
-        ## return result 
+        return np2vct ( data , weight = weight )
                         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays

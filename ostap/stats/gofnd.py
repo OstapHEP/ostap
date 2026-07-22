@@ -43,6 +43,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
 from   ostap.core.cpu_info      import HAS_AVX2 
+from   ostap.math.math_base     import weight_trivial 
 from   ostap.utils.basic        import typename  
 from   ostap.stats.gof          import AGoF, AGoFnp 
 from   ostap.core.core          import Ostap, VE 
@@ -57,7 +58,7 @@ from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.stats.gof_utils    import format_row, draw_ecdf  
 import ostap.stats.gof_np       as     GNP
 import ostap.logger.table       as     T 
-import ROOT, numpy 
+import ROOT, numpy
 # =============================================================================
 # logging 
 # =============================================================================
@@ -75,7 +76,8 @@ class GoF(AGoF) :
     def __init__ ( self             ,
                    estimator        , ## actual GoF-evaluator
                    mcFactor = 20    ,
-                   sample   = False ) : 
+                   sample   = False ,
+                   genconf  = {}    ) : 
         ## 
         assert isinstance ( mcFactor  , int ) and 1 <= mcFactor , "Invalid `mcFactor':%s" % mcFactor
         assert isinstance ( estimator , AGoFnp ) , "Invalid `estmator':%s" % typename ( estimator ) 
@@ -83,6 +85,7 @@ class GoF(AGoF) :
         self.__estimator  = estimator 
         self.__mcFactor   = mcFactor 
         self.__sample     = True if sample else False
+        self.__genconf    = genconf
         
     # =======================================================================
     ## get all configration parameters
@@ -90,14 +93,15 @@ class GoF(AGoF) :
     def config ( self ) :
         return { 'estimator' : self.estimator ,
                  'mcFactor'  : self.mcFactor  ,
-                 'sample'    : self.sample    }
+                 'sample'    : self.sample    , 
+                 'genconf'   : self.genconf   }
     
     # =========================================================================
     ## self-print get the configuration 
-    def table (  self , prefix = '# ' ) : 
+    def table (  self , title = '' , prefix = '# ' ) : 
         """ print configuration """
         from ostap.logger.utils import map2table_ex
-        title = "%s configuration " % typename ( self )
+        title = title if title else "%s configuration " % typename ( self )
         return map2table_ex ( self.config , 
                               header      = ( 'Parameter' , 'type' , 'value' ) ,
                               alignment   = 'rcw'  , 
@@ -131,6 +135,11 @@ class GoF(AGoF) :
     def sample ( self ) :
         """`sample` : sample number of events for generation step?"""
         return self.__sample
+
+    @property
+    def genconf ( self ) :
+        """`genconf` : additinnal papameter for `pdf.generate`"""
+        return self.__genconf     
     
     @property
     def silent ( self ) :
@@ -176,16 +185,18 @@ class GoF(AGoF) :
         """
         return { 'estimator': self.gof      ,
                  'mcFactor' : self.mcFactor ,
-                 'sample'   : self.sample   } 
+                 'sample'   : self.sample   , 
+                 'genconf'  : self.genconf  } 
     
     # =========================================================================
     # De-serialize it (for parallelization) 
     def __setstate__ ( self , state ) :
         """ (De)Serialize it (for parallelization)
         """
-        self.__estimator  = state.pop ( 'estimator'       )
+        self.__estimator  = state.pop ( 'estimator'        )
         self.__mcFactor   = state.pop ( 'mcFactor' , 20    )
         self.__sample     = state.pop ( 'sample'   , False )
+        self.__genconf    = state.pop ( 'genconf'  , {}    )
         
     # =========================================================================
     ## Calculate T-value for Goodness-of-Fit 
@@ -206,9 +217,12 @@ class GoF(AGoF) :
             "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
                                                                        typename ( self.gof ) )
         ## 
-        ds1, ds2 = self.transform ( pdf , data )         
+        ## ds1, ds2           = self. transform ( pdf , data )         
         ## estimate the t-value 
-        return self.gof ( ds1 , ds2 , normalize = True )
+        ## return self.gof ( ds1 , ds2 , normalize = True )
+    
+        ds1, ds2 , weight1 = self.wtransform ( pdf , data )         
+        return self.gof ( ds1 , ds2 , weight1 = weight1 , normalize = True )
 
     # =========================================================================
     ## Calculate the t & p-values
@@ -218,7 +232,7 @@ class GoF(AGoF) :
     #  data = ... 
     #  t , p = ppd.pvalue ( pdf , data )
     #  @endcode 
-    def pvalue ( self , pdf , data ) :
+    def pvalue ( self , pdf , data , * , tvalue = None ) :
         """ Calculate the t & p-values
         >>> gof   = ...
         >>> pdf   = ... 
@@ -229,9 +243,13 @@ class GoF(AGoF) :
             "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
                                                                        typename ( self.gof ) )
         
-        ds1 , ds2 = self.transform ( pdf , data )         
+        ## ds1 , ds2 = self.transform ( pdf , data )         
         ## estimate t&p-values
-        tv ,  pv  = self.gof.pvalue ( ds1 , ds2  )        
+        ## tv ,  pv  = self.gof.pvalue ( ds1 , ds2 , tvalue = tvalue )
+        ## 
+        ds1, ds2 , weight1 = self.wtransform ( pdf , data )         
+        tv , pv = self.gof.pvalue ( ds1 , ds2 , weight1 = weight1 , tvalue = tvalue )
+        ## 
         return tv , pv 
     
     # =========================================================================
@@ -257,11 +275,16 @@ class GoF(AGoF) :
         """ Generate MC dataset from PDF according to data 
         """
         nEvents = len ( data ) * self.mcFactor
-        dset    = pdf.generate ( nEvents = nEvents , varset = data , sample = self.sample )        
+        dset    = pdf.generate ( nEvents = nEvents     ,
+                                 varset  = data        ,
+                                 sample  = self.sample , **self.genconf )        
         assert dset or self.sample , "generate: failure to produce non-empty dataset!"
-        while not dset : dset = pdf.generate ( nEvents = nEvents , varset = data , sample = self.sample )        
+        while not dset :
+            dset = pdf.generate ( nEvents = nEvents     ,
+                                  varset  = data        ,
+                                  sample  = self.sample , **self.genconf )        
         return dset 
-            
+    
     # ==========================================================================
     ## Transform a (pdf,data) pair into (data_np, mc_np) pair 
     #  @code
@@ -330,10 +353,10 @@ class GoF(AGoF) :
         
         wname = data1.wname
         
-        var_lst = tuple ( sorted ( v.name for v in var1  if v in var2 and v.name != wname ) )  
+        var_lst  = tuple ( sorted ( v.name for v in vars1 if v in vars2 and v.name != wname ) )  
                    
-        ds1 , w1 = data1.slice ( var_lst , silent = silent , structured = True , weight_name = data.wname() )
-        ds2 , _  = data2.slice ( var_lst , silent = silent , structured = True )
+        ds1 , w1 = data1.slice ( var_lst , progress = False , structured = True ) ## , weight_name = data.wname() )
+        ds2 , _  = data2.slice ( var_lst , progress = False , structured = True )
 
         if not weight_trivial ( w1 ) : w1 /= numpy.sum ( w1 )
                         
@@ -401,21 +424,19 @@ class GoF(AGoF) :
                   tvalue    = None ,
                   pvalue    = None ,
                   ecdf      = None ,
-                  counter   = None ,                  
+                  counter   = None ,
                   precision = 4    ,
                   width     = 6    ) :         
         """ Get results in form of the table 
         >>> gof = ...
         >>> header , row = gof.the_row ( ... ) 
         """
-        return self.gof.the_row ( tvalue  = tvalue  ,
-                                  pvalue  = pvalue  , 
-                                  ecdf    = ecdf    ,
-                                  counter = counter , 
-                                  title   = title  if title else '%s GoF-report' % typename ( self ) , 
-                                  prefix  = prefix  ,
-                                  style   = style   )
-    
+        return self.gof.the_row ( tvalue    = tvalue    ,
+                                  pvalue    = pvalue    , 
+                                  ecdf      = ecdf      ,
+                                  counter   = counter   ,
+                                  precision = precision ,
+                                  width     = width     )
     
     # =========================================================================
     ## Get results in a form of the table 
@@ -642,7 +663,7 @@ class DNN(GoF) :
     #  data = ... 
     #  t , p = dnn.pvalue ( pdf , data )
     #  @endcode 
-    def pvalue ( self , pdf , data ) :
+    def pvalue ( self , pdf , data , * , tvalue = None ) :
         """ Calculate the t & p-values
         >>> dnn  = ...
         >>> pdf  = ... 
@@ -653,7 +674,7 @@ class DNN(GoF) :
         ds1 , vpdf = self.transform ( pdf , data ) 
 
         ## call underlying method 
-        t_value = self.gof.tvalue ( ds1 , vpdf )
+        t_value = self.gof.tvalue ( ds1 , vpdf ) if tvalue is None else tvalue
 
         ## ## save the histogram (do not override it!)
         ## if   self.__histo   : pass
@@ -876,7 +897,7 @@ class NLL(AGoF) :
     #  data = ... 
     #  t_value , p_value = gof.pvalue ( pdf , data )
     #  @endcode 
-    def pvalue ( self , pdf , data ) :
+    def pvalue ( self , pdf , data , * , tvalue = None ) :
         """ Calculate the t & p-values
         >>> gof  = ...
         >>> pdf  = ... 
@@ -884,7 +905,7 @@ class NLL(AGoF) :
         >>> t_value , p_value = gof.pvalue ( pdf , data ) 
         """
 
-        t_value   = self.the_tvalue ( self.fitresult ) 
+        t_value   = self.the_tvalue ( self.fitresult ) if tvalue is None else tvalue 
 
         ## prepare toys
         toys = TOYS ( self                        ,
@@ -1131,14 +1152,14 @@ class ADVAL_LightGBM(GoF) :
         >>> data   = ... 
         >>> tvalue = ppd.tvalue ( pdf , data ) 
         """
-        ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 = self.wtransform ( pdf , data )         
         ## estimate the t-value 
-        return self.gof ( ds1              ,
-                          ds2              ,
-                          weight1   = w1   ,
-                          weight2   = None ,
-                          normalize = True )
-
+        return self.gof ( ds1                 ,
+                          ds2                 ,
+                          weight1   = weight1 ,
+                          weight2   = None    ,
+                          normalize = True    )
+    
     # =========================================================================
     ## Calculate the t & p-values
     #  @code
@@ -1147,19 +1168,20 @@ class ADVAL_LightGBM(GoF) :
     #  data = ... 
     #  t , p = ppd.pvalue ( pdf , data )
     #  @endcode 
-    def pvalue ( self , pdf , data ) :
+    def pvalue ( self , pdf , data , * , tvalue = None ) :
         """ Calculate the t & p-values
         >>> ppd  = ...
         >>> pdf  = ... 
         >>> data = ... 
         >>> t , p = ppd.pvalue ( pdf , data ) 
         """
-        ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 = self.wtransform ( pdf , data )         
         ## estimate t&p-values 
-        return self.gof.pvalue ( ds1              ,
-                                 ds2              ,
-                                 weight1   = w1   , 
-                                 weight2   = None )        
+        return self.gof.pvalue ( ds1               ,
+                                 ds2               ,
+                                 weight1 = weight1 , 
+                                 weight2 = None    ,
+                                 tvalue  = tvalue  )        
 
     
 # =============================================================================

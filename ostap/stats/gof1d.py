@@ -783,7 +783,8 @@ class GoF1DToys(GoF1D) :
         self.__counters = defaultdict(SE) 
         self.__ecdfs    = {}        
         self.__nToys    = 0
-        
+
+    # ===============================================================================
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object 
@@ -798,6 +799,7 @@ class GoF1DToys(GoF1D) :
         # 
         return state 
     
+    # ===============================================================================
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
         """ De-serialize the object """
@@ -1111,7 +1113,8 @@ class GoF1DToys(GoF1D) :
 
     __repr__ = table
     __str__  = table
-
+    report   = table
+    
     # =========================================================================
     ## Draw ECDF for toys & statistical estimator 
     def draw  ( self , what , option = '' , **kwargs ) :
@@ -1259,7 +1262,7 @@ class GoF_1D(AGoF) :
     #  data = ... 
     #  t_value , p_value = gof.pvalue ( pdf , data )
     #  @endcode
-    def pvalue ( self , pdf , data ) :
+    def pvalue ( self , pdf , data , * , tvalue = None ) :
         """ Calculate the t & p-values
         >>> gof  = ...
         >>> pdf  = ... 
@@ -1272,7 +1275,7 @@ class GoF_1D(AGoF) :
         ##
         gof = GoF1D ( pdf , data , cdf = self.__cdf , parameters = self.__parameters )
 
-        tval     = gof.etimators [ self.__what ]        
+        tval     = gof.etimators [ self.__what ] if tvalue is None else tvalue 
         gof_toys = GoF1DToys   ( gof )
         gof_toys.run           ( **self.kwargs )
             

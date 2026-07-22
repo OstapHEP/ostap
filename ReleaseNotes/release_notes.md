@@ -15,6 +15,8 @@
   
 ## Bug fixes
 
+  1. fix bug in `ostap.io.dbase.dbopen`
+  
 ## Backward incompatible
 
   1. `ostap.tools.reweight.WeightingPlot` from now gets  only one positional `what`-argument, others are keyword-only

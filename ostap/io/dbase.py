@@ -369,6 +369,13 @@ def dbopen ( file               ,
                 # =================================================================================
                 logger.warning ( "dbopen: unable to unlink file:`%s'" % file , exc_info = True ) 
 
+    def _extra_args_ ( **kw ) :
+        if not kw : return
+        from ostap.logger.utils import print_args
+        title  = 'dbopen: Unused %d arguments' % len ( kw )
+        table  = print_args ( prefix = '# ' , **kw )
+        logger.warning ( '%s:\n%s' % ( title , table ) )
+        
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
         
@@ -377,13 +384,6 @@ def dbopen ( file               ,
         elif isinstance ( dbtype , string_types ) : db_types = name_transform ( dbtype ) ,  
         else                                      : db_types = tuple ( name_transform ( db )  for db in dbtype ) 
 
-        def _extra_args_ ( **kw ) :
-            if not kw : return
-            from ostap.logger.utils import print_args
-            title  = 'dbopen: Unused %d arguments' % len ( kw )
-            table  = print_args ( prefix = '# ' , **kw )
-            logger.warning ( '%s:\n%s' % ( title , table ) )
-            
         the_dbs = preferrable_backends + db_types 
         from ostap.core.ostap_types import string_types
         if the_dbs and isinstance ( the_dbs , string_types ) : the_dbs = the_dbs , 

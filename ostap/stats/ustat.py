@@ -372,7 +372,7 @@ class USTAT(AGoF) :
     #  data  = ... 
     #  t , p = ustat.pvalue ( pdf , data )
     #  @endcode 
-    def pvalue ( self , pdf , data ) :
+    def pvalue ( self , pdf , data  , * , tvalue = None ) : 
         """ Calculate the t & p-values
         >>> ustat  = ...
         >>> pdf   = ... 
@@ -386,7 +386,7 @@ class USTAT(AGoF) :
         self.__silent = True
         
         estimator = self 
-        t_value   = estimator ( pdf , data )        
+        t_value   = estimator ( pdf , data ) if tvalue is None else tvalue 
 
         ## prepare toys
         toys = TOYS ( self                   ,

@@ -104,7 +104,7 @@ class AGoF(abc.ABC) :
     #  t_value , p_value = gof.pvalue ( pdf , data )
     #  @endcode 
     @abc.abstractmethod
-    def pvalue ( self , pdf , data , * , t_value = None ) :
+    def pvalue ( self , pdf , data , * , tvalue = None ) :
         """ Calculate the t & p-values
         >>> gof  = ...
         >>> pdf  = ... 
