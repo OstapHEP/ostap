@@ -27,7 +27,7 @@ import ROOT
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__' == __name__ : 
+if '__main__' == __name__  : 
     logger = getLogger ( 'ostap.test_histos_parameterisation3' )
 else : 
     logger = getLogger ( __name__ )

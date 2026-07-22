@@ -20,7 +20,7 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__' == __name__ : 
+if '__main__' == __name__  : 
     logger = getLogger ( 'ostap.test_histos_axes' )
 else : 
     logger = getLogger ( __name__ )

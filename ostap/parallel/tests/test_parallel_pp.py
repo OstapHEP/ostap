@@ -18,7 +18,7 @@ import ROOT, random, time, sys, pp
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__' == __name__ : 
+if '__main__' == __name__  : 
     logger = getLogger ( 'test_parallel_pp' )
 else : 
     logger = getLogger ( __name__ )

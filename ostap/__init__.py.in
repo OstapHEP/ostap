@@ -38,7 +38,7 @@ __date__    = "@OSTAP_BUILD_TIMESTAMP@"
 import sys,datetime 
 from   collections import namedtuple
 # =============================================================================
-if ( , 3 , 13 ) <= sys.version_info :
+if ( 3 , 13 ) <= sys.version_info :
     import builtins
     sys.modules['__builtin__'] = builtins   
 # =============================================================================

@@ -17,7 +17,7 @@ import ROOT, time, sys
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__' == __name__ : 
+if '__main__' == __name__  : 
     logger = getLogger ( 'test_parallel_ipyparallel' )
 else : 
     logger = getLogger ( __name__ )

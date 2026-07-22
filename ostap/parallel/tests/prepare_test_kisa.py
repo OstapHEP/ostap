@@ -25,7 +25,7 @@ import ROOT,os,  random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' == __name__ or '__builtin__' == __name__ : 
+if '__main__' == __name__ : 
     logger = getLogger( 'prepare_test_kisa' )
 else : 
     logger = getLogger( __name__ )
