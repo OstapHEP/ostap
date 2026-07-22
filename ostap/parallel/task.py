@@ -58,6 +58,17 @@ else                      : logger = getLogger ( __name__              )
 ## keyboard-interrupt tag 
 keyboard_interrupt = attention ( 'Keyboard Interrupt' )
 # ==============================================================================
+## This is another standard signal handler, which will simply ignore the given signal.
+#  - Ignore Interrupt from keyboard (CTRL + C).
+def signal_sigint () :
+    """ This is another standard signal handler, which will simply ignore the given signal.
+    - Ignore Interrupt from keyboard (CTRL + C).
+    """
+    signal.signal ( signal.SIGINT , signal.SIG_IGN ) ## SIGNAL
+# ==============================================================================
+if ( 3, 10 ) <= sys.version_info : class TaskBase(abc.ABC) : pass
+else                             : class TaskBase(object)  : __metaclass__ abc.ABCMeta        
+# ==============================================================================
 ## @class Task
 #  Basic base class to encapsulate any processing
 #  that is going to be porcessed in parallel.
@@ -74,7 +85,7 @@ keyboard_interrupt = attention ( 'Keyboard Interrupt' )
 #  - <code>prepend_to</code>: prepend some path-like environment varibales 
 #  - <code>dot_in_path</code>: shoud the '.' be added to sys.path?
 #  @author Pere MATO Pere.Meto@cern.ch
-class Task(abc.ABC) :
+class Task(TaskBase) :
     """ Basic base class to encapsulate any processing that is
     going to be processed in parallel.
     User class must inherit from it and implement the methods
@@ -91,31 +102,33 @@ class Task(abc.ABC) :
     """
     ## @attention ensure that the important attributes are available even before __init__
     def __new__( cls , *args , **kwargs):
-        obj = super( Task , cls).__new__( cls )
+        obj = super ( Task , cls).__new__( cls )
         ## define the local trash 
-
+        ## 
         obj.__directory   = None
-        
+        ## 
         obj.__environment = {}
         obj.__prepend_to  = {}
         obj.__append_to   = {}
         obj.__dot_in_path = None
-        
+        ## 
         obj.__batch       = None  
         obj.__batch_set   = False
-        
+        ## 
         obj.__build       = None
         obj.__build_set   = False
-        
+        ## 
         obj.__cleanup     = True
-        
+        ## 
         return obj
 
+    # =========================================================================
     ## Local initialization:  invoked once on localhost for the main task
     def initialize_local  ( self )          :
         """ Local initialization:  invoked once on localhost for the main task"""
         pass
     
+    # =========================================================================
     ## Remote initialization: invoked for each secondary task on remote host
     def initialize_remote ( self , jobid = -1 )  :
         """ Remote initialization: invoked for each secondary task on remote host
@@ -123,12 +136,13 @@ class Task(abc.ABC) :
         """
         return self.initialize_local () 
     
+    # =========================================================================
     ## Finalization action: invoked once on local host for the main task (after merge)
     def finalize          ( self )          :
         """ Finalization action: invoked once on local host for the main task (after merge)"""
         pass
 
-    # =================================================================================
+    # =========================================================================
     ## Process the (secondary) task on remote host
     #  @attention must return the result
     #  @param jobid jobid 
@@ -139,21 +153,21 @@ class Task(abc.ABC) :
         """
         return None 
 
-    # =================================================================================
+    # =========================================================================
     ## Collect and merge the results (invoked at local host)
     @abc.abstractmethod 
     def merge_results     ( self , result , jobid = -1 ) :
         """ Collect and merge the results (invoked at local host)"""
         pass
 
-    # =================================================================================
+    # =========================================================================
     ## get the final merged task results 
     @abc.abstractmethod 
     def results           ( self )          :
         """ Get the final merged task results"""
         return None 
 
-    # =================================================================================
+    # =========================================================================
     ## shortcut of <code>process</code> method
     #  @param jobid jobid 
     #  @param item  item 
@@ -161,14 +175,14 @@ class Task(abc.ABC) :
         """ Shortcut of process method"""
         return self.process ( jobid , *params ) 
 
-    # =================================================================================
+    # =========================================================================
     ## get a task output (internally it invokes the method `results` """
     @property
     def output  ( self ) :
         """`output' : get a task output (internally it invokes the method `results` """
         return self.results()
 
-    # =================================================================================
+    # =========================================================================
     ## directory where job starts"""
     @property
     def directory ( self ) :
@@ -178,7 +192,7 @@ class Task(abc.ABC) :
     def directory ( self , value ) :
         self.__directory = value 
 
-    # =================================================================================
+    # =========================================================================
     ## additional environment for the job"""
     @property
     def environment ( self ) :
@@ -188,21 +202,21 @@ class Task(abc.ABC) :
     def environment ( self , value ) :
         self.__environment.update ( value ) 
     
-    # =================================================================================
+    # =========================================================================
     ## dictionary of environment variables to be appended"""
     @property
     def append_to ( self ) :
         """`append_to' : a dictionary of environment variables to be appended"""
         return self.__append_to
     
-    # =================================================================================
+    # =========================================================================
     ## dictionary of environment variables to be appended"""
     @property
     def prepend_to ( self ) :
         """`prepend_to' : a dictionary of environment variables to be appended"""
         return self.__prepend_to
     
-    # =================================================================================
+    # =========================================================================
     ## has a dot in sys.path?"""
     @property
     def dot_in_path ( self ) :
@@ -217,7 +231,7 @@ class Task(abc.ABC) :
         """`batch_set' : is `batch' property activated?"""
         return self.__batch_set
     
-    # =================================================================================
+    # =========================================================================
     ## Batch mode for processing?"""
     @property
     def batch ( self ) :
@@ -228,7 +242,7 @@ class Task(abc.ABC) :
         self.__batch     = True if value else False
         self.__batch_set = True
 
-    # =================================================================================
+    # =========================================================================
     ## use this as a build directory"""
     @property
     def build ( self ) :
@@ -244,6 +258,8 @@ class Task(abc.ABC) :
         """`build_set': is build directory defined?"""
         return self.__build_set
 
+    # =========================================================================
+    ## cleanup the temporary directories"""
     @property
     def cleanup ( self ) :
         """`cleanup' : cleanup the temporary directories"""
@@ -804,7 +820,7 @@ def task_executor ( item ) :
         task.initialize_remote ( jobid )         
         with Statistics ()  as stat :
             # ================================================================
-            signal.signal ( signal.SIGINT , signal.SIG_IGN )         ## SIGNAL
+            signal_sigint () 
             # ================================================================
             result = None
             # ================================================================
@@ -837,7 +853,7 @@ def func_executor ( item ) :
     with clean_context () , batch ( True ) :        
         with Statistics ()  as stat :
             # ================================================================
-            signal.signal ( signal.SIGINT , signal.SIG_IGN )         ## SIGNAL
+            signal_sigint () 
             # ================================================================
             result = None
             # ================================================================
