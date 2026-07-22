@@ -41,6 +41,9 @@ from   collections import namedtuple
 if ( 3 , 13 ) <= sys.version_info :
     import builtins
     sys.modules['__builtin__'] = builtins   
+    if not hasattr(builtins, "__main__"):
+        import __main__
+        builtins.__main__ = __main__
 # =============================================================================
 version      = __version__
 VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak' ) )
