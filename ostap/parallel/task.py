@@ -49,7 +49,7 @@ from   ostap.utils.basic      import numcpu
 from   ostap.logger.colorized import attention
 import ostap.io.zipshelve     as     DBASE 
 from   itertools              import repeat , count
-import os, operator, abc, signal   
+import sys, os, operator, abc, signal   
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.task' )
@@ -66,8 +66,15 @@ def signal_sigint () :
     """
     signal.signal ( signal.SIGINT , signal.SIG_IGN ) ## SIGNAL
 # ==============================================================================
-if ( 3, 10 ) <= sys.version_info : class TaskBase(abc.ABC) : pass
-else                             : class TaskBase(object)  : __metaclass__ abc.ABCMeta        
+if ( 3, 10 ) <= sys.version_info : # ===========================================
+    # ==========================================================================
+    class TaskBase(abc.ABC) : pass # ===========================================
+    # ==========================================================================    
+else : # =======================================================================
+    # ==========================================================================
+    class TaskBase(object)  : 
+        __metaclass__ = abc.ABCMeta
+        pass    
 # ==============================================================================
 ## @class Task
 #  Basic base class to encapsulate any processing

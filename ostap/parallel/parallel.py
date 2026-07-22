@@ -199,6 +199,20 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+    from ostap.utils.basic import typename
+    
+    logger.info ( 'WORKER      is %s' % worker )
+
+    obj  = WorkManager 
+    if obj :        
+        info = getattr ( obj , '__name__' , '????' ) ,getattr ( obj  , '__module__' , 'NONE' ) ,
+        logger.info ( 'WorkManager is %s from %s ' % info )
+
+    obj = Checker
+    if obj :        
+        info = getattr ( obj , '__name__' , '????' ) ,getattr ( obj  , '__module__' , 'NONE' ) ,
+        logger.info ( 'Checker     is %s from %s ' % info )
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
