@@ -38,6 +38,10 @@ __date__    = "@OSTAP_BUILD_TIMESTAMP@"
 import sys,datetime 
 from   collections import namedtuple
 # =============================================================================
+if ( , 3 , 13 ) <= sys.version_info :
+    import builtins
+    sys.modules['__builtin__'] = builtins   
+# =============================================================================
 version      = __version__
 VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak' ) )
 version_info = VersionInfo ( @OSTAP_VERSION_MAJOR@ ,
