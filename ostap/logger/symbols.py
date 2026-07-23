@@ -253,9 +253,9 @@ greek_lower_sigma     = '\U000003C3'  if show else 'sigma'
 greek_lower_tau       = '\U000003C4'  if show else 'tau'
 greek_lower_ypsilon   = '\U000003C5'  if show else 'ypsilon'
 greek_lower_phi       = '\U000003C6'  if show else 'phi'
-greek_lower_chi       = '\U0001D6C7'  if show else 'chi'
-greek_lower_psi       = '\U0001D6C8'  if show else 'psi'
-greek_lower_omega     = '\U0001D6C9'  if show else 'omega'
+greek_lower_chi       = '\U000003C7'  if show else 'chi'
+greek_lower_psi       = '\U000003C8'  if show else 'psi'
+greek_lower_omega     = '\U000003C9'  if show else 'omega'
 
 ## Uppercase Greek letters 
 greek_upper_alpha     = '\U00000391'  if show else 'A'
