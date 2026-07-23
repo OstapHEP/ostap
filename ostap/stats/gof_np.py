@@ -125,18 +125,18 @@ class GoFnp (AGoFnp) :
     
     # =========================================================================
     ## self-print get the configuration 
-    def table (  self , prefix = '# ') : 
+    def table (  self , title = '' , prefix = '' ) : 
         """ print configuration """
         from ostap.logger.utils import map2table_ex
-        title = "%s configuration " % typename ( self )
+        title = title if title else "%s configuration " % typename ( self )
         return map2table_ex ( self.config , 
                               header      = ( 'Parameter' , 'type' , 'value' ) ,
                               ailgnment   = 'rcw'  , 
                               prefix      = prefix ,
                               title       = title  )
     
-    def __str__  ( self ) : return self.table ( prefix = '' ) 
-    def __repr__ ( self ) : return self.__str__ ()
+    __str__  = table
+    __repr__ = table 
     
     # =========================================================================
     @property 
@@ -470,11 +470,6 @@ class MIXnp(GoFnp) :
                    progress    = True  ,
                    n_neighbors = 10    , **params ) : 
         
-        # =================================================================================
-        if parallel and not run_parallel ( parallel ) :
-            logger.warning ( "Parallel processing is switched OFF!" ) 
-            parallel = False 
-            
         ## Attention!
         assert isinstance ( n_neighbors , int ) and 2 <= n_neighbors , \
             "Invalid `n_neighbors`: %s" % n_neighbors 
@@ -483,6 +478,11 @@ class MIXnp(GoFnp) :
         self._k_max = n_neighbors 
         ##
         
+        # =================================================================================
+        if parallel and not run_parallel ( parallel ) :
+            logger.warning ( "%s: Parallel processing is switched OFF!" % typename ( self ) ) 
+            parallel = False 
+                    
         n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
 
         ## initialize the base 
@@ -612,6 +612,8 @@ class MIXnp(GoFnp) :
 #    the other methods <..> .
 #    These downsides are not enough to out-way its excellent performance;
 #    this is a very powerful g.o.f. tool.
+#
+#    @attention It is rather sow to large number of events 
 class PPDnp(GoFnp) : 
     """ Implementation of concrete method "Point-To-Point Dissimilarity"
     for probing of Goodness-Of-Fit
@@ -629,7 +631,8 @@ class PPDnp(GoFnp) :
     ... the other methods <..> .
     ... These downsides are not enough to out-way its excellent performance;
     ... this is a very powerful g.o.f. tool.
-    
+
+    - ATTENTION: It is rather sow to large number of events! 
     """
     def __init__ ( self                   ,
                    mc2mc     = False      ,
@@ -639,8 +642,14 @@ class PPDnp(GoFnp) :
                    parallel  = False      , 
                    silent    = False      ,
                    progress  = True       , 
-                   maxsize   = 1000000    , **params ) :
+                   maxsize   = 10000000   , **params ) :
 
+        
+        # =================================================================================
+        if parallel and not run_parallel ( parallel ) :
+            logger.warning ( "%s: Parallel processing is switched OFF!" % typename ( self ) ) 
+            parallel = False 
+                    
         n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
         
         GoFnp.__init__ ( self                 ,
@@ -726,7 +735,7 @@ class PPDnp(GoFnp) :
             # =================================================================
             result = 0.0
             nsplit = ( n1 * n2 ) // nnmax  + 2
-            ## split the second (larger) dataset into `nsplit` parts 
+            ## split the second (larger) dataset into `nsplit` parts
             for f , l in split_n_range ( 0 , n2 , nsplit ) :
                 result += self.sum_distances ( data1 , data2 [ f : l ] )
             return result 
@@ -735,13 +744,11 @@ class PPDnp(GoFnp) :
         scale = -0.5 / ( self.sigma ** 2 ) 
         distance_type , transform , _ = psi_conf ( self.psi , scale )
         ##
-        
         ## calculate all pair-wise distances
-        distances = pairwise_distances ( data1 , data2 , metric = distance_type , **self.params )
-
+        distances = pairwise_distances ( data1 , data2 , metric = distance_type , **self.params )        
         distances = distances [ distances > 0 ]
         if transform : distances  = transform ( distances )        
-        ## 
+        ##
         return numpy.sum ( distances )
     
     # =========================================================================
@@ -778,8 +785,9 @@ class PPDnp(GoFnp) :
         
         ## calculate sums of distances, Eq (3.7) 
         result  = self.sum_distances ( uds1 , uds1 ) / ( n1 * ( n1 - 1 ) )
+
         result -= self.sum_distances ( uds1 , uds2 ) / ( n1 *   n2       )
-    
+
         ## add the distances from the second dataset? 
         if self.mc2mc : result += self.sum_distances ( uds2 , uds2 ) / ( n2 * ( n2 - 1 ) )
         
@@ -787,6 +795,7 @@ class PPDnp(GoFnp) :
         result = float ( result )
         self.t_value = result
         ## 
+
         return result
 
     # =========================================================================    
@@ -863,7 +872,6 @@ class DNNnp(GoFnp) :
         
         n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
 
-        ## 
         if 'metric' in params : params.pop ( 'metric' )
         if 'p'      in params : params.pop ( 'p'      )
         
@@ -881,8 +889,16 @@ class DNNnp(GoFnp) :
         if   isinstance ( histo , ROOT.TH1 ) :
             self.__histo = histo
         elif isinstance ( histo , int      ) and 1 < histo :
-            self.__histo = ROOT.TH1D ( hID() , 'U-values' , histo , -0.1 , 1.1 ) 
+            self.__histo = ROOT.TH1D ( hID () , 'U-values' , histo , -0.05 , 1.05 ) 
 
+    # ==================================================================================
+    @property
+    def config ( self ) :
+        """`config` : get all (configuration) parameters"""
+        conf = super().config 
+        conf [ 'histo' ] = self.__histo
+        return conf 
+            
     # =========================================================================
     ## Are weights  are supported by this estimators?
     @property 
@@ -899,7 +915,12 @@ class DNNnp(GoFnp) :
         """`two_samples`: Can this estimator be used for comparison of two samples?
         """
         return False 
-
+    
+    @property
+    def histo ( self ) :
+        """`histo` : the histogram with distribution of U-values"""
+        return self.__histo
+    
     # =========================================================================
     ## Calculate the t-value
     #  @see Eqs. (3.16) in M.Williams' paper
@@ -1014,7 +1035,6 @@ class DNNnp(GoFnp) :
                              weight2   = weight2 ,                             
                              normalize = True    )
     
-    '''
     # ============================================================================
     ## p-value is not really defined here 
     # 
@@ -1030,12 +1050,7 @@ class DNNnp(GoFnp) :
         
         However, one always can run straightforward pseudoexperiments 
         """        
-    raise NotImplementedError( "p-value is not defined for DNNnp!" )
-    '''
-    @property
-    def histo ( self ) :
-        """`histo` : the histogram with distribution of U-values"""
-        return self.__histo
+        raise NotImplementedError( "p-value is not defined for DNNnp!" )
 
 # =============================================================================
 ## @class Mahalanobis

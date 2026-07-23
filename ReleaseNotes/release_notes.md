@@ -1,7 +1,13 @@
+# v3.7.4.2
+
 ## New features
 
+  1. Simplify Goodness-of-Fit for SimFit
+  
 ## Bug fixes
 
+  1. Several bug-fixes
+  
 ## Backward incompatible
 
 # v3.7.4.0

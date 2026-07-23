@@ -753,25 +753,29 @@ def  balanced ( expression , left = '([' , right = ')]' ) :
 # =============================================================================
 ## The simplest splitter of N-object into n groups :
 #  @code
-#  for i in spliter ( 10 , 3 ) : print ( i ) 
+#  for i in splitеer ( 10 , 3 ) : print ( i ) 
 #  @endcode
-def splitter ( N , n ) :
+def splitter ( N , n , uniform = True ) :
     """ The simplest splitter of N-objects into n groups
-    >>> for i in spliter ( 10 , 3 ) : print ( i ) 
+    >>> for i in splitter ( 10 , 3 ) : print ( i ) 
     """
     assert isinstance ( N , int ) and 0 <= N , "Invalid N"
     assert isinstance ( n , int ) and 1 <= n , "Invalid n"
-    if   not N  : pass
-    elif 1 == n : yield N
-    else :
-        a , b = divmod ( N , n )
-        if   not a :
-            for i in range ( b ) : yield 1
-        elif not b :
-            for i in range ( n ) : yield a
-        else :
-            for i in range ( b     ) : yield a + 1
-            for i in range ( b , n ) : yield a 
+    
+    if N <= n :
+        for _ in range ( N ) : yield 1
+        return 
+
+    size , reminder = divmod ( N , n )
+    
+    if not uniform :
+        for _ in range ( n - 1 ) : yield size
+        yield size + reminder
+        return
+    
+    for _ in range ( n - reminder ) : yield size 
+    for _ in range (     reminder ) : yield size + 1
+
 # =========================================================================
 ## absract property decorator
 #  @code

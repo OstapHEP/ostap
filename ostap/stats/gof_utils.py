@@ -83,6 +83,7 @@ try : # =======================================================================
                              metric = 'sqeuclidean'   , *  ,
                              n_jobs = None            , **kwargs ) : 
         """ Calculate all pair-wise distances using scipy 
+        -   scipy.spatial.distance.cdist  
         """
         return _scipy_pw_distances ( data1 , data2 , metric , **kwargs ).flatten()
     # =========================================================================
@@ -101,8 +102,10 @@ try : # =======================================================================
     def pairwise_distances ( data1  ,
                              data2  ,
                              metric = 'sqeuclidean' , **kwargs ) : 
-        """ Calculate all pair-wise distances using scikit-learn 
+        """ Calculate all pair-wise distances using scikit-learn
+        -  see sclearn.metrics.pairwise_distances 
         """
+        if data1 is data2 : data2 = None 
         return _sk_pw_distances ( data1 , data2 , metric , **kwargs ).flatten()
     # =========================================================================
 except ImportError : # ========================================================
@@ -483,8 +486,7 @@ Labels = {
     'BJ'  : 'Berk-Jones'         ,        
     'NLL' : '-log L'             ,
     'AIC' : 'Aikaike IC'         ,
-    'BIC' : 'Bayesian IC'        ,
-    
+    'BIC' : 'Bayesian IC'        ,    
 }
 # =============================================================================
 ## lower-case shortcuts:
@@ -504,6 +506,16 @@ Keys = {
 # =============================================================================
 assert Labels.keys() == Keys.keys() , "Mismatch between Labels & Keys structures!"
 # =============================================================================
+__all_1D_names = cidict ( transform = cidict_fun )
+for k,vv in Keys.items() :
+    for v in vv : __all_1D_names [ v ] = k
+# =============================================================================
+## Get the internal  name for extrnal 1D-method
+def method_1D ( mm ) :
+    """ Get the internal  name for external 1D-method
+    """
+    return __all_1D_names.get ( mm , '' ) 
+# =============================================================================        
 ## clip p-value 
 def clip_pvalue ( pvalue , clip = 0.5 ) :
     """ Clip p-value

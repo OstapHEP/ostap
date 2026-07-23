@@ -26,14 +26,12 @@ from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.basic        import typename, numcpu 
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
+                                         GoFSimFitType   , 
                                          GoFSimFit1D     , 
-                                         GoFSimFit1DToys ,
-                                         MIXSimFit       ,
-                                         PPDSimFit       ,
-                                         DNNSimFit       ,
-                                         USTATSimFit     )  
+                                         GoFSimFit1DToys )
 from   ostap.stats.gof_utils    import useLightGBM, useXGBoost, useCatBoost
 from   ostap.stats.gof1d        import GoF_1D
+import ostap.stats.gofnd        as     GnD 
 import ostap.logger.table       as     T 
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.models     as     Models 
@@ -68,15 +66,18 @@ dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )
 # ============================================================================
 small = numcpu () <= 8
 
+
+NS1  = 2000
+NB1  =  100
+NS2  =  200
+NB2  = 1000     
+
 # =============================================================================
 ## high statistic, low-background "control channel"
 # =============================================================================
 
 mean1  = 2.0
 sigma1 = 0.50
-NS1    = 2000
-NB1    =  100
-
 for i in range ( NS1 )  :    
     v1 = random.gauss ( mean1 , sigma1 )
     while not v1 in mass1 : v1 = random.gauss ( mean1 , sigma1 )        
@@ -92,8 +93,6 @@ for i in range ( NB1 ) :
 # ============================================================================
 ## low statistic, high-background "signal channel"
 # ============================================================================
-NS2     =    200
-NB2     =   1000     
 mean2   = mean1  + 1.0
 sigma2  = sigma1 * 0.5
 
@@ -232,154 +231,69 @@ def test_gof_simfit () :
         # =========================================================================
         nToys    = 20 ## realistic values should be well in excess of 100
         mcFactor =  5 ## realistic values should be well in excess of 10                  
-        
-    gof_mix  = MIXSimFit   ( model_sim             , 
-                             dataset               ,
-                             parameters = r        ,                          
-                             mcFactor   = mcFactor , 
-                             nToys      = nToys    ,
-                             ## parallel   = True     , 
-                             silent     = False    )
-    
-    gof_ppd  = PPDSimFit   ( model_sim             , 
-                             dataset               ,
-                             parameters = r        ,                          
-                             mcFactor   = mcFactor , 
-                             nToys      = nToys    ,
-                             sigma      = 0.5      , ## can be (and should be!) varied between 0.1 and 1.0 
-                             ## parallel   = True     , 
-                             silent     = False    )
-    
-    gof_dnn  = DNNSimFit   ( model_sim             , 
-                             dataset               ,
-                             parameters = r        ,                          
-                             nToys      = nToys    ,
-                             ## parallel   = True     , 
-                             silent     = False    )
-    
-    gof_ustat = USTATSimFit ( model_sim             , 
-                              dataset               ,
-                              parameters = r        ,                          
-                              nToys      = nToys    ,
-                              ## parallel   = True     , 
-                              silent     = False    )
-    
-    for gof in ( gof_mix   ,
-                 gof_ppd   ,                 
-                 gof_dnn   ,
-                 gof_ustat ) : 
-        
-        gof_type = typename ( gof )
-        
-        with timing ( 'Processing %s' % gof_type , logger = logger ) :
-            
-            title = 'GoF %s' % gof_type  
-            logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )             
-            for sample  in gof.gofs :
-                with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) ) :
-                    gof.draw ( sample  )
 
-    # =========================================================================
-    ## Use universal SimFit-GoF tool with 1D estiamtors 
-    # =========================================================================
-
-    estimators = { 'A'  : GoF_1D ( 'KS' ) , 'B' : GoF_1D ( 'KS' ) } 
+    gofs = [] 
     
-    gof2       = GoFSimFit ( model_sim                ,
-                             dataset                  ,
-                             estimators  = estimators ,  
-                             parameters  = r          )
-    
-    gof2.run ( nToys , silent = False , parallel = True )
-    
-    title = 'GoF/ID-KS for SimFit' 
-    logger.info ( '%s:\n%s' % ( title , gof2.table ( title = title , prefix = '# ' ) ) ) 
-
-    # =========================================================================
-    ## Use universal SimFit-GoF tool with ND estimators 
-    # =========================================================================
-    from   ostap.stats.gofnd        import MIX 
-
-    estimators = { 'A'  : MIX () , 'B' : MIX ()  } 
-    
-    gof3       = GoFSimFit ( model_sim                ,
-                             dataset                  ,
-                             estimators  = estimators ,  
-                             parameters  = r          , 
-                             nToys       = nToys      , 
-                             silent      = False      , 
-                             parallel    = True       )
-    
-    ## gof3.run ( nToys , silent = False , parallel = True )
-    
-    title = 'GoF/MIX for SimFit' 
-    logger.info ( '%s:\n%s' % ( title , gof3.table ( title = title , prefix = '# ' ) ) ) 
+    gof_configs = [ GnD.MIX ( mcFactor = mcFactor               ) , 
+                    GnD.PPD ( mcFactor = mcFactor , sigma = 0.1 ) , 
+                    GnD.DNN   () ,
+                    GnD.USTAT () ]
 
     # =========================================================================
     ## LightGBM ?
     # =========================================================================
     if useLightGBM() :
         from   ostap.stats.gofnd import ADVAL_LightGBM as GOF  
-
-        estimators = { 'A' : GOF ( parallel = True ) , 
-                       'B' : GOF ( parallel = True ) } 
-    
-        gof4       = GoFSimFit ( model_sim                ,
-                             dataset                  ,
-                             estimators  = estimators ,  
-                             parameters  = r          , 
-                             nToys       = nToys      , 
-                             silent      = False      , 
-                             parallel    = True       )
-    
-        ## gof4.run ( nToys , silent = False , parallel = True )
-    
-        title = 'GoF/LightGBM for SimFit ' 
-        logger.info ( '%s:\n%s' % ( title , gof4.table ( title = title , prefix = '# ' ) ) ) 
- 
+        gof_configs.append (  GOF ( parallel = True ) )
+        
     # =========================================================================
     ## XGBoost?
     # =========================================================================
     if useXGBoost () :
         from   ostap.stats.gofnd import ADVAL_XGBoost as GOF  
+        gof_configs.append (  GOF ( parallel = True ) )
 
-        estimators = { 'A' : GOF ( parallel = True ) , 
-                       'B' : GOF ( parallel = True ) } 
-    
-        gof5       = GoFSimFit ( model_sim                ,
-                             dataset                  ,
-                             estimators  = estimators ,  
-                             parameters  = r          , 
-                             nToys       = nToys      , 
-                             silent      = False      , 
-                             parallel    = True       )
-    
-        ## gof5.run ( nToys , silent = False , parallel = True )
-    
-        title = 'GoF/XGBoost for SimFit ' 
-        logger.info ( '%s:\n%s' % ( title , gof5.table ( title = title , prefix = '# ' ) ) ) 
-    
     # =========================================================================
     ## CatBoost?
     # =========================================================================
     if useCatBoost () :
         from   ostap.stats.gofnd import ADVAL_CatBoost as GOF  
+        gof_configs.append (  GOF ( parallel = True ) )
+        
+        
+    gofs = [ GoFSimFitType ( GOF        = gof       ,
+                             pdf        = model_sim ,
+                             dataset    = dataset   ,
+                             parameters = r         ) for gof in gof_configs ]
+    
+    
+    # ========================================================================
+    ## use differnt methods
+    # =======================================================================
+    estimators = { 'A' : GoF_1D  ( 'KS' ) , 
+                   'B' : GnD.MIX ( parallel = True      ) }
+    
+    gofs.append ( GoFSimFit ( model_sim                ,
+                              dataset                  ,
+                              estimators  = estimators ,  
+                              parameters  = r          , 
+                              nToys       = nToys      , 
+                              silent      = False      , 
+                              parallel    = True       ) )
+    
+    # ========================================================================
+    for gof in gofs : 
+        
+        gof_type = typename ( gof )
+        
+        with timing ( 'Processing %s' % gof_type , logger = logger ) :            
+            gof.run ( nToys = nToys , silent = False )
+            title = gof.title 
+            logger.info ( '%s:\n%s' % ( title , gof.report ( prefix = '# ' ) ) )             
+            ## for sample  in gof.gofs :
+            ##     with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) ) :
+            ##        gof.draw ( sample  )
 
-        estimators = { 'A' : GOF ( parallel = True ) , 
-                       'B' : GOF ( parallel = True ) } 
-    
-        gof6       = GoFSimFit ( model_sim                ,
-                             dataset                  ,
-                             estimators  = estimators ,  
-                             parameters  = r          , 
-                             nToys       = nToys      , 
-                             silent      = False      , 
-                             parallel    = True       )
-    
-        ## gof6.run ( nToys , silent = False , parallel = True )
-    
-        title = 'GoF/CatBoost for SimFit ' 
-        logger.info ( '%s:\n%s' % ( title , gof6.table ( title = title , prefix = '# ' ) ) ) 
     
 # =============================================================================
 ## check that everything is serializable
@@ -412,7 +326,7 @@ if '__main__' == __name__ :
         test_gof_simfit ()
         
     ## check finally that everything is serializeable:
-    with timing ('Save to DB:'     , logger ) : test_db ()          
+    ## with timing ('Save to DB:'     , logger ) : test_db ()          
     
 # =============================================================================
 ##                                                                      The END 

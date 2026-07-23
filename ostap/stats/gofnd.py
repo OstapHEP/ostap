@@ -557,8 +557,8 @@ class PPD(GoF) :
     #  @param psi      : type of psi/distance function 
     #  @param sigma    : sigma scale (used for psi=`gaussian`)
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
-    def __init__ ( self                   ,
-                   mc2mc     = False      ,
+    def __init__ ( self                   , * , 
+                   mc2mc     = False      , 
                    nToys     = 1000       ,
                    psi       = 'gaussian' ,
                    sigma     = 0.10       ,
@@ -577,7 +577,7 @@ class PPD(GoF) :
         """
         
         GoF.__init__ ( self ,
-                       estimator = GNP.PPDnp ( mc2mc    = mc2mc    ,
+                       estimator = GNP.PPDnp ( mc2mc    = mc2mc    , 
                                                nToys    = nToys    ,
                                                psi      = psi      ,
                                                sigma    = sigma    ,

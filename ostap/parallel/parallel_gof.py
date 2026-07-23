@@ -115,7 +115,7 @@ def parallel_goftoys ( gof             ,
     assert isinstance ( nToys  , integer_types ) and 1 <= nToys  ,\
         'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
     
-    if not nSplit : nSplit = max ( 2 , 2 * numcpu () ) 
+    if not nSplit : nSplit = max ( 2 , 5 * numcpu () ) 
     
     assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
         'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
@@ -132,7 +132,6 @@ def parallel_goftoys ( gof             ,
                    silent   = silent or not progress )
         
         return toys
-
     
     ## create work manager 
     wmgr  = WorkManager ( silent   = silent and not progress ,
@@ -140,9 +139,12 @@ def parallel_goftoys ( gof             ,
 
     ## create the task 
     task  = GoFTask ( gof = gof )
-
-    ## start parallel processing! 
-    wmgr.process ( task , splitter ( nToys , nSplit )  )
+    
+    ## start parallel processing!
+    if nToys < 10 * nSplit : wmgr.process ( task , splitter ( nToys , nSplit ) ) 
+    else : 
+        ## - use one "pilot" job
+        wmgr.process ( task , [ 1 ] + list ( splitter ( nToys - 1  , nSplit ) ) )
     
     return task.results () 
 

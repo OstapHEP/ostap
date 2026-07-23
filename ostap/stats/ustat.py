@@ -293,7 +293,7 @@ class USTAT(AGoF) :
         """`weghts_supported`: Are weights supported by this estimator?
         """
         return False 
-
+    
     # =======================================================================
     ## get all configration parameters
     @property 
@@ -301,22 +301,23 @@ class USTAT(AGoF) :
         return { 'nToys'    : self.__nToys    ,  
                  'sample'   : self.__sample   , 
                  'parallel' : self.__parallel , 
-                 'sample'   : self.__sample   }
+                 'sample'   : self.__sample   , 
+                 'histo'    : self.__histo    }
     
     # =========================================================================
     ## self-print get the configuration 
-    def table (  self , prefix = '# ' ) : 
+    def table (  self , title = '' , prefix = '' ) : 
         """ print configuration """
         from ostap.logger.utils import map2table_ex
-        title = "%s configuration " % typename ( self )
+        title = title if title else "%s configuration" % typename ( self )
         return map2table_ex ( self.config , 
                               header      = ( 'Parameter' , 'type' , 'value' ) ,
                               alignment   = 'rcw'  , 
                               prefix      = prefix ,
                               title       = title  )
-    
-    def __str__  ( self ) : return self.table ( prefix = '' ) 
-    def __repr__ ( self ) : return self.__str__ ()
+
+    __str__  = table
+    __repr__ = table
     
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 

@@ -42,7 +42,8 @@ from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
 from   ostap.stats.gof_utils    import ( Labels      , Keys      ,
                                          clip_pvalue , data2vct  ,
-                                         format_row  , draw_ecdf )  
+                                         format_row  , draw_ecdf ,
+                                         method_1D   )  
 from   ostap.stats.gof          import AGoF
 from   ostap.plotting.color     import RoyalBlue, Gold   
 from   collections              import defaultdict, namedtuple
@@ -1187,9 +1188,9 @@ class GoF_1D(AGoF) :
     """ Implementation of 1D GoF estimator (AGoF interface) 
     """ 
     def __init__ ( self , what , **kwargs ) :
-        
-        assert isinstance ( what , string_types ) and what.upper() in GoF_methods , \
-            "Invalid `what`: %s/%s"% ( what , typename ( what ) ) 
+
+        mm = method_1D ( what ) 
+        assert mm in GoF_methods , "Invalid `what`: %s/%s"% ( what , typename ( what ) ) 
             
         self.__what       = what.upper()     
         self.__gof        = None 
@@ -1206,7 +1207,13 @@ class GoF_1D(AGoF) :
     def kwargs ( self ) : 
         """`kwargs` : arguments for `GoF1DToys.run`"""
         return self.__kwargs 
-       
+
+    ## allow parallel run for toys?"""
+    @property
+    def parallel ( self ) :
+        """`parallel` : allow parallel run for toys?"""
+        return True
+    
     # =========================================================================
     ## Are weights supported by this GoF estimator?
     @property 
