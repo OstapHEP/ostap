@@ -1,3 +1,9 @@
+## New features
+
+## Bug fixes
+
+## Backward incompatible
+
 # v3.7.4.0
 
 ## New features

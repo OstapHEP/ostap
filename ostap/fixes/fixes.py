@@ -14,7 +14,14 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = () ## noting to import 
 # =============================================================================
-import os 
+import os, sys 
+# ============================================================================
+if ( 3 , 13 ) <= sys.version_info :
+    import builtins
+    sys.modules['__builtin__'] = builtins   
+    if not hasattr ( builtins , "__main__" ) :
+        import __main__
+        builtins.__main__ = __main__
 # ============================================================================
 ## @class MuteC
 #  context manager to suppress pythion prinout

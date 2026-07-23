@@ -38,13 +38,6 @@ __date__    = "@OSTAP_BUILD_TIMESTAMP@"
 import sys,datetime 
 from   collections import namedtuple
 # =============================================================================
-if ( 3 , 13 ) <= sys.version_info :
-    import builtins
-    sys.modules['__builtin__'] = builtins   
-    if not hasattr(builtins, "__main__"):
-        import __main__
-        builtins.__main__ = __main__
-# =============================================================================
 version      = __version__
 VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak' ) )
 version_info = VersionInfo ( @OSTAP_VERSION_MAJOR@ ,
@@ -57,14 +50,16 @@ if   ( 3 , 11 ) <= sys.version_info :
 elif ( 3 ,  5 ) <= sys.version_info :
     build_time = datetime.datetime.fromtimestamp ( @OSTAP_BUILD_UTCUNIX@ , datetime.timezone.utc )
 else :
-    build_time = datetime.datetime.fromtimestamp ( @OSTAP_BUILD_UTCUNIX@ )    
+    build_time = datetime.datetime.fromtimestamp ( @OSTAP_BUILD_UTCUNIX@ )
+# ===============================================================================
+## integer version 
 version_int  = version_info.tweak                   +\
                version_info.patch             * 100 +\
                version_info.minor       * 100 * 100 +\
                version_info.major * 100 * 100 * 100 
                
 # =============================================================================
-##
+## apply nesessary fixes 
 import ostap.fixes.fixes
 # =============================================================================
 # @see https://patorjk.com/software/taag/#p=display&f=Roman&t=%20Ostap2
