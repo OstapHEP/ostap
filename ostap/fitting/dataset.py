@@ -495,19 +495,22 @@ def _rad_mul_ ( ds1 , ds2 ) :
         
         res  = ds1.emptyClone()
         l    = len ( ds1 )
-        for i in range ( l ) :            
+        
+        for i in range ( l ) :
+            
             if random.uniform ( 0 , 1 ) <= fraction :
+                
                 if   store_asym_errors :
                     wel , weh = ds1.weight_errors () 
                     entry = ds1.get ( i ) , ds1.weight () , wel , weh 
-                elif store_error :
+                elif store_errors :
                     entry = ds1.get ( i ) , ds1.weight () , ds1.weightError ()
                 elif weighted :
                     entry = ds1.get ( i ) , ds1.weight ()
                 else: 
                     entry = ds1.get ( i ) ,
                 ##    
-                res.append ( *entry ) 
+                res.add ( *entry ) 
                 
         return res
     
