@@ -76,7 +76,7 @@ from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
 from   ostap.utils.memory     import memory, virtualMemory, Memory
-import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime, operator  ## attention here!!
+import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime, operator, threading  ## attention here!!
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
@@ -973,7 +973,7 @@ class NumCalls (object):
 #  Count a number of  times a callable object is invoked
 numcalls = NumCalls
 
-
+# ==============================================================================
 ## @class Singleton
 #  Simple metaclass for the singleton
 #  @code
@@ -992,18 +992,19 @@ class Singleton(type) :
     >>> print ( a is b ) 
     """
     _INSTANCES = {}
-    def __call__ ( klass , *args , **kwargs):
+    _LOCK      = threading.Lock()
+    # ==========================================================================
+    def __call__ ( klass , *args , **kwargs ) :
         """ Singleton """
-        cls = klass._INSTANCES.get ( klass , None )
-        if cls is None :
-            ## create it:  
-            cls = super(Singleton, klass).__call__ ( *args , **kwargs )
-            klass._INSTANCES [ klass ] = cls
-        else:
-            ## Re-initialize it 
-            cls.__init__ ( *args , **kwargs )
-
-        return cls 
+        ## already created ? 
+        if klass not in klass._INSTANCES:
+            with klass._LOCK :
+                if klass not in klass._INSTANCES:
+                    instance = super().__call__ ( *args , **kwargs )
+                    klass._INSTANCES [ klass ] = instance
+                    return instance
+                
+        return klass._INSTANCES [ klass ]
 
 # ==============================================================================
 ## Copy file with the progress
