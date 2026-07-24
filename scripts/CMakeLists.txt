@@ -28,7 +28,12 @@ configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/.thisostap.sh.in"
   "${CMAKE_CURRENT_BINARY_DIR}/thisostap.sh" @ONLY
   )
-    
+
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/.thisostap.csh.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/thisostap.csh" @ONLY
+  )
+
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/.ostaprc.in"
   "${CMAKE_CURRENT_BINARY_DIR}/.ostaprc"     @ONLY
@@ -58,6 +63,11 @@ install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/.rootlogon.C
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 	
 install( FILES ${CMAKE_CURRENT_BINARY_DIR}/thisostap.sh  
+         DESTINATION . 
+         COMPONENT   scripts 
+         PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+install( FILES ${CMAKE_CURRENT_BINARY_DIR}/thisostap.csh  
          DESTINATION . 
          COMPONENT   scripts 
          PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

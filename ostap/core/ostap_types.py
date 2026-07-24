@@ -101,11 +101,12 @@ array_buffer_types = ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' , 'b' , 'B'
 # float types in numpy
 numpy_floats = ( numpy.float16  ,
                  numpy.float32  ,
-                 numpy.float64  ,
-                 numpy.float128 ) 
+                 numpy.float64  )
+# =============================================================================
+if hasattr ( numpy , 'float128' ) : numpy_floats = numpy_floats + ( numpy.float128 , )
+# =============================================================================
 ## sometimes we need to ensure that dictionary is ordered 
-ordered_dict = dict
-
+ordered_dict = dict ## = OrderedDict  ()   ## ensure ordering!
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :

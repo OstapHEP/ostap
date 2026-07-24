@@ -1,8 +1,18 @@
+## New features
+
+   1. provide the first version of `thisostap.csh` script to setup the environment for `csh/tcsh`.
+   
+## Bug fixes
+
+   1. Bug fixes for OSX
+   
+## Backward incompatible
+
 # v3.7.4.4
 
 ## New features
 
-   1.  `scripts` installs as `bin`  : fo netter coherency and simlification of conda builds
+   1.  `scripts` installs as `bin`  : for netter coherency and simlification of conda builds
 
 ## Bug fixes
 

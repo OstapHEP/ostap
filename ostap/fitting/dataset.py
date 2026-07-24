@@ -24,14 +24,15 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights
     )
 # =============================================================================
-from   collections                  import OrderedDict, defaultdict 
+from   collections                  import defaultdict 
 from   ostap.core.meta_info         import root_info
 from   ostap.core.core              import ( Ostap          ,
                                              VE , SE , dsID , 
                                              valid_pointer  )
 from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              num_types     , sequence_types ,
-                                             sized_types   , dictlike_types )
+                                             sized_types   , dictlike_types ,
+                                             ordered_dict  )
 from   ostap.utils.basic            import loop_items  , typename            
 from   ostap.math.math_base         import std, evt_range, FIRST_ENTRY, LAST_ENTRY, isint, isequal   
 from   ostap.utils.random_seed      import random_seed
@@ -3397,7 +3398,7 @@ def ds_slice ( data                       ,
     assert not missing , "Variables are not in the table: %s" % ','.join ( missing )
     
     nEvents = 0    
-    result  = OrderedDict()   ## ensure ordering! 
+    result  = ordered_dict () 
     for var in varlst :
         column         = table [ var ]
         

@@ -1,7 +1,7 @@
 #!/bin/sh
 # =====================================================================
 # @file
-# Helper script to define the environment for ostap-3.7.4.4 
+# Helper script to define the environment for ostap-@OSTAP_VERSION@ sh/bash/ksh/zsh 
 # =====================================================================
 
 if [ -n "${PYTHONNOUSERSITE}" ]; then
@@ -56,10 +56,11 @@ EOF
 # =============================================================================
 ## Clean the path 
 # =============================================================================
-if [ -n "${OSTAP_DIR}" ]; then
+if [ -n "${OSTAP_DIR}" ] && [ -h "${OSTAP_DIR}" ] ; then
     old_ostap_dir="${OSTAP_DIR}"
     PATH=$(_path_remove PATH "${old_ostap_dir}/bin"); export PATH
     PYTHONPATH=$(_path_remove PYTHONPATH "${old_ostap_dir}"); export PYTHONPATH
+    PYTHONPATH=$(_path_remove PYTHONPATH "${old_ostap_dir}@OSTAP_PYTHON_SITE_DIR"); export PYTHONPATH
     LD_LIBRARY_PATH=$(_path_remove LD_LIBRARY_PATH "${old_ostap_dir}@OSTAP_PYTHON_SITE_DIR@"); export LD_LIBRARY_PATH
     MANPATH=$(_path_remove MANPATH "${old_ostap_dir}/doc/man"); export MANPATH
 fi
@@ -108,9 +109,6 @@ MANPATH=$(_path_prepend MANPATH "${OSTAP_DIR}/doc/man"); export MANPATH
 unset -f _path_prepend
 unset -f _path_remove 
  
-unset -f _path_prepend
-unset -f _path_remove 
-
 # =====================================================================
 #                                                               The END 
 # =====================================================================

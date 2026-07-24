@@ -1,0 +1,120 @@
+
+#!/bin/csh
+# =====================================================================
+# @file
+# Helper script to define the environment for ostap-@OSTAP_VERSION@ csh/tcsh
+# =====================================================================
+
+if ( $?PYTHONNOUSERSITE ) then
+    echo "thisostap.h: unset PYTHONNOUSERSITE ${PYTHONNOUSERSITE}"
+    unsetenv PYTHONNOUSERSITE
+endif
+
+# =============================================================================
+## Clean the path (remove old OSTAP entries if OSTAP_DIR was previously set)
+# =============================================================================
+if ( $?OSTAP_DIR ) then
+    if ( "$OSTAP_DIR" != "" ) then
+        set old_ostap_dir="$OSTAP_DIR"
+
+        if ( $?PATH ) then
+            setenv PATH `python -c "import os,sys; path=os.environ.get('PATH','').split(os.pathsep); item=sys.argv[1]; print(os.pathsep.join([p for p in path if p and os.path.exists(p) and os.path.isdir(p) and not (os.path.exists(item) and os.path.samefile(p, item))]))" "${old_ostap_dir}/bin"`
+        endif
+
+        if ( $?PYTHONPATH ) then
+            setenv PYTHONPATH `python -c "import os,sys; path=os.environ.get('PYTHONPATH','').split(os.pathsep); item=sys.argv[1]; print(os.pathsep.join([p for p in path if p and os.path.exists(p) and os.path.isdir(p) and not (os.path.exists(item) and os.path.samefile(p, item))]))" "${old_ostap_dir}"`
+            setenv PYTHONPATH `python -c "import os,sys; path=os.environ.get('PYTHONPATH','').split(os.pathsep); item=sys.argv[1]; print(os.pathsep.join([p for p in path if p and os.path.exists(p) and os.path.isdir(p) and not (os.path.exists(item) and os.path.samefile(p, item))]))" "${old_ostap_dir}@OSTAP_PYTHON_SITE_DIR@"`
+        endif
+
+        if ( $?LD_LIBRARY_PATH ) then
+            setenv LD_LIBRARY_PATH `python -c "import os,sys; path=os.environ.get('LD_LIBRARY_PATH','').split(os.pathsep); item=sys.argv[1]; print(os.pathsep.join([p for p in path if p and os.path.exists(p) and os.path.isdir(p) and not (os.path.exists(item) and os.path.samefile(p, item))]))" "${old_ostap_dir}@OSTAP_PYTHON_SITE_DIR@"`
+        endif
+
+        if ( $?MANPATH ) then
+            setenv MANPATH `python -c "import os,sys; path=os.environ.get('MANPATH','').split(os.pathsep); item=sys.argv[1]; print(os.pathsep.join([p for p in path if p and os.path.exists(p) and os.path.isdir(p) and not (os.path.exists(item) and os.path.samefile(p, item))]))" "${old_ostap_dir}/doc/man"`
+        endif
+    endif
+endif
+
+# =============================================================================
+## Define OSTAP_DIR as a directory where this script is located
+# =============================================================================
+set SCRIPT_PATH=""
+
+# 1. Если запущен интерактивный или обычный tcsh
+if ( $?tcsh ) then
+    set ARGS=($_)
+    foreach arg ($ARGS)
+        if ( "$arg" != "" && "$arg" != "csh" && "$arg" != "tcsh" ) then
+            if ( -f "$arg" ) then
+                set SCRIPT_PATH="$arg"
+                break
+            endif
+        endif
+    end
+endif
+
+# 2. Переменная $script
+if ( "$SCRIPT_PATH" == "" && $?script ) then
+    if ( "$script" != "" && "$script" != "csh" && "$script" != "tcsh" ) set SCRIPT_PATH="$script"
+endif
+
+# 3. Поиск открытого файлаthisostap.csh через PID текущей оболочки ($$) в /proc/$$/fd
+if ( "$SCRIPT_PATH" == "" || "$SCRIPT_PATH" == "csh" || "$SCRIPT_PATH" == "tcsh" ) then
+    if ( -d /proc/$$/fd ) then
+        set SCRIPT_PATH=`ls -l /proc/$$/fd | grep -o '/.*thisostap\.csh' | head -n 1`
+    endif
+endif
+
+# 4. Если /proc недоступен, пробуем lsof для текущего процесса PID
+if ( "$SCRIPT_PATH" == "" || "$SCRIPT_PATH" == "csh" || "$SCRIPT_PATH" == "tcsh" ) then
+    which lsof >& /dev/null
+    if ( $status == 0 ) then
+        set SCRIPT_PATH=`lsof -p $$ 2>/dev/null | grep -o '/.*thisostap\.csh' | head -n 1`
+    endif
+endif
+
+# 5. Крайний фолбэк на $0
+if ( "$SCRIPT_PATH" == "" ) then
+    set SCRIPT_PATH="$0"
+endif
+
+# Вычисляем абсолютный путь к директории (если путь относительный — привязываем к pwd)
+if ( "$SCRIPT_PATH" !~ /* ) then
+    set SCRIPT_PATH="`pwd`/$SCRIPT_PATH"
+endif
+
+setenv OSTAP_DIR `python -c "import os, sys; print(os.path.dirname(os.path.realpath(sys.argv[1])))" "$SCRIPT_PATH"`
+setenv OSTAP_VERSION "@OSTAP_VERSION@"
+
+# =============================================================================
+## Update environment paths (Prepend new OSTAP paths and remove duplicates)
+# =============================================================================
+
+# 1. PATH
+if ( ! $?PATH ) setenv PATH ""
+setenv PATH `python -c "import os,sys; path=os.environ.get('PATH','').split(os.pathsep); item=sys.argv[1]; path.insert(0,item) if item else None; np=[]; [np.append(os.path.normpath(p)) for p in path if p and os.path.isdir(p) and os.path.normpath(p) not in np]; print(os.pathsep.join(np))" "${OSTAP_DIR}/bin"`
+
+# 2. PYTHONPATH
+if ( ! $?PYTHONPATH ) setenv PYTHONPATH ""
+if ( -d "${OSTAP_DIR}@OSTAP_PYTHON_SITE_DIR@" ) then
+    setenv PYTHONPATH `python -c "import os,sys; path=os.environ.get('PYTHONPATH','').split(os.pathsep); item=sys.argv[1]; path.insert(0,item) if item else None; np=[]; [np.append(os.path.normpath(p)) for p in path if p and os.path.isdir(p) and os.path.normpath(p) not in np]; print(os.pathsep.join(np))" "${OSTAP_DIR}@OSTAP_PYTHON_SITE_DIR@"`
+else
+    setenv PYTHONPATH `python -c "import os,sys; path=os.environ.get('PYTHONPATH','').split(os.pathsep); item=sys.argv[1]; path.insert(0,item) if item else None; np=[]; [np.append(os.path.normpath(p)) for p in path if p and os.path.isdir(p) and os.path.normpath(p) not in np]; print(os.pathsep.join(np))" "${OSTAP_DIR}"`
+endif
+
+# 3. LD_LIBRARY_PATH
+if ( ! $?LD_LIBRARY_PATH ) setenv LD_LIBRARY_PATH ""
+setenv LD_LIBRARY_PATH `python -c "import os,sys; path=os.environ.get('LD_LIBRARY_PATH','').split(os.pathsep); item=sys.argv[1]; path.insert(0,item) if item else None; np=[]; [np.append(os.path.normpath(p)) for p in path if p and os.path.isdir(p) and os.path.normpath(p) not in np]; print(os.pathsep.join(np))" "${OSTAP_DIR}/lib"`
+
+# 4. MANPATH
+if ( ! $?MANPATH ) setenv MANPATH ""
+setenv MANPATH `python -c "import os,sys; path=os.environ.get('MANPATH','').split(os.pathsep); item=sys.argv[1]; path.insert(0,item) if item else None; np=[]; [np.append(os.path.normpath(p)) for p in path if p and os.path.isdir(p) and os.path.normpath(p) not in np]; print(os.pathsep.join(np))" "${OSTAP_DIR}/doc/man"`
+
+# Очистка локальных переменных
+unset SCRIPT_PATH
+if ( $?ARGS ) unset ARGS
+
+# =====================================================================
+#                                                               The END 
+# =====================================================================
