@@ -1,0 +1,115 @@
+#!/usr/bin/fish
+# =====================================================================
+# @file
+# Helper script to define the environment for ostap-@OSTAP_VERSION@ (fish shell)
+# =====================================================================
+
+if set -q PYTHONNOUSERSITE
+    printf 'thisostap.h: unset PYTHONNOUSERSITE %s\n' "$PYTHONNOUSERSITE"
+    set -e PYTHONNOUSERSITE
+end
+
+# Вспомогательные функции для редактирования путей
+function _path_prepend
+    cat <<EOF | python - "$argv[1]" "$argv[2]"
+import os, sys
+path = sys.argv[1] 
+item = sys.argv[2] if 2 < len(sys.argv) else ''
+item = item.strip() 
+path = os.environ.get(path, '')
+path = path.split(os.pathsep) 
+if item: path.insert(0, item) 
+npath = []
+for p in path: 
+    if not os.path.exists(p): continue 
+    if not os.path.isdir(p): continue 
+    pn = os.path.normpath(p) 
+    if pn in npath: continue 
+    npath.append(pn)
+path = os.pathsep.join(npath)
+print(path)
+EOF
+end
+
+function _path_remove
+    cat <<EOF | python - "$argv[1]" "$argv[2]"
+import os, sys
+path = sys.argv[1] 
+item = sys.argv[2] if 2 < len(sys.argv) else ''
+item = item.strip() 
+path = os.environ.get(path, '')
+path = path.split(os.pathsep) 
+npath = []
+for p in path: 
+    if os.path.exists(item) and os.path.samefile(p, item): continue    
+    if not os.path.exists(p): continue 
+    if not os.path.isdir(p): continue 
+    pn = os.path.normpath(p) 
+    if pn in npath: continue 
+    npath.append(pn)
+path = os.pathsep.join(npath)
+print(path)
+EOF
+end
+
+# =============================================================================
+## Clean the path (если OSTAP_DIR ранее был установлен)
+# =============================================================================
+if set -q OSTAP_DIR; and test -n "$OSTAP_DIR"
+    set -l old_ostap_dir "$OSTAP_DIR"
+    
+    set -gx PATH (_path_remove PATH "$old_ostap_dir/bin")
+    set -gx PYTHONPATH (_path_remove PYTHONPATH "$old_ostap_dir@OSTAP_PYTHON_SITE_DIR@")
+    set -gx PYTHONPATH (_path_remove PYTHONPATH "$old_ostap_dir")
+    set -gx LD_LIBRARY_PATH (_path_remove LD_LIBRARY_PATH "$old_ostap_dir/lib")
+    set -gx MANPATH (_path_remove MANPATH "$old_ostap_dir/doc/man")
+end
+
+# =============================================================================
+## Define OSTAP_DIR as a directory where the script is located
+# =============================================================================
+# В fish путь к текущему выполняемому скрипту/источнику определяется через 'status filename'
+set -l SCRIPT_PATH (status filename)
+
+set -gx OSTAP_DIR "$SCRIPT_PATH"
+
+# =============================================================================
+## Resolve symlinks
+# =============================================================================
+while test -L "$OSTAP_DIR"
+    set -l DIR (cd (dirname "$OSTAP_DIR") >/dev/null 2>&1; and pwd)
+    set -l LINK_TARGET (readlink "$OSTAP_DIR")
+    
+    switch "$LINK_TARGET"
+        case '/*'
+            set OSTAP_DIR "$LINK_TARGET"
+        case '*'
+            set OSTAP_DIR "$DIR/$LINK_TARGET"
+    end
+end
+
+set -gx OSTAP_DIR (cd (dirname "$OSTAP_DIR") >/dev/null 2>&1; and pwd)
+
+set -gx OSTAP_VERSION "@OSTAP_VERSION@"
+
+# =============================================================================
+## Update environment paths
+# =============================================================================
+set -gx PATH (_path_prepend PATH "$OSTAP_DIR/bin")
+
+if test -d "$OSTAP_DIR@OSTAP_PYTHON_SITE_DIR@"
+    set -gx PYTHONPATH (_path_prepend PYTHONPATH "$OSTAP_DIR@OSTAP_PYTHON_SITE_DIR@")
+else
+    set -gx PYTHONPATH (_path_prepend PYTHONPATH "$OSTAP_DIR")
+end
+
+set -gx LD_LIBRARY_PATH (_path_prepend LD_LIBRARY_PATH "$OSTAP_DIR/lib")
+set -gx MANPATH (_path_prepend MANPATH "$OSTAP_DIR/doc/man")
+
+# Удаляем временные функции
+functions -e _path_prepend
+functions -e _path_remove
+
+# =====================================================================
+#                                                               The END 
+# =====================================================================
