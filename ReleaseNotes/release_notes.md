@@ -1,4 +1,14 @@
+
+
+## New features
+
+## Bug fixes 
+
+## Backward incompatible
+
 # v3.7.5.0
+
+## New features 
 
   1. provide the first version of `thisostap.csh` script to setup the environment for `csh/tcsh`.
   1. make the basic `thisostap.sh` script "universal": from now it should be OK for `sh/bash/ksh/zsh"
