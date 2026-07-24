@@ -1,371 +1,361 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-LCG=${1:-dev3/latest}
-PLATFORM=${2:-x86_64-el9-clang22-opt} 
+LCG="${1:-dev3/latest}"
+PLATFORM="${2:-x86_64-el9-clang22-opt}" 
 
 prefix='<<OSTAP WITH LCG>>'
 prefix_error='<<OSTAP WITH LCG ERROR>>'
 
 # =========================================================================
-# Define a safe safe_safe_exit function
+# Portable Helper Functions
 # =========================================================================
-safe_exit()
-{
-    local exit_code="${1:-0}"
-    # Check if the script is being sourced
-    if [ "$0" = "$BASH_SOURCE" ]; then
-        exit   "$exit_code" # Safe to safe_safe_exit (running as a normal script)
+
+# Check if script is sourced in POSIX-compliant shells
+is_sourced() {
+    (return 0 2>/dev/null)
+}
+
+safe_exit() {
+    exit_code="${1:-0}"
+    if is_sourced; then
+        return "$exit_code"
     else
-        return "$exit_code" # Safe to return (being run via 'source')
+        exit "$exit_code"
     fi
 }
 
-COLORS=$(tput colors 2> /dev/null)
-if [[ $? = 0  && $COLORS -gt 2 ]]
-then    
-    FWHITE='\033[1;97m'     # White
-    BGREEN='\033[42m'       # Green
-    FYELLOW='\033[1;93m'    # Yellow
-    BRED='\033[6;101m'      # Red
-    ##
-    COLOR_OK=${FYELLOW}${BGREEN}
-    COLOR_ERR=${FYELLOW}${BRED}
-    COLOR_OFF='\033[0m' 
-    ##
-    prefix=${COLOR_OK}${prefix}${COLOR_OFF}
-    prefix_error=${COLOR_ERR}${prefix_error}${COLOR_OFF}
-    ## 
+# Cross-platform canonical absolute path resolution (replaces GNU readlink -f / realpath -m)
+get_canonical_path() {
+    target_path="$1"
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c "import os, sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))" "$target_path" 2>/dev/null
+    elif command -v python >/dev/null 2>&1; then
+        python -c "import os, sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))" "$target_path" 2>/dev/null
+    elif [ -d "$target_path" ]; then
+        (cd "$target_path" && pwd -P)
+    else
+        echo "$target_path"
+    fi
+}
+
+# ==========================================================================
+## Color output setup
+# ==========================================================================
+if command -v tput >/dev/null 2>&1; then
+    COLORS=$(tput colors 2>/dev/null || echo 0)
+else
+    COLORS=0
 fi
 
-echo -e ${prefix}' LCG version='${LCG} ' PLATFORM='${PLATFORM}
+if [ "$COLORS" -gt 2 ]; then
+    # Generate literal ESC byte portably in POSIX sh
+    ESC=$(printf '\033')
+
+    COLOR_OK="${ESC}[1;97m${ESC}[42m"
+    COLOR_ERR="${ESC}[1;93m${ESC}[6;101m"
+    COLOR_OFF="${ESC}[0m"
+
+    prefix="${COLOR_OK}${prefix}${COLOR_OFF}"
+    prefix_error="${COLOR_ERR}${prefix_error}${COLOR_OFF}"
+fi
+
+printf "%s LCG version=%s PLATFORM=%s\n" "${prefix}" "${LCG}" "${PLATFORM}"
 
 # ================================================================================
-## Wake up the cvmfs fuse mount
-#  - on Windows WSL some action is required
+## Wake up the cvmfs fuse mount (on Windows WSL or dormant CVMFS mounts)
 # ================================================================================
-for run in {1..50}; do
+run=1
+while [ "$run" -le 50 ]; do
 
-    for the_dir in /cvmfs/sft.cern.ch/                             \
-		   /cvmfs/sft.cern.ch/lcg                          \
-		   /cvmfs/sft.cern.ch/lcg/views                    \
-		   /cvmfs/sft-nightlies.cern.ch                    \
-		   /cvmfs/sft-nightlies.cern.ch/lcg                \
-		   /cvmfs/sft-nightlies.cern.ch/lcg/views          \
-		   /cvmfs/sft.cern.ch/lcg/views/${LCG}             \
-		   /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}
+    for the_dir in \
+        /cvmfs/sft.cern.ch/ \
+        /cvmfs/sft.cern.ch/lcg \
+        /cvmfs/sft.cern.ch/lcg/views \
+        /cvmfs/sft-nightlies.cern.ch \
+        /cvmfs/sft-nightlies.cern.ch/lcg \
+        /cvmfs/sft-nightlies.cern.ch/lcg/views \
+        "/cvmfs/sft.cern.ch/lcg/views/${LCG}" \
+        "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}"
     do
-	
-	if [[ ! -d $the_dir ]]
-	then
-	    ( ( ls -al $the_dir >/dev/null 2>&1 ) ;
-	      ( cd     $the_dir >/dev/null 2>&1 ; ls -al .  >/dev/null 2>&1 ) ;
-	      ( ls -al $the_dir >/dev/null 2>&1 ) )
-	fi
-	
+        if [ ! -d "$the_dir" ]; then
+            ( ( ls -al "$the_dir" >/dev/null 2>&1 ) ;
+              ( cd "$the_dir" >/dev/null 2>&1 && ls -al . >/dev/null 2>&1 ) ;
+              ( ls -al "$the_dir" >/dev/null 2>&1 ) )
+        fi
     done 
-    
-    for the_file in /cvmfs/sft.cern.ch/lcg/views/setupViews.sh  \
-		    /cvmfs/sft.cern.ch/lcg/views/setupViews.csh
+
+    for the_file in \
+        /cvmfs/sft.cern.ch/lcg/views/setupViews.sh \
+        /cvmfs/sft.cern.ch/lcg/views/setupViews.csh
     do
-	( ( ls -al $the_file >/dev/null 2>&1 ) ;
-	  ( cat    $the_file >/dev/null 2>&1 ) ; 
-	  ( ls -al $the_file >/dev/null 2>&1 ) )
+        ( ( ls -al "$the_file" >/dev/null 2>&1 ) ;
+          ( cat    "$the_file" >/dev/null 2>&1 ) ; 
+          ( ls -al "$the_file" >/dev/null 2>&1 ) )
     done
-    
-    ( ( ls -al /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh > /dev/null 2>&1 ) ;
-      ( cat    /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh > /dev/null 2>&1 ) ;
-      ( ls -al /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh > /dev/null 2>&1 ) )
-        
-    if [[ -d /cvmfs/sft.cern.ch                          &&
-	  -d /cvmfs/sft.cern.ch/lcg                      &&
-	  -d /cvmfs/sft.cern.ch/lcg/views                &&
-	  -d /cvmfs/sft-nightlies.cern.ch                &&
-	  -d /cvmfs/sft-nightlies.cern.ch/lcg            &&
-	  -d /cvmfs/sft-nightlies.cern.ch/lcg/views      &&
-	  -f /cvmfs/sft.cern.ch/lcg/views/setupViews.sh  &&
-	  -f /cvmfs/sft.cern.ch/lcg/views/setupViews.csh ]] 
-    then
-	break
+
+    ( ( ls -al "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh" > /dev/null 2>&1 ) ;
+      ( cat    "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh" > /dev/null 2>&1 ) ;
+      ( ls -al "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh" > /dev/null 2>&1 ) )
+
+    if [ -d /cvmfs/sft.cern.ch ] && \
+       [ -d /cvmfs/sft.cern.ch/lcg ] && \
+       [ -d /cvmfs/sft.cern.ch/lcg/views ] && \
+       [ -d /cvmfs/sft-nightlies.cern.ch ] && \
+       [ -d /cvmfs/sft-nightlies.cern.ch/lcg ] && \
+       [ -d /cvmfs/sft-nightlies.cern.ch/lcg/views ] && \
+       [ -f /cvmfs/sft.cern.ch/lcg/views/setupViews.sh ] && \
+       [ -f /cvmfs/sft.cern.ch/lcg/views/setupViews.csh ]; then
+        break
     else
-	echo -e ${prefix}' Make a try to wake up cvmfs #'$run 
-	sleep 2
+        printf "%s Make a try to wake up cvmfs #%s\n" "${prefix}" "${run}"
+        sleep 2
     fi
-    
+    run=$((run + 1))
 done
 
-( ls -al  /cvmfs/sft.cern.ch/lcg/releases/binutils/ 2>&1 > /dev/null )
+( ls -al /cvmfs/sft.cern.ch/lcg/releases/binutils/ >/dev/null 2>&1 )
 
-if [[ ${LCG} && -d /cvmfs/sft.cern.ch/lcg/views/${LCG} ]]
-then
-    true 
+if [ -n "${LCG}" ] && [ -d "/cvmfs/sft.cern.ch/lcg/views/${LCG}" ]; then
+    :
 else
-    echo -e ${prefix_error}' Valid LCGs are:' `ls /cvmfs/sft.cern.ch/lcg/views`
-    return 110
+    printf "%s Valid LCGs are: %s\n" "${prefix_error}" "$(ls /cvmfs/sft.cern.ch/lcg/views 2>/dev/null)"
+    safe_exit 110
 fi
 
-if [[ ${PLATFORM} && -d /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM} ]]
-then
-    true
+if [ -n "${PLATFORM}" ] && [ -d "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}" ]; then
+    :
 else
-    echo -e ${prefix_error}' Valid platforms are:' `ls /cvmfs/sft.cern.ch/lcg/views/$LCG`
+    printf "%s Valid platforms are: %s\n" "${prefix_error}" "$(ls "/cvmfs/sft.cern.ch/lcg/views/${LCG}" 2>/dev/null)"
     safe_exit 111
 fi
 
-LCG_VIEWS=/cvmfs/sft.cern.ch/lcg/views
-LCG_BUILD=${LCG_VIEWS}/${LCG}/${PLATFORM}
-LCG_SETUP=${LCG_BUILD}/setup.sh
+LCG_VIEWS="/cvmfs/sft.cern.ch/lcg/views"
+LCG_BUILD="${LCG_VIEWS}/${LCG}/${PLATFORM}"
+LCG_SETUP="${LCG_BUILD}/setup.sh"
 
-LCG_BUILD=$(readlink -f ${LCG_BUILD})
-LCG_SETUP=$(readlink -f ${LCG_SETUP})
+LCG_BUILD=$(get_canonical_path "${LCG_BUILD}")
+LCG_SETUP=$(get_canonical_path "${LCG_SETUP}")
 
-if [[ ${LCG} && ${PLATFORM} &&
-      -d ${LCG_VIEWS}       && 
-      -d ${LCG_BUILD}       &&
-      -f ${LCG_SETUP}       &&
-      -r ${LCG_SETUP}       ]]
-then
-    echo -e ${prefix}$' Source LCG setup   = '${LCG_SETUP}  
-    source ${LCG_SETUP}
+if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
+   [ -d "${LCG_VIEWS}" ] && [ -d "${LCG_BUILD}" ] && \
+   [ -f "${LCG_SETUP}" ] && [ -r "${LCG_SETUP}" ]; then
+
+    printf "%s Source LCG setup   = %s\n" "${prefix}" "${LCG_SETUP}"
+    . "${LCG_SETUP}"
 else
-    echo -e ${prefix_error}' No valid LCG/PLATFORM/setup script: ' ${LCG_SETUP}
+    printf "%s No valid LCG/PLATFORM/setup script: %s\n" "${prefix_error}" "${LCG_SETUP}"
     safe_exit 112 
 fi
 
-## CLANG
-if [[ $LCG_BUILD == *"x86_64-el9-clang22-"* ]]
-then
-    wrapper=/cvmfs/sft.cern.ch/lcg/contrib/clang/22.1.5/x86_64-el9/setup-wrapper.sh
-    if [[ -f ${wrapper} && -r ${wrapper} ]]
-    then 
-	echo -e ${prefix}$' Source clang22-wrapper = '${wrapper}
-	source $wrapper
-    fi
-fi
+## CLANG wrapper check
+case "${LCG_BUILD}" in
+    *"x86_64-el9-clang22-"*)
+        wrapper="/cvmfs/sft.cern.ch/lcg/contrib/clang/22.1.5/x86_64-el9/setup-wrapper.sh"
+        if [ -f "${wrapper}" ] && [ -r "${wrapper}" ]; then 
+            printf "%s Source clang22-wrapper = %s\n" "${prefix}" "${wrapper}"
+            . "${wrapper}"
+        fi
+        ;;
+esac
 
-##  check ROOTSYS 
-if [[    ${ROOTSYS}                 &&
-      -d ${ROOTSYS}                 &&
-      -d ${ROOTSYS}/bin             &&
-      -x ${ROOTSYS}/bin/root        &&
-      -x ${ROOTSYS}/bin/root.exe    &&
-      -x ${ROOTSYS}/bin/root-config ]]	    
-then 
-    true
+## Check ROOTSYS
+if [ -n "${ROOTSYS}" ] && \
+   [ -d "${ROOTSYS}" ] && \
+   [ -d "${ROOTSYS}/bin" ] && \
+   [ -x "${ROOTSYS}/bin/root" ] && \
+   [ -x "${ROOTSYS}/bin/root.exe" ] && \
+   [ -x "${ROOTSYS}/bin/root-config" ]; then 
+    :
 else 
-    echo -e ${prefix_error}' No valid ROOTSYS directory ' ${ROOTSYS}
+    printf "%s No valid ROOTSYS directory: %s\n" "${prefix_error}" "${ROOTSYS}"
     safe_exit 113
 fi
 
-OSTAP_SOURCE=${3:-${OSTAP_SOURCE}}
+OSTAP_SOURCE="${3:-${OSTAP_SOURCE}}"
 
-source_found=
-for source_dir in ${OSTAP_SOURCE:-${OSTAP_HOME}} \
-		  ${OSTAP_HOME:-${PWD}}          \
-		  ${HOME}/ostap                  \
-		  ${PWD}                         \
-		  ../                            \
-		  ./                      
+source_found=""
+for source_dir in \
+    "${OSTAP_SOURCE:-${OSTAP_HOME}}" \
+    "${OSTAP_HOME:-${PWD}}" \
+    "${HOME}/ostap" \
+    "${PWD}" \
+    "../" \
+    "./"
 do
-    ## echo 'source_dir' ${source_dir} 
-    ## valid structure of the source directory:
-    if [[   ${source_dir}                   &&
-	 -d ${source_dir}                   &&
-	 -d ${source_dir}/cmake             &&
-	 -d ${source_dir}/data              &&
-	 -d ${source_dir}/docs              &&
-	 -d ${source_dir}/examples          &&
-	 -d ${source_dir}/ostap             &&
-	 -d ${source_dir}/scripts           &&
-	 -d ${source_dir}/source            &&
-	 -d ${source_dir}/ReleaseNotes      &&		
-	 -d ${source_dir}/.aux              &&
-	 -f ${source_dir}/CMakeLists.txt    &&
-	 -f ${source_dir}/.aux/.build-ostap ]]
-    then	
-	source_found=$(readlink -f ${source_dir})
-	break	
+    if [ -n "${source_dir}" ] && \
+       [ -d "${source_dir}" ] && \
+       [ -d "${source_dir}/cmake" ] && \
+       [ -d "${source_dir}/data" ] && \
+       [ -d "${source_dir}/docs" ] && \
+       [ -d "${source_dir}/examples" ] && \
+       [ -d "${source_dir}/ostap" ] && \
+       [ -d "${source_dir}/scripts" ] && \
+       [ -d "${source_dir}/source" ] && \
+       [ -d "${source_dir}/ReleaseNotes" ] && \
+       [ -d "${source_dir}/.aux" ] && \
+       [ -f "${source_dir}/CMakeLists.txt" ] && \
+       [ -f "${source_dir}/.aux/.build-ostap" ]; then
+        source_found=$(get_canonical_path "${source_dir}")
+        break 
     fi
-    
 done
 
-if [[    ${source_found} &&
-      -d ${source_found} ]]
-then
-    
-    OSTAP_SOURCE=$(readlink -f ${source_found})
-    echo -e ${prefix}' Use OSTAP_SOURCE   = '${OSTAP_SOURCE}
-    
+if [ -n "${source_found}" ] && [ -d "${source_found}" ]; then
+    OSTAP_SOURCE=$(get_canonical_path "${source_found}")
+    printf "%s Use OSTAP_SOURCE   = %s\n" "${prefix}" "${OSTAP_SOURCE}"
 else
-    
-    echo -e ${prefix_error}' No ostap source drectory found!'
+    printf "%s No ostap source directory found!\n" "${prefix_error}"
     safe_exit 114 
 fi
-    
-## parameter #4: build directory
-OSTAP_BUILD=${4:-${OSTAP_BUILD}}
 
-if   [[    ${OSTAP_BUILD} &&
-        -d ${OSTAP_BUILD} &&
-        -w ${OSTAP_BUILD} ]]
-then
-    
-    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
-    echo -e ${prefix}' Use OSTAP_BUILD    = '${OSTAP_BUILD}
+## Parameter #4: build directory
+OSTAP_BUILD="${4:-${OSTAP_BUILD}}"
+ostap_build_upper=$(echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]')
 
-elif [[   ${OSTAP_BUILD} && `echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]'` == "TMP" ]]
-then
-    
-    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
-    echo -e ${prefix} ' Build directory is created '${OSTAP_BUILD}
-    
-elif [[ -d ${OSTAP_SOURCE}/build &&
-	-w ${OSTAP_SOURCE}/build ]]
-then
-    
-     OSTAP_BUILD=$(readlink -f ${OSTAP_SOURCE}/build)
-     echo -e ${prefix}' Use OSTAP_BUILD    = '${OSTAP_BUILD}
-     
-elif [[  -w ${OSTAP_SOURCE} &&
-       ! -d ${OSTAP_SOURCE}/build ]]
-then
-    
-     mkdir ${OSTAP_SOURCE}/build
-     OSTAP_BUILD=$(readlink -f ${OSTAP_SOURCE}/build)
-     echo -e ${prefix}' Build directory is created '${OSTAP_BUILD}
-     
+if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
+
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
+
+elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
+
+    OSTAP_BUILD=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX")
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
+
+elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
+
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
+    printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
+
+elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
+
+    mkdir -p "${OSTAP_SOURCE}/build"
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
+    printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
+
 else
-    
-    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
-    echo -e ${prefix} ' Build directory is created '${OSTAP_BUILD}
-    
+
+    OSTAP_BUILD=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX")
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
+
 fi
 
-## check it again 
-if   [[    ${OSTAP_BUILD} &&
-	-d ${OSTAP_BUILD} &&
-	-w ${OSTAP_BUILD} ]]
-then
-    
-    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})    
-    echo -e ${prefix}' Use OSTAP_BUILD    = '${OSTAP_BUILD}
-    
+## Check build directory validation
+if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
 else
-    
-    echo -e ${prefix_error}' No valid build directory is found! '${OSTAP_BUILD}
+    printf "%s No valid build directory is found! %s\n" "${prefix_error}" "${OSTAP_BUILD}"
     safe_exit 115
 fi     
 
-## check CMAKE & NINJA
-
-if command -v cmake &> /dev/null 
-then
-    echo -e "${prefix}"' CMAKE             : '$(which cmake   )
-    echo -e "${prefix}"' CMAKE version     : '$(cmake --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+## Check CMAKE & NINJA
+if command -v cmake >/dev/null 2>&1; then
+    printf "%s CMAKE              : %s\n" "${prefix}" "$(command -v cmake)"
+    printf "%s CMAKE version      : %s\n" "${prefix}" "$(cmake --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
-   echo -e "${prefix_error}"' CMAKE is not found!'
-   safe_exit 116
+    printf "%s CMAKE is not found!\n" "${prefix_error}"
+    safe_exit 116
 fi
 
-if command -v ctest &> /dev/null 
-then
-    echo -e "${prefix}"' CTEST             : '$(which ctest   )
-    echo -e "${prefix}"' CTEST version     : '$(ctest --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+if command -v ctest >/dev/null 2>&1; then
+    printf "%s CTEST              : %s\n" "${prefix}" "$(command -v ctest)"
+    printf "%s CTEST version      : %s\n" "${prefix}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
-   echo -e "${prefix_error}"' CTEST is not found!'
-   safe_exit 117 
+    printf "%s CTEST is not found!\n" "${prefix_error}"
+    safe_exit 117 
 fi
 
-if command -v cpack &> /dev/null 
-then
-    echo -e "${prefix}"' CPACK             : '$(which cpack   )
-    echo -e "${prefix}"' CPACK version     : '$(cpack --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+if command -v cpack >/dev/null 2>&1; then
+    printf "%s CPACK              : %s\n" "${prefix}" "$(command -v cpack)"
+    printf "%s CPACK version      : %s\n" "${prefix}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
-   echo -e "${prefix_error}"' CPACK is not found!'
-   safe_exit 118 
+    printf "%s CPACK is not found!\n" "${prefix_error}"
+    safe_exit 118 
 fi
 
-if command -v ninja &> /dev/null 
-then
-    echo -e "${prefix}"' NINJA             : '$(which ninja   )
-    echo -e "${prefix}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+if command -v ninja >/dev/null 2>&1; then
+    printf "%s NINJA              : %s\n" "${prefix}" "$(command -v ninja)"
+    printf "%s NINJA version      : %s\n" "${prefix}" "$(ninja --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
-   echo -e "${prefix_error}"' NINJA is not found!'
-   safe_exit 119 
+    printf "%s NINJA is not found!\n" "${prefix_error}"
+    safe_exit 119 
 fi 
 
-if [[ -f ${OSTAP_BUILD}/build.ninja ]]
-then
-    if command -v ninja &> /dev/null 
-    then
-	( echo -e ${prefix}' Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD}  ; cd ${OSTAP_BUILD} ; ninja clean )
+if [ -f "${OSTAP_BUILD}/build.ninja" ]; then
+    if command -v ninja >/dev/null 2>&1; then
+        printf "%s Clean  OSTAP_BUILD   build remnants   %s\n" "${prefix}" "${OSTAP_BUILD}"
+        ( cd "${OSTAP_BUILD}" && ninja clean )
     fi
 fi
 
-( echo -e ${prefix}' Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  ;
-  cd ${OSTAP_BUILD} ;
-  rm -rf CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
+printf "%s Remove OSTAP_BUILD   remnants&garbage %s\n" "${prefix}" "${OSTAP_BUILD}"
+( cd "${OSTAP_BUILD}" && \
+  rm -rf -- CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
 
-## parameter #5: install directory 
-OSTAP_INSTALL=${5:-${OSTAP_INSTALL}}
+## Parameter #5: install directory 
+OSTAP_INSTALL="${5:-${OSTAP_INSTALL}}"
 
-if   [[   ${OSTAP_INSTALL} &&
-       -d ${OSTAP_INSTALL} &&
-       -w ${OSTAP_INSTALL} ]]
-then
-    
-    OSTAP_INSTALL=$(readlink -f ${OSTAP_INSTALL})
-    ( echo -e ${prefix}' Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} ;
-      cd ${OSTAP_INSTALL} ;
-      rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
-    
-elif [[     ${OSTAP_INSTALL} &&
-         -d ${OSTAP_INSTALL} &&
-       ! -w ${OSTAP_INSTALL} ]]
-then
-    
-    echo -e ${prefix_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
+if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTALL}" ]; then
+
+    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    printf "%s Clean  OSTAP_INSTALL directory        %s\n" "${prefix}" "${OSTAP_INSTALL}"
+    ( cd "${OSTAP_INSTALL}" && \
+      rm -rf -- .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
+
+elif [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
+
+    printf "%s Directory OSTAP_INSTALL is not writeable! %s\n" "${prefix_error}" "${OSTAP_INSTALL}"
     safe_exit 120
-    
+
 else
-    
-    OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/${LCG}/${PLATFORM}
-    OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL})
-    
+
+    OSTAP_INSTALL="${OSTAP_BUILD}/INSTALL/${LCG}/${PLATFORM}"
+    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+
 fi
 
-echo -e ${prefix}' LCG VERSION    : '${LCG}
-echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
-echo -e ${prefix}' LCG BUILD      : '${LCG_BUILD}
+printf "%s LCG VERSION    : %s\n" "${prefix}" "${LCG}"
+printf "%s LCG PLATFORM   : %s\n" "${prefix}" "${PLATFORM}"
+printf "%s LCG BUILD      : %s\n" "${prefix}" "${LCG_BUILD}"
 
-echo -e ${prefix}' ROOTSYS        : '${ROOTSYS}
+printf "%s ROOTSYS        : %s\n" "${prefix}" "${ROOTSYS}"
 
-echo -e ${prefix}' OSTAP_SOURCE   : '${OSTAP_SOURCE}
-echo -e ${prefix}' OSTAP_INSTALL  : '${OSTAP_INSTALL}
-echo -e ${prefix}' OSTAP_BUILD    : '${OSTAP_BUILD}
+printf "%s OSTAP_SOURCE   : %s\n" "${prefix}" "${OSTAP_SOURCE}"
+printf "%s OSTAP_INSTALL  : %s\n" "${prefix}" "${OSTAP_INSTALL}"
+printf "%s OSTAP_BUILD    : %s\n" "${prefix}" "${OSTAP_BUILD}"
+
+old_prefix="${prefix}"
+old_prefix_error="${prefix_error}"
 
 # =======================================================================================
-## the actual build-script 
+## Actual build script sourcing
 # =======================================================================================
-source ${OSTAP_SOURCE}/.aux/.build-ostap ${OSTAP_SOURCE} ${OSTAP_INSTALL} ${OSTAP_BUILD}
-
-result=$?
-
-echo -e ${prefix}' LCG VERSION    : '${LCG}
-echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
-echo -e ${prefix}' LCG BUILD      : '${LCG_BUILD}
-
-if [[ $result -eq 0 ]]
-then
-    echo -e ${prefix}' RESULT         : 'SUCCESS
+if [ -f "${OSTAP_SOURCE}/.aux/.build-ostap" ] && [ -r "${OSTAP_SOURCE}/.aux/.build-ostap" ]; then
+    . "${OSTAP_SOURCE}/.aux/.build-ostap" "${OSTAP_SOURCE}" "${OSTAP_INSTALL}" "${OSTAP_BUILD}"
+    result=$?
 else
-    echo -e ${prefix_error}' RESULT     : '${result}
+    printf "%s Build script not found: %s/.aux/.build-ostap\n" "${prefix_error}" "${OSTAP_SOURCE}"
+    result=121
+fi
+
+prefix="${old_prefix}"
+prefix_error="${old_prefix_error}"
+
+printf "%s LCG VERSION    : %s\n" "${prefix}" "${LCG}"
+printf "%s LCG PLATFORM   : %s\n" "${prefix}" "${PLATFORM}"
+printf "%s LCG BUILD      : %s\n" "${prefix}" "${LCG_BUILD}"
+
+if [ "$result" -eq 0 ]; then
+    printf "%s RESULT         : SUCCESS\n" "${prefix}"
+else
+    printf "%s RESULT         : %s\n" "${prefix_error}" "${result}"
 fi
 
 # ===================================================================================
-safe_exit ${result} 
-
+safe_exit "${result}"
 
 # ===================================================================================
 ##                                                                            The END 

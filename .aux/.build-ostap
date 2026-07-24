@@ -1,436 +1,391 @@
-#!/usr/bin/bash
+#!/usr/bin/env sh
 
 prefix1='<<BUILD OSTAP>>'
 prefix1_error='<<BUILD OSTAP *ERROR*>>'
+prefix='<<BUILD OSTAP>>'
+prefix_error='<<BUILD OSTAP *ERROR*>>'
 
 # =========================================================================
-# Define a safe safe_exit function
+# Portable Helper Functions
 # =========================================================================
-safe_exit()
-{
-    local exit_code="${1:-0}"
-    # Check if the script is being sourced
-    if [ "$0" = "$BASH_SOURCE" ]; then
-        exit   "$exit_code" # Safe to exit (running as a normal script)
+
+# Check if script is sourced or executed in POSIX-compliant shells
+is_sourced() {
+    (return 0 2>/dev/null)
+}
+
+safe_exit() {
+    exit_code="${1:-0}"
+    if is_sourced; then
+        return "$exit_code"
     else
-        return "$exit_code" # Safe to return (being run via 'source')
+        exit "$exit_code"
     fi
 }
+
+# Cross-platform CPU core count
+get_cpu_count() {
+    if command -v nproc >/dev/null 2>&1; then
+        nproc
+    elif command -v sysctl >/dev/null 2>&1; then
+        sysctl -n hw.ncpu 2>/dev/null || echo 1
+    else
+        echo 1
+    fi
+}
+
+# Cross-platform canonical absolute path resolution
+get_canonical_path() {
+    target_path="$1"
+    if command -v python >/dev/null 2>&1; then
+        python -c "import os, sys; print(os.path.realpath(sys.argv[1]))" "$target_path" 2>/dev/null
+    elif [ -d "$target_path" ]; then
+        (cd "$target_path" && pwd -P)
+    else
+        echo "$target_path"
+    fi
+}
+
 # ==========================================================================
-## Color output ? 
+## Color output setup
 # ==========================================================================
-COLORS=$(tput colors 2> /dev/null)
-if [[ $? == 0  && $COLORS -gt 2 ]]
-then
-    FWHITE='\033[1;97m'     # White
-    BGREEN='\033[42m'       # Green
-    FYELLOW='\033[1;93m'    # Yellow
-    BRED='\033[6;101m'      # Red
-    ##
-    COLOR_OK=${FYELLOW}${BGREEN}
-    COLOR_ERR=${FYELLOW}${BRED}
-    COLOR_OFF='\033[0m' 
-    ##
-    prefix=${COLOR_OK}${prefix}${COLOR_OFF}
-    prefix_error=${COLOR_ERR}${prefix_error}${COLOR_OFF}
-    prefix1=${COLOR_OK}${prefix1}${COLOR_OFF}
-    prefix1_error=${COLOR_ERR}${prefix1_error}${COLOR_OFF}
-    ## 
+if command -v tput >/dev/null 2>&1; then
+    COLORS=$(tput colors 2>/dev/null || echo 0)
+else
+    COLORS=0
 fi
 
-# ==========================================================================
-## Get parameters 
-# ==========================================================================
-OSTAP_SOURCE=${1:-${OSTAP_SOURCE}}
-OSTAP_INSTALL=${2:-${OSTAP_INSTALL}}
-OSTAP_BUILD=${3:-${OSTAP_BUILD}}
+if [ "$COLORS" -gt 2 ]; then
+    # Generate literal ESC byte portably in POSIX sh
+    ESC=$(printf '\033')
+
+    COLOR_OK="${ESC}[1;97m${ESC}[42m"
+    COLOR_ERR="${ESC}[1;93m${ESC}[6;101m"
+    COLOR_OFF="${ESC}[0m"
+
+    prefix="${COLOR_OK}${prefix}${COLOR_OFF}"
+    prefix_error="${COLOR_ERR}${prefix_error}${COLOR_OFF}"
+    prefix1="${COLOR_OK}${prefix1}${COLOR_OFF}"
+    prefix1_error="${COLOR_ERR}${prefix1_error}${COLOR_OFF}"
+fi
+
 
 # ==========================================================================
-## Valid ROOTSYS ? 
+## Get parameters
 # ==========================================================================
-if [[    ${ROOTSYS}                 &&
-      -d ${ROOTSYS}                 &&
-      -d ${ROOTSYS}/bin             &&
-      -x ${ROOTSYS}/bin/root        &&
-      -x ${ROOTSYS}/bin/root.exe    &&
-      -x ${ROOTSYS}/bin/root-config ]]	    
-then 
-    true
-else 
-    echo -e ${prefix1_error}' No valid ROOTSYS directory:' ${ROOTSYS}
+OSTAP_SOURCE="${1:-${OSTAP_SOURCE}}"
+OSTAP_INSTALL="${2:-${OSTAP_INSTALL}}"
+OSTAP_BUILD="${3:-${OSTAP_BUILD}}"
+
+# ==========================================================================
+## Valid ROOTSYS?
+# ==========================================================================
+if [ -n "${ROOTSYS}" ] && \
+   [ -d "${ROOTSYS}" ] && \
+   [ -d "${ROOTSYS}/bin" ] && \
+   [ -x "${ROOTSYS}/bin/root" ] && \
+   [ -x "${ROOTSYS}/bin/root.exe" ] && \
+   [ -x "${ROOTSYS}/bin/root-config" ]; then
+    :
+else
+    printf "%s No valid ROOTSYS directory: %s\n" "${prefix1_error}" "${ROOTSYS}"
     safe_exit 210
 fi
 
 # ==========================================================================
-## Valid source directory ? 
+## Valid source directory?
 # ==========================================================================
-if [[    ${OSTAP_SOURCE}                && 
-      -d ${OSTAP_SOURCE}                &&
-      -d ${OSTAP_SOURCE}/cmake          &&
-      -d ${OSTAP_SOURCE}/data           &&
-      -d ${OSTAP_SOURCE}/docs           &&
-      -d ${OSTAP_SOURCE}/examples       &&
-      -d ${OSTAP_SOURCE}/ostap          &&
-      -d ${OSTAP_SOURCE}/scripts        &&
-      -d ${OSTAP_SOURCE}/source         &&
-      -d ${OSTAP_SOURCE}/ReleaseNotes   &&
-      -f ${OSTAP_SOURCE}/CMakeLists.txt ]]
-then
-    OSTAP_SOURCE=$(readlink -f ${OSTAP_SOURCE})
-    echo -e "${prefix1}"' Use OSTAP_SOURCE  = '${OSTAP_SOURCE}
-else 	
-    echo -e ${prefix1_error}' No valid source directory is found! '${OSTAP_SOURCE}
-    ## 
-    unset OSTAP_SOURCE OSTAP_BUILD OSTAP_INSTALL		
+if [ -n "${OSTAP_SOURCE}" ] && \
+   [ -d "${OSTAP_SOURCE}" ] && \
+   [ -d "${OSTAP_SOURCE}/cmake" ] && \
+   [ -d "${OSTAP_SOURCE}/data" ] && \
+   [ -d "${OSTAP_SOURCE}/docs" ] && \
+   [ -d "${OSTAP_SOURCE}/examples" ] && \
+   [ -d "${OSTAP_SOURCE}/ostap" ] && \
+   [ -d "${OSTAP_SOURCE}/scripts" ] && \
+   [ -d "${OSTAP_SOURCE}/source" ] && \
+   [ -d "${OSTAP_SOURCE}/ReleaseNotes" ] && \
+   [ -f "${OSTAP_SOURCE}/CMakeLists.txt" ]; then
+
+    OSTAP_SOURCE=$(get_canonical_path "${OSTAP_SOURCE}")
+    printf "%s Use OSTAP_SOURCE  = %s\n" "${prefix1}" "${OSTAP_SOURCE}"
+else
+    printf "%s No valid source directory is found! %s\n" "${prefix1_error}" "${OSTAP_SOURCE}"
+    unset OSTAP_SOURCE OSTAP_BUILD OSTAP_INSTALL
     safe_exit 211
 fi
 
 # ==========================================================================
-## INSTALL directory 
+## INSTALL directory
 # ==========================================================================
-if [[ ${OSTAP_INSTALL} && "${OSTAP_INSTALL}" ]]
-then
-    OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL} )
+if [ -n "${OSTAP_INSTALL}" ]; then
+    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
 else
-    OSTAP_INSTALL=$(realpath -m "./INSTALL" )
+    OSTAP_INSTALL=$(get_canonical_path "./INSTALL")
 fi
 
-if [[      ${OSTAP_INSTALL} &&
-        -d ${OSTAP_INSTALL} &&  
-      ! -w ${OSTAP_INSTALL} ]]
-then
-    echo -e ${prefix1_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
-    ## 
-    unset OSTAP_BUILD OSTAP_INSTALL		
+if [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
+    printf "%s Directory OSTAP_INSTALL is not writeable! %s\n" "${prefix1_error}" "${OSTAP_INSTALL}"
+    unset OSTAP_BUILD OSTAP_INSTALL
     safe_exit 212
 fi
 
-echo -e "${prefix1}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
-    
+printf "%s Use OSTAP_INSTALL = %s\n" "${prefix1}" "${OSTAP_INSTALL}"
+
 # =========================================================================
-## Valid build  directory (1) ? 
+## Valid build directory (1)?
 # ==========================================================================
+ostap_build_upper=$(echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]')
 
-if   [[    ${OSTAP_BUILD} &&
-        -d ${OSTAP_BUILD} &&
-        -w ${OSTAP_BUILD} ]]
-then
-    
-    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
-    echo -e "${prefix1}"' Use OSTAP_BUILD   = '${OSTAP_BUILD}
+if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
 
-elif [[   ${OSTAP_BUILD} && `echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]'` == "TMP" ]]
-then
-    
-    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    echo -e ${prefix} ' Build directory is created '${OSTAP_BUILD}
-        
-elif [[ -d ${OSTAP_SOURCE}/build &&
-	-w ${OSTAP_SOURCE}/build ]]
-then
-    
-     OSTAP_BUILD=$(readlink -f ${OSTAP_SOURCE}/build)
-     echo -e "${prefix1}"' Use OSTAP_BUILD   = '${OSTAP_BUILD}
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    printf "%s Use OSTAP_BUILD   = %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
-elif [[  -w ${OSTAP_SOURCE} &&
-       ! -d ${OSTAP_SOURCE}/build ]]
-then
-    
-     mkdir ${OSTAP_SOURCE}/build
-     OSTAP_BUILD=$(readlink -f ${OSTAP_SOURCE}/build)
-     echo -e ${prefix1}' Build directory is created '${OSTAP_BUILD}
-     
+elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
+
+    OSTAP_BUILD=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX")
+    printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
+
+elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
+
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
+    printf "%s Use OSTAP_BUILD   = %s\n" "${prefix1}" "${OSTAP_BUILD}"
+
+elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
+
+    mkdir -p "${OSTAP_SOURCE}/build"
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
+    printf "%s Build directory is created %s\n" "${prefix1}" "${OSTAP_BUILD}"
+
 else
-    
-    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    echo -e ${prefix1} ' Build directory is created '${OSTAP_BUILD}
-    
+
+    OSTAP_BUILD=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX")
+    printf "%s Build directory is created %s\n" "${prefix1}" "${OSTAP_BUILD}"
+
 fi
 
 # =========================================================================
-## Valid build  directory (2) ? 
+## Valid build directory (2)?
 # ==========================================================================
-if   [[    ${OSTAP_BUILD} &&
-	-d ${OSTAP_BUILD} &&
-	-w ${OSTAP_BUILD} ]]
-then
-    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
+if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
 else
-    echo -e ${prefix1_error}' No valid build directory is found! '${OSTAP_BUILD}
-    ## 
-    unset OSTAP_BUILD OSTAP_INSTALL		
-    safe_exit 213 
-fi  
-
-if command -v python &> /dev/null 
-then
-    echo -e "${prefix1}"' PYTHON            : '$(which python )
-    echo -e "${prefix1}"' PYTHON version    : '$(python --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
-else
-   echo -e "${prefix1_error}"'PYTHON in not found!'
-   safe_exit 214
-fi 
-
-if command -v cmake &> /dev/null 
-then
-    echo -e "${prefix1}"' CMAKE             : '$(which cmake   )
-    echo -e "${prefix1}"' CMAKE version     : '$(cmake --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
-else
-   echo -e "${prefix1_error}"' CMAKE is not found!'
-   safe_exit 215 
+    printf "%s No valid build directory is found! %s\n" "${prefix1_error}" "${OSTAP_BUILD}"
+    unset OSTAP_BUILD OSTAP_INSTALL
+    safe_exit 213
 fi
 
-if command -v ctest &> /dev/null 
-then
-    echo -e "${prefix1}"' CTEST             : '$(which ctest   )
-    echo -e "${prefix1}"' CTEST version     : '$(ctest --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+# Tool checks
+if command -v python >/dev/null 2>&1; then
+    printf "%s PYTHON             : %s\n" "${prefix1}" "$(command -v python)"
+    printf "%s PYTHON version     : %s\n" "${prefix1}" "$(python --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
-   echo -e "${prefix1_error}"' CTEST is not found!'
-   safe_exit 216 
+    printf "%s PYTHON is not found!\n" "${prefix1_error}"
+    safe_exit 214
 fi
 
-if command -v ctest &> /dev/null 
-then
-    echo -e "${prefix1}"' CPACK             : '$(which cpack   )
-    echo -e "${prefix1}"' CPACK version     : '$(cpack --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+if command -v cmake >/dev/null 2>&1; then
+    printf "%s CMAKE              : %s\n" "${prefix1}" "$(command -v cmake)"
+    printf "%s CMAKE version      : %s\n" "${prefix1}" "$(cmake --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
-   echo -e "${prefix1_error}"' CPACK is not found!'
-   safe_exit 217 
-fi 
+    printf "%s CMAKE is not found!\n" "${prefix1_error}"
+    safe_exit 215
+fi
 
-make_command=
-make_generator=
-if command -v ninja &> /dev/null
-then
-    make_command=ninja
+if command -v ctest >/dev/null 2>&1; then
+    printf "%s CTEST              : %s\n" "${prefix1}" "$(command -v ctest)"
+    printf "%s CTEST version      : %s\n" "${prefix1}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+else
+    printf "%s CTEST is not found!\n" "${prefix1_error}"
+    safe_exit 216
+fi
+
+if command -v cpack >/dev/null 2>&1; then
+    printf "%s CPACK              : %s\n" "${prefix1}" "$(command -v cpack)"
+    printf "%s CPACK version      : %s\n" "${prefix1}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+else
+    printf "%s CPACK is not found!\n" "${prefix1_error}"
+    safe_exit 217
+fi
+
+make_command=""
+make_generator=""
+if command -v ninja >/dev/null 2>&1; then
+    make_command="ninja"
     make_generator="-G Ninja"
-    echo -e "${prefix1}"' NINJA             : '$(which   ninja   )
-    echo -e "${prefix1}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )    
-elif command -v gmake &> /dev/null
-then    
-    make_command=gmake
-    echo -e "${prefix1}"' GMAKE             : '$(which  gmake    )
-    echo -e "${prefix1}"' GMAKE version     : '$(gmake --version | grep -Eo "[0-9]\.[0-9]+" )    
-elif command -v make &> /dev/null
-then    
-    make_command=make
-    echo -e "${prefix1}"' MAKE              : '$(which  make    )
-    echo -e "${prefix1}"' MAKE version      : '$(make --version | grep -Eo "[0-9]\.[0-9]+" )
-else         
-    echo -e "${prefix1_error}"' neither NINJA nor (G)MAKE is found!'
-    safe_exit 218 
+    printf "%s NINJA              : %s\n" "${prefix1}" "$(command -v ninja)"
+    printf "%s NINJA version      : %s\n" "${prefix1}" "$(ninja --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+elif command -v gmake >/dev/null 2>&1; then
+    make_command="gmake"
+    printf "%s GMAKE              : %s\n" "${prefix1}" "$(command -v gmake)"
+    printf "%s GMAKE version      : %s\n" "${prefix1}" "$(gmake --version | grep -Eo '[0-9]+\.[0-9]+')"
+elif command -v make >/dev/null 2>&1; then
+    make_command="make"
+    printf "%s MAKE               : %s\n" "${prefix1}" "$(command -v make)"
+    printf "%s MAKE version       : %s\n" "${prefix1}" "$(make --version | grep -Eo '[0-9]+\.[0-9]+')"
+else
+    printf "%s neither NINJA nor (G)MAKE is found!\n" "${prefix1_error}"
+    safe_exit 218
 fi
 
-# ==========================================================================
-if [[ ${PYTHONNOUSERSITE} ]]
-then
-    echo -e "${prefix1}"' unset PYTHONNOUSERSITE '${PYTHONNOUSERSITE}
+# Environment sanitization
+if [ -n "${PYTHONNOUSERSITE}" ]; then
+    printf "%s unset PYTHONNOUSERSITE %s\n" "${prefix1}" "${PYTHONNOUSERSITE}"
     unset PYTHONNOUSERSITE
 fi
 
 # =========================================================================
-## Clean install directory 
+## Clean install directory
 # ==========================================================================
-if [[ -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
-then
-    OSTAP_INSTALL=$(readlink -f ${OSTAP_INSTALL})
-    ( echo -e "${prefix1}"' [1/7] Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} &&  
-      cd ${OSTAP_INSTALL}                                                                 && 
+if [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTALL}" ]; then
+    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    printf "%s [1/7] Clean  OSTAP_INSTALL directory        %s\n" "${prefix1}" "${OSTAP_INSTALL}"
+    ( cd "${OSTAP_INSTALL}" && \
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
-    
+
     sc=$?
-    if [[ ${sc} -ne 0 ]]
-    then
-	echo -e "${prefix1_error}"' [1/7] failure: Cannot clean OSTAP_INSTALL' ${sc} ${OSTAP_INSTALL}
-	## 
-	## unset OSTAP_BUILD OSTAP_INSTALL		
-	## safe_exit ${sc}
+    if [ "${sc}" -ne 0 ]; then
+        printf "%s [1/7] failure: Cannot clean OSTAP_INSTALL %s %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
     fi
 fi
 
 # =========================================================================
-## Clean build  directory (1) 
+## Clean build directory (1)
 # ==========================================================================
-if [[ -f ${OSTAP_BUILD}/build.ninja && "${make_command}" == "ninja" ]]
-then
-    ( echo -e "${prefix1}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} &&
-	  cd ${OSTAP_BUILD} &&
-	  ${make_command} clean )
-    
+if [ -f "${OSTAP_BUILD}/build.ninja" ] && [ "${make_command}" = "ninja" ]; then
+    printf "%s [2/7] Clean  OSTAP_BUILD   build remnants   %s\n" "${prefix1}" "${OSTAP_BUILD}"
+    ( cd "${OSTAP_BUILD}" && "${make_command}" clean )
     sc=$?
-    if [[ ${sc} -ne 0 ]]
-    then
-	echo -e "${prefix1_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${sc} ${OSTAP_BUILD}
-	## 
-	## unset OSTAP_BUILD OSTAP_INSTALL		
-	## safe_exit ${sc}
+    if [ "${sc}" -ne 0 ]; then
+        printf "%s [2/7] failure: Cannot clean OSTAP_BUILD %s %s\n" "${prefix1_error}" "${sc}" "${OSTAP_BUILD}"
     fi
-    
-elif [[ -f ${OSTAP_BUILD}/Makefile && "${make_command}" != "ninja" ]]
-then
-    
-    ( echo -e "${prefix1}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} &&
-	  cd ${OSTAP_BUILD} &&
-	  ${make_command} clean )
-    
+
+elif [ -f "${OSTAP_BUILD}/Makefile" ] && [ "${make_command}" != "ninja" ]; then
+    printf "%s [2/7] Clean  OSTAP_BUILD   build remnants   %s\n" "${prefix1}" "${OSTAP_BUILD}"
+    ( cd "${OSTAP_BUILD}" && "${make_command}" clean )
     sc=$?
-    if [[ ${sc} -ne 0 ]]
-    then
-	echo -e "${prefix1_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${sc} ${OSTAP_BUILD}
-	## 
-	## unset OSTAP_BUILD OSTAP_INSTALL		
-	## safe_exit ${sc}
+    if [ "${sc}" -ne 0 ]; then
+        printf "%s [2/7] failure: Cannot clean OSTAP_BUILD %s %s\n" "${prefix1_error}" "${sc}" "${OSTAP_BUILD}"
     fi
-    
 fi
 
 # =========================================================================
-## Clean build  directory (2) 
+## Clean build directory (2)
 # ==========================================================================
-( echo -e "${prefix1}"' [3/7] Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  &&
-  cd ${OSTAP_BUILD}                                                                  && 
-  rm -rf CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
+printf "%s [3/7] Remove OSTAP_BUILD   remnants&garbage %s\n" "${prefix1}" "${OSTAP_BUILD}"
+( cd "${OSTAP_BUILD}" && \
+  rm -rf -- CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
 
 sc=$?
-if [[ ${sc} -ne 0 ]]
-then
-    echo -e "${prefix1_error}"' [3/7] failure: Cannot remove OSTAP_BUILD ramnants&garbage' ${sc} ${OSTAP_BUILD}
-    ## 
-    ## unset OSTAP_BUILD OSTAP_INSTALL		
-    ## safe_exit ${sc}
+if [ "${sc}" -ne 0 ]; then
+    printf "%s [3/7] failure: Cannot remove OSTAP_BUILD remnants&garbage %s %s\n" "${prefix1_error}" "${sc}" "${OSTAP_BUILD}"
 fi
 
 # ==========================================================================
-## CMAKE supports "--fresh" options from 3.24 
+## CMAKE supports "--fresh" option from 3.24+
 # ==========================================================================
-cmake_version=$(cmake --version | grep -Eo '[0-9]\.[0-9]+\.[0-9]+')
-if [[ "${cmake_version}" < "3.24.0" ]]
-then
-    fresh=
-else
+cmake_ver=$(cmake --version | head -n 1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+cmake_major=$(echo "$cmake_ver" | cut -d. -f1)
+cmake_minor=$(echo "$cmake_ver" | cut -d. -f2)
+
+fresh=""
+if [ "$cmake_major" -gt 3 ] || { [ "$cmake_major" -eq 3 ] && [ "$cmake_minor" -ge 24 ]; }; then
     fresh="--fresh"
 fi
 
+NCPU=$(get_cpu_count)
+
 # =========================================================================
-## (FRESH) build 
+## (FRESH) build
 # ==========================================================================
-( echo -e "${prefix1}"' [4/7] First  pass of cmake&'${make_command}'&install    '${OSTAP_BUILD} && 
-    cd ${OSTAP_BUILD}                                                                           && 
-    cmake ${fresh} ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_generator}    &&
-    ${make_command} -j$(nproc --all)                                                            && 
-    ${make_command} install | grep -v Up-to-date | grep -v Installing )
+printf "%s [4/7] First  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
+( cd "${OSTAP_BUILD}" && \
+  cmake ${fresh} "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" "${make_generator}" && \
+  "${make_command}" -j"${NCPU}" && \
+  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
 
 sc=$?
-if [[ ${sc} -ne 0 ]]
-then
-    echo -e "${prefix1_error}"' [4/7] failure: first pass of cmake&'${make_command}'&install' ${sc} ${OSTAP_BUILD}
-    ## 
-    unset  OSTAP_BUILD OSTAP_INSTALL		
-    safe_exit ${sc}
+if [ "${sc}" -ne 0 ]; then
+    printf "%s [4/7] failure: first pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    unset OSTAP_BUILD OSTAP_INSTALL
+    safe_exit "${sc}"
 fi
 
-# =========================================================================
-## install directory must appear...  
-# ==========================================================================
-if [[ -d ${OSTAP_INSTALL} ]]
-then
-    true
-else 
-    echo -e "${prefix1_error}"' Missing install directory! '${OSTAP_INSTALL}
-    unset  OSTAP_BUILD OSTAP_INSTALL		
+# Check install directory existence
+if [ ! -d "${OSTAP_INSTALL}" ]; then
+    printf "%s Missing install directory! %s\n" "${prefix1_error}" "${OSTAP_INSTALL}"
+    unset OSTAP_BUILD OSTAP_INSTALL
     safe_exit 219
-fi 
-
-# =========================================================================
-## Again ...
-# ==========================================================================
-( echo -e "${prefix1}"' [5/7] Second pass of cmake&'${make_command}'&install'    ${OSTAP_BUILD} &&
-      cd ${OSTAP_BUILD}                                                                         && 
-      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_generator}   && 
-      ${make_command} -j$(nproc --all)                                                          && 
-      ${make_command} install | grep -v Up-to-date | grep -v Installing )
-
-sc=$?
-if [[ ${sc} -ne 0 ]]
-then
-    echo -e "${prefix1_error}"' [4/7] failure: second pass of cmake&'${make_command}'&install ' ${sc} ${OSTAP_BUILD} 
-    unset  OSTAP_BUILD OSTAP_INSTALL		
-    safe_exit ${sc}
 fi
 
 # =========================================================================
-## setup script must be here
+## Second Pass
 # ==========================================================================
-if [[ -f ${OSTAP_INSTALL}/thisostap.sh &&
-      -x ${OSTAP_INSTALL}/thisostap.sh ]]
-then
-    source ${OSTAP_INSTALL}/thisostap.sh
+printf "%s [5/7] Second pass of cmake&%s&install %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
+( cd "${OSTAP_BUILD}" && \
+  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" "${make_generator}" && \
+  "${make_command}" -j"${NCPU}" && \
+  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
+
+sc=$?
+if [ "${sc}" -ne 0 ]; then
+    printf "%s [5/7] failure: second pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    unset OSTAP_BUILD OSTAP_INSTALL
+    safe_exit "${sc}"
+fi
+
+# =========================================================================
+## Source setup script
+# ==========================================================================
+if [ -f "${OSTAP_INSTALL}/thisostap.sh" ] && [ -r "${OSTAP_INSTALL}/thisostap.sh" ]; then
+    . "${OSTAP_INSTALL}/thisostap.sh"
 else
-    echo -e "${prefix1_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh
-    ## 
-    unset  OSTAP_BUILD OSTAP_INSTALL		
+    printf "%s No thisostap.sh is found %s\n" "${prefix1_error}" "${OSTAP_INSTALL}/thisostap.sh"
+    unset OSTAP_BUILD OSTAP_INSTALL
     safe_exit 220
 fi
 
 # =========================================================================
-## Again ...
+## Third Pass
 # ==========================================================================
-( echo -e "${prefix1}"' [6/7] Third  pass of cmake&'${make_command}'&install    '${OSTAP_BUILD} &&
-      cd ${OSTAP_BUILD}                                                                         && 
-      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_generator}   && 
-      ${make_command} -j$(nproc --all)                                                          && 
-      ${make_command} install | grep -v Up-to-date | grep -v Installing )
+printf "%s [6/7] Third  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
+( cd "${OSTAP_BUILD}" && \
+  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" "${make_generator}" && \
+  "${make_command}" -j"${NCPU}" && \
+  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
 
 sc=$?
-if [[ ${sc} -ne 0 ]]
-then
-    echo -e "${prefix1_error}"' [6/7] failure: third pass of cmake&'${make_command}'&install ' ${sc} ${OSTAP_BUILD} 
-    unset  OSTAP_BUILD OSTAP_INSTALL		
-    safe_exit ${sc}
+if [ "${sc}" -ne 0 ]; then
+    printf "%s [6/7] failure: third pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    unset OSTAP_BUILD OSTAP_INSTALL
+    safe_exit "${sc}"
 fi
 
-## ( echo -e "${prefix1}"' [7/7] Last   pass of cmake&'${make_command}'&package'                  && 
-##      cd ${OSTAP_BUILD}                                                                        && 
-##      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_generator} &&
-##      ${make_command} -j$(nproc --all)                                                         && 
-##      ${make_command} -j$(nproc --all)  package )
+OSTAP_BUILDER="${make_command}"
+printf "%s PROJECT BUILDER : %s\n" "${prefix1}" "${OSTAP_BUILDER}"
+printf "%s ROOTSYS         : %s\n" "${prefix1}" "${ROOTSYS}"
+printf "%s OSTAP_DIR       : %s\n" "${prefix1}" "${OSTAP_DIR}"
+printf "%s OSTAP_SOURCE    : %s\n" "${prefix1}" "${OSTAP_SOURCE}"
+printf "%s OSTAP_BUILD     : %s\n" "${prefix1}" "${OSTAP_BUILD}"
+printf "%s OSTAP_INSTALL   : %s\n" "${prefix1}" "${OSTAP_INSTALL}"
+printf "%s thisostap.sh    : %s/thisostap.sh\n" "${prefix1}" "${OSTAP_INSTALL}"
+printf "%s root            : %s\n" "${prefix1}" "$(command -v root)"
+printf "%s root.exe        : %s\n" "${prefix1}" "$(command -v root.exe)"
+printf "%s root version    : %s\n" "${prefix1}" "$(root.exe --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+printf "%s python          : %s\n" "${prefix1}" "$(command -v python)"
+printf "%s python version  : %s\n" "${prefix1}" "$(python --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+printf "%s ostap           : %s\n" "${prefix1}" "$(command -v ostap)"
+printf "%s ostap version   : %s\n" "${prefix1}" "$(ostap --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')"
 
-sc=$?
-if [[ ${sc} -ne 0 ]]
-then
-    echo -e "${prefix1_error}"' [7/7] failure: last pass of cmake&'${make_command}'&package ' ${sc} ${OSTAP_BUILD} 
-    unset  OSTAP_BUILD OSTAP_INSTALL		
-    safe_exit ${sc}
-fi
-
-OSTAP_BUILDER=${make_command}
-echo -e "${prefix1}"' PROJECT BUILDER : '${OSTAP_BUILDER}
-echo -e "${prefix1}"' ROOTSYS         : '${ROOTSYS}
-echo -e "${prefix1}"' OSTAP_DIR       : '${OSTAP_DIR}
-echo -e "${prefix1}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
-echo -e "${prefix1}"' OSTAP_BUILD     : '${OSTAP_BUILD}
-echo -e "${prefix1}"' OSTAP_INSTALL   : '${OSTAP_INSTALL}
-echo -e "${prefix1}"' thisostap.sh    : '${OSTAP_INSTALL}/thisostap.sh
-echo -e "${prefix1}"' root            : '$(which root       )
-echo -e "${prefix1}"' root.exe        : '$(which root.exe   )
-echo -e "${prefix1}"' root version    : '$(root.exe --version 2>&1 | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
-echo -e "${prefix1}"' python          : '$(which python    )
-echo -e "${prefix1}"' python version  : '$(python   --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
-echo -e "${prefix1}"' ostap           : '$(which ostap     )
-echo -e "${prefix1}"' ostap version   : '$(ostap    --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]+\.[0-9]+" )
-
-
-
-if command -v tree &> /dev/null
-then
-    tree -d -L 3 --charset UTF-8 ${OSTAP_INSTALL}
+if command -v tree >/dev/null 2>&1; then
+    tree -d -L 3 --charset UTF-8 "${OSTAP_INSTALL}"
 else
-    ls ${OSTAP_INSTALL}     
-fi 
+    ls "${OSTAP_INSTALL}"
+fi
 
-if command -v pip &> /dev/null
-then
-    python -m pip list --user 
+if command -v pip >/dev/null 2>&1; then
+    python -m pip list --user
 fi
 
 export OSTAP_BUILDER
@@ -438,10 +393,8 @@ export OSTAP_SOURCE
 export OSTAP_BUILD
 export OSTAP_INSTALL
 
-
-result=${sc} 
-safe_exit ${result} 
+safe_exit "${sc}"
 
 # ===================================================================================
-##                                                                            The END 
+#                                                                           The END
 # ===================================================================================

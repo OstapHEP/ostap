@@ -1,45 +1,48 @@
-#!/usr/bin/env bash
-LCG=$1
-CMTCONFIG=$2
+#!/usr/bin/env sh
 
-mkdir build
-cd    build
+# Safe argument check
+LCG="${1:?Error: Specify LCG version (e.g., LCG_105)}"
+PLATFORM="${2:?Error: Specify PLATFORM (e.g., x86_64-el9-gcc13-opt)}"
 
-## OLD 
-## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-## cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install
+printf "=== BUILD-WITH-LCG Environment Info ===\n"
+printf "LCG      : %s\n" "${LCG}"
+printf "PLATFORM : %s\n" "${PLATFORM}"
 
-## source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
+# Create build directory and navigate into it
+mkdir -p build && cd build || exit 1
 
-echo 'BUILD-WITH-LCG:     python ' $(which python)
-echo 'BUILD-WITH-LCG:     python ' $(python --version)
+# Source LCG environment (. instead of source for 100% shell compatibility)
+. ../.aux/.build-lcg "${LCG}" "${PLATFORM}"
 
+printf "=== BUILD-WITH-LCG Environment Info ===\n"
+printf "Python binary:  %s\n" "$(which python)"
+printf "Python version: %s\n" "$(python --version 2>&1)"
+
+# Check Python user-site directory
 user_site=$(python -m site --user-site)
-if [[ ${user_site} && -d ${user_site} ]]
-then
-    echo 'BUILD-WITH-LCG:     USER-SITE directory ' ${user_site}
-    ls ${user_site}    
-elif [[ ! -d ${user_site} ]] 
-then 
-    echo 'BUILD-WITH-LCG:  no USER-SITE directory ' ${user_site}  
+
+if [ -d "${user_site}" ]; then
+    printf "USER-SITE directory (%s):\n" "${user_site}"
+    ls -la "${user_site}"
+else
+    printf "No USER-SITE directory found at: %s\n" "${user_site}"
 fi
 
-which python
-
-user_site=$(python -m site --user-site)
-echo 'USER-SITE python directory: ' ${user_site}
-ls -al ${user_site}
-
-if command -v pip &> /dev/null
-then
-    python -m pip list --user 
+# List user-installed pip packages if pip is available
+if command -v pip >/dev/null 2>&1; then
+    printf "=== Installed User Pip Packages ===\n"
+    python -m pip list --user || true
 fi
 
-## (re)check all dependencies
-if command -v check-dependencies  &> /dev/null
-then
-    check-dependencies 
+# Recheck all dependencies
+if command -v check-dependencies >/dev/null 2>&1; then
+    printf "=== Checking Dependencies ===\n"
+    check-dependencies
 fi
+
+# =============================================================================
+##                                                                      The END 
+# =============================================================================
+
 
 

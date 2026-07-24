@@ -1,58 +1,85 @@
-#!/usr/bin/env bash
-LCG=$1
-CMTCONFIG=$2
+#!/usr/bin/env sh
 
-echo 'test-with-lcg       LCG =' ${LCG}
-echo 'test-with-lcg CMTCONFIG =' ${CMTCONFIG}
-echo 'test-with-lcg       PWD =' ${PWD}
+# =============================================================================
+# Safe argument check
+# =============================================================================
+LCG="${1:?Error: Specify LCG version (e.g., LCG_105)}"
+PLATFORM="${2:?Error: Specify PLATFORM (e.g., x86_64-el9-gcc13-opt)}"
 
+# =============================================================================
+printf "=== TEST-WITH-LCG Environment Info ===\n"
+printf "LCG      : %s\n" "${LCG}"
+printf "PLATFORM : %s\n" "${PLATFORM}"
+# =============================================================================
 
-cd ./build
+# =============================================================================
+# Navigate into build directory safely
+# =============================================================================
+cd ./build || exit 1
 
-if [[ ${LCG}                                                       &&
-	  ${CMTCONFIG}                                                 &&                        
-	  -f /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh &&
-	  -f ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh                ]]
-then
-    
-    echo 'TEST-WITH-LCG: sourcing ' /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh    
-    source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-    
-    echo 'TEST-WITH-LCG: sourcing ' ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
-    source ./INSTALL/${LCG}/${CMTCONFIG}/thisostap.sh
-    
+LCG_SETUP_SCRIPT="/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh"
+OSTAP_SETUP_SCRIPT="./INSTALL/${LCG}/${PLATFORM}/thisostap.sh"
+
+if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
+   [ -f "${LCG_SETUP_SCRIPT}" ] && [ -f "${OSTAP_SETUP_SCRIPT}" ]; then
+
+    # =========================================================================
+    printf "TEST-WITH-LCG: sourcing %s\n" "${LCG_SETUP_SCRIPT}"
+    # shellcheck disable=SC1091
+    . "${LCG_SETUP_SCRIPT}"
+    # =========================================================================
+    printf "TEST-WITH-LCG: sourcing %s\n" "${OSTAP_SETUP_SCRIPT}"
+    # shellcheck disable=SC1091
+    . "${OSTAP_SETUP_SCRIPT}"
+    # =========================================================================
+
 else
-    
-    echo '(re)source .build-lcg'
-    source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
-        
+
+    # =========================================================================
+    printf "(re)source .build-lcg\n"
+    # shellcheck disable=SC1091
+    . ../.aux/.build-lcg "${LCG}" "${PLATFORM}"
+    # =========================================================================
+
 fi
 
-## echo '(re)source .build-lcg'
-## source ../.aux/.build-lcg ${LCG} ${CMTCONFIG}
+# =============================================================================
+printf "=== TEST-WITH-LCG Environment Info ===\n"
+printf "Python binary:  %s\n" "$(which python)"
+printf "Python version: %s\n" "$(python --version 2>&1)"
+# =============================================================================
 
-echo 'TEST-WITH-LCG:      python ' $(which python)
-echo 'TEST-WITH-LCG:      python ' $(python --version)
-
-## 
+# =============================================================================
+# Check Python user-site directory
+# =============================================================================
 user_site=$(python -m site --user-site)
-if [[ ${user_site} && -d ${user_site} ]]
-then
-    echo 'TEST-WITH-LCG:      USER-SITE directory ' ${user_site}
-    ls ${user_site}
-elif [[ ! -d ${user_site} ]] 
-then 
-    echo 'TEST-WITH-LCG:   no USER-SITE directory ' ${user_site}  
+if [ -d "${user_site}" ]; then
+    printf "TEST-WITH-LCG:      USER-SITE directory %s\n" "${user_site}"
+    ls -la "${user_site}"
+else
+    printf "TEST-WITH-LCG:   no USER-SITE directory %s\n" "${user_site}"
 fi
 
-if command -v pip &> /dev/null
-then
-    python -m pip list --user
+# =============================================================================
+# List user-installed pip packages if pip is available
+# =============================================================================
+if command -v pip >/dev/null 2>&1; then
+    python -m pip list --user || true
 fi
-    
-## (re)check all dependencies 
-COLUMNS=200 check-dependencies
 
-## run tests 
-## OSTAP_BATCH=True COLUMNS=200 ctest -j4  -R '(para|gof|rewe|run)' --output-on-failure --test-output-size-failed 5000000
+# =============================================================================
+# Recheck all dependencies
+# =============================================================================
+if command -v check-dependencies >/dev/null 2>&1; then
+    COLUMNS=200 check-dependencies
+fi
+
+# =============================================================================
+# Run tests
+# =============================================================================
 OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core.core --output-on-failure --test-output-size-failed 5000000
+
+# =============================================================================
+#                                                                       The END
+# =============================================================================
+

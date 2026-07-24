@@ -5,12 +5,11 @@
 # =====================================================================
 
 if [ -n "${PYTHONNOUSERSITE}" ]; then
-    printf 'thisostap.h: unset PYTHONNOUSERSITE %s\n' "${PYTHONNOUSERSITE}"
+    printf 'thisostap.sh: unset PYTHONNOUSERSITE %s\n' "${PYTHONNOUSERSITE}"
     unset PYTHONNOUSERSITE
 fi
 
-
-## 
+## Helper functions for PATH manipulation via Python
 _path_prepend() {
 cat <<EOF | python - "$1" "$2"
 import os, sys
@@ -42,7 +41,7 @@ path = os.environ.get(path, '')
 path = path.split(os.pathsep) 
 npath = []
 for p in path: 
-    if os.path.exists(item) and os.path.samefile(p, item): continue    
+    if os.path.exists(item) and os.path.samefile(p, item): continue     
     if not os.path.exists(p): continue 
     if not os.path.isdir(p): continue 
     pn = os.path.normpath(p) 
@@ -54,19 +53,19 @@ EOF
 }
 
 # =============================================================================
-## Clean the path 
+## Clean old OSTAP paths if OSTAP_DIR was previously set
 # =============================================================================
-if [ -n "${OSTAP_DIR}" ] && [ -h "${OSTAP_DIR}" ] ; then
+if [ -n "${OSTAP_DIR}" ] && [ -d "${OSTAP_DIR}" ]; then
     old_ostap_dir="${OSTAP_DIR}"
     PATH=$(_path_remove PATH "${old_ostap_dir}/bin"); export PATH
     PYTHONPATH=$(_path_remove PYTHONPATH "${old_ostap_dir}"); export PYTHONPATH
-    PYTHONPATH=$(_path_remove PYTHONPATH "${old_ostap_dir}@OSTAP_PYTHON_SITE_DIR"); export PYTHONPATH
-    LD_LIBRARY_PATH=$(_path_remove LD_LIBRARY_PATH "${old_ostap_dir}@OSTAP_PYTHON_SITE_DIR@"); export LD_LIBRARY_PATH
+    PYTHONPATH=$(_path_remove PYTHONPATH "${old_ostap_dir}@OSTAP_PYTHON_SITE_DIR@"); export PYTHONPATH
+    LD_LIBRARY_PATH=$(_path_remove LD_LIBRARY_PATH "${old_ostap_dir}/lib"); export LD_LIBRARY_PATH
     MANPATH=$(_path_remove MANPATH "${old_ostap_dir}/doc/man"); export MANPATH
 fi
 
 # =============================================================================
-## define OSTAP_DIR  as a directory where the script is located
+## Determine SCRIPT_PATH portably depending on shell (bash/zsh/ksh/sh)
 # =============================================================================
 if [ -n "${BASH_SOURCE-}" ]; then
     SCRIPT_PATH="${BASH_SOURCE[0]}"
@@ -79,23 +78,30 @@ else
 fi
 
 # =============================================================================
-while [ -h "${OSTAP_DIR}" ]; do
-    DIR="$(cd -P "$(dirname "${OSTAP_DIR}")" >/dev/null 2>&1 && pwd)"
-    OSTAP_DIR="$(readlink "${OSTAP_DIR}")"
-    case "${OSTAP_DIR}" in
+## Resolve symlinks on the script file itself to get actual OSTAP_DIR
+# =============================================================================
+THIS_SCRIPT="${SCRIPT_PATH}"
+
+while [ -h "${THIS_SCRIPT}" ]; do
+    DIR="$(cd -P "$(dirname "${THIS_SCRIPT}")" >/dev/null 2>&1 && pwd)"
+    THIS_SCRIPT="$(readlink "${THIS_SCRIPT}")"
+    case "${THIS_SCRIPT}" in
         /*) ;;
-        *) OSTAP_DIR="${DIR}/${OSTAP_DIR}" ;;
+        *) THIS_SCRIPT="${DIR}/${THIS_SCRIPT}" ;;
     esac 
 done
 
-OSTAP_DIR="$(cd -P "$(dirname "${OSTAP_DIR}")" >/dev/null 2>&1 && pwd)"
+OSTAP_DIR="$(cd -P "$(dirname "${THIS_SCRIPT}")" >/dev/null 2>&1 && pwd)"
 export OSTAP_DIR 
 
 OSTAP_VERSION=@OSTAP_VERSION@
 export OSTAP_VERSION
 
+# =============================================================================
 ## Update environment paths
+# =============================================================================
 PATH=$(_path_prepend PATH "${OSTAP_DIR}/bin"); export PATH
+
 if [ -d "${OSTAP_DIR}@OSTAP_PYTHON_SITE_DIR@" ]; then
     PYTHONPATH=$(_path_prepend PYTHONPATH "${OSTAP_DIR}@OSTAP_PYTHON_SITE_DIR@")
     export PYTHONPATH
@@ -103,13 +109,15 @@ else
     PYTHONPATH=$(_path_prepend PYTHONPATH "${OSTAP_DIR}")
     export PYTHONPATH
 fi
+
 LD_LIBRARY_PATH=$(_path_prepend LD_LIBRARY_PATH "${OSTAP_DIR}/lib"); export LD_LIBRARY_PATH
 MANPATH=$(_path_prepend MANPATH "${OSTAP_DIR}/doc/man"); export MANPATH
 
+# Clean up helper shell functions
 unset -f _path_prepend
 unset -f _path_remove 
- 
+unset THIS_SCRIPT SCRIPT_PATH DIR old_ostap_dir
+
 # =====================================================================
 #                                                               The END 
 # =====================================================================
- 

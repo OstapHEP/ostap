@@ -1,7 +1,12 @@
-## New features
+# v3.7.5.0
 
-   1. provide the first version of `thisostap.csh` script to setup the environment for `csh/tcsh`.
-   
+  1. provide the first version of `thisostap.csh` script to setup the environment for `csh/tcsh`.
+  1. make the basic `thisostap.sh` script "universal": from now it should be OK for `sh/bash/ksh/zsh"
+  1. make `build_with_lcg` and `test_with_lcg` scripts "universal
+  1. make `.build-ostap` script "universal
+  1. make `.build-lcg` script "universal
+  1. `scripts` installs as `bin`  : for better coherency and simlification of conda builds
+  
 ## Bug fixes
 
    1. Bug fixes for OSX
@@ -11,8 +16,6 @@
 # v3.7.4.4
 
 ## New features
-
-   1.  `scripts` installs as `bin`  : for netter coherency and simlification of conda builds
 
 ## Bug fixes
 
