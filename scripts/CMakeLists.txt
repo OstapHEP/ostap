@@ -1,26 +1,26 @@
 
 install ( FILES       ostap 
-          DESTINATION scripts
+          DESTINATION bin
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install ( FILES       check-dependencies 
-          DESTINATION scripts  
+          DESTINATION bin 
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install ( FILES       ostap-table 
-          DESTINATION scripts  
+          DESTINATION bin 
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install ( FILES       sync-dirs 
-          DESTINATION scripts  
+          DESTINATION bin
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install ( FILES       pplaunch
-          DESTINATION scripts
+          DESTINATION bin
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 

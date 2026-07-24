@@ -1,3 +1,13 @@
+# v3.7.4.4
+
+## New features
+
+   1.  `scripts` installs as `bin`  : fo netter coherency and simlification of conda builds
+
+## Bug fixes
+
+## Backward incompatible
+
 # v3.7.4.2
 
 ## New features
