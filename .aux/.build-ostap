@@ -213,15 +213,17 @@ make_command=""
 make_generator=""
 if command -v ninja >/dev/null 2>&1; then
     make_command="ninja"
-    make_generator="-G Ninja"
+    make_generator="Ninja"
     printf "%s NINJA              : %s\n" "${prefix1}" "$(command -v ninja)"
     printf "%s NINJA version      : %s\n" "${prefix1}" "$(ninja --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 elif command -v gmake >/dev/null 2>&1; then
     make_command="gmake"
+    make_generator="Unix Makefiles"
     printf "%s GMAKE              : %s\n" "${prefix1}" "$(command -v gmake)"
     printf "%s GMAKE version      : %s\n" "${prefix1}" "$(gmake --version | grep -Eo '[0-9]+\.[0-9]+')"
 elif command -v make >/dev/null 2>&1; then
     make_command="make"
+    make_generator="Unix Makefiles"
     printf "%s MAKE               : %s\n" "${prefix1}" "$(command -v make)"
     printf "%s MAKE version       : %s\n" "${prefix1}" "$(make --version | grep -Eo '[0-9]+\.[0-9]+')"
 else
@@ -229,7 +231,9 @@ else
     safe_exit 218
 fi
 
-# Environment sanitization
+# =========================================================================
+## Environment sanitization
+# =========================================================================
 if [ -n "${PYTHONNOUSERSITE}" ]; then
     printf "%s unset PYTHONNOUSERSITE %s\n" "${prefix1}" "${PYTHONNOUSERSITE}"
     unset PYTHONNOUSERSITE
@@ -301,7 +305,7 @@ NCPU=$(get_cpu_count)
 # ==========================================================================
 printf "%s [4/7] First  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
 ( cd "${OSTAP_BUILD}" && \
-  cmake ${fresh} "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" "${make_generator}" && \
+  cmake ${fresh} "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
   "${make_command}" -j"${NCPU}" && \
   "${make_command}" install | grep -v Up-to-date | grep -v Installing )
 
@@ -310,13 +314,19 @@ if [ "${sc}" -ne 0 ]; then
     printf "%s [4/7] failure: first pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
     unset OSTAP_BUILD OSTAP_INSTALL
     safe_exit "${sc}"
+else
+    printf "%s First  pass is OK %s\n" "${prefix1}" "${sc}"
 fi
 
-# Check install directory existence
+# ==========================================================================
+## Check install directory existence
+# ==========================================================================
 if [ ! -d "${OSTAP_INSTALL}" ]; then
     printf "%s Missing install directory! %s\n" "${prefix1_error}" "${OSTAP_INSTALL}"
     unset OSTAP_BUILD OSTAP_INSTALL
     safe_exit 219
+else 
+    printf "%s OSTAP_INSTALL is found %s\n" "${prefix}" "${OSTAP_INSTALL}"
 fi
 
 # =========================================================================
@@ -324,7 +334,7 @@ fi
 # ==========================================================================
 printf "%s [5/7] Second pass of cmake&%s&install %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
 ( cd "${OSTAP_BUILD}" && \
-  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" "${make_generator}" && \
+  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
   "${make_command}" -j"${NCPU}" && \
   "${make_command}" install | grep -v Up-to-date | grep -v Installing )
 
@@ -333,12 +343,15 @@ if [ "${sc}" -ne 0 ]; then
     printf "%s [5/7] failure: second pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
     unset OSTAP_BUILD OSTAP_INSTALL
     safe_exit "${sc}"
+else
+    printf "%s Second pass is OK %s\n" "${prefix1}" "${sc}"    
 fi
 
 # =========================================================================
 ## Source setup script
 # ==========================================================================
 if [ -f "${OSTAP_INSTALL}/thisostap.sh" ] && [ -r "${OSTAP_INSTALL}/thisostap.sh" ]; then
+    printf "%s thisostap.sh is sourced %s\n" "${prefix1}" "${OSTAP_INSTALL}/thisostap.sh"
     . "${OSTAP_INSTALL}/thisostap.sh"
 else
     printf "%s No thisostap.sh is found %s\n" "${prefix1_error}" "${OSTAP_INSTALL}/thisostap.sh"
@@ -351,7 +364,7 @@ fi
 # ==========================================================================
 printf "%s [6/7] Third  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
 ( cd "${OSTAP_BUILD}" && \
-  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" "${make_generator}" && \
+  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
   "${make_command}" -j"${NCPU}" && \
   "${make_command}" install | grep -v Up-to-date | grep -v Installing )
 
@@ -360,6 +373,8 @@ if [ "${sc}" -ne 0 ]; then
     printf "%s [6/7] failure: third pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
     unset OSTAP_BUILD OSTAP_INSTALL
     safe_exit "${sc}"
+else
+    printf "%s Third  pass is OK %s\n" "${prefix1}" "${sc}"    
 fi
 
 OSTAP_BUILDER="${make_command}"

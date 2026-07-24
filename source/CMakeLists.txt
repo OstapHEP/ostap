@@ -15,8 +15,8 @@ endif ()
 
 if    (ROOT_VERSION VERSION_LESS "6.26")
   message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} "<6.26 is not supported anymore" )
-## elseif(ROOT_VERSION VERSION_LESS "6.28")
-## message ( WARNING     " ROOT   version " ${ROOT_VERSION} "<6.28 support will be drop soon" )
+elseif(ROOT_VERSION VERSION_LESS "6.28")
+  message ( WARNING     " ROOT   version " ${ROOT_VERSION} "<6.28 support will be drop soon" )
 endif() 
     
 message ( "----> ROOT            version    : " ${ROOT_VERSION} )
