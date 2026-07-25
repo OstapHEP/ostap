@@ -18,15 +18,27 @@ prefix_error='<<OSTAP WITH LCG ERROR>>'
 # Cross-platform canonical absolute path resolution (replaces GNU readlink -f / realpath -m)
 # =========================================================================
 get_canonical_path() {
+    
     target_path="$1"
-    if command -v python3 >/dev/null 2>&1; then
-        python3 -c "import os, sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))" "$target_path" 2>/dev/null
-    elif command -v python >/dev/null 2>&1; then
-        python -c "import os, sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))" "$target_path" 2>/dev/null
-    elif [ -d "$target_path" ]; then
-        (cd "$target_path" && pwd -P)
+
+    # 1. Если это директория (или симлинк на директорию)
+    if [ -d "${target_path}" ]; then
+        (cd "${target_path}" 2>/dev/null && pwd -P)
+
+    # 2. Если это файл (или симлинк на файл)
+    elif [ -f "${target_path}" ]; then
+        dir_name=$(dirname "${target_path}")
+        file_name=$(basename "${target_path}")
+        abs_dir=$(cd "${dir_name}" 2>/dev/null && pwd -P)
+        if [ -n "${abs_dir}" ]; then
+            printf "%s/%s\n" "${abs_dir}" "${file_name}"
+        else
+            echo "${target_path}"
+        fi
+
+    # 3. Фолбэк для несуществующих путей
     else
-        echo "$target_path"
+        echo "${target_path}"
     fi
 }
 
