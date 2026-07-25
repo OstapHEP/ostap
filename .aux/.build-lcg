@@ -233,7 +233,7 @@ do
        [ -f "${source_dir}/CMakeLists.txt" ] && \
        [ -f "${source_dir}/.aux/.build-ostap" ]; then
 
-        source_dir=$(get_canonical_path "${source_dir}")
+        ## source_dir=$(get_canonical_path "${source_dir}")
         source_found="${source_dir}"
         printf " source found! %s  %s\n" "${source_dir}" "${source_found}"
         break
