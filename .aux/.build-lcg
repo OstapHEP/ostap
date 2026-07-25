@@ -217,25 +217,6 @@ for source_dir in \
     "../" \
     "./"
 do
-    printf ">>>>>>>>>>> CHECKING source_dir: '%s' <<<<<<<<\n" "${source_dir}"
-    printf ">>>>>>>>>>> CHECKING source_found: '%s' <<<<<<<<\n" "${source_found}"
-    
-    if [ -d "${source_dir}" ]; then  
-        ls "${source_dir}"
-        
-        [ -d "${source_dir}/cmake" ]        && printf "> dir : cmake\n"
-        [ -d "${source_dir}/data" ]         && printf "> dir : data\n"
-        [ -d "${source_dir}/docs" ]         && printf "> dir : docs\n"
-        [ -d "${source_dir}/examples" ]     && printf "> dir : examples\n"
-        [ -d "${source_dir}/ostap" ]        && printf "> dir : ostap\n"
-        [ -d "${source_dir}/scripts" ]      && printf "> dir : scripts\n"
-        [ -d "${source_dir}/source" ]       && printf "> dir : source\n"
-        [ -d "${source_dir}/ReleaseNotes" ] && printf "> dir : ReleaseNotes\n"
-        [ -d "${source_dir}/.aux" ]         && printf "> dir : .aux\n"
-        [ -f "${source_dir}/CMakeLists.txt" ]        && printf "> file: CMakeLists.txt\n"
-        [ -f "${source_dir}/.aux/.build-ostap" ]     && printf "> file: .aux/.build-ostap\n"
-    fi 
-     
     if [ -n "${source_dir}" ] && \
        [ -d "${source_dir}" ] && \
        [ -d "${source_dir}/cmake" ] && \
@@ -257,8 +238,6 @@ do
     fi
 done
 
-printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/1 %s <<<<<<<<\n" "${source_found}"
-
 if [ -n "${source_found}" ] && [ -d "${source_found}" ]; then
     OSTAP_SOURCE=$(get_canonical_path "${source_found}")
     printf "%s Use OSTAP_SOURCE   = '%s'\n" "${prefix}" "${OSTAP_SOURCE}"
@@ -266,8 +245,6 @@ else
     printf "%s No ostap source directory found!\n" "${prefix_error}"
     return 114 
 fi
-
-printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/2 <<<<<<<<\n"
 
 ## Parameter #4: build directory
 OSTAP_BUILD="${4:-${OSTAP_BUILD}}"
@@ -354,15 +331,19 @@ if [ -f "${OSTAP_BUILD}/build.ninja" ]; then
     fi
 fi
 
+# ===================================================================================
 printf "%s Remove OSTAP_BUILD   remnants&garbage %s\n" "${prefix}" "${OSTAP_BUILD}"
 for item in CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* '#'* '*~' '.*~' '.#'*; do
     [ -e "${OSTAP_BUILD}/${item}" ] && rm -rf -- "${OSTAP_BUILD}/${item}"
 done
+# ===================================================================================
 
 ## rm -rf -- CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
 ## printf "%s Clean OSTAP_BUILD remnants&garbage %s\n" "${prefix}" "${OSTAP_BUILD}"
 
-## Parameter #5: install directory 
+# ===================================================================================
+## Parameter #5: install directory
+# ===================================================================================
 OSTAP_INSTALL="${5:-${OSTAP_INSTALL}}"
 
 if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTALL}" ]; then
@@ -384,15 +365,15 @@ else
 
 fi
 
-printf "%s LCG VERSION    : %s\n" "${prefix}" "${LCG}"
-printf "%s LCG PLATFORM   : %s\n" "${prefix}" "${PLATFORM}"
-printf "%s LCG BUILD      : %s\n" "${prefix}" "${LCG_BUILD}"
+printf "%s LCG VERSION        : %s\n" "${prefix}" "${LCG}"
+printf "%s LCG PLATFORM       : %s\n" "${prefix}" "${PLATFORM}"
+printf "%s LCG BUILD          : %s\n" "${prefix}" "${LCG_BUILD}"
 
-printf "%s ROOTSYS        : %s\n" "${prefix}" "${ROOTSYS}"
+printf "%s ROOTSYS            : %s\n" "${prefix}" "${ROOTSYS}"
 
-printf "%s OSTAP_SOURCE   : %s\n" "${prefix}" "${OSTAP_SOURCE}"
-printf "%s OSTAP_INSTALL  : %s\n" "${prefix}" "${OSTAP_INSTALL}"
-printf "%s OSTAP_BUILD    : %s\n" "${prefix}" "${OSTAP_BUILD}"
+printf "%s OSTAP_SOURCE       : %s\n" "${prefix}" "${OSTAP_SOURCE}"
+printf "%s OSTAP_INSTALL      : %s\n" "${prefix}" "${OSTAP_INSTALL}"
+printf "%s OSTAP_BUILD        : %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 old_prefix="${prefix}"
 old_prefix_error="${prefix_error}"
@@ -412,18 +393,19 @@ fi
 prefix="${old_prefix}"
 prefix_error="${old_prefix_error}"
 
-printf "%s LCG VERSION    : %s\n" "${prefix}" "${LCG}"
-printf "%s LCG PLATFORM   : %s\n" "${prefix}" "${PLATFORM}"
-printf "%s LCG BUILD      : %s\n" "${prefix}" "${LCG_BUILD}"
+printf "%s LCG VERSION        : %s\n" "${prefix}" "${LCG}"
+printf "%s LCG PLATFORM       : %s\n" "${prefix}" "${PLATFORM}"
+printf "%s LCG BUILD          : %s\n" "${prefix}" "${LCG_BUILD}"
 
 if [ "$result" -eq 0 ]; then
-    printf "%s RESULT         : SUCCESS\n" "${prefix}"
+    printf "%s RESULT             : SUCCESS\n" "${prefix}"
 else
-    printf "%s RESULT         : %s\n" "${prefix_error}" "${result}"
+    printf "%s RESULT             : %s\n" "${prefix_error}" "${result}"
 fi
 
 # ===================================================================================
 return "${result}"
+# ===================================================================================
 
 # ===================================================================================
 ##                                                                            The END 

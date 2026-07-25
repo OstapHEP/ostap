@@ -1,14 +1,5 @@
 #!/usr/bin/env sh
 
-safe_exit() {
-    exit_code="${1:-0}"
-    if is_sourced; then
-        return "$exit_code"
-    else
-        exit "$exit_code"
-    fi
-}
-
 # Safe argument check
 LCG="${1:?Error: Specify LCG version (e.g., LCG_105)}"
 PLATFORM="${2:?Error: Specify PLATFORM (e.g., x86_64-el9-gcc13-opt)}"
@@ -34,8 +25,27 @@ mkdir -p build && cd build || exit 1
 sc=$?
 if [ "${sc}" -ne 0 ]; then
     printf "::error::Error from .build-lcg %s\n" "${prefix1_error}" "${sc}"
-    safe_exit ${sc}
+    exit ${sc}
 fi
+
+if [ -n "${OSTAP_DIR}" ]  && [ -d "${OSTAP_DIR}" ] && [ -f "${OSTAP_DIR}/thisostap.sh" ]; then
+    ;
+else 
+    printf "::error::Invalid OSTAP_DIR %s\n" "${OSTAP_DIR}"
+    exit 2 
+fi
+
+# =============================================================================
+## check for ostap
+# =============================================================================
+if command -v ostap >/dev/null 2>&1; then
+    ;
+else
+    printf "::error::ostap is not accessible!\n"
+    exit 3     
+fi
+
+# =============================================================================
 
 printf "=== BUILD-WITH-LCG Environment Info ===\n"
 printf "Python binary:  %s\n" "$(which python)"
@@ -60,8 +70,6 @@ if command -v pip >/dev/null 2>&1; then
     printf "=== Installed User Pip Packages ===\n"
     python -m pip list --user || true
 fi
-## python -c "import importlib.metadata; print('\n'.join(f'{d.name}=={d.version}' for d in importlib.metadata.distributions()))"
-
 
 # =============================================================================
 # Recheck all dependencies
@@ -69,6 +77,9 @@ fi
 if command -v check-dependencies >/dev/null 2>&1; then
     printf "=== Checking Dependencies ===\n"
     check-dependencies
+else
+    printf "::error::check-dependencies is not accssible!\n"
+    exit 4     
 fi
 
 # =============================================================================

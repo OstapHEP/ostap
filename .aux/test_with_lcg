@@ -75,16 +75,32 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     # shellcheck disable=SC1091
     . "${OSTAP_SETUP_SCRIPT}"
     # =========================================================================
+    
+    sc=$?
+    if [ "${sc}" -ne 0 ]; then
+	printf "::error::Error from '. %s' %s\n" "${OSTAP_SETUP_SCRIPT}" "${sc}"
+	exit ${sc}
+    fi
 
 else
-
+    
     # =========================================================================
     printf "(re)source .build-lcg\n"
     # shellcheck disable=SC1091
-    . ../.aux/.build-lcg "${LCG}" "${PLATFORM}"
+    ## . ../.aux/.build-lcg "${LCG}" "${PLATFORM}"
+    ../.aux/build_with_lcg "${LCG}" "${PLATFORM}"
     # =========================================================================
-
+    
+    sc=$?
+    if [ "${sc}" -ne 0 ]; then
+	printf "::error::Error from build-with-lcg %s\n" "${sc}"
+	exit ${sc}
+    fi
+    
 fi
+
+
+# =============================================================================
 
 # =============================================================================
 printf "=== TEST-WITH-LCG Environment Info ===\n"
