@@ -153,7 +153,7 @@ elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
 
     ## OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
-    OSTAP_BUILD="${OSTAP_SOURCE}/build")
+    OSTAP_BUILD="${OSTAP_SOURCE}/build"
     printf "%s Use OSTAP_BUILD   = %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
