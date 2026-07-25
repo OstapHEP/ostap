@@ -20,7 +20,7 @@ is_sourced() {
 safe_exit() {
     exit_code="${1:-0}"
     if is_sourced; then
-        return "$exit_code"
+        return "$exit_code" 2>/dev/null || kill -INT $$
     else
         exit "$exit_code"
     fi
