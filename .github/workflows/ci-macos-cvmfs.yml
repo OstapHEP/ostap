@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Ensure this platform string matches your target LCG View in CVMFS
           - { os: macos-14, lcg: dev3/latest, platform: arm64-mac14-clang160-opt }
           - { os: macos-15, lcg: dev3/latest, platform: arm64-mac15-clang170-opt }
           - { os: macos-15, lcg: LCG_110,     platform: arm64-mac15-clang170-opt }
@@ -32,26 +31,24 @@ jobs:
         run: |
           echo "=== Creating synthetic /cvmfs root directory ==="
           
-          # 1. Создаем целевую директорию
+          # 1. Создаем папку и отдаем права текущему пользователю runner
           sudo mkdir -p /Users/Shared/cvmfs
+          sudo chown -R runner:staff /Users/Shared/cvmfs
           
           # 2. Прописываем синтетическую связь в /etc/synthetic.conf
-          # Важно: между 'cvmfs' и '/Users/Shared/cvmfs' должен быть строго символ табуляции (\t)!
           printf "cvmfs\t/Users/Shared/cvmfs\n" | sudo tee -a /etc/synthetic.conf
 
           # 3. Принуждаем macOS смонтировать synthetic точку без перезагрузки
           sudo apfs.util -c 2>/dev/null || sudo mount -t synthetic / / 2>/dev/null || true
 
-          # 4. Если apfs.util не сработал, делаем симлинк как фолбэк
+          # 4. Фолбэк через обычный симлинк, если apfs.util не создал папку
           if [ ! -d "/cvmfs" ]; then
             sudo ln -s /Users/Shared/cvmfs /cvmfs 2>/dev/null || true
           fi
 
-          # 5. Проверяем доступность точки /cvmfs
+          # 5. Проверяем доступность
           ls -ld /cvmfs
-	  
 
-      # 2. Настраиваем Homebrew Taps (как у вас)
       - name: Trust CVMFS Homebrew Taps
         run: |
           brew tap cvmfs/cvmfs || true
@@ -59,12 +56,10 @@ jobs:
           brew trust cvmfs/cvmfs || true
           brew trust macos-fuse-t/cask || true
 
-      # 3. Монтируем CVMFS, принудительно указав mountpoint = /cvmfs
       - name: Install and Mount CVMFS
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
-          cvmfs_mountpoint: '/cvmfs'
 
       - name: Verify CVMFS Access on macOS
         run: |
@@ -73,7 +68,7 @@ jobs:
             printf "::error::No %s is found!\n" "${lcg_script}"
             exit 1
           fi
-          echo "CVMFS successfully mounted on macOS!"
+          echo "CVMFS successfully mounted on macOS at /cvmfs!"
 
       - name: Clean environment for CVMFS / LCG (like Azure)
         run: |
@@ -108,4 +103,3 @@ jobs:
         with:
           name: macos-artifacts-${{ matrix.os }}-${{ strategy.job-index }}
           path: build/Testing
-
