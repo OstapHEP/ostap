@@ -51,11 +51,6 @@ jobs:
           export CMAKE_BUILD_PARALLEL_LEVEL=2
           ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
 
-      - name: Verify-2 CVMFS Access on macOS
-        run: |
-          ls -la /cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}/
-          echo "CVMFS successfully mounted on macOS!"
-	  
       - name: Test Ostap on macOS
         run: |
           ./.aux/test_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
