@@ -28,22 +28,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
       - name: Create synthetic /cvmfs directory on macOS
         run: |
           echo "=== Creating synthetic /cvmfs root directory ==="
-          # Создаем реальную папку в доступном месте
+          
+          # 1. Создаем целевую директорию
           sudo mkdir -p /Users/Shared/cvmfs
-          sudo chown -R runner:staff /Users/Shared/cvmfs
           
-          # Прописываем монтирование в synthetic.conf (симлинк /cvmfs -> /Users/Shared/cvmfs)
-          echo -e "cvmfs\t/Users/Shared/cvmfs" | sudo tee -a /etc/synthetic.conf
-          
-          # Принудительно перезапускаем синтетический апдейтер macOS
-          sudo /System/Library/Filesystems/apfs.fs/Contents/Resources/apfs.util -B || true
-          
-          # Проверяем, что /cvmfs появился в корне
+          # 2. Прописываем синтетическую связь в /etc/synthetic.conf
+          # Важно: между 'cvmfs' и '/Users/Shared/cvmfs' должен быть строго символ табуляции (\t)!
+          printf "cvmfs\t/Users/Shared/cvmfs\n" | sudo tee -a /etc/synthetic.conf
+
+          # 3. Принуждаем macOS смонтировать synthetic точку без перезагрузки
+          sudo apfs.util -c 2>/dev/null || sudo mount -t synthetic / / 2>/dev/null || true
+
+          # 4. Если apfs.util не сработал, делаем симлинк как фолбэк
+          if [ ! -d "/cvmfs" ]; then
+            sudo ln -s /Users/Shared/cvmfs /cvmfs 2>/dev/null || true
+          fi
+
+          # 5. Проверяем доступность точки /cvmfs
           ls -ld /cvmfs
+	  
 
       # 2. Настраиваем Homebrew Taps (как у вас)
       - name: Trust CVMFS Homebrew Taps
