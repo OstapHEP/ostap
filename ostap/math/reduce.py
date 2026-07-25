@@ -17,7 +17,7 @@ import  array
 # =============================================================================
 ## Trivial factory for deserialization of generic objects
 def root_factory ( klass , *params ) :
-    """ Trivial factory for deserialization of generic bjects
+    """ Trivial factory for (de)serialization of generic objects
     """
     return klass ( *params )
 

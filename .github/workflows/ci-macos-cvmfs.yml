@@ -1,0 +1,39 @@
+name: macOS (Native CVMFS)
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test_macos:
+    name: Build macOS (${{ matrix.platform }})
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { lcg: dev3/latest, platform: arm64-mac14-clang15-opt }
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install and Mount CVMFS
+        uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
+
+      - name: Build and Test
+        run: |
+          export CMAKE_BUILD_PARALLEL_LEVEL=2
+          ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
+          ./.aux/test_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
+
+      - name: Archive macOS production artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: build/Testing
