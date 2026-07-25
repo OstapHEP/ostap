@@ -49,8 +49,6 @@ jobs:
           fi
           echo "CVMFS successfully mounted on macOS!"
 
-    echo "CVMFS successfully mounted on macOS!"
-
       - name: Build Ostap on macOS
         run: |
           # Limit C++ build concurrency to prevent Out-Of-Memory (OOM) failures
