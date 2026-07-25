@@ -7,7 +7,7 @@
 [![macOS (Native + CVMFS)](https://github.com/OstapHEP/ostap/actions/workflows/ci-macos-cvmfs.yml/badge.svg)](https://github.com/OstapHEP/ostap/actions/workflows/ci-macos-cvmfs.yml)
 [![Azure Build Status](https://dev.azure.com/OstapHep/OstapHep/_apis/build/status/OstapHEP.ostap?branchName=master)](https://dev.azure.com/OstapHep/OstapHep/_build/latest?definitionId=5&branchName=master)
 [![Gitter Chat](https://badges.gitter.im/OstapHEP/ostap.svg)](https://gitter.im/OstapHEP/ostap?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![DOI](https://zenodo.org/badge/81464356.svg)](https://zenodo.org/badge/latestdoi/81464356)
+[![DOI](https://zenodo.org/badge/latestdoi/81464356.svg)](https://zenodo.org/badge/latestdoi/81464356)
 
 [![Conda Version](https://anaconda.org/conda-forge/ostaphep/badges/version.svg)](https://anaconda.org/conda-forge/ostaphep)
 [![Conda Release Date](https://anaconda.org/conda-forge/ostaphep/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/ostaphep)
