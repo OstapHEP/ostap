@@ -141,7 +141,13 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
    [ -f "${LCG_SETUP}" ] && [ -r "${LCG_SETUP}" ]; then
 
     printf "%s Source LCG setup   = %s\n" "${prefix}" "${LCG_SETUP}"
+
+
+    unset PYTHONHOME ## ATTENTION !!! 
+    unset PYTHONPATH ## ATTENTION !!! 
+    
     . "${LCG_SETUP}"
+    
 else
     printf "%s No valid LCG/PLATFORM/setup script: %s\n" "${prefix_error}" "${LCG_SETUP}"
     safe_exit 112 
