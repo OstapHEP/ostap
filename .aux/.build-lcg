@@ -363,6 +363,7 @@ old_prefix_error="${prefix_error}"
 ## Actual build script sourcing
 # =======================================================================================
 if [ -f "${OSTAP_SOURCE}/.aux/.build-ostap" ] && [ -r "${OSTAP_SOURCE}/.aux/.build-ostap" ]; then
+    # ===================================================================================
     . "${OSTAP_SOURCE}/.aux/.build-ostap" "${OSTAP_SOURCE}" "${OSTAP_INSTALL}" "${OSTAP_BUILD}"
     result=$?
 else
