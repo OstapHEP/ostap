@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 LCG="${1:-dev3/latest}"
-PLATFORM="${2:-x86_64-el9-clang22-opt}" 
+PLATFORM="${2:-x86_64-el9-clang22-opt}"
 
 prefix='<<OSTAP WITH LCG>>'
 prefix_error='<<OSTAP WITH LCG ERROR>>'
@@ -253,7 +253,7 @@ elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
     
     OSTAP_BUILD="${OSTAP_SOURCE}/build"
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD")
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
     printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
@@ -321,8 +321,12 @@ if [ -f "${OSTAP_BUILD}/build.ninja" ]; then
 fi
 
 printf "%s Remove OSTAP_BUILD   remnants&garbage %s\n" "${prefix}" "${OSTAP_BUILD}"
-( cd "${OSTAP_BUILD}" && \
-  rm -rf -- CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
+for item in CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* '#'* '*~' '.*~' '.#'*; do
+    [ -e "${OSTAP_BUILD}/${item}" ] && rm -rf -- "${OSTAP_BUILD}/${item}"
+done
+
+## rm -rf -- CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
+## printf "%s Clean OSTAP_BUILD remnants&garbage %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 ## Parameter #5: install directory 
 OSTAP_INSTALL="${5:-${OSTAP_INSTALL}}"
