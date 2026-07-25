@@ -107,7 +107,8 @@ if [ -n "${OSTAP_SOURCE}" ] && \
    [ -d "${OSTAP_SOURCE}/ReleaseNotes" ] && \
    [ -f "${OSTAP_SOURCE}/CMakeLists.txt" ]; then
 
-    OSTAP_SOURCE=$(get_canonical_path "${OSTAP_SOURCE}")
+    ## OSTAP_SOURCE=$(get_canonical_path "${OSTAP_SOURCE}")
+    OSTAP_SOURCE="${OSTAP_SOURCE}"
     printf "%s Use OSTAP_SOURCE  = %s\n" "${prefix1}" "${OSTAP_SOURCE}"
 else
     printf "%s No valid source directory is found! %s\n" "${prefix1_error}" "${OSTAP_SOURCE}"
@@ -119,9 +120,11 @@ fi
 ## INSTALL directory
 # ==========================================================================
 if [ -n "${OSTAP_INSTALL}" ]; then
-    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    ## OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    OSTAP_INSTALL="${OSTAP_INSTALL}"
 else
-    OSTAP_INSTALL=$(get_canonical_path "./INSTALL")
+    ## OSTAP_INSTALL=$(get_canonical_path "./INSTALL")
+    OSTAP_INSTALL="./INSTALL"
 fi
 
 if [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
@@ -139,7 +142,7 @@ ostap_build_upper=$(echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]')
 
 if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
 
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    ## OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
     printf "%s Use OSTAP_BUILD   = %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
@@ -149,13 +152,14 @@ elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 
 elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
 
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
+    ## OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
+    OSTAP_BUILD="${OSTAP_SOURCE}/build")
     printf "%s Use OSTAP_BUILD   = %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
 
     mkdir -p "${OSTAP_SOURCE}/build"
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
+    ## OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
     printf "%s Build directory is created %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 else
@@ -243,7 +247,7 @@ fi
 ## Clean install directory
 # ==========================================================================
 if [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTALL}" ]; then
-    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    ## OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
     printf "%s [1/7] Clean  OSTAP_INSTALL directory        %s\n" "${prefix1}" "${OSTAP_INSTALL}"
     ( cd "${OSTAP_INSTALL}" && \
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
