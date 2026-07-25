@@ -1,8 +1,8 @@
 Ostap Project                   
 =============
 
-[![Linux/(Docker+CVMFS) Latest build:](https://github.com/OstapHEP/ostap/actions/workflows/ci-linux-docker.yml/badge.svg)][https://github.com/OstapHEP/ostap/actions/workflows/ci-linux-docker.yml)
-![MacOS/(Native+CVMFS) Latest build:](https://github.com/OstapHEP/ostap/actions/workflows/ci-macos-cvmfs.yml/badge.svg)[https://github.com/OstapHEP/ostap/actions/workflows/ci-macos-cvmfs.yml)
+[![Linux/(Docker+CVMFS) Latest build:](https://github.com/OstapHEP/ostap/actions/workflows/ci-linux-docker.yml/badge.svg)](https://github.com/OstapHEP/ostap/actions/workflows/ci-linux-docker.yml)
+!![MacOS/(Native+CVMFS) Latest build:](https://github.com/OstapHEP/ostap/actions/workflows/ci-macos-cvmfs.yml/badge.svg)(https://github.com/OstapHEP/ostap/actions/workflows/ci-macos-cvmfs.yml)
 
 [![Build Status](https://dev.azure.com/OstapHep/OstapHep/_apis/build/status/OstapHEP.ostap?branchName=master)](https://dev.azure.com/OstapHep/OstapHep/_build/latest?definitionId=5&branchName=master)
 [![Join the chat at https://gitter.im/OstapHEP/ostap](https://badges.gitter.im/OstapHEP/ostap.svg)](https://gitter.im/OstapHEP/ostap?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
