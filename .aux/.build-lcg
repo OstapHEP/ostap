@@ -145,9 +145,17 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
    [ -f "${LCG_SETUP}" ] && [ -r "${LCG_SETUP}" ]; then
 
     printf "%s Source LCG setup   = %s\n" "${prefix}" "${LCG_SETUP}"
-
-    unset PYTHONHOME ## ATTENTION !!! 
-    unset PYTHONPATH ## ATTENTION !!! 
+    
+    if [ "$(uname -s)" = "Darwin" ]; then
+	
+	# 1. Принудительно очищаем PATH от путей Homebrew перед настройкой LCG,
+	# чтобы GitHub-раннер не подмешивал свои бинарники и питон
+	export PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "/opt/homebrew" | grep -v "/usr/local" | tr '\n' ':')
+	
+	# 2. Сбрасываем переменные Python, которые навязывает GitHub Actions
+	unset PYTHONHOME
+	unset PYTHONPATH
+    fi
     
     . "${LCG_SETUP}"
 
