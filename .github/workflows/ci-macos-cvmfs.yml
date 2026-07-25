@@ -20,7 +20,8 @@ jobs:
       matrix:
         include:
           # Ensure this platform string matches your target LCG View in CVMFS
-          - { os: macos-15 , lcg: dev3/latest, platform: arm64-mac15-clang160-opt }
+          - { os: macos-14 , lcg: dev3/latest, platform: arm64-mac14-clang160-opt }
+          - { os: macos-15 , lcg: dev3/latest, platform: arm64-mac15-clang170-opt }
 
     steps:
       - name: Checkout repository
