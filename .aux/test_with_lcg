@@ -37,17 +37,24 @@ get_canonical_path() {
 printf "TEST-WITH-LCG:   LCG_SETUP_SCRIPT/1 %s\n" "${LCG_SETUP_SCRIPT}"
 printf "TEST-WITH-LCG: OSTAP_SETUP_SCRIPT/1 %s\n" "${OSTAP_SETUP_SCRIPT}"
 
+ls -al /cvmfs/sft.cern.ch/lcg/views
+
 LCG_SETUP_SCRIPT=$(get_canonical_path "${LCG_SETUP_SCRIPT}")
 OSTAP_SETUP_SCRIPT=$(get_canonical_path "${OSTAP_SETUP_SCRIPT}")
 
 printf "TEST-WITH-LCG:   LCG_SETUP_SCRIPT/2 %s\n" "${LCG_SETUP_SCRIPT}"
 printf "TEST-WITH-LCG: OSTAP_SETUP_SCRIPT/2 %s\n" "${OSTAP_SETUP_SCRIPT}"
 
+ls -al /cvmfs/sft.cern.ch/lcg/views
+
+printf "TEST-WITH-LCG:  LCG=%s\n" "${LCG}"
+printf "TEST-WITH-LCG:  LCG=%s\n" "${LCG}"
+    
 if [ -n "${LCG}" ] ; then
-    printf "TEST-WITH-LCG:  no LCG\n"
+    printf "TEST-WITH-LCG:  OK LCG\n"
 fi
 if [ -n "${PLATFORM}" ] ; then
-    printf "TEST-WITH-LCG:  no PLATFORM\n"
+    printf "TEST-WITH-LCG:  OK PLATFORM\n"
 fi
 
 if [ -f "${LCG_SETUP_SCRIPT}" ] ; then
@@ -58,7 +65,6 @@ if [ -f "${OSTAP_SETUP_SCRIPT}" ] ; then
     printf "TEST-WITH-LCG:  no OSTAP_SETUP_SCRIPT %s\n" "${OSTAP_SETUP_SCRIPT}"
 fi
 
-   
 if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
    [ -f "${LCG_SETUP_SCRIPT}" ] && [ -f "${OSTAP_SETUP_SCRIPT}" ]; then
 

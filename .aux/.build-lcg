@@ -133,8 +133,8 @@ LCG_VIEWS="/cvmfs/sft.cern.ch/lcg/views"
 LCG_BUILD="${LCG_VIEWS}/${LCG}/${PLATFORM}"
 LCG_SETUP="${LCG_BUILD}/setup.sh"
 
-LCG_BUILD=$(get_canonical_path "${LCG_BUILD}")
-LCG_SETUP=$(get_canonical_path "${LCG_SETUP}")
+## LCG_BUILD=$(get_canonical_path "${LCG_BUILD}")
+## LCG_SETUP=$(get_canonical_path "${LCG_SETUP}")
 
 if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
    [ -d "${LCG_VIEWS}" ] && [ -d "${LCG_BUILD}" ] && \
