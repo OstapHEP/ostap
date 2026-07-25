@@ -152,25 +152,31 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     . "${LCG_SETUP}"
 
     if [ "$(uname -s)" = "Darwin" ]; then
-        # Находим системный/Homebrew CMake
-        SYS_CMAKE_BIN=""
-        if [ -x "/opt/homebrew/bin/cmake" ]; then
+	SYS_CMAKE_BIN=""
+	if [ -x "/opt/homebrew/bin/cmake" ]; then
             SYS_CMAKE_BIN="/opt/homebrew/bin/cmake"
-        elif [ -x "/usr/local/bin/cmake" ]; then
+	elif [ -x "/usr/local/bin/cmake" ]; then
             SYS_CMAKE_BIN="/usr/local/bin/cmake"
-        fi
-
-        if [ -n "${SYS_CMAKE_BIN}" ]; then
-            # Ставим системную папку с cmake на первое место в PATH, перебивая CVMFS
+	fi
+	
+	if [ -n "${SYS_CMAKE_BIN}" ]; then
             SYS_CMAKE_DIR=$(dirname "${SYS_CMAKE_BIN}")
             export PATH="${SYS_CMAKE_DIR}:${PATH}"
             
-            # Очищаем системные переменные CMake, чтобы он задействовал свои родные модули CheckCXXSourceRuns
             unset CMAKE_ROOT
             unset CMAKE_MODULE_PATH
-        fi
+            
+            # ==============================================================================
+            # КЛЮЧЕВОЙ ФИКС: Указываем системному CMake путь к библиотекам из CVMFS View
+            # ==============================================================================
+            if [ -n "${LCG_VIEW}" ]; then
+		export CMAKE_PREFIX_PATH="${LCG_VIEW}:${CMAKE_PREFIX_PATH}"
+            elif [ -n "${SERVER_DIR}" ]; then
+		export CMAKE_PREFIX_PATH="${SERVER_DIR}:${CMAKE_PREFIX_PATH}"
+            fi
+	fi
     fi
-    # ==============================================================================
+    
     
 else
     printf "%s No valid LCG/PLATFORM/setup script: %s\n" "${prefix_error}" "${LCG_SETUP}"
