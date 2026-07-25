@@ -139,7 +139,6 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     
     . "${LCG_SETUP}"
 
-
     if [ "$(uname -s)" = "Darwin" ]; then
         # Находим системный/Homebrew CMake
         SYS_CMAKE_BIN=""
@@ -202,8 +201,11 @@ for source_dir in \
     "./"
 do
 
-    printf ">>>>>>>>>>> CHECKING source_dir: %s <<<<<<<<\n" "${source_dir}"
-
+    printf ">>>>>>>>>>> CHECKING source_dir: '%s' <<<<<<<<\n" "${source_dir}"
+    if [ -d "${source_dir}" ] ; then	
+	ls ${source_dir}
+    fi 
+	 
     if [ -n "${source_dir}" ] && \
        [ -d "${source_dir}" ] && \
        [ -d "${source_dir}/cmake" ] && \
@@ -223,17 +225,17 @@ do
     fi
 done
 
-printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/1 <<<<<<<<"
+printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/1 <<<<<<<<\n"
 
 if [ -n "${source_found}" ] && [ -d "${source_found}" ]; then
     OSTAP_SOURCE=$(get_canonical_path "${source_found}")
-    printf "%s Use OSTAP_SOURCE   = %s\n" "${prefix}" "${OSTAP_SOURCE}"
+    printf "%s Use OSTAP_SOURCE   = '%s'\n" "${prefix}" "${OSTAP_SOURCE}"
 else
     printf "%s No ostap source directory found!\n" "${prefix_error}"
     return 114 
 fi
 
-printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/2 <<<<<<<<"
+printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/2 <<<<<<<<\n"
 
 ## Parameter #4: build directory
 OSTAP_BUILD="${4:-${OSTAP_BUILD}}"

@@ -17,7 +17,12 @@ printf "=== BUILD-WITH-LCG Environment Info ===\n"
 printf "LCG      : %s\n" "${LCG}"
 printf "PLATFORM : %s\n" "${PLATFORM}"
 
+printf "PWD      : %s\n" "$(PWD)"
+ls -al
+
+# ========================================================================
 # Create build directory and navigate into it
+# ========================================================================
 mkdir -p build && cd build || exit 1
 
 # Source LCG environment (. instead of source for 100% shell compatibility)
