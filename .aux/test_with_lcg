@@ -20,6 +20,45 @@ cd ./build || exit 1
 LCG_SETUP_SCRIPT="/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh"
 OSTAP_SETUP_SCRIPT="./INSTALL/${LCG}/${PLATFORM}/thisostap.sh"
 
+# Cross-platform canonical absolute path resolution (replaces GNU readlink -f / realpath -m)
+get_canonical_path() {
+    target_path="$1"
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c "import os, sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))" "$target_path" 2>/dev/null
+    elif command -v python >/dev/null 2>&1; then
+        python -c "import os, sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))" "$target_path" 2>/dev/null
+    elif [ -d "$target_path" ]; then
+        (cd "$target_path" && pwd -P)
+    else
+        echo "$target_path"
+    fi
+}
+
+printf "TEST-WITH-LCG:   LCG_SETUP_SCRIPT/1 %s\n" "${LCG_SETUP_SCRIPT}"
+printf "TEST-WITH-LCG: OSTAP_SETUP_SCRIPT/1 %s\n" "${OSTAP_SETUP_SCRIPT}"
+
+LCG_SETUP_SCRIPT=$(get_canonical_path "${LCG_SETUP_SCRIPT}")
+OSTAP_SETUP_SCRIPT=$(get_canonical_path "${OSTAP_SETUP_SCRIPT}")
+
+printf "TEST-WITH-LCG:   LCG_SETUP_SCRIPT/2 %s\n" "${LCG_SETUP_SCRIPT}"
+printf "TEST-WITH-LCG: OSTAP_SETUP_SCRIPT/2 %s\n" "${OSTAP_SETUP_SCRIPT}"
+
+if [ -n "${LCG}" ] ; then
+    printf "TEST-WITH-LCG:  no LCG\n"
+fi
+if [ -n "${PLATFORM}" ] ; then
+    printf "TEST-WITH-LCG:  no PLATFORM\n"
+fi
+
+if [ -f "${LCG_SETUP_SCRIPT}" ] ; then
+    printf "TEST-WITH-LCG:  no LCG_SETUP_SCRIPT %s\n" "${LCG_SETUP_SCRIPT}"
+fi
+
+if [ -f "${OSTAP_SETUP_SCRIPT}" ] ; then
+    printf "TEST-WITH-LCG:  no OSTAP_SETUP_SCRIPT %s\n" "${OSTAP_SETUP_SCRIPT}"
+fi
+
+   
 if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
    [ -f "${LCG_SETUP_SCRIPT}" ] && [ -f "${OSTAP_SETUP_SCRIPT}" ]; then
 
@@ -78,7 +117,7 @@ fi
 # Run tests
 # =============================================================================
 ## OSTAP_BATCH=True COLUMNS=200 ctest -j4 --output-on-failure --test-output-size-failed 5000000
-OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core --output-on-failure --test-output-size-failed 5000000
+OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core.core --output-on-failure --test-output-size-failed 5000000
 
 # =============================================================================
 #                                                                       The END

@@ -40,9 +40,9 @@ jobs:
         with:
           cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
 
-      - name: Verify CVMFS Access on macOS
+      - name: Verify-1 CVMFS Access on macOS
         run: |
-          ls -la /cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}
+          ls -la /cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}/
           echo "CVMFS successfully mounted on macOS!"
 
       - name: Build Ostap on macOS
@@ -51,6 +51,11 @@ jobs:
           export CMAKE_BUILD_PARALLEL_LEVEL=2
           ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
 
+      - name: Verify-2 CVMFS Access on macOS
+        run: |
+          ls -la /cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}/
+          echo "CVMFS successfully mounted on macOS!"
+	  
       - name: Test Ostap on macOS
         run: |
           ./.aux/test_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
