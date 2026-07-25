@@ -151,7 +151,7 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     
     . "${LCG_SETUP}"
 
-    if [ "$(uname -s)" = "Darwin" ]; then
+    if [ "$(uname -s)" = "QUQUDarwin" ]; then
 	SYS_CMAKE_BIN=""
 	if [ -x "/opt/homebrew/bin/cmake" ]; then
             SYS_CMAKE_BIN="/opt/homebrew/bin/cmake"
