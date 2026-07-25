@@ -1,4 +1,4 @@
-name: macOS (Native CVMFS)
+name: Ostap @ macOS (Native CVMFS)
 
 on:
   push:
