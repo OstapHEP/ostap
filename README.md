@@ -1,6 +1,8 @@
 
 # Ostap Project
 
+# Ostap Project
+
 [![Linux (Docker + CVMFS)](https://github.com/OstapHEP/ostap/actions/workflows/ci-linux-docker.yml/badge.svg)](https://github.com/OstapHEP/ostap/actions/workflows/ci-linux-docker.yml)
 [![macOS (Native + CVMFS)](https://github.com/OstapHEP/ostap/actions/workflows/ci-macos-cvmfs.yml/badge.svg)](https://github.com/OstapHEP/ostap/actions/workflows/ci-macos-cvmfs.yml)
 [![Azure Build Status](https://dev.azure.com/OstapHep/OstapHep/_apis/build/status/OstapHEP.ostap?branchName=master)](https://dev.azure.com/OstapHep/OstapHep/_build/latest?definitionId=5&branchName=master)
@@ -10,8 +12,6 @@
 [![Conda Version](https://anaconda.org/conda-forge/ostaphep/badges/version.svg)](https://anaconda.org/conda-forge/ostaphep)
 [![Conda Release Date](https://anaconda.org/conda-forge/ostaphep/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/ostaphep)
 [![Conda Downloads](https://anaconda.org/conda-forge/ostaphep/badges/downloads.svg)](https://anaconda.org/conda-forge/ostaphep)
-
-QUQUQUQUQUQUQUQUQUQUQ
 
 
 Nowadays [ROOT](http://root.cern.ch/) and [PyROOT](http://root.cern.ch/drupal/content/pyroot) are de-facto standard tools for performing physics analysis. The Ostap project is a community-driven initiative aiming to provide more user friendly and more intuitive interface to [ROOT](http://root.cern.ch/) and [PyROOT](http://root.cern.ch/drupal/content/pyroot) and extending the existing functionality.
