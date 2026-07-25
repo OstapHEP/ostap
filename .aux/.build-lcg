@@ -191,7 +191,7 @@ fi
 
 OSTAP_SOURCE="${3:-${OSTAP_SOURCE}}"
 
-source_found=""
+source_found=
 for source_dir in \
     "${OSTAP_SOURCE:-${OSTAP_HOME}}" \
     "${OSTAP_HOME:-${PWD}}" \
@@ -200,45 +200,25 @@ for source_dir in \
     "../" \
     "./"
 do
-
-    printf ">>>>>>>>>>> CHECKING source_dir: '%s' '%s'<<<<<<<<\n" "${source_dir}"
-    printf ">>>>>>>>>>> CHECKING source_found: '%s' '%s'<<<<<<<<\n" "${source_found}"
+    printf ">>>>>>>>>>> CHECKING source_dir: '%s' <<<<<<<<\n" "${source_dir}"
+    printf ">>>>>>>>>>> CHECKING source_found: '%s' <<<<<<<<\n" "${source_found}"
     
-    if [ -d "${source_dir}" ] ; then	
-	ls ${source_dir}
-	
-	if [ -d "${source_dir}/cmake" ]; then
-	   printf "> dir : cmake\n"
-        fi
-	if [ -d "${source_dir}/data" ]; then
-	   printf "> dir : data\n"
-        fi
-	if [ -d "${source_dir}/docs" ]; then
-	   printf "> dir : docs\n"
-        fi
-	if [ -d "${source_dir}/scripts" ]; then
-	   printf "> dir : scripts\n"
-        fi
-	if [ -d "${source_dir}/source" ]; then
-	   printf "> dir : scripts\n"
-        fi
-	if [ -d "${source_dir}/source" ]; then
-	   printf "> dir : source\n"
-        fi
-	if [ -d "${source_dir}/ReleaseNotes" ]; then
-	   printf "> dir : ReleaseNotes\n"
-        fi
-	if [ -d "${source_dir}/.aux" ]; then
-	   printf "> dir : .aux\n"
-        fi
-	if [ -f "${source_dir}/CMakeLists" ]; then
-	   printf "> file: CMakeLists.txt\n"
-        fi
-	if [ -f "${source_dir}/.aux/.build-ostap" ]; then
-	   printf "> file: .aux/.build-ostap\n"
-        fi	   
+    if [ -d "${source_dir}" ]; then  
+        ls "${source_dir}"
+        
+        [ -d "${source_dir}/cmake" ]        && printf "> dir : cmake\n"
+        [ -d "${source_dir}/data" ]         && printf "> dir : data\n"
+        [ -d "${source_dir}/docs" ]         && printf "> dir : docs\n"
+        [ -d "${source_dir}/examples" ]     && printf "> dir : examples\n"
+        [ -d "${source_dir}/ostap" ]        && printf "> dir : ostap\n"
+        [ -d "${source_dir}/scripts" ]      && printf "> dir : scripts\n"
+        [ -d "${source_dir}/source" ]       && printf "> dir : source\n"
+        [ -d "${source_dir}/ReleaseNotes" ] && printf "> dir : ReleaseNotes\n"
+        [ -d "${source_dir}/.aux" ]         && printf "> dir : .aux\n"
+        [ -f "${source_dir}/CMakeLists.txt" ]        && printf "> file: CMakeLists.txt\n"
+        [ -f "${source_dir}/.aux/.build-ostap" ]     && printf "> file: .aux/.build-ostap\n"
     fi 
-	 
+     
     if [ -n "${source_dir}" ] && \
        [ -d "${source_dir}" ] && \
        [ -d "${source_dir}/cmake" ] && \
@@ -252,11 +232,11 @@ do
        [ -d "${source_dir}/.aux" ] && \
        [ -f "${source_dir}/CMakeLists.txt" ] && \
        [ -f "${source_dir}/.aux/.build-ostap" ]; then
-	
+
         source_dir=$(get_canonical_path "${source_dir}")
-	source_found="${source_dir}"
-	printf " source found! %s  %s\n" "${source_dir}" "${source_found}"
-        break 
+        source_found="${source_dir}"
+        printf " source found! %s  %s\n" "${source_dir}" "${source_found}"
+        break
     fi
 done
 
