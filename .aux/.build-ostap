@@ -9,21 +9,9 @@ prefix_error='<<BUILD OSTAP *ERROR*>>'
 # Portable Helper Functions
 # =========================================================================
 
-# Check if script is sourced or executed in POSIX-compliant shells
-is_sourced() {
-    (return 0 2>/dev/null)
-}
-
-safe_exit() {
-    exit_code="${1:-0}"
-    if is_sourced; then
-        return "$exit_code"
-    else
-        exit "$exit_code"
-    fi
-}
-
+# =========================================================================
 # Cross-platform CPU core count
+# =========================================================================
 get_cpu_count() {
     if command -v nproc >/dev/null 2>&1; then
         nproc
@@ -34,7 +22,9 @@ get_cpu_count() {
     fi
 }
 
+# =========================================================================
 # Cross-platform canonical absolute path resolution
+# =========================================================================
 get_canonical_path() {
     target_path="$1"
     if command -v python >/dev/null 2>&1; then
@@ -89,7 +79,7 @@ if [ -n "${ROOTSYS}" ] && \
     :
 else
     printf "%s No valid ROOTSYS directory: %s\n" "${prefix1_error}" "${ROOTSYS}"
-    safe_exit 210
+    return 210
 fi
 
 # ==========================================================================
@@ -112,7 +102,7 @@ if [ -n "${OSTAP_SOURCE}" ] && \
 else
     printf "%s No valid source directory is found! %s\n" "${prefix1_error}" "${OSTAP_SOURCE}"
     unset OSTAP_SOURCE OSTAP_BUILD OSTAP_INSTALL
-    safe_exit 211
+    return 211
 fi
 
 # ==========================================================================
@@ -128,7 +118,7 @@ fi
 if [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
     printf "%s Directory OSTAP_INSTALL is not writeable! %s\n" "${prefix1_error}" "${OSTAP_INSTALL}"
     unset OSTAP_BUILD OSTAP_INSTALL
-    safe_exit 212
+    return 212
 fi
 
 printf "%s Use OSTAP_INSTALL = %s\n" "${prefix1}" "${OSTAP_INSTALL}"
@@ -173,7 +163,7 @@ if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]
 else
     printf "%s No valid build directory is found! %s\n" "${prefix1_error}" "${OSTAP_BUILD}"
     unset OSTAP_BUILD OSTAP_INSTALL
-    safe_exit 213
+    return 213
 fi
 
 # ==========================================================================
@@ -184,7 +174,7 @@ if command -v python >/dev/null 2>&1; then
     printf "%s PYTHON version     : %s\n" "${prefix1}" "$(python --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s PYTHON is not found!\n" "${prefix1_error}"
-    safe_exit 214
+    return 214
 fi 
 
 # ==========================================================================
@@ -193,7 +183,7 @@ if command -v pip >/dev/null 2>&1; then
     printf "%s PIP    version     : %s\n" "${prefix1}" "$(pip --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s PIP    is not found!\n" "${prefix1_error}"
-    ## safe_exit 214
+    ## return 214
 fi 
 
 if command -v cmake >/dev/null 2>&1; then
@@ -201,7 +191,7 @@ if command -v cmake >/dev/null 2>&1; then
     printf "%s CMAKE version      : %s\n" "${prefix1}" "$(cmake --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CMAKE is not found!\n" "${prefix1_error}"
-    safe_exit 215
+    return 215
 fi
 
 if command -v ctest >/dev/null 2>&1; then
@@ -209,7 +199,7 @@ if command -v ctest >/dev/null 2>&1; then
     printf "%s CTEST version      : %s\n" "${prefix1}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CTEST is not found!\n" "${prefix1_error}"
-    safe_exit 216
+    return 216
 fi
 
 if command -v cpack >/dev/null 2>&1; then
@@ -217,7 +207,7 @@ if command -v cpack >/dev/null 2>&1; then
     printf "%s CPACK version      : %s\n" "${prefix1}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CPACK is not found!\n" "${prefix1_error}"
-    safe_exit 217
+    return 217
 fi
 
 make_command=""
@@ -239,7 +229,7 @@ elif command -v make >/dev/null 2>&1; then
     printf "%s MAKE version       : %s\n" "${prefix1}" "$(make --version | grep -Eo '[0-9]+\.[0-9]+')"
 else
     printf "%s neither NINJA nor (G)MAKE is found!\n" "${prefix1_error}"
-    safe_exit 218
+    return 218
 fi
 
 # =========================================================================
@@ -324,7 +314,7 @@ sc=$?
 if [ "${sc}" -ne 0 ]; then
     printf "%s [4/7] failure: first pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
     unset OSTAP_BUILD OSTAP_INSTALL
-    safe_exit "${sc}"
+    return "${sc}"
 else
     printf "%s First  pass is OK %s\n" "${prefix1}" "${sc}"
 fi
@@ -335,7 +325,7 @@ fi
 if [ ! -d "${OSTAP_INSTALL}" ]; then
     printf "%s Missing install directory! %s\n" "${prefix1_error}" "${OSTAP_INSTALL}"
     unset OSTAP_BUILD OSTAP_INSTALL
-    safe_exit 219
+    return 219
 else 
     printf "%s OSTAP_INSTALL is found %s\n" "${prefix}" "${OSTAP_INSTALL}"
 fi
@@ -353,7 +343,7 @@ sc=$?
 if [ "${sc}" -ne 0 ]; then
     printf "%s [5/7] failure: second pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
     unset OSTAP_BUILD OSTAP_INSTALL
-    safe_exit "${sc}"
+    return "${sc}"
 else
     printf "%s Second pass is OK %s\n" "${prefix1}" "${sc}"    
 fi
@@ -367,7 +357,7 @@ if [ -f "${OSTAP_INSTALL}/thisostap.sh" ] && [ -r "${OSTAP_INSTALL}/thisostap.sh
 else
     printf "%s No thisostap.sh is found %s\n" "${prefix1_error}" "${OSTAP_INSTALL}/thisostap.sh"
     unset OSTAP_BUILD OSTAP_INSTALL
-    safe_exit 220
+    return 220
 fi
 
 # =========================================================================
@@ -383,7 +373,7 @@ sc=$?
 if [ "${sc}" -ne 0 ]; then
     printf "%s [6/7] failure: third pass of cmake&%s&install %s %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
     unset OSTAP_BUILD OSTAP_INSTALL
-    safe_exit "${sc}"
+    return "${sc}"
 else
     printf "%s Third  pass is OK %s\n" "${prefix1}" "${sc}"    
 fi
@@ -419,7 +409,7 @@ export OSTAP_SOURCE
 export OSTAP_BUILD
 export OSTAP_INSTALL
 
-safe_exit "${sc}"
+return "${sc}"
 
 # ===================================================================================
 #                                                                           The END

@@ -13,18 +13,6 @@ prefix_error='<<OSTAP WITH LCG ERROR>>'
 # =========================================================================
 # Check if script is sourced in POSIX-compliant shells
 # =========================================================================
-is_sourced() {
-    (return 0 2>/dev/null)
-}
-
-safe_exit() {
-    exit_code="${1:-0}"
-    if is_sourced; then
-        return "$exit_code" 2>/dev/null || kill -INT $$
-    else
-        exit "$exit_code"
-    fi
-}
 
 # =========================================================================
 # Cross-platform canonical absolute path resolution (replaces GNU readlink -f / realpath -m)
@@ -123,14 +111,14 @@ if [ -n "${LCG}" ] && [ -d "/cvmfs/sft.cern.ch/lcg/views/${LCG}" ]; then
     :
 else
     printf "%s Valid LCGs are: %s\n" "${prefix_error}" "$(ls /cvmfs/sft.cern.ch/lcg/views 2>/dev/null)"
-    safe_exit 110
+    return 110
 fi
 
 if [ -n "${PLATFORM}" ] && [ -d "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}" ]; then
     :
 else
     printf "%s Valid platforms are: %s\n" "${prefix_error}" "$(ls "/cvmfs/sft.cern.ch/lcg/views/${LCG}" 2>/dev/null)"
-    safe_exit 111
+    return 111
 fi
 
 LCG_VIEWS="/cvmfs/sft.cern.ch/lcg/views"
@@ -175,7 +163,7 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     
 else
     printf "%s No valid LCG/PLATFORM/setup script: %s\n" "${prefix_error}" "${LCG_SETUP}"
-    safe_exit 112 
+    return 112 
 fi
 
 ## CLANG wrapper check
@@ -199,7 +187,7 @@ if [ -n "${ROOTSYS}" ] && \
     :
 else 
     printf "%s No valid ROOTSYS directory: %s\n" "${prefix_error}" "${ROOTSYS}"
-    safe_exit 113
+    return 113
 fi
 
 OSTAP_SOURCE="${3:-${OSTAP_SOURCE}}"
@@ -214,7 +202,7 @@ for source_dir in \
     "./"
 do
 
-    printf ">>>>>>>>>>> CHECKING source_dir: %s <<<<<<<<" "${source_dir}"
+    printf ">>>>>>>>>>> CHECKING source_dir: %s <<<<<<<<\n" "${source_dir}"
 
     if [ -n "${source_dir}" ] && \
        [ -d "${source_dir}" ] && \
@@ -242,7 +230,7 @@ if [ -n "${source_found}" ] && [ -d "${source_found}" ]; then
     printf "%s Use OSTAP_SOURCE   = %s\n" "${prefix}" "${OSTAP_SOURCE}"
 else
     printf "%s No ostap source directory found!\n" "${prefix_error}"
-    safe_exit 114 
+    return 114 
 fi
 
 printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/2 <<<<<<<<"
@@ -289,7 +277,7 @@ if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]
     printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
 else
     printf "%s No valid build directory is found! %s\n" "${prefix_error}" "${OSTAP_BUILD}"
-    safe_exit 115
+    return 115
 fi     
 
 ## Check CMAKE & NINJA
@@ -298,7 +286,7 @@ if command -v cmake >/dev/null 2>&1; then
     printf "%s CMAKE version      : %s\n" "${prefix}" "$(cmake --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CMAKE is not found!\n" "${prefix_error}"
-    safe_exit 116
+    return 116
 fi
 
 if command -v ctest >/dev/null 2>&1; then
@@ -306,7 +294,7 @@ if command -v ctest >/dev/null 2>&1; then
     printf "%s CTEST version      : %s\n" "${prefix}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CTEST is not found!\n" "${prefix_error}"
-    safe_exit 117 
+    return 117 
 fi
 
 if command -v cpack >/dev/null 2>&1; then
@@ -314,7 +302,7 @@ if command -v cpack >/dev/null 2>&1; then
     printf "%s CPACK version      : %s\n" "${prefix}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CPACK is not found!\n" "${prefix_error}"
-    safe_exit 118 
+    return 118 
 fi
 
 if command -v ninja >/dev/null 2>&1; then
@@ -322,7 +310,7 @@ if command -v ninja >/dev/null 2>&1; then
     printf "%s NINJA version      : %s\n" "${prefix}" "$(ninja --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s NINJA is not found!\n" "${prefix_error}"
-    safe_exit 119 
+    return 119 
 fi 
 
 if [ -f "${OSTAP_BUILD}/build.ninja" ]; then
@@ -353,7 +341,7 @@ if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTA
 elif [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
 
     printf "%s Directory OSTAP_INSTALL is not writeable! %s\n" "${prefix_error}" "${OSTAP_INSTALL}"
-    safe_exit 120
+    return 120
 
 else
 
@@ -401,7 +389,7 @@ else
 fi
 
 # ===================================================================================
-safe_exit "${result}"
+return "${result}"
 
 # ===================================================================================
 ##                                                                            The END 
