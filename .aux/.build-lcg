@@ -148,6 +148,28 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     
     . "${LCG_SETUP}"
     
+    # ==============================================================================
+    # Универсальный POSIX-блок определения CMAKE_ROOT
+    # ==============================================================================
+    # Безопасно находим путь к бинарнику cmake (работает в sh, bash, zsh)
+    CMAKE_EXECUTABLE=$(command -v cmake 2>/dev/null)
+    
+    if [ -n "${CMAKE_EXECUTABLE}" ]; then
+	# Получаем родительский каталог (например, /.../arm64-mac14-clang160-opt)
+	CMAKE_BIN_DIR=$(dirname "${CMAKE_EXECUTABLE}")
+	CMAKE_BASE_DIR=$(dirname "${CMAKE_BIN_DIR}")
+	
+	# Безопасно ищем папку share/cmake-X.Y без использования ls и без ошибок в zsh
+	for dir in "${CMAKE_BASE_DIR}"/share/cmake-*; do
+	    if [ -d "${dir}" ]; then
+		export CMAKE_ROOT="${dir}"
+		export CMAKE_MODULE_PATH="${CMAKE_ROOT}/Modules${CMAKE_MODULE_PATH:+:${CMAKE_MODULE_PATH}}"
+		break
+	    fi
+	done
+    fi
+    # ==============================================================================
+    
 else
     printf "%s No valid LCG/PLATFORM/setup script: %s\n" "${prefix_error}" "${LCG_SETUP}"
     safe_exit 112 
