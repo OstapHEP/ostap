@@ -28,7 +28,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Explicitly tap and trust CVMFS Homebrew repositories to bypass Homebrew security restrictions
+
+      - name: Create synthetic /cvmfs directory on macOS
+        run: |
+          echo "=== Creating synthetic /cvmfs root directory ==="
+          # Создаем реальную папку в доступном месте
+          sudo mkdir -p /Users/Shared/cvmfs
+          sudo chown -R runner:staff /Users/Shared/cvmfs
+          
+          # Прописываем монтирование в synthetic.conf (симлинк /cvmfs -> /Users/Shared/cvmfs)
+          echo -e "cvmfs\t/Users/Shared/cvmfs" | sudo tee -a /etc/synthetic.conf
+          
+          # Принудительно перезапускаем синтетический апдейтер macOS
+          sudo /System/Library/Filesystems/apfs.fs/Contents/Resources/apfs.util -B || true
+          
+          # Проверяем, что /cvmfs появился в корне
+          ls -ld /cvmfs
+
+      # 2. Настраиваем Homebrew Taps (как у вас)
       - name: Trust CVMFS Homebrew Taps
         run: |
           brew tap cvmfs/cvmfs || true
@@ -36,10 +53,12 @@ jobs:
           brew trust cvmfs/cvmfs || true
           brew trust macos-fuse-t/cask || true
 
+      # 3. Монтируем CVMFS, принудительно указав mountpoint = /cvmfs
       - name: Install and Mount CVMFS
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
+          cvmfs_mountpoint: '/cvmfs'
 
       - name: Verify CVMFS Access on macOS
         run: |
