@@ -40,10 +40,16 @@ jobs:
         with:
           cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
 
-      - name: Verify-1 CVMFS Access on macOS
+      - name: Verify CVMFS Access on macOS
         run: |
-          ls -la /cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}/
+          lcg_script="/cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}/setup.sh"
+          if [ ! -f "${lcg_script}" ]; then 
+            printf "::error::No %s is found!\n" "${lcg_script}"
+            exit 1
+          fi
           echo "CVMFS successfully mounted on macOS!"
+
+    echo "CVMFS successfully mounted on macOS!"
 
       - name: Build Ostap on macOS
         run: |
