@@ -9,7 +9,7 @@ on:
 jobs:
   test_macos:
     name: Build macOS (${{ matrix.platform }})
-    runs-on: macos-14 # Apple Silicon (M1/M2/M3)
+    runs-on: ${{ matrix.os }}
     
     # Bypass Homebrew's untrusted tap requirement across the entire job
     env:
@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           # Ensure this platform string matches your target LCG View in CVMFS
-          - { lcg: dev3/latest, platform: arm64-mac14-clang15-opt }
+          - { os: macos-15 , lcg: dev3/latest, platform: arm64-mac15-clang160-opt }
 
     steps:
       - name: Checkout repository
