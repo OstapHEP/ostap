@@ -151,23 +151,25 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     
     . "${LCG_SETUP}"
 
+
     if [ "$(uname -s)" = "Darwin" ]; then
-	# 1. Находим системный/Homebrew CMake, у которого гарантированно целые модули
-	SYS_CMAKE=$(which cmake)
-	
-	# Если `which cmake` всё ещё указывает на CVMFS, берем системный из /usr/local или /opt/homebrew
-	if echo "$SYS_CMAKE" | grep -q "cvmfs"; then
-	    SYS_CMAKE="/opt/homebrew/bin/cmake"
-	fi
-	
-	# 2. Берем исправную папку Modules из локального CMake
-	SYS_CMAKE_DIR=$(dirname $(dirname "$SYS_CMAKE"))
-	LOCAL_MODULES=$(ls -d ${SYS_CMAKE_DIR}/share/cmake-*/Modules 2>/dev/null | tail -n 1)
-	
-	if [ -d "$LOCAL_MODULES" ]; then
-	    export CMAKE_ROOT=$(dirname "$LOCAL_MODULES")
-	    export CMAKE_MODULE_PATH="${LOCAL_MODULES}"
-	fi
+        # Находим системный/Homebrew CMake
+        SYS_CMAKE_BIN=""
+        if [ -x "/opt/homebrew/bin/cmake" ]; then
+            SYS_CMAKE_BIN="/opt/homebrew/bin/cmake"
+        elif [ -x "/usr/local/bin/cmake" ]; then
+            SYS_CMAKE_BIN="/usr/local/bin/cmake"
+        fi
+
+        if [ -n "${SYS_CMAKE_BIN}" ]; then
+            # Ставим системную папку с cmake на первое место в PATH, перебивая CVMFS
+            SYS_CMAKE_DIR=$(dirname "${SYS_CMAKE_BIN}")
+            export PATH="${SYS_CMAKE_DIR}:${PATH}"
+            
+            # Очищаем системные переменные CMake, чтобы он задействовал свои родные модули CheckCXXSourceRuns
+            unset CMAKE_ROOT
+            unset CMAKE_MODULE_PATH
+        fi
     fi
     # ==============================================================================
     
