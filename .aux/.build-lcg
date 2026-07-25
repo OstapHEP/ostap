@@ -213,6 +213,9 @@ for source_dir in \
     "../" \
     "./"
 do
+
+    printf ">>>>>>>>>>> CHECKING source_dir: %s <<<<<<<<" "${source_dir}"
+
     if [ -n "${source_dir}" ] && \
        [ -d "${source_dir}" ] && \
        [ -d "${source_dir}/cmake" ] && \
@@ -232,6 +235,8 @@ do
     fi
 done
 
+printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/1 <<<<<<<<"
+
 if [ -n "${source_found}" ] && [ -d "${source_found}" ]; then
     OSTAP_SOURCE=$(get_canonical_path "${source_found}")
     printf "%s Use OSTAP_SOURCE   = %s\n" "${prefix}" "${OSTAP_SOURCE}"
@@ -239,6 +244,8 @@ else
     printf "%s No ostap source directory found!\n" "${prefix_error}"
     safe_exit 114 
 fi
+
+printf ">>>>>>>>>>> CHECK FOR OSTAP_SOURCE/2 <<<<<<<<"
 
 ## Parameter #4: build directory
 OSTAP_BUILD="${4:-${OSTAP_BUILD}}"
