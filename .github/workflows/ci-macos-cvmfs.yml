@@ -10,7 +10,7 @@ jobs:
   test_macos:
     name: Build macOS (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
-    
+
     # Bypass Homebrew's untrusted tap requirement across the entire job
     env:
       HOMEBREW_NO_REQUIRE_TAP_TRUST: 1
@@ -20,9 +20,9 @@ jobs:
       matrix:
         include:
           # Ensure this platform string matches your target LCG View in CVMFS
-          - { os: macos-14 , lcg: dev3/latest, platform: arm64-mac14-clang160-opt }
-          - { os: macos-15 , lcg: dev3/latest, platform: arm64-mac15-clang170-opt }
-          - { os: macos-15 , lcg: LCG_110,     platform: arm64-mac15-clang170-opt }
+          - { os: macos-14, lcg: dev3/latest, platform: arm64-mac14-clang160-opt }
+          - { os: macos-15, lcg: dev3/latest, platform: arm64-mac15-clang170-opt }
+          - { os: macos-15, lcg: LCG_110,     platform: arm64-mac15-clang170-opt }
 
     steps:
       - name: Checkout repository
@@ -50,6 +50,23 @@ jobs:
           fi
           echo "CVMFS successfully mounted on macOS!"
 
+      - name: Clean environment for CVMFS / LCG (like Azure)
+        run: |
+          echo "=== Cleaning up GitHub Actions environment ==="
+
+          # 1. Удаляем Homebrew и пути Python из PATH, сохраняя системные утилиты
+          NEW_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "/opt/homebrew/bin" | grep -v "/Users/runner/.local" | tr '\n' ':')
+          echo "PATH=${NEW_PATH}" >> $GITHUB_ENV
+
+          # 2. Сбрасываем конфликтные переменные Python и CMake
+          echo "PYTHONPATH=" >> $GITHUB_ENV
+          echo "PYTHONHOME=" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=" >> $GITHUB_ENV
+          echo "CMAKE_MODULE_PATH=" >> $GITHUB_ENV
+
+          # 3. Отключаем проверку обновлений pip
+          echo "PIP_DISABLE_PIP_VERSION_CHECK=1" >> $GITHUB_ENV
+
       - name: Build Ostap on macOS
         run: |
           # Limit C++ build concurrency to prevent Out-Of-Memory (OOM) failures
@@ -64,5 +81,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: macos-artifacts
+          name: macos-artifacts-${{ matrix.os }}-${{ strategy.job-index }}
           path: build/Testing
+

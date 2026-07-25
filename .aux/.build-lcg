@@ -144,48 +144,8 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
    [ -d "${LCG_VIEWS}" ] && [ -d "${LCG_BUILD}" ] && \
    [ -f "${LCG_SETUP}" ] && [ -r "${LCG_SETUP}" ]; then
 
-    printf "%s Source LCG setup   = %s\n" "${prefix}" "${LCG_SETUP}"
-    
-    if [ "$(uname -s)" = "Darwin" ]; then
-	
-	# 1. Принудительно очищаем PATH от путей Homebrew перед настройкой LCG,
-	# чтобы GitHub-раннер не подмешивал свои бинарники и питон
-	export PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "/opt/homebrew" | grep -v "/usr/local" | tr '\n' ':')
-	
-	# 2. Сбрасываем переменные Python, которые навязывает GitHub Actions
-	unset PYTHONHOME
-	unset PYTHONPATH
-    fi
-    
     . "${LCG_SETUP}"
 
-    if [ "$(uname -s)" = "QUQUDarwin" ]; then
-	SYS_CMAKE_BIN=""
-	if [ -x "/opt/homebrew/bin/cmake" ]; then
-            SYS_CMAKE_BIN="/opt/homebrew/bin/cmake"
-	elif [ -x "/usr/local/bin/cmake" ]; then
-            SYS_CMAKE_BIN="/usr/local/bin/cmake"
-	fi
-	
-	if [ -n "${SYS_CMAKE_BIN}" ]; then
-            SYS_CMAKE_DIR=$(dirname "${SYS_CMAKE_BIN}")
-            export PATH="${SYS_CMAKE_DIR}:${PATH}"
-            
-            unset CMAKE_ROOT
-            unset CMAKE_MODULE_PATH
-            
-            # ==============================================================================
-            # КЛЮЧЕВОЙ ФИКС: Указываем системному CMake путь к библиотекам из CVMFS View
-            # ==============================================================================
-            if [ -n "${LCG_VIEW}" ]; then
-		export CMAKE_PREFIX_PATH="${LCG_VIEW}:${CMAKE_PREFIX_PATH}"
-            elif [ -n "${SERVER_DIR}" ]; then
-		export CMAKE_PREFIX_PATH="${SERVER_DIR}:${CMAKE_PREFIX_PATH}"
-            fi
-	fi
-    fi
-    
-    
 else
     printf "%s No valid LCG/PLATFORM/setup script: %s\n" "${prefix_error}" "${LCG_SETUP}"
     return 112 
