@@ -28,9 +28,7 @@ if [ "${sc}" -ne 0 ]; then
     exit ${sc}
 fi
 
-if [ -n "${OSTAP_DIR}" ]  && [ -d "${OSTAP_DIR}" ] && [ -f "${OSTAP_DIR}/thisostap.sh" ]; then
-    ;
-else 
+if [ ! -n "${OSTAP_DIR}" ]  ||  [ !-d "${OSTAP_DIR}" ] || [ ! -f "${OSTAP_DIR}/thisostap.sh" ]; then
     printf "::error::Invalid OSTAP_DIR %s\n" "${OSTAP_DIR}"
     exit 2 
 fi
