@@ -1,3 +1,5 @@
+
+
 name: Ostap @ macOS (Native CVMFS)
 
 on:
@@ -27,28 +29,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create synthetic /cvmfs directory on macOS
-        run: |
-          echo "=== Creating synthetic /cvmfs root directory ==="
-          
-          # 1. Создаем папку и отдаем права текущему пользователю runner
-          sudo mkdir -p /Users/Shared/cvmfs
-          sudo chown -R runner:staff /Users/Shared/cvmfs
-          
-          # 2. Прописываем синтетическую связь в /etc/synthetic.conf
-          printf "cvmfs\t/Users/Shared/cvmfs\n" | sudo tee -a /etc/synthetic.conf
-
-          # 3. Принуждаем macOS смонтировать synthetic точку без перезагрузки
-          sudo apfs.util -c 2>/dev/null || sudo mount -t synthetic / / 2>/dev/null || true
-
-          # 4. Фолбэк через обычный симлинк, если apfs.util не создал папку
-          if [ ! -d "/cvmfs" ]; then
-            sudo ln -s /Users/Shared/cvmfs /cvmfs 2>/dev/null || true
-          fi
-
-          # 5. Проверяем доступность
-          ls -ld /cvmfs
-
+      # 1. Configure Homebrew tap trust settings
       - name: Trust CVMFS Homebrew Taps
         run: |
           brew tap cvmfs/cvmfs || true
@@ -56,50 +37,74 @@ jobs:
           brew trust cvmfs/cvmfs || true
           brew trust macos-fuse-t/cask || true
 
+      # 2. Mount CVMFS repositories
       - name: Install and Mount CVMFS
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
 
+      # 3. Dynamically locate the active CVMFS mount point
+      - name: Setup CVMFS Path Mapping
+        run: |
+          CVMFS_REAL_PATH=""
+          if [ -d "/cvmfs/sft.cern.ch" ]; then
+            CVMFS_REAL_PATH="/cvmfs"
+          elif [ -d "/Users/Shared/cvmfs/sft.cern.ch" ]; then
+            CVMFS_REAL_PATH="/Users/Shared/cvmfs"
+          elif [ -d "/Users/runner/cvmfs/sft.cern.ch" ]; then
+            CVMFS_REAL_PATH="/Users/runner/cvmfs"
+          fi
+
+          if [ -z "${CVMFS_REAL_PATH}" ]; then
+            echo "::error::CVMFS root directory was not found!"
+            exit 1
+          fi
+
+          echo "Found CVMFS at: ${CVMFS_REAL_PATH}"
+          echo "CVMFS_MOUNT_DIR=${CVMFS_REAL_PATH}" >> $GITHUB_ENV
+
+      # 4. Verify access to the LCG environment setup script
       - name: Verify CVMFS Access on macOS
         run: |
-          lcg_script="/cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}/setup.sh"
+          lcg_script="${CVMFS_MOUNT_DIR}/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}/setup.sh"
           if [ ! -f "${lcg_script}" ]; then 
             printf "::error::No %s is found!\n" "${lcg_script}"
             exit 1
           fi
-          echo "CVMFS successfully mounted on macOS at /cvmfs!"
+          echo "CVMFS successfully mounted and verified at ${lcg_script}"
 
+      # 5. Clean external runner environment variables to mirror Azure behavior
       - name: Clean environment for CVMFS / LCG (like Azure)
         run: |
           echo "=== Cleaning up GitHub Actions environment ==="
 
-          # 1. Удаляем Homebrew и пути Python из PATH, сохраняя системные утилиты
+          # Strip Homebrew binaries and runner-local Python directories from PATH
           NEW_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "/opt/homebrew/bin" | grep -v "/Users/runner/.local" | tr '\n' ':')
           echo "PATH=${NEW_PATH}" >> $GITHUB_ENV
 
-          # 2. Сбрасываем конфликтные переменные Python и CMake
+          # Reset conflicting environment variables for CMake and Python
           echo "PYTHONPATH=" >> $GITHUB_ENV
           echo "PYTHONHOME=" >> $GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=" >> $GITHUB_ENV
           echo "CMAKE_MODULE_PATH=" >> $GITHUB_ENV
-
-          # 3. Отключаем проверку обновлений pip
           echo "PIP_DISABLE_PIP_VERSION_CHECK=1" >> $GITHUB_ENV
 
+      # 6. Build the Ostap package
       - name: Build Ostap on macOS
         run: |
-          # Limit C++ build concurrency to prevent Out-Of-Memory (OOM) failures
           export CMAKE_BUILD_PARALLEL_LEVEL=2
           ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
 
+      # 7. Execute tests
       - name: Test Ostap on macOS
         run: |
           ./.aux/test_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
 
+      # 8. Upload test build artifacts
       - name: Archive macOS production artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: macos-artifacts-${{ matrix.os }}-${{ strategy.job-index }}
           path: build/Testing
+	  
