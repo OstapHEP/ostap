@@ -107,8 +107,7 @@ if [ -n "${OSTAP_SOURCE}" ] && \
    [ -d "${OSTAP_SOURCE}/ReleaseNotes" ] && \
    [ -f "${OSTAP_SOURCE}/CMakeLists.txt" ]; then
 
-    ## OSTAP_SOURCE=$(get_canonical_path "${OSTAP_SOURCE}")
-    OSTAP_SOURCE="${OSTAP_SOURCE}"
+    OSTAP_SOURCE=$(get_canonical_path "${OSTAP_SOURCE}")
     printf "%s Use OSTAP_SOURCE  = %s\n" "${prefix1}" "${OSTAP_SOURCE}"
 else
     printf "%s No valid source directory is found! %s\n" "${prefix1_error}" "${OSTAP_SOURCE}"
@@ -120,11 +119,10 @@ fi
 ## INSTALL directory
 # ==========================================================================
 if [ -n "${OSTAP_INSTALL}" ]; then
-    ## OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
-    OSTAP_INSTALL="${OSTAP_INSTALL}"
+    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
 else
-    ## OSTAP_INSTALL=$(get_canonical_path "./INSTALL")
     OSTAP_INSTALL="./INSTALL"
+    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
 fi
 
 if [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
@@ -152,14 +150,12 @@ elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 
 elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
 
-    ## OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
-    OSTAP_BUILD="${OSTAP_SOURCE}/build"
+    OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
     printf "%s Use OSTAP_BUILD   = %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
 
     mkdir -p "${OSTAP_SOURCE}/build"
-    ## OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
     printf "%s Build directory is created %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 else
@@ -180,14 +176,25 @@ else
     safe_exit 213
 fi
 
-# Tool checks
+# ==========================================================================
+## Tool checks
+# ==========================================================================
 if command -v python >/dev/null 2>&1; then
     printf "%s PYTHON             : %s\n" "${prefix1}" "$(command -v python)"
     printf "%s PYTHON version     : %s\n" "${prefix1}" "$(python --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s PYTHON is not found!\n" "${prefix1_error}"
     safe_exit 214
-fi
+fi 
+
+# ==========================================================================
+if command -v pip >/dev/null 2>&1; then
+    printf "%s PIP                : %s\n" "${prefix1}" "$(command -v pip)"
+    printf "%s PIP    version     : %s\n" "${prefix1}" "$(pip --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+else
+    printf "%s PIP    is not found!\n" "${prefix1_error}"
+    ## safe_exit 214
+fi 
 
 if command -v cmake >/dev/null 2>&1; then
     printf "%s CMAKE              : %s\n" "${prefix1}" "$(command -v cmake)"
