@@ -202,8 +202,40 @@ for source_dir in \
 do
 
     printf ">>>>>>>>>>> CHECKING source_dir: '%s' <<<<<<<<\n" "${source_dir}"
+    
     if [ -d "${source_dir}" ] ; then	
 	ls ${source_dir}
+	
+	if [ -d "${source_dir}/cmake" ]l then
+	   printf "> dir : cmake\n'"
+        fi
+	if [ -d "${source_dir}/data" ]l then
+	   printf "> dir : data\n'"
+        fi
+	if [ -d "${source_dir}/docs" ]l then
+	   printf "> dir : docs\n'"
+        fi
+	if [ -d "${source_dir}/scripts" ]l then
+	   printf "> dir : scripts\n'"
+        fi
+	if [ -d "${source_dir}/source" ]l then
+	   printf "> dir : scripts\n'"
+        fi
+	if [ -d "${source_dir}/source" ]l then
+	   printf "> dir : source\n'"
+        fi
+	if [ -d "${source_dir}/ReleaseNotes" ]l then
+	   printf "> dir : ReleaseNotes\n'"
+        fi
+	if [ -d "${source_dir}/.aux" ]l then
+	   printf "> dir : .aux\n'"
+        fi
+	if [ -f "${source_dir}/CMakeLists" ]l then
+	   printf "> file: CMakeLists.txt\n'"
+        fi
+	if [ -f "${source_dir}/.aux/.build-ostap" ]l then
+	   printf "> file: .aux/.build-ostap\n'"
+        fi	   
     fi 
 	 
     if [ -n "${source_dir}" ] && \
@@ -221,6 +253,7 @@ do
        [ -f "${source_dir}/.aux/.build-ostap" ]; then
         source_found=$(get_canonical_path "${source_dir}")
         ## source_found="${source_dir}"
+	printf " source found! %s  %s\n" "${source_dir}" "${source_found}"
         break 
     fi
 done
