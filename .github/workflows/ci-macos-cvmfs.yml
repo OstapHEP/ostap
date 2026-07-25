@@ -9,26 +9,49 @@ on:
 jobs:
   test_macos:
     name: Build macOS (${{ matrix.platform }})
-    runs-on: macos-14
+    runs-on: macos-14 # Apple Silicon (M1/M2/M3)
+    
+    # Bypass Homebrew's untrusted tap requirement across the entire job
+    env:
+      HOMEBREW_NO_REQUIRE_TAP_TRUST: 1
+
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Ensure this platform string matches your target LCG View in CVMFS
           - { lcg: dev3/latest, platform: arm64-mac14-clang15-opt }
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Explicitly tap and trust CVMFS Homebrew repositories to bypass Homebrew security restrictions
+      - name: Trust CVMFS Homebrew Taps
+        run: |
+          brew tap cvmfs/cvmfs || true
+          brew tap macos-fuse-t/cask || true
+          brew trust cvmfs/cvmfs || true
+          brew trust macos-fuse-t/cask || true
+
       - name: Install and Mount CVMFS
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
 
-      - name: Build and Test
+      - name: Verify CVMFS Access on macOS
         run: |
+          ls -la /cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}
+          echo "CVMFS successfully mounted on macOS!"
+
+      - name: Build Ostap on macOS
+        run: |
+          # Limit C++ build concurrency to prevent Out-Of-Memory (OOM) failures
           export CMAKE_BUILD_PARALLEL_LEVEL=2
           ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
+
+      - name: Test Ostap on macOS
+        run: |
           ./.aux/test_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}
 
       - name: Archive macOS production artifacts
