@@ -51,9 +51,27 @@ jobs:
         run: |
           ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
 
-          export BERKELEYDB_DIR="${CONDA_PREFIX}"
-          export CFLAGS="-I${CONDA_PREFIX}/include"
-          export LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib"
+          # Check if berkeleydb is available
+          python -c "import berkeleydb" 2> /dev/null
+          no_berkeleydb=$?
+          
+          # If the package is missing (exit code not 0), install it from source
+          if [ ${no_berkeleydb} -ne 0 ]; then  
+             printf "::notice::BerkeleyDB not found, trying to install from source...\n"
+             export YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1
+             export BERKELEYDB_DIR="${CONDA_PREFIX}"
+             export CFLAGS="-I${CONDA_PREFIX}/include"
+             export LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib"
+             YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 python -m pip install --no-binary=:all: berkeleydb
+          fi
+          
+          # Re-check if berkeleydb is successfully installed
+          python -c "import berkeleydb" 2> /dev/null
+          no_berkeleydb=$?
+          if [ ${no_berkeleydb} -ne 0 ]; then
+             printf "::error::BerkeleyDB installation failed!\n"
+             exit 1
+          fi 
 
           mkdir build && cd build
 
@@ -76,9 +94,10 @@ jobs:
           fi
 
           cd build
+          # Re-configure CMake so CTest detects all generated and installed tests
           cmake ..
 
-          # Корректно экспортируем пути ПОСЛЕ переключения в папочку build
+          # Export library paths correctly after switching to the build directory
           export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${LD_LIBRARY_PATH}"
           export DYLD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${DYLD_LIBRARY_PATH}"
           export PYTHONPATH="${PWD}/../python:${PYTHONPATH}"
