@@ -51,11 +51,26 @@ jobs:
         run: |
           ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
           mkdir build && cd build
-          cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
-          ninja -j${ncpus}
-          ninja install | grep -v -E "Up-to-date|Installing"
+	  
+          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} && ninja -j${ncpus} && ninja install | grep -v -E "Up-to-date|Installing" )
+          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} && ninja -j${ncpus} && ninja install | grep -v -E "Up-to-date|Installing" )
+          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} && ninja -j${ncpus} && ninja install | grep -v -E "Up-to-date|Installing" )
 
           if command -v check-dependencies >/dev/null 2>&1; then
              printf "=== Checking Dependencies ===\n"
              check-dependencies
           fi
+
+      # Test Ostap using Ninja generator
+      - name: Test Ostap
+        shell: bash -el {0}
+        run: |
+          ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+
+          if command -v check-dependencies >/dev/null 2>&1; then
+             printf "=== Checking Dependencies ===\n"
+             check-dependencies
+          fi
+
+	  cd build
+	  OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core.core --output-on-failure --test-output-size-failed 5000000

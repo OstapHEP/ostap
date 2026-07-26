@@ -70,5 +70,7 @@ dependencies:
   # Pip package manager and pip-only dependencies
   - pip
   - pip:
+    - terminaltables3
     - pragmastat
+    - berkeleydb 
     - cpufeature; platform_machine == 'x86_64' or platform_machine == 'AMD64'
