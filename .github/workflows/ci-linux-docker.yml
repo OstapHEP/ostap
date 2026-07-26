@@ -5,51 +5,58 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+
 jobs:
   test_docker:
-     strategy:
-      matrix:
-        build: [1,2,3,4,5]  
-        include:
-            - { build: 1, lcg: dev3/latest, platform: x86_64-el9-gcc13-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
-	    - { build: 2, lcg: dev3/latest, platform: x86_64-el9-gcc14-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
-	    - { build: 3, lcg: dev3/latest, platform: x86_64-el9-gcc15-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
-	    - { build: 4, lcg: dev3/latest, platform: x86_64-el9-gcc16-opt   , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
-	    - { build: 5, lcg: dev3/latest, platform: x86_64-el9-clang22-opt , registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest } 
-    
+    runs-on: ubuntu-latest
+    strategy:
       fail-fast: false
-     runs-on: ubuntu-latest 
-     steps:
-       - name: Checkout repository
-         uses: actions/checkout@v7
-       - name: Install and Mount CVMFS
-         uses: cvmfs-contrib/github-action-cvmfs@v5 
-         with:
+      matrix:
+        build: [1, 2, 3, 4, 5]
+        include:
+          - { build: 1, lcg: dev3/latest, platform: x86_64-el9-gcc13-opt,   registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
+          - { build: 2, lcg: dev3/latest, platform: x86_64-el9-gcc14-opt,   registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
+          - { build: 3, lcg: dev3/latest, platform: x86_64-el9-gcc15-opt,   registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
+          - { build: 4, lcg: dev3/latest, platform: x86_64-el9-gcc16-opt,   registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
+          - { build: 5, lcg: dev3/latest, platform: x86_64-el9-clang22-opt, registry: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest }
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install and Mount CVMFS
+        uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
           cvmfs_repositories: 'sft.cern.ch,sft-nightlies.cern.ch'
-       - name: Verify CVMFS Access /cvmfs/stf.cern.ch 
-         run: |
-          ls /cvmfs/sft.cern.ch/lcg/views/${{matrix.lcg}}/${{matrix.platform}}
+
+      - name: Verify CVMFS Access /cvmfs/sft.cern.ch
+        run: |
+          ls /cvmfs/sft.cern.ch/lcg/views/${{ matrix.lcg }}/${{ matrix.platform }}
           echo "/cvmfs/sft.cern.ch successfully mounted!"
-       - name: Build
-         run: |
-          ls /cvmfs/sft.cern.ch 
-          echo $PWD 
+
+      - name: Build
+        run: |
+          ls /cvmfs/sft.cern.ch
+          echo $PWD
           docker create -v /cvmfs:/cvmfs:shared -u 0 --security-opt seccomp=unconfined --name ostap-build ${{ matrix.registry }} sleep infinity
-          docker cp /home/runner/work/ostap ostap-build:/osya
+          docker cp ${{ github.workspace }} ostap-build:/osya
           docker start ostap-build
           docker exec ostap-build /bin/bash -c "dnf clean all -y && rm -rf /etc/yum.repos.d/eos*.repo && dnf install which libdb-devel libdb-cxx-devel libdb-utils -y"
-          docker exec ostap-build /bin/bash -c "cd /osya/ostap && echo $PWD && ls -al && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
-       - name: Test
-         run: |
-          ls /cvmfs/sft.cern.ch 
-          docker exec ostap-build /bin/bash -c "cd /osya/ostap && echo $PWD && ls -al && ./.aux/test_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
-       - name: copy artifacts
-         if: always()
-         run: |
-            docker cp  ostap-build:/osya/ostap/build .
-       - name: Archive production artifacts
-         if: always()
-         uses: actions/upload-artifact@v4
-         with:
+          docker exec ostap-build /bin/bash -c "cd /osya && echo $PWD && ls -al && ./.aux/build_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
+
+      - name: Test
+        run: |
+          ls /cvmfs/sft.cern.ch
+          docker exec ostap-build /bin/bash -c "cd /osya && echo $PWD && ls -al && ./.aux/test_with_lcg ${{ matrix.lcg }} ${{ matrix.platform }}"
+
+      - name: Copy artifacts
+        if: always()
+        run: |
+          docker cp ostap-build:/osya/build .
+
+      - name: Archive production artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
           name: my-artifacts-${{ strategy.job-index }}
           path: build/Testing
