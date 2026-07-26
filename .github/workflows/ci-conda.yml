@@ -1,4 +1,4 @@
-name: Build and Test Ostap with Conda
+name: Ostap @ Conda
 
 on:
   push:

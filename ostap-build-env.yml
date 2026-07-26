@@ -6,7 +6,6 @@ channels:
   - defaults
 
 dependencies:
-
   # ROOT framework from conda-forge
   - root
 
@@ -23,7 +22,7 @@ dependencies:
   # GSL & friends
   - gsl
   - openblas
-  
+
   # Core numerical and scientific packages
   - numpy
   - scipy
@@ -38,38 +37,38 @@ dependencies:
   - dill
   - multiprocess
   - ppft
-  - pox 
+  - pox
   - joblib
   - ipyparallel
-  
+
   # Utilities
   - psutil
   - more-itertools
   - cpufeature
   - py-cpuinfo
-  - sortedcontainers   
+  - sortedcontainers
   - pathvalidate
-  - packaging 
+  - packaging
 
   # Tables
   - terminaltables
   - tabulate
-  
+
   # DB
   - libdb
   - duckdb
   - fasteners
 
-  # Reweightings, GoF & Two-samples tests 
+  # Reweightings, GoF & Two-samples tests
   - lightgbm
   - xgboost
   - catboost
   - hep_ml
 
-  # Auxillary 
+  # Auxiliary
   - zstandard
 
-  # pip
-  
+  # Pip package manager and pip-only dependencies
   - pip
-    - pragmastat 
+  - pip:
+    - pragmastat
