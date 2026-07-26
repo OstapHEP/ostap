@@ -1,0 +1,71 @@
+name: ostap-test-env
+
+# Recommended channels for ROOT, Ostap, and scientific stack
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+
+  # ROOT framework from conda-forge
+  - root
+
+  # Target Python runtime
+  - python
+
+  # Build tools
+  - c-compiler
+  - cxx-compiler
+  - ccache
+  - cmake
+  - ninja
+
+  # GSL & friends
+  - gsl
+  - openblas
+  
+  # Core numerical and scientific packages
+  - numpy
+  - scipy
+  - numba
+  - cffi
+  - pandas
+  - statsmodels
+  - sweetviz
+
+  # Parallelization
+  - pathos
+  - dill
+  - multiprocess
+  - ppft
+  - pox 
+  - joblib
+  - ipyparallel
+  
+  # Utilities
+  - psutil
+  - more-itertools 
+  - py-cpuinfo
+  - sortedcontainers   
+  - pathvalidate
+  - packaging 
+
+  # Tables
+  - terminaltables
+  - tabulate
+  
+  # DB
+  - libdb
+  - duckdb
+  - fasteners
+
+  # Reweightings, GoF & Two-samples tests 
+  - lightgbm
+  - xgboost
+  - catboost
+  - hep_ml
+
+  # Auxillary 
+  - zstandard
+  - lzma 
+ 
