@@ -1757,8 +1757,8 @@ namespace Ostap
       template <typename... CHANNELS>
       BreitWignerMC
       ( const double       m0       , 
-	const ChannelBW&   c1       , 
-	const CHANNELS&... channels )
+        const ChannelBW&   c1       , 
+        const CHANNELS&... channels )
         : BreitWignerMC ( m0 , c1 ) 
       { this->add ( channels... ) ; }
       // ======================================================================

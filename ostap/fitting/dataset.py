@@ -2956,10 +2956,10 @@ def _ds_table2_ (  dataset                 ,
 ##  print DataSet
 def _ds_print2_ ( dataset ) :
     """ Print dataset"""
-    if dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) :
-        store = dataset.store()
-        if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) : pass
-        else : return _ds_print_ ( dataset )         
+    ## if dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) :
+    ##    store = dataset.store()
+    ##    if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) : pass
+    ##    else : return _ds_print_ ( dataset )         
     from ostap.utils.basic import terminal_size, isatty 
     if not isatty() : return _ds_table_ ( dataset )
     tw  , th  = terminal_size()

@@ -1457,8 +1457,6 @@ if not hasattr ( ROOT.RooMinimizer , '_old_contour_' ) :
 # =============================================================================
 ## some decoration over RooFitResult
 
-## ROOT.RooFitResult . __repr__        = _rfr_print_
-## ROOT.RooFitResult . __str__         = _rfr_print_
 
 ROOT.RooFitResult.success = property ( _rfr_success_ , None , None, _rfr_success_.__doc__ )
 ROOT.RooFitResult.failure = property ( _rfr_failure_ , None , None, _rfr_failure_.__doc__ )
@@ -1519,6 +1517,9 @@ ROOT.RooFitResult . compare            = _rfr_compare_
 ROOT.RooFitResult . table              = _rfr_table_
 ROOT.RooFitResult . __len__            = _rfr_len_ 
 
+ROOT.RooFitResult . __repr__           = _rfr_table_
+ROOT.RooFitResult . __str__            = _rfr_table_
+
 _new_methods_ += [
     #
     ROOT.RooFitResult . success             , 
@@ -1577,6 +1578,9 @@ _new_methods_ += [
     ROOT.RooFitResult . covmatrix        ,
     ROOT.RooFitResult . kullback         , 
     ROOT.RooFitResult . kullback_leibler ,
+    ##
+    ROOT.RooFitResult . __repr__         , 
+    ROOT.RooFitResult . __str__          , 
     ]
 
 # =============================================================================
