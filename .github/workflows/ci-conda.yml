@@ -36,13 +36,6 @@ jobs:
           # Uses mamba solver for significantly faster environment resolution
           use-mamba: true
 
-      # Conditional step: Install cpufeature via Conda ONLY on x86_64 platforms
-      - name: Install cpufeature on x86_64 architecture
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
-        shell: bash -el {0}
-        run: |
-          conda install -y cpufeature
-
       # Diagnostic step to verify activated tools and versions
       - name: Environment Diagnostics
         shell: bash -el {0}
