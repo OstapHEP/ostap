@@ -51,15 +51,16 @@ jobs:
         run: |
           ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
 
+          export BERKELEYDB_DIR="${CONDA_PREFIX}"
+          export CFLAGS="-I${CONDA_PREFIX}/include"
+          export LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib"
+
           mkdir build && cd build
 
           cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX="${CONDA_PREFIX}"
           ninja -j"${ncpus}"
           ninja install | grep -v -E "Up-to-date|Installing"
 
-	  ## once more 
-	  cmake ..
-	  
           if command -v check-dependencies >/dev/null 2>&1; then
              printf "=== Checking Dependencies ===\n"
              check-dependencies
@@ -74,6 +75,6 @@ jobs:
              check-dependencies
           fi
 
-          cd build && cmake .. 
-          
+          cd build && cmake ..
+
           OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core.core --output-on-failure --test-output-size-failed 5000000
