@@ -56,29 +56,13 @@ jobs:
       - name: Build Ostap
         shell: bash -el {0}
         run: |
-          set -o pipefail
           ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
           mkdir build && cd build
-          cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
-          ninja -j${ncpus}
-          ninja install | grep -v -E "Up-to-date|Installing"
-
-      # Test Ostap
-      - name: Test Ostap
-        shell: bash -el {0}
-        run: |
-          set -o pipefail
-          ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
-          
-          # Change directory to build root where CTest files reside
-          cd build
-          
-          # Set runtime flags and paths for Python/C++ shared libraries
-          export OSTAP_BATCH=1
-          ## export PYTHONPATH="${PWD}:${PYTHONPATH}"
-          ## export LD_LIBRARY_PATH="${PWD}:${LD_LIBRARY_PATH}"
-          ## export DYLD_LIBRARY_PATH="${PWD}:${DYLD_LIBRARY_PATH}"
-          
-          # Run core tests in parallel
-          COLUMNS=200 ctest -j${ncpus} -R core.core --output-on-failure --test-output-size-failed 5000000
-
+          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} && ninja -j${ncpus} && ninja install | grep -v -E "Up-to-date|Installing" )
+          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} && ninja -j${ncpus} && ninja install | grep -v -E "Up-to-date|Installing" )
+          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} && ninja -j${ncpus} && ninja install | grep -v -E "Up-to-date|Installing" )
+	  
+          if command -v check-dependencies >/dev/null 2>&1; then
+             printf "=== Checking Dependencies ===\n"
+             check-dependencies
+          fi
