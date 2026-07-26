@@ -70,15 +70,17 @@ jobs:
       - name: Test Ostap
         shell: bash -el {0}
         run: |
-         
-          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${LD_LIBRARY_PATH}"
-          export DYLD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${DYLD_LIBRARY_PATH}"
-          export PYTHONPATH="${PWD}/python:${PYTHONPATH}"
-          
-         if command -v check-dependencies >/dev/null 2>&1; then
+          if command -v check-dependencies >/dev/null 2>&1; then
              printf "=== Checking Dependencies ===\n"
              check-dependencies
-         fi
-                       
-         cd build && cmake ..
-         OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core.core --output-on-failure --test-output-size-failed 5000000
+          fi
+
+          cd build
+          cmake ..
+
+          # Корректно экспортируем пути ПОСЛЕ переключения в папочку build
+          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${LD_LIBRARY_PATH}"
+          export DYLD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${DYLD_LIBRARY_PATH}"
+          export PYTHONPATH="${PWD}/../python:${PYTHONPATH}"
+
+          OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core.core --output-on-failure --test-output-size-failed 5000000
