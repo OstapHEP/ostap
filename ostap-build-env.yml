@@ -44,7 +44,6 @@ dependencies:
   # Utilities
   - psutil
   - more-itertools
-  - cpufeature
   - py-cpuinfo
   - sortedcontainers
   - pathvalidate
