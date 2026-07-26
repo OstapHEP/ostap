@@ -1,67 +1,69 @@
+
+
 #!/usr/bin/env sh
 
 # =============================================================================
-# Safe argument check
+# Safe argument check (POSIX compatible)
 # =============================================================================
-LCG="${1:?Error: Specify LCG version (e.g., LCG_105)}"
-PLATFORM="${2:?Error: Specify PLATFORM (e.g., x86_64-el9-gcc13-opt)}"
+if [ -z "$1" ] || [ -z "$2" ]; then
+    printf "::error::Usage: %s <LCG_version> <PLATFORM>\n" "$0"
+    printf "Example: %s LCG_105 x86_64-el9-gcc13-opt\n" "$0"
+    return 1 2>/dev/null || exit 1
+fi
 
-# =============================================================================
+LCG="$1"
+PLATFORM="$2"
+
 printf "=== TEST-WITH-LCG Environment Info ===\n"
 printf "LCG      : %s\n" "${LCG}"
 printf "PLATFORM : %s\n" "${PLATFORM}"
-# =============================================================================
+printf "PWD      : %s\n" "${PWD}"
+
+source_dir="${PWD}"
+
+# =========================================================================
+# Cross-platform canonical absolute path resolution
+# =========================================================================
+get_canonical_path() {
+    target_path="$1"
+
+    # 1. Directory (or symlink to directory)
+    if [ -d "${target_path}" ]; then
+        (cd "${target_path}" 2>/dev/null && pwd -P)
+
+    # 2. File (or symlink to file)
+    elif [ -f "${target_path}" ]; then
+        dir_name=$(dirname "${target_path}")
+        file_name=$(basename "${target_path}")
+        abs_dir=$(cd "${dir_name}" 2>/dev/null && pwd -P)
+        if [ -n "${abs_dir}" ]; then
+            printf "%s/%s\n" "${abs_dir}" "${file_name}"
+        else
+            echo "${target_path}"
+        fi
+
+    # 3. Fallback for non-existent paths
+    else
+        echo "${target_path}"
+    fi
+}
 
 # =============================================================================
 # Navigate into build directory safely
 # =============================================================================
-cd ./build || exit 1
+mkdir -p build && cd ./build || {
+    printf "::error::Failed to enter build directory\n"
+    return 1 2>/dev/null || exit 1
+}
 
 LCG_SETUP_SCRIPT="/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh"
 OSTAP_SETUP_SCRIPT="./INSTALL/${LCG}/${PLATFORM}/thisostap.sh"
 
-# Cross-platform canonical absolute path resolution (replaces GNU readlink -f / realpath -m)
-get_canonical_path() {
-    target_path="$1"
-    if command -v python3 >/dev/null 2>&1; then
-        python3 -c "import os, sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))" "$target_path" 2>/dev/null
-    elif command -v python >/dev/null 2>&1; then
-        python -c "import os, sys; print(os.path.abspath(os.path.realpath(sys.argv[1])))" "$target_path" 2>/dev/null
-    elif [ -d "$target_path" ]; then
-        (cd "$target_path" && pwd -P)
-    else
-        echo "$target_path"
-    fi
-}
-
-printf "TEST-WITH-LCG:   LCG_SETUP_SCRIPT/1 %s\n" "${LCG_SETUP_SCRIPT}"
-printf "TEST-WITH-LCG: OSTAP_SETUP_SCRIPT/1 %s\n" "${OSTAP_SETUP_SCRIPT}"
-
 LCG_SETUP_SCRIPT=$(get_canonical_path "${LCG_SETUP_SCRIPT}")
 OSTAP_SETUP_SCRIPT=$(get_canonical_path "${OSTAP_SETUP_SCRIPT}")
 
-printf "TEST-WITH-LCG:   LCG_SETUP_SCRIPT/2 %s\n" "${LCG_SETUP_SCRIPT}"
-printf "TEST-WITH-LCG: OSTAP_SETUP_SCRIPT/2 %s\n" "${OSTAP_SETUP_SCRIPT}"
-
-ls -al /cvmfs/sft.cern.ch/lcg/views
-
-printf "TEST-WITH-LCG:  LCG=%s\n" "${LCG}"
-printf "TEST-WITH-LCG:  LCG=%s\n" "${LCG}"
-    
-if [ -n "${LCG}" ] ; then
-    printf "TEST-WITH-LCG:  OK LCG\n"
-fi
-if [ -n "${PLATFORM}" ] ; then
-    printf "TEST-WITH-LCG:  OK PLATFORM\n"
-fi
-
-if [ -f "${LCG_SETUP_SCRIPT}" ] ; then
-    printf "TEST-WITH-LCG:  no LCG_SETUP_SCRIPT %s\n" "${LCG_SETUP_SCRIPT}"
-fi
-
-if [ -f "${OSTAP_SETUP_SCRIPT}" ] ; then
-    printf "TEST-WITH-LCG:  no OSTAP_SETUP_SCRIPT %s\n" "${OSTAP_SETUP_SCRIPT}"
-fi
+printf "TEST-WITH-LCG:   LCG_SETUP_SCRIPT %s\n" "${LCG_SETUP_SCRIPT}"
+printf "TEST-WITH-LCG: OSTAP_SETUP_SCRIPT %s\n" "${OSTAP_SETUP_SCRIPT}"
 
 if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
    [ -f "${LCG_SETUP_SCRIPT}" ] && [ -f "${OSTAP_SETUP_SCRIPT}" ]; then
@@ -70,49 +72,49 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     printf "TEST-WITH-LCG: sourcing %s\n" "${LCG_SETUP_SCRIPT}"
     # shellcheck disable=SC1091
     . "${LCG_SETUP_SCRIPT}"
+    
+    sc=$?
+    if [ "${sc}" -ne 0 ]; then
+        printf "::error::Error from '. %s' (code %d)\n" "${LCG_SETUP_SCRIPT}" "${sc}"
+        return "${sc}" 2>/dev/null || exit "${sc}"
+    fi
+    
     # =========================================================================
     printf "TEST-WITH-LCG: sourcing %s\n" "${OSTAP_SETUP_SCRIPT}"
     # shellcheck disable=SC1091
     . "${OSTAP_SETUP_SCRIPT}"
-    # =========================================================================
     
     sc=$?
     if [ "${sc}" -ne 0 ]; then
-	printf "::error::Error from '. %s' %s\n" "${OSTAP_SETUP_SCRIPT}" "${sc}"
-	exit ${sc}
+        printf "::error::Error from '. %s' (code %d)\n" "${OSTAP_SETUP_SCRIPT}" "${sc}"
+        return "${sc}" 2>/dev/null || exit "${sc}"
     fi
 
 else
     
     # =========================================================================
     printf "(re)source .build-lcg\n"
-    # shellcheck disable=SC1091
-    ## . ../.aux/.build-lcg "${LCG}" "${PLATFORM}"
-    ../.aux/build_with_lcg "${LCG}" "${PLATFORM}"
-    # =========================================================================
+    # FIXED: Fixed syntax error in ${source_dir} and ensured correct path to build_with_lcg
+    ( cd "${source_dir}" && ./.aux/build_with_lcg "${LCG}" "${PLATFORM}" )
     
     sc=$?
     if [ "${sc}" -ne 0 ]; then
-	printf "::error::Error from build-with-lcg %s\n" "${sc}"
-	exit ${sc}
+        printf "::error::Error from build-with-lcg (code %d)\n" "${sc}"
+        return "${sc}" 2>/dev/null || exit "${sc}"
     fi
-    
 fi
-
-
-# =============================================================================
 
 # =============================================================================
 printf "=== TEST-WITH-LCG Environment Info ===\n"
-printf "Python binary:  %s\n" "$(which python)"
+printf "Python binary:  %s\n" "$(command -v python 2>/dev/null || which python)"
 printf "Python version: %s\n" "$(python --version 2>&1)"
 # =============================================================================
 
 # =============================================================================
 # Check Python user-site directory
 # =============================================================================
-user_site=$(python -m site --user-site)
-if [ -d "${user_site}" ]; then
+user_site=$(python -m site --user-site 2>/dev/null)
+if [ -n "${user_site}" ] && [ -d "${user_site}" ]; then
     printf "TEST-WITH-LCG:      USER-SITE directory %s\n" "${user_site}"
     ls -la "${user_site}"
 else
@@ -136,7 +138,6 @@ fi
 # =============================================================================
 # Run tests
 # =============================================================================
-## OSTAP_BATCH=True COLUMNS=200 ctest -j4 --output-on-failure --test-output-size-failed 5000000
 OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core.core --output-on-failure --test-output-size-failed 5000000
 
 # =============================================================================

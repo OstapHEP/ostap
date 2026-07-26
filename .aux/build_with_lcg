@@ -1,21 +1,31 @@
 #!/usr/bin/env sh
 
-# Safe argument check
-LCG="${1:?Error: Specify LCG version (e.g., LCG_105)}"
-PLATFORM="${2:?Error: Specify PLATFORM (e.g., x86_64-el9-gcc13-opt)}"
+# ========================================================================
+# Safe argument check (POSIX compatible)
+# ========================================================================
+if [ -z "$1" ] || [ -z "$2" ]; then
+    printf "::error::Usage: %s <LCG_version> <PLATFORM>\n" "$0"
+    printf "Example: %s LCG_105 x86_64-el9-gcc13-opt\n" "$0"
+    return 1 2>/dev/null || exit 1
+fi
+
+LCG="$1"
+PLATFORM="$2"
 
 printf "=== BUILD-WITH-LCG Environment Info ===\n"
 printf "LCG      : %s\n" "${LCG}"
 printf "PLATFORM : %s\n" "${PLATFORM}"
-
-printf "PWD      : %s\n" "$(PWD)"
+printf "PWD      : %s\n" "${PWD}"
 
 source_dir="${PWD}"
 
 # ========================================================================
 # Create build directory and navigate into it
 # ========================================================================
-mkdir -p build && cd build || exit 1
+mkdir -p build && cd build || {
+    printf "::error::Failed to create or enter build directory\n"
+    return 2 2>/dev/null || exit 2
+}
 
 # ========================================================================
 # Source LCG environment (. instead of source for 100% shell compatibility)
@@ -24,37 +34,35 @@ mkdir -p build && cd build || exit 1
 
 sc=$?
 if [ "${sc}" -ne 0 ]; then
-    printf "::error::Error from .build-lcg %s\n" "${prefix1_error}" "${sc}"
-    exit ${sc}
+    printf "::error::Error from .build-lcg (code %d): %s\n" "${sc}" "${prefix1_error}"
+    return "${sc}" 2>/dev/null || exit "${sc}"
 fi
 
-if [ ! -n "${OSTAP_DIR}" ]  ||  [ !-d "${OSTAP_DIR}" ] || [ ! -f "${OSTAP_DIR}/thisostap.sh" ]; then
+if [ -z "${OSTAP_DIR}" ] || [ ! -d "${OSTAP_DIR}" ] || [ ! -f "${OSTAP_DIR}/thisostap.sh" ]; then
     printf "::error::Invalid OSTAP_DIR %s\n" "${OSTAP_DIR}"
-    exit 2 
+    return 3 2>/dev/null || exit 3
 fi
 
 # =============================================================================
-## check for ostap
+## Check for ostap
 # =============================================================================
-if command -v ostap >/dev/null 2>&1; then
-    ;
-else
+if ! command -v ostap >/dev/null 2>&1; then
     printf "::error::ostap is not accessible!\n"
-    exit 3     
+    return 4 2>/dev/null || exit 4
 fi
 
 # =============================================================================
 
 printf "=== BUILD-WITH-LCG Environment Info ===\n"
-printf "Python binary:  %s\n" "$(which python)"
+printf "Python binary:  %s\n" "$(which python 2>/dev/null || command -v python)"
 printf "Python version: %s\n" "$(python --version 2>&1)"
 
 # =============================================================================
 # Check Python user-site directory
 # =============================================================================
-user_site=$(python -m site --user-site)
+user_site=$(python -m site --user-site 2>/dev/null)
 
-if [ -d "${user_site}" ]; then
+if [ -n "${user_site}" ] && [ -d "${user_site}" ]; then
     printf "USER-SITE directory (%s):\n" "${user_site}"
     ls -la "${user_site}"
 else
@@ -76,13 +84,11 @@ if command -v check-dependencies >/dev/null 2>&1; then
     printf "=== Checking Dependencies ===\n"
     check-dependencies
 else
-    printf "::error::check-dependencies is not accssible!\n"
-    exit 4     
+    printf "::error::check-dependencies is not accessible!\n"
+    return 5 2>/dev/null || exit 5
 fi
 
 # =============================================================================
-##                                                                      The END 
+#                                                                       The END 
 # =============================================================================
-
-
 
