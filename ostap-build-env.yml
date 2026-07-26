@@ -67,5 +67,4 @@ dependencies:
 
   # Auxillary 
   - zstandard
-  - lzma 
  
