@@ -35,7 +35,14 @@ jobs:
           show-channel-urls: true
           # Uses mamba solver for significantly faster environment resolution
           use-mamba: true
-
+	  
+      # Conditional step: Install cpufeature via Conda ONLY on x86_64 platforms
+      - name: Install cpufeature on x86_64 architecture
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
+        shell: bash -el {0}
+        run: |
+          conda install -y cpufeature
+	  
       # Diagnostic step to verify activated tools and versions
       - name: Environment Diagnostics
         shell: bash -el {0}
@@ -52,11 +59,11 @@ jobs:
           set -o pipefail
           ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
           mkdir build && cd build
-          cmake .. -G Ninja
+          cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
           ninja -j${ncpus}
           ninja install | grep -v -E "Up-to-date|Installing"
 
-      # Execute Ostap CTest suite
+      # Test Ostap
       - name: Test Ostap
         shell: bash -el {0}
         run: |
@@ -68,9 +75,9 @@ jobs:
           
           # Set runtime flags and paths for Python/C++ shared libraries
           export OSTAP_BATCH=1
-          export PYTHONPATH="${PWD}:${PYTHONPATH}"
-          export LD_LIBRARY_PATH="${PWD}:${LD_LIBRARY_PATH}"
-          export DYLD_LIBRARY_PATH="${PWD}:${DYLD_LIBRARY_PATH}"
+          ## export PYTHONPATH="${PWD}:${PYTHONPATH}"
+          ## export LD_LIBRARY_PATH="${PWD}:${LD_LIBRARY_PATH}"
+          ## export DYLD_LIBRARY_PATH="${PWD}:${DYLD_LIBRARY_PATH}"
           
           # Run core tests in parallel
           COLUMNS=200 ctest -j${ncpus} -R core.core --output-on-failure --test-output-size-failed 5000000
