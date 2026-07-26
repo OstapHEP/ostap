@@ -24,7 +24,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up Conda/Mamba using ostap-build-env.yaml
+      # Set up Conda/Mamba using ostap-build-env.yml
       - name: Setup Conda environment
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -51,9 +51,8 @@ jobs:
         run: |
           set -o pipefail
           source_dir="${PWD}"
-          ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)    
+          ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
           mkdir build && cd build
           cmake .. -G Ninja
           ninja -j${ncpus}
           ninja install | grep -v -E "Up-to-date|Installing"
-	  
