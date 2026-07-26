@@ -1,4 +1,3 @@
-
 name: Ostap @ Conda
 
 on:
@@ -51,17 +50,15 @@ jobs:
         shell: bash -el {0}
         run: |
           ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
-          
-          # Universal environment exports for C/C++ builds inside Conda
+
           export BERKELEYDB_DIR="${CONDA_PREFIX}"
           export CFLAGS="-I${CONDA_PREFIX}/include"
           export LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib"
 
           mkdir build && cd build
-	  
-          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX="${CONDA_PREFIX}" && ninja -j"${ncpus}" && ninja install | grep -v -E "Up-to-date|Installing" )
-          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX="${CONDA_PREFIX}" && ninja -j"${ncpus}" && ninja install | grep -v -E "Up-to-date|Installing" )
-          ( cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX="${CONDA_PREFIX}" && ninja -j"${ncpus}" && ninja install | grep -v -E "Up-to-date|Installing" )
+          cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX="${CONDA_PREFIX}"
+          ninja -j"${ncpus}"
+          ninja install | grep -v -E "Up-to-date|Installing"
 
           if command -v check-dependencies >/dev/null 2>&1; then
              printf "=== Checking Dependencies ===\n"
