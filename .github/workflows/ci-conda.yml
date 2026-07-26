@@ -16,7 +16,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-13   # Intel x86_64 runner
+          # - macos-13   # Intel x86_64 runner
           - macos-14   # Apple Silicon (M1/M2) ARM64 runner
           - macos-15   # Apple Silicon ARM64 runner
 
@@ -36,7 +36,7 @@ jobs:
           # Uses mamba solver for significantly faster environment resolution
           use-mamba: true
 
-      # Check environment and compilers
+      # Diagnostic step to verify activated tools and versions
       - name: Environment Diagnostics
         shell: bash -el {0}
         run: |
@@ -45,14 +45,33 @@ jobs:
           python --version
           cmake --version
 
-      # Build Ostap
+      # Build Ostap using Ninja generator
       - name: Build Ostap
         shell: bash -el {0}
         run: |
           set -o pipefail
-          source_dir="${PWD}"
           ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
           mkdir build && cd build
           cmake .. -G Ninja
           ninja -j${ncpus}
           ninja install | grep -v -E "Up-to-date|Installing"
+
+      # Execute Ostap CTest suite
+      - name: Test Ostap
+        shell: bash -el {0}
+        run: |
+          set -o pipefail
+          ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+          
+          # Change directory to build root where CTest files reside
+          cd build
+          
+          # Set runtime flags and paths for Python/C++ shared libraries
+          export OSTAP_BATCH=1
+          export PYTHONPATH="${PWD}:${PYTHONPATH}"
+          export LD_LIBRARY_PATH="${PWD}:${LD_LIBRARY_PATH}"
+          export DYLD_LIBRARY_PATH="${PWD}:${DYLD_LIBRARY_PATH}"
+          
+          # Run core tests in parallel
+          COLUMNS=200 ctest -j${ncpus} -R core.core --output-on-failure --test-output-size-failed 5000000
+

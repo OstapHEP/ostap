@@ -44,7 +44,8 @@ dependencies:
   
   # Utilities
   - psutil
-  - more-itertools 
+  - more-itertools
+  - cpufeature
   - py-cpuinfo
   - sortedcontainers   
   - pathvalidate
@@ -67,4 +68,8 @@ dependencies:
 
   # Auxillary 
   - zstandard
- 
+
+  # pip
+  
+  - pip
+    - pragmastat 
