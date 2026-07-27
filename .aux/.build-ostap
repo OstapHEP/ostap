@@ -23,18 +23,59 @@ get_cpu_count() {
 }
 
 # =========================================================================
-# Cross-platform canonical absolute path resolution
+# Universal POSIX-compliant Canonical Absolute Path Resolution
+# (Works in bash, zsh, dash, sh)
 # =========================================================================
-get_canonical_path() {
-    target_path="$1"
-    if command -v python >/dev/null 2>&1; then
-        python -c "import os, sys; print(os.path.realpath(sys.argv[1]))" "$target_path" 2>/dev/null
-    elif [ -d "$target_path" ]; then
-        (cd "$target_path" && pwd -P)
+if ! command -v canonical_path >/dev/null 2>&1; then
+printf "%s Use local 'canonical_path' function \n" "${prefix1}"
+canonical_path() {
+    # =====================================================================
+    # 1. Use native realpath if available
+    # =====================================================================
+    if command -v realpath >/dev/null 2>&1; then
+        realpath -m -- "$1" 2>/dev/null && return 0
+    elif command -v grealpath >/dev/null 2>&1; then
+        grealpath -m -- "$1" 2>/dev/null && return 0
+    fi
+
+    # ======================================================================
+    # 2. Pure POSIX fallback (no 'local' keyword to ensure compatibility with plain sh)
+    # ======================================================================
+    if [ -z "$1" ]; then
+        return 1
+    fi
+    
+    if [ -e "$1" ]; then
+        if [ -d "$1" ]; then
+            (cd -- "$1" 2>/dev/null && pwd -P)
+        else
+            _gp_dir=$(dirname -- "$1")
+            _gp_file=$(basename -- "$1")
+            _gp_abs=$(cd -- "$_gp_dir" 2>/dev/null && pwd -P)
+            if [ -n "$_gp_abs" ]; then
+                printf '%s/%s\n' "$_gp_abs" "$_gp_file"
+            else
+                printf '%s\n' "$1"
+            fi
+        fi
     else
-        echo "$target_path"
+        _gp_current="$1"
+        _gp_suffix=""
+        
+        while [ ! -e "$_gp_current" ] && [ "$_gp_current" != "." ] && [ "$_gp_current" != "/" ]; do
+            _gp_suffix="/$(basename -- "$_gp_current")${_gp_suffix}"
+            _gp_current=$(dirname -- "$_gp_current")
+        done
+        
+        if [ -e "$_gp_current" ]; then
+            _gp_abs=$(canonical_path "$_gp_current")
+            printf '%s%s\n' "$_gp_abs" "$_gp_suffix"
+        else
+            printf '%s/%s\n' "$PWD" "$1"
+        fi
     fi
 }
+fi
 
 # ==========================================================================
 ## Color output setup
@@ -97,7 +138,7 @@ if [ -n "${OSTAP_SOURCE}" ] && \
    [ -d "${OSTAP_SOURCE}/ReleaseNotes" ] && \
    [ -f "${OSTAP_SOURCE}/CMakeLists.txt" ]; then
 
-    OSTAP_SOURCE=$(get_canonical_path "${OSTAP_SOURCE}")
+    OSTAP_SOURCE=$(canonical_path "${OSTAP_SOURCE}")
     printf "%s Use OSTAP_SOURCE      = %s\n" "${prefix1}" "${OSTAP_SOURCE}"
 else
     printf "%s No valid source directory is found! %s\n" "${prefix1_error}" "${OSTAP_SOURCE}"
@@ -109,10 +150,10 @@ fi
 ## INSTALL directory
 # ==========================================================================
 if [ -n "${OSTAP_INSTALL}" ]; then
-    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    OSTAP_INSTALL=$(canonical_path "${OSTAP_INSTALL}")
 else
     OSTAP_INSTALL="./INSTALL"
-    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    OSTAP_INSTALL=$(canonical_path "${OSTAP_INSTALL}")
 fi
 
 if [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
@@ -130,7 +171,7 @@ ostap_build_upper=$(echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]')
 
 if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
 
-    ## OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    ## OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Use OSTAP_BUILD       = %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
@@ -140,7 +181,7 @@ elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 
 elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
 
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_SOURCE}/build")
+    OSTAP_BUILD=$(canonical_path "${OSTAP_SOURCE}/build")
     printf "%s Use OSTAP_BUILD       = %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
@@ -159,7 +200,7 @@ fi
 ## Valid build directory (2)?
 # ==========================================================================
 if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
 else
     printf "%s No valid build directory is found! %s\n" "${prefix1_error}" "${OSTAP_BUILD}"
     unset OSTAP_BUILD OSTAP_INSTALL
@@ -248,7 +289,7 @@ fi
 ## Clean install directory (1) 
 # =========================================================================
 if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTALL}" ]; then
-    ## OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    ## OSTAP_INSTALL=$(canonical_path "${OSTAP_INSTALL}")
 
     printf "%s [1/8] Clean OSTAP_INSTALL directory %s\n" "${prefix1}" "${OSTAP_INSTALL}"
     
@@ -393,11 +434,11 @@ printf "%s [7/8] Third  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_c
 
 sc=$?
 if [ "${sc}" -ne 0 ]; then
-    printf "%s [5/8] failure: third pass of cmake&%s&install (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [7/8] failure: third pass of cmake&%s&install (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    return ${sc} 2>/dev/null || exit ${sc}
 else
-    printf "%s [5/8] success: third pass of cmake&%s&install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [7/8] success: third pass of cmake&%s&install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
 fi
-
 
 OSTAP_BUILDER="${make_command}"
 printf "%s PROJECT BUILDER : %s\n" "${prefix1}" "${OSTAP_BUILDER}"
@@ -429,6 +470,13 @@ export OSTAP_BUILDER
 export OSTAP_SOURCE
 export OSTAP_BUILD
 export OSTAP_INSTALL
+
+result=${sc}
+if [ "$result" -eq 0 ]; then
+    printf "%s RESULT             : SUCCESS\n" "${prefix1}"
+else
+    printf "%s RESULT             : %s\n" "${prefix1_error}" "${result}"
+fi
 
 return ${result} 2>/dev/null || exit ${result}
 

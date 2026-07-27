@@ -11,36 +11,61 @@ prefix_error='<<OSTAP WITH LCG ERROR>>'
 # =========================================================================
 
 # =========================================================================
-# Check if script is sourced in POSIX-compliant shells
+# Universal POSIX-compliant Canonical Absolute Path Resolution
+# (Works in bash, zsh, dash, sh)
 # =========================================================================
+if ! command -v canonical_path >/dev/null 2>&1; then
+printf "%s Use local 'canonical_path' function \n" "${prefix1}"
+canonical_path() {
+    # =====================================================================
+    # 1. Use native realpath if available
+    # =====================================================================
+    if command -v realpath >/dev/null 2>&1; then
+        realpath -m -- "$1" 2>/dev/null && return 0
+    elif command -v grealpath >/dev/null 2>&1; then
+        grealpath -m -- "$1" 2>/dev/null && return 0
+    fi
 
-# =========================================================================
-# Cross-platform canonical absolute path resolution (replaces GNU readlink -f / realpath -m)
-# =========================================================================
-get_canonical_path() {
+    # ======================================================================
+    # 2. Pure POSIX fallback (no 'local' keyword to ensure compatibility with plain sh)
+    # ======================================================================
+    if [ -z "$1" ]; then
+        return 1
+    fi
     
-    target_path="$1"
-
-    # 1. Если это директория (или симлинк на директорию)
-    if [ -d "${target_path}" ]; then
-        (cd "${target_path}" 2>/dev/null && pwd -P)
-
-    # 2. Если это файл (или симлинк на файл)
-    elif [ -f "${target_path}" ]; then
-        dir_name=$(dirname "${target_path}")
-        file_name=$(basename "${target_path}")
-        abs_dir=$(cd "${dir_name}" 2>/dev/null && pwd -P)
-        if [ -n "${abs_dir}" ]; then
-            printf "%s/%s\n" "${abs_dir}" "${file_name}"
+    if [ -e "$1" ]; then
+        if [ -d "$1" ]; then
+            (cd -- "$1" 2>/dev/null && pwd -P)
         else
-            echo "${target_path}"
+            _gp_dir=$(dirname -- "$1")
+            _gp_file=$(basename -- "$1")
+            _gp_abs=$(cd -- "$_gp_dir" 2>/dev/null && pwd -P)
+            if [ -n "$_gp_abs" ]; then
+                printf '%s/%s\n' "$_gp_abs" "$_gp_file"
+            else
+                printf '%s\n' "$1"
+            fi
         fi
-
-    # 3. Фолбэк для несуществующих путей
     else
-        echo "${target_path}"
+        _gp_current="$1"
+        _gp_suffix=""
+        
+        while [ ! -e "$_gp_current" ] && [ "$_gp_current" != "." ] && [ "$_gp_current" != "/" ]; do
+            _gp_suffix="/$(basename -- "$_gp_current")${_gp_suffix}"
+            _gp_current=$(dirname -- "$_gp_current")
+        done
+        
+        if [ -e "$_gp_current" ]; then
+            _gp_abs=$(canonical_path "$_gp_current")
+            printf '%s%s\n' "$_gp_abs" "$_gp_suffix"
+        else
+            printf '%s/%s\n' "$PWD" "$1"
+        fi
     fi
 }
+fi
+# =========================================================================
+
 
 # ==========================================================================
 ## Color output setup
@@ -138,8 +163,8 @@ LCG_VIEWS="/cvmfs/sft.cern.ch/lcg/views"
 LCG_BUILD="${LCG_VIEWS}/${LCG}/${PLATFORM}"
 LCG_SETUP="${LCG_BUILD}/setup.sh"
 
-## LCG_BUILD=$(get_canonical_path "${LCG_BUILD}")
-## LCG_SETUP=$(get_canonical_path "${LCG_SETUP}")
+## LCG_BUILD=$(canonical_path "${LCG_BUILD}")
+## LCG_SETUP=$(canonical_path "${LCG_SETUP}")
 
 if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
    [ -d "${LCG_VIEWS}" ] && [ -d "${LCG_BUILD}" ] && \
@@ -148,7 +173,7 @@ if [ -n "${LCG}" ] && [ -n "${PLATFORM}" ] && \
     . "${LCG_SETUP}"
 
     if [ "$(uname -s)" = "Darwin" ]; then
-    real_cmake_path=$(get_canonical_path "$(which cmake 2>/dev/null)")
+    real_cmake_path=$(canonical_path "$(which cmake 2>/dev/null)")
 
     case "${real_cmake_path}" in
         /cvmfs/*)
@@ -235,7 +260,7 @@ do
        [ -f "${source_dir}/CMakeLists.txt" ] && \
        [ -f "${source_dir}/.aux/.build-ostap" ]; then
 
-        ## source_dir=$(get_canonical_path "${source_dir}")
+        ## source_dir=$(canonical_path "${source_dir}")
         source_found="${source_dir}"
         printf " source found! %s  %s\n" "${source_dir}" "${source_found}"
         break
@@ -243,7 +268,7 @@ do
 done
 
 if [ -n "${source_found}" ] && [ -d "${source_found}" ]; then
-    OSTAP_SOURCE=$(get_canonical_path "${source_found}")
+    OSTAP_SOURCE=$(canonical_path "${source_found}")
     printf "%s Use OSTAP_SOURCE   = '%s'\n" "${prefix}" "${OSTAP_SOURCE}"
 else
     printf "%s No ostap source directory found!\n" "${prefix_error}"
@@ -258,39 +283,39 @@ ostap_build_upper=$(echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]')
 
 if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
 
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 
     OSTAP_BUILD=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX")
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
     
     OSTAP_BUILD="${OSTAP_SOURCE}/build"
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
 
     mkdir -p "${OSTAP_SOURCE}/build"
     OSTAP_BUILD="${OSTAP_SOURCE}/build"
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 else
 
     OSTAP_BUILD=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX")
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 fi
 
 ## Check build directory validation
 if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
-    OSTAP_BUILD=$(get_canonical_path "${OSTAP_BUILD}")
+    OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
 else
     printf "%s No valid build directory is found! %s\n" "${prefix_error}" "${OSTAP_BUILD}"
@@ -354,7 +379,7 @@ OSTAP_INSTALL="${5:-${OSTAP_INSTALL}}"
 
 if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTALL}" ]; then
 
-    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    OSTAP_INSTALL=$(canonical_path "${OSTAP_INSTALL}")
     printf "%s Clean  OSTAP_INSTALL directory        %s\n" "${prefix}" "${OSTAP_INSTALL}"
     ( cd "${OSTAP_INSTALL}" && \
       rm -rf -- .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
@@ -367,7 +392,7 @@ elif [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_I
 else
 
     OSTAP_INSTALL="${OSTAP_BUILD}/INSTALL/${LCG}/${PLATFORM}"
-    OSTAP_INSTALL=$(get_canonical_path "${OSTAP_INSTALL}")
+    OSTAP_INSTALL=$(canonical_path "${OSTAP_INSTALL}")
 
 fi
 
@@ -411,8 +436,6 @@ fi
 
 # ===================================================================================
 return ${result} 2>/dev/null || exit ${result}
-# ===================================================================================
-
 # ===================================================================================
 ##                                                                            The END 
 # ===================================================================================

@@ -39,9 +39,9 @@ try : # =======================================================================
     # =========================================================================
     import cpuinfo
     cpu_info.update ( cpuinfo.cpuinfo.get_cpu_info() )
-    cpu_flags   = cpu_info.get ( 'flags' , () )
-    HAS_AVX  = 'avx'  in cpu_flags 
-    HAS_AVX2 = 'avx2' in cpu_flags  
+    cpu_flags = cpu_info.get ( 'flags' , () )
+    HAS_AVX   = 'avx'  in cpu_flags 
+    HAS_AVX2  = 'avx2' in cpu_flags  
     cpu_info [ 'SOURCE'   ] = 'cpuinfo'
     for flag in flags :
         fl = flag.lower().replace ( '.' , '_' )
@@ -60,6 +60,8 @@ if not cpu_info : # ===========================================================
         HAS_AVX  = cpu_info.get ( 'AVX'  , False )
         HAS_AVX2 = cpu_info.get ( 'AVX2' , False )
         cpu_info [ 'SOURCE'   ] = 'cpufeature'
+        for flag in flags :
+            if not flag in flags : cpu_info [ flag ] = False 
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================

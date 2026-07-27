@@ -9,59 +9,94 @@ if [ -n "${PYTHONNOUSERSITE}" ]; then
     unset PYTHONNOUSERSITE
 fi
 
-## Helper functions for PATH manipulation via Python
+# =====================================================================
+## Helper functions for PATH manipulation with Python fallback
+# =====================================================================
 _path_prepend() {
-cat <<EOF | python - "$1" "$2"
+    _pp_var_name="$1"
+    _pp_item_raw="$2"
+    
+    _pp_new_path=$(cat <<EOF | python3 - "$_pp_var_name" "$_pp_item_raw"
 import os, sys
-path = sys.argv[1] 
-item = sys.argv[2] if 2 < len(sys.argv) else ''
-item = item.strip() 
-path = os.environ.get(path, '')
-path = path.split(os.pathsep) 
-if item: path.insert(0, item) 
+var_name = sys.argv[1]
+item = sys.argv[2] if len(sys.argv) > 2 else ''
+item = item.strip()
+
+path = os.environ.get(var_name, '')
+path = path.split(os.pathsep) if path else []
+
+if item:
+    path.insert(0, item)
+
 npath = []
-for p in path: 
-    if not os.path.exists(p): continue 
-    if not os.path.isdir(p): continue 
-    pn = os.path.normpath(p) 
-    if pn in npath: continue 
-    npath.append(pn)
-path = os.pathsep.join(npath)
-print(path)
+for p in path:
+    if not os.path.exists(p) or not os.path.isdir(p):
+        continue
+    pn = os.path.normpath(p)
+    if pn not in npath:
+        npath.append(pn)
+
+print(os.pathsep.join(npath))
 EOF
+)
+    # Dynamically set and export the updated variable
+    eval "${_pp_var_name}=\"${_pp_new_path}\""
+    eval "export ${_pp_var_name}"
+    
+    unset _pp_var_name _pp_item_raw _pp_new_path
 }
 
 _path_remove() {
-cat <<EOF | python - "$1" "$2"
+    _pr_var_name="$1"
+    _pr_item_raw="$2"
+    
+    _pr_new_path=$(cat <<EOF | python3 - "$_pr_var_name" "$_pr_item_raw"
 import os, sys
-path = sys.argv[1] 
-item = sys.argv[2] if 2 < len(sys.argv) else ''
-item = item.strip() 
-path = os.environ.get(path, '')
-path = path.split(os.pathsep) 
+var_name = sys.argv[1]
+item = sys.argv[2] if len(sys.argv) > 2 else ''
+item = item.strip()
+
+target_norm = os.path.normpath(item) if item else ''
+
+path = os.environ.get(var_name, '')
+path = path.split(os.pathsep) if path else []
+
 npath = []
-for p in path: 
-    if os.path.exists(item) and os.path.samefile(p, item): continue     
-    if not os.path.exists(p): continue 
-    if not os.path.isdir(p): continue 
-    pn = os.path.normpath(p) 
-    if pn in npath: continue 
-    npath.append(pn)
-path = os.pathsep.join(npath)
-print(path)
+for p in path:
+    if not os.path.exists(p) or not os.path.isdir(p):
+        continue
+    pn = os.path.normpath(p)
+    
+    # Skip if matches the target item to remove
+    if target_norm and pn == target_norm:
+        continue
+        
+    if pn not in npath:
+        npath.append(pn)
+
+print(os.pathsep.join(npath))
 EOF
+)
+    # Dynamically set and export the updated variable
+    eval "${_pr_var_name}=\"${_pr_new_path}\""
+    eval "export ${_pr_var_name}"
+    
+    unset _pr_var_name _pr_item_raw _pr_new_path
 }
+
 
 # =============================================================================
 ## Clean old OSTAP paths if OSTAP_DIR was previously set
 # =============================================================================
-if [ -n "${OSTAP_DIR}" ] && [ -d "${OSTAP_DIR}" ]; then
+if [ -n "${OSTAP_DIR:-}" ]; then
     old_ostap_dir="${OSTAP_DIR}"
-    PATH=$(_path_remove PATH "${old_ostap_dir}/bin"); export PATH
-    PYTHONPATH=$(_path_remove PYTHONPATH "${old_ostap_dir}"); export PYTHONPATH
-    PYTHONPATH=$(_path_remove PYTHONPATH "${old_ostap_dir}@OSTAP_PYTHON_SITE_DIR@"); export PYTHONPATH
-    LD_LIBRARY_PATH=$(_path_remove LD_LIBRARY_PATH "${old_ostap_dir}/lib"); export LD_LIBRARY_PATH
-    MANPATH=$(_path_remove MANPATH "${old_ostap_dir}/doc/man"); export MANPATH
+    
+    # Call functions directly without $(...) and without explicit export
+    _path_remove PATH            "${old_ostap_dir}/bin"
+    _path_remove PYTHONPATH      "${old_ostap_dir}"
+    _path_remove PYTHONPATH      "${old_ostap_dir}/@OSTAP_PYTHON_SITE_DIR@"
+    _path_remove LD_LIBRARY_PATH "${old_ostap_dir}/lib"
+    _path_remove MANPATH         "${old_ostap_dir}/doc/man"
 fi
 
 # =============================================================================
@@ -82,6 +117,8 @@ fi
 # =============================================================================
 THIS_SCRIPT="${SCRIPT_PATH}"
 
+echo 'THIS-SCRIPT-1' $THIS_SCRIPT
+
 while [ -h "${THIS_SCRIPT}" ]; do
     DIR="$(cd -P "$(dirname "${THIS_SCRIPT}")" >/dev/null 2>&1 && pwd)"
     THIS_SCRIPT="$(readlink "${THIS_SCRIPT}")"
@@ -94,30 +131,43 @@ done
 OSTAP_DIR="$(cd -P "$(dirname "${THIS_SCRIPT}")" >/dev/null 2>&1 && pwd)"
 export OSTAP_DIR 
 
-OSTAP_VERSION=@OSTAP_VERSION@
+OSTAP_VERSION="@OSTAP_VERSION@"
 export OSTAP_VERSION
 
 # =============================================================================
 ## Update environment paths
 # =============================================================================
-PATH=$(_path_prepend PATH "${OSTAP_DIR}/bin"); export PATH
+# 1. Add executables
+# =============================================================================
+_path_prepend PATH "${OSTAP_DIR}/bin"
 
-if [ -d "${OSTAP_DIR}@OSTAP_PYTHON_SITE_DIR@" ]; then
-    PYTHONPATH=$(_path_prepend PYTHONPATH "${OSTAP_DIR}@OSTAP_PYTHON_SITE_DIR@")
-    export PYTHONPATH
-else
-    PYTHONPATH=$(_path_prepend PYTHONPATH "${OSTAP_DIR}")
-    export PYTHONPATH
+# =============================================================================
+# 2. Add Python packages
+# =============================================================================
+if [ -d "${OSTAP_DIR}" ]; then
+    _path_prepend PYTHONPATH "${OSTAP_DIR}"
 fi
 
-LD_LIBRARY_PATH=$(_path_prepend LD_LIBRARY_PATH "${OSTAP_DIR}/lib"); export LD_LIBRARY_PATH
-MANPATH=$(_path_prepend MANPATH "${OSTAP_DIR}/doc/man"); export MANPATH
+if [ -d "${OSTAP_DIR}/@OSTAP_PYTHON_SITE_DIR@" ]; then
+    _path_prepend PYTHONPATH "${OSTAP_DIR}/@OSTAP_PYTHON_SITE_DIR@"
+else
+    _path_prepend PYTHONPATH "${OSTAP_DIR}"
+fi
 
-# Clean up helper shell functions
+# =============================================================================
+# 3. Add dynamic libraries and manual pages
+# =============================================================================
+_path_prepend LD_LIBRARY_PATH "${OSTAP_DIR}/lib"
+_path_prepend MANPATH         "${OSTAP_DIR}/doc/man"
+
+# =============================================================================
+# Clean up helper shell functions and temporary variables
+# =============================================================================
 unset -f _path_prepend
 unset -f _path_remove 
 unset THIS_SCRIPT SCRIPT_PATH DIR old_ostap_dir
 
+printf '\n'
 # =====================================================================
 #                                                               The END 
 # =====================================================================
