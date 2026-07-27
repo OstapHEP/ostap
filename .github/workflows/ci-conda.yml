@@ -16,7 +16,6 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # - macos-13   # Intel x86_64 runner
           - macos-14   # Apple Silicon (M1/M2) ARM64 runner
           - macos-15   # Apple Silicon ARM64 runner
 
@@ -33,7 +32,6 @@ jobs:
           auto-activate-base: false
           auto-update-conda: false
           show-channel-urls: true
-          # Uses mamba solver for significantly faster environment resolution
           use-mamba: true
 
       # Diagnostic step to verify activated tools and versions
@@ -44,19 +42,13 @@ jobs:
           conda list
           python --version
           cmake --version
-          
+
       # Step to install libdb into the active Conda environment
       - name: Install libdb & berkeleydb dependency
         shell: bash -el {0}
         run: |
           conda install -y -c conda-forge libdb
           YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 python -m pip install --no-binary=:all: berkeleydb
-
-      # Step to install remaining pips 
-      - name: Install remaining pips 
-        shell: bash -el {0}
-        run: |
-          python -m pip install catboost 
 
       # Build Ostap using Ninja generator
       - name: Build Ostap
@@ -71,8 +63,8 @@ jobs:
           ninja install | grep -v -E "Up-to-date|Installing"
 
           if command -v check-dependencies >/dev/null 2>&1; then
-             printf "=== Checking Dependencies ===\n"
-             check-dependencies
+              printf "=== Checking Dependencies ===\n"
+              check-dependencies
           fi
 
       # Test Ostap using Ninja generator
@@ -80,8 +72,8 @@ jobs:
         shell: bash -el {0}
         run: |
           if command -v check-dependencies >/dev/null 2>&1; then
-             printf "=== Checking Dependencies ===\n"
-             check-dependencies
+              printf "=== Checking Dependencies ===\n"
+              check-dependencies
           fi
 
           cd build
