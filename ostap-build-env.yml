@@ -7,10 +7,10 @@ channels:
 
 dependencies:
   # ROOT framework from conda-forge
-  - root
+  - "root>=6.28"
 
   # Target Python runtime
-  - python
+  - "python>=3.10"
 
   # Build tools
   - c-compiler
