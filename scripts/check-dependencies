@@ -148,9 +148,8 @@ to_install =  ( 'numpy'            , 'scipy'            ,
                 'statsmodels'      , 
                 'sweetviz'         , 
                 'lightgbm'         , 
-                'catboost'         ,                
-                'hep_ml'           ,
-                'cpufeature'       )
+                ## 'catboost'         ,                
+                'hep_ml'           )
 
 if ( 3 , 9  ) <= python_info : to_install += ( 'terminaltables3' , )
 else                         : to_install += ( 'terminaltables'  , )
@@ -960,14 +959,14 @@ if HAS_AVX2 : # ===============================================================
         message = """ catboost cannot be imported!
         - catboost  is useful for comparison of datasets  
         """
-        missing.append ( 'catboost' ) 
+        ## missing.append ( 'catboost' ) 
         logger.error ( message )
         row = attention ( 'catboost' ) , attention ( '---' ) , '' 
         rows.append  ( row )
         # =====================================================================
     except : # ================================================================
         # =====================================================================
-        missing.append ( 'catboost' ) 
+        ## missing.append ( 'catboost' ) 
         logger.error ( 'catboost  cannot be imported!' )
 # =============================================================================
 if True or ( 3 , 12 ) <= python_info : # ======================================
