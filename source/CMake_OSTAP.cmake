@@ -30,7 +30,7 @@ add_library(ostap SHARED src/format.cpp
                          src/DataFrameUtils.cpp
                          src/Differences.cpp
                          src/ECDF.cpp
-			             src/EffEntity.cpp
+                                     src/EffEntity.cpp
                          src/EPDF.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
@@ -72,20 +72,20 @@ add_library(ostap SHARED src/format.cpp
                          src/MatrixUtils.cpp
                          src/Misc.cpp
                          src/Models.cpp
-                         src/Moebius.cpp                         			 
+                         src/Moebius.cpp                                                 
                          src/Models2D.cpp
                          src/Models3D.cpp
-                         src/Moments.cpp			 
+                         src/Moments.cpp                         
                          src/MoreMath.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
-            		 src/Names.cpp 
+                         src/Names.cpp 
                          src/NStatEntity.cpp
                          src/Notifier.cpp
-			 src/Numbers.cpp
+                         src/Numbers.cpp
                          src/Ostap.cpp
-			 src/Quantile.cpp
+                         src/Quantile.cpp
                          src/Parameter.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp
@@ -106,7 +106,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Primitives.cpp
                          src/Printable.cpp
                          src/ProgressBar.cpp
-			 src/Project.cpp
+                         src/Project.cpp
                          src/PyBLOB.cpp
                          src/PyCallable.cpp 
                          src/PyFuncs.cpp 
@@ -114,7 +114,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
-                         src/PyVar.cpp			 
+                         src/PyVar.cpp                   
                          src/Quantile.cpp
                          src/Quantiles.cpp
                          src/Rational.cpp
@@ -133,7 +133,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Tensors.cpp
                          src/Topics.cpp
                          src/Tmva.cpp
-			 src/ToStream.cpp						  
+                         src/ToStream.cpp                                                 
                          src/TreeGetter.cpp
                          src/Types.cpp
                          src/qMath.cpp
@@ -149,7 +149,7 @@ add_library(ostap SHARED src/format.cpp
                          src/owens.cpp      
                          src/hcubature.cpp                         
                          src/pcubature.cpp
-			 src/hstats.cpp      
+                         src/hstats.cpp      
                         )
 
 target_compile_features ( ostap PUBLIC cxx_constexpr                      )

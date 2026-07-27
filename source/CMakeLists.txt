@@ -230,7 +230,7 @@ else()
     
 endif() 
     
-target_link_libraries   ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
+target_link_libraries   ( ostap PUBLIC ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
 
 target_include_directories (ostap
     PUBLIC 
@@ -240,25 +240,112 @@ target_include_directories (ostap
         ${CMAKE_CURRENT_SOURCE_DIR}/src ${Python_INCLUDE_DIRS} 
 )
 
-REFLEX_GENERATE_DICTIONARY( ostap     ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
-                            SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml )
+set_target_properties ( ostap  PROPERTIES SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX} )
 
-add_library           ( ostapDict MODULE ostap.cxx )
-add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot )
-target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
+## REFLEX_GENERATE_DICTIONARY( ostap     ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
+##                            SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml )
 
-set_target_properties ( ostap     PROPERTIES SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX} )
-set_target_properties ( ostapDict PROPERTIES SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX} )
+## include_directories(
+##     ${CMAKE_CURRENT_SOURCE_DIR}/include
+##    ${CMAKE_CURRENT_SOURCE_DIR}/src
+## )
+
+## REFLEX_GENERATE_DICTIONARY(
+##    ostap
+##    ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh
+##    SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml
+##    OPTIONS
+##        --rootmap=${CMAKE_CURRENT_BINARY_DIR}/libostap.rootmap
+##        --rootmap-lib=libostap${CMAKE_SHARED_LIBRARY_SUFFIX}
+##)
+
+## # 2. Добавляем сгенерированный исходник словаря в нашу ЕДИНСТВЕННУЮ библиотеку ostap
+## target_sources(ostap PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.cxx)
+
+## # 3. Исправляем .so -> .dylib (для macOS) в файл libostap.rootmap
+## add_custom_command(
+##    TARGET ostap POST_BUILD
+##    COMMAND sed "s/libostap.so/libostap${CMAKE_SHARED_LIBRARY_SUFFIX}/g" 
+##            ${CMAKE_CURRENT_BINARY_DIR}/libostap.rootmap > ${CMAKE_CURRENT_BINARY_DIR}/libostap.rootmap.tmp
+##    COMMAND ${CMAKE_COMMAND} -E rename 
+##            ${CMAKE_CURRENT_BINARY_DIR}/libostap.rootmap.tmp 
+##            ${CMAKE_CURRENT_BINARY_DIR}/libostap.rootmap
+##    COMMENT "Fixing library extension in libostap.rootmap"
+## )
+
+## # 4. Установка библиотеки и словарей в директорию lib
+## install(TARGETS ostap DESTINATION lib)
+## install(FILES 
+##     ${CMAKE_CURRENT_BINARY_DIR}/libostap.rootmap
+##     ${CMAKE_CURRENT_BINARY_DIR}/libostap_rdict.pcm
+##     DESTINATION lib
+## )
+
+## add_library           ( ostapDict MODULE ostap.cxx )
+## add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot )
+## target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
+## set_target_properties ( ostapDict PROPERTIES SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX} )
+
+
+## REFLEX_GENERATE_DICTIONARY(
+##    ostapDict
+##    ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh
+##    SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml
+## )
+## ## Привязываем сгенерированные файлы к библиотеке ostap
+## target_sources(ostap PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.cpp)
+##
+
+
+# =========================================================================
+# Inclde directories  (nneded?)
+# =========================================================================
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+# =========================================================================
+## Generate dictionaries fom XML selection file 
+# ========================================================================
+REFLEX_GENERATE_DICTIONARY(
+    ostap
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh
+    SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml
+)
+
+# ========================================================================
+## Add dictionaries into the main lbrary 
+# ========================================================================
+target_sources(ostap PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/ostap.cxx)
+
+set_target_properties ( ostap  PROPERTIES SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX} )
+
+# =======================================================================
+## Fix ROOT-map name and content
+# =======================================================================
+add_custom_command(
+    TARGET ostap POST_BUILD
+    COMMAND sed "s/libostapDict.so/libostap${CMAKE_SHARED_LIBRARY_SUFFIX}/g" 
+            ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap > ${CMAKE_CURRENT_BINARY_DIR}/libostap.rootmap
+    COMMENT "Renaming and fixing library extension in libostap.rootmap via sed"
+)
+
+# =======================================================================
+## Library installation
+# =======================================================================
+install(TARGETS ostap DESTINATION lib)
+install(FILES 
+    ${CMAKE_CURRENT_BINARY_DIR}/libostap.rootmap
+    ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm
+    DESTINATION lib
+)
 
 install ( TARGETS   ostap
           EXPORT    ostap-export
           COMPONENT export 
           LIBRARY   DESTINATION lib 
           INCLUDES  DESTINATION include )
-
-install ( TARGETS     ostapDict
-          LIBRARY DESTINATION lib
-          COMPONENT   libraries )
 
 install ( DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     
           DESTINATION include 
@@ -270,8 +357,6 @@ install ( DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap
           PATTERN     "*#*"    EXCLUDE )
     
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h     DESTINATION include/Ostap COMPONENT headers    )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm    DESTINATION lib           COMPONENT libraries  )  
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap  DESTINATION lib           COMPONENT libraries  )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/.ostap.build       DESTINATION .             COMPONENT libraries  )
 
 install(EXPORT ostap-export
