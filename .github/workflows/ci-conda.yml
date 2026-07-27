@@ -48,7 +48,7 @@ jobs:
         shell: bash -el {0}
         run: |
           conda install -y -c conda-forge libdb          
-          YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 BERKELEYDB_DIR="${CONDA_PREFIX}" python -m pip install --no-binary=:all: berkeleydb
+          YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 BERKELEYDB_DIR="${CONDA_PREFIX}" python -m pip install --force-reinstall --no-binary=:all: berkeleydb
 
       # Build Ostap using Ninja generator
       - name: Build Ostap
@@ -61,6 +61,9 @@ jobs:
           cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX="${CONDA_PREFIX}"
           ninja -j"${ncpus}"
           ninja install | grep -v -E "Up-to-date|Installing"
+
+          # Re-configure CMake so CTest detects all generated and installed tests
+          cmake ..
 
           if command -v check-dependencies >/dev/null 2>&1; then
               printf "=== Checking Dependencies ===\n"
@@ -79,6 +82,9 @@ jobs:
           cd build
           # Re-configure CMake so CTest detects all generated and installed tests
           cmake ..
+          
+          echo "$CONDA_PREFIX/lib"
+          ls -al $CONDA_PREFIX/lib/*stap*
 
           # Export library paths correctly after switching to the build directory
           # export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${LD_LIBRARY_PATH}"
