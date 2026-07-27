@@ -48,7 +48,8 @@ jobs:
         shell: bash -el {0}
         run: |
           conda install -y -c conda-forge libdb
-          YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 python -m pip install --no-binary=:all: berkeleydb --config-settings="--build-option=--berkeley-db=${CONDA_PREFIX}"
+          
+          YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 BERKELEYDB_DIR="${CONDA_PREFIX}" python -m pip install --no-binary=:all: berkeleydb
 
       # Build Ostap using Ninja generator
       - name: Build Ostap
