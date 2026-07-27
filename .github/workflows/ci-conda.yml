@@ -85,10 +85,28 @@ jobs:
           
           echo "$CONDA_PREFIX/lib"
           ls -al $CONDA_PREFIX/lib/*stap*
+          
+          printf "ALL PCMS     in %s\n" "${CONDA_PREFIX}/lib"          
+          find ${CONDA_PREFIX}/lib -name '*'.pcm
+
+          printf "ALL ROOT-MAP in %s\n" "${CONDA_PREFIX}/lib"          
+          find ${CONDA_PREFIX}/lib -name '*'.rootmap 
+
+          printf "ALL ostap    in %s\n" "${CONDA_PREFIX}/lib"
+          find ${CONDA_PREFIX}/lib -name '*'ostap'*' 
+
+          printf "ALL Ostap    in %s\n" "${CONDA_PREFIX}/lib"
+          find ${CONDA_PREFIX}/lib -name '*'Ostap'*' 
+
 
           # Export library paths correctly after switching to the build directory
           # export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${LD_LIBRARY_PATH}"
           # export DYLD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${DYLD_LIBRARY_PATH}"
           # export PYTHONPATH="${PWD}/../python:${PYTHONPATH}"
 
+          printf "CONDA_PREFIX      :%s\n" "${CONDA_PREFIX}"
+          printf "LD_LIBRARY_PATH   :%s\n" "${LD_LIBRARY_PATH}"
+          printf "DYLD_LIBRARY_PATH :%s\n" "${DYLD_LIBRARY_PATH}"
+          printf "PYTHONPATH        :%s\n" "${PYTHONPATH}"
+            
           OSTAP_BATCH=True COLUMNS=200 ctest -j1 -R core.core --output-on-failure --test-output-size-failed 5000000
