@@ -247,6 +247,9 @@ add_library           ( ostapDict MODULE ostap.cxx )
 add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 
+set_target_properties ( ostap     PROPERTIES SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX} )
+set_target_properties ( ostapDict PROPERTIES SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX} )
+
 install ( TARGETS   ostap
           EXPORT    ostap-export
           COMPONENT export 
@@ -282,11 +285,11 @@ enable_testing()
 
 add_test ( NAME ostap.test_aclic1_cpp
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC1.cpp   -b -x -l -q ) 
+           COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC1.cpp   -b -x -l -q ) 
 add_test ( NAME ostap.test_aclic2_cpp
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC2.cpp+  -b -x -l -q ) 
+           COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC2.cpp+  -b -x -l -q ) 
 add_test ( NAME ostap.test_aclic3_cpp
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC3.cpp++ -b -x -l -q ) 
+           COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC3.cpp++ -b -x -l -q ) 
 
