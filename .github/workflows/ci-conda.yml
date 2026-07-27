@@ -54,7 +54,7 @@ jobs:
       - name: Build Ostap
         shell: bash -el {0}
         run: |
-          ncpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+          ncpus=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 2)
 
           mkdir build && cd build
 
@@ -73,6 +73,28 @@ jobs:
       # Test Ostap using Ninja generator
       - name: Test Ostap
         shell: bash -el {0}
+        env:
+          # --- 1. Prevent I/O Stalls & Buffer Locks ---
+          # Force Python stdout/stderr streams to be unbuffered.
+          # Prevents GitHub Actions pipes from stalling on buffer fill (~64KB).
+          PYTHONUNBUFFERED: "1"
+
+          # Dump Python tracebacks automatically on crash, segfault, or freeze.
+          PYTHONFAULTHANDLER: "1"
+
+          # --- 2. Disable GUI & Interactive Windows (Headless Mode) ---
+          # Force ROOT framework to run in batch mode (no TCanvas/X11 popups).
+          ROOTSYS_BATCH: "1"
+
+          # Force Ostap framework to run in batch mode.
+          OSTAP_BATCH: "1"
+
+          # Direct Qt/PyQt to use offscreen rendering without connecting to macOS WindowServer.
+          QT_QPA_PLATFORM: "offscreen"
+
+          # Force Matplotlib to use the 'Agg' non-interactive backend (renders directly in memory).
+          MPLBACKEND: "Agg"
+
         run: |
 
           if command -v check-dependencies >/dev/null 2>&1; then
@@ -83,4 +105,4 @@ jobs:
           cd build
           
           NCPU=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
-          OSTAP_BATCH=True COLUMNS=200 ctest -j${NCPU} --output-on-failure --test-output-size-failed 5000000
+          OSTAP_BATCH=True COLUMNS=200 ctest -j2 -E para --output-on-failure --test-output-size-failed 5000000

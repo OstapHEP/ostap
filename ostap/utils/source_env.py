@@ -181,7 +181,7 @@ if '__main__' == __name__ :
         prog       = "source_env" )
     parser.add_argument    (
         '-s' , '--silent' ,
-        help    = "Silent processing [default: %(Default)s]" ,
+        help    = "Silent processing [default: %(default)s]" ,
         action  = "store_true")
     parser.add_argument    (
         '-l1', '--lmax1'  ,

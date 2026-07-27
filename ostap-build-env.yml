@@ -55,6 +55,7 @@ dependencies:
 
   # DB
   - libdb
+  - gdbm
   - duckdb
   - fasteners
 
