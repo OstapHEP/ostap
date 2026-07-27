@@ -3,32 +3,32 @@
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py) 
 
 macro(find_python_module module)
-	string(TOUPPER ${module} module_upper)
-	if(NOT PY_${module_upper})
-		if    (ARGC GREATER 1 AND ARGV1 STREQUAL "REQUIRED")
-			set(PY_${module}_FIND_REQUIRED TRUE)
-		elseif(ARGC GREATER 2 AND ARGV2 STREQUAL "REQUIRED")
-			set(PY_${module}_FIND_REQUIRED TRUE)
-		endif()
-		if    (ARGC GREATER 1 AND ARGV1 STREQUAL "QUIET")
-			set(PY_${module}_FIND_QUIETLY TRUE)
-		elseif(ARGC GREATER 2 AND ARGV2 STREQUAL "QUIET")
-			set(PY_${module}_FIND_QUIETLY TRUE)
-		endif()
-		# A module's location is usually a directory, but for binary modules
-		# it's a .so file.
-		execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c 
-			"import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
-			RESULT_VARIABLE _${module}_status 
-			OUTPUT_VARIABLE _${module}_location
-			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-		if(NOT _${module}_status)
-			set(PY_${module_upper} ${_${module}_location} CACHE STRING 
-				"Location of Python module ${module}")
-		endif(NOT _${module}_status)
-	endif(NOT PY_${module_upper})
-	find_package_handle_standard_args(PY_${module} DEFAULT_MSG PY_${module_upper} )
-	## find_package_handle_standard_args(PY_${module}   REQUIRED_VARS PY_${module_upper} )
+        string(TOUPPER ${module} module_upper)
+        if(NOT PY_${module_upper})
+                if    (ARGC GREATER 1 AND ARGV1 STREQUAL "REQUIRED")
+                        set(PY_${module}_FIND_REQUIRED TRUE)
+                elseif(ARGC GREATER 2 AND ARGV2 STREQUAL "REQUIRED")
+                        set(PY_${module}_FIND_REQUIRED TRUE)
+                endif()
+                if    (ARGC GREATER 1 AND ARGV1 STREQUAL "QUIET")
+                        set(PY_${module}_FIND_QUIETLY TRUE)
+                elseif(ARGC GREATER 2 AND ARGV2 STREQUAL "QUIET")
+                        set(PY_${module}_FIND_QUIETLY TRUE)
+                endif()
+                # A module's location is usually a directory, but for binary modules
+                # it's a .so file.
+                execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c 
+                        "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
+                        RESULT_VARIABLE _${module}_status 
+                        OUTPUT_VARIABLE _${module}_location
+                        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+                if(NOT _${module}_status)
+                        set(PY_${module_upper} ${_${module}_location} CACHE STRING 
+                                "Location of Python module ${module}")
+                endif(NOT _${module}_status)
+        endif(NOT PY_${module_upper})
+        find_package_handle_standard_args(PY_${module} DEFAULT_MSG PY_${module_upper} )
+        ## find_package_handle_standard_args(PY_${module}   REQUIRED_VARS PY_${module_upper} )
 endmacro(find_python_module)
 
 macro(find_python_module_version module)
@@ -103,9 +103,9 @@ if ( NOT ${PY_cpuinfo_FOUND} )
 endif()
 
 find_python_module ( cpufeature QUIET )
-if ( NOT ${PY_cpufeature_FOUND} ) 
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install cpufeature ${PIP_ARGS})
-endif()
+## if ( NOT ${PY_cpufeature_FOUND} ) 
+##  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install cpufeature ${PIP_ARGS})
+## endif()
 find_python_module ( cpufeature QUIET )
 if ( NOT ${PY_cpufeature_FOUND} ) 
   message ( "----> warning                 cpufeature is NOT found!" ) 
@@ -449,10 +449,10 @@ endif()
 ## 
 if ( ${OSTAP_HAS_AVX2} )
   find_python_module ( catboost QUIET )
-  if ( NOT ${PY_catboost_FOUND} ) 
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install catboost ${PIP_ARGS})
-  endif()
-  find_python_module ( catboost QUIET )
+  ## if ( NOT ${PY_catboost_FOUND} ) 
+  ##  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install catboost ${PIP_ARGS})
+  ## endif()
+  ## find_python_module ( catboost QUIET )
   if ( NOT ${PY_catboost_FOUND} ) 
     message ( "----> warning                catboost is NOT found!" ) 
   endif()
@@ -816,14 +816,14 @@ install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
           DESTINATION     ${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}
           FILES_MATCHING  PATTERN "*.py" 
           PATTERN  "*#*"  EXCLUDE 
- 	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
+          PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
 
 install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}  
           DESTINATION     . 
           COMPONENT       python 
           FILES_MATCHING  PATTERN "*.py"          
           PATTERN  "*.#*" EXCLUDE      
-	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
+          PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
 
 ## install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
 ##          DESTINATION     .${OSTAP_PYTHON_SITE_LOCAL}
@@ -831,5 +831,5 @@ install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
 ##          FILES_MATCHING  PATTERN "*.py" 
 ##          PATTERN  "*#*"  EXCLUDE 
 ##          PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
-	
+        
 ## nosetests -w ../ostap/tools --exe --processes=16  --process-timeout=2000 -I '.*chopping.*'

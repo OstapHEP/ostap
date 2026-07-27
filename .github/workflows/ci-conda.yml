@@ -43,12 +43,11 @@ jobs:
           python --version
           cmake --version
 
-      # Step to install libdb into the active Conda environment
+      # Step to install libdb into the act
       - name: Install libdb & berkeleydb dependency
         shell: bash -el {0}
         run: |
-          conda install -y -c conda-forge libdb
-          
+          conda install -y -c conda-forge libdb          
           YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 BERKELEYDB_DIR="${CONDA_PREFIX}" python -m pip install --no-binary=:all: berkeleydb
 
       # Build Ostap using Ninja generator
@@ -82,8 +81,8 @@ jobs:
           cmake ..
 
           # Export library paths correctly after switching to the build directory
-          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${LD_LIBRARY_PATH}"
-          export DYLD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${DYLD_LIBRARY_PATH}"
-          export PYTHONPATH="${PWD}/../python:${PYTHONPATH}"
+          # export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${LD_LIBRARY_PATH}"
+          # export DYLD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${PWD}:${DYLD_LIBRARY_PATH}"
+          # export PYTHONPATH="${PWD}/../python:${PYTHONPATH}"
 
-          OSTAP_BATCH=True COLUMNS=200 ctest -j4 -R core.core --output-on-failure --test-output-size-failed 5000000
+          OSTAP_BATCH=True COLUMNS=200 ctest -j1 -R core.core --output-on-failure --test-output-size-failed 5000000
