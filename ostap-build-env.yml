@@ -24,8 +24,8 @@ dependencies:
   - openblas
 
   # Core numerical and scientific packages
-  - numpy
-  - scipy
+  - "numpy>=2.0"
+  - "scipy>=1.6"
   - numba
   - cffi
   - pandas
@@ -61,7 +61,6 @@ dependencies:
   # Reweightings, GoF & Two-samples tests
   - lightgbm
   - xgboost
-  - catboost
   - hep_ml
 
   # Auxiliary
