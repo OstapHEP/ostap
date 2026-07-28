@@ -28,19 +28,23 @@ PyObject* Ostap::blob_to_bytes ( const Ostap::BLOB& blob )
 {
   constexpr std::size_t max_val = std::numeric_limits<Py_ssize_t>::max();
   
-  std::cerr << " blob_to_bytes : "
-            <<  blob.GetName()
-            << "size="
-            <<  blob.size() << std::endl ;
-  if ( blob.empty () || !blob.buffer () ) { return PyBytes_FromStringAndSize ( "" , 0 ) ; }
-  // 
   if ( max_val < blob.size() )
   {
     PyErr_SetString ( PyExc_OverflowError, "Ostap::BLOB size is too large for Python");
     return nullptr;
   }
+  
+  const Py_ssize_t py_size = blob.size() ;
+  std::cerr << " blob_to_bytes : "
+            <<  blob.GetName()
+            << "size="
+            <<  blob.size()
+            << " pysize " << py_size 
+            << std::endl ;
+  if ( blob.empty () || !blob.buffer () ) { return PyBytes_FromStringAndSize ( "" , 0 ) ; }
+  // 
   //
-  return PyBytes_FromStringAndSize ( reinterpret_cast<const char*> ( blob.buffer () ) ,static_cast<Py_ssize_t> ( blob.size () ) );
+  return PyBytes_FromStringAndSize ( reinterpret_cast<const char*> ( blob.buffer () ) , py_size ) ;
 }
 // ============================================================================
 /*  convert bytes to blob 
