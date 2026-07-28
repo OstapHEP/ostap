@@ -127,6 +127,11 @@ else                      : logger = getLogger ( __name__              )
 logger.debug ( "Simple generic ROOT-based shelve-like-database" )
 # =============================================================================
 
+import ctypes
+import cppyy
+import cppyy.ll
+
+
 # =============================================================================
 ## @class RootOnlyShelf
 #  Plain vanilla DBASE for ROOT-object (only)
@@ -464,9 +469,22 @@ class RootShelf(RootOnlyShelf):
 
                 ## (1) unpack it!
                 ## z     = Ostap.blob_to_bytes ( value )
+                ## z     = Ostap.to_bytes ( blob )
+
+                ptr  = blob.data ()
+                size = blob.size ()
                 
-                z     = Ostap.to_bytes ( blob )
-                
+                if ptr and 0 < size :
+
+                    addr = cppyy.ll.addressof ( ptr )
+    
+                    char_array_type = ctypes.c_char * size
+                    c_array         = char_array_type.from_address ( addr )
+                    z               = memoryview ( c_array ) 
+                      
+                else                :
+                    z = b""
+                    
                 ## (2) decompress 
                 u     = zlib.decompress ( z )
                 ## (3) unpickle it! 
