@@ -885,8 +885,8 @@ def copy_files ( files_to_copy           ,
 #  by the destination directory 
 #  @param file_to_copy sequence of files to be copied or sequence of (source,destination) pairs 
 #  @param new_dir destination directory, for None temproary directory wil lbe used
-#  @param copier the low-level copy routine ot be used 
-#  @param progress show progrees bar if possible
+#  @param copier the low-level copy routine to be used 
+#  @param progress show progrees bar if/when possible
 #  @return list of copied files 
 def sync_files ( files_to_copy          ,
                  new_dir   = None       ,
@@ -909,13 +909,16 @@ def sync_files ( files_to_copy          ,
     - file_to_copy sequence of files to be copied or sequence of (source,destination) pairs 
     - new_dir      destination directory, for None temproary directory wil lbe used
     - copier       low-level copy routine ot be used 
-    - progress      show progrees bar if possible
+    - progress     show progrees bar if/when possible
     
     A list of copied files is returned 
     """
 
     from   ostap.utils.utils  import which
-    if not which ( 'rsync' ) :
+
+    if   which ( 'rsync'     ) : _command = 'rsync -a'
+    elif which ( 'openrsync' ) : _command = 'openrsync -a'
+    else : 
         from ostap.io.utils import copy_file
         return copy_files ( files_to_copy        ,
                             new_dir  = new_dir   ,
@@ -924,7 +927,7 @@ def sync_files ( files_to_copy          ,
                             copy_cmd = ''        ,
                             progress = progress  )
 
-    if not copy_cmd : copy_cmd = 'rsync -a'
+    if not copy_cmd : copy_cmd = _command
     if not copier : 
         from ostap.io.utils import sync_file
         copier = sync_file
