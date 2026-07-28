@@ -62,7 +62,7 @@ from   ostap.io.pickling    import ( Pickler  , Unpickler, BytesIO,
 from   ostap.utils.cleanup  import CUBase
 from   ostap.utils.basic    import typename  
 from   ostap.io.utils       import file_size, writeable
-import os, abc, shelve, glob, time, datetime, zipfile, tarfile 
+import sys, os, abc, shelve, glob, time, datetime, zipfile, tarfile 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
@@ -73,10 +73,10 @@ ENCODING = 'utf-8'
 # =============================================================================
 _modes_ = {
     # =========================================================================
-    # 'r'	Open existing database for reading only
-    # 'w'	Open existing database for reading and writing[
-    # 'c'	Open database for reading and writing, creating it if it doesn't exist
-    # 'n'	Always create a new, empty database, open for reading and writing
+    # 'r'       Open existing database for reading only
+    # 'w'       Open existing database for reading and writing[
+    # 'c'       Open database for reading and writing, creating it if it doesn't exist
+    # 'n'       Always create a new, empty database, open for reading and writing
     # =========================================================================
     'n'        : 'n' ,
     'c'        : 'c' ,
@@ -115,8 +115,10 @@ class CompressShelf (shelve.Shelf,CUBase) :
     - uncompress_file
     """
     __metaclass__ = abc.ABCMeta
-    ZIP_EXTS      = ( '.zip' , '.zipdb' , '.dbzip' , '.zdb' , '.dbz' ) ## whole DB is in zip-archive 
-    TAR_EXTS      = ( '.tar' , '.tardb' , '.dbtar' , '.tdb' , '.dbt' ) ## whole DB is in tar-archive 
+    ## whole DB is in zip-archive
+    ZIP_EXTS      = ( '.zip' , '.zipdb' , '.dbzip' , '.zdb' , '.dbz' ) if sys.platform != 'darwin' else () 
+    ## whole DB is in tar-archive
+    TAR_EXTS      = ( '.tar' , '.tardb' , '.dbtar' , '.tdb' , '.dbt' ) if sys.platform != 'darwin' else () 
 
     def __init__(
             self                   ,
@@ -324,7 +326,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
         self.sync ()
 
         self.__taropts = 'x:gz' 
-	
+        
 
     @property
     def dbtype   ( self ) :

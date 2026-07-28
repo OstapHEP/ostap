@@ -23,28 +23,36 @@
  *  @return PyBytes object from the blob
  */
 // ============================================================================
-#include <iostream>
 PyObject* Ostap::blob_to_bytes ( const Ostap::BLOB& blob ) 
 {
-  constexpr std::size_t max_val = std::numeric_limits<Py_ssize_t>::max();
+  // 1. Extract raw data pointer and size from the BLOB
+  const std::size_t size = blob.size() ;
+  const char*       data = reinterpret_cast<const char*> ( blob.data() );
   
-  if ( max_val < blob.size() )
+  // 2. Handle empty or invalid BLOBs safelya
+  if ( !data || !size || blob.empty() )
+  { return PyBytes_FromStringAndSize ( "" , 0 ) ; }
+  
+  constexpr std::size_t max_size = std::numeric_limits<Py_ssize_t>::max();  
+  if ( max_size < size )
   {
     PyErr_SetString ( PyExc_OverflowError, "Ostap::BLOB size is too large for Python");
     return nullptr;
   }
+    
+  // 4. Allocate Python bytes and copy the binary data (safely handles binary content & null bytes)
+  const Py_ssize_t py_size = static_cast<Py_ssize_t>( size );
+  PyObject* bytes = PyBytes_FromStringAndSize ( data , py_size );
+    
+  // 6. Check for allocation failure
+  if ( !bytes )
+  {
+    PyErr_SetString ( PyExc_MemoryError, "Failed to allocate PyBytes from Ostap::BLOB");
+    return nullptr;
+  }
   
-  const Py_ssize_t py_size = blob.size() ;
-  std::cerr << " blob_to_bytes : "
-            <<  blob.GetName()
-            << "size="
-            <<  blob.size()
-            << " pysize " << py_size 
-            << std::endl ;
-  if ( blob.empty () || !blob.buffer () ) { return PyBytes_FromStringAndSize ( "" , 0 ) ; }
-  // 
-  //
-  return PyBytes_FromStringAndSize ( reinterpret_cast<const char*> ( blob.buffer () ) , py_size ) ;
+  // return a PyObject* with a reference count of 1 (owned by the caller)
+  return bytes ;
 }
 // ============================================================================
 /*  convert bytes to blob 
@@ -65,23 +73,11 @@ PyObject* Ostap::blob_from_bytes ( Ostap::BLOB& blob , PyObject* bytes )
     return NULL ;
   } 
   //
-  std::cerr << " blob_from_bytes/1 : "
-            <<  blob.GetName()
-            << " bytes=" << PyBytes_Size ( bytes ) << std::endl ;
-  
   // set the blob 
   //
-  std::size_t ns = blob.setBuffer ( PyBytes_Size  ( bytes ) , PyBytes_AsString  ( bytes ) ) ;
-  // 
-  std::cerr << " blob_from_bytes/2 : "
-            <<  blob.GetName()
-            <<  ns << std::endl ;
+  blob.setBuffer ( PyBytes_Size  ( bytes ) , PyBytes_AsString  ( bytes ) ) ;
   //
   Py_INCREF ( Py_True );
-  //
-  std::cerr << " blob_from_bytes/3 : "
-            <<  blob.GetName()
-            <<  blob.size () << std::endl ;
   //
   return Py_True ;
 }

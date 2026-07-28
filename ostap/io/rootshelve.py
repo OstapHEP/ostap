@@ -118,7 +118,8 @@ from   ostap.io.dbase          import TmpDB
 from   ostap.io.pickling       import ( Pickler, Unpickler, BytesIO, 
                                         PROTOCOL,
                                         HIGHEST_PROTOCOL, DEFAULT_PROTOCOL )
-import ROOT, shelve, zlib, os 
+from   ostap.core.core         import Ostap 
+import ROOT, shelve, zlib, os, ctypes, cppyy, cppyy.ll 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
@@ -126,10 +127,31 @@ else                      : logger = getLogger ( __name__              )
 # =============================================================================
 logger.debug ( "Simple generic ROOT-based shelve-like-database" )
 # =============================================================================
+## Provide Ostap::BLOB with buffer protocol
+#  @see Ostap::BLOB
+#  @code
+#  blob = ...
+#  memvew = memory ( blob )
+#  @endcode
+def _blob_2_buffer_ ( blob , flags = 0 ) :
+    """ Provide `Ostap.BLOB` with buffer protocol
+    - see `Ostap.BLOB`
+    >>> blob    = ...
+    >>> memview = memoryview ( blob )
+    """
+    size = blob.size()
+    if 0 >= size : return memoryview ( b"" )    
+    ptr  = blob.data()
+    if not ptr   : return memoryview ( b"" )
+    ##
+    addr            = cppyy.ll.addressof ( ptr )
+    char_array_type = ctypes.c_char * size
+    c_array         = char_array_type.from_address ( addr )
+    ##
+    return memoryview ( c_array )
 
-import ctypes
-import cppyy
-import cppyy.ll
+## 
+Ostap.BLOB.__buffer__ = _blob_2_buffer_
 
 
 # =============================================================================
@@ -461,36 +483,23 @@ class RootShelf(RootOnlyShelf):
             ## blob ?
             from  ostap.core.core import  Ostap
             if isinstance ( value , Ostap.BLOB ) :
-                ##
-                
+                ##                
                 blob = value
                 
-                print ( 'ROOT-SHELVE: UNPACKING BLOB/1:', key, blob.size() )
-
                 ## (1) unpack it!
                 ## z     = Ostap.blob_to_bytes ( value )
                 ## z     = Ostap.to_bytes ( blob )
-
-                ptr  = blob.data ()
-                size = blob.size ()
                 
-                if ptr and 0 < size :
-
-                    addr = cppyy.ll.addressof ( ptr )
-    
-                    char_array_type = ctypes.c_char * size
-                    c_array         = char_array_type.from_address ( addr )
-                    z               = memoryview ( c_array ) 
-                      
-                else                :
-                    z = b""
-                    
+                ## (1) get access to buffer 
+                z     = memoryview ( blob )
+                
                 ## (2) decompress 
                 u     = zlib.decompress ( z )
                 ## (3) unpickle it! 
                 f     = BytesIO ( u )
                 value = Unpickler(f).load()
-                del z , u , f
+                
+                ## del z , u , f
                 
             if self.writeback : self.cache[key] = value
                 
@@ -520,12 +529,10 @@ class RootShelf(RootOnlyShelf):
             z      = zlib.compress ( f.getvalue() , self.compresslevel )
             self.__sizes [ key ] = len ( z ) 
             ## (3) put it into  BLOB 
-            print ( 'ROOT-SHELVE:   PACKING BLOB/1:' , key , len ( z )  )            
             from  ostap.core.core import  Ostap
             blob   = Ostap.BLOB            ( key      ) 
             status = Ostap.blob_from_bytes ( blob , z )
             value  = blob
-            print ( 'ROOT-SHELVE:   PACKING BLOB/2:', key, value.size() , status )            
             del z , f , p 
         
         ## finally use ROOT 

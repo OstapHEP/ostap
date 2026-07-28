@@ -51,13 +51,10 @@ Ostap::BLOB::~BLOB(){}
 // ============================================================================
 // redefine the buffer 
 // ============================================================================
-std::size_t Ostap::BLOB::setBuffer
+void Ostap::BLOB::setBuffer
 ( const std::size_t size   , 
   const void*       buffer ) 
-{
-  m_data.Set ( size , (const char*) buffer ) ;
-  return this -> size () ;
-}
+{ m_data.Set ( size , (const char*) buffer ) ; }
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

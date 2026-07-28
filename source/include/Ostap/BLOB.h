@@ -43,12 +43,12 @@ namespace Ostap
     /// get the buffer/data itself 
     inline const void* data   () const { return      m_data.GetArray () ; }    
     /// get the buffer/data itself 
-    inline bool        empty  () const { return 0 >= m_data.GetSize  () ; }    
+    inline bool        empty  () const { return !m_data.GetArray() || 0 >= m_data.GetSize  () ; }    
     // ========================================================================
   public: // setters 
     // ========================================================================
     /// redefine the buffer 
-    std::size_t setBuffer 
+    void setBuffer 
     ( const std::size_t size   , 
       const void*       buffer ) ;
     // ========================================================================
