@@ -70,7 +70,7 @@ PyObject* Ostap::blob_from_bytes ( Ostap::BLOB& blob , PyObject* bytes )
   // 
   // check the arguments 
   //
-  if ( nullptr == bytes || !PyBytes_Check  ( bytes ) ) 
+  if ( nullptr == bytes || !PyBytes_Check  ( bytes ) )
   {
     PyErr_SetString ( PyExc_TypeError, "Invalid bytes/string object" ) ;
     return nullptr ;
