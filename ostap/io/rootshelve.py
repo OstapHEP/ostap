@@ -457,9 +457,16 @@ class RootShelf(RootOnlyShelf):
             from  ostap.core.core import  Ostap
             if isinstance ( value , Ostap.BLOB ) :
                 ##
-                print ( 'ROOT-SHELVE: UNPACKING BLOB/1:', key, value.size() )
+                
+                blob = value
+                
+                print ( 'ROOT-SHELVE: UNPACKING BLOB/1:', key, blob.size() )
+
                 ## (1) unpack it!
-                z     = Ostap.blob_to_bytes ( value )
+                ## z     = Ostap.blob_to_bytes ( value )
+                
+                z     = Ostap.to_bytes ( blob )
+                
                 ## (2) decompress 
                 u     = zlib.decompress ( z )
                 ## (3) unpickle it! 
