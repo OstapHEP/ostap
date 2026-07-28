@@ -40,7 +40,7 @@ dependencies:
   - pox
   - joblib
   - ipyparallel
-
+  
   # Utilities
   - psutil
   - more-itertools
@@ -48,6 +48,7 @@ dependencies:
   - sortedcontainers
   - pathvalidate
   - packaging
+  - parallel 
 
   # Tables
   - terminaltables
