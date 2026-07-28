@@ -916,8 +916,8 @@ def sync_files ( files_to_copy          ,
 
     from   ostap.utils.utils  import which
 
-    if   which ( 'rsync'     ) : _command = 'rsync -a'
-    elif which ( 'openrsync' ) : _command = 'openrsync -a'
+    if   which ( 'rsync'     ) : the_command = 'rsync -a'
+    elif which ( 'openrsync' ) : the_command = 'openrsync -a'
     else : 
         from ostap.io.utils import copy_file
         return copy_files ( files_to_copy        ,
