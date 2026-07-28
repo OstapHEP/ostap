@@ -24,7 +24,10 @@
  */
 // ============================================================================
 PyObject* Ostap::blob_to_bytes ( const Ostap::BLOB& blob ) 
-{ return PyBytes_FromStringAndSize ( (const char*) blob.buffer () , blob.size () ) ; }
+{
+  if ( 0 == blob.size () || !blob.bufefr() ) { return PyBytes_FromStringAndSize ( "" , 0 ) ; }
+  return PyBytes_FromStringAndSize ( reinterpret_cast<const char*> ( blob.buffer () ) , blob.size () );
+}
 // ============================================================================
 /*  convert bytes to blob 
  *  @see   Ostap::BLOB
@@ -52,10 +55,6 @@ PyObject* Ostap::blob_from_bytes ( Ostap::BLOB& blob , PyObject* bytes )
   //
   return Py_True ;
 }
-
-// ==========================================================================
-
-
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
