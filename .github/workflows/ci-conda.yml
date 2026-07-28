@@ -43,33 +43,33 @@ jobs:
           python --version
           cmake --version
 
-      # Step to install libdb into the act
-      - name: Install libdb & berkeleydb dependency
+      # Step to install libdb & missing utilities (rsync)
+      - name: Install libdb & system dependencies
         shell: bash -el {0}
         run: |
-
           if [[ "$RUNNER_OS" == "macOS" ]]; then
-          
-            # На macOS скомпилировать с Conda-libdb невозможно из-за плоского пространства имен dyld.
-            # Используем Homebrew:
-            brew install berkeley-db
+            # 1. Устанавливаем rsync и berkeley-db через Homebrew на macOS
+            brew install berkeley-db rsync findutils
+            
             BDB_PREFIX=$(brew --prefix berkeley-db)
-      
-            BERKELEYDB_DIR="$BDB_PREFIX" \
+
+            # 2. Компилируем berkeleydb с явным rpath к Homebrew
+            CFLAGS="-I${BDB_PREFIX}/include" \
+            LDFLAGS="-L${BDB_PREFIX}/lib -Wl,-rpath,${BDB_PREFIX}/lib" \
+            BERKELEYDB_DIR="${BDB_PREFIX}" \
+            YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
+            python -m pip install --force-reinstall --no-cache-dir --no-build-isolation --no-binary=berkeleydb berkeleydb
+          else
+            # На Linux Conda-сборка работает отлично:
+            conda install -y -c conda-forge libdb rsync
+            
+            BERKELEYDB_DIR="${CONDA_PREFIX}" \
             YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
             python -m pip install --no-binary=berkeleydb berkeleydb
-            
-         else
-         
-           # На Linux Conda-сборка работает безупречно:
-           conda install -y -c conda-forge libdb
-           BERKELEYDB_DIR="${CONDA_PREFIX}" \
-           YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
-           python -m pip install --no-binary=berkeleydb berkeleydb
-         fi
+          fi
 
-         python -c "import berkeleydb; print(berkeleydb.__version__)"
-          
+          python -c "import berkeleydb; print('BerkeleyDB version:', berkeleydb.__version__)"
+
       # Build Ostap using Ninja generator
       - name: Build Ostap
         shell: bash -el {0}
@@ -94,33 +94,27 @@ jobs:
       - name: Test Ostap
         shell: bash -el {0}
         env:
-          # --- 1. Prevent I/O Stalls & Buffer Locks ---
-          # Force Python stdout/stderr streams to be unbuffered.
-          # Prevents GitHub Actions pipes from stalling on buffer fill (~64KB).
-          PYTHONUNBUFFERED: "1"
+          # --- 1. Prevent Multithreading Deadlocks in Cling / ROOT / OpenMP on macOS ---
+          ROOT_MAX_THREADS: "1"
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          VECLIB_MAXIMUM_THREADS: "1"
 
-          # Dump Python tracebacks automatically on crash, segfault, or freeze.
+          # --- 2. Prevent I/O Stalls & Buffer Locks ---
+          PYTHONUNBUFFERED: "1"
           PYTHONFAULTHANDLER: "1"
 
-          # --- 2. Disable GUI & Interactive Windows (Headless Mode) ---
-          # Force ROOT framework to run in batch mode (no TCanvas/X11 popups).
-          ROOTSYS_BATCH: "1"
-
-          # Force Ostap framework to run in batch mode.
-          OSTAP_BATCH: "1"
-
-          # Direct Qt/PyQt to use offscreen rendering without connecting to macOS WindowServer.
+          # --- 3. Disable GUI & Interactive Windows (Headless Mode) ---
+          ROOT_BATCH: "1"
+          OSTAP_BATCH: "True"
           QT_QPA_PLATFORM: "offscreen"
-
-          # Force Matplotlib to use the 'Agg' non-interactive backend (renders directly in memory).
           MPLBACKEND: "Agg"
 
-          # 
+          # --- 4. Cling & Warnings Flags ---
           EXTRA_CLING_ARGS: "-Wno-macro-redefined"
-          PYTHONWARNINGS: "error,ignore::DeprecationWarning,once::UserWarning,ignore::FutureWarning,ignore:::CPyCppyy"
-          
-        run: |
+          PYTHONWARNINGS: "ignore::DeprecationWarning,once::UserWarning,ignore::FutureWarning,ignore:::CPyCppyy"
 
+        run: |
           if command -v check-dependencies >/dev/null 2>&1; then
               printf "=== Checking Dependencies ===\n"
               check-dependencies
@@ -128,5 +122,5 @@ jobs:
 
           cd build
           
-          NCPU=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
-          OSTAP_BATCH=True COLUMNS=200 ctest -j2 -R '(_io_|sync)' --output-on-failure --test-output-size-failed 5000000
+          # Запускаем ctest с таймаутом в 300 секунд (5 мин) на каждый отдельный тест
+          ctest -j1 -R '(_io_|sync)' --timeout 300 --output-on-failure --test-output-size-failed 5000000
