@@ -25,6 +25,9 @@
 // ============================================================================
 PyObject* Ostap::blob_to_bytes ( const Ostap::BLOB& blob ) 
 {
+
+  return nullptr ;
+  
   // 1. Extract raw data pointer and size from the BLOB
   const std::size_t size = blob.size() ;
   const char*       data = reinterpret_cast<const char*> ( blob.data() );
@@ -70,7 +73,7 @@ PyObject* Ostap::blob_from_bytes ( Ostap::BLOB& blob , PyObject* bytes )
   if ( nullptr == bytes || !PyBytes_Check  ( bytes ) ) 
   {
     PyErr_SetString ( PyExc_TypeError, "Invalid bytes/string object" ) ;
-    return NULL ;
+    return nullptr ;
   } 
   //
   // set the blob 
@@ -147,6 +150,8 @@ PyObject* Ostap::to_bytes ( const Ostap::BLOB& blob )
 // ============================================================================
 PyObject* Ostap::to_buffer ( const Ostap::BLOB& blob )
 {
+  return nullptr ;
+  
   /// 1. Extract raw data pointer and size
   const char*       data = reinterpret_cast<const char*> ( blob.data() ); 
   const std::size_t size = blob.size () ; 

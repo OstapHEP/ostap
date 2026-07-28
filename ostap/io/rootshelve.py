@@ -140,7 +140,7 @@ def _blob_2_buffer_ ( blob , flags = 0 ) :
     >>> memview = memoryview ( blob )
     """
     size = blob.size()
-    if 0 >= size : return memoryview ( b"" )    
+    if not 0 < size <= 0x7FFFFFFF : return memoryview ( b"" )
     ptr  = blob.data()
     if not ptr   : return memoryview ( b"" )
     ##
@@ -493,7 +493,7 @@ class RootShelf(RootOnlyShelf):
                 ## z     = Ostap.to_bytes ( blob )
                 
                 ## (1) get access to buffer 
-                z     = memoryview ( blob )
+                z     = blob ## memoryview ( blob )
                 
                 ## (2) decompress 
                 u     = zlib.decompress ( z )
