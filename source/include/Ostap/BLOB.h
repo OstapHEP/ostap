@@ -37,9 +37,13 @@ namespace Ostap
   public: // gettters 
     // ========================================================================
     /// get the size of the buffer 
-    std::size_t size   () const { return m_data.GetSize  () ; }
-    /// get the buffer itself 
-    const void* buffer () const { return m_data.GetArray () ; }    
+    inline std::size_t size   () const { return      m_data.GetSize  () ; }
+    /// get the buffer/data itself 
+    inline const void* buffer () const { return      m_data.GetArray () ; }    
+    /// get the buffer/data itself 
+    inline const void* data   () const { return      m_data.GetArray () ; }    
+    /// get the buffer/data itself 
+    inline bool        empty  () const { return 0 == m_data.GetSize  () ; }    
     // ========================================================================
   public: // setters 
     // ========================================================================
