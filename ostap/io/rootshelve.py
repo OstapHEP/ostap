@@ -457,7 +457,7 @@ class RootShelf(RootOnlyShelf):
             from  ostap.core.core import  Ostap
             if isinstance ( value , Ostap.BLOB ) :
                 ##
-                print ( 'ROOT-SHELVE: UNPACKING BLOB:', key, value.size() )
+                print ( 'ROOT-SHELVE: UNPACKING BLOB/1:', key, value.size() )
                 ## (1) unpack it!
                 z     = Ostap.blob_to_bytes ( value )
                 ## (2) decompress 
@@ -495,11 +495,12 @@ class RootShelf(RootOnlyShelf):
             z      = zlib.compress ( f.getvalue() , self.compresslevel )
             self.__sizes [ key ] = len ( z ) 
             ## (3) put it into  BLOB 
+            print ( 'ROOT-SHELVE:   PACKING BLOB/1:' , key , len ( z )  )            
             from  ostap.core.core import  Ostap
             blob   = Ostap.BLOB            ( key      ) 
             status = Ostap.blob_from_bytes ( blob , z )
             value  = blob
-            print ( 'ROOT-SHELVE:   PACKING BLOB:', key, value.size() )            
+            print ( 'ROOT-SHELVE:   PACKING BLOB/2:', key, value.size() , status )            
             del z , f , p 
         
         ## finally use ROOT 

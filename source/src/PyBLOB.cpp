@@ -58,11 +58,15 @@ PyObject* Ostap::blob_from_bytes ( Ostap::BLOB& blob , PyObject* bytes )
   
   // set the blob 
   //
-  blob.setBuffer ( PyBytes_Size  ( bytes ) , PyBytes_AsString  ( bytes ) ) ;
+  std::size_t ns = blob.setBuffer ( PyBytes_Size  ( bytes ) , PyBytes_AsString  ( bytes ) ) ;
   // 
+  std::cerr << " blob_from_bytes/2 : "
+            <<  blob.GetName()
+            <<  ns << std::endl ;
+  //
   Py_INCREF ( Py_True );
   //
-  std::cerr << " blob_from_bytes/2 : "
+  std::cerr << " blob_from_bytes/3 : "
             <<  blob.GetName()
             <<  blob.size () << std::endl ;
   //
