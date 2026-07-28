@@ -48,10 +48,11 @@ jobs:
         shell: bash -el {0}
         run: |
           conda install -y -c conda-forge libdb
-          conda install -y -c conda-forge libdb
 
           BERKELEYDB_INCDIR="${CONDA_PREFIX}/include" \
           BERKELEYDB_LIBDIR="${CONDA_PREFIX}/lib" \
+          LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib" \
+          CFLAGS="-I${CONDA_PREFIX}/include" \
           YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
           python -m pip install --force-reinstall --no-cache-dir --no-build-isolation --no-binary=:all: berkeleydb
 
