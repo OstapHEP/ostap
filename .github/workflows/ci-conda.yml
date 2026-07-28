@@ -48,15 +48,12 @@ jobs:
         shell: bash -el {0}
         run: |
           conda install -y -c conda-forge libdb
-          
-          # Явно прописываем RPATH, LDFLAGS и CFLAGS для линкера macOS
-          CFLAGS="-I${CONDA_PREFIX}/include" \
-          LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib" \
-          BERKELEYDB_DIR="${CONDA_PREFIX}" \
-          YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
-          python -m pip install --force-reinstall --no-cache-dir --no-binary=:all: berkeleydb
+          conda install -y -c conda-forge libdb
+
+          BERKELEYDB_DIR="${CONDA_PREFIX}" CFLAGS="-I${CONDA_PREFIX}/include" LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib" YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 python -m pip install --force-reinstall --no-cache-dir --no-binary=:all: --no-build-isolation berkeleydb
 
           python -c "import berkeleydb; print(berkeleydb.__version__)"
+
           ## YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 BERKELEYDB_DIR="${CONDA_PREFIX}" python -m pip install --force-reinstall --no-binary=:all: berkeleydb
           ## python -c "import berkeleydb;print ( berkeleydb.__version__ )"
           
