@@ -55,7 +55,6 @@ dependencies:
   - tabulate
 
   # DB
-  - libdb
   - gdbm
   - duckdb
   - fasteners

@@ -47,22 +47,28 @@ jobs:
       - name: Install libdb & berkeleydb dependency
         shell: bash -el {0}
         run: |
-          conda install -y -c conda-forge libdb
 
-          # 2. Компилируем berkeleydb из исходников (--no-binary), отключив изоляцию окружения (--no-build-isolation)
-          BERKELEYDB_DIR="${CONDA_PREFIX}" \
-          BERKELEYDB_INCDIR="${CONDA_PREFIX}/include" \
-          BERKELEYDB_LIBDIR="${CONDA_PREFIX}/lib" \
-          CFLAGS="-I${CONDA_PREFIX}/include" \
-          LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib" \
-          YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
-          python -m pip install --force-reinstall --no-cache-dir --no-build-isolation --no-binary=:all: berkeleydb
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+          
+            # На macOS скомпилировать с Conda-libdb невозможно из-за плоского пространства имен dyld.
+            # Используем Homebrew:
+            brew install berkeley-db
+            BDB_PREFIX=$(brew --prefix berkeley-db)
+      
+            BERKELEYDB_DIR="$BDB_PREFIX" \
+            YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
+            python -m pip install --no-binary=berkeleydb berkeleydb
+            
+         else
+         
+           # На Linux Conda-сборка работает безупречно:
+           conda install -y -c conda-forge libdb
+           BERKELEYDB_DIR="${CONDA_PREFIX}" \
+           YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
+           python -m pip install --no-binary=berkeleydb berkeleydb
+         fi
 
-          # 3. Проверяем импорт
-          python -c "import berkeleydb; print(berkeleydb.__version__)"
-
-          ## YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 BERKELEYDB_DIR="${CONDA_PREFIX}" python -m pip install --force-reinstall --no-binary=:all: berkeleydb
-          ## python -c "import berkeleydb;print ( berkeleydb.__version__ )"
+         python -c "import berkeleydb; print(berkeleydb.__version__)"
           
       # Build Ostap using Ninja generator
       - name: Build Ostap
