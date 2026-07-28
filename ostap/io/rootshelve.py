@@ -485,6 +485,8 @@ class RootShelf(RootOnlyShelf):
             if isinstance ( value , Ostap.BLOB ) :
                 ##                
                 blob = value
+
+                print ( 'BEFORE memory view' , key )
                 
                 ## (1) unpack it!
                 ## z     = Ostap.blob_to_bytes ( value )
@@ -499,6 +501,8 @@ class RootShelf(RootOnlyShelf):
                 f     = BytesIO ( u )
                 value = Unpickler(f).load()
                 
+                print ( 'AFTER memory view' , key ) 
+
                 ## del z , u , f
                 
             if self.writeback : self.cache[key] = value

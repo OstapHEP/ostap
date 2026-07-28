@@ -106,14 +106,14 @@ PyObject* Ostap::to_bytes ( const Ostap::BLOB& blob )
     PyGILState_Release ( gil );
     return bytes;
   }
-
+  
   constexpr std::size_t max_size = std::numeric_limits<Py_ssize_t>::max();  
   if ( max_size < size )
   {
     PyErr_SetString ( PyExc_OverflowError, "Ostap::BLOB size is too large for Python");
     return nullptr;
   }
-    
+
   // 3. Ensure GIL is acquired (Critical for Python 3.13 / C-API calls from Cppyy)
   PyGILState_STATE gil = PyGILState_Ensure();
   

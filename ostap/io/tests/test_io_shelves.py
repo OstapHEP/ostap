@@ -74,7 +74,7 @@ for i in range ( 1000 ) :
 def test_shelves1():
 
     logger = getLogger ('Test shelves')
-    logger.info ( 'Test varioouts shelves' ) 
+    logger.info ( 'Test various shelves' ) 
 
     names  = {} 
     dbases = {}
