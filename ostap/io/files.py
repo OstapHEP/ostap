@@ -927,7 +927,7 @@ def sync_files ( files_to_copy          ,
                             copy_cmd = ''        ,
                             progress = progress  )
 
-    if not copy_cmd : copy_cmd = _command
+    if not copy_cmd : copy_cmd = the_command
     if not copier : 
         from ostap.io.utils import sync_file
         copier = sync_file
