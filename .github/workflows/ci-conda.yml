@@ -47,28 +47,44 @@ jobs:
       - name: Install libdb & system dependencies
         shell: bash -el {0}
         run: |
-          if [[ "$RUNNER_OS" == "macOS" ]]; then
-            # 1. Устанавливаем rsync и berkeley-db через Homebrew на macOS
-            brew install berkeley-db rsync findutils
-            
-            BDB_PREFIX=$(brew --prefix berkeley-db)
 
-            # 2. Компилируем berkeleydb с явным rpath к Homebrew
-            CFLAGS="-I${BDB_PREFIX}/include" \
-            LDFLAGS="-L${BDB_PREFIX}/lib -Wl,-rpath,${BDB_PREFIX}/lib" \
-            BERKELEYDB_DIR="${BDB_PREFIX}" \
-            YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
-            python -m pip install --force-reinstall --no-cache-dir --no-build-isolation --no-binary=berkeleydb berkeleydb
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+          
+             # Install berkeley-db and missing core utilities via Homebrew
+             brew install berkeley-db findutils
+  
+             # Dynamically fetch the prefix for Homebrew's keg-only berkeley-db package
+             BDB_PREFIX=$(brew --prefix berkeley-db)
+
+             # Copy headers and dynamic libraries directly into the Conda environment
+             cp -R "${BDB_PREFIX}/include/"* "${CONDA_PREFIX}/include/"
+             cp -R "${BDB_PREFIX}/lib/"*dylib* "${CONDA_PREFIX}/lib/"
+
+             # Build berkeleydb from source, linked against CONDA_PREFIX libraries with rpath
+             BERKELEYDB_DIR="${CONDA_PREFIX}" \
+             BERKELEYDB_INCDIR="${CONDA_PREFIX}/include" \
+             BERKELEYDB_LIBDIR="${CONDA_PREFIX}/lib" \
+             CFLAGS="-I${CONDA_PREFIX}/include" \
+             LDFLAGS="-L${CONDA_PREFIX}/lib -Wl,-rpath,${CONDA_PREFIX}/lib" \
+             YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
+             python -m pip install --force-reinstall --no-cache-dir --no-build-isolation --no-binary=berkeleydb berkeleydb
+
           else
-            # На Linux Conda-сборка работает отлично:
-            conda install -y -c conda-forge libdb rsync
-            
-            BERKELEYDB_DIR="${CONDA_PREFIX}" \
-            YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
-            python -m pip install --no-binary=berkeleydb berkeleydb
+          
+             # On Linux, conda-forge's libdb works directly out of the box
+             conda install -y -c conda-forge libdb
+  
+             BERKELEYDB_DIR="${CONDA_PREFIX}" YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1 \
+             python -m pip install --no-binary=berkeleydb berkeleydb
           fi
 
           python -c "import berkeleydb; print('BerkeleyDB version:', berkeleydb.__version__)"
+
+          # Check if rsync is available; if not, install it via Conda
+          if ! command -v rsync >/dev/null 2>&1; then
+             echo "rsync not found. Installing via conda-forge..."
+             conda install -y -c conda-forge rsync
+          fi
 
       # Build Ostap using Ninja generator
       - name: Build Ostap
