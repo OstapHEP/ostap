@@ -113,6 +113,7 @@ __all__ = (
     'tmpdb'         , ## helper function to create TEMPORARY  RootShelve database 
     )
 # =============================================================================
+from   ostap.core.meta_info    import python_info
 from   ostap.utils.basic       import typename 
 from   ostap.io.dbase          import TmpDB 
 from   ostap.io.pickling       import ( Pickler, Unpickler, BytesIO, 
@@ -150,8 +151,21 @@ def _blob_2_buffer_ ( blob , flags = 0 ) :
     ##
     return memoryview ( c_array )
 
+
 ## 
 Ostap.BLOB.__buffer__ = _blob_2_buffer_
+
+# ============================================================================
+if python_info < ( 3, 12 ) :  # ==============================================
+    # ========================================================================
+    ## Fallback for Python <= 3.11 where C-extensions (like zlib)
+    #  do not inspect Python-level __buffer__ methods.
+    def _blob_2_bytes_(blob):
+        """ Fallback for Python <= 3.11 where C-extensions (like zlib)
+            do not inspect Python-level __buffer__ methods.
+        """
+        return bytes(_blob_2_buffer_(blob))
+    Ostap.BLOB.__bytes__  = _blob_2_bytes_
 
 
 # =============================================================================
