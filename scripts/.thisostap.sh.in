@@ -100,7 +100,7 @@ if [ -n "${OSTAP_DIR:-}" ]; then
 fi
 
 # =============================================================================
-## Determine SCRIPT_PATH portably depending on shell (bash/zsh/ksh/sh)
+## 1. Determine SCRIPT_PATH portably depending on shell (bash/zsh/ksh/sh)
 # =============================================================================
 if [ -n "${BASH_SOURCE-}" ]; then
     SCRIPT_PATH="${BASH_SOURCE[0]}"
@@ -113,26 +113,43 @@ else
 fi
 
 # =============================================================================
-## Resolve symlinks on the script file itself to get actual OSTAP_DIR
+## 2. Resolve symlink chain safely without corrupting current shell state
 # =============================================================================
-THIS_SCRIPT="${SCRIPT_PATH}"
+CURRENT_TARGET="${SCRIPT_PATH}"
 
-echo 'THIS-SCRIPT-1' $THIS_SCRIPT
+# =============================================================================
+# Extract base target directory and filename safely
+# =============================================================================
+TARGET_DIR="$(cd -P -- "$(dirname -- "${CURRENT_TARGET}")" >/dev/null 2>&1 && pwd)"
+TARGET_FILE="$(basename -- "${CURRENT_TARGET}")"
 
-while [ -h "${THIS_SCRIPT}" ]; do
-    DIR="$(cd -P "$(dirname "${THIS_SCRIPT}")" >/dev/null 2>&1 && pwd)"
-    THIS_SCRIPT="$(readlink "${THIS_SCRIPT}")"
-    case "${THIS_SCRIPT}" in
-        /*) ;;
-        *) THIS_SCRIPT="${DIR}/${THIS_SCRIPT}" ;;
-    esac 
-done
+# =============================================================================
+# Resolve symlinks iteratively inside a subshell to keep parent working directory intact
+# =============================================================================
+RESOLVED_DIR="$(
+    cd -- "${TARGET_DIR}" || exit 1
+    
+    # Loop while the current file is a symbolic link
+    while [ -L "${TARGET_FILE}" ]; do
+        # Retrieve symlink destination
+        LINK_DEST="$(readlink -- "${TARGET_FILE}")" || break
+        
+        # Navigate to target directory and extract new filename
+        cd -P -- "$(dirname -- "${LINK_DEST}")" >/dev/null 2>&1 || exit 1
+        TARGET_FILE="$(basename -- "${LINK_DEST}")"
+    done
+    
+    # Print canonical absolute directory
+    pwd -P
+)"
 
-OSTAP_DIR="$(cd -P "$(dirname "${THIS_SCRIPT}")" >/dev/null 2>&1 && pwd)"
-export OSTAP_DIR 
+# =============================================================================
+# Fallback to TARGET_DIR if subshell resolution failed
+# =============================================================================
+OSTAP_DIR="${RESOLVED_DIR:-${TARGET_DIR}}"
+export OSTAP_DIR
 
-OSTAP_VERSION="@OSTAP_VERSION@"
-export OSTAP_VERSION
+unset CURRENT_TARGET TARGET_DIR TARGET_FILE RESOLVED_DIR SCRIPT_PATH
 
 # =============================================================================
 ## Update environment paths

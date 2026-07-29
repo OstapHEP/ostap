@@ -1,7 +1,14 @@
-
-
 ## New features
 
+   1. make a try to use custom cpp-aware pickling the cpp-metatypes by name wthni direct reference to the libraries
+   1. make a try to use custom cross-version unpickling withon-flith substituton of `libROOTTPytho*`
+   1. small improvement for `RooFitResult` serialization 
+   1. remove unpicklnig from `compress_shelbve.uncompress_item` and call it explicitely afterward
+   1. add `pickle_dependencies` funtion to get the importan content of pickel stream (foe debugging)
+   1. add `dependenncies` method for `ostap.io.compressed_shelve.CompressShelf` base class
+   1. add `__get_raw_bytes__` method for `ostap.io.compressed_shelve.CompressShelf` base class
+   
+   
 ## Bug fixes 
 
 ## Backward incompatible

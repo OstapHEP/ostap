@@ -29,10 +29,10 @@ from   ostap.fitting.variables      import SETVAR, FIXVAR , SETPAR, FIXPAR
 from   ostap.fitting.dataset        import setStorage, useStorage
 from   ostap.utils.basic            import typename 
 import ostap.fitting.roocollections
-import ostap.fitting.rooreduce 
 import ostap.fitting.roofitresult
 import ostap.fitting.printable
 import ostap.fitting.roocmdarg   
+import ostap.fitting.rooreduce 
 import ROOT, random, math, copy  
 # =============================================================================
 # logging 

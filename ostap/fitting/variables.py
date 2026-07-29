@@ -72,12 +72,11 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
 from   ostap.math.math_base     import doubles, iszero, isequal 
-from   ostap.core.core          import VE, hID, Ostap, valid_pointer 
-from   ostap.math.reduce        import root_factory 
+from   ostap.core.core          import VE, hID, Ostap, valid_pointer
 from   ostap.core.ostap_types   import ( num_types      , list_types     ,
                                          integer_types  , string_types   ,
                                          dictlike_types , sequence_types )
-from   ostap.utils.basic        import typename 
+from   ostap.utils.basic        import typename
 import ostap.math.math_ve       as     mve 
 import ROOT, array
 # =============================================================================
@@ -94,17 +93,6 @@ isone = lambda x : isequal ( float ( x ) , 1 )
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
-## Factory for deserialization of generic objects
-#  @attention it stores the constructor parameters as local attributes
-def root_store_factory ( klass , *params ) :
-    """ Factory for deserialization of generic object
-    - attention: it stores the constructor parameters as local attributes
-    """
-    ## create the objects 
-    obj = root_factory ( klass , *params )
-    ## keep argumets with the newly created obnject  
-    obj.__store = params    ## Attention - keep arguments with newly created object!
-    return obj 
 
 # =============================================================================
 ## fix parameter at some value

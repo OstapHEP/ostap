@@ -76,11 +76,14 @@ namespace Ostap
         const std::vector<double>& globalcc  , // fillCorrMatrix 
         const TMatrixDSym&         corrs     , // fillCorrMatrix 
         const TMatrixDSym&         covs      , // fillCorrMatrix
-        const History&             history   = History () ) ; // setStatusHistory 
+        const History&             history   = History () ) ; // setStatusHistory
+      // =========================================================================
+      /// "default" 
+      FitResults 
+      ( const char* name  = nullptr ,
+        const char* title = nullptr ) ;
       /// copy constructor
       FitResults ( const FitResults& right ) ;
-      /// default constructor 
-      FitResults() = default ;  
       /// destructor 
       virtual ~FitResults () ;
       // clones 

@@ -179,20 +179,20 @@ class ZipShelf(CompressShelf):
                                  compresstype = 'zip'    , **kwargs ) 
         
     # ==========================================================================
-    ## compress (zip)  the item  using <code>zlib.compress</code>
+    ## Serialize & compress (zip)  the item  using <code>zlib.compress</code>
     def compress_item ( self , value ) :
-        """ Compress (zip) the item using ``zlib.compress''
+        """ Serialze & Compress (zip) the item using ``zlib.compress''
         - see zlib.compress
         """
         return zlib.compress ( self.pickle ( value ) , self.compresslevel )
         
     # =========================================================================
-    ## uncompress (unzip) the item using <code>zlib.decompress</code>
-    def uncompress_item ( self , value ) :
+    ## uncompress (unzip) & deserialize the item using <code>zlib.decompress</code>
+    def uncompress_item ( self , value ) :                          ## FIXED 
         """ Uncompress (unzip) the item using ``zlib.decompress''
         -  see zlib.decompress
         """        
-        return self.unpickle ( zlib.decompress ( value ) ) 
+        return zlib.decompress ( value )
 
 # =============================================================================
 ## helper function to access ZipShelve data base

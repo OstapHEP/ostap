@@ -225,10 +225,10 @@ class ZstShelf(CompressShelf):
     
     # =========================================================================
     ## uncompres (ZST) the item using decompressor 
-    def uncompress_item ( self , value ) :
+    def uncompress_item ( self , value ) :                             ## FIXED 
         """ Uncompress (ZST) the item using decompressor 
         """        
-        return self.unpickle ( self.decompressor.decompress ( value ) ) 
+        return self.decompressor.decompress ( value ) 
 
 # =============================================================================
 ## helper function to access ZstShelve data base

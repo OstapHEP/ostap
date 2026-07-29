@@ -44,6 +44,14 @@ Ostap::Utils::FitResults::FitResults
   fillLegacyCorrMatrix() ;
 }
 // ============================================================================
+// "default" 
+// ============================================================================
+Ostap::Utils::FitResults::FitResults
+( const char* name  ,
+  const char* title ) 
+  : RooFitResult ( name , title )
+{}
+// ============================================================================
 // full constructor #1
 // ============================================================================
 Ostap::Utils::FitResults::FitResults 

@@ -57,11 +57,12 @@ __all__ = (
 from   ostap.core.meta_info import meta_info, python_info  
 from   ostap.io.dbase       import dbopen     , whichdb, Item, ordered_dict, dbfiles   
 from   ostap.io.pickling    import ( Pickler  , Unpickler, BytesIO,
-                                     PROTOCOL ,
-                                     HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
+                                     PROTOCOL , HIGHEST_PROTOCOL  , DEFAULT_PROTOCOL, 
+                                     pickle_dependencies )
 from   ostap.utils.cleanup  import CUBase
 from   ostap.utils.basic    import typename  
 from   ostap.io.utils       import file_size, writeable
+from   collections          import defaultdict 
 import sys, os, abc, shelve, glob, time, datetime, zipfile, tarfile 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -116,9 +117,9 @@ class CompressShelf (shelve.Shelf,CUBase) :
     """
     __metaclass__ = abc.ABCMeta
     ## whole DB is in zip-archive
-    ZIP_EXTS      = ( '.zip' , '.zipdb' , '.dbzip' , '.zdb' , '.dbz' ) if sys.platform != 'darwin' else () 
+    ZIP_EXTS      = ( '.zip' , '.zipdb' , '.dbzip' , '.zdb' , '.dbz' ) 
     ## whole DB is in tar-archive
-    TAR_EXTS      = ( '.tar' , '.tardb' , '.dbtar' , '.tdb' , '.dbt' ) if sys.platform != 'darwin' else () 
+    TAR_EXTS      = ( '.tar' , '.tardb' , '.dbtar' , '.tdb' , '.dbt' ) 
 
     def __init__(
             self                   ,
@@ -673,6 +674,13 @@ class CompressShelf (shelve.Shelf,CUBase) :
     
     __str__ = __repr__
 
+    # ==========================================================================
+    ## get raw uncompressed bytes (the input for unpickling) for the given key
+    def __get_raw_bytes__ ( self , key ) :
+        """ Get raw uncompressed bytes (the input for unpickling) for the given key
+        """
+        return self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] )
+        
     # =========================================================================
     ## `get-and-uncompress-item' from dbase
     #  @code
@@ -688,11 +696,13 @@ class CompressShelf (shelve.Shelf,CUBase) :
             # =================================================================
         except KeyError: # ====================================================
             # =================================================================
-            value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] ) 
+            ## value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] )
+            value = self.__get_raw_bytes__ ( key ) 
+            value = self.unpickle ( value )
             if self.writeback : self.cache [ key ] = value
             
         return value
-    
+
     # =========================================================================
     ## `get-and-uncompress-item' from dbase
     #  @code
@@ -747,7 +757,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
     #   ds = db.disk_size()   
     #   @endcode  
     def disk_size ( self  ) :
-        """Get the disk size of the db
+        """ Get the disk size of the db
         >>> db = ...
         >>> ds = db.disk_size()   
         """
@@ -756,7 +766,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
     # =========================================================================
     ## Pickle/serialize compressed data 
     def pickle ( self , value ) :
-        """Pickle/serialize compressed data"""
+        """ Pickle/serialize compressed data"""
         f = BytesIO ()
         p = Pickler ( f , self.protocol )
         p.dump ( value )
@@ -765,14 +775,14 @@ class CompressShelf (shelve.Shelf,CUBase) :
     # =========================================================================
     ## Unpickle/deserialize the uncompressed data
     def unpickle ( self , value ) :
-        """Unpickle/deserialize uncompressed data"""
+        """ Unpickle/deserialize uncompressed data"""
         f = BytesIO ( value )
         return Unpickler ( f ) . load ( )
     
     # =========================================================================
     @abc.abstractmethod
     def compress_item   ( self , value ) :
-        """Compress the value  using the certain compressing engine"""
+        """ Compress the value  using the certain compressing engine"""
         return NotImplemented
 
     # =========================================================================
@@ -871,6 +881,29 @@ class CompressShelf (shelve.Shelf,CUBase) :
 
         return () 
 
+    # =========================================================================
+    ## Get the modules, libraries, types associated with given key
+    #  @code
+    #  dbase = ...
+    #  dbase.dependencies ( "THE_KEY" ) ## dependenced for particular key
+    #  dbase.dependencies () ## dependencies for all keys     
+    #  @endcode 
+    def dependencies ( self , key = None ) :
+        """ Get the modules, libraries, types associated with given key
+        >>> dbase = ...
+        >>> dbase.dependencies ( "THE_KEY" ) ## dependenced for particular key
+        >>> dbase.dependencies () ## dependencies for all keys             
+        """
+        if   key and not key in self : raise KeyError ("Invalid ket %s" % key )
+        elif key :  return pickle_dependencies ( self.__get_raw_bytes__ ( k ) ) 
+
+        result = defaultdict(set)
+        for k in self.ikeys () :
+            deps = pickle_dependencies ( self.__get_raw_bytes__ ( k ) )
+            for v , c in deps.items() : result [ v ] != set ( c )
+
+        return { k : tuple(sorted(list(c))) for k,v in result.items() } 
+        
     # =========================================================================
     ## copy the database into new one
     #  @code

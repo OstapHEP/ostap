@@ -193,11 +193,11 @@ class LzShelf(CompressShelf):
     
     # =========================================================================
     ## uncompres (LZMA) the item using <code>lzma.decompress</code>
-    def uncompress_item ( self , value ) :
+    def uncompress_item ( self , value ) :                             ## FIXED 
         """ Uncompress (LZMA) the item using ``lzma.decompress''
         -  see lzma.decompress
         """        
-        return self.unpickle ( lzma.decompress ( value ) )
+        return lzma.decompress ( value ) 
     
 # =============================================================================
 ## helper function to access LzShelve data base

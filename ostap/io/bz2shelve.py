@@ -193,11 +193,11 @@ class Bz2Shelf(CompressShelf):
 
     # =========================================================================
     ## uncompres (bzip2) the item using <code>bz2.decompress</code>
-    def uncompress_item ( self , value ) :
+    def uncompress_item ( self , value ) :                             ## FIXED 
         """ Uncompress (bzip2) the item using ``bz2.decompress''
         -  see bz2.decompress
         """        
-        return self.unpickle ( bz2.decompress ( value ) ) 
+        return bz2.decompress ( value ) 
                          
 # =============================================================================
 ## helper function to access Bz2Shelve data base

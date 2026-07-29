@@ -20,8 +20,10 @@ __all__     = (
 from   ostap.core.meta_info         import root_info 
 from   ostap.math.math_base         import doubles
 from   ostap.core.core              import Ostap
-from   ostap.math.reduce            import root_factory
-from   pickle                       import PicklingError, UnpicklingError 
+from   ostap.core.reduce            import root_factory, root_store_factory
+from   pickle                       import PicklingError, UnpicklingError
+import ostap.math.reduce 
+import ostap.math.more_reduce 
 import ostap.fitting.variables
 import ostap.fitting.roocollections
 import ostap.histos.graph_reduce    as     GR 
@@ -37,17 +39,6 @@ logger.debug( 'Some useful decorations for RooFit variables')
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
-## Factory for deserialization of generic objects
-#  @attention it stores the constructor kaprameters as local attributes
-def root_store_factory ( klass , *params ) :
-    """ Factory for deserialization of generic object
-    - attention: it stores the constructor kaprameters as local attribute
-    """
-    ## create the objects 
-    obj = root_factory ( klass , *params )
-    ## keep argumets with the newly created obnject  
-    obj.__store = params    ## Attention - keep argumetns with newly crfeated object!
-    return obj 
 
 # =============================================================================
 ## Some native ROOT/RooFit objects 
@@ -369,13 +360,13 @@ def _rmvgau_factory_ ( klass , *args ) :
     - see `ROOT.RooMultiVarGaussian`
     """
 
-    if 5 != len ( args ) : raise UnpicklingError("RooMultiVarGaussian: ivalid record length!")
+    if 5 != len ( args ) : raise UnpicklingError ( "RooMultiVarGaussian: invalid record length!")
 
     muvec  = args [3]
     covm   = args [4]
 
     N = len ( muvec )
-    if N * N != len ( covm ) : raise UnpicklingError("RooMultiVarGaussian: cannot reconstruct covmatrix")
+    if N * N != len ( covm ) : raise UnpicklingError ( "RooMultiVarGaussian: cannot reconstruct covmatrix" )
     
     muvec = ROOT.TVectorD    ( N , muvec )
     covm  = ROOT.TMatrixDSym ( N , covm  )
@@ -469,7 +460,8 @@ def _rprodpdf_reduce_ ( pdf ) :
     """ Reduce `ROOT.RooProdPdf`
     - see `ROOT.RooProdPdf`
     """
-    if pdf.conditional () : raise PicklingError("RooProdPdf is conditional (cannot be pickled)")
+    if pdf.conditional () :
+        raise PicklingError ( "RooProdPdf is conditional (cannot be pickled)" )
     
     content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
     return root_store_factory , content
@@ -722,6 +714,12 @@ def _rrfr_factory_ ( klass , *args ) :
     """
     ## create
 
+    ## specific de-serialization for of default object
+    if len ( args ) <= 2 :
+        result = ROOT.RooFitResult ( *args )
+        result.__args = args
+        return 
+    
     newargs = args [ : 10 ] 
     covargs = args [   10 ] ## covariance related arguments 
     history = args [   11 ] ## the last argument, history 
@@ -731,8 +729,8 @@ def _rrfr_factory_ ( klass , *args ) :
         gcc , corm , covm = covargs 
         D    = len ( gcc )
         
-        if D * D != len ( corm ) : raise UnpicklingError("FitResult(1): cannot reconstruct cormatrix")
-        if D * D != len ( covm ) : raise UnpicklingError("FitResult(1): cannot reconstruct covmatrix")
+        if D * D != len ( corm ) : raise UnpicklingError ( "FitResult(1): cannot reconstruct cormatrix" )
+        if D * D != len ( covm ) : raise UnpicklingError ( "FitResult(1): cannot reconstruct covmatrix" )
 
         gcc      = doubles ( gcc ) 
         corm     = ROOT.TMatrixDSym ( D , corm )
@@ -746,7 +744,7 @@ def _rrfr_factory_ ( klass , *args ) :
         
         l2 = len ( covm )
         D  = int ( math.sqrt ( l2 ) ) 
-        if D * D != l2 : raise UnpicklingError("FitResult(2): cannot reconstruct covmatrix")
+        if D * D != l2 : raise UnpicklingError ( "FitResult(2): cannot reconstruct covmatrix" )
         covm = ROOT.TMatrixDSym ( D , covm )
 
         newargs += covm ,
@@ -767,6 +765,9 @@ def _rrfr_reduce_ ( res ) :
     """ Reduce `RooFitResult`
     - see `ROOT.RooFitResult`
     """
+    if not res.constPars() and not res.floatParsInit() :
+        return _rrfr_factory_ , ( type ( res ) , res.name , res.title )
+    
     nr      = Ostap.Utils.FitResults ( res )
     content = type ( nr )      , res.name , res.title , \
               res.constPars () , res.floatParsInit()  , res.floatParsFinal() , \
@@ -792,7 +793,6 @@ def _rrfr_reduce_ ( res ) :
     return _rrfr_factory_ , content 
 
 ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 
-
 
 # =============================================================================
 ## reconstruct/deserialize <code>RooPlot</code> object

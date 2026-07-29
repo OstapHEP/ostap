@@ -12,14 +12,10 @@ __all__     = (
     )
 # =============================================================================
 from    ostap.math.math_base   import Ostap, doubles, complexes  
-from    ostap.core.ostap_types import sequence_types 
+from    ostap.core.ostap_types import sequence_types
+from    ostap.core.reduce      import root_factory 
 import  array 
 # =============================================================================
-## Trivial factory for deserialization of generic objects
-def root_factory ( klass , *params ) :
-    """ Trivial factory for (de)serialization of generic objects
-    """
-    return klass ( *params )
 
 # =============================================================================
 ## Simple (basic) polynomials 
