@@ -45,8 +45,6 @@ def cpptype_factory ( the_name ) :
     using a multi-tier fallback strategy.
     """
 
-    print ( 'RECONSTRUCT' , the_name ) 
-
     # =========================================================================
     ## Remove leading global namespace specifier (e.g., '::Physics::Particle' -> 'Physics::Particle')
     # =========================================================================
