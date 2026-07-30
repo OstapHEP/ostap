@@ -54,7 +54,7 @@ from   ostap.core.ostap_types import ( string_types   ,
                                        sequence_types ,
                                        dictlike_types )
 from   ostap.core.core        import Ostap , valid_pointer
-from   ostap.utils.cor        import typename      
+from   ostap.utils.core       import typename      
 from   ostap.utils.basic      import zip_longest    
 from   ostap.utils.strings    import split_string   
 from   ostap.fitting.pdfbasic import APDF1
