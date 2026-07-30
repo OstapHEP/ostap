@@ -99,7 +99,8 @@ from   ostap.tools.tmva          import Reader  as TMVAReader
 from   ostap.tools.tmva          import ( dir_name      , good_for_negative ,
                                           trivial_opts  , make_tarfile      ,
                                           decode_vars   , NO_PROCESSING     )
-from   ostap.utils.basic         import items_loop, typename 
+from   ostap.utils.core          import typename 
+from   ostap.utils.basic         import items_loop
 from   ostap.stats.statvars      import data_statistic
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.progress_bar  import progress_bar

@@ -114,7 +114,7 @@ __all__ = (
     )
 # =============================================================================
 from   ostap.core.meta_info    import python_info
-from   ostap.utils.basic       import typename 
+from   ostap.utils.core        import typename 
 from   ostap.io.dbase          import TmpDB 
 from   ostap.io.pickling       import ( Pickler, Unpickler, BytesIO, 
                                         PROTOCOL,
@@ -134,9 +134,11 @@ logger.debug ( "Simple generic ROOT-based shelve-like-database" )
 #  blob = ...
 #  memvew = memory ( blob )
 #  @endcode
+#  @attention: No data is copied! 
 def _blob_2_buffer_ ( blob , flags = 0 ) :
     """ Provide `Ostap.BLOB` with buffer protocol
     - see `Ostap.BLOB`
+    - attention: No data is copied! 
     >>> blob    = ...
     >>> memview = memoryview ( blob )
     """
@@ -151,22 +153,18 @@ def _blob_2_buffer_ ( blob , flags = 0 ) :
     ##
     return memoryview ( c_array )
 
-
 ## 
 Ostap.BLOB.__buffer__ = _blob_2_buffer_
 
 # ============================================================================
-if python_info < ( 3, 12 ) :  # ==============================================
+if  ( 3, 12 ) <= python_info :  # ============================================
     # ========================================================================
-    ## Fallback for Python <= 3.11 where C-extensions (like zlib)
-    #  do not inspect Python-level __buffer__ methods.
-    def _blob_2_bytes_(blob):
-        """ Fallback for Python <= 3.11 where C-extensions (like zlib)
-            do not inspect Python-level __buffer__ methods.
-        """
-        return bytes(_blob_2_buffer_(blob))
-    Ostap.BLOB.__bytes__  = _blob_2_bytes_
-
+    def as_buffer ( blob ) : return blob
+    # ========================================================================
+else : # =====================================================================
+    # ========================================================================
+    def as_buffer ( blob ) : return bytes ( blob.__buffer__ () )
+    # ========================================================================
 
 # =============================================================================
 ## @class RootOnlyShelf
@@ -500,14 +498,13 @@ class RootShelf(RootOnlyShelf):
                 ##                
                 blob = value
 
-                print ( 'BEFORE memory view' , key )
-                
                 ## (1) unpack it!
                 ## z     = Ostap.blob_to_bytes ( value )
                 ## z     = Ostap.to_bytes ( blob )
                 
-                ## (1) get access to buffer 
-                z     = blob ## memoryview ( blob )
+                ## (1) get access to buffer
+                ## z     = blob ## memoryview ( blob )
+                z     = as_buffer ( blob )
                 
                 ## (2) decompress 
                 u     = zlib.decompress ( z )
@@ -515,8 +512,6 @@ class RootShelf(RootOnlyShelf):
                 f     = BytesIO ( u )
                 value = Unpickler(f).load()
                 
-                print ( 'AFTER memory view' , key ) 
-
                 ## del z , u , f
                 
             if self.writeback : self.cache[key] = value

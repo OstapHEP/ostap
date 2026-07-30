@@ -410,7 +410,7 @@ def pool_context  ( pool ) :
 def pp_submit ( ppsrv , func, *args , **kwargs ) :
     """ Fixed 'submit'-method for pp 
     """
-    from  ostap.utils.basic import  ismethod, isfunction, typename
+    from  ostap.utils.core import  ismethod, isfunction, typename
     ##
     if   ismethod   ( func ) : the_func = func 
     elif isfunction ( func ) : the_func = func 
@@ -430,7 +430,7 @@ def fix_ppsrv ( ppsrv ) :
     if not hasattr ( ppsrv , '_old_submit_' ) :
         ppsrv._old_submit_ = ppsrv.submit
         
-        from  ostap.utils.basic import  ismethod, isfunction, typename
+        from  ostap.utils.core import  ismethod, isfunction, typename
         
         # ======================================================================
         def _pp_new_submit_ ( self , func , *args , **kwargs ) :

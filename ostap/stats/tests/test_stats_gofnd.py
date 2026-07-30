@@ -21,7 +21,8 @@ from   ostap.logger.pretty    import pretty_float
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.math.math_ve     import significance
 from   ostap.utils.root_utils import batch_env
-from   ostap.utils.basic      import numcpu, typename 
+from   ostap.utils.core       import typename 
+from   ostap.utils.basic      import numcpu
 from   ostap.logger.symbols   import plus_minus , greek_lower_sigma 
 from   ostap.stats.gof_utils  import clip_pvalue, useLightGBM, useXGBoost, useCatBoost 
 import ostap.fitting.models   as     M 

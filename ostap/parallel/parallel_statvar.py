@@ -26,11 +26,11 @@ __all__     = (
     'MAX_FILES'           , ## maximal number of files
 ) 
 # =============================================================================
+from   ostap.utils.core        import typename 
 from   ostap.math.math_base    import ( FIRST_ENTRY ,
                                         LAST_ENTRY  , 
                                         evt_range   ,
                                         all_entries )
-from   ostap.utils.basic       import typename 
 from   ostap.parallel.parallel import Task, WorkManager
 import ROOT
 # =============================================================================

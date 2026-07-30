@@ -75,7 +75,7 @@ from   ostap.fitting.fithelpers import ( H1D_dset, H2D_dset  , H3D_dset ,
 from   ostap.fitting.funbasic   import FUN1, FUN2, FUN3, Fun1D , Fun2D , Fun3D 
 from   ostap.fitting.variables  import SETVAR
 from   ostap.utils.cidict       import select_keys
-from   ostap.utils.basic        import typename 
+from   ostap.utils.core         import typename 
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command
 from   ostap.logger.pretty      import pretty_float 
 # 

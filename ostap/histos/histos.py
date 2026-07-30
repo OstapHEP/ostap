@@ -59,7 +59,7 @@ from   ostap.math.random_ext          import poisson
 from   ostap.utils.utils              import accumulate
 from   ostap.logger.utils             import print_args 
 from   ostap.utils.cidict             import cidict, cidict_fun  
-from   ostap.utils.basic              import typename 
+from   ostap.utils.core               import typename 
 from   ostap.logger.pretty            import pretty_float
 from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_axes
 from   ostap.stats.moments            import Quantile, Quantiles

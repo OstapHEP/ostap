@@ -28,7 +28,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import Ostap    , valid_pointer
-from   ostap.utils.basic       import typename , prntrf 
+from   ostap.utils.core       import typename
+from   ostap.utils.basic       import prntrf 
 import ostap.trees.treereduce 
 import ROOT, abc 
 # =============================================================================

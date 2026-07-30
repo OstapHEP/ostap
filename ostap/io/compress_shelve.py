@@ -59,8 +59,8 @@ from   ostap.io.dbase       import dbopen     , whichdb, Item, ordered_dict, dbf
 from   ostap.io.pickling    import ( Pickler  , Unpickler, BytesIO,
                                      PROTOCOL , HIGHEST_PROTOCOL  , DEFAULT_PROTOCOL, 
                                      pickle_dependencies )
+from   ostap.utils.core     import typename  
 from   ostap.utils.cleanup  import CUBase
-from   ostap.utils.basic    import typename  
 from   ostap.io.utils       import file_size, writeable
 from   collections          import defaultdict 
 import sys, os, abc, shelve, glob, time, datetime, zipfile, tarfile 

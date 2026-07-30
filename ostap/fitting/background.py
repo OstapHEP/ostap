@@ -61,7 +61,7 @@ from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf, Flat1D, Sum1D
 from   ostap.fitting.fithelpers import Phases, ParamsPoly
 from   ostap.fitting.fit1d      import PEAK 
 from   ostap.utils.ranges       import vrange
-from   ostap.utils.basic        import typename 
+from   ostap.utils.core         import typename 
 from   ostap.logger.utils       import print_args 
 import ROOT, math
 # =============================================================================

@@ -7,7 +7,8 @@
    1. add `pickle_dependencies` funtion to get the importan content of pickel stream (foe debugging)
    1. add `dependenncies` method for `ostap.io.compressed_shelve.CompressShelf` base class
    1. add `__get_raw_bytes__` method for `ostap.io.compressed_shelve.CompressShelf` base class
-   
+   1. move some functions from `ostap.utils.basic` to new module `sstap.utils.core`
+   1. fix uncompression of `Ostap.BLOB` for python<3.12 
    
 ## Bug fixes 
 
@@ -55,7 +56,7 @@
 ## New features
 
   1. Add `Ostap::Math::symmetric` function to check if (S)matrix is symmetric
-  1. Add `Ostap::Math::symmetric_positive_definite` function to check if (S)matrix is syemmtric & positive-definite
+  1. Add `Ostap::Math::symmetric_positive_definite` function to check if (S)matrix is symmtric & positive-definite
   1. Add `Ostap::Math::covariance_matrix` function to check if (S)matrix can be valid covariance matrix
   1. Add "reweighters" based on `LigthGBM`, `XGBoost` and `CatBoost`. All of them are much faster than `GBReweighter` with similar perfomance
   1. Add helper script `ostap-table` to convert table-like data from the input stream to pretty ostap's style tables

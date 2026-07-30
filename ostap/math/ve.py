@@ -26,7 +26,7 @@ __all__     = (
     )
 # ============================================================================= 
 from   ostap.math.math_base  import Ostap, std , iszero, isequal
-from   ostap.utils.basic     import typename 
+from   ostap.utils.core      import typename 
 from   ostap.logger.symbols  import plus_minus, times 
 from   ostap.math.random_ext import poisson as _poisson 
 import ROOT

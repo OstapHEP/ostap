@@ -37,7 +37,8 @@ from   ostap.core.core          import SE, VE, Ostap, hID
 from   ostap.stats.counters     import EffCounter
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
-from   ostap.utils.basic        import numcpu, typename  
+from   ostap.utils.core         import typename  
+from   ostap.utils.basic        import numcpu
 from   ostap.stats.gof          import AGoFnp
 from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          num_jobs           , 

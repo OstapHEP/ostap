@@ -47,7 +47,7 @@ from   ostap.fitting.pdfbasic     import ( APDF1 ,
                                            PDF3  , Generic3D_pdf )
 from   ostap.fitting.variables    import FIXVAR
 from   ostap.histos.histos        import Histo1DFun, Histo2DFun 
-from   ostap.utils.basic          import typename
+from   ostap.utils.core           import typename
 from   ostap.utils.progress_conf  import progress_conf 
 from   ostap.utils.progress_bar   import progress_bar
 import ostap.trees.trees 

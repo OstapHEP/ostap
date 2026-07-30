@@ -34,7 +34,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import num_types, sized_types, sequence_types   
 from   ostap.core.core        import VE
-from   ostap.utils.basic      import typename
+from   ostap.utils.core       import typename
 from   ostap.math.math_base   import iszero, isequal
 from   ostap.logger.symbols   import times, plus_minus  
 from   ostap.logger.pretty    import pretty_float 

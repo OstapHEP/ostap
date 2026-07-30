@@ -26,7 +26,7 @@ __all__     = (
 # =============================================================================
 from   ostap.math.ve          import Ostap, VE
 from   ostap.math.math_base   import std, isequal, isequalf, iszero
-from   ostap.utils.basic      import typename 
+from   ostap.utils.core       import typename 
 from   ostap.core.ostap_types import ( dictlike_types , sequence_types ,
                                        integer_types  , sized_types    )
 from   ostap.logger.symbols   import times 

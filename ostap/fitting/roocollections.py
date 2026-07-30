@@ -25,7 +25,7 @@ __all__     = (
 from   collections.abc         import Container
 from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import std, Ostap, valid_pointer
-from   ostap.utils.basic       import typename 
+from   ostap.utils.core        import typename 
 from   ostap.core.ostap_types  import string_types , integer_types
 import ostap.fitting.variables
 import ROOT

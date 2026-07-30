@@ -232,7 +232,8 @@ class PickleChecker ( object ) :
         """ Format and return the pickling table 
         """        
         from ostap.core.ostap_types import string_types 
-        from ostap.utils.basic      import typename, prntrf,  loop_items
+        from ostap.utils.core       import typename
+        from ostap.utils.basic      import prntrf,  loop_items
     
         rows  = [  ( 'Argument' , 'type' , 'value' , "pickles'" , 'pickles"' ) ]
 
@@ -270,7 +271,7 @@ class PickleChecker ( object ) :
     def table_pickleable  ( self , title = 'Pickleable Types' , prefix = '' , style = '' ) :
         """ Get table of known pickleable types 
         """
-        from ostap.utils.basic import typename 
+        from ostap.utils.core import typename 
         extra = set ( self.MORE_TYPES ) | set ( self.EXTRA_TYPES ) | set ( PICKLE_TYPES ) 
         rows  = [ ( '#' , 'Type' ) ]
         extra = sorted ( typename ( e ) for e in extra ) 
@@ -285,7 +286,7 @@ class PickleChecker ( object ) :
     def table_nonpickleable  ( self , title = 'Non-pickleable Types' , prefix = '' , style = '' ) :
         """ Get table of known non-pickleable types 
         """
-        from ostap.utils.basic import typename 
+        from ostap.utils.core import typename 
         rows  = [ ( '#' , 'Type' ) ]
         extra = sorted  ( typename ( t ) for t in self.NONPICKLEABLE_TYPES ) 
         for i , e in enumerate ( extra , start = 1 ) :

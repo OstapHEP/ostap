@@ -45,7 +45,8 @@ from   ostap.core.core           import Ostap, WSE, VE
 from   ostap.math.math_base      import strings 
 from   ostap.utils.cleanup       import CleanUp
 from   ostap.utils.root_utils    import ImplicitMT 
-from   ostap.utils.basic         import items_loop, typename  
+from   ostap.utils.core          import typename  
+from   ostap.utils.basic         import items_loop
 from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.timing        import timing

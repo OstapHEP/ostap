@@ -19,7 +19,7 @@
 """
 # ============================================================================= 
 from   ostap.core.core          import Ostap, SE
-from   ostap.utils.basic        import typename 
+from   ostap.utils.core         import typename 
 from   ostap.utils.root_utils   import batch_env
 import ostap.math.models
 import random

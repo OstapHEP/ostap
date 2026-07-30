@@ -16,7 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.core        import rooSilent 
 from   ostap.utils.timing     import timing
-from   ostap.utils.basic      import typename 
+from   ostap.utils.core       import typename 
 from   ostap.utils.root_utils import batch_env 
 import ostap.fitting.roofit 
 import ROOT, random

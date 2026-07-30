@@ -35,7 +35,8 @@ from   ostap.core.core          import VE, Ostap, hID
 from   ostap.math.math_base     import axis_range, np2raw, isequal     
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
-from   ostap.utils.basic        import loop_items, typename   
+from   ostap.utils.core         import typename   
+from   ostap.utils.basic        import loop_items
 from   ostap.stats.counters     import SE, EffCounter 
 from   ostap.logger.pretty      import pretty_float
 from   ostap.math.ve            import fmt_pretty_ve

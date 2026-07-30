@@ -15,8 +15,7 @@ __all__    = () ## nothing to import
 from   ostap.utils.timing          import timing 
 from   ostap.plotting.canvas       import use_canvas
 from   ostap.utils.root_utils      import batch_env 
-
-from   ostap.utils.basic           import typename 
+from   ostap.utils.core            import typename 
 import ostap.fitting.models        as     Models 
 import ROOT 
 # =============================================================================

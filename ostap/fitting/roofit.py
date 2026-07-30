@@ -27,7 +27,7 @@ from   ostap.core.core              import Ostap, VE, valid_pointer
 from   ostap.core.ostap_types       import integer_types, string_types 
 from   ostap.fitting.variables      import SETVAR, FIXVAR , SETPAR, FIXPAR 
 from   ostap.fitting.dataset        import setStorage, useStorage
-from   ostap.utils.basic            import typename 
+from   ostap.utils.core             import typename 
 import ostap.fitting.roocollections
 import ostap.fitting.roofitresult
 import ostap.fitting.printable

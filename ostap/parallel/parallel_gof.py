@@ -22,7 +22,8 @@ __all__     = (
 # =============================================================================
 from   ostap.parallel.parallel import Task , WorkManager
 from   ostap.core.ostap_types  import string_types, integer_types
-from   ostap.utils.basic       import numcpu , typename 
+from   ostap.utils.core        import typename 
+from   ostap.utils.basic       import numcpu
 from   ostap.utils.utils       import splitter
 import ROOT
 # =============================================================================

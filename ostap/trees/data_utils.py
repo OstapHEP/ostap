@@ -53,7 +53,7 @@ from   ostap.core.ostap_types import string_types
 from   ostap.core.core        import rootError, rootWarning
 from   ostap.io.files         import Files, fsize_unit 
 from   ostap.io.rootfiles     import RootFiles
-from   ostap.utils.basic      import typename 
+from   ostap.utils.core       import typename 
 from   ostap.logger.symbols   import chain          as chain_symbol
 from   ostap.logger.symbols   import tree           as tree_symbol
 from   ostap.logger.symbols   import branch         as branch_symbol

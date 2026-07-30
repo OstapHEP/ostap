@@ -23,7 +23,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, path_types, sized_types  
-from   ostap.utils.basic      import typename 
+from   ostap.utils.core       import typename 
 from   ostap.utils.timing     import timing 
 from   ostap.parallel.task    import Task
 from   ostap.logger.symbols   import tape           as file_symbol

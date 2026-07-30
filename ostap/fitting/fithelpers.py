@@ -74,7 +74,8 @@ from   ostap.fitting.utils     import ( make_name   , numcpu , ncpu , get_i ,
 from   ostap.fitting.roocmdarg import check_arg 
 from   ostap.fitting.variables import SETVAR, make_formula
 from   ostap.utils.utils       import make_iterable
-from   ostap.utils.basic       import typename , items_loop
+from   ostap.utils.core        import typename 
+from   ostap.utils.basic       import items_loop
 from   ostap.utils.valerrors   import VAE 
 from   ostap.logger.symbols    import times, arrow_right
 import ostap.logger.table      as     T 

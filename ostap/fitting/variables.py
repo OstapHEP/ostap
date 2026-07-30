@@ -76,7 +76,7 @@ from   ostap.core.core          import VE, hID, Ostap, valid_pointer
 from   ostap.core.ostap_types   import ( num_types      , list_types     ,
                                          integer_types  , string_types   ,
                                          dictlike_types , sequence_types )
-from   ostap.utils.basic        import typename
+from   ostap.utils.core         import typename
 import ostap.math.math_ve       as     mve 
 import ROOT, array
 # =============================================================================

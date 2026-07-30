@@ -23,7 +23,8 @@ __all__     = (
     )
 # =============================================================================
 from    ostap.core.core        import cpp, Ostap, funID
-from    ostap.utils.basic      import loop_items, typename 
+from    ostap.utils.core       import typename 
+from    ostap.utils.basic      import loop_items
 from    ostap.core.ostap_types import num_types, integer_types, sequence_types 
 from    ostap.math.math_base   import  ( pos_infinity     ,
                                          neg_infinity     ,

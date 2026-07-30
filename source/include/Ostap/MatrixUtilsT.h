@@ -2159,8 +2159,8 @@ namespace Ostap
         typedef TVectorT<T2> M2 ;
         // equality 
         static bool operation
-	( const M1& m1 , 
-	  const M2& m2 ) 
+        ( const M1& m1 , 
+          const M2& m2 ) 
         { return m1.IsValid() && m2.IsValid() && m1.GetNrows() == m2.GetNrows() ; }
       } ;
       // =========================================================================
@@ -2172,8 +2172,8 @@ namespace Ostap
         typedef TVectorT<T2>              M2 ;
         // equality 
         static bool operation
-	( const M1& /* m1 */ , 
-	  const M2&    m2    ) 
+        ( const M1& /* m1 */ , 
+          const M2&    m2    ) 
         { return m2.IsValid() && D == m2.GetNrows() ; }
       } ;
       
@@ -2186,8 +2186,8 @@ namespace Ostap
         typedef ROOT::Math::SVector<T1,D> M2 ;
         // equality 
         static bool operation
-	( const M1&    m1    , 
-	  const M2& /* m2 */ ) 
+        ( const M1&    m1    , 
+          const M2& /* m2 */ ) 
         { return m1.IsValid() && D == m1.GetNrows() ; }
       } ;
 
@@ -3083,9 +3083,7 @@ namespace Ostap
         ( const M1& m1  , const M2& m2 ) 
         { return m1.IsValid() && m2.IsValid() && m1.GetNrows() == m2.GetNrows() ; }
       } ;
-      
-      
-      
+            
       // ======================================================================
       template <class T>
       struct SimT< TMatrixTSym<T> , 
@@ -3331,11 +3329,25 @@ namespace Ostap
     // ========================================================================
 
     
+    // ========================================================================
+    /// Is this matrix symmetric ?
+    template <class T> 
+    inline bool symmetric
+    ( const TMatrixT<T>& mtrx )
+    { return mtrx.IsValid() && mtrx.IsSymmetric() ; }
+    // ========================================================================
+    /// Is this matrix symmetric ?
+    template <class T> 
+    inline bool symmetric  
+    ( const TMatrixTSym<T>& mtrx )
+    { return mtrx.IsValid() && mtrx.IsSymmetric() ; }
+    // ========================================================================
     
+   
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
-} //                                           The end of namespace Ostap::Math
+} //                                                 The end of namespace Ostap
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -28,8 +28,8 @@ __all__ = (
 # =============================================================================
 import pickle 
 from   io                import BytesIO 
-from   ostap.core.reduce import cpptype_reduce, CPP_META 
 import ostap.core.config as     config
+from   ostap.core.reduce import cpptype_reduce, CPP_META 
 import sys, array, pickletools, re, cppyy 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -68,7 +68,7 @@ if CPP_META : # ===============================================================
         before CPython's _pickle.c attempts to serialize them via standard save_type.
         """
         ## Intercept C++ classes/metaclasses via fast C-level type check
-        def reducer_override(self, obj):
+        def reducer_override(self, obj ):
             """ Intercept C++ classes/metaclasses via fast C-level type check"""
             if CPP_META is not None and ( isinstance ( obj , CPP_META ) or obj is CPP_META ):
                 return cpptype_reduce ( obj ) 

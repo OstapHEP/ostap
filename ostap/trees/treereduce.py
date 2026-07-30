@@ -14,9 +14,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2022-09-09"
 __all__     = () 
 # =============================================================================
-from   ostap.core.core     import Ostap
-from   ostap.utils.basic   import typename 
-from   ostap.math.reduce   import root_factory
+from   ostap.core.core   import Ostap
+from   ostap.utils.core  import typename 
+from   ostap.core.reduce import root_factory
 import ROOT 
 # =============================================================================
 # logging 

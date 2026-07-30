@@ -26,7 +26,7 @@ from   ostap.core.core          import Ostap , VE , valid_pointer, roo_silent
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   )
-from   ostap.utils.basic        import typename 
+from   ostap.utils.core         import typename 
 from   ostap.fitting.funbasic   import FUN1
 from   ostap.fitting.fithelpers import Shift, Scale  
 from   ostap.fitting.pdfbasic   import PDF1, APDF1, Sum1D

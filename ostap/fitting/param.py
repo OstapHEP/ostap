@@ -21,7 +21,7 @@ __all__     = (
 from   ostap.core.meta_info    import root_info 
 from   ostap.core.core         import Ostap, funID
 from   ostap.core.ostap_types  import num_types, integer_types
-from   ostap.utils.basic       import typename
+from   ostap.utils.core        import typename
 from   ostap.histos.histos     import histo_fit
 from   ostap.fitting.funcs     import make_tf1 
 from   ostap.plotting.color    import Gold

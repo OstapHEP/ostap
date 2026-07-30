@@ -16,7 +16,7 @@ __all__     = (
     'make_constrained' , ## helper function to create constraied PDFs
 )
 # =============================================================================
-from   ostap.utils.basic            import typename 
+from   ostap.utils.core            import typename 
 import ostap.fitting.variables
 import ostap.fitting.roocollections
 import ROOT 

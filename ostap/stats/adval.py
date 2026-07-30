@@ -52,7 +52,8 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types
-from   ostap.utils.basic        import typename , numcpu, num_jobs, run_parallel 
+from   ostap.utils.core         import typename
+from   ostap.utils.basic        import numcpu, num_jobs, run_parallel 
 from   ostap.math.math_base     import weight_trivial 
 from   ostap.stats.gof_np       import GoFnp 
 import ROOT, numpy, abc, os   

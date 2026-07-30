@@ -8,18 +8,21 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
 __all__     = (
-    'root_factory'       , ## a simple factory for generic deserialization
-    'root_store_factory' , ## a simple factory for generic deserialization 
+    'root_factory'              , ## a simple factory for generic deserialization
+    'root_store_factory'        , ## a simple factory for generic deserialization
+    'is_cpp_class'              , ## pure C++ class? 
+    'is_python_subclass_of_cpp' , ## python subclass of  C++ class? 
 )
 # =============================================================================
-from functools          import reduce as ft_reduce 
-import cppyy, copyreg
+from   ostap.utils.core  import is_cpp_class 
+import sys, cppyy, copyreg, functools, importlib, pickle   
 # =============================================================================
 ## Trivial factory for deserialization of generic objects
 def root_factory ( klass , *params ) :
     """ Trivial factory for (de)serialization of generic objects
     """
     return klass ( *params )
+
 # =============================================================================
 ## Factory for deserialization of generic objects
 #  - dirty trick is here
@@ -31,74 +34,169 @@ def root_store_factory ( klass , *params ) :
     """
     ## create the objects 
     obj = root_factory ( klass , *params )
-    ## keep arguments with the newly created obnject  
+    ## keep arguments with the newly created object  
     obj.__store = params    ## Attention - keep arguments with newly created object!
     return obj 
 
+# ==========================================================================
+## Determine whether `cls` is a Python-defined class inheriting from a C++ class.
+#  @param  cls Object/type to inspect.
+#  @return True if `cls` is a Python subclass of a C++ type, False otherwise.
+def is_python_subclass_of_cpp ( cls ) -> bool:
+    """ Determine whether `cls` is a Python-defined class inheriting from a C++ class.
+    
+    :param cls: Object/type to inspect.
+    :return: True if `cls` is a Python subclass of a C++ type, False otherwise.
+    """
+    if not isinstance ( cls , type) : return False
+
+    # A pure C++ class cannot be its own Python subclass
+    if is_cpp_class ( cls ) : return False
+
+    # Check if any ancestor class in the MRO (excluding self) is a pure C++ class
+    return any ( is_cpp_class ( base ) for base in cls.__mro__[1:] )
+
+# ==============================================================================
+if 'win32' == sys.platform : # =================================================
+    # ==========================================================================
+    SHARED_LIB_EXTS = ( '.dll' ,  )
+    # ==========================================================================
+    def is_shared_lib ( module_name: str) -> bool :
+        """ Check if the module string represents a C++ dynamic library."""
+        return module_name.endswith ( SHARED_LIB_EXTS )
+else :
+    # ==========================================================================
+    SHARED_LIB_EXTS = ( ".so", ".dylib")
+    def is_shared_lib ( module_name: str) -> bool :
+        """ Check if the module string represents a C++ dynamic library."""
+        return module_name.startswith ( "lib" ) or module_name.endswith ( SHARED_LIB_EXTS )
+
 # =============================================================================
 ## de-seriailze cpp-metaclass
-#  Restores a C++ class/type from its fully qualified __scopedname__ 
-#  using a multi-tier fallback strategy.
-def cpptype_factory ( the_name ) :
-    """ de-seriailze cpp-metaclass
-    Restores a C++ class/type from its fully qualified __scopedname__ 
-    using a multi-tier fallback strategy.
+#  Restores any class object (C++ or Python) from its name and optional module scope.
+#  
+#  @param the_name: Fully qualified class name (e.g., 'Ostap::Kinematics::Dalitz', 'MyPyClass')
+#  @param module: Optional module or dynamic library name (e.g., 'ROOT', 'cppyy.gbl', 'libOstap')
+#  @return Resolved class object.
+def cpptype_factory(the_name, module=None):
+    """ Restores any class object (C++ or Python) from its name and optional module scope.
+
+    :param the_name: Fully qualified class name (e.g., 'Ostap::Kinematics::Dalitz', 'MyPyClass')
+    :param module: Optional module or dynamic library name (e.g., 'ROOT', 'cppyy.gbl', 'libOstap')
+    :return: Resolved class object.
     """
+    if not the_name or not isinstance(the_name, str):
+        raise pickle.UnpicklingError(f"Invalid type name for cpptype_factory: {the_name!r}")
 
     # =========================================================================
-    ## Remove leading global namespace specifier (e.g., '::Physics::Particle' -> 'Physics::Particle')
-    # =========================================================================
-    clean_name = the_name.removeprefix ( "::" )
+    # Remove leading global C++ namespace specifier (e.g., '::ROOT::Math' -> 'ROOT::Math')
+    clean_name = the_name.removeprefix("::")
 
     # =========================================================================
-    ## Tier 1: Direct lookup in cppyy.gbl (fastest if cppyy natively parses '::')
-    # =========================================================================    
-    the_type = getattr ( cppyy.gbl, clean_name , None )
-    if not the_type is None : return the_type 
+    ## Tier 1: Try resolving via Shared Library or Python Module first
+    # =========================================================================
+    if module: # ==============================================================
+        # =====================================================================
+        if is_shared_lib(module):
+            # ROOT.gSystem.Load returns:
+            #  0 : Library successfully loaded
+            #  1 : Library was already loaded in the current session
+            # <0 : Error loading library
+            status = ROOT.gSystem.Load(module)
+            # If library loading fails, fall through to attempt Cling/cppyy resolution
+            if status < 0 : pass
+            # =================================================================
+        else: # ===============================================================
+            # =================================================================
+            try: # ============================================================
+                # =============================================================
+                mod_obj = importlib.import_module(module)
+                # Split attributes by '::' or '.' to support nested modules/classes
+                delimiters = "::" if "::" in clean_name else "."
+                return functools.reduce(getattr, clean_name.split(delimiters), mod_obj)
+                # =============================================================
+            except (ImportError, AttributeError): # ===========================
+                # =============================================================
+                pass
 
     # =========================================================================
-    ## Tier 2: Traversal through nested namespaces (e.g., cppyy.gbl.Physics.Particle)
-    # =========================================================================    
+    ## Tier 2: Direct C++ Scope Resolution in cppyy.gbl
+    # =========================================================================
     try: # ====================================================================
         # =====================================================================
-        return ft_reduce ( getattr, clean_name.split("::") , cppyy.gbl )
+        the_type = getattr ( cppyy.gbl , clean_name , None )
+        if the_type is not None: return the_type
         # =====================================================================
-    except AttributeError: # ==================================================
+    except Exception: # =======================================================
+        # =====================================================================        
+        pass
+
+    # =========================================================================
+    ## Tier 3: Hierarchical C++ Namespace Traversal (e.g., cppyy.gbl.Ostap.Kinematics)
+    # =========================================================================
+    try: # ====================================================================
+        # =====================================================================
+        return functools.reduce ( getattr , clean_name.split("::") , cppyy.gbl )
+        # =====================================================================
+    except (AttributeError, TypeError): # =====================================
         # =====================================================================
         pass
 
     # =========================================================================
-    ## Tier 3: Heavy-duty JIT evaluation (handles complex templated types like std::vector<...>)
-    # =========================================================================    
+    ## Tier 4: Dynamic Cling JIT Lookup (for templated types like std::vector<...>)
+    # =========================================================================
     try: # ====================================================================
-        return eval ( f"cppyy.gbl.{clean_name}" )
-         # ====================================================================
+        # =====================================================================
+        return cppyy.gbl.__getattr__( clean_name )
+        # =====================================================================
     except Exception as err: # ================================================
         # =====================================================================
-        raise TypeError ( f"Failed to restore C++ type for '{the_name}': {err}" )
+        raise pickle.UnpicklingError ( f"Failed to restore class '{the_name}' (module={module!r}): {err}" ) from err
 
 # =============================================================================
-## Serialize cpp-metaclass
-#  - try __scopedname__
-#  - try __cpp_name__
-#  - Fallback:  __name__
-def cpptype_reduce ( meta_type , protocol = None ) :
-    """ Serialize cpp-metaclass
+_INTERNAL_NAMES = 'cppyy.gbl' , 'ROOT' , 'ROOT._facade' , '' 
+# =============================================================================
+## Serializes class types preserving both full class name and module/namespace scope.
+#  Correctly handles C++ types, pure Python classes, and Python subclasses of C++ types.
+def cpptype_reduce(meta_type, protocol=None):
+    """ Serializes class types preserving both full class name and module/namespace scope.
+    Correctly handles C++ types, pure Python classes, and Python subclasses of C++ types.
     """
-    print ( 'REDUCE' , meta_type )
+    # =========================================================================
+    # 1. Native C++ Class
+    # =========================================================================
+    if is_cpp_class(meta_type):
+        the_name = ( getattr ( meta_type , '__cpp_name__', None ) or
+                     getattr ( meta_type , '__qualname__', None ) or
+                     meta_type.__name__  )
+        return cpptype_factory, ( the_name , None )
     
-    the_name                   = getattr ( meta_type , '__scopedname__'   , None )
-    if not the_name : the_name = getattr ( meta_type , '__cpp_name__'     , None )
-    if not the_name : the_name = getattr ( meta_type , '__display_name__' , None )
-    if not the_name : the_name = getattr ( meta_type , '__qualname__'     , None )
-    if not the_name : the_name = getattr ( meta_type , '__name__'         )
-    return cpptype_factory , ( the_name , )
+    # =========================================================================
+    # 2. Python Class or Python Subclass of C++ Type (e.g. MyGauss1)
+    # =========================================================================
+    # Force reading from __dict__ to bypass C++ dispatcher overriding __qualname__
+    the_name = ( meta_type.__dict__.get ( '__qualname__' ) or 
+                 meta_type.__dict__.get ( '__name__'     ) or 
+                 getattr ( meta_type , '__name__', str ( meta_type ) ) )
 
-# =============================================================================
+    # ==========================================================================
+    # Safely extract module attributes
+    mod_attr = getattr ( meta_type , '__module__'    , None )
+    raw_mod  = meta_type.__dict__.get( '__module__'  , mod_attr )
+
+    mod_name = raw_mod
+
+    # ==========================================================================
+    # Clean up ROOT internal facades, cppyy pseudo-modules, and empty strings
+    if ( not raw_mod or raw_mod in _INTERNAL_NAMES or 'cppyy_internal' in raw_mod ):
+        mod_obj  = sys.modules.get ( mod_attr ) if mod_attr else None
+        mod_name = getattr ( mod_obj , '__name__', '__main__' )
+        if mod_name and 'cppyy_internal' in mod_name : mod_name = '__main__'
+
+    return cpptype_factory, (the_name, mod_name)
+
+# ============================================================================
 ## Registration for C++ Metaclass Serialization
-# =============================================================================
-import ctypes 
-
 # ============================================================================
 try : # ======================================================================
     # ========================================================================
@@ -123,7 +221,7 @@ if CPP_META : # =============================================================
     # Register in dispatch_table to intercept class-level pickle.dumps(CPP_CLASS)
     # ======================================================================
     copyreg.dispatch_table [ CPP_META ] = cpptype_reduce
-
+    
 # =============================================================================
 if '__main__' == __name__ :
 

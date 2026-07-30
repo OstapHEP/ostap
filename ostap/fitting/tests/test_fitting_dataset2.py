@@ -16,7 +16,7 @@ from   ostap.core.core          import dsID, hID, Ostap
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.memory       import memory
-from   ostap.utils.basic        import typename 
+from   ostap.utils.core         import typename 
 from   ostap.utils.root_utils   import batch_env
 from   ostap.logger.symbols     import delta_symbol, ram 
 import ostap.logger.table       as     T

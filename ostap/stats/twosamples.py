@@ -20,7 +20,8 @@ __all__     = (
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import listlike_types, sequence_types  
 from   ostap.core.core        import SE, VE, Ostap
-from   ostap.utils.basic      import loop_items, typename 
+from   ostap.utils.core       import typename 
+from   ostap.utils.basic      import loop_items
 from   ostap.math.math_base   import doubles, axis_range, numpy   
 from   ostap.math.models      import f1_draw
 from   ostap.utils.cidict     import cidict_fun

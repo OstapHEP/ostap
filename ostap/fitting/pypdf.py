@@ -21,7 +21,8 @@ __all__     = (
 from   ostap.core.meta_info         import root_info 
 from   ostap.core.ostap_types       import sequence_types 
 from   ostap.core.core              import Ostap
-from   ostap.utils.basic            import typename, prntrf  
+from   ostap.utils.core             import typename
+from   ostap.utils.basic            import prntrf  
 import ostap.fitting.roocollections
 import ostap.fitting.variables 
 import ROOT, math, abc 

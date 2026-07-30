@@ -1787,7 +1787,7 @@ namespace Ostap
       const Ostap::Math::Equal_To<T> equal ;
       for ( unsigned i = 0 ; i < D ; ++i )
       { for ( unsigned j = 0 ; j < i ; ++j )
-	{ if ( !equal ( mtrx ( i , j ) , mtrx ( j , i ) ) ) { return false ; } } }
+        { if ( !equal ( mtrx ( i , j ) , mtrx ( j , i ) ) ) { return false ; } } }
       return true ;
     }
     // =======================================================================
@@ -1821,18 +1821,18 @@ namespace Ostap
       //
       for ( unsigned int i = 0 ; i < D ; ++i )
       {
-	/// diagonal elements must be positive! 
-	const T mii = mtrx ( i , i ) ;
-	if ( !std::isfinite ( mii ) || mii <= 0 || zero ( mii ) ) { return false ; } // positive ? 
-	for ( unsigned j = 0 ; j < i ; ++j )
-	{
-	  //
-	  const T mij = mtrx ( i , j ) ;
-	  if ( !std::isfinite ( mij ) ) { return false ; } // finite ?
-	  const T mji = mtrx ( j , i ) ;
-	  if ( !std::isfinite ( mji ) ) { return false ; } // finite ?
-	  if ( !equal ( mij , mji )   ) { return false ; } // symmetric? 
-	} 	
+        /// diagonal elements must be positive! 
+        const T mii = mtrx ( i , i ) ;
+        if ( !std::isfinite ( mii ) || mii <= 0 || zero ( mii ) ) { return false ; } // positive ? 
+        for ( unsigned j = 0 ; j < i ; ++j )
+        {
+          //
+          const T mij = mtrx ( i , j ) ;
+          if ( !std::isfinite ( mij ) ) { return false ; } // finite ?
+          const T mji = mtrx ( j , i ) ;
+          if ( !std::isfinite ( mji ) ) { return false ; } // finite ?
+          if ( !equal ( mij , mji )   ) { return false ; } // symmetric? 
+        }       
       }
       // ======================================================================
       /// convert to symmetric matrix 
@@ -1856,16 +1856,16 @@ namespace Ostap
       const Ostap::Math::Zero<T>     zero;
       for ( unsigned int i = 0 ; i < D ; ++i )
       {
-	/// diagonal elements must be positive! 
-	const T mii = mtrx ( i , i ) ;
-	if ( !std::isfinite ( mii ) || mii <= 0 || zero ( mii ) ) { return false ; }
-	for ( unsigned j = 0 ; j < i ; ++j )
-	{
-	  const T mjj = mtrx ( j , j ) ;
-	  const T mij = mtrx ( i , j ) ;
-	  /// off-diagonal elements can not be too large
-	  if  ( !std::isfinite ( mij ) || mij * mij > mii * mjj ) { return false ; }
-	}
+        /// diagonal elements must be positive! 
+        const T mii = mtrx ( i , i ) ;
+        if ( !std::isfinite ( mii ) || mii <= 0 || zero ( mii ) ) { return false ; }
+        for ( unsigned j = 0 ; j < i ; ++j )
+        {
+          const T mjj = mtrx ( j , j ) ;
+          const T mij = mtrx ( i , j ) ;
+          /// off-diagonal elements can not be too large
+          if  ( !std::isfinite ( mij ) || mij * mij > mii * mjj ) { return false ; }
+        }
       }
       /// check for positive definitess  
       const ROOT::Math::CholeskyDecomp<T,D> decomp ( mtrx ) ;
@@ -1883,8 +1883,7 @@ namespace Ostap
     template <class T, unsigned int D1, unsigned int D2, class R>
     inline bool covariance_matrix 
     ( const ROOT::Math::SMatrix<T,D1,D2,R> & /* mtrx */ )
-    { return false ; } 
-
+    { return false ; }    
     // ========================================================================
     /** Can this matrix be a covariance matrix? 
      *  - Diagonal elements are finite and positive
@@ -1902,27 +1901,27 @@ namespace Ostap
       //
       for ( unsigned int i = 0 ; i < D ; ++i )
       {
-	/// diagonal elements must be positive! 
-	const T mii = mtrx ( i , i ) ;
-	if ( !std::isfinite ( mii ) || mii <= 0 || zero ( mii ) ) { return false ; } // positive ? 
-	for ( unsigned j = 0 ; j < i ; ++j )
-	{
-	  //
-	  const T mij = mtrx ( i , j ) ;
-	  if ( !std::isfinite ( mij ) ) { return false ; } // finite ?
-	  const T mji = mtrx ( j , i ) ;
-	  if ( !std::isfinite ( mji ) ) { return false ; } // finite ?
-	  //
-	  if ( !equal ( mij , mji )   ) { return false ; } // symmetric? 
-	  //
-	  const T mjj = mtrx ( j , j ) ;
-	  //
-	  /// off-diagonal elements can not be too large
-	  const T mm = mii * mjj ;
-	  if  ( mij * mij > mm ) { return false ; }        // too large 
-	  if  ( mji * mji > mm ) { return false ; }        // too large 
-	  // 
-	} 	
+        /// diagonal elements must be positive! 
+        const T mii = mtrx ( i , i ) ;
+        if ( !std::isfinite ( mii ) || mii <= 0 || zero ( mii ) ) { return false ; } // positive ? 
+        for ( unsigned j = 0 ; j < i ; ++j )
+        {
+          //
+          const T mij = mtrx ( i , j ) ;
+          if ( !std::isfinite ( mij ) ) { return false ; } // finite ?
+          const T mji = mtrx ( j , i ) ;
+          if ( !std::isfinite ( mji ) ) { return false ; } // finite ?
+          //
+          if ( !equal ( mij , mji )   ) { return false ; } // symmetric? 
+          //
+          const T mjj = mtrx ( j , j ) ;
+          //
+          /// off-diagonal elements can not be too large
+          const T mm = mii * mjj ;
+          if  ( mij * mij > mm ) { return false ; }        // too large 
+          if  ( mji * mji > mm ) { return false ; }        // too large 
+          // 
+        }       
       }
       // ======================================================================
       // convert to symmetric matrix 
@@ -1946,16 +1945,16 @@ namespace Ostap
       const Ostap::Math::Zero<T>     zero;
       for ( unsigned int i = 0 ; i < D ; ++i )
       {
-	/// diagonal elements must be positive! 
-	const T mii = mtrx ( i , i ) ;
-	if ( !std::isfinite ( mii ) || mii <= 0 || zero ( mii ) ) { return false ; }
-	for ( unsigned j = 0 ; j < i ; ++j )
-	{
-	  const T mjj = mtrx ( j , j ) ;
-	  const T mij = mtrx ( i , j ) ;
-	  /// off-diagonal elements can not be too large
-	  if  ( !std::isfinite ( mij ) || mij * mij > mii * mjj ) { return false ; }
-	}
+        /// diagonal elements must be positive! 
+        const T mii = mtrx ( i , i ) ;
+        if ( !std::isfinite ( mii ) || mii <= 0 || zero ( mii ) ) { return false ; }
+        for ( unsigned j = 0 ; j < i ; ++j )
+        {
+          const T mjj = mtrx ( j , j ) ;
+          const T mij = mtrx ( i , j ) ;
+          /// off-diagonal elements can not be too large
+          if  ( !std::isfinite ( mij ) || mij * mij > mii * mjj ) { return false ; }
+        }
       }
       /// check for positive definitess  
       const ROOT::Math::CholeskyDecomp<T,D> decomp ( mtrx ) ;

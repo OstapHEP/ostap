@@ -28,7 +28,7 @@ from   ostap.core.meta_info           import root_info
 from   ostap.core.ostap_types         import ( sequence_types  , sized_types   ,
                                                generator_types , 
                                                num_types       , integer_types )
-from   ostap.utils.basic              import typename 
+from   ostap.utils.core               import typename 
 from   ostap.core.core                import hID , Ostap, valid_pointer, rootException
 from   ostap.math.math_base           import isequal, isfinite  
 from   ostap.utils.ranges             import vrange

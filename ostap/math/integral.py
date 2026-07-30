@@ -79,7 +79,8 @@ from   ostap.core.meta_info   import python_info
 from   ostap.core.ostap_types import num_types, string_types 
 from   ostap.math.ve          import VE
 from   ostap.math.math_base   import isequal, isfinite
-from   ostap.utils.basic      import items_loop, memoize, typename, wm_print 
+from   ostap.utils.core       import typename
+from   ostap.utils.basic      import items_loop, memoize, wm_print 
 from   ostap.math.integrator  import ( integral_ostap  ,
                                        integral2_ostap , 
                                        integral3_ostap ) 

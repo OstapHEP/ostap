@@ -22,7 +22,7 @@ from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf
 from   ostap.core.ostap_types   import num_types, integer_types, string_types 
 from   ostap.fitting.rooreduce  import root_store_factory
 from   ostap.fitting.fithelpers import Tail, LeftTail, RightTail 
-from   ostap.utils.basic        import typename 
+from   ostap.utils.core         import typename 
 from   ostap.logger.symbols     import asterisk 
 import ostap.logger.table       as     T 
 import ROOT, math

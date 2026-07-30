@@ -71,7 +71,8 @@ from   ostap.stats.gof          import AGoF
 from   ostap.stats.gof_utils    import TOYS, draw_ecdf   
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.memory       import memory_enough 
-from   ostap.utils.basic        import numcpu, typename 
+from   ostap.utils.core         import typename 
+from   ostap.utils.basic        import numcpu
 import ostap.histos.histos
 import ROOT, ctypes
 # =============================================================================

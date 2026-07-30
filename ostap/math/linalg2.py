@@ -22,7 +22,7 @@ __all__     = (
 from   ostap.core.ostap_types import num_types , integer_types
 from   ostap.math.math_base   import isequal   , iszero, std , Ostap, numpy
 from   ostap.core.core        import hID 
-from   ostap.utils.basic      import typename 
+from   ostap.utils.core       import typename 
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import fmt_pretty_float, fmt_pretty_error 
 from   ostap.math.math_base   import pretty_array

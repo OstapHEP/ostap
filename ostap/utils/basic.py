@@ -34,25 +34,21 @@ __all__     = (
     ##
     'numcpu'               , ## number of cores/CPUs
     ##
-    'typename'             , ## the typename of the object
     'prntrf'               , ## very specific printer of functions 
     ##
     'zip_longest'          , ## itertools.(i)zip.longest
     ##
-    'isfunction'           , ## is it a function (or lambda) ?
-    'islambda'             , ## is it a lambda?
-    'ismethod'             , ## is it a method?    
-    ## 
     'counted'              , ## helper to count function calls 
     'memoize'              , ## lightweight cache
     ##
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
-from   ostap.core.meta_info import python_info, whoami  
+from   ostap.core.meta_info import python_info, whoami
+from   ostap.utils.core     import typename
 from   itertools            import zip_longest
 import multiprocessing      as     mp_
-import sys, os, datetime, shutil, functools
+import sys, os, datetime, shutil, functools, cppyy 
 # =============================================================================
 ## current process 
 current_process = mp_.current_process()
@@ -194,7 +190,7 @@ def __the_function () : pass
 __fun_type = type ( __the_function )
 # =============================================================================
 ## very specific printer of object
-#  - o defiend special print for functins  
+#  - o defined special print for functins  
 def prntrf ( o ) :
     """ very specific printer of object
       - o defined special print for functins  
@@ -206,32 +202,6 @@ def prntrf ( o ) :
             return getattr ( o , '__qualname__' , getattr ( o  , '__name__' , 'FUNCTION' ) ) 
     return str ( o )
 
-# =============================================================================
-## Get the type name
-#  @code
-#  obj = ...
-#  print ( 'Object type name is %s' % typename ( obj ) ) 
-#  @endcode 
-def typename ( o ) :
-    """ Get the type name
-    >>> obj = ...
-    >>> print ( 'Object type name is %s' % typename ( obj ) )
-    """
-    if callable ( o ) :
-        to = type ( o ) 
-        if to is __fun_type :
-            if '<lambda>' == to.__name__ : return 'lambda'
-            return getattr ( to , '__qualname__' , getattr ( to , '__name__' ) )
-        
-    tname = getattr ( o , '__cpp_name__'  ,\
-                      getattr ( o , '__qualname__' ,\
-                                getattr ( o , '__name__' , '' ) ) )
-    if tname : return tname
-    to = type ( o )
-    return getattr ( to , '__cpp_name__'  ,\
-                     getattr ( to , '__qualname__' ,\
-                               getattr ( to , '__name__' ) ) )
-    
 # =============================================================================
 ## Get number of cores/CPUs
 if ( 3 , 13 ) <= python_info : from os import process_cpu_count as cpu_count 
@@ -259,28 +229,6 @@ def numcpu () :
     return max ( 1 , nn  ) 
 
 # =============================================================================
-from inspect import ismethod
-from types   import FunctionType, LambdaType
-# =============================================================================
-## is it a function (or lambda) ?
-#  @code
-#  obj = ...
-#  print ( 'function?' , isfunction ( obj ) ) 
-#  @endcode 
-def isfunction ( func ) :
-    """ Is it a function (or lambda) ?
-    """
-    return isinstance ( func , ( FunctionType , LambdaType ) )
-# =============================================================================
-## is it a lambda ?
-#  @code
-#  obj = ...
-#  print ( 'lambda?' , islambda ( obj ) ) 
-#  @endcode 
-def islambda  ( func ) :
-    """ Is it a lambda?
-    """
-    return isinstance ( func , LambdaType )
 
 # =============================================================================
 ## create 'counted' function to know number of function calls

@@ -17,7 +17,7 @@
 # ============================================================================= 
 from   ostap.core.core          import Ostap, hID 
 from   ostap.trees.data         import Data
-from   ostap.utils.basic        import typename 
+from   ostap.utils.core         import typename 
 from   ostap.utils.timing       import timing 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.fitting.variables  import FIXVAR 

@@ -94,7 +94,8 @@ from   ostap.core.ostap_types          import ( string_types   , integer_types  
                                                 num_types      , dictlike_types ,
                                                 sequence_types )
 from   ostap.trees.cuts                import expression_types, vars_and_cuts
-from   ostap.utils.basic               import loop_items, typename, numcpu
+from   ostap.utils.core                import typename
+from   ostap.utils.basic               import loop_items, numcpu
 from   ostap.utils.progress_conf       import progress_conf
 import ostap.frames.frames             as     F 
 import ostap.parallel.parallel_statvar as     P 

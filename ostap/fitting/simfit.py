@@ -23,7 +23,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import std , Ostap , dsID
-from   ostap.utils.basic        import items_loop  , typename
+from   ostap.utils.core         import typename
+from   ostap.utils.basic        import items_loop 
 from   ostap.utils.utils        import chunked 
 from   ostap.fitting.fithelpers import VarMaker, ConfigReducer
 from   ostap.fitting.pdfbasic   import ( PDF1  , Generic1D_pdf    , 

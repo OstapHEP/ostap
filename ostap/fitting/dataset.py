@@ -33,7 +33,8 @@ from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              num_types     , sequence_types ,
                                              sized_types   , dictlike_types ,
                                              ordered_dict  )
-from   ostap.utils.basic            import loop_items  , typename            
+from   ostap.utils.core             import typename            
+from   ostap.utils.basic            import loop_items
 from   ostap.math.math_base         import std, evt_range, FIRST_ENTRY, LAST_ENTRY, isint, isequal   
 from   ostap.utils.random_seed      import random_seed
 from   ostap.fitting.variables      import valid_formula, make_formula 

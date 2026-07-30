@@ -146,8 +146,8 @@ from   ostap.math.param       import ( legendre_sum      ,
                                        rational_fun      , 
                                        fourier_sum       , 
                                        cosine_sum        ) 
+from   ostap.utils.core       import typename
 from   ostap.utils.ranges     import vrange 
-from   ostap.utils.basic      import typename
 from   ostap.utils.root_utils import implicitMT 
 from   ostap.fitting.param    import H_fit, H_Nfit
 from   collections            import namedtuple

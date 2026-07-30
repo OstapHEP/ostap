@@ -24,7 +24,8 @@ from   ostap.fitting.pdfbasic   import PDF1, APDF1
 from   ostap.core.core          import VE, Ostap
 from   ostap.math.math_base     import axis_range, product 
 from   ostap.utils.cidict       import cidict_fun
-from   ostap.utils.basic        import loop_items, typename   
+from   ostap.utils.core         import typename   
+from   ostap.utils.basic        import loop_items
 from   ostap.stats.counters     import SE, EffCounter 
 from   ostap.logger.pretty      import pretty_float
 from   ostap.math.ve            import fmt_pretty_ve

@@ -44,7 +44,7 @@ __all__     = (
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
 from   ostap.core.cpu_info      import HAS_AVX2 
 from   ostap.math.math_base     import weight_trivial 
-from   ostap.utils.basic        import typename  
+from   ostap.utils.core         import typename  
 from   ostap.stats.gof          import AGoF, AGoFnp 
 from   ostap.core.core          import Ostap, VE 
 from   ostap.math.math_base     import axis_range

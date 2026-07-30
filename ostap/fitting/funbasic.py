@@ -47,7 +47,7 @@ from   ostap.fitting.fithelpers      import ( FitHelper      ,
                                               config_factory , 
                                               XVar , YVar , ZVar )
 from   ostap.utils.cidict            import cidict
-from   ostap.utils.basic             import typename 
+from   ostap.utils.core              import typename 
 from   ostap.plotting.fit_draw       import key_transform, draw_options
 from   ostap.logger.pretty           import pretty_float, fmt_pretty_values
 from   ostap.logger.symbols          import times, checked_yes

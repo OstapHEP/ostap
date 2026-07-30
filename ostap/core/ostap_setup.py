@@ -186,7 +186,7 @@ def run_py ( path , run_name = '' , with_context = True , path_name = '' ) :
 
     if enabledDebug () and ( symbols_updated or symbols_new ) : 
     
-        from   ostap.utils.basic      import typename 
+        from   ostap.utils.core      import typename 
         rows   =  [ ( 'Symbol' , 'Type' , '' ) ]
     
         title1 = 'Symbols from %s' % path

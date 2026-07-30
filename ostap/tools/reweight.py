@@ -32,7 +32,8 @@ from   ostap.math.operations  import Mul  as MULT       ## needed for proper abs
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weight to TTree/RooDataSet
 from   ostap.utils.utils      import CallThem, AttrGetter 
 from   ostap.utils.strings    import is_formula
-from   ostap.utils.basic      import typename, numcpu  
+from   ostap.utils.core       import typename
+from   ostap.utils.basic      import numcpu  
 from   ostap.math.reduce      import root_factory
 from   ostap.logger.symbols   import ( plus_minus , thumb_up    ,
                                        checked_no , checked_yes ,

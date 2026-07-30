@@ -7,7 +7,7 @@
 """ Test module or soem core utils 
 """
 # =============================================================================
-from   ostap.utils.basic      import typename
+from   ostap.utils.core       import typename
 from   ostap.utils.strings    import split_string
 from   ostap.logger.mute      import mute
 from   ostap.core.core        import *

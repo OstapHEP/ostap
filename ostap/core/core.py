@@ -89,7 +89,8 @@ from   ostap.math.math_base   import ( Ostap    , std      , cpp ,
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
-from   ostap.utils.basic      import NoContext, loop_items, typename
+from   ostap.utils.core       import typename
+from   ostap.utils.basic      import NoContext, loop_items
 import ostap.core.ostap_setup 
 import ostap.plotting.color   
 import ROOT, cppyy, ctypes, math, sys, os, re  

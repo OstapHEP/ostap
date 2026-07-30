@@ -17,7 +17,7 @@ __all__     = () ## nothing to import
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.core        import cpp, Ostap, VE, funID, usedRootID
 from   ostap.core.ostap_types import num_types, integer_types, string_types 
-from   ostap.utils.basic      import typename 
+from   ostap.utils.core       import typename 
 import ROOT, ctypes 
 # =============================================================================
 # logging 

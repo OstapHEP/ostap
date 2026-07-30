@@ -24,8 +24,8 @@ __all__     = (
     'scalar_minimize' , ## local copy of minimize_scalar from scipy 
     )
 # =============================================================================
-from   ostap.utils.basic import typename
-import numpy             as     np 
+from   ostap.utils.core import typename
+import numpy            as     np 
 import math  
 # =============================================================================
 # logging 

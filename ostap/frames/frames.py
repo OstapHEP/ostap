@@ -70,7 +70,8 @@ from   ostap.math.math_base      import isequal, iszero, axis_range
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.cidict        import cidict, cidict_fun      
 from   ostap.utils.progress_conf import progress_conf 
-from   ostap.utils.basic         import isatty, loop_items, typename 
+from   ostap.utils.core          import typename 
+from   ostap.utils.basic         import isatty, loop_items
 from   ostap.frames.frame2histo  import ( DF_P2Model , DF_P1Model , 
                                           DF_H3Model , DF_H2Model , DF_H1Model ) 
 import ostap.core.config         as     config 

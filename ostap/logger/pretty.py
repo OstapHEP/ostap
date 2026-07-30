@@ -48,7 +48,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types, sequence_types
 from   ostap.logger.symbols   import plus_minus, times
-from   ostap.utils.basic      import typename 
+from   ostap.utils.core       import typename 
 import math 
 # =============================================================================
 # logging 
@@ -595,7 +595,6 @@ def pretty_print ( what              , * ,
                               precision = precision ,
                               latex     = latex     , **kwargs )
     
-    from ostap.utils.basic import typename 
     raise TypeError( "pretty_print: invalid `what` type: %s:" % typename ( what ) )
 
 # =======================================================================

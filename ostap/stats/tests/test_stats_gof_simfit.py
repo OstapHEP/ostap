@@ -23,7 +23,8 @@ from   ostap.core.core          import dsID
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env
-from   ostap.utils.basic        import typename, numcpu 
+from   ostap.utils.core         import typename
+from   ostap.utils.basic        import numcpu 
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          GoFSimFitType   , 

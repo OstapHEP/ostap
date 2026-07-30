@@ -135,8 +135,8 @@ class AGoF(abc.ABC) :
         >>> table = gof.report () ## ditto
         
         """
+        from ostap.utils.core      import typename 
         from ostap.stats.gof_utils import format_table
-        from ostap.utils.basic     import typename 
         return format_table  ( tvalue    = tvalue    ,
                                pvalue    = pvalue    ,
                                ecdf      = ecdf      ,
@@ -309,8 +309,8 @@ class AGoFnp(abc.ABC) :
                  style     = ''   ) :
         """ Get results in form of the table 
         """
+        from ostap.utils.core      import typename 
         from ostap.stats.gof_utils import format_table
-        from ostap.utils.basic     import typename 
         return format_table  ( tvalue    = tvalue    ,
                                pvalue    = pvalue    ,
                                ecdf      = ecdf      ,

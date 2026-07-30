@@ -16,7 +16,7 @@ __all__     = (
     'DataReweighter' , 
     ) 
 # =============================================================================
-from   ostap.utils.basic        import typename
+from   ostap.utils.core         import typename
 from   ostap.math.math_base     import weight_trivial
 from   ostap.stats.statvars     import data_slice 
 from   ostap.trees.cuts         import vars_and_cuts 

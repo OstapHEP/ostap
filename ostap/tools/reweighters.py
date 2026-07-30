@@ -19,7 +19,8 @@ __all__     = (
 ) 
 # =============================================================================
 from   ostap.math.math_base  import weight_trivial
-from   ostap.utils.basic     import typename, numcpu, num_jobs 
+from   ostap.utils.core      import typename
+from   ostap.utils.basic     import numcpu, num_jobs 
 import numpy, abc, warnings  
 # =============================================================================
 # logging 

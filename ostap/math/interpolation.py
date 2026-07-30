@@ -145,7 +145,7 @@ from    ostap.core.ostap_types import ( is_integer     ,
                                         dictlike_types )  
 from    ostap.core.core        import cpp, Ostap
 from    ostap.math.math_base   import iszero, isequal, doubles 
-from    ostap.utils.basic      import typename 
+from    ostap.utils.core       import typename 
 from    ostap.utils.ranges     import vrange
 from    collections.abc        import Iterable, Mapping
 import  ostap.math.reduce      

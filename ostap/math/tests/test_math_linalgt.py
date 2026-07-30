@@ -12,7 +12,7 @@
 from   ostap.core.meta_info   import root_info
 from   ostap.math.linalg      import checkops, gsl_info  
 from   ostap.core.core        import Ostap
-from   ostap.utils.basic      import typename
+from   ostap.utils.core       import typename
 from   ostap.utils.root_utils import batch_env
 import ostap.logger.table     as     T 
 import ostap.math.math_base   

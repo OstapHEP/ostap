@@ -11,7 +11,7 @@
 # ============================================================================= 
 from   ostap.math.ve          import VE
 from   ostap.math.math_base   import cpp, iszero, isequal
-from   ostap.utils.basic      import typename 
+from   ostap.utils.core       import typename 
 from   ostap.utils.root_utils import batch_env 
 from   ostap.math.math_ve     import *
 import ostap.logger.table     as     T

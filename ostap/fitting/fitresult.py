@@ -56,7 +56,7 @@ def _fit_repr_ ( self ) :
 def _fit_table_ ( rfit , title = '' , prefix = '' ) :
     """ Print `TFitResult` as a table
     """
-    from ostap.utils.basic       import typename
+    from ostap.utils.core        import typename
     from ostap.math.ve           import fmt_pretty_ve 
     from ostap.fitting.utils     import fit_status, cov_qual
     from ostap.logger.colorized  import attention, allright
