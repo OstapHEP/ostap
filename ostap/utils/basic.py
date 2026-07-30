@@ -43,7 +43,7 @@ __all__     = (
 ) # ===========================================================================
 # =============================================================================
 from   ostap.core.meta_info import python_info, whoami
-from   ostap.utils.core     import typename
+from   ostap.utils.core     import typename, isfunction 
 from   itertools            import zip_longest
 import multiprocessing      as     mp_
 import sys, os, datetime, shutil, functools, cppyy 
@@ -171,22 +171,19 @@ class NoContext(object) :
     def __exit__  ( self , *args ) : pass  
 
 # ============================================================================
-def __the_function () : pass
-__fun_type = type ( __the_function )
-# =============================================================================
 ## very specific printer of object
-#  - o defined special print for functins  
+#  - o defined special print for functinos   
 def prntrf ( o ) :
     """ very specific printer of object
-      - o defined special print for functins  
+      - o defined special print for functions  
     """
     if callable ( o ) :
-        func_doc = getattr ( o , 'func_doc' , '' )
+        func_doc = getattr ( o , '__doc__' , '' )
         if func_doc : return func_doc
-        if type ( o ) is __fun_type :                
-            return getattr ( o , '__qualname__' , getattr ( o  , '__name__' , 'FUNCTION' ) ) 
+        if isfunction ( o ) :            
+            return getattr ( o , '__qualname__' , '' ) or getattr ( o  , '__name__' , 'FUNCTION' ) 
     return str ( o )
-
+     
 # =============================================================================
 ## Get number of cores/CPUs
 if ( 3 , 13 ) <= python_info : from os import process_cpu_count as cpu_count 

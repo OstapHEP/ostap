@@ -24,8 +24,8 @@ __all__     = (
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
-from inspect import ismethod
 from types   import FunctionType, LambdaType
+from inspect import ismethod
 import cppyy, functools
 # =============================================================================
 ## Determine whether `cls` is a pure C++ class/struct registered in cppyy/ROOT.
@@ -68,32 +68,6 @@ def is_cpp_class ( cls ) -> bool :
         # ==================================================================
         return False
 
-# ==========================================================================
-## Get the type name
-#  @code
-#  obj = ...
-#  print ( 'Object type name is %s' % typename ( obj ) ) 
-#  @endcode 
-def typename ( o ) :
-    """ Get the type name
-    >>> obj = ...
-    >>> print ( 'Object type name is %s' % typename ( obj ) )
-    """
-    if callable ( o ) :
-        to = type ( o ) 
-        if to is __fun_type :
-            if '<lambda>' == to.__name__ : return 'lambda'
-            return getattr ( to , '__qualname__' , getattr ( to , '__name__' ) )
-        
-    to = type ( o )
-    if is_cpp_class ( to )  :        
-        tname = ( getattr ( to , '__cpp_name__' , None ) or                  
-                  getattr ( to , '__qualname__' , None ) or 
-                  getattr ( to , '__name__'     , None ) )
-        if tname : return tname
-        
-    return getattr ( to , '__qualname__' , None ) or getattr ( to , '__name__' ) 
-    
 # =============================================================================
 ## is it a function (or lambda) ?
 #  @code
@@ -113,8 +87,33 @@ def isfunction ( func ) :
 def islambda  ( func ) :
     """ Is it a lambda?
     """
-    return isinstance ( func , LambdaType )
+    return isinstance ( func , LambdaType ) and '<lambda>' == func.__name__ 
 
+# ==========================================================================
+## Get the type name
+#  @code
+#  obj = ...
+#  print ( 'Object type name is %s' % typename ( obj ) ) 
+#  @endcode 
+def typename ( o ) :
+    """ Get the type name
+    >>> obj = ...
+    >>> print ( 'Object type name is %s' % typename ( obj ) )
+    """
+    if callable ( o ) and isfunction ( o ) :
+        return 'lambda' if islambda ( o ) else ( getattr ( o , '__qualname__' , None ) or getattr ( o , '__name__' ) ) 
+
+    to = type ( o ) 
+    if is_cpp_class ( to )  :        
+        tname = ( getattr ( to , '__cpp_name__' , None ) or                  
+                  getattr ( to , '__qualname__' , None ) or 
+                  getattr ( to , '__name__'     , None ) )
+        if tname : return tname
+
+    qname = getattr ( to , '__qualname__' , None )
+    if qname and qname != 'CPPOverload': return qname
+    return getattr ( o , '__name__'  , None ) or getattr ( to , '__name__' ) 
+    
 # =============================================================================
 if __name__ == '__main__' :
 
