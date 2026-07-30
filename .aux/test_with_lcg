@@ -1,6 +1,17 @@
-
-
 #!/usr/bin/env sh
+
+# =========================================================================
+# Save current locale settings (or empty strings if unset)
+OLD_LC_ALL="${LC_ALL:-}"
+OLD_LC_CTYPE="${LC_CTYPE:-}"
+
+# Restore initial locale settings on exit (handles script errors and Ctrl+C)
+trap 'export LC_ALL="${OLD_LC_ALL}"; export LC_CTYPE="${OLD_LC_CTYPE}"' EXIT
+
+# Override locale to standard 'C' to suppress R/ROOT LC_CTYPE startup warnings
+export LC_ALL=C
+export LC_CTYPE=C
+# =========================================================================
 
 # =============================================================================
 # Safe argument check (POSIX compatible)

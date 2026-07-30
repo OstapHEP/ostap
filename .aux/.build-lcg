@@ -1,5 +1,19 @@
 #!/usr/bin/env sh
 
+# =========================================================================
+# Save current locale settings (or empty strings if unset)
+OLD_LC_ALL="${LC_ALL:-}"
+OLD_LC_CTYPE="${LC_CTYPE:-}"
+
+# Restore initial locale settings on exit (handles script errors and Ctrl+C)
+trap 'export LC_ALL="${OLD_LC_ALL}"; export LC_CTYPE="${OLD_LC_CTYPE}"' EXIT
+
+# Override locale to standard 'C' to suppress R/ROOT LC_CTYPE startup warnings
+export LC_ALL=C
+export LC_CTYPE=C
+# =========================================================================
+
+
 LCG="${1:-dev3/latest}"
 PLATFORM="${2:-x86_64-el9-clang22-opt}"
 
@@ -262,7 +276,6 @@ do
 
         ## source_dir=$(canonical_path "${source_dir}")
         source_found="${source_dir}"
-        printf " source found! %s  %s\n" "${source_dir}" "${source_found}"
         break
     fi
 done
