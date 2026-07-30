@@ -9018,7 +9018,7 @@ def histo_book ( ranges , **kwargs ) :
     histo = histo_book2 ( ranges , kw )
     if kw : 
         rows = [ ( 'Argument' , 'Value' ) ]
-        for k , v  in loop_items ( kw ) :
+        for k , v  in kw.items () :
             row = k , str ( v )
             rows.append ( row )
         title = 'histo_book: %d unused arguments' % len ( kw ) 

@@ -29,8 +29,6 @@ __all__     = (
     'whoami'               , ## who am I?
     ##
     'NoContext'            , ## empty context manager
-    'loop_items'           , ## loop over dictionary items 
-    'items_loop'           , ## ditto
     ##
     'numcpu'               , ## number of cores/CPUs
     ##
@@ -171,19 +169,6 @@ class NoContext(object) :
     def __enter__ ( self         ) : return self 
     ## context manager 
     def __exit__  ( self , *args ) : pass  
-
-# =============================================================================
-## loop over dictionary items
-def loop_items ( dct ) :
-    """ Iterate over the dictionary items
-    >>> d = { 'a' : ...   , 'b' : ... , }
-    >>> for e in   loop_items ( d ) : print (e) 
-    """
-    for item in dct.items () : yield item
-
-# =============================================================================
-## Iterate over the dictionary items
-items_loop = loop_items 
 
 # ============================================================================
 def __the_function () : pass

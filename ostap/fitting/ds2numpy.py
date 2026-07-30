@@ -26,7 +26,6 @@ from   ostap.core.meta_info         import root_info
 from   ostap.core.ostap_types       import string_types, dictlike_types, sized_types
 from   ostap.core.core              import Ostap
 from   ostap.utils.core             import typename  
-from   ostap.utils.basic            import loop_items
 from   ostap.utils.utils            import split_range
 from   ostap.math.math_base         import doubles
 from   ostap.fitting.dataset        import useStorage
@@ -151,7 +150,7 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         formulas = []
         varlst   = dataset.varlst () 
         if more_vars and isinstance ( more_vars , dictlike_types ) :
-            for name , fun in loop_items ( more_vars ) :
+            for name , fun in more_vars.items () :
                 assert not name in dataset, 'ds2numpy: no way to redefine variable `%s`!' % name 
                 if   isinstance ( fun , AFUN1           ) : absreal = fun.fun
                 elif isinstance ( fun , ROOT.RooAbsPdf  ) : absreal = fun
@@ -405,7 +404,7 @@ else :
         formulas = []
         varlst   = dataset.varlst () 
         if more_vars and isinstance ( more_vars , dictlike_types ) :
-            for name , fun in loop_items ( more_vars ) :
+            for name , fun in more_vars.items () :
                 if   isinstance ( fun , AFUN1           ) : absreal = fun.fun
                 elif isinstance ( fun , ROOT.RooAbsPdf  ) : absreal = fun
                 elif isinstance ( fun , ROOT.RooAbsReal ) : absreal = fun

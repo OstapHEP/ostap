@@ -233,7 +233,7 @@ class PickleChecker ( object ) :
         """        
         from ostap.core.ostap_types import string_types 
         from ostap.utils.core       import typename
-        from ostap.utils.basic      import prntrf,  loop_items
+        from ostap.utils.basic      import prntrf
     
         rows  = [  ( 'Argument' , 'type' , 'value' , "pickles'" , 'pickles"' ) ]
 
@@ -250,7 +250,7 @@ class PickleChecker ( object ) :
         if 'prefix' in kwargs : kwargs [ '*prefix' ] = kwargs.pop ( 'prefix' )
         if 'title'  in kwargs : kwargs [ '*title'  ] = kwargs.pop ( 'title'  ) 
         
-        for key , v in loop_items  ( kwargs ) :
+        for key , v in kwargs.items () :
             pickable = self.pickles         ( v )
             process  = self.pickles_process ( v )            
             row      = '%s' % key , typename ( v ) , prntrf  ( v ) , \

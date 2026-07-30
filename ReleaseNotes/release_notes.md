@@ -9,6 +9,7 @@
    1. add `__get_raw_bytes__` method for `ostap.io.compressed_shelve.CompressShelf` base class
    1. move some functions from `ostap.utils.basic` to new module `sstap.utils.core`
    1. fix uncompression of `Ostap.BLOB` for python<3.12 
+   1. remove `loop_items`
    
 ## Bug fixes 
 

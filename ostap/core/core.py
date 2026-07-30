@@ -90,7 +90,7 @@ from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
 from   ostap.utils.core       import typename
-from   ostap.utils.basic      import NoContext, loop_items
+from   ostap.utils.basic      import NoContext
 import ostap.core.ostap_setup 
 import ostap.plotting.color   
 import ROOT, cppyy, ctypes, math, sys, os, re  
@@ -288,7 +288,7 @@ def remove_draw_args ( kwargs  ) :
     """ remove "draw-args" from dictionary of arguments """
     nargs = {}
     from ostap.utils.cidict import cidict_fun 
-    for k, v in loop_items ( kwargs ) :
+    for k, v in kwargs.items() :
         key = cidict_fun ( k )
         if key in draw_args : continue
         nargs [ k ] = v

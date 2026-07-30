@@ -38,8 +38,8 @@ from   ostap.math.reduce         import root_factory
 from   ostap.histos.histos       import histo_book2, histo_keys
 from   ostap.stats.statvars      import data_decorate , data_range , good_for_frame , good_for_parallel 
 from   ostap.trees.cuts          import vars_and_cuts , order_warning
-from   ostap.utils.basic         import ( isatty , terminal_size ,
-                                          NoContext, loop_items  , typename )
+from   ostap.utils.core          import typename 
+from   ostap.utils.basic         import isatty , terminal_size , NoContext 
 from   ostap.utils.strings       import ( split_string           ,
                                           split_string_respect   ,
                                           var_separators         )
@@ -1721,7 +1721,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         suffix   = kwargs.pop ( 'suffix'  , '_sw' )
         mapping  = kwargs.pop ( 'mapping' , {}    )
         the_map  = Ostap.AddBranch.DCT()
-        for key, value in loop_items ( mapping ) : the_map [ key ] = value
+        for key, value in mapping .items () : the_map [ key ] = value
         for c in branch.coefficients() : new_branches.add ( prefix + c.name + suffix )        
         args     = branch , prefix , suffix , the_map 
         logger.debug ( 'prepare_branches: case [2] %s' % typename ( branch ) ) 
@@ -1734,7 +1734,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         names    = strings    ( names ) 
         mapping  = kwargs.pop ( 'mapping' , {} )
         the_map  = Ostap.AddBranch.DCT () 
-        for key, value in loop_items ( mapping ) : the_map [ key ] = value
+        for key, value in mapping .items () : the_map [ key ] = value
         for name in names : new_branches.add ( name )        
         args     = branch , names , the_map
         logger.debug ( 'prepare_branches: case [3] %s' % typename ( branch ) ) 
@@ -1771,7 +1771,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         ## RooFit construction 
         mapping  = kwargs.pop ( 'mapping' , {}  )
         the_map  = Ostap.AddBranch.DCT()
-        for key, value in loop_items ( mapping ) : the_map[ key ] = value
+        for key, value in mapping .items () : the_map[ key ] = value
         args     = branch , the_map
         logger.debug ( 'prepare_branches: case [7] %s' % typename ( branch ) ) 
 
@@ -1784,7 +1784,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
         normalization = kwargs.pop ( 'normalization' , ROOT.nullptr )
         mapping       = kwargs.pop ( 'mapping' , {}  )
         the_map  = Ostap.AddBranch.DCT()
-        for key, value in loop_items ( mapping ) : the_map[ key ] = value
+        for key, value in mapping .items()  : the_map[ key ] = value
         keeper.append ( observables   )
         keeper.append ( normalization )
         args     = branch , observables , normalization , the_map 
@@ -1829,7 +1829,7 @@ def prepare_branches ( tree , branch , / , **kwargs ) :
 
         branches = Ostap.Trees.Branches()
 
-        for key , value in loop_items ( branch ) :
+        for key , value in branch.items () :
             keeper.append ( value ) 
             
             assert isinstance ( key , string_types ) and Ostap.Trees.valid_name_for_branch ( key ) ,\
@@ -2115,7 +2115,7 @@ def add_new_buffer ( tree , buffer , * , name = '' , **kwargs ) :
                 "add_new_buffer: name `%s' is not valid!" % key
                 
     keep  = [ buffer ] 
-    for k , v in loop_items ( kwargs ) : keep.append ( ( k , v ) )
+    for k , v in kwargs .items() : keep.append ( ( k , v ) )
 
     extra_floats = () if not numpy else ( numpy.float16 , )
     extra_ints   = () if not numpy else ( numpy.int8    , )

@@ -25,7 +25,6 @@ from   ostap.core.core          import VE, Ostap
 from   ostap.math.math_base     import axis_range, product 
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.core         import typename   
-from   ostap.utils.basic        import loop_items
 from   ostap.stats.counters     import SE, EffCounter 
 from   ostap.logger.pretty      import pretty_float
 from   ostap.math.ve            import fmt_pretty_ve
@@ -826,7 +825,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
         if not isinstance ( other , GoFSimFit1DToys ) : return NotImplemented 
 
         ## (1) merge ECDFs 
-        for key, content in loop_items ( other.ecdfs   ) :
+        for key, content in other.ecdfs.items()  :
             if not key in self.__ecdfs : self.__ecdfs [ key ] = content
             else :
                 ecdfs = self.__ecdfs [ key ]
@@ -835,14 +834,14 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                     else            : ecdfs [ e ]  = ecdf
                     
         ## (2) merge counters 
-        for key, content in loop_items ( other.counters ) :
+        for key, content in other.counters.items () :
             if not key in self.__counters : self.__counters [ key ] = content
             else :
                 counters = self.__counters [ key ]
                 for e , cnt in content.items () : counters [ e ] += cnt
 
         ## (3) merge total
-        for key, content in loop_items ( other.total ) :
+        for key, content in other.total.items () :
             if not key in self.__total : self.__total [ key ]  = content
             else                       : self.__total [ key ] += content
 
@@ -1011,12 +1010,12 @@ class GoFSimFit(GoFSimFitBase) :
         if not isinstance ( other , GoFSimFit  ) : return NotImplemented 
 
         ## (1) merge ECDFs 
-        for key, content in loop_items ( other.ecdfs   ) :
+        for key, content in other.ecdfs.items () :
             if not key in self.__ecdfs    : self.__ecdfs [ key ]  = content
             else                          : self.__ecdfs [ key ] += content 
                     
         ## (2) merge counters 
-        for key, content in loop_items ( other.counters ) :
+        for key, content in other.counters.items ()  :
             if not key in self.__counters : self.__counters [ key ]  = content
             else                          : self.__counters [ key ] += content 
 

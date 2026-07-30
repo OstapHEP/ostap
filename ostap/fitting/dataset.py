@@ -34,7 +34,6 @@ from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              sized_types   , dictlike_types ,
                                              ordered_dict  )
 from   ostap.utils.core             import typename            
-from   ostap.utils.basic            import loop_items
 from   ostap.math.math_base         import std, evt_range, FIRST_ENTRY, LAST_ENTRY, isint, isequal   
 from   ostap.utils.random_seed      import random_seed
 from   ostap.fitting.variables      import valid_formula, make_formula 
@@ -992,7 +991,7 @@ def _rds_duplicates_ ( dataset          ,
                                            criterium = ''       ,
                                            progress  = progress )
     
-    for e, lst in progress_bar ( loop_items ( snapshot ) ,
+    for e, lst in progress_bar ( snapshot.items ()              ,
                                  max_value   = len ( snapshot ) ,
                                  description = '2nd loop:'      ,
                                  silent      = not progress     ) : 
@@ -1047,7 +1046,7 @@ def _rds_unique_entries_ ( dataset           ,
 
         cnt    = SE ()
         unique = 0 
-        for e, lst in progress_bar ( loop_items ( snapshot )        ,
+        for e, lst in progress_bar ( snapshot.items ()              ,
                                      max_value   = len ( snapshot ) ,
                                      description = '2nc loop:'      ,
                                      silent      = not progress     ) : 

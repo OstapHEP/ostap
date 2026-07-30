@@ -54,9 +54,8 @@ from   ostap.core.ostap_types import ( string_types   ,
                                        sequence_types ,
                                        dictlike_types )
 from   ostap.core.core        import Ostap , valid_pointer
-from   ostap.utils.basic      import ( zip_longest    ,
-                                       loop_items     , 
-                                       typename       )
+from   ostap.utils.cor        import typename      
+from   ostap.utils.basic      import zip_longest    
 from   ostap.utils.strings    import split_string   
 from   ostap.fitting.pdfbasic import APDF1
 import ostap.fitting.roofit
@@ -282,7 +281,7 @@ class ModelConfig(object):
         if kw_args :
             import ostap.logger.table as T 
             rows = [ ( 'Argument' , 'Value' ) ]
-            for k , v in loop_items ( kw_args ) :
+            for k , v in kw_args.items () :
                 row = k , str ( v )
                 rows.append ( row )
             title = 'ModelConfig: %d ignored arguments' % len ( kw_args ) 

@@ -17,7 +17,6 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.core                 import valid_pointer 
-from   ostap.utils.basic               import loop_items 
 from   ostap.parallel.parallel         import Task, WorkManager, Checker
 import ostap.trees.trees_base 
 import ROOT
@@ -170,15 +169,15 @@ def add_new_branch ( chain           ,
         logger.info ( '%s:\n%s' % ( title , check.pickling_table ( branch , prefix = '# ' , **kwargs ) ) )
 
     keeper = [ branch ]
-    for k , v in loop_items ( kwargs ) : keeper.append ( v )
+    for k , v in kwargs.items () : keeper.append ( v )
     
     # ========================================================================
     ## process all rguments  
     args , expected , kw , keeps = prepare_branches ( chain , branch , **kwargs ) 
 
     keeper += keeps 
-    for a     in args              : keeper.append ( a )
-    for k , v in loop_items ( kw ) : keeper.append ( v )
+    for a     in args          : keeper.append ( a )
+    for k , v in kw .items ()  : keeper.append ( v )
     
     if verbose : 
         title = 'All processed arguments'

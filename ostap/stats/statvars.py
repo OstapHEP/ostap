@@ -95,7 +95,7 @@ from   ostap.core.ostap_types          import ( string_types   , integer_types  
                                                 sequence_types )
 from   ostap.trees.cuts                import expression_types, vars_and_cuts
 from   ostap.utils.core                import typename
-from   ostap.utils.basic               import loop_items, numcpu
+from   ostap.utils.basic               import numcpu
 from   ostap.utils.progress_conf       import progress_conf
 import ostap.frames.frames             as     F 
 import ostap.parallel.parallel_statvar as     P 
@@ -731,7 +731,7 @@ def data_minmax ( data ,
                                 
     if isinstance ( results , dictlike_types ) :
         res = {} 
-        for key, r in loop_items ( results ) :
+        for key, r in results.items () :
             res  [ key ] = r.min() , r.max()
         results = res 
     else : results = results.min() , results.max()
@@ -781,7 +781,7 @@ def data_range ( data               ,
     
 
     if isinstance ( results , dictlike_types ) :
-        for k , r in loop_items ( results ) :
+        for k , r in results.items () :
             mn, mx = r
             if mx < mn and ( cuts or cut_range or not process_all  ) : 
                 ## recalculate without cuts, cut-range and event ranges: 
@@ -995,7 +995,7 @@ def data_sum ( data               ,
                               parallel  = parallel  )
     result2 = {} 
     if isinstance ( result , dictlike_types ) :
-        for key , r in loop_items ( result ) : 
+        for key , r in result .items () : 
             result2 [ key ] = r.sum()
     else :
         result2 = result.sum() 

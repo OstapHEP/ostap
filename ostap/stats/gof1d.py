@@ -36,7 +36,6 @@ from   ostap.math.math_base     import axis_range, np2raw, isequal
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.core         import typename   
-from   ostap.utils.basic        import loop_items
 from   ostap.stats.counters     import SE, EffCounter 
 from   ostap.logger.pretty      import pretty_float
 from   ostap.math.ve            import fmt_pretty_ve
@@ -671,7 +670,7 @@ class GoF1D(object) :
         header = ()
         rows   = [] 
         
-        for label , value  in loop_items ( self.estimators ) :
+        for label , value  in self.estimators.items () :
             
             the_label = Labels.get ( label , label )
             
@@ -1022,12 +1021,12 @@ class GoF1DToys(GoF1D) :
         if not isinstance ( other , GoF1DToys ) : return NotImplemented 
 
         ecdfs = other.ecdfs        
-        for key, ecdf    in loop_items ( ecdfs   ) : 
+        for key, ecdf    in ecdfs.items () : 
             if key in self.__ecdfs    : self.__ecdfs    [ key ] += ecdf
             else                      : self.__ecdfs    [ key ]  = ecdf
             
         counters = other.counters
-        for key, counter in loop_items ( counters ) : 
+        for key, counter in counters.items ()  : 
             if key in self.__counters : self.__counters [ key ] += counter 
             else                      : self.__counters [ key ]  = counter 
 

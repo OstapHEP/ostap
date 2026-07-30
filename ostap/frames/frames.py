@@ -71,7 +71,7 @@ from   ostap.logger.utils        import multicolumn
 from   ostap.utils.cidict        import cidict, cidict_fun      
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.core          import typename 
-from   ostap.utils.basic         import isatty, loop_items
+from   ostap.utils.basic         import isatty
 from   ostap.frames.frame2histo  import ( DF_P2Model , DF_P1Model , 
                                           DF_H3Model , DF_H2Model , DF_H1Model ) 
 import ostap.core.config         as     config 
@@ -140,7 +140,7 @@ def get_values ( results                               , * ,
         return transform ( results ) 
     ## 
     values = {}
-    for key, value in loop_items ( results ) : 
+    for key, value in results.items () : 
         values [ key ] = transform ( value ) 
     ## 
     if frame and report :
@@ -302,7 +302,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
     if added :
         title = 'Added variables'
         rows  = [ ( 'Variable' , 'Expression' ) ] 
-        for row in loop_items ( added ) : rows.append ( row )
+        for row in added.items() : rows.append ( row )
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )        
         logger.debug ( '%s:\n%s' % ( title , table ) )
         
@@ -326,7 +326,7 @@ def _fr_helper2_ ( frame                                ,
         _fr_helper_ ( frame , expressions , cuts , progress = progress )
 
     results = {}
-    for expr, var_name in loop_items ( var_names ) : 
+    for expr, var_name in var_names.items () : 
         results [ expr ] = creator ( current , var_name , cut_name ) 
 
     ## single variable as argument 
@@ -822,7 +822,7 @@ def frame_range ( frame               ,
     
     if isinstance ( result , dictlike_types ) :
         ranges = {}
-        for key , value in loop_items ( result ) :
+        for key , value in result.items () :
             mn , mx = value 
             if mx <= mn and cuts :
                 ## REDO WITH NO CUTS 
@@ -1888,7 +1888,7 @@ def frame_draw ( frame               ,
     kw = cidict ( transform = cidict_fun , **kwargs )
 
     histos = [] 
-    for key, var in loop_items ( items ) :
+    for key, var in items.items () :
         mn , mx = ranges [ var ]
         item = key , ( mn , mx ) 
         histos.append ( item )
