@@ -46,7 +46,6 @@ from   ostap.math.math_base      import strings
 from   ostap.utils.cleanup       import CleanUp
 from   ostap.utils.root_utils    import ImplicitMT 
 from   ostap.utils.core          import typename  
-from   ostap.utils.basic         import items_loop
 from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.timing        import timing
@@ -153,7 +152,7 @@ class WeightsFiles(CleanUp) :
         assert isinstance ( weights_files , dict  ), \
                "Invalid type of 'weight_files'  %s "    % weights_files
 
-        for method , xml in items_loop ( weights_files ) :            
+        for method , xml in weights_files.items() :            
             assert os.path.exists ( xml ) and os.path.isfile ( xml ), \
                    "No weights file '%s'" %  xml 
             
@@ -965,7 +964,7 @@ class Trainer(object):
         if self.nicknames :
             row = 'Nicknames:' , ''
             rows.append ( row )
-            for k , v  in items_loop ( self.nicknames ) :
+            for k , v  in self.nicknames.items() :
                 row = ' - ' + k , v
                 rows.append ( row )
                 
@@ -1694,7 +1693,7 @@ class Trainer(object):
                 all_vars.append ( vv [ 0 ] )
                 vv , qq = vv
                 if not ":=" in vv :
-                    for k , v in items_loop ( self.nicknames ) :
+                    for k , v in self.nicknames.items() :
                         if vv == v :
                             vv = '%s := %s' % ( k , v )
                             break
@@ -2428,7 +2427,7 @@ class Reader(object)  :
         ##
         self.__methods = self.weights.methods
         
-        for method , xml in  items_loop ( self.weights.files ) :
+        for method , xml in self.weights.files.items() :
             mstr = ROOT.TString ( method )
             xstr = ROOT.TString ( xml    ) 
             ## m = self.__reader.BookMVA ( method , xml  )
@@ -2712,7 +2711,7 @@ def _inputs2map_ ( inputs ) :
            'Invalid type of "inputs": %s' % inputs
     
     if   isinstance ( inputs , dict  ) :
-        for k , v  in items_loop ( inputs ) : _inputs [ k ] = v
+        for k , v  in inputs.items(): _inputs [ k ] = v
     elif isinstance ( inputs , ( tuple , list ) ) :
         for i in inputs :
             
@@ -2751,7 +2750,7 @@ def _weights2map_ ( weights ) :
         weights  = WeightsFiles ( weights  )
 
     _map = MAP() 
-    for method , xml in items_loop ( weights.files ) :
+    for method , xml in weights.files.items() :
         _map [ method ] = xml
 
     assert not _map .empty() , \

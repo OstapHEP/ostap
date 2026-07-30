@@ -80,7 +80,7 @@ from   ostap.core.ostap_types import num_types, string_types
 from   ostap.math.ve          import VE
 from   ostap.math.math_base   import isequal, isfinite
 from   ostap.utils.core       import typename
-from   ostap.utils.basic      import items_loop, memoize, wm_print 
+from   ostap.utils.basic      import memoize, wm_print 
 from   ostap.math.integrator  import ( integral_ostap  ,
                                        integral2_ostap , 
                                        integral3_ostap ) 
@@ -971,7 +971,7 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
         rmx  =  None # (current) region with the maximal error 
         emx  = -1    # (current) maximal error
 
-        for r , entry in items_loop ( stack ) :
+        for r , entry in stack.items () :
 
             err     = entry[0]            
             serr   += err

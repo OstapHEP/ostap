@@ -56,13 +56,12 @@ class cidict(MutableMapping) :
         self.__transform = transform 
         self.__store     = {}
         
-        from ostap.utils.basic import items_loop
         dtmp = dict ( dct )
-        for k,v in items_loop ( dtmp ) :
+        for k,v in dtmp.items () :
             kk = self.the_key( k )
             self.__store [ kk ] = v 
             
-        for k, v  in items_loop ( kwargs ) :
+        for k, v  in kwargs.items ()  :
             kk = self.the_key( k )
             self.__store [ kk ] = v 
 
@@ -114,9 +113,8 @@ def select_keys ( origin , keys , transform = case_transform , **kwargs ) :
     ## transformed keys
     kt =  set ( [ selected.the_key( k ) for k in keys ] )
     
-    from ostap.utils.basic import items_loop    
     remove = set() 
-    for k , value in items_loop ( origin ) :
+    for k , value in origin.items() :
         kk = selected.the_key ( k )
         if kk in kt :
             selected [ kk ] = value
@@ -125,7 +123,7 @@ def select_keys ( origin , keys , transform = case_transform , **kwargs ) :
     ## remove selected keys from the origin  
     for k in remove : origin.pop ( k )  
         
-    for k , value in items_loop ( kwargs ) :
+    for k , value in kwargs.items() :
         kk = selected.the_key ( k )
         if kk in kt : selected [ kk ] = value
         

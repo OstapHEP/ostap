@@ -108,7 +108,6 @@ from   ostap.core.core            import ( cpp  , Ostap ,
                                            dsID , valid_pointer , binomEff )
 from   ostap.fitting.variables    import make_formula
 from   ostap.utils.progress_conf  import progress_conf 
-from   ostap.utils.basic          import items_loop 
 from   ostap.math.reduce          import root_factory 
 from   ostap.trees.utils          import Chain 
 from   ostap.trees.cuts           import expression_types, vars_and_cuts 
@@ -1167,7 +1166,7 @@ class SelectorWithVars(SelectorWithCuts) :
             
         if not self.__data or not len ( self.__data ) :
             skip = 0
-            for k,v in items_loop ( self.__skip ) : skip += v 
+            for k,v in self.__skip.items () : skip += v 
             self.logger.warning("Selector(%s): empty dataset! Total:%s/Processed:%s/Skipped:%d"
                                   % ( self.__name  , self.total , self.processed , skip ) ) 
             

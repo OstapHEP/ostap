@@ -166,7 +166,6 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, list_types
-from   ostap.utils.basic      import items_loop
 from   ostap.utils.cidict     import cidict
 from   ostap.utils.cidict     import cidict_fun as key_transform
 from   ostap.plotting.color   import ( Red       , Yellow       , Gold     , Orange      , 
@@ -259,7 +258,7 @@ def draw_options ( **kwargs ) :
     ...      draw_opts = draw_options ( kwargs )
     """
     options = {}
-    for k , v  in items_loop ( kwargs ) :
+    for k , v  in kwargs.items () :
         for key in keys :
             if key_compare ( k , key ) :
                 options [ k ] = v

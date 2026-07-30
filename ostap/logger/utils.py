@@ -54,7 +54,7 @@ from   ostap.logger.mute      import ( mute   , mute_py ,
                                        MuteC  , MutePy  ,
                                        TeeCpp , TeePy   , OutputC    )
 from   ostap.utils.core       import typename
-from   ostap.utils.basic      import NoContext, prntrf, items_loop  
+from   ostap.utils.basic      import NoContext, prntrf  
 from   ostap.logger.symbols   import plus_minus, times  
 import time, os, sys, math  ## attention here!!
 # =============================================================================

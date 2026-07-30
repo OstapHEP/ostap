@@ -100,7 +100,6 @@ from   ostap.tools.tmva          import ( dir_name      , good_for_negative ,
                                           trivial_opts  , make_tarfile      ,
                                           decode_vars   , NO_PROCESSING     )
 from   ostap.utils.core          import typename 
-from   ostap.utils.basic         import items_loop
 from   ostap.stats.statvars      import data_statistic
 from   ostap.utils.progress_conf import progress_conf 
 from   ostap.utils.progress_bar  import progress_bar
@@ -508,7 +507,7 @@ class Trainer(object) :
                 
             import ostap.trees.trees
             
-            for k, v in items_loop ( self.signal_vars ) : the_vars.append ( v ) 
+            for k, v in self.signal_vars.items() : the_vars.append ( v ) 
             avars = self.signal.the_variables ( the_vars )
             
             keys  = set   ( self.background_vars.keys () ) - set ( self.signal_vars    .keys () )
@@ -577,7 +576,7 @@ class Trainer(object) :
                                 
             import ostap.trees.trees
 
-            for k, v in items_loop ( self.background_vars ) : the_vars.append ( v )             
+            for k, v in self.background_vars.items() : the_vars.append ( v )             
             bvars = self.background.the_variables ( the_vars )
                         
             keys  = set   ( self.signal_vars.keys () ) - set ( self.background_vars    .keys () )

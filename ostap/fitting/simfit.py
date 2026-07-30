@@ -24,7 +24,6 @@ __all__     = (
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import std , Ostap , dsID
 from   ostap.utils.core         import typename
-from   ostap.utils.basic        import items_loop 
 from   ostap.utils.utils        import chunked 
 from   ostap.fitting.fithelpers import VarMaker, ConfigReducer
 from   ostap.fitting.pdfbasic   import ( PDF1  , Generic1D_pdf    , 
@@ -413,7 +412,7 @@ class SimFit (VarMaker,ConfigReducer) :
                                            
         self.__pdf = sim_pdf 
         
-        for k , cmp in items_loop ( self.categories ) :
+        for k , cmp in self.categories.items ():
 
             self.pdf.copy_structures ( cmp )
             
@@ -1232,7 +1231,7 @@ class SimFit (VarMaker,ConfigReducer) :
         """
         rows = [ ( 'Category' , 'Index' , 'Type' , 'Name' , 'Title' ) ]
 
-        for label , index in items_loop ( self.sample ) :
+        for label , index in self.sample.items () :
             row = str ( label ) , str ( index )
             
             cmp = self.categories [ label ]  
@@ -1258,7 +1257,7 @@ class SimFit (VarMaker,ConfigReducer) :
         """
         
         newcats = {}
-        for k , cmp in items_loop ( self.categories ) :
+        for k , cmp in self.categories.items () :
             newcats [ k ] = cmp.make_constrained ( *constraints ) 
 
         newsim = SimFit ( sample     = self.sample ,
@@ -1266,7 +1265,7 @@ class SimFit (VarMaker,ConfigReducer) :
                           name       = 'Constrained_%s' % self.name , 
                           title      = 'Constrained_%s' % self.pdf.pdf.title )
 
-        for k , cmp in items_loop ( self.categories ) :            
+        for k , cmp in self.categories.items () :            
             newsim.pdf.copy_structures     ( cmp )
             newsim.pdf.draw_options.update ( cmp.draw_options )
             

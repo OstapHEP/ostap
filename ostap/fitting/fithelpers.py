@@ -75,7 +75,6 @@ from   ostap.fitting.roocmdarg import check_arg
 from   ostap.fitting.variables import SETVAR, make_formula
 from   ostap.utils.utils       import make_iterable
 from   ostap.utils.core        import typename 
-from   ostap.utils.basic       import items_loop
 from   ostap.utils.valerrors   import VAE 
 from   ostap.logger.symbols    import times, arrow_right
 import ostap.logger.table      as     T 
@@ -1712,7 +1711,7 @@ class FitHelper(VarMaker) :
         from ostap.utils.cidict import cidict_fun as key_transform 
         transformed_draw_options = tuple ( key_transform ( k ) for k in drawing_options )
         
-        for k , a in items_loop ( kwargs ) :
+        for k , a in kwargs.items () :
             
             key  = key_transform ( k )             
             
