@@ -99,7 +99,7 @@ if __name__ == "__main__": # ===============================================
     
     if len ( sys.argv ) <= 1 :
         sys.stderr.write ( "Usage: OSTAP_PROFILE_OUTPUT='result.prof' python -m ostap.hooks.profile <script.py> [args...]\n" )
-        sys.exit ( 1 )
+        sys.exit ()
 
     # Remove hook module name from CLI arguments
     sys.argv.pop ( 0 )

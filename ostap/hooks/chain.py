@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # ==========================================================================
     if len ( sys.argv ) <= 1:
         sys.stderr.write ( "Usage: OSTAP_HOOKS='spawn,batch' python -m ostap.hooks.chain <script.py> [args...]\n" )
-        sys.exit ( 1 )
+        sys.exit ()
 
     sys.argv.pop ( 0 )
     target_script = sys.argv [ 0 ]

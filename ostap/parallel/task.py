@@ -45,10 +45,10 @@ __all__     = (
     'func_executor' , ## helper function to execute callable
     )
 # =============================================================================
+from   ostap.core.ostap_types import sized_types
 from   ostap.utils.basic      import numcpu 
 from   ostap.logger.colorized import attention
 from   itertools              import repeat , count
-from   ostap.utils.singleton  import Singleton
 import ostap.io.zipshelve     as     DBASE 
 import sys, os, operator, abc, signal   
 # =============================================================================
@@ -133,7 +133,7 @@ class Task(TaskBase) :
         obj.__implicitMT     = True
         obj.__implicitMT_set = False 
         ## 
-        obj.__cleanup     = True
+        obj.__cleanup        = True
         ## 
         return obj
 
@@ -992,12 +992,11 @@ class TaskManager(ManagerBase) :
         job_block = kwargs.pop ( 'block_size', self.block_size  )
         if job_block <= 1 : job_block = 100 * ( numcpu() + 1 ) 
         
-        from ostap.utils.utils import chunked 
-        blocks = list ( chunked ( args , job_block ) ) 
-
+       
+        
         # ===============================================================================
-        if isinstance ( task , Task ) : result = self.__process_task ( task , blocks , **kwargs )
-        else                          : result = self.__process_func ( task , blocks , **kwargs )
+        if isinstance ( task , Task ) : result = self.__process_task ( task , args , **kwargs )
+        else                          : result = self.__process_func ( task , args , **kwargs )
         # ===============================================================================
             
         return result 
@@ -1005,20 +1004,28 @@ class TaskManager(ManagerBase) :
     # ===================================================================================
     ## Helper internal method for parallel processing of
     #  the plain function with chunks of data
-    def __process_func ( self , task , blocks  , **kwargs ) :
+    def __process_func ( self , task , args , **kwargs ) :
         """ Helper internal method for parallel processiing of
         the plain function with chunks of data
         """
-        from ostap.utils.cidict import cidict
-        my_args = cidict( kwargs )
         
         from timeit import default_timer as _timer
         start = _timer()
         
-        init      = my_args.pop ( 'init'      , None )
-        merger    = my_args.pop ( 'merger'    , None )
-        collector = my_args.pop ( 'collector' , None )
+        from ostap.utils.cidict import cidict
+        my_args = cidict( kwargs )
         
+        init       = my_args.pop ( 'init'       , None )
+        merger     = my_args.pop ( 'merger'     , None )
+        collector  = my_args.pop ( 'collector'  , None )
+        
+        silent     = my_args.pop ( 'silent'     , self.silent   )
+        progress   = my_args.pop ( 'progress'   , self.progress )    
+        progress   = progress or not silent 
+                
+        block_size = my_args.pop ( 'block_size' , self.block_size  )
+        if block_size < 1 : block_size = 100 * ( numcpu() + 1 ) 
+                
         ## mergers for statistics & results
         if   not merger and not collector : logger.warning ( "Neither `merger' nor `collector' are specified for merging!")
         elif     merger and     collector : logger.warning ( "Both    `merger' and `collector' are specified for merging!")
@@ -1032,22 +1039,24 @@ class TaskManager(ManagerBase) :
 
         ## initialize the results 
         results = init
-
+        
+        my_args ['progress'] = False 
+        barconf = dict ( description = 'Jobs:' , silent = not progress )
+        if progress : 
+            if not isinstance ( args , sized_types ) : args = list ( args )
+            barconf ['max_value' ] = len ( args )   
+        
+        from ostap.utils.utils        import batched    
         from ostap.utils.progress_bar import ProgressBar
-        ## total number of jobs  
-        njobs = sum  ( len ( c ) for c in chunks )
-        with ProgressBar ( max_value = njobs , silent = not self.progress , description = 'Jobs:' ) as bar :
+        
+        with ProgressBar ( **barconf ) as bar :
             
-            while chunks :
+            for batch in batched ( args , block_size ) :
 
-                chunk = chunks.pop ( 0 ) 
-                
-                jobs_args = zip ( repeat ( task ) , count ( index ) , chunk )
+                jobs_args = zip ( repeat ( task ) , count ( index ) , batch )
 
                 ## call for the actual jobs handling method 
-                for jobid , result , stat in self.iexecute ( func_executor    ,
-                                                             jobs_args        ,
-                                                             progress = False ) :
+                for jobid , result , stat in self.iexecute ( func_executor ,  jobs_args , **my_args ) :
                     
                     merged_stat += stat
                                         
@@ -1089,7 +1098,7 @@ class TaskManager(ManagerBase) :
 
     # ===================================================================================
     ## helper internal method to process the task with chunks of data 
-    def __process_task  ( self , task , chunks , **kwargs ) :
+    def __process_task  ( self , task , args , **kwargs ) :
         """ Helper internal method to process the task with chunks of data 
         """
             
@@ -1102,24 +1111,35 @@ class TaskManager(ManagerBase) :
         ## mergers for statistics 
         merged_stat    = StatMerger ()
         merged_stat_pp = StatMerger ()
-
+        
+        from ostap.utils.cidict import cidict
+        my_args = cidict( kwargs )
+       
+        silent     = my_args.pop ( 'silent'     , self.silent   )
+        progress   = my_args.pop ( 'progress'   , self.progress )    
+        progress   = progress or not silent 
+                
+        block_size = my_args.pop ( 'block_size' , self.block_size  )
+        if block_size < 1 : block_size = 100 * ( numcpu() + 1 ) 
+                
+        my_args [ 'progress'] = False 
+        barconf = dict ( description = 'Jobs:' , silent = not progress )
+        if progress : 
+            if not isinstance ( args , sized_types ) : args = list ( args )
+            barconf [ 'max_value' ] = len ( args )   
+            
         ## start index for jobs
         index = 0 
-
-        ## total number of jobs 
-        njobs = sum  ( len ( c ) for c in chunks ) 
+        
+        from ostap.utils.utils        import batched    
         from ostap.utils.progress_bar import ProgressBar
-        with ProgressBar ( max_value = njobs , silent = not self.progress , description = "Jobs:" ) as bar :
+        with ProgressBar ( **barconf ) as bar :
 
-            while chunks :
-
-                chunk = chunks.pop ( 0 ) 
+           for batch in batched ( args , block_size ) : 
                 
-                jobs_args = zip ( repeat ( task ) , count ( index ) , chunk )
+                jobs_args = zip ( repeat ( task ) , count ( index ) , batch )
                 
-                for jobid , result , stat in self.iexecute ( task_executor    ,
-                                                             jobs_args        ,
-                                                             progress = False ) :
+                for jobid , result , stat in self.iexecute ( task_executor , jobs_args , **my_args ) : 
 
                     ## merge statistics 
                     merged_stat += stat

@@ -43,7 +43,7 @@ if __name__ == "__main__":
     # ======================================================================
     if len ( sys.argv ) <= 1 :
         sys.stderr.write ( "Usage: python -m ostap.hooks.batch <script.py> [args...]\n" )
-        sys.exit ( 1 )
+        sys.exit ()
 
     target_script = sys.argv [ 0 ]
     if not os.path.isfile ( target_script ):

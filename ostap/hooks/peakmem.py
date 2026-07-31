@@ -62,7 +62,7 @@ if __name__ == "__main__": # ===============================================
     
     if len ( sys.argv ) <= 1 :
         sys.stderr.write ( "Usage: python -m ostap.hooks.peakmem <script.py> [args...]\n" )
-        sys.exit ( 1 )
+        sys.exit ()
 
     # Remove launcher module name from sys.argv
     sys.argv.pop(0)
