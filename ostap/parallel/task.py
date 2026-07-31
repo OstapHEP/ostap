@@ -904,23 +904,20 @@ def func_executor ( item ) :
 class TaskManager(ManagerBase) :
     """ Abstract base class for the work manager for parallel data processing 
     """
-    ## __metaclass__ = abc.ABCMeta
-    
     def __init__  ( self                ,
                     ncpus               , * , 
                     silent      = False ,
                     progress    = True  ,
-                    chunk_size  = -1    ,   
+                    block_size  = -1    , 
                     dump_dbase  = None  ,
                     dump_jobs   = 0     ,
                     dump_freq   = 0     , **kwargs ) :
 
-        self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else max ( 1 , numcpu() - 1 ) 
+        self.__ncpus      = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else max ( 1 , numcpu() - 1 ) 
+
+        ## block size 
+        self.__block_size = block_size if isinstance ( block_size , int ) and 1 < block_size else -1
         
-        if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
-            chunk_size  = 1 + 5 * ( self.ncpus + 1 )
-            
-        self.__chunk_size = chunk_size 
         self.__silent     = True if silent else False  
         self.__progress   = True if ( progress or not silent ) else False
 
@@ -949,7 +946,7 @@ class TaskManager(ManagerBase) :
                 logger.error ( 'DBASE cannot be used %s' % dump_dbase , exc_info = True ) 
                 self.__dump_dbase = None
 
-        ## addtional parameetrs 
+        ## additional parameters 
         self.__params = kwargs 
         
     # =========================================================================
@@ -992,15 +989,15 @@ class TaskManager(ManagerBase) :
         
         """
         
-        job_chunk = kwargs.pop ( 'chunk_size', self.chunk_size  )
-        if job_chunk <= 1 : job_chunk = self.chunk_size 
-
+        job_block = kwargs.pop ( 'block_size', self.block_size  )
+        if job_block <= 1 : job_block = 100 * ( numcpu() + 1 ) 
+        
         from ostap.utils.utils import chunked 
-        chunks    = list ( chunked ( args , job_chunk ) )
+        blocks = list ( chunked ( args , job_block ) ) 
 
         # ===============================================================================
-        if isinstance ( task , Task ) : result = self.__process_task ( task , chunks , **kwargs )
-        else                          : result = self.__process_func ( task , chunks , **kwargs )
+        if isinstance ( task , Task ) : result = self.__process_task ( task , blocks , **kwargs )
+        else                          : result = self.__process_func ( task , blocks , **kwargs )
         # ===============================================================================
             
         return result 
@@ -1008,7 +1005,7 @@ class TaskManager(ManagerBase) :
     # ===================================================================================
     ## Helper internal method for parallel processing of
     #  the plain function with chunks of data
-    def __process_func ( self , task , chunks  , **kwargs ) :
+    def __process_func ( self , task , blocks  , **kwargs ) :
         """ Helper internal method for parallel processiing of
         the plain function with chunks of data
         """
@@ -1023,10 +1020,8 @@ class TaskManager(ManagerBase) :
         collector = my_args.pop ( 'collector' , None )
         
         ## mergers for statistics & results
-        if   not merger and not collector :
-            logger.warning ( "Neither `merger' nor `collector' are specified for merging!")
-        elif     merger and     collector :
-            logger.warning ( "Both    `merger' and `collector' are specified for merging!")
+        if   not merger and not collector : logger.warning ( "Neither `merger' nor `collector' are specified for merging!")
+        elif     merger and     collector : logger.warning ( "Both    `merger' and `collector' are specified for merging!")
             
         ## mergers for statistics 
         merged_stat    = StatMerger ()
@@ -1181,18 +1176,17 @@ class TaskManager(ManagerBase) :
         """`ncpus' : number of CPUs"""
         return self.__ncpus
 
-    @property 
-    def chunk_size  ( self ) : 
-        """`chunk_size: split huge sequence of jobs into chunks.. Reasonabel size fo chun is 5-10* #cpus 
-        """
-        return self.__chunk_size
-    @chunk_size.setter
-    def chunk_size ( self, value ) :
-        if isinstance ( value , int ) and 1 < value : self.__chunk_size = value 
+    @property
+    def block_size ( self ) :
+        """`block_size`: split a huge sequence of jobs into large blocks, processed sequntially"""
+        return self.__block_size
+    @block_size.setter
+    def block_size ( self , value ) :
+        if isinstance ( value , int ) and 1 < value : self.__block_size = value 
         else                                        :
-            self.__chunk_size = 5 * ( self.ncpus + 1 )
-            logger.warning ( "Specified `chunk_size` of %s is ignored, use %d instead" % ( value , self.chunk_size ) ) 
-            
+            self.__block_size = -1 
+            logger.warning ( "Specified `chunk_size` of %s is ignored, block-split is disabled" % ( value , self.block_size ) ) 
+    
     @property
     def dump_dbase  ( self ) :
         """`dump_dbase` : database name (or None) to save intermediate resurtlas if requetsed

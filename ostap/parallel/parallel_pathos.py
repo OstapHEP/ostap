@@ -67,6 +67,10 @@ def get_pps ( pool ) :
     import pathos.parallel
     return pathos.parallel.__STATE.get ( pool._id , None )
 
+def get_states () :
+    import pathos.multiprocessing
+    return pathos.multiprocessing.__STATE
+        
 # =============================================================================
 ## @class WorkManager
 #  Class to in charge of managing the tasks and distributing them to
@@ -210,12 +214,11 @@ class WorkManager (TaskManager) :
             if not self.silent and self.ppservers : show_tunnels ( self.ppservers )
             
         else :
-            
+
             ## from pathos.multiprocessing import ProcessPool 
             from pathos.pools import ProcessPool 
             self.__pool      = ProcessPool ( self.ncpus )
-
-        ##
+                
         ## adjust chunk size 
         if isinstance ( chunk_size , int ) and 1 < chunk_size :
             self.chunk_size = chunk_size
@@ -258,17 +261,19 @@ class WorkManager (TaskManager) :
         """
         sys.stdout .flush ()
         sys.stderr .flush ()
-        if self.pool : self.pool.restart ( True )                           
+        ## if self.pool : self.pool.restart ( True ) ## commented out my 
         return self
     
     # =========================================================================
     ## context protocol: EXIT, close/join/clear the pool 
     def __exit__   ( self , *_ ) :         
         """ Context protocol: EXIT, close/join/clear the pool"""
+
         if  self.pool :
             self.pool.close ()
             self.pool.join  ()
-            self.pool.clear ()
+            self.pool.clear () ## VB: comment out!
+            
         sys.stdout .flush ()
         sys.stderr .flush ()
 

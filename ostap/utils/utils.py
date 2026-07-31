@@ -533,7 +533,7 @@ except ImportError : # ========================================================
     #  @endcode
     #
     #  The function is copied from <code>more_itertools</code> 
-    def take(n, iterable):
+    def take ( n , iterable ) :
         """ Return first *n* items of the iterable as a list.
         
         >>> take(3, range(10))
@@ -775,6 +775,39 @@ def splitter ( N , n , uniform = True ) :
     for _ in range (     reminder ) : yield size + 1
 
 # =========================================================================
+if ( 3 , 12  ) <= python_info : # =========================================
+    # =====================================================================
+    from itertools import batched
+    # =====================================================================
+else : # ==================================================================
+    # =====================================================================    
+    from itertools import islice 
+    ## Batch data from an iterable into tuples of length n.
+    def batched ( iterable , n ):
+        """ Batch data from an iterable into tuples of length n.
+        The last batch may be shorter than n if there are not enough items.
+        Compatible with Python 3.9 and older versions.
+        """
+        
+        # Ensure the batch size is valid
+        if n < 1 :
+            raise ValueError("n must be at least one")
+    
+        # Convert the input iterable into an iterator
+        iterator = iter(iterable)
+        
+        while True:
+            # Fetch up to n elements from the iterator
+            batch = list ( islice ( iterator , n ) )
+            
+            # Stop looping if the iterator is exhausted
+            if not batch:
+                break
+            
+            # Yield the current batch
+            yield tuple ( batch ) 
+              
+# =========================================================================
 ## absract property decorator
 #  @code
 #  @absproperty
@@ -801,7 +834,7 @@ if  ( 3 , 12 ) <= python_info : # =============================================
         def __get__(self, instance, owner):
             return self.fget(owner)
     # =========================================================================
-elif  ( 3 , 9 ) <= python_info : # ============================================
+else : # ( 3 , 9 ) <= python_info : # ========================================
     # =========================================================================
     ## class property decorator
     #  @code
@@ -814,74 +847,6 @@ elif  ( 3 , 9 ) <= python_info : # ============================================
         def A ( cls ) : ...
         """
         return classmethod ( property ( func ) ) 
-    # =========================================================================
-else : 
-    # =========================================================================
-    ## class @classproperty
-    #  class property decorator  (copied and simplified from astropy)
-    #  @code
-    #  @classprop
-    #  def A ( cls ) : ...  
-    #  @endcode
-    class classprop(property):
-        """ Class property
-        @classprop
-        def A ( cls ) : ...
-        """        
-        def __new__(cls, fget=None, doc=None):
-            if fget is None:
-                # Being used as a decorator--return a wrapper that implements
-                # decorator syntax
-                def wrapper(func):
-                    return cls(func)            
-                return wrapper
-            return super(classprop,cls).__new__(cls)
-        
-        def __init__(self, fget, doc=None, ):
-            fget = self._wrap_fget(fget)
-            super(classprop,self).__init__(fget=fget, doc=doc)
-            
-            # There is a buglet in Python where self.__doc__ doesn't
-            # get set properly on instances of property subclasses if
-            # the doc argument was used rather than taking the docstring
-            # from fget
-            # Related Python issue: https://bugs.python.org/issue24766
-            if doc is not None:
-                self.__doc__ = doc
-                
-        def __get__(self, obj, objtype):
-            # The base property.__get__ will just return self here;
-            # instead we pass objtype through to the original wrapped
-            # function (which takes the class as its sole argument)
-            val = self.fget.__wrapped__(objtype)
-            return val
-
-        def getter(self, fget):
-            return super(classprop,self).getter(self._wrap_fget(fget))
-        
-        def setter(self, fset):
-            raise NotImplementedError(
-                "classproperty can only be read-only; use a metaclass to "
-                "implement modifiable class-level properties")
-        
-        def deleter(self, fdel):
-            raise NotImplementedError(
-                "classproperty can only be read-only; use a metaclass to "
-                "implement modifiable class-level properties")
-        
-        @staticmethod
-        def _wrap_fget(orig_fget):
-            if isinstance(orig_fget, classmethod):
-                orig_fget = orig_fget.__func__
-                
-            # Using stock functools.wraps instead of the fancier version
-            # found later in this module, which is overkill for this purpose
-            
-            @functools.wraps(orig_fget)
-            def fget(obj):
-                return orig_fget(obj.__class__)
-            
-            return fget
 
 # =============================================================================
 ## @class CallThem

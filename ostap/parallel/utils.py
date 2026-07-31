@@ -382,7 +382,7 @@ class PoolContext(object) :
     def __exit__  ( self , *_) :
         self.__pool.close ()
         self.__pool.join  ()
-        self.__pool.clear ()
+        self.__pool.clear ()   ## COMMENTED OUT 
         sys.stdout .flush ()
         sys.stderr .flush ()
         
