@@ -89,47 +89,63 @@ commonpath = os.path.commonpath
 # =============================================================================
 ## make directories recursively 
 make_dirs = os.makedirs
+import datetime
+import os
 
 # =============================================================================
 ## Get the modification time for the path (including subdirectories)
 #  @code
 #  path = ...
 #  mdate = mtime ( path ) ## check file/directory
-#  mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectories s
-#  @endcode
-#  @attention for <cpde>subdirs=True</code> it could be very slow!
+#  mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectories
+#  @code
+#  @attention for <code>subdirs=True</code> it could be slow on huge directories!
 def mtime ( path , subdirs = False ) :
     """ Get the last modification time for the path (including subdirectories)
+
     >>> path = ...
     >>> mdate = mtime ( path ) ## check file/directory
-    >>> mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectoreis
-    - attention: for `subdirs=True` it could be very slow! 
+    >>> mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectories
+    - attention: for `subdirs=True` it could be slow on huge directories!
     """
-    assert os.path.exists ( path ) , "mtime: the path `%s' does not exist!" % path
+    assert os.path.exists ( path ) , f"mtime: the path '{path}' does not exist!"
 
-    ## get the time of modification/creation 
-    _mtime_ = lambda p : max ( os.path.getmtime ( p ) , os.path.getctime ( p ) ) 
+    # =======================================================================
+    # Helper function to safely get mtime/ctime from stat result or path
+    def _safe_mtime(entry_or_path):
+        """ Helper function to safely get mtime/ctime from stat result or path"""
+        # ==================================================================
+        try: # =============================================================
+            # ==============================================================
+            if isinstance ( entry_or_path ,  os.DirEntry ) :
+                st = entry_or_path.stat(follow_symlinks=False)
+            else:
+                st = os.stat(entry_or_path, follow_symlinks=False)
+            return max(st.st_mtime, st.st_ctime)
+            # =============================================================
+        except ( OSError , PermissionError ) : # ==========================
+            # =============================================================
+            return 0.0
 
-    ## own/root  
-    tt = _mtime_ ( path ) 
-    
-    if subdirs and os.path.isdir ( path ) :
-        
-        for root, dirs, files in os.walk ( path , topdown = False ) :
-            
-            if os.path.exists ( root ) : tt  = max ( tt , _mtime_ ( root ) ) 
+    # Own/root timestamp
+    tt = _safe_mtime ( path )
 
-            for d in dirs  :
-                entry = os.path.join ( root , d )
-                if os.path.exists ( entry ) : tt = max ( tt , _mtime_ ( entry ) )
-                
-            for f in files :
-                entry = os.path.join ( root , f )
-                if os.path.exists ( entry ) : tt = max ( tt , _mtime_ ( entry ) ) 
+    if subdirs and os.path.isdir ( path ):
+        # Fast filesystem traversal via os.walk
+        for root, dirs, files in os.walk(path, topdown=False):
+            # 1. Process files
+            for f in files:
+                f_path = os.path.join(root, f)
+                tt = max(tt, _safe_mtime(f_path))
 
-    return datetime.datetime.fromtimestamp ( tt )
+            # 2. Process subdirectories
+            for d in dirs:
+                d_path = os.path.join(root, d)
+                tt = max(tt, _safe_mtime(d_path))
 
-# =========================================================================
+    return datetime.datetime.fromtimestamp(tt)
+
+# =============================================================================
 ## copy source file into destination, creating intermediate directories
 #  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
 def copy_file ( source           ,

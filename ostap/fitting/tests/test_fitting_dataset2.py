@@ -128,11 +128,8 @@ title = "Memory usage"
 table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' )
 logger.info ( '%s:\n%s' % ( title , table ) )
 
-## if True :
-##    raise TypeError ( " MEMORY: %+.3f %+.3f %+.3f %+.3f " % ( dm0.delta , dm1.delta , dm2.delta , dm3.delta ) )
-                 
-assert dm1.delta < max ( 2 , 2.0 * dm0.delta ) , "There is some memory leak in Bootstrap: %+.2f vs %+.2f [MB]" % ( dm1.delta , dm0.delta )
-assert dm2.delta < max ( 2 , 2.0 * dm0.delta ) , "There is some memory leak in Jackknife: %+.2f vs %+.2f [MB]" % ( dm1.delta , dm0.delta )
+assert dm1.delta < max ( 2 , 2 * dm0.delta ) , "There is some memory leak in Bootstrap: %+.2f vs %+.2f [MB]" % ( dm1.delta , dm0.delta )
+assert dm2.delta < max ( 2 , 2 * dm0.delta ) , "There is some memory leak in Jackknife: %+.2f vs %+.2f [MB]" % ( dm2.delta , dm0.delta )
 
 # =============================================================================
 ##                                                                      The END 

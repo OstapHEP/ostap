@@ -62,8 +62,6 @@ __all__     = (
     'CallThem'           , ## convert sequence of callables into single callable
     'AttrGetter'         , ## helper class to have pickeable `operator.attrgetter`
     ##
-    'Singleton'          , ## Metaclass for the singleton 
-    ##
     )
 # =============================================================================
 from   itertools              import repeat, chain, islice
@@ -977,38 +975,6 @@ class NumCalls (object):
 #  Count a number of  times a callable object is invoked
 numcalls = NumCalls
 
-# ==============================================================================
-## @class Singleton
-#  Simple metaclass for the singleton
-#  @code
-#  class MyClass(metaclass = Singleton ) :
-#      ....
-#  a = MyClass()
-#  b = MyClass()
-#  print ( a is b ) 
-#  endcode 
-class Singleton(type) :
-    """ Simple metaclass for the singleton:
-    >>> class MyClass(metaclass = Singleton ) :
-        ...
-    >>> a = MyClass()
-    >>> b = MyClass()
-    >>> print ( a is b ) 
-    """
-    _INSTANCES = {}
-    _LOCK      = threading.Lock()
-    # ==========================================================================
-    def __call__ ( klass , *args , **kwargs ) :
-        """ Singleton """
-        ## already created ? 
-        if klass not in klass._INSTANCES:
-            with klass._LOCK :
-                if klass not in klass._INSTANCES:
-                    instance = super().__call__ ( *args , **kwargs )
-                    klass._INSTANCES [ klass ] = instance
-                    return instance
-                
-        return klass._INSTANCES [ klass ]
 
 # ==============================================================================
 ## Copy file with the progress

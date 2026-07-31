@@ -104,9 +104,13 @@ def prepare_data ( nfiles = 50 ,  nentries = 500  ) :
 
 ## top-level function 
 def fun_ftwo  ( x  ) : return 2 * x
-def gauss_top ( *_ ) : return random.gauss(0,1)    
+def gauss_top ( *_ ) :
+    import random
+    return random.gauss(0,1)    
 class Gauss(object) :
-    def __call__ ( *_ ) : return random.gauss(0,1)
+    def __call__ ( *_ ) :
+        import random 
+        return random.gauss(0,1)
 gauss_lam = lambda *x : random.gauss(0,1)
 
 pt_lam              = lambda tree : tree.pt**2 + tree.mass**2        
@@ -127,7 +131,7 @@ def test_addbranch() :
     """
     
     ## files = prepare_data ( 100 , 1000 )
-    files = prepare_data ( 1  , 1000 )
+    files = prepare_data ( 4  , 1000 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( files , 'S'  )
@@ -144,7 +148,7 @@ def test_addbranch() :
     rows.append ( ( timer.name , '%.3f' % timer.delta ) ) 
     ## reload the chain and check: 
     assert 'et1' in chain , "Branch `et1' is  not here!"
-    
+
     # =========================================================================
     ## (2) add new branch as TTree-formula:
     # =========================================================================
@@ -419,7 +423,7 @@ def test_addbranch() :
     assert 'gauss_lambda4' in chain , "Branch `gauss_lambda4' is  not here!"
     
     # =========================================================================
-    ## (14) python function again 
+    ## (18) python function again 
     # =========================================================================
     with timing ('gauss-top1' , logger = logger ) as timer :          
         chain = data.chain 
@@ -429,7 +433,7 @@ def test_addbranch() :
     assert 'gauss_top1' in chain , "Branch `gauss_top1' is  not here!"
 
     # =========================================================================
-    ## (15) python function again 
+    ## (19) python function again 
     # =========================================================================
     with timing ('gauss-top2' , logger = logger ) as timer :          
         chain = data.chain 
@@ -439,7 +443,7 @@ def test_addbranch() :
     assert 'gauss_top2' in chain , "Branch `gauss_top2' is  not here!"
 
     # =========================================================================
-    ## (16) python function again 
+    ## (20) python function again 
     # =========================================================================
     with timing ('gauss-obj1' , logger = logger ) as timer :          
         chain = data.chain 
@@ -449,7 +453,7 @@ def test_addbranch() :
     assert 'gauss_obj1' in chain , "Branch `gauss_obj1' is  not here!"
 
     # =========================================================================
-    ## (17) python function again 
+    ## (21) python function again 
     # =========================================================================
     with timing ('gauss-obj2' , logger = logger ) as timer :          
         chain = data.chain 
@@ -459,7 +463,7 @@ def test_addbranch() :
     assert 'gauss_obj2' in chain , "Branch `gauss_obj2' is  not here!"
         
     # =========================================================================
-    ## (17) generic fucction with 1 argument 
+    ## (22) generic fucction with 1 argument 
     # =========================================================================
     with timing ('generic-1D-py-1' , logger = logger ) as timer :          
         def fun1  ( x ) : return x  
@@ -470,7 +474,7 @@ def test_addbranch() :
     assert 'gf1py_1' in chain , "Branch `gf1py_1' is  not here!"
 
     # =========================================================================
-    ## (18) generic function with 1 argument 
+    ## (23) generic function with 1 argument 
     # =========================================================================
     with timing ('generic-1D-py-2' , logger = logger ) as timer :          
         def fun1  ( x ) : return x 
@@ -481,7 +485,7 @@ def test_addbranch() :
     assert 'gf1py_2' in chain , "Branch `gf1py_2' is  not here!"
 
     # =========================================================================
-    ## (19) generic function with 1 argument 
+    ## (24) generic function with 1 argument 
     # =========================================================================
     with timing ('generic-1D-cxx-1' , logger = logger ) as timer :          
         ## fun1  = ROOT.MyTest.cpp_fun1 
@@ -493,7 +497,7 @@ def test_addbranch() :
     assert 'gf1cxx_1' in chain , "Branch `gf1cxx_1' is  not here!"
 
     # =========================================================================
-    ## (20) generic function with 1 argument 
+    ## (25) generic function with 1 argument 
     # =========================================================================
     with timing ('generic-1D-cxx-2' , logger = logger ) as timer :          
         fun1  = ROOT.MyTest.cpp_fun1 
@@ -504,7 +508,7 @@ def test_addbranch() :
     assert 'gf1cxx_2' in chain , "Branch `gf1cxx_2' is  not here!"
 
     # =========================================================================
-    ## (21) generic function with 2 arguments 
+    ## (26) generic function with 2 arguments 
     # =========================================================================
     with timing ('generic-2D-py-1' , logger = logger ) as timer :          
         def fun2  ( x , y ) : return x + y  
@@ -515,7 +519,7 @@ def test_addbranch() :
     assert 'gf2py_1' in chain , "Branch `gf2py_1' is  not here!"
 
     # =========================================================================
-    ## (22) generic function with 2 arguments 
+    ## (27) generic function with 2 arguments 
     # =========================================================================
     with timing ('generic-2D-py-2' , logger = logger ) as timer :          
         def fun2  ( x , y ) : return x + y 
@@ -526,7 +530,7 @@ def test_addbranch() :
     assert 'gf2py_2' in chain , "Branch `gf2py_2' is  not here!"
 
     # =========================================================================
-    ## (23) generic function with 2 arguments 
+    ## (28) generic function with 2 arguments 
     # =========================================================================
     with timing ('generic-2D-cxx-1' , logger = logger ) as timer :          
         fun2  = ROOT.MyTest.cpp_fun2 
@@ -537,7 +541,7 @@ def test_addbranch() :
     assert 'gf2cxx_1' in chain , "Branch `gf2cxx_1' is  not here!"
 
     # =========================================================================
-    ## (24) generic function with 2 arguments 
+    ## (29) generic function with 2 arguments 
     # =========================================================================
     with timing ('generic-2D-cxx-2' , logger = logger ) as timer :          
         fun2  = ROOT.MyTest.cpp_fun2 
@@ -548,7 +552,7 @@ def test_addbranch() :
     assert 'gf2cxx_2' in chain , "Branch `gf2cxx_2' is  not here!"
     
     # =========================================================================
-    ## (25) generic function with 3 arguments 
+    ## (30) generic function with 3 arguments 
     # =========================================================================
     with timing ('generic-3D-py-1' , logger = logger ) as timer :          
         def fun3  ( x , y , z ) : return x + y + z  
@@ -559,7 +563,7 @@ def test_addbranch() :
     assert 'gf3py_1' in chain , "Branch `gf3py_1' is  not here!"
 
     # =========================================================================
-    ## (26) generic function with 3 arguments 
+    ## (31) generic function with 3 arguments 
     # =========================================================================
     with timing ('generic-3D-py-2' , logger = logger ) as timer :          
         def fun3  ( x , y , z ) : return x + y + z 
@@ -570,7 +574,7 @@ def test_addbranch() :
     assert 'gf3py_2' in chain , "Branch `gf3py_2' is  not here!"
 
     # =========================================================================
-    ## (27) generic function with 3 arguments 
+    ## (32) generic function with 3 arguments 
     # =========================================================================
     with timing ('generic-3D-cxx-1' , logger = logger ) as timer :          
         fun3  = ROOT.MyTest.cpp_fun3 
@@ -581,7 +585,7 @@ def test_addbranch() :
     assert 'gf3cxx_1' in chain , "Branch `gf3cxx_!' is  not here!"
 
     # =========================================================================
-    ## (25) generic function with 3 arguments 
+    ## (33) generic function with 3 arguments 
     # =========================================================================
     with timing ('generic-3D-cxx-2' , logger = logger ) as timer :          
         fun3  = ROOT.MyTest.cpp_fun3 

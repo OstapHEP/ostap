@@ -47,8 +47,9 @@ __all__     = (
 # =============================================================================
 from   ostap.utils.basic      import numcpu 
 from   ostap.logger.colorized import attention
-import ostap.io.zipshelve     as     DBASE 
 from   itertools              import repeat , count
+from   ostap.utils.singleton  import Singleton
+import ostap.io.zipshelve     as     DBASE 
 import sys, os, operator, abc, signal   
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -69,10 +70,14 @@ def signal_sigint () :
 if ( 3, 10 ) <= sys.version_info : # ===========================================
     # ==========================================================================
     class TaskBase(abc.ABC) : pass # ===========================================
+    class ManagerBase(abc.ABC) : pass # ========================================
     # ==========================================================================    
 else : # =======================================================================
     # ==========================================================================
     class TaskBase(object)  : 
+        __metaclass__ = abc.ABCMeta
+        pass
+    class ManagerBase(object)  : 
         __metaclass__ = abc.ABCMeta
         pass    
 # ==============================================================================
@@ -119,11 +124,14 @@ class Task(TaskBase) :
         obj.__append_to   = {}
         obj.__dot_in_path = None
         ## 
-        obj.__batch       = None  
-        obj.__batch_set   = False
+        obj.__batch          = None  
+        obj.__batch_set      = False
         ## 
-        obj.__build       = None
-        obj.__build_set   = False
+        obj.__build          = None
+        obj.__build_set      = False
+        ##
+        obj.__implicitMT     = True
+        obj.__implicitMT_set = False 
         ## 
         obj.__cleanup     = True
         ## 
@@ -249,6 +257,22 @@ class Task(TaskBase) :
         self.__batch     = True if value else False
         self.__batch_set = True
 
+    # =========================================================================
+    @property
+    def implicitMT_set ( value ) :
+        """`implicitMT_set` : is `implicitMC` property activated?"""
+        return self.__implicitMT_set
+
+    # =========================================================================
+    @property
+    def implicitMT   ( self ) :
+        """`implicitMT` : activate `ROOT.ROOT.EnableImplicitMT (...)`"""
+        return self.__implicitMT
+    @implicitMT.setter 
+    def implicitMT   ( self , value  ) :
+        self.__implicitMT     = value
+        self.__implicitMT_set = True 
+            
     # =========================================================================
     ## use this as a build directory"""
     @property
@@ -877,10 +901,10 @@ def func_executor ( item ) :
 # ============================================================================
 ## @class TaskManager
 #   Abstract base class for the work manager for parallel data processing  
-class TaskManager(object) :
+class TaskManager(ManagerBase) :
     """ Abstract base class for the work manager for parallel data processing 
     """
-    __metaclass__ = abc.ABCMeta
+    ## __metaclass__ = abc.ABCMeta
     
     def __init__  ( self                ,
                     ncpus               , * , 
