@@ -152,9 +152,7 @@ from   ostap.fitting.fithelpers import ( Phases  , ZERO      ,
                                          Tail    , LeftTail  , RightTail ,
                                          SigmaLR , TwoSigmas )    
 from   ostap.fitting.variables  import var_tanh, SETVAR
-## 
-from   ostap.fitting.wide       import BreitWigner_pdf 
-## 
+from   ostap.fitting.wide       import *  
 import ostap.math.dalitz
 import ostap.math.models
 import ROOT, math
