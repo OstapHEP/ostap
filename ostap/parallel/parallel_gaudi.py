@@ -19,6 +19,7 @@ Two main class are defined: Task and WorkManager
 """
 # =============================================================================
 __all__ = (
+    'Task'        , ## base-class for task 
     'WorkManager' , ## Task-manager 
     'Checker'     , ## check of the object can be pickled/unpickled  
    )
@@ -26,7 +27,7 @@ __all__ = (
 from   collections.abc          import Sized
 from   itertools                import repeat , count
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.parallel.task      import TaskManager
+from   ostap.parallel.task      import Task, TaskManager
 from   ostap.io.checker         import PickleChecker as Checker
 from   ostap.core.ostap_types   import sized_types 
 import multiprocessing          as     MP
@@ -56,44 +57,34 @@ class WorkManager(TaskManager) :
         the workers. They can be local (using other cores) or remote
         using other nodes in the local cluster """
 
-    def __init__( self                     , 
-                  ncpus      = 'autodetect' ,
-                  ppservers  = None         ,
-                  pp         = False        ,
-                  silent     = False        ,
-                  progress   = True         ,
-                  chunk_size = -1           , 
-                  dump_dbase = None         ,
-                  dump_jobs  = 0            ,
-                  dump_freq  = 0            ,         
-                  **kwargs                  ) :
+    def __init__( self                            , 
+                  ncpus            = 'autodetect' , * , 
+                  ppservers        = None         ,
+                  pp               = False        ,
+                  silent           = False        ,
+                  progress         = True         ,
+                  block_size       = -1           , 
+                  hyper_block_size = -1           ,                   
+                  dump_dbase       = None         ,
+                  dump_jobs        = 0            ,
+                  dump_freq        = 0            ,         
+                  **kwargs                        ) :
         
-        if not ( isinstance ( ncpus , int ) and 1 <= ncpus ) :
-            from ostap.utils.basic import numcpu 
-            ncpus = numcpu () 
-            
-        if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
-            chunk_size  = 5 * ( ncpus + 1 )
-            
-        ## if pp        : logger.warning ( "WorkManager: option ``pp'' is ignored" )
-        ## if ppservers : logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
-        
-        if 'ppservers' in kwargs : kwarsg.pop ( 'ppservers' )
+
+        if pp        : logger.warning ( "WorkManager: option ``pp'' is ignored" )
+        if ppservers : logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
         
         ## initialize the base class 
         TaskManager.__init__  ( self ,
-                                ncpus      = ncpus      ,
-                                silent     = silent     ,
-                                progress   = progress   ,
-                                chunk_size = chunk_size , 
-                                dump_dbase = dump_dbase ,
-                                dump_jobs  = dump_jobs  ,
-                                dump_freq  = dump_freq  , **kwargs ) 
+                                ncpus            = ncpus            ,
+                                silent           = silent           ,
+                                progress         = progress         ,
+                                block_size       = block_size       ,
+                                hyper_block_size = hyper_block_size ,                                
+                                dump_dbase       = dump_dbase       ,
+                                dump_jobs        = dump_jobs        ,
+                                dump_freq        = dump_freq        , **kwargs ) 
         
-        ## self.pool   = MP.Pool ( self.ncpus )
-        
-        if kwargs : self.extra_arguments ( **kwargs )
-
     # =========================================================================
     ## process the bare <code>executor</code> function
     #  @param job   function to be executed
@@ -111,7 +102,9 @@ class WorkManager(TaskManager) :
     #  - no statistics
     #  - no summary printout 
     #  - no merging of results  
-    def iexecute ( self , job , jobs_args , progress = False , **kwargs ) :
+    def iexecute ( self , job , jobs_args , * ,
+                   ordered  = False ,
+                   progress = False , **kwargs ) :
         """ Process the bare `executor` function
         >>> mgr  = WorkManager  ( .... )
         >>> job  = ...
@@ -124,32 +117,51 @@ class WorkManager(TaskManager) :
         - no summary prin
         - no merging of results  
         """
+        from ostap.utils.cidict import cidict, cidict_fun 
+        myargs = cidict ( self.params , transform = cidict_fun )
+        myargs.update   ( kwargs      )
+        ##
+        chunk_size = myargs.pop ( 'chunk_size' , None ) or myargs.pop ( 'batch_size' , None )
+        if   ordered and chunk_size is None : pass
+        elif not isinstance ( chunk_size , int ) or chunk_size < 1 :
+            chunk_size = self.chunksize_guess ( jobs_args ) 
+            logger.info ( "`chunksize' is chosen to be %s'" % chunk_size )
+            
+        ## block-size is embedded deep into multiprocessing 
+        myargs.pop ( 'block_size' , self.block_size )
+
+        ## progress-bar description
+        description = myargs.pop ( 'description' , "Jobs:" )
         
-        njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) ) 
+        ## number of jobs 
+        njobs = ( myargs.pop ( 'njobs'     , None ) or 
+                  myargs.pop ( 'max_value' , None ) or
+                  ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+        
+        if myargs : self.extra_arguments ( **myargs ) 
+
         with MP.Pool ( self.ncpus ) as pool : ##  pool_context ( self.pool ) as pool :
 
-            ## create and submit jobs 
-            jobs = pool.imap_unordered ( job , jobs_args )
+            ## create and submit jobs
+            if ordered : jobs = pool.imap           ( job , jobs_args , chunksize = chunk_size )
+            else       : jobs = pool.imap_unordered ( job , jobs_args , chunksize = chunk_size )
             
             progress = progress    or self.progress        
             silent   = self.silent or not progress
                    
             ## retrive (asynchronous) results from the jobs
-            for result in progress_bar ( jobs                               ,
-                                         max_value   = njobs                ,
-                                         description = kwargs.pop ( 'description' , "Jobs:" ) , 
-                                         silent      = silent               ) :
+            for result in progress_bar ( jobs                      ,
+                                         max_value   = njobs       ,
+                                         description = description , 
+                                         silent      = silent      ) :
                 yield result                
                 
-        if kwargs : self.extra_arguments ( **kwargs ) 
-            
     # ========================================================================
     ## get PP-statistics if/when possible 
     def get_pp_stat ( self ) : 
         """ Get PP-statistics if/when possible 
         """
         return None
-
 
     # =========================================================================
     ## context protocol: ENTER 

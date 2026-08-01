@@ -602,8 +602,8 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
 
     with bar :
         bar.show () 
-        for i in iterable :
-            yield i
+        for item in iterable :
+            yield item
             bar += 1
                         
 # =============================================================================

@@ -9,11 +9,20 @@
    1. add `__get_raw_bytes__` method for `ostap.io.compressed_shelve.CompressShelf` base class
    1. move some functions from `ostap.utils.basic` to new module `sstap.utils.core`
    1. fix uncompression of `Ostap.BLOB` for python<3.12 
-   1. remove `loop_items`
+   1. larger unification of parallel managers
+   1. add uniform treatment of `chunksize` & `block_size` for parallel managers
+   1. add `hyper_block_size` for the parallel managers
+   1. add `ordered=False` argument to `iexecute` method for all parallel managers 
+   1. add unordering processing for the parallel manager based on `concurent.future`
+   1. add parallel manager based in `concurrent.futures.InterpreterPoolExecutor` (for 3.14<=python)
+   1. add `implicitMT` property for tasks, allowing enable or disable ImpliciMT treatment ROOT   
+   1. tweaks for `ostap.utils.utils.ImplicitMT`
    
 ## Bug fixes 
 
 ## Backward incompatible
+
+   1. remove `loop_items` and `items_loop`
 
 # v3.7.5.0
 

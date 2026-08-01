@@ -46,6 +46,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.ostap_types import sized_types
+from   ostap.utils.core       import typename 
 from   ostap.utils.basic      import numcpu 
 from   ostap.logger.colorized import attention
 from   itertools              import repeat , count
@@ -259,10 +260,9 @@ class Task(TaskBase) :
 
     # =========================================================================
     @property
-    def implicitMT_set ( value ) :
+    def implicitMT_set ( self ) :
         """`implicitMT_set` : is `implicitMC` property activated?"""
         return self.__implicitMT_set
-
     # =========================================================================
     @property
     def implicitMT   ( self ) :
@@ -271,7 +271,7 @@ class Task(TaskBase) :
     @implicitMT.setter 
     def implicitMT   ( self , value  ) :
         self.__implicitMT     = value
-        self.__implicitMT_set = True 
+        self.__implicitMT_set = True
             
     # =========================================================================
     ## use this as a build directory"""
@@ -828,25 +828,20 @@ def task_executor ( item ) :
     if task.dot_in_path and not '.' in sys.path :
         sys.path  = ['.'] + sys.path
         logger.debug ( "Task %s: '.' is added to sys.path" % jobid )
-        
-    if task.batch_set :
-        from ostap.utils.root_utils import Batch       as batch_context 
-    else :
-        from ostap.utils.basic      import NoContext   as batch_context 
 
-    if task.build_set :
-        from ostap.core.build_dir import UseBuildDir as build_context
-    else :
-        from ostap.utils.basic    import NoContext   as build_context 
 
-    ##
-    if task.cleanup : 
-        from ostap.utils.cleanup  import CleanUpPID  as clean_context
-    else : 
-        from ostap.utils.basic    import NoContext   as clean_context 
-        
+    from ostap.utils.basic      import NoContext
+    from ostap.utils.root_utils import Batch, ImplicitMT       
+    from ostap.core.build_dir   import UseBuildDir
+    from ostap.utils.cleanup    import CleanUpPID 
+
+    batch_context      =      Batch  ( task.batch      ) if task.batch_set      else NoContext() 
+    build_context      = UseBuildDir ( task.build      ) if task.build_set      else NoContext()
+    implicitMT_context = ImplicitMT  ( task.implicitMT ) if task.implicitMT_set else NoContext()
+    cleanup_context    = CleanUpPID () 
+    
     ## use clean, build & batch context 
-    with clean_context () , build_context ( task.build ) , batch_context ( task.batch ) :         
+    with cleanup_context , implicitMT_context , build_context , batch_context :         
         ## perform remote  initialization (if needed) 
         task.initialize_remote ( jobid )         
         with Statistics ()  as stat :
@@ -866,11 +861,11 @@ def task_executor ( item ) :
             return jobid , result , stat
         
 # =============================================================================
-## helper function to execute the function and collect statisticc
+## helper function to execute the function and collect statistics
 #  (unfornately due to limitation of <code>parallel python</code> one cannot
 #  use decorators here :-(
 def func_executor ( item ) :
-    """ Helper function to execute the task and collect job execution statistic
+    """ Helper function to execute the fnuction and collect job execution statistic
     - unfornately due to limitation of `parallel python' one cannot
     use python decorators here :-(
     """
@@ -879,9 +874,9 @@ def func_executor ( item ) :
     jobid = item [ 1  ] 
     args  = item [ 2: ]    
     ##
-    from ostap.utils.cleanup    import CleanUpPID as clean_context
+    from ostap.utils.cleanup    import CleanUpPID as cleanup_context
     from ostap.utils.root_utils import batch 
-    with clean_context () , batch ( True ) :        
+    with cleanup_context () , batch ( True ) :        
         with Statistics ()  as stat :
             # ================================================================
             signal_sigint () 
@@ -904,19 +899,23 @@ def func_executor ( item ) :
 class TaskManager(ManagerBase) :
     """ Abstract base class for the work manager for parallel data processing 
     """
-    def __init__  ( self                ,
-                    ncpus               , * , 
-                    silent      = False ,
-                    progress    = True  ,
-                    block_size  = -1    , 
-                    dump_dbase  = None  ,
-                    dump_jobs   = 0     ,
-                    dump_freq   = 0     , **kwargs ) :
+    def __init__  ( self             ,
+                    ncpus            , * , 
+                    silent           = False ,
+                    progress         = True  ,
+                    block_size       = -1    , 
+                    hyper_block_size = -1    , 
+                    dump_dbase       = None  ,
+                    dump_jobs        = 0     ,
+                    dump_freq        = 0     , **kwargs ) :
 
         self.__ncpus      = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else max ( 1 , numcpu() - 1 ) 
 
-        ## block size 
-        self.__block_size = block_size if isinstance ( block_size , int ) and 1 < block_size else -1
+        ## block& hyperblock sizes  
+        self.__block_size       =       block_size if isinstance (       block_size , int ) \
+            and                   1 <       block_size else   2 * ( self.ncpus + 1 )
+        self.__hyper_block_size = byper_block_size if isinstance ( hyper_block_size , int ) \
+            and self.block_size * 4 < hyper_block_size else 200 * ( self.ncpus + 1 )
         
         self.__silent     = True if silent else False  
         self.__progress   = True if ( progress or not silent ) else False
@@ -947,7 +946,14 @@ class TaskManager(ManagerBase) :
                 self.__dump_dbase = None
 
         ## additional parameters 
-        self.__params = kwargs 
+        self.__params = kwargs
+        
+        if not self.silent :
+            title = 'TaskManager is %s from %s' %  ( typename ( self ) , type ( self ) .__module__ ) 
+            if not self.params : logger.info ( title ) 
+            else :
+                table = self.table ( title = title , prefix = '# ' )
+                logger.info ( '%s\n%s' % ( title , table ) )
         
     # =========================================================================
     ## process Task or callable object :
@@ -989,10 +995,6 @@ class TaskManager(ManagerBase) :
         
         """
         
-        job_block = kwargs.pop ( 'block_size', self.block_size  )
-        if job_block <= 1 : job_block = 100 * ( numcpu() + 1 ) 
-        
-       
         
         # ===============================================================================
         if isinstance ( task , Task ) : result = self.__process_task ( task , args , **kwargs )
@@ -1013,19 +1015,18 @@ class TaskManager(ManagerBase) :
         start = _timer()
         
         from ostap.utils.cidict import cidict
-        my_args = cidict( kwargs )
+        myargs = cidict ( self.params )
+        myargs.update ( kwargs )
         
-        init       = my_args.pop ( 'init'       , None )
-        merger     = my_args.pop ( 'merger'     , None )
-        collector  = my_args.pop ( 'collector'  , None )
         
-        silent     = my_args.pop ( 'silent'     , self.silent   )
-        progress   = my_args.pop ( 'progress'   , self.progress )    
+        init       = myargs.pop ( 'init'       , None )
+        merger     = myargs.pop ( 'merger'     , None )
+        collector  = myargs.pop ( 'collector'  , None )
+        
+        silent     = myargs.pop ( 'silent'     , self.silent   )
+        progress   = myargs.pop ( 'progress'   , self.progress )    
         progress   = progress or not silent 
-                
-        block_size = my_args.pop ( 'block_size' , self.block_size  )
-        if block_size < 1 : block_size = 100 * ( numcpu() + 1 ) 
-                
+                                
         ## mergers for statistics & results
         if   not merger and not collector : logger.warning ( "Neither `merger' nor `collector' are specified for merging!")
         elif     merger and     collector : logger.warning ( "Both    `merger' and `collector' are specified for merging!")
@@ -1040,23 +1041,27 @@ class TaskManager(ManagerBase) :
         ## initialize the results 
         results = init
         
-        my_args ['progress'] = False 
+        myargs ['progress'] = False 
         barconf = dict ( description = 'Jobs:' , silent = not progress )
         if progress : 
             if not isinstance ( args , sized_types ) : args = list ( args )
             barconf ['max_value' ] = len ( args )   
-        
+
+        ## HYPER-BLOCKS?
+        hyper_block_size = myargs.pop ( 'hyper_block_size' , self.hyper_block_size  )
+        if not isinstance ( hyper_block_size , int ) or hyper_block_size <= 1 : hyper_block_size = self.hyper_block_size
+
         from ostap.utils.utils        import batched    
         from ostap.utils.progress_bar import ProgressBar
         
         with ProgressBar ( **barconf ) as bar :
             
-            for batch in batched ( args , block_size ) :
+            for hyper_block  in batched ( args , hyper_block_size ) :
 
-                jobs_args = zip ( repeat ( task ) , count ( index ) , batch )
+                jobs_args = zip ( repeat ( task ) , count ( index ) , hyper_block )
 
                 ## call for the actual jobs handling method 
-                for jobid , result , stat in self.iexecute ( func_executor ,  jobs_args , **my_args ) :
+                for jobid , result , stat in self.iexecute ( func_executor ,  jobs_args , **myargs ) :
                     
                     merged_stat += stat
                                         
@@ -1113,16 +1118,16 @@ class TaskManager(ManagerBase) :
         merged_stat_pp = StatMerger ()
         
         from ostap.utils.cidict import cidict
-        my_args = cidict( kwargs )
+        myargs = cidict( kwargs )
        
-        silent     = my_args.pop ( 'silent'     , self.silent   )
-        progress   = my_args.pop ( 'progress'   , self.progress )    
+        silent     = myargs.pop ( 'silent'     , self.silent   )
+        progress   = myargs.pop ( 'progress'   , self.progress )    
         progress   = progress or not silent 
                 
-        block_size = my_args.pop ( 'block_size' , self.block_size  )
+        block_size = myargs.pop ( 'block_size' , self.block_size  )
         if block_size < 1 : block_size = 100 * ( numcpu() + 1 ) 
                 
-        my_args [ 'progress'] = False 
+        myargs [ 'progress'] = False 
         barconf = dict ( description = 'Jobs:' , silent = not progress )
         if progress : 
             if not isinstance ( args , sized_types ) : args = list ( args )
@@ -1139,7 +1144,7 @@ class TaskManager(ManagerBase) :
                 
                 jobs_args = zip ( repeat ( task ) , count ( index ) , batch )
                 
-                for jobid , result , stat in self.iexecute ( task_executor , jobs_args , **my_args ) : 
+                for jobid , result , stat in self.iexecute ( task_executor , jobs_args , **myargs ) : 
 
                     ## merge statistics 
                     merged_stat += stat
@@ -1180,6 +1185,37 @@ class TaskManager(ManagerBase) :
         self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
         ## 
         return task.results ()
+
+    @property
+    def config ( self ) :
+        """`config`: full configuration """
+        conf = {}
+        conf.update ( self.params ) 
+        conf [ 'silent'           ] = self.silent
+        conf [ 'progress'         ] = self.progress
+        conf [ 'ncpus'            ] = self.ncpus
+        conf [ 'hyper_block_size' ] = self.hyper_block_size
+        conf [ 'block_size'       ] = self.block_size
+        #
+        conf [ 'dump_dbase'       ] = self.dump_dbase 
+        conf [ 'dump_jobs'        ] = self.dump_jobs
+        conf [ 'dump_freq'        ] = self.dump_freq
+        return conf
+    
+    # =========================================================================
+    ## self-print get the configuration 
+    def table (  self , title = '' , prefix = '# ' ) : 
+        """ print configuration """
+        from ostap.logger.utils import map2table_ex
+        title = title if title else "%s from %s" %  ( typename ( self ) , type ( self ).__module__ )
+        return map2table_ex ( self.config , 
+                              header      = ( 'Parameter' , 'type' , 'value' ) ,
+                              alignment   = 'rcw'  , 
+                              prefix      = prefix ,
+                              title       = title  )
+    
+    def __str__  ( self ) : return self.table ( prefix = '' ) 
+    def __repr__ ( self ) : return self.__str__ ()
     
     @property
     def silent ( self ) :
@@ -1197,15 +1233,19 @@ class TaskManager(ManagerBase) :
         return self.__ncpus
 
     @property
+    def hyper_block_size ( self ) :
+        """`hyper_block_size`: (Memory Outer Boundary): Loads large slices of the iterable
+        into RAM at once. Guarantees garbage collection and checkpointing between
+        hyper-blocks. split a huge sequence of jobs into very large blocks, processed sequntially
+        """
+        return self.__hyper_block_size
+
+    @property
     def block_size ( self ) :
-        """`block_size`: split a huge sequence of jobs into large blocks, processed sequntially"""
+        """`block_size`: (Backpressure Control): Limits the maximum number of active
+        task chunks submitted to the executor queue concurrently
+        """
         return self.__block_size
-    @block_size.setter
-    def block_size ( self , value ) :
-        if isinstance ( value , int ) and 1 < value : self.__block_size = value 
-        else                                        :
-            self.__block_size = -1 
-            logger.warning ( "Specified `chunk_size` of %s is ignored, block-split is disabled" % ( value , self.block_size ) ) 
     
     @property
     def dump_dbase  ( self ) :
@@ -1290,9 +1330,20 @@ class TaskManager(ManagerBase) :
         """
         if args or kwargs :
             from ostap.logger.utils import print_args
-            title = 'Unused/extra arguments'
+            title = '%s Unused/extra arguments' % typename ( self ) 
             logger.warning  ( '%s:\n%s' % ( title , print_args ( *args , prefix = '#' , **kwargs ) ) )
 
+    # =========================================================================
+    ## Guess for `chunksize` argument
+    def chunksize_guess ( self , jobs ) :
+        """ Guess for `chunksize` argument
+        """
+        if   isinstance ( jobs , int ) and 0 <= jobs : njobs = jobs
+        elif isinstance ( jobs , sized_types )       : njobs = len ( jobs )
+        else : return 1
+        ## 
+        return max ( 1 , njobs // ( 4 * ( self.ncpus + 1 ) ) )
+    
     # ========================================================================
     ## context protocol: ENTER
     @abc.abstractmethod 

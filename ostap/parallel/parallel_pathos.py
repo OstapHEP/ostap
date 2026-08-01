@@ -34,6 +34,7 @@ __version__ = '$Revision$'
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
+    'Task'        , ## base-class for task 
     'WorkManager' , ## task manager
     'Checker'     , ## check of the object can be pickled/unpickled  
 )
@@ -92,32 +93,30 @@ class WorkManager (TaskManager) :
     >>> wm3 = WorkManager ( ncpus = 0 , ppservers = ... ) ## use only remote servers
     """
     def __init__( self                      ,
-                  ncpus      = 'autodetect' ,
-                  ppservers  = ()           ,
-                  silent     = False        ,
-                  progress   = True         ,
-                  chunk_size = -1           , 
-                  dump_dbase = None         ,
-                  dump_jobs  = 0            ,
-                  dump_freq  = 0            ,         
-                  **kwargs                  ) :
-
-        if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
-            from ostap.utils.basic import numcpu 
-            ncpus = numcpu() 
-            
+                  ncpus            = 'autodetect' , * , 
+                  ppservers        = ()           ,
+                  silent           = False        ,
+                  progress         = True         ,
+                  block_size       = -1           , 
+                  hyper_block_size = -1           ,                                     
+                  dump_dbase       = None         ,
+                  dump_jobs        = 0            ,
+                  dump_freq        = 0            ,         
+                  **kwargs                        ) :
+        
         ## initialize the base class 
         TaskManager.__init__ ( self,
-                               ncpus      = ncpus      ,
-                               silent     = silent     , 
-                               progress   = progress   ,
-                               chunk_size = chunk_size , 
-                               dump_dbase = dump_dbase ,
-                               dump_jobs  = dump_jobs  ,
-                               dump_freq  = dump_freq  ) 
+                               ncpus            = ncpus      ,
+                               silent           = silent     , 
+                               progress         = progress   ,
+                               block_size       = block_size       ,
+                               hyper_block_size = hyper_block_size ,                                
+                               dump_dbase       = dump_dbase ,
+                               dump_jobs        = dump_jobs  ,
+                               dump_freq        = dump_freq  ) 
                                                               
         from ostap.utils.cidict import cidict
-        kwa = cidict ( **kwargs ) 
+        kwa = cidict ( kwargs ) 
 
         self.__ppservers = ()
         self.__locals    = ()
@@ -219,13 +218,6 @@ class WorkManager (TaskManager) :
             from pathos.pools import ProcessPool 
             self.__pool      = ProcessPool ( self.ncpus )
                 
-        ## adjust chunk size 
-        if isinstance ( chunk_size , int ) and 1 < chunk_size :
-            self.chunk_size = chunk_size
-        else :
-            ## assume that the remote machines are `similar' to the local one ..
-            self.chunk_size = 5 * ( self.ncpus + 1 ) * ( len ( self.ppservers ) + 1 ) 
-            
         ##
         ps = '%s' % self.pool
         ps = ps.replace( '<pool ' , '' ).replace  ('>','').replace ('servers','remotes')
@@ -294,7 +286,9 @@ class WorkManager (TaskManager) :
     #  - no statistics
     #  - no summary printout 
     #  - no merging of results  
-    def iexecute ( self , job , jobs_args , progress = False , **kwargs ) :
+    def iexecute ( self      , job , jobs_args , * ,
+                   ordered   = False ,
+                   progress  = False , **kwargs ) :
         """ Process the bare `executor` function
         >>> mgr  = WorkManager  ( .... )
         >>> job  = ...
@@ -302,32 +296,55 @@ class WorkManager (TaskManager) :
         >>> for result in mgr.iexecute ( job , args ) :
         ...
         ...
-        It is a ``minimal'' interface
+        It is a  `minimal' interface
         - no statistics
         - no summary prin
         - no merging of results  
         """
         # =====================================================================
+        from ostap.utils.cidict import cidict, cidict_fun
+        myargs = cidict ( self.params , transform = cidict_fun )
+        myargs.update   ( kwargs      )
+
+        chunk_size = myargs.pop ( 'chunk_size' , None ) or myargs.pop ( 'batch_size' , None )
+        if   ordered and chunk_size is None : pass
+        elif not isinstance ( chunk_size , int ) or chunk_size < 1 :
+            chunk_size = self.chunksize_guess ( jobs_args ) 
+            logger.info ( "`chunksize' is chosen to be %s'" % chunk_size )
+        
+        ## block-size is embedded deep into multiprocessing 
+        myargs.pop ( 'block_size' , self.block_size )
+
+        ## progress-bar description        
+        description = myargs.pop ( 'description' , "Jobs:" )
+        
+        ## number of jobs 
+        njobs = ( myargs.pop ( 'njobs'     , None ) or 
+                  myargs.pop ( 'max_value' , None ) or
+                  ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+        
+        if myargs : self.extra_arguments ( **myargs ) 
+                   
         with pool_context ( self.pool ) as pool :
+                     
             # =================================================================
             done = 0            
             # =================================================================
             try : # ===========================================================
                 # =============================================================
                 
-                ## create and submit jobs 
-                jobs     = pool.uimap ( job , jobs_args )
-                
-                njobs    = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+                ## create and submit jobs
+                if ordered : jobs = pool. imap ( job , jobs_args , chunksize = chunk_size )
+                else       : jobs = pool.uimap ( job , jobs_args , chunksize = chunk_size )
                 
                 progress = progress    or self.progress 
                 silent   = self.silent or not progress
 
                 ## retrive (asynchronous) results from the jobs
                 for result in progress_bar ( jobs ,
-                                             max_value   = njobs                ,
-                                             description = kwargs.pop ( 'description' , "Jobs:" ) , 
-                                             silent      = silent               ) :
+                                             max_value   = njobs       ,
+                                             description = description , 
+                                             silent      = silent      ) :
                     ## generator! 
                     yield result
                     done += 1
@@ -356,8 +373,6 @@ class WorkManager (TaskManager) :
                     
                 raise 
                 
-        if kwargs : self.extra_arguments ( **kwargs ) 
-            
     # =========================================================================
     ## get the statistics from the parallel python
     def get_pp_stat ( self ) :
@@ -411,9 +426,9 @@ try : # =======================================================================
                                            command  = DILL_COMMAND ,
                                            fast     = fast         ) ;
         # =========================================================================
-        ## add new type into th elist of "known-types"
+        ## add new type into the list of "known-types"
         def add ( self , *ntypes ) :
-            """ Add new type into th elist of "known-types
+            """ Add new type into the list of "known-types
             """
             for ntype in ntypes :
                 if ntype in self : continue 

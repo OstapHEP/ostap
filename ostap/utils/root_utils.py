@@ -23,7 +23,6 @@ __all__     = (
     'batch_env'          , ## check&set the batch from environment 
     ##
     'implicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
-    ##
     'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT    
     ##
     'hadd'               , ## merge ROOT files using command `hadd`
@@ -168,40 +167,54 @@ class ImplicitMT(object) :
     """
     def __init__  ( self , enable = True ) :
 
-        if   isinstance ( enable , bool ) : 
-            self.__enable   = True if enable else False 
-            self.__nthreads = 0
+        if  enable in ( True , False ) : 
+            self.__enable   = enable
+            self.__nthreads = 0 
         elif isinstance ( enable , int  ) and 0 <= enable : 
             self.__enable   = True if enable else False 
             self.__nthreads = enable 
         else :
             raise  TypeError ( "ImplicitMT: invalid `enable' flag :%s/%s" % ( enable , typename ( enable ) ) )
 
+        ## get the current state
+        self.__state = ROOT.ROOT.IsImplicitMTEnabled () , ROOT.ROOT.GetThreadPoolSize ()
+
     @property
     def enable   ( self ) : return self.__enable
     @property
     def nthreads ( self ) : return self.__nthreads
     
+    # ======================================================================
     ## Context manager: ENTER 
     def __enter__ ( self ) :
-            
-        self.__initial = True if ROOT.ROOT. IsImplicitMTEnabled () else False 
+        """ Context manager: ENTER """
+
+        ## get the current state
+        self.__state = ROOT.ROOT.IsImplicitMTEnabled () , ROOT.ROOT.GetThreadPoolSize ()
+        enabled , n  = self.__state 
         
-        if   self.__initial  == self.enable : pass 
-        elif self.enable : ROOT.ROOT.EnableImplicitMT  ( self.__nthreads )
-        else             : ROOT.ROOT.DisableImplicitMT ()
+        if self.enable :
+            if enabled and n != self.nthreads : ROOT.ROOT.DisableImplicitMT ()
+            ROOT.ROOT. EnableImplicitMT ( self.nthreads )
+        else           : ROOT.ROOT.DisableImplicitMT ()
 
         return self
     
+    # ======================================================================
     ## Context manager: EXIT
     def __exit__ ( self , *_ ) :
+        """ Context manager: EXIT """
+        
+        enabled_prev , n_prev = self.__state         
 
-        _current = True if ROOT.ROOT.IsImplicitMTEnabled() else False 
-
-        if   _current == self.__initial : pass
-        elif _current                   : ROOT.ROOT.DisableImplicitMT ()
-        else                            : ROOT.ROOT.EnableImplicitMT  ()
+        if enabled_prev :
             
+            enabled , n  = ROOT.ROOT.IsImplicitMTEnabled () , ROOT.ROOT.GetThreadPoolSize ()    
+            if enabled and n != n_prev : ROOT.ROOT.DisableImplicitMT ()
+            ROOT.ROOT. EnableImplicitMT ( n_prev )
+            
+        else       : ROOT.ROOT.DisableImplicitMT ()
+        
 # =============================================================================
 ## Context manager to enable/disable implicit MT in ROOT 
 #  @see ROOT::EnableImplicitMT 
