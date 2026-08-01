@@ -1,6 +1,6 @@
 # @date   2010-04-30
 # =============================================================================
-""" Helper module to check "(unpickeability" for different objects 
+""" Helper module to check "unpickeability" for different objects 
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"

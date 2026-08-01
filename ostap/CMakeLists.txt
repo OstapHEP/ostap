@@ -174,6 +174,18 @@ if ( NOT ${PY_joblib_FOUND} )
   message ( "----> warning (optional)          joblib is NOT found!" ) 
 endif() 
 
+# =======================================================================================
+## cloudpickle : serializatin for joblib & ipyparallel 
+# =======================================================================================
+find_python_module ( cloudpickle          QUIET )
+if ( NOT ${PY_cloudpickle_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install cloudpickle ${PIP_ARGS})
+endif()
+find_python_module ( cloudpickle          QUIET )
+if ( NOT ${PY_cloudpickle_FOUND} )
+  message ( "----> warning (optional)          cloudpickle is NOT found!" ) 
+endif() 
+
 # ========================================================================================
 ## zstandard
 # ========================================================================================
@@ -470,6 +482,22 @@ if ( NOT ${PY_hep_ml_FOUND} )
   message ( "----> warning (optional)          hep_ml is NOT found!" ) 
 endif()
 
+# ========================================================================================
+## snakeviz
+# ========================================================================================
+## 
+find_python_module ( snakeviz QUIET )
+if ( NOT ${PY_snakeviz_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install snakeviz ${PIP_ARGS})
+endif()
+find_python_module ( snakeviz QUIET )
+if ( NOT ${PY_snakeviz_FOUND} )
+  message ( "----> warning                   snakeviz is NOT found!" ) 
+endif()
+
+
+
+
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
    message ( "----> Full pathos (pathos+dill+multiprocess+ppft) is found" )
 else()
@@ -535,6 +563,11 @@ endif()
 if ( ${PY_joblib_FOUND} )
   find_python_module_version ( joblib ) 
   message ( "----> joblib           version    : " ${PY_joblib_VERSION} " \t" ${PY_JOBLIB} )            
+endif() 
+##
+if ( ${PY_cloudpickle_FOUND} )
+  find_python_module_version ( cloudpickle ) 
+  message ( "----> cloudpickle      version    : " ${PY_cloudpickle_VERSION} " \t" ${PY_CLOUDPICKLE} )            
 endif() 
 ##
 if ( ${PY_zstandard_FOUND} )
@@ -659,6 +692,12 @@ if ( ${PY_hep_ml_FOUND} )
   find_python_module_version ( hep_ml ) 
   message ( "----> hep_ml           version    : " ${PY_hep_ml_VERSION} " \t" ${PY_HEP_ML} ) 
 endif()
+##
+if ( ${PY_snakeviz_FOUND} )
+  find_python_module_version ( snakeviz ) 
+  message ( "----> snakeviz         version    : " ${PY_snakeviz_VERSION} " \t" ${PY_SNAKEVIZ} ) 
+endif()
+#
 
 # =========================================================================================
 ## INSTALLATION

@@ -16,9 +16,8 @@ __all__ = (
 from   packaging.version            import Version 
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager, keyboard_interrupt 
-from   ostap.io.checker             import PickleChecker as Checker
 from   ostap.core.ostap_types       import sized_types 
-from   queue                        import Queue
+from   ostap.parallel.cloud_checker import CloudChecker as Checker 
 import sys
 # =============================================================================
 from   ostap.logger.logger          import getLogger

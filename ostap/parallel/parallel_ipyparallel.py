@@ -40,14 +40,10 @@ except ImportError : # ========================================================
     # =========================================================================
     dill = None
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    if dill : 
-        from ostap.parallel_pathos import DillChecker as Checker 
-    # =========================================================================
-except ImportError : # =======================================================
-    # =========================================================================
-    pass 
+if dill : 
+    from ostap.parallel.dill_checker import DillChecker as Checker 
+else : 
+    from ostap.parallel.cloud_checker import CloudChecker as Checker 
 # =============================================================================
 ## @class WorkManager
 #  Class to in charge of managing the tasks and distributing them to

@@ -39,14 +39,15 @@ __all__     = (
     'Checker'     , ## check of the object can be pickled/unpickled  
 )
 # =============================================================================
-from   ostap.parallel.task      import ( TaskManager        ,
-                                         Task               , TaskMerger    , 
-                                         Statistics         , StatMerger    ,
-                                         keyboard_interrupt )
-from   ostap.utils.progress_bar import progress_bar  
-from   ostap.core.ostap_types   import sized_types 
-from   ostap.parallel.utils     import get_local_port  , pool_context
-from   ostap.logger.mute        import mute_py as mute  
+from   ostap.parallel.task         import ( TaskManager        ,
+                                            Task               , TaskMerger    , 
+                                            Statistics         , StatMerger    ,
+                                            keyboard_interrupt )
+from   ostap.utils.progress_bar    import progress_bar  
+from   ostap.core.ostap_types      import sized_types 
+from   ostap.parallel.utils        import get_local_port  , pool_context
+from   ostap.logger.mute           import mute_py as mute  
+from   ostap.parallel.dill_checker import DillChecker as Checker
 import sys, os 
 # =============================================================================
 ## CORE pathos 
@@ -392,56 +393,6 @@ class WorkManager (TaskManager) :
                 s.time  = stat.time
                 smpp   += s
         return smpp
-
-# =============================================================================
-DILL_COMMAND = """import sys, dill
-with open('%s','rb') as f : dill.load ( f )"""
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import dill 
-    from ostap.io.checker import PickleChecker 
-    # =========================================================================
-    ## @class DillChecker
-    #  Check if the object can be properly pickled/unpickled
-    class DillChecker(PickleChecker) :
-        """ Check if the object can be properly pickled/unpickled
-        """
-        # =====================================================================
-        ## check if the object can be properly pickled/unpickled 
-        def pickles ( self , *objects ) :
-            """ Check of the object can be properly pickled/unpickled
-            """
-            return self._pickles ( *objects               ,
-                                   fun_dumps = dill.dumps ,
-                                   fun_loads = dill.loads ) 
-        # =====================================================================
-        ## Check pickling of an object across another (sub) process
-        def pickles_process ( self , *objects , fast = False  ) :
-            """ Check pickling of an object across another (sub)process
-            """
-            return self._pickles_process ( *objects                ,
-                                           fun_dump = dill.dump    ,
-                                           fun_load = dill.load    ,
-                                           command  = DILL_COMMAND ,
-                                           fast     = fast         ) ;
-        # =========================================================================
-        ## add new type into the list of "known-types"
-        def add ( self , *ntypes ) :
-            """ Add new type into the list of "known-types
-            """
-            for ntype in ntypes :
-                if ntype in self : continue 
-                self.EXTRA_TYPES.add ( ntype )
-
-    # =========================================================================
-    ## usefulname
-    Checker = DillChecker 
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    from ostap.io.checker import PickleChecker as Checker 
-    # =========================================================================
 
 # =============================================================================
 if '__main__' == __name__ :
