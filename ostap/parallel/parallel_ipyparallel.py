@@ -15,6 +15,7 @@ __all__ = (
 # =============================================================================
 import sys, os, time
 from   itertools                    import repeat , count
+from   packaging.version            import Version
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager, keyboard_interrupt 
 from   ostap.io.checker             import PickleChecker as Checker
@@ -71,6 +72,9 @@ class WorkManager(TaskManager) :
                   dump_freq        = 0            , **kwargs ) :
 
         
+        assert ipyparallel and Version ( ipyparallel.__version__ ) >= Version ( "8.0.0" ) , \
+                "ipyparallel is not available or too old, please install ipyparallel>=8.0.0"
+            
         import logging 
         config = { 'engine_timeout' : 120   ,
                    'quiet'          : True  , 

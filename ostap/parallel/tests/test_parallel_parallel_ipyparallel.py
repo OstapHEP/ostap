@@ -6,35 +6,25 @@
 """ Oversimplified script for parallel execution using ipyparallel
 """
 # ============================================================================
-from   itertools                import count 
-from   ostap.parallel.task      import Task, GenericTask
-from   ostap.parallel.utils     import pool_context 
-from   ostap.utils.progress_bar import progress_bar 
-from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.root_utils   import batch_env 
+from   itertools                           import count 
+from   packaging.version                   import Version
+from   ostap.parallel.task                 import Task, GenericTask
+from   ostap.plotting.canvas               import use_canvas
+from   ostap.utils.root_utils              import batch_env 
+from   ostap.utils.basic                   import numcpu
+from   ostap.parallel.parallel_ipyparallel import WorkManager
 import ostap.histos.histos
-import ROOT, random, time, sys 
+import ROOT, random, sys, ipyparallel
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_parallel_parallel_ipyparallel' )
-else : 
-    logger = getLogger ( __name__ )
+if '__main__' == __name__  : logger = getLogger ( 'test_parallel_parallel_ipyparallel' )
+else                       : logger = getLogger ( __name__ )
 # =============================================================================
 batch_env ( logger ) 
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    from ostap.parallel.parallel_ipyparallel import WorkManager
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    logger.error ("Cannot import WorkManager from parallel_ipyparallel")
-    WorkManager = None 
-# =============================================================================
-
+ipp_version = Version ( ipyparallel.__version__ )
 # =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histo  ( jobid , n ) :
@@ -89,25 +79,22 @@ class HTask(Task) :
     def results ( self ) :
         return self.__histo
 
+ncpus = max( 2 , numcpu() - 2 ) 
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (bare interface) 
 def test_parallel_ipyparallel_bare ( ) :
     """ Test parallel processing with parallel_ipyparallel (bare interface) 
     """
     logger  = getLogger ("test_parallel_ipyparallel_bare")
-    if not WorkManager :
-        logger.error ("Failure to import WorkManager")
-        return
-    
     logger.info ('Test job submission with %s' % WorkManager  ) 
-
-    if sys.version_info < ( 3 , 10 ) :
-        logger.error ( "require minimal pthon version of 3.10")
+    
+    if ipp_version < Version ( "8.0.0" ) :
+        logger.error ( "require minimal ipyparallel version of 8.0.0")
         return
-            
+     
     ## create the manager 
-    manager = WorkManager ( silent = False  )
-
+    manager = WorkManager ( ncpus = ncpus , silent = False  )
+        
     ## initialize  result 
     result   = None
     
@@ -124,25 +111,20 @@ def test_parallel_ipyparallel_bare ( ) :
         
     return result
 
-
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (task interface) 
 def test_parallel_ipyparallel_task ( ) :
     """ Test parallel processing with parallel_ipyparallel (task interface) 
     """
     logger  = getLogger ("test_parallel_iparallel_task")
-    if not WorkManager :
-        logger.error ("Failure to import WorkManager")
-        return
-    
     logger.info ('Test job submission with %s' % WorkManager  ) 
     
-    if sys.version_info < ( 3 , 10 ) :
-        logger.error ( "require minimal pthon version of 3.10")
+    if ipp_version < Version ( "8.0.0" ) :
+        logger.error ( "require minimal ipyparallel version of 8.0.0")
         return
-            
+    
     ## create the manager 
-    manager = WorkManager ( silent = False  )
+    manager = WorkManager ( ncpus = ncpus , silent = False  )
 
     ## create the task 
     task     = HTask()
@@ -156,7 +138,6 @@ def test_parallel_ipyparallel_task ( ) :
         result.draw (   ) 
     
     return result
-
     
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel  (func interface) 
@@ -164,16 +145,12 @@ def test_parallel_ipyparallel_func ( ) :
     """ Test parallel processing with parallel_ipyparallel (func interface) 
     """
     logger  = getLogger ("test_parallel_ipyparallel_task")
-    if not WorkManager :
-        logger.error ("Failure to import WorkManager")
-        return
-    
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
-    if sys.version_info < ( 3 , 10 ) :
-        logger.error ( "require minimal pthon version of 3.10")
+    if ipp_version < Version ( "8.0.0" ) :
+        logger.error ( "require minimal ipyparallel version of 8.0.0")
         return
-            
+    
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -187,25 +164,21 @@ def test_parallel_ipyparallel_func ( ) :
 
     return result
 
-    
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (use generic task)
 def test_parallel_ipyparallel_generic ( ) :
-    """T est parallel processnig with parallel_ipyparallel (use generic task)
+    """ Test parallel processnig with parallel_ipyparallel (use generic task)
     """
     logger  = getLogger ("test_parallel_ipyparallel_generic")
-    if not WorkManager :
-        logger.error ("Failure to import WorkManager")
+        
+    logger.info ('Test job submission with %s' % WorkManager  ) 
+            
+    if ipp_version < Version ( "8.0.0" ) :
+        logger.error ( "require minimal ipyparallel version of 8.0.0")
         return
     
-    logger.info ('Test job submission with %s' % WorkManager  ) 
-
-    if sys.version_info < ( 3 , 10 ) :
-        logger.error ( "require minimal pthon version of 3.10")
-        return
-            
     ## create the manager 
-    manager = WorkManager ( silent = False  )
+    manager = WorkManager ( ncpus = ncpus , silent = False  )
 
     ## create the task 
     task    = GenericTask ( processor = make_histo   ,
@@ -220,7 +193,6 @@ def test_parallel_ipyparallel_generic ( ) :
         result.draw (   ) 
         
     return result
-
 
 # =============================================================================
 if '__main__' == __name__ :
