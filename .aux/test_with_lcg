@@ -152,7 +152,7 @@ fi
 nproc_val=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 2)
 ncpus=$(( nproc_val - 2 > 2 ? nproc_val - 2 : 2 ))
 
-OSTAP_BATCH=True COLUMNS=200 ctest -j${ncpus} -R ipypa --output-on-failure --test-output-size-failed 5000000
+OSTAP_BATCH=True COLUMNS=200 ctest -j${ncpus} --output-on-failure --test-output-size-failed 5000000
 
 # =============================================================================
 #                                                                       The END
