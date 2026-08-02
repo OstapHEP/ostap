@@ -78,6 +78,7 @@ class WorkManager(TaskManager) :
         import logging 
         config = { 'engine_timeout' : 120   ,
                    'quiet'          : True  , 
+                   'create_profile' : True  , 
                    'log_level'      : logging.WARNING }
         
         if silent : 
@@ -186,7 +187,8 @@ class WorkManager(TaskManager) :
         myargs.pop ( 'engine_timeout' , None ) 
         myargs.pop ( 'log_level'      , None ) 
         myargs.pop ( 'quiet'          , None )
-
+        myargs.pop ( 'create_profile' , None )  
+        
         modules_to_import = myargs.pop ( "imports" , [] )
         if isinstance ( modules_to_import , str ) : modules_to_import = [ modules_to_import ]
 

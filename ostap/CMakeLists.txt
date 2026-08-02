@@ -748,9 +748,9 @@ if ( OSTAP_TEST_PYWARNINGS )
   message ( "----> All tests will be executed with PYTHONWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  )
 endif()
 
-set ( TEST_ENV1                              "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
-set ( TEST_ENV2 "PYTHONBUFFERED=1"           "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
-set ( TEST_ENV3 "IPYTHONDIR=/tmp/.iprofile"  "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV1                                    "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV2                 "PYTHONBUFFERED=1" "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
+set ( TEST_ENV3 "OSTAP_NCPUS=3" "PYTHONBUFFERED=1" "PYWARNINGS=${OSTAP_TEST_PYWARNINGS}" )
 
 # ========================================================================================
 ## main tests
@@ -800,9 +800,8 @@ foreach(filename ${tests})
 ##  endif  () 
 
   if     ( TEST_IPYPA     GREATER_EQUAL 0  )
-    set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "${TEST_ENV2}" ) 
-    ## message ( "----> Test will be executed with IPYTHONDIR=/tmp/.ipython : " ${tname} ) 
-    message ( "----> Test will be executed with PYTHONBUFFERED=1         : " ${tname} )  
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "${TEST_ENV3}" ) 
+    message ( "----> Test will be executed with OSTAP_NCPUS=2 PYTHONBUFFERED=1 : " ${tname} )  
   elseif ( TEST_PP     GREATER_EQUAL 0  )
     set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT "${TEST_ENV2}" ) 
     message ( "----> Test will be executed with PYTHONBUFFERED=1         : " ${tname} )    
