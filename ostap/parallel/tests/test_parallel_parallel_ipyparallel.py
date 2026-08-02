@@ -79,7 +79,7 @@ class HTask(Task) :
     def results ( self ) :
         return self.__histo
 
-ncpus = max( 2 , numcpu() - 2 ) 
+ncpus = 2 
 # =============================================================================
 ## test parallel processing with parallel_ipyparallel (bare interface) 
 def test_parallel_ipyparallel_bare ( ) :
@@ -91,7 +91,11 @@ def test_parallel_ipyparallel_bare ( ) :
     if ipp_version < Version ( "8.0.0" ) :
         logger.error ( "require minimal ipyparallel version of 8.0.0")
         return
-     
+    
+    if sys.version_info < ( 3, 10 ) :
+        logger.error ( "require minimal python version of 3.10")
+        return
+    
     ## create the manager 
     manager = WorkManager ( ncpus = ncpus , silent = False  )
         
@@ -123,6 +127,10 @@ def test_parallel_ipyparallel_task ( ) :
         logger.error ( "require minimal ipyparallel version of 8.0.0")
         return
     
+    if sys.version_info < ( 3, 10 ) :
+        logger.error ( "require minimal python version of 3.10")
+        return
+    
     ## create the manager 
     manager = WorkManager ( ncpus = ncpus , silent = False  )
 
@@ -151,6 +159,10 @@ def test_parallel_ipyparallel_func ( ) :
         logger.error ( "require minimal ipyparallel version of 8.0.0")
         return
     
+    if sys.version_info < ( 3, 10 ) :
+        logger.error ( "require minimal python version of 3.10")
+        return
+    
     ## create the manager 
     manager = WorkManager ( silent = False  )
 
@@ -177,6 +189,10 @@ def test_parallel_ipyparallel_generic ( ) :
         logger.error ( "require minimal ipyparallel version of 8.0.0")
         return
     
+    if sys.version_info < ( 3, 10 ) :
+        logger.error ( "require minimal python version of 3.10")
+        return
+        
     ## create the manager 
     manager = WorkManager ( ncpus = ncpus , silent = False  )
 
