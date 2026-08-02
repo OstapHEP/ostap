@@ -139,4 +139,4 @@ jobs:
           cd build
           
           # Запускаем ctest с таймаутом в 300 секунд (5 мин) на каждый отдельный тест
-          ctest -V -j1 -R '(_io_|sync)' --timeout 300 --output-on-failure --test-output-size-failed 5000000
+          ostapbatch=1 ctest -j2 --output-on-failure --test-output-size-failed 5000000

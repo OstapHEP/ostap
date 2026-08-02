@@ -113,6 +113,12 @@
     <class function = "Ostap::Math::poly_to_bernstein"     />  
     <class function = "Ostap::Math::bernstein_from_roots"  />  
 
+    <class name="ROOT::RDataFrame" />
+    <class name="std::pair<double,double>" />
+    
+    <class name="std::__wrap_iter<const double*>" />
+    <class name="std::__wrap_iter<double const*>" />
+
   </exclusion>
 
   
