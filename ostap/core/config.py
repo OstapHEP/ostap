@@ -161,9 +161,9 @@ config [ 'Tables'      ] = { 'Style' : default_config.table_style } ## configura
 config [ 'RooFit'      ] = {} ## RooFit configuration
 
 config [ 'Pathos'      ] = {} ## PATHOS configuration  
-config [ 'IPyparallel' ] = {} ## ipyparallel configuration 
+config [ 'IPyParallel' ] = {} ## ipyparallel configuration 
+config [ 'JobLib'      ] = {} ## joblib configuration 
 config [ 'Futures'     ] = {} ## concurrent.futures configuration 
-config [ 'Joblib'      ] = {} ## joblib configuration 
 
 # ============================================================================
 ## the list of config files to be processed

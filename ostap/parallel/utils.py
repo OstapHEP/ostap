@@ -47,7 +47,8 @@ __all__     = (
     ## 
 )
 # =============================================================================
-import sys, socket
+import sys, socket, importlib
+
 # =============================================================================
 from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
@@ -447,6 +448,41 @@ def fix_ppsrv ( ppsrv ) :
         ppsrv._new_submit_ = _pp_new_submit_
         ppsrv.submit       = _pp_new_submit_
 
+
+
+# =============================================================================
+## Worker initialization function.
+#
+#  Imports specified modules directly into the worker's global namespace
+#  dynamically without requiring the 'global' keyword.
+#
+#  @param modules : str or list of str
+#       Module name or list of module names to import on the worker (e.g.,
+def init_worker_modules ( modules ):
+  """ Worker initialization function.
+  
+  Imports specified modules directly into the worker's global namespace
+  dynamically without requiring the 'global' keyword.
+  
+  Parameters
+  ----------
+  modules : str or list of str
+      Module name or list of module names to import on the worker (e.g.,
+      'array' or ['array', 'numpy']).
+  """
+  if not modules: return
+  elif  isinstance ( modules, str ) : modules = [modules]
+  
+  # Retrieve the module-level globals dictionary for the executing worker
+  gl = globals()
+
+  import importlib 
+  for mod in modules:
+    # Handle submodules (e.g., 'os.path' -> assigns variable name 'os')
+    base_name = mod.split(".")[0]
+    gl [ base_name ] = importlib.import_module ( mod )
+
+
 # ===============================================================================
 ## "Unordered map iterator" over the list of (jobid,job) pairs
 def uimap  ( jobs ) :
@@ -460,6 +496,9 @@ def uimap  ( jobs ) :
                 lst.pop ( i ) 
                 yield  jobid, job 
                 break
+            
+
+
             
 # =============================================================================
 if '__main__' == __name__ :

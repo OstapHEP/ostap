@@ -1,3 +1,5 @@
+# v3.7.9.9
+
 ## New features
 
    1. make a try to use custom cpp-aware pickling the cpp-metatypes by name wthni direct reference to the libraries
@@ -5,7 +7,7 @@
    1. small improvement for `RooFitResult` serialization 
    1. remove unpicklnig from `compress_shelbve.uncompress_item` and call it explicitely afterward
    1. add `pickle_dependencies` funtion to get the importan content of pickel stream (foe debugging)
-   1. add `dependenncies` method for `ostap.io.compressed_shelve.CompressShelf` base class
+   1. add `dependencies` method for `ostap.io.compressed_shelve.CompressShelf` base class
    1. add `__get_raw_bytes__` method for `ostap.io.compressed_shelve.CompressShelf` base class
    1. move some functions from `ostap.utils.basic` to new module `sstap.utils.core`
    1. fix uncompression of `Ostap.BLOB` for python<3.12 
@@ -17,6 +19,7 @@
    1. add parallel manager based in `concurrent.futures.InterpreterPoolExecutor` (for 3.14<=python)
    1. add `implicitMT` property for tasks, allowing enable or disable ImpliciMT treatment ROOT   
    1. tweaks for `ostap.utils.utils.ImplicitMT`
+   1. small adjustment for `RunningBar`
    
 ## Bug fixes 
 

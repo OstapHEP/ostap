@@ -26,10 +26,11 @@ __all__ = (
 # =============================================================================
 from   collections.abc          import Sized
 from   itertools                import repeat , count
+from   ostap.core.ostap_types   import sized_types
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.parallel.task      import Task, TaskManager
 from   ostap.io.checker         import PickleChecker as Checker
-from   ostap.core.ostap_types   import sized_types 
+from   ostap.parallel.utils     import init_worker_modules 
 import multiprocessing          as     MP
 import sys, os
 # =============================================================================
@@ -61,7 +62,7 @@ class WorkManager(TaskManager) :
                   ncpus            = 'autodetect' , * , 
                   ppservers        = None         ,
                   pp               = False        ,
-                  silent           = False        ,
+                  silent           = True         ,
                   progress         = True         ,
                   block_size       = -1           , 
                   hyper_block_size = -1           ,                   
@@ -139,21 +140,26 @@ class WorkManager(TaskManager) :
                   ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
         
         if myargs : self.extra_arguments ( **myargs ) 
-
+        
+        modules_to_import = myargs.pop ( "imports" , [] )
+        if isinstance ( modules_to_import , str ) : modules_to_import = [ modules_to_import ]
+  
         with MP.Pool ( self.ncpus ) as pool : ##  pool_context ( self.pool ) as pool :
-
+            
+            if modules_to_import:
+                ## import requested modules on worked nodes  
+                n_nodes = pool.nodes if pool.nodes else self.ncpus
+                pool.map ( lambda _: init_worker_modules ( modules_to_import ) , range ( n_nodes ) )
+                
             ## create and submit jobs
             if ordered : jobs = pool.imap           ( job , jobs_args , chunksize = chunk_size )
             else       : jobs = pool.imap_unordered ( job , jobs_args , chunksize = chunk_size )
             
-            progress = progress    or self.progress        
-            silent   = self.silent or not progress
-                   
             ## retrive (asynchronous) results from the jobs
-            for result in progress_bar ( jobs                      ,
-                                         max_value   = njobs       ,
-                                         description = description , 
-                                         silent      = silent      ) :
+            for result in progress_bar ( jobs                       ,
+                                         max_value   = njobs        ,
+                                         description = description  , 
+                                         silent      = not progress ) :
                 yield result                
                 
     # ========================================================================

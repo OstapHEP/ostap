@@ -52,6 +52,7 @@ from   ostap.plotting.fit_draw       import key_transform, draw_options
 from   ostap.logger.pretty           import pretty_float, fmt_pretty_values
 from   ostap.logger.symbols          import times, checked_yes
 # 
+import ostap.plotting.color 
 import ostap.fitting.roocollections
 import ROOT, numpy, math, sys, abc  
 # =============================================================================

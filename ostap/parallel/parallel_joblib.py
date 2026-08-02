@@ -40,7 +40,7 @@ class WorkManager(TaskManager) :
     """
     def __init__( self       ,
                   ncpus            = 'autodetect', * , 
-                  silent           = False       ,
+                  silent           = True        ,
                   progress         = True        ,
                   block_size       = -1          , 
                   hyper_block_size = -1          ,                                     
@@ -125,25 +125,28 @@ class WorkManager(TaskManager) :
                   myargs.pop ( 'max_value' , None ) or
                   ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
 
-        
+        modules_to_import = myargs.pop ( "imports" , [] )
+        if isinstance ( modules_to_import , str ) : modules_to_import = [ modules_to_import ]
+
         if myargs : self.extra_arguments ( **myargs ) 
         
-        ## 
-        progress = progress    or self.progress        
-        silent   = self.silent or not progress
         ##
         done = 0
-        # ========================================================================
+        # ====================================================================
         with joblib.Parallel ( n_jobs = self.ncpus , **config )  as executor: 
             # ================================================================ 
             try: # ===========================================================
                 # ============================================================
+                
+                if modules_to_import:
+                    executor ( joblib.delayed ( init_worker_modules ) ( modules_to_import ) for _ in range ( self.ncpus ) )
+                    
                 results = executor ( joblib.delayed ( job ) ( a ) for a in jobs_args ) 
-                # ================================================================ 
-                for result in progress_bar ( results                   ,
-                                             max_value   = njobs       ,
-                                             description = description ,
-                                             silent      = silent      ) : 
+                # ===========================================================
+                for result in progress_bar ( results                    ,
+                                             max_value   = njobs        ,
+                                             description = description  ,
+                                             silent      = not progress ) : 
                     yield result
                     done += 1
                 # ============================================================

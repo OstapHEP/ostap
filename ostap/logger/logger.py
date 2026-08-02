@@ -119,7 +119,7 @@ logging.Logger.attention = _attention1_
 ## add method 'attention' to root logger 
 logging.attention        = _attention2_
 # =============================================================================
-## Logger with support for soem rudimentaty markup 
+## Logger with support for some rudimentaty markup 
 def log_with_markup ( method ) :
     """ Logger with support for soem rudimentaty markup"""
     ## Logger with support for soem rudimentaty markup     

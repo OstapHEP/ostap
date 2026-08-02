@@ -901,7 +901,7 @@ class TaskManager(ManagerBase) :
     """
     def __init__  ( self             ,
                     ncpus            , * , 
-                    silent           = False ,
+                    silent           = True  ,
                     progress         = True  ,
                     block_size       = -1    , 
                     hyper_block_size = -1    , 
@@ -913,12 +913,12 @@ class TaskManager(ManagerBase) :
 
         ## block& hyperblock sizes  
         self.__block_size       =       block_size if isinstance (       block_size , int ) \
-            and                   1 <       block_size else   2 * ( self.ncpus + 1 )
+            and                   1 <       block_size else   2 * self.ncpus 
         self.__hyper_block_size = byper_block_size if isinstance ( hyper_block_size , int ) \
-            and self.block_size * 4 < hyper_block_size else 200 * ( self.ncpus + 1 )
+            and self.block_size * 4 < hyper_block_size else 100 * self.ncpus
         
-        self.__silent     = True if silent else False  
-        self.__progress   = True if ( progress or not silent ) else False
+        self.__silent     = True if silent   else False  
+        self.__progress   = True if progress else False
 
         assert isinstance ( dump_freq , int ) and 0 <= dump_freq , \
             "Invalid `dump_freq' argument: %s" % dumpfreq
@@ -949,7 +949,7 @@ class TaskManager(ManagerBase) :
         self.__params = kwargs
         
         if not self.silent :
-            title = 'TaskManager is %s from %s' %  ( typename ( self ) , type ( self ) .__module__ ) 
+            title = '%s from %s' %  ( typename ( self ) , type ( self ) .__module__ ) 
             if not self.params : logger.info ( title ) 
             else :
                 table = self.table ( title = title , prefix = '# ' )
@@ -993,9 +993,7 @@ class TaskManager(ManagerBase) :
         >>> result1 =  wm.process ( my_fun , items , merger = TaskMerger ( lambda  a,b : a+[b] , init = [] ) )
         >>> result2 =  wm.process ( my_fun , items , merger = TaskMerger () )    
         
-        """
-        
-        
+        """        
         # ===============================================================================
         if isinstance ( task , Task ) : result = self.__process_task ( task , args , **kwargs )
         else                          : result = self.__process_func ( task , args , **kwargs )
@@ -1017,16 +1015,14 @@ class TaskManager(ManagerBase) :
         from ostap.utils.cidict import cidict
         myargs = cidict ( self.params )
         myargs.update ( kwargs )
-        
-        
+                
         init       = myargs.pop ( 'init'       , None )
         merger     = myargs.pop ( 'merger'     , None )
         collector  = myargs.pop ( 'collector'  , None )
         
-        silent     = myargs.pop ( 'silent'     , self.silent   )
         progress   = myargs.pop ( 'progress'   , self.progress )    
-        progress   = progress or not silent 
-                                
+        progress   = True if progress else False
+
         ## mergers for statistics & results
         if   not merger and not collector : logger.warning ( "Neither `merger' nor `collector' are specified for merging!")
         elif     merger and     collector : logger.warning ( "Both    `merger' and `collector' are specified for merging!")
@@ -1040,22 +1036,42 @@ class TaskManager(ManagerBase) :
 
         ## initialize the results 
         results = init
-        
-        myargs ['progress'] = False 
+
+
+        myargs [ 'progress' ] = False
         barconf = dict ( description = 'Jobs:' , silent = not progress )
-        if progress : 
-            if not isinstance ( args , sized_types ) : args = list ( args )
-            barconf ['max_value' ] = len ( args )   
-
-        ## HYPER-BLOCKS?
-        hyper_block_size = myargs.pop ( 'hyper_block_size' , self.hyper_block_size  )
-        if not isinstance ( hyper_block_size , int ) or hyper_block_size <= 1 : hyper_block_size = self.hyper_block_size
-
-        from ostap.utils.utils        import batched    
-        from ostap.utils.progress_bar import ProgressBar
         
-        with ProgressBar ( **barconf ) as bar :
+        ## get proper max-value for Progress/Running-bars
+        if progress :
             
+            max_value = ( myargs.pop ( 'max_value'  , None ) or
+                          myargs.pop ( 'max_jobs'   , None ) or
+                          myargs.pop ( 'total_jobs' , None ) or
+                          myargs.pop ( 'njobs'      , None ) or
+                          len ( args ) if isinstance ( args , sized_types ) else None )
+            
+            if   max_value is None                                 : pass 
+            elif isinstance ( max_value , int ) and 1 <= max_value : pass
+            else                                                   : max_value = None
+            
+        else :
+            
+            max_value = None 
+        
+        if max_value is None :
+            from ostap.utils.progress_bar import RunningBar
+            the_bar = RunningBar ( **barconf )
+        else :            
+            from ostap.utils.progress_bar import ProgressBar
+            the_bar = ProgressBar ( max_value = max_value , **barconf )
+                
+        with the_bar as bar :
+            
+            ## HYPER-BLOCKS?
+            hyper_block_size = myargs.pop ( 'hyper_block_size' , self.hyper_block_size  )
+            if not isinstance ( hyper_block_size , int ) or hyper_block_size <= 1 : hyper_block_size = self.hyper_block_size
+                        
+            from ostap.utils.utils        import batched            
             for hyper_block  in batched ( args , hyper_block_size ) :
 
                 jobs_args = zip ( repeat ( task ) , count ( index ) , hyper_block )
@@ -1121,28 +1137,53 @@ class TaskManager(ManagerBase) :
         myargs = cidict( kwargs )
        
         silent     = myargs.pop ( 'silent'     , self.silent   )
+        
         progress   = myargs.pop ( 'progress'   , self.progress )    
-        progress   = progress or not silent 
+        progress   = True if progress else False
                 
         block_size = myargs.pop ( 'block_size' , self.block_size  )
         if block_size < 1 : block_size = 100 * ( numcpu() + 1 ) 
                 
         myargs [ 'progress'] = False 
         barconf = dict ( description = 'Jobs:' , silent = not progress )
-        if progress : 
-            if not isinstance ( args , sized_types ) : args = list ( args )
-            barconf [ 'max_value' ] = len ( args )   
-            
+
         ## start index for jobs
         index = 0 
-        
-        from ostap.utils.utils        import batched    
-        from ostap.utils.progress_bar import ProgressBar
-        with ProgressBar ( **barconf ) as bar :
 
-           for batch in batched ( args , block_size ) : 
+        ## get proper max-value for Progress/Running-bars
+        if progress :
+            
+            max_value = ( myargs.pop ( 'max_value'  , None ) or
+                          myargs.pop ( 'max_jobs'   , None ) or
+                          myargs.pop ( 'total_jobs' , None ) or
+                          myargs.pop ( 'njobs'      , None ) or
+                          len ( args ) if isinstance ( args , sized_types ) else None )
+            
+            if   max_value is None                                 : pass 
+            elif isinstance ( max_value , int ) and 1 <= max_value : pass
+            else                                                   : max_value = None
+            
+        else :
+            
+            max_value = None 
+        
+        if max_value is None :
+            from ostap.utils.progress_bar import RunningBar
+            the_bar = RunningBar ( **barconf )
+        else :            
+            from ostap.utils.progress_bar import ProgressBar
+            the_bar = ProgressBar ( max_value = max_value , **barconf )
                 
-                jobs_args = zip ( repeat ( task ) , count ( index ) , batch )
+        with the_bar as bar :
+            
+            ## HYPER-BLOCKS?
+            hyper_block_size = myargs.pop ( 'hyper_block_size' , self.hyper_block_size  )
+            if not isinstance ( hyper_block_size , int ) or hyper_block_size <= 1 : hyper_block_size = self.hyper_block_size
+
+            from ostap.utils.utils        import batched    
+            for hyper_block in batched ( args , hyper_block_size ) : 
+                
+                jobs_args = zip ( repeat ( task ) , count ( index ) , hyper_block )
                 
                 for jobid , result , stat in self.iexecute ( task_executor , jobs_args , **myargs ) : 
 

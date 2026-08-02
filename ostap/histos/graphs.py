@@ -43,7 +43,8 @@ from   ostap.core.ostap_types         import ( num_types   , integer_types ,
                                                sized_types , string_types  )   
 from   ostap.plotting.draw_attributes import copy_graph_attributes
 from   ostap.logger.pretty            import pretty_float
-from   ostap.math.integral            import Integral 
+from   ostap.math.integral            import Integral
+import ostap.plotting.color 
 from   ostap.utils.valerrors          import ( AsymErrors         ,
                                                ValWithErrors      ,
                                                ValWithMultiErrors )

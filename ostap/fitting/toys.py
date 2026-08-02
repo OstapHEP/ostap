@@ -1772,8 +1772,8 @@ class FunToys(object) :
     """
     def __init__ ( self , fun , fitresult , progress = False ) :
         
-        assert isinstance ( fun       , AFUN1             ) , "Inavlid type of `fun'!"
-        assert isinstance ( fitresult , ROOT.RooFitResult ) , "Inavlid type of `fitresult'!"
+        assert isinstance ( fun       , AFUN1             ) , "Invalid type of `fun'!"
+        assert isinstance ( fitresult , ROOT.RooFitResult ) , "Invalid type of `fitresult'!"
         
         self.__fun        = fun
         self.__fit_result = fitresult
@@ -1828,8 +1828,9 @@ class FunToys(object) :
         else :
             raise TypeError ( "Invalid type of `methods'" )
         
-        progress = kwargs.pop ( 'progress' , self.__progress ) 
-        for i in progress_bar ( nToys , silent = not progress ) :
+        progress = kwargs.pop ( 'progress' , self.__progress )
+        silent   = kwargs.get ( 'silent'   , not progress    )
+        for i in progress_bar ( nToys , silent = silent ) :
 
             pars     = self.fit_result.randomizePars()
             self.fun.load_params ( pars , silent = True )

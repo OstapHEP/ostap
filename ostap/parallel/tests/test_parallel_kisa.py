@@ -42,7 +42,9 @@ def create_tree ( jobid , item ) :
     >>> create_tree ( ('1.root' ,  1000 ) ) 
     """
     
-    fname , nentries = item 
+    fname , nentries = item
+    
+    import ROOT, array, random 
     
     var1 = array.array ( 'd', [0])
     var2 = array.array ( 'd', [0])
@@ -126,7 +128,6 @@ def test_kisa () :
     
     chain = data.chain
     
-
     print ( chain.table () )
     
     with timing('SEQUENTIAL(%s):' % len(chain) , logger ) :

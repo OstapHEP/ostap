@@ -32,7 +32,7 @@ class WorkManager(PF.WorkManager) :
     """
     def __init__( self ,
                   ncpus            = 'autodetect', * , 
-                  silent           = False       ,
+                  silent           = True        ,
                   progress         = True        ,
                   block_size       = -1          , 
                   hyper_block_size = -1          ,                                                       

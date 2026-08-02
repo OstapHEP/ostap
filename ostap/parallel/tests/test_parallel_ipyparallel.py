@@ -9,7 +9,8 @@
 from   itertools                import count    
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.timing       import timing 
+from   ostap.utils.timing       import timing
+from   ostap.utils.basic        import numcpu 
 from   ostap.utils.root_utils   import batch_env
 import ostap.histos.histos
 import ROOT, time, sys
@@ -52,7 +53,9 @@ def make_histos ( item ) :
     for i in range ( n ) : h1.Fill ( random.gauss (  5 ,  1 ) )
     return h1
 
-# ===================================================================================
+# ==================================================================================
+ncpus = max ( 2 , numcpu() - 2 ) 
+# ==================================================================================
 ## @class MakeHisto
 #  helper class to create a fill histograms
 class MakeHisto(object) :
@@ -93,12 +96,16 @@ def test_ipyparallel_function () :
         logger.error ( "ipyparallel module is too old %s" % str ( ipp.version_info ) ) 
         return
 
-    result = None 
-    with ipp.Cluster () as cluster : 
+    result = None
+    with ipp.Cluster ( n              = ncpus , 
+                       engine_timeout = 120   ) as client  :
         
-        view    = cluster.load_balanced_view()        
-        results = view.map_async ( make_histos , zip  ( count () , inputs ) )
-            
+        client.wait_for_engines ( ncpus , timeout = 240 )
+        
+        client[:].use_dill()
+        view    = client.load_balanced_view()
+
+        results = view.imap ( make_histos , zip  ( count () , inputs ) )            
         for r in progress_bar ( results ) :
             if not result  : result = r
             else           : result.Add ( r )
@@ -136,13 +143,15 @@ def test_ipyparallel_callable () :
         return
 
     result = None 
-    with ipp.Cluster () as cluster : 
+    with ipp.Cluster ( n              = ncpus , 
+                       engine_timeout = 120   ) as client  :
         
-        ##view    = cluster.load_balanced_view()
-        view    = cluster[:] 
-        view.use_dill()
-            
-        results = view.map_async ( mh , zip  ( count () , inputs ) )
+        client.wait_for_engines ( ncpus , timeout = 240 )
+        
+        client[:].use_dill()
+        view    = client.load_balanced_view()
+
+        results = view.imap ( mh , zip  ( count () , inputs ) )
             
         for r in progress_bar ( results ) :
             if not result  : result = r

@@ -40,14 +40,18 @@ except ImportError : # ========================================================
     # =========================================================================
     dill = None
 # =============================================================================
-if dill : 
-    from ostap.parallel.dill_checker import DillChecker as Checker 
-else : 
+if dill : # ===================================================================
+    # =========================================================================
+    from ostap.parallel.dill_checker  import DillChecker as Checker
+    #==========================================================================
+else : # ======================================================================
+    # =========================================================================
     from ostap.parallel.cloud_checker import CloudChecker as Checker 
 # =============================================================================
 ## @class WorkManager
-#  Class to in charge of managing the tasks and distributing them to
-#  the workers. They can be local (using other cores) or remote
+#  Class in charge of managing the tasks and distributing them to
+#  the workers.
+#  They can be local (using other cores) or remote
 #  using other nodes in the local cluster """
 class WorkManager(TaskManager) :
     """ Class to in charge of managing the tasks and distributing them to
@@ -56,7 +60,7 @@ class WorkManager(TaskManager) :
     """
     def __init__( self ,
                   ncpus            = 'autodetect' , * ,
-                  silent           = False        ,
+                  silent           = True         ,
                   progress         = True         ,
                   balanced         = True         ,
                   use_dill         = True         ,
@@ -65,12 +69,23 @@ class WorkManager(TaskManager) :
                   dump_dbase       = None         ,
                   dump_jobs        = 0            ,
                   dump_freq        = 0            , **kwargs ) :
-        
-        if 'ppservers' in kwargs : kwarsg.pop ( 'ppservers' )
 
-        if silent :
+        
+        import logging 
+        config = { 'engine_timeout' : 120   ,
+                   'quiet'          : True  , 
+                   'log_level'      : logging.WARNING }
+        
+        if silent : 
             import logging
-            kwargs [ 'log_level' ] = logging.WARNING 
+            logging.getLogger ( "ipyparallel" ).setLevel ( logging.WARNING )
+
+        config.update ( kwargs )
+        if 'ppservers' in config : config.pop ( 'ppservers' )
+        
+        ##  ipp.Cluster arguments 
+        self.__balanced = True if          balanced else False 
+        self.__use_dill = True if dill and use_dill else False
 
         ## initialize the base class 
         TaskManager.__init__  ( self             ,
@@ -81,20 +96,26 @@ class WorkManager(TaskManager) :
                                 hyper_block_size = hyper_block_size ,                                
                                 dump_dbase       = dump_dbase ,
                                 dump_jobs        = dump_jobs  ,
-                                dump_freq        = dump_freq  , **kwargs ) 
-        
-        ##  ipp.Cluster arguments 
-        self.__balanced = True if          balanced else False 
-        self.__use_dill = True if dill and use_dill else False
+                                dump_freq        = dump_freq  , **config ) 
 
+    @property
+    def balanced ( self ) :
+        """`balanced` : balanced processing?"""
+        return self.__balanced
+
+    @property
+    def use_dill ( self ) :
+        """`use_dill` : use dill for serialization?"""
+        return self.__use_dill
+    
     # ==================================================================================
     @property
     def config ( self ) :
         """`config` : get all configuration parameters"""
         conf = {}
         conf.update ( super().config ) 
-        conf [ 'balanced'   ] = self.__balanced
-        conf [ 'use_fdill'  ] = self.__use_dill 
+        conf [ 'balanced' ] = self.balanced
+        conf [ 'use_dill' ] = self.use_dill 
         return conf
      
     # ==================================================================================
@@ -156,27 +177,50 @@ class WorkManager(TaskManager) :
                   myargs.pop ( 'max_value' , None ) or
                   ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
         
-        progress = progress    or self.progress        
-        silent   = self.silent or not progress
         done     = 0
-        
+
+        myargs.pop ( 'engine_timeout' , None ) 
+        myargs.pop ( 'log_level'      , None ) 
+        myargs.pop ( 'quiet'          , None )
+
+        modules_to_import = myargs.pop ( "imports" , [] )
+        if isinstance ( modules_to_import , str ) : modules_to_import = [ modules_to_import ]
+
         if myargs : self.extra_arguments ( **myargs ) 
+
+        cluster_conf = {}
+        cluster_conf.update ( self.params )
+        for key in ( 'max_outstanding' ,
+                     'block_size'      ,
+                     'batch_size'      ,
+                     'chunk_size'      ,
+                     'njobs'           ,
+                     'max_value'       ,
+                     'progress'        ,
+                     'silent'          ,                     
+                     'imports'         ) :  cluster_conf.pop ( key , None )
+
+        with ipyparallel.Cluster ( n = self.ncpus , **cluster_conf  ) as client :
+
+            client.wait_for_engines ( self.ncpus , timeout = 360 )
+
+            if   self.use_dill : client[:].use_dill()
+            
+            if modules_to_import:
+                command = '; '.join( f'import {mod}' for mod in modules_to_import )
+                client[:].execute ( command , block = True )
                 
-        with ipyparallel.Cluster ( n = self.ncpus , **self.params ) as cluster :
-            
-            if   self.__use_dill : cluster[:].use_dill()                     
-            
             ## BALANCED ? 
-            view = cluster.load_balanced_view() if self.__balanced else cluster[:]
-                                        
+            view = client.load_balanced_view() if self.balanced else client[:]
+
             # ================================================================
             try : # ==========================================================
                 # ============================================================                    
                 results = view.imap ( job , jobs_args  , **config )                    
-                for result in progress_bar ( results                   ,
-                                             max_value   = njobs       ,
-                                             description = description ,
-                                             silent      = silent      ) : 
+                for result in progress_bar ( results                    ,
+                                             max_value   = njobs        ,
+                                             description = description  ,
+                                             silent      = not progress ) : 
                     yield result
                     done += 1                        
                 # ============================================================
@@ -185,14 +229,28 @@ class WorkManager(TaskManager) :
                 logger.attention ( "%s only #%d jobs are processed" % ( keyboard_interrupt , done ) )
                 # ===========================================================
                 ## ABORT!! 
-                view.abort()                    
+                try    : view.abort()
+                except : pass
+                ## 
                 return
-            # ============================================================ 
+                # ============================================================
+            except ipyparallel.RemoteError as e : # ==========================
+                # ============================================================
+                traceback_text = '\n'.join ( line.rstrip() for line in e.render_traceback() )
+                logger.error ( 'RemoteError exeption after #%d jobs processed \n%s' %  ( done , traceback_text ) ) 
+                # ============================================================
+                try    : view.abort()
+                except : pass
+                ## 
+                raise   
+                # ============================================================                               
             except Exception : # =============================================
                 # ============================================================
                 logger.error ( 'Exception caught after #%d jobs processed' % done , exc_info = True )
-                ## ABORT!! 
-                view.abort()                
+                # ============================================================
+                try    : view.abort()
+                except : pass
+                ## 
                 raise   
         
     # ========================================================================

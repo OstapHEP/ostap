@@ -43,15 +43,16 @@ else                       : logger = getLogger ( __name__                  )
 # =============================================================================
 batch_env ( logger ) 
 # =============================================================================
-## defie three C++ fnuctions 
-cppyy.cppdef( """
-namespace MyTest 
-{
-   double cpp_fun1 ( double x                      ) { return x         ; } 
-   double cpp_fun2 ( double x, double y            ) { return x + y     ; } 
-   double cpp_fun3 ( double x, double y , double z ) { return x + y + z ; } 
-}""" )
-
+## For C++ functions are defiend in Ostap/Ostap.h
+#    double cpp_fun0 () ;
+#    double cpp_fun1 ( double x ) ;
+#    double cpp_fun2 ( double x , double y ) ;
+#    double cpp_fun3 ( double x , double y , double z ) ;
+# ==============================================================================
+cpp_fun0 = Ostap.Tests.cpp_fun0
+cpp_fun1 = Ostap.Tests.cpp_fun1
+cpp_fun2 = Ostap.Tests.cpp_fun2
+cpp_fun3 = Ostap.Tests.cpp_fun3
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
@@ -488,8 +489,7 @@ def test_addbranch() :
     ## (24) generic function with 1 argument 
     # =========================================================================
     with timing ('generic-1D-cxx-1' , logger = logger ) as timer :          
-        ## fun1  = ROOT.MyTest.cpp_fun1 
-        fun1  = lambda x : ROOT.MyTest.cpp_fun1 ( x ) 
+        fun1  = lambda x : cpp_fun1 ( x ) 
         chain = data.chain 
         chain = chain.padd_new_branch ( fun1 , name = 'gf1cxx_1' , arguments = 'pt*10' )         
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
@@ -500,7 +500,7 @@ def test_addbranch() :
     ## (25) generic function with 1 argument 
     # =========================================================================
     with timing ('generic-1D-cxx-2' , logger = logger ) as timer :          
-        fun1  = ROOT.MyTest.cpp_fun1 
+        fun1  = cpp_fun1 
         chain = data.chain 
         chain = chain.padd_new_branch ( 'gf1cxx_2' , function = fun1 , arguments = 'pt*10' )         
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
@@ -533,7 +533,7 @@ def test_addbranch() :
     ## (28) generic function with 2 arguments 
     # =========================================================================
     with timing ('generic-2D-cxx-1' , logger = logger ) as timer :          
-        fun2  = ROOT.MyTest.cpp_fun2 
+        fun2  = cpp_fun2 
         chain = data.chain 
         chain = chain.padd_new_branch ( fun2 , name = 'gf2cxx_1' , arguments = 'et1,et2' )         
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
@@ -544,7 +544,7 @@ def test_addbranch() :
     ## (29) generic function with 2 arguments 
     # =========================================================================
     with timing ('generic-2D-cxx-2' , logger = logger ) as timer :          
-        fun2  = ROOT.MyTest.cpp_fun2 
+        fun2  = cpp_fun2 
         chain = data.chain 
         chain = chain.padd_new_branch ( 'gf2cxx_2' , function = fun2 , arguments = ( 'et1',  'et2' ) ) 
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
@@ -577,7 +577,7 @@ def test_addbranch() :
     ## (32) generic function with 3 arguments 
     # =========================================================================
     with timing ('generic-3D-cxx-1' , logger = logger ) as timer :          
-        fun3  = ROOT.MyTest.cpp_fun3 
+        fun3  = cpp_fun3 
         chain = data.chain 
         chain = chain.padd_new_branch ( fun3 , name = 'gf3cxx_1' , arguments = 'et1,et2,et3' )         
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         
@@ -588,7 +588,7 @@ def test_addbranch() :
     ## (33) generic function with 3 arguments 
     # =========================================================================
     with timing ('generic-3D-cxx-2' , logger = logger ) as timer :          
-        fun3  = ROOT.MyTest.cpp_fun3 
+        fun3  = cpp_fun3 
         chain = data.chain 
         chain = chain.padd_new_branch ( 'gf3cxx_2' , function = fun3 , arguments = ( 'et1',  'et2' , 'et3' ) ) 
     rows.append ( ( timer.name  , '%.3f' % timer.delta ) )         

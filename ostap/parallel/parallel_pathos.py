@@ -45,7 +45,7 @@ from   ostap.parallel.task         import ( TaskManager        ,
                                             keyboard_interrupt )
 from   ostap.utils.progress_bar    import progress_bar  
 from   ostap.core.ostap_types      import sized_types 
-from   ostap.parallel.utils        import get_local_port  , pool_context
+from   ostap.parallel.utils        import get_local_port, pool_context, init_worker_modules 
 from   ostap.logger.mute           import mute_py as mute  
 from   ostap.parallel.dill_checker import DillChecker as Checker
 import sys, os 
@@ -96,7 +96,7 @@ class WorkManager (TaskManager) :
     def __init__( self                      ,
                   ncpus            = 'autodetect' , * , 
                   ppservers        = ()           ,
-                  silent           = False        ,
+                  silent           = True         ,
                   progress         = True         ,
                   block_size       = -1           , 
                   hyper_block_size = -1           ,                                     
@@ -318,12 +318,15 @@ class WorkManager (TaskManager) :
 
         ## progress-bar description        
         description = myargs.pop ( 'description' , "Jobs:" )
-        
+
         ## number of jobs 
         njobs = ( myargs.pop ( 'njobs'     , None ) or 
                   myargs.pop ( 'max_value' , None ) or
                   ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
         
+        modules_to_import = myargs.pop ( "imports" , [] )
+        if isinstance ( modules_to_import , str ) : modules_to_import = [ modules_to_import ]
+  
         if myargs : self.extra_arguments ( **myargs ) 
                    
         with pool_context ( self.pool ) as pool :
@@ -334,18 +337,20 @@ class WorkManager (TaskManager) :
             try : # ===========================================================
                 # =============================================================
                 
+                if modules_to_import:
+                    ## import requested modules on worked nodes  
+                    n_nodes = pool.nodes if pool.nodes else self.ncpus
+                    pool.map ( lambda _: init_worker_modules ( modules_to_import ) , range ( n_nodes ) )
+
                 ## create and submit jobs
                 if ordered : jobs = pool. imap ( job , jobs_args , chunksize = chunk_size )
                 else       : jobs = pool.uimap ( job , jobs_args , chunksize = chunk_size )
                 
-                progress = progress    or self.progress 
-                silent   = self.silent or not progress
-
                 ## retrive (asynchronous) results from the jobs
                 for result in progress_bar ( jobs ,
-                                             max_value   = njobs       ,
-                                             description = description , 
-                                             silent      = silent      ) :
+                                             max_value   = njobs        ,
+                                             description = description  , 
+                                             silent      = not progress ) :
                     ## generator! 
                     yield result
                     done += 1

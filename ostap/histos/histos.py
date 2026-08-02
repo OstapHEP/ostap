@@ -69,7 +69,8 @@ from   ostap.io.root_file             import ROOTCWD
 from   ostap.utils.root_utils         import implicitMT 
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
-import ostap.plotting.draw_attributes 
+import ostap.plotting.draw_attributes
+import ostap.plotting.color
 import ostap.io.root_file
 from   itertools                      import repeat 
 import ROOT, sys, math, ctypes, array, numpy   

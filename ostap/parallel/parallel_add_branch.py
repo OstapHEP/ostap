@@ -19,7 +19,7 @@ __all__     = (
 from   ostap.core.core                 import valid_pointer 
 from   ostap.parallel.parallel         import Task, WorkManager, Checker
 import ostap.trees.trees_base 
-import ROOT
+import ROOT, array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -188,9 +188,11 @@ def add_new_branch ( chain           ,
     ## perfect! 
     if   check.pickles_all  ( *args ) :
         task = AddNewBranch ( *args )
-    ## some 'args' are not pickable! 
+    ## some 'args' are not pickable!    
     elif check.pickles_all ( branch , **kwargs ) :
+        # =====================================================================
         task = AddUnpreparedBranch ( branch , **kwargs )
+        # =====================================================================
     elif backup :         
         # =====================================================================
         table = check.pickling_table ( branch , *args , prefix = '# ' , **kwargs )
@@ -201,7 +203,8 @@ def add_new_branch ( chain           ,
         missing    = sorted ( branch for branch in expected if not branch in chain  )
         if missing : logger.warning ( 'Missing expected brnaches: %s' % ( ', '.join ( m for m in missing ) ) )
         logger.attention ( "A (SLOW) sequentional processing was used..." ) 
-        return chain                           
+        return chain
+        # =====================================================================
     else  : # =================================================================
         # =====================================================================
         table = check.pickling_table ( branch , prefix = '# ' , **kwargs ) 

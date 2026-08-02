@@ -1916,6 +1916,8 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
     """ Add new branch to the tree
     - see `Ostap.AddBranch.add_branch`
     """
+    import array, numpy
+
     assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
         "Tree* is invalid!"
 
@@ -2090,6 +2092,7 @@ def add_new_buffer ( tree , buffer , * , name = '' , **kwargs ) :
     """ Add new buffer to TTree
     - see `Ostap.AddBuffer.add_buffer` 
     """
+    import array, numpy
     
     assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
         "add_new_buffer: Tree* is invalis!"
@@ -2104,7 +2107,7 @@ def add_new_buffer ( tree , buffer , * , name = '' , **kwargs ) :
     if name and name in tree :
         logger.error ( "The branch/leaf `%s' already exists, skip it!!" % name )
         return tree
-    
+
     ## if the buffer is a dictionary of "buffers", pre-check the names 
     if not name and isinstance ( buffer , dictlike_types ) :        
         for key in buffer.keys () :

@@ -14,11 +14,12 @@ __all__ = (
 )
 # =============================================================================
 from   itertools                    import repeat , count, islice 
+from   ostap.core.ostap_types       import sized_types
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.utils.utils            import chunked 
 from   ostap.parallel.task          import Task, TaskManager, keyboard_interrupt 
 from   ostap.io.checker             import PickleChecker as Checker
-from   ostap.core.ostap_types       import sized_types
+from   ostap.parallel.utils         import init_worker_modules 
 import concurrent.futures
 import sys
 #  =============================================================================
@@ -128,7 +129,7 @@ class WorkManager(TaskManager) :
     """
     def __init__( self ,
                   ncpus            = 'autodetect', * , 
-                  silent           = False       ,
+                  silent           = True        ,
                   progress         = True        ,
                   block_size       = -1          , 
                   hyper_block_size = -1          ,                                                       
@@ -137,7 +138,7 @@ class WorkManager(TaskManager) :
                   dump_freq        = 0           ,  **kwargs ) :
 
         ## 
-        if 'ppservers' in kwargs: conf.pop ( 'ppservers' )        
+        if 'ppservers' in kwargs: kwargs.pop ( 'ppservers' )        
         ## initialize the base class 
         TaskManager.__init__  ( self ,
                                 ncpus            = ncpus      ,
@@ -201,33 +202,39 @@ class WorkManager(TaskManager) :
                   myargs.pop ( 'max_value' , None ) or
                   ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
 
-        ## 
-        progress = progress    or self.progress        
-        silent   = self.silent or not progress
-        ##
-        done   = 0
         
         config = dict ( chunksize = chunk_size )
         if not ordered                 : config [ 'block_size'  ] = block_size
         elif ( 3 , 14 ) <= python_info : config [ 'buffer_size' ] = block_size
+        
+        modules_to_import = myargs.pop ( "imports" , [] )
+        if isinstance ( modules_to_import , str ) : modules_to_import = [ modules_to_import ]
 
+        if myargs : self.extra_arguments ( **myargs ) 
+
+        ## counter for executed jobs 
+        done   = 0
         # =====================================================================
-        ## creaet and use executor:
+        ## create and use executor:
         with self.make_executor ( max_workers = self.ncpus ) as executor:
 
             # =================================================================
             try : # ===========================================================
-                # =============================================================
-
-                if ordered : results = executor.map (            job , jobs_args , **config )
-                else       : results = future_uimap ( executor , job , jobs_args , **config ) 
+              # =============================================================
+              
+              if modules_to_import :
+                r = executor.map ( init_worker_modules , [ modules_to_import ] * self.ncpus ) 
+                r = list ( r ) 
                 
-                for result in progress_bar ( results                   ,
-                                            max_value   = njobs       ,
-                                             description = description ,
-                                             silent      = silent      ) : 
-                    yield result
-                    done +=1
+              if ordered : results = executor.map (            job , jobs_args , **config )
+              else       : results = future_uimap ( executor , job , jobs_args , **config ) 
+              
+              for result in progress_bar ( results                    ,
+                                           max_value   = njobs        ,
+                                           description = description  ,
+                                           silent      = not progress ) : 
+                yield result
+                done +=1
                 # ============================================================
             except KeyboardInterrupt : # =====================================
                 # ============================================================
@@ -240,8 +247,6 @@ class WorkManager(TaskManager) :
                 logger.error ( 'Exception caught after #%d jobs processed' % done , exc_info = True )
                 raise   
             
-        if kwargs : self.extra_arguments ( **kwargs ) 
-        
     # =========================================================================
     ## helper method to creat ethe executor
     def make_executor ( self , *args , **kwargs ) :

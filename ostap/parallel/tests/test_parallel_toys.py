@@ -594,8 +594,8 @@ def test_parallel_significance ( ) :
             progress    = True        ,
             logger      = logger      )
 
-    logger.info( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
-    logger.info( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
+    logger.info ( 'Results : [%s]' % ( ', '.join ( key for key in results ) ) ) 
+    logger.info ( 'Stats   : [%s]' % ( ', '.join ( key for key in stats   ) ) )
 
     # =========================================================================
     ## yields 

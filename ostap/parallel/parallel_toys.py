@@ -33,6 +33,9 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.toys' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
+## default number of jobs
+N_SPLIT = max ( 2 , 2 * numcpu () )
+# ============================================================================
 ## merge results of toys 
 #  Helper function to merge results of toys
 #  @param previous  previous results
@@ -600,21 +603,22 @@ class BootstrapTask(JackknifeTask) :
 #  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
 #  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
 def parallel_toys (
-        pdf                  ,
-        nToys                , ## total number of toys 
-        data                 , ## template for dataset/variables 
-        gen_config           , ## parameters for <code>pdf.generate</code>
-        nSplit      = 0      , ## split into  <code>nSplit</code> subjobs         
-        fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
-        init_pars   = {}     ,
-        more_vars   = {}     ,
-        add_results = False  , ## add fit-resutls to the output?
-        gen_fun     = None   , ## generator function ( pdf , varset  , **config )
-        fit_fun     = None   , ## fit       function ( pdf , dataset , **config )
-        accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset )
-        silent      = True   ,
-        progress    = True   ,
-        frequency   = 0      , **kwargs ):
+        pdf                   , * , ## PDF to generate&fit toys 
+        nToys                 ,     ## total number of toys 
+        data                  ,     ## template for dataset/variables 
+        gen_config            ,     ## parameters for <code>pdf.generate</code>
+        nSplit      = N_SPLIT ,     ## split into  <code>nSplit</code> subjobs         
+        fit_config  = {}      ,     ## parameters for <code>pdf.fitTo</code>
+        init_pars   = {}      ,
+        more_vars   = {}      ,
+        add_results = False   ,     ## add fit-resutls to the output?
+        gen_fun     = None    ,     ## generator function ( pdf , varset  , **config )
+        fit_fun     = None    ,     ## fit       function ( pdf , dataset , **config )
+        accept_fun  = None    ,     ## accept    function ( fit-result, pdf, dataset )
+        silent      = True    ,
+        progress    = True    ,
+        frequency   = 0       ,
+        logger      = logger  , **kwargs ):
     """ Make `ntoys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
 
@@ -683,11 +687,7 @@ def parallel_toys (
     
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
         'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
-
-    if not nSplit : nSplit = max ( 2 , 2 * numcpu() ) 
-        
-    assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
-        'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
+    
 
     config =  { 'pdf'         : pdf         ,
                 'data'        : data        ,
@@ -700,13 +700,15 @@ def parallel_toys (
                 'fit_fun'     : fit_fun     ,
                 'accept_fun'  : accept_fun  ,
                 'silent'      : silent      ,
-               'frequency'   : frequency   }
+                'frequency'   : frequency   }
     
     import ostap.fitting.toys as Toys
-    if nSplit   <  2 : return Toys.make_toys ( nToys  = nToys , progress = progress , **config )
-    if numcpu() <= 1 :
-        logger.warning ("Not enough CPUs for parallelisation!") 
-        return Toys.make_toys (  nToys = nToys , progress = progress , **config ) 
+    
+    nSplit = nSplit  if isinstance ( nSplit , int ) and 1 <= nSplit else N_SPLIT 
+    if   nSplit    <  2 : return Toys.make_toys ( nToys  = nToys , progress = progress , **config )
+    elif numcpu () <= 1 :
+        logger.warning ( "Not enough CPUs for parallelisation" )  
+        return Toys.make_toys ( nToys = nToys , progress = progress , **config )
     
     import ostap.fitting.roofit
     import ostap.fitting.dataset
@@ -799,7 +801,7 @@ def parallel_toys (
 # @param gen_pdf     PDF to be used for generation 
 # @param fit_pdf     PDF to be used for fitting
 # @param nToys       total number    of pseudoexperiments to generate
-# @param nSplit      split the total number of presudoexperiemtns into <code>nSplit</code> subjobs 
+# @param nSplit      split the total number of presudoexperiments into <code>nSplit</code> subjobs 
 # @param data        variable list of variables to be used for dataset generation
 # @param gen_config  configuration of <code>pdf.generate</code>
 # @param fit_config  configuration of <code>pdf.fitTo</code>
@@ -817,23 +819,24 @@ def parallel_toys (
 #  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
 #  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
 def parallel_toys2 (
-    gen_pdf              , ## PDF to generate toys 
-    fit_pdf              , ## PDF to generate toys 
-    nToys                , ## total number of toys 
-    data                 , ## template for dataset/variables 
-    gen_config           , ## parameters for <code>pdf.generate</code>   
-    nSplit      = 0      , ## split into  <code>nSplit</code> subjobs 
-    fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
-    gen_pars    = {}     ,
-    fit_pars    = {}     ,
-    more_vars   = {}     ,
-    add_results = False  , ## add fit-resutls to the output?
-    gen_fun    = None    , ## generator function ( pdf , varset  , **gen_config ) 
-    fit_fun    = None    , ## fit       function ( pdf , dataset , **fit_config ) 
-    accept_fun = None    , ## accept    function ( fit-result, pdf, dataset     )
-    silent     = True    ,
-    progress   = True    ,
-    frequency  = 0       , **kwargs ) :
+        gen_pdf               ,     ## PDF to generate toys 
+        fit_pdf               , * , ## PDF to fit toys 
+        nToys                 ,     ## total number of toys 
+        data                  ,     ## template for dataset/variables 
+        gen_config            ,     ## parameters for <code>pdf.generate</code>   
+        nSplit      = N_SPLIT ,     ## split into  <code>nSplit</code> subjobs 
+        fit_config  = {}      ,     ## parameters for <code>pdf.fitTo</code>
+        gen_pars    = {}      ,
+        fit_pars    = {}      ,
+        more_vars   = {}      ,
+        add_results = False   ,     ## add fit-resutls to the output?
+        gen_fun    = None     ,     ## generator function ( pdf , varset  , **gen_config ) 
+        fit_fun    = None     ,     ## fit       function ( pdf , dataset , **fit_config ) 
+        accept_fun = None     ,     ## accept    function ( fit-result, pdf, dataset     )
+        silent     = True     ,
+        progress   = True     ,
+        frequency  = 0        ,
+        logger     = logger   , **kwargs ) :
     """ Make `nToys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
     
@@ -905,11 +908,6 @@ def parallel_toys2 (
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
                'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
 
-    if not nSplit : nSplit = max ( 2 , 2 * numcpu() ) 
-        
-    assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
-               'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
-
     config = { 'gen_pdf'     : gen_pdf     ,
                'fit_pdf'     : fit_pdf     ,
                'data'        : data        ,
@@ -926,11 +924,13 @@ def parallel_toys2 (
                'frequency'   : frequency   }
 
     import ostap.fitting.toys as Toys
-    if nSplit < 2    : return Toys.make_toys2 ( nToys = nToys , progress = progress , **config ) 
-    if numcpu() <= 1 :
-        logger.warning ("Not enough CPUs for parallelisation!") 
+    
+    nSplit = nSplit  if isinstance ( nSplit , int ) and 1 <= nSplit else N_SPLIT     
+    if   nSplit    <  2 : return Toys.make_toys2 ( nToys = nToys , progress = progress , **config ) 
+    elif numcpu () <= 1 :
+        logger.warning ( "Not enough CPUs for parallelisation!" ) 
         return Toys.make_toys2 ( nToys = nToys , progress = progress , **config ) 
-        
+    
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -1043,22 +1043,23 @@ def parallel_toys2 (
 #  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
 #  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
 def parallel_toys3 (
-        gen_pdf              , ## PDF to generate toys 
-        fit_pdf              , ## PDF to generate toys 
-        nToys                , ## total number of toys 
-        data                 , ## template for dataset/variables
-        action               , ## actual function to get results 
-        gen_config           , ## parameters for <code>pdf.generate</code>   
-        nSplit      = 0      , ## split into  <code>nSplit</code> subjobs 
-        fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
-        gen_pars    = {}     ,
-        fit_pars    = {}     ,
-        gen_fun     = None   , ## generator function ( pdf , varset  , **gen_config ) 
-        fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
-        accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
-        silent      = True   ,
-        progress    = True   ,
-        frequency   = 0      , **kwargs ) :
+        gen_pdf               ,     ## PDF to generate toys 
+        fit_pdf               , * , ## PDF to generate toys 
+        nToys                 ,     ## total number of toys 
+        data                  ,     ## template for dataset/variables
+        action                ,     ## actual function to get results 
+        gen_config            ,     ## parameters for <code>pdf.generate</code>   
+        nSplit      = N_SPLIT ,     ## split into  <code>nSplit</code> subjobs 
+        fit_config  = {}      ,     ## parameters for <code>pdf.fitTo</code>
+        gen_pars    = {}      ,
+        fit_pars    = {}      ,
+        gen_fun     = None    ,     ## generator function ( pdf , varset  , **gen_config ) 
+        fit_fun     = None    ,     ## fit       function ( pdf , dataset , **fit_config ) 
+        accept_fun  = None    ,     ## accept    function ( fit-result, pdf, dataset     )
+        silent      = True    ,
+        progress    = True    ,
+        frequency   = 0       ,
+        logger      = logger  , **kwargs ) :
     """ Make `nToys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
     
@@ -1128,11 +1129,6 @@ def parallel_toys3 (
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
                'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
 
-    if not nSplit : nSplit = max ( 2 , 2 * numcpu() ) 
-        
-    assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
-               'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
-
     config = { 'gen_pdf'     : gen_pdf     ,
                'fit_pdf'     : fit_pdf     ,
                'data'        : data        ,
@@ -1148,11 +1144,13 @@ def parallel_toys3 (
                'frequency'   : frequency   }
 
     import ostap.fitting.toys as Toys
-    if nSplit   < 2  : return Toys.make_toys3 (  nToys = nToys , progress = progress , **config ) 
-    if numcpu() <= 1 :
-        logger.warning ( "Not enough CPU for parallelisation!" ) 
+    
+    nSplit = nSplit  if isinstance ( nSplit , int ) and 1 <= nSplit else N_SPLIT 
+    if   nSplit   < 2  : return Toys.make_toys3 (  nToys = nToys , progress = progress , **config ) 
+    elif numcpu() <= 1 :
+        logger.warning ( "Not enough CPUs for parallelisation!" ) 
         return Toys.make_toys3 (  nToys = nToys , progress = progress , **config ) 
-        
+    
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -1230,25 +1228,19 @@ def parallel_toys3 (
 #  @param frequency  how often to dump the intermediate results ? 
 #  @return statistics of jackknife experiments 
 def parallel_jackknife (
-        pdf                  ,
-        data                 ,
-        nSplit      = 0      , ## split into n-subtasks 
-        fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
-        fit_pars    = {}     , ## fit-parameters to reset/use
-        more_vars   = {}     , ## additional  results to be calculated
-        add_results = False  , ## add fit-resutls to the output?                         
-        fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
-        accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
-        silent      = True   ,
-        progress    = True   ,
-        logger      = logger ,
-        frequency   = 0      , **kwargs ) :
-
-
-    if not nSplit : nSplit = max ( 2 , 2 * numcpu() ) 
-            
-    assert isinstance ( nSplit  , integer_types ) and 0 <= nSplit  <= len ( data )  ,\
-           'Invalid "nSplit"  argument %s/%s' % ( nSplit  , type ( nSplit  ) )
+        pdf                   ,
+        data                  , * , 
+        nSplit      = N_SPLIT , ## split into n-subtasks 
+        fit_config  = {}      , ## parameters for <code>pdf.fitTo</code>
+        fit_pars    = {}      , ## fit-parameters to reset/use
+        more_vars   = {}      , ## additional  results to be calculated
+        add_results = False   , ## add fit-resutls to the output?                         
+        fit_fun     = None    , ## fit       function ( pdf , dataset , **fit_config ) 
+        accept_fun  = None    , ## accept    function ( fit-result, pdf, dataset     )
+        silent      = True    ,
+        progress    = True    ,
+        logger      = logger  ,
+        frequency   = 0       , **kwargs ) :
 
     config = { 'pdf'         : pdf         ,
                'data'        : data        ,
@@ -1261,9 +1253,11 @@ def parallel_jackknife (
                'frequency'   : frequency   }
     
     import ostap.fitting.toys as Toys
-    if nSplit   < 2  : return Toys.make_jackknife ( progress = progress , **config ) 
-    if numcpu() <= 1 :
-        logger.warning ("Not enough CPUs for parallelisation!") 
+    
+    nSplit = nSplit  if isinstance ( nSplit , int ) and 1 <= nSplit else N_SPLIT     
+    if   nSplit   < 2  : return Toys.make_jackknife ( progress = progress , **config ) 
+    elif numcpu() <= 1 :
+        logger.warning ( "Not enough CPUs for parallelisation!" ) 
         return Toys.make_jackknife ( progress = progress , **config ) 
 
     ## check if pdf and `extended` flag are in agreemrnt, and print warning message otherwise
@@ -1313,7 +1307,6 @@ def parallel_jackknife (
     if not ok1 : logger.warning ( "Jackknife: estimates for `yield`-parameters are likely wrong!")        
     return results, stats   
 
-
 # =============================================================================
 ## Run Bootstrap analysis, useful for evaluaton of fit biases and uncertainty estimates
 # 
@@ -1350,30 +1343,25 @@ def parallel_jackknife (
 #  @param frequency  how often dump the intermediate results? 
 #  @return statistics of boostrap experiments 
 def parallel_bootstrap (
-        pdf                  ,
-        data                 ,
-        size                 ,   ## numbere of samples
-        nSplit      = 0      ,   ## number of splits 
-        fit_config  = {}     ,   ## parameters for <code>pdf.fitTo</code>
-        fit_pars    = {}     ,   ## fit-parameters to reset/use
-        more_vars   = {}     ,   ## additional  results to be calculated
-        add_results = False  ,   ## add fit-resutls to the output?
-        extended    = True   ,   ## use extended bootstrap 
-        fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config ) 
-        accept_fun  = None   ,   ## accept    function ( fit-result, pdf, dataset     )
-        silent      = True   ,   ## silent processing?
-        progress    = True   ,   ## shpow progress bar? 
-        logger      = logger ,   ## use this logger 
-        frequency   = 0      , **kwargs ) :
+        pdf                   ,
+        data                  , * , 
+        size                  ,       ## number of samples
+        nSplit      = N_SPLIT ,       ## number of splits 
+        fit_config  = {}      ,       ## parameters for <code>pdf.fitTo</code>
+        fit_pars    = {}      ,       ## fit-parameters to reset/use
+        more_vars   = {}      ,       ## additional  results to be calculated
+        add_results = False   ,       ## add fit-resutls to the output?
+        extended    = True    ,       ## use extended bootstrap 
+        fit_fun     = None    ,       ## fit       function ( pdf , dataset , **fit_config ) 
+        accept_fun  = None    ,       ## accept    function ( fit-result, pdf, dataset     )
+        silent      = True    ,       ## silent processing?
+        progress    = True    ,       ## shpow progress bar? 
+        logger      = logger  ,       ## use this logger 
+        frequency   = 0       , **kwargs ) :
     
     assert isinstance ( size  , integer_types ) and 1 <= size ,\
            'Invalid "size"  argument %s/%s' % ( size  , type ( size ) )
 
-    if not nSplit : nSplit = max ( 2 , 2 * numcpu() ) 
-
-    assert isinstance ( nSplit  , integer_types ) and 0 <= nSplit  <= size ,\
-           'Invalid "nSplit"  argument %s/%s' % ( nSplit  , type ( nSplit  ) )
-    
     config = { 'pdf'         : pdf         ,
                'data'        : data        , 
                'fit_config'  : fit_config  ,
@@ -1388,9 +1376,10 @@ def parallel_bootstrap (
     
 
     import ostap.fitting.toys as Toys
-    if nSplit    < 2  : return Toys.make_boostrap ( size = size , progress = progress , **config ) 
-    if numcpu () <= 1 :
-        logger.warning ("Not enough CPUs for parallelisation!") 
+    nSplit = nSplit  if isinstance ( nSplit , int ) and 1 <= nSplit else N_SPLIT     
+    if   nSplit    <  2  : return Toys.make_boostrap ( size = size , progress = progress , **config ) 
+    elif numcpu () <= 1 :
+        logger.warning ( "Not enough CPUs for parallelisation!" ) 
         return Toys.make_bootstrap ( size = size , progress = progress , **config ) 
     
     ## check if pdf and `extended` flag are in agreemrnt, and print warning message otherwise
@@ -1480,20 +1469,21 @@ class  FunToysTask (TheBaseTask) :
             self.the_output = self.__funtoys.merge ( self.the_output , result )
             
 # =============================================================================
-## Get certain features (mainly uncertaintes) of the model using pseudoexperments.
+## Get certain features (mainly uncertainties) of the model using pseudoexperments.
 #  Propagate fit uncertainties for the model features using pseudoexpeeriments 
 #  @param model      the model to be checked
 #  @param fit_result fit result
 #  @param methods    methods to be invokes
 #  @aram  nToys      number of pseudoexperiments
-def parallel_funtoys ( model         ,
-                       fit_result    , 
-                       methods       ,
-                       nSplit = 0    ,
-                       nToys  = 1000 ,
-                       *args         ,
-                       **kwargs      ) :
-    """ Get certain features (mainly uncertaintes) of the model using pseudoexperments
+def parallel_funtoys ( model            , 
+                       fit_result       , 
+                       methods          ,
+                       nSplit = N_SPLIT ,
+                       nToys  = 1000    ,
+                       *args            ,
+                       logger = logger  , 
+                       **kwargs         ) :
+    """ Get certain features (mainly uncertainties) of the model using pseudoexperments
     - model      : the model to be checked
     - fit_result : fit results
     - methods:   : methods to be invokes
@@ -1508,11 +1498,7 @@ def parallel_funtoys ( model         ,
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
         'Invalid "nToys"  argument %s/%s' % ( nToys  , type ( nToys  ) )
     
-    if not nSplit : nSplit = max ( 2 , 2 * numcpu() )
-    
-    assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
-        'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
-    
+    nSplit = nSplit  if isinstance ( nSplit , int ) and 1 <= nSplit else N_SPLIT     
     if nSplit <  2 or numcpu() <= 1 : 
         return Toys.make_funtoys ( model , fit_result , methods , nToys , *args , **kwargs ) 
     
@@ -1520,7 +1506,8 @@ def parallel_funtoys ( model         ,
     if rem : params = [ size + rem ] + ( nSplit - 1 ) * [ size ]
     else   : params =                    nSplit       * [ size ]
 
-    progress = kwargs.pop ( 'progress' , True )
+    progress = kwargs.pop ( 'progress' , True          )
+    silent   = kwargs.get ( 'silent'    , not progress ) 
     
     ## create the task 
     task = FunToysTask ( model      ,
@@ -1529,8 +1516,8 @@ def parallel_funtoys ( model         ,
                          *args      ,
                          **kwargs   )
     
-    ## create work manager 
-    wmgr  = WorkManager ( silent = not progress , progress = progress )
+    ## create work manager
+    wmgr  = WorkManager ( silent = silent , progress = progress )
     
     ## start parallel processing! 
     wmgr.process( task , params  )
