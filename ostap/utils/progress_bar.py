@@ -384,7 +384,7 @@ class ProgressBar(object):
 
     # ==========================================================================
     ## Show the  bar 
-    def show ( self ) :
+    def show ( self , force = False ) :
         """ Show the bar """
         if not self.__silent and self.__bar != self.__last : 
             if self.__prefix : self.__output.write ( self.__prefix       ) 
@@ -410,7 +410,7 @@ class ProgressBar(object):
         """
         self.__the_start  = time.time ()
         self.__the_end    = None 
-        self.show() 
+        self.show ( force = True ) 
         return self
         
     # =========================================================================
@@ -498,7 +498,7 @@ class RunningBar(object):
     def __str__ ( self ) :
         return str ( self.bar )
 
-    def show ( self ) :
+    def show ( self , force = False  ) :
 
         if self.silent : return
 
@@ -565,7 +565,7 @@ class RunningBar(object):
         self.__start  = time.time ()
         self.__last   = None 
         self.__shown  = 0
-        if not self.silent : self.show ( force = True )
+        if not self.silent : self.show_ ( force = True )
         return self
     
     ## CONTEXT manager EXIT 
