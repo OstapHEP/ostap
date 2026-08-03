@@ -172,12 +172,12 @@ def cramer_von_mises ( cdf_data  ) :
 #  k        = kuiper ( cdf_data )
 #  @endcode
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
-#  @return Kolmogorov-Smirnov statistics K
+#  @return Kuiper statistics K
 def kuiper ( cdf_data ) :
     """ Get Kuiper statistis  KS
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
     >>> cdf_data =...
-    >>> ks2  = kolmogorov_smirnov ( cdf_data )
+    >>> ks2  = kuiper  ( cdf_data )
     """
     n       = len ( cdf_data )
     
@@ -817,6 +817,7 @@ class GoF1DToys(GoF1D) :
     def run ( self ,
               nToys    = 1000   , * ,
               parallel = False  ,
+              progress = True   , 
               silent   = False  ,
               fitconf  = {}     , 
               nSplit   = 0      ) :
@@ -826,12 +827,12 @@ class GoF1DToys(GoF1D) :
 
         if parallel :
             from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
-            self += parallel_toys ( gof      = self       ,
-                                    nToys    = nToys      ,
-                                    nSplit   = nSplit     ,
-                                    fitconf  = fitconf    , 
-                                    silent   = True       ,
-                                    progress = not silent )
+            self += parallel_toys ( gof      = self      ,
+                                    nToys    = nToys     ,
+                                    nSplit   = nSplit    ,
+                                    fitconf  = fitconf   , 
+                                    silent   = silent    ,
+                                    progress = progress  )
             return self 
         
         varname  = self.pdf.xvar.name        
@@ -844,16 +845,17 @@ class GoF1DToys(GoF1D) :
         use_NLL = 'NLL' in self.estimators  or 'AIC' in self.estimators  or 'BIC' in self.estimators
         
         cnt = SE() 
-        for i in progress_bar ( nToys , silent = silent , description = 'Toys:') :
+        for i in progress_bar ( nToys , silent = not progress  , description = 'Toys:') :
 
             self.pdf.load_params ( self.parameters , silent = True )            
             dset     = self.pdf.generate ( self.N  , sample = True )
 
-
             # =======================================================================
-            if use_NLL : # =========================================================
+            if use_NLL : # ==========================================================
+                # ===================================================================
                 ## fit it ?                
                 r , _ = self.pdf.fitTo ( dset , draw = False , silent = silent , **fitconf )
+                
                 nll   = r.minNll (      )
                 aic   = r.aic    (      )
                 bic   = r.bic    ( dset )

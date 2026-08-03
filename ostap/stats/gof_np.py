@@ -94,9 +94,9 @@ class GoFnp (AGoFnp) :
         self.__pvalue    = None
                 
         if self.__parallel :
-            mratio = memory_enough () / numcpu () 
-            if mratio < 1 :
-                logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing' % mratio )                
+            mratio = memory_enough ()  
+            if mratio <= 1 :
+                logger.warning ( 'Available/used memory ratio: %.1f; switch-off parallel processing' % mratio )                
                 ## self.__parallel = False
                 
     @property

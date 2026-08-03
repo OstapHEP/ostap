@@ -189,19 +189,18 @@ class WorkManager(TaskManager) :
         block_size = myargs.pop ( 'buffer_size' , None ) or myargs.pop ( 'block_size' , None  ) or self.block_size 
         if not isinstance ( block_size , int ) or block_size <= 1 : block_size = self.block_size
 
-        chunk_size = myargs.pop ( 'batch_size'  , None ) or myargs.pop ( 'chunk_size' , None  )
-        if not isinstance ( chunk_size , int ) or chunk_size < 1 :
-            chunk_size = self.chunksize_guess ( jobs_args ) 
-            logger.info ( "`chunksize' is chosen to be %s" % chunk_size )
-            
-        ## progress-bar description
-        description = myargs.pop ( 'description' , "Jobs:" )
-        
         ## number of jobs 
         njobs = ( myargs.pop ( 'njobs'     , None ) or 
                   myargs.pop ( 'max_value' , None ) or
                   ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
-
+        
+        chunk_size = myargs.pop ( 'batch_size'  , None ) or myargs.pop ( 'chunk_size' , None  )
+        if not isinstance ( chunk_size , int ) or chunk_size < 1 :
+            chunk_size = self.chunksize_guess ( jobs_args , njobs ) 
+            logger.debug ( "`chunksize' is chosen to be %s" % chunk_size )
+            
+        ## progress-bar description
+        description = myargs.pop ( 'description' , "Jobs:" )
         
         config = dict ( chunksize = chunk_size )
         if not ordered                 : config [ 'block_size'  ] = block_size

@@ -93,6 +93,7 @@ class GoFTask (Task) :
         
         toys.run ( nToys    = nToys ,
                    parallel = False ,
+                   progress = False , 
                    silent   = True  )
         
         return toys 
@@ -127,25 +128,29 @@ def parallel_goftoys ( gof             ,
         elif isinstance ( gof , GoFSimFit1D ) : toys = GoFSimFitToys ( gof )
         elif isinstance ( gof , GoFSimFit   ) : toys = gof 
         
-        toys.run ( nToys    = nToys                  ,
-                   parallel = False                  ,
-                   fitconf  = fitconf                , 
-                   silent   = silent or not progress )
+        toys.run ( nToys    = nToys    ,
+                   parallel = False    ,
+                   fitconf  = fitconf  ,
+                   progress = progress , 
+                   silent   = silent   )
         
         return toys
     
     ## create work manager 
-    wmgr  = WorkManager ( silent   = silent and not progress ,
-                          progress = progress or not silent  , **kwargs )
+    wmgr  = WorkManager ( silent   = silent   ,
+                          progress = progress , **kwargs )
 
     ## create the task 
     task  = GoFTask ( gof = gof )
-    
+
     ## start parallel processing!
-    if nToys < 10 * nSplit : wmgr.process ( task , splitter ( nToys , nSplit ) ) 
+    if nToys < 10 * nSplit :
+        jobs  = splitter ( nToys , nSplit ) 
+        wmgr.process ( task , jobs , njobs = nSplit ) 
     else : 
-        ## - use one "pilot" job
-        wmgr.process ( task , [ 1 ] + list ( splitter ( nToys - 1  , nSplit ) ) )
+        ## - use one short "pilot" job
+        jobs = [ 1 ] + list ( splitter ( nToys - 1 , nSplit - 1 ) ) 
+        wmgr.process ( task , jobs ) 
     
     return task.results () 
 

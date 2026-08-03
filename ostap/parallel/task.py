@@ -993,7 +993,10 @@ class TaskManager(ManagerBase) :
         >>> result1 =  wm.process ( my_fun , items , merger = TaskMerger ( lambda  a,b : a+[b] , init = [] ) )
         >>> result2 =  wm.process ( my_fun , items , merger = TaskMerger () )    
         
-        """        
+        """
+
+        if isinstance ( args , sized_types ) : kwargs [ 'njobs' ] = len ( args )
+        
         # ===============================================================================
         if isinstance ( task , Task ) : result = self.__process_task ( task , args , **kwargs )
         else                          : result = self.__process_func ( task , args , **kwargs )
@@ -1037,26 +1040,17 @@ class TaskManager(ManagerBase) :
         ## initialize the results 
         results = init
 
-
         myargs [ 'progress' ] = False
         barconf = dict ( description = 'Jobs:' , silent = not progress )
         
         ## get proper max-value for Progress/Running-bars
-        if progress :
-            
-            max_value = ( myargs.pop ( 'max_value'  , None ) or
-                          myargs.pop ( 'max_jobs'   , None ) or
-                          myargs.pop ( 'total_jobs' , None ) or
-                          myargs.pop ( 'njobs'      , None ) or
-                          len ( args ) if isinstance ( args , sized_types ) else None )
-            
-            if   max_value is None                                 : pass 
-            elif isinstance ( max_value , int ) and 1 <= max_value : pass
-            else                                                   : max_value = None
-            
-        else :
-            
-            max_value = None 
+        max_value = ( myargs.pop ( 'njobs'      , None ) or
+                      myargs.pop ( 'max_value'  , None ) or
+                      myargs.pop ( 'max_jobs'   , None ) or
+                      myargs.pop ( 'total_jobs' , None ) or
+                      ( len ( args ) if isinstance ( args , sized_types ) else None ) ) 
+        
+        max_value = max_value if isinstance ( max_value , int ) and 1 <= max_value else None 
         
         if max_value is None :
             from ostap.utils.progress_bar import RunningBar
@@ -1066,7 +1060,7 @@ class TaskManager(ManagerBase) :
             the_bar = ProgressBar ( max_value = max_value , **barconf )
                 
         with the_bar as bar :
-            
+
             ## HYPER-BLOCKS?
             hyper_block_size = myargs.pop ( 'hyper_block_size' , self.hyper_block_size  )
             if not isinstance ( hyper_block_size , int ) or hyper_block_size <= 1 : hyper_block_size = self.hyper_block_size
@@ -1077,7 +1071,7 @@ class TaskManager(ManagerBase) :
                 jobs_args = zip ( repeat ( task ) , count ( index ) , hyper_block )
 
                 ## call for the actual jobs handling method 
-                for jobid , result , stat in self.iexecute ( func_executor ,  jobs_args , **myargs ) :
+                for jobid , result , stat in self.iexecute ( func_executor , jobs_args , njobs = len ( hyper_block ) , **myargs ) :
                     
                     merged_stat += stat
                                         
@@ -1122,7 +1116,7 @@ class TaskManager(ManagerBase) :
     def __process_task  ( self , task , args , **kwargs ) :
         """ Helper internal method to process the task with chunks of data 
         """
-            
+
         from timeit import  default_timer as _timer
         start = _timer()
 
@@ -1151,29 +1145,21 @@ class TaskManager(ManagerBase) :
         index = 0 
 
         ## get proper max-value for Progress/Running-bars
-        if progress :
-            
-            max_value = ( myargs.pop ( 'max_value'  , None ) or
-                          myargs.pop ( 'max_jobs'   , None ) or
-                          myargs.pop ( 'total_jobs' , None ) or
-                          myargs.pop ( 'njobs'      , None ) or
-                          len ( args ) if isinstance ( args , sized_types ) else None )
-            
-            if   max_value is None                                 : pass 
-            elif isinstance ( max_value , int ) and 1 <= max_value : pass
-            else                                                   : max_value = None
-            
-        else :
-            
-            max_value = None 
+        max_value = ( myargs.pop ( 'njobs'      , None ) or                      
+                      myargs.pop ( 'max_value'  , None ) or
+                      myargs.pop ( 'max_jobs'   , None ) or
+                      myargs.pop ( 'total_jobs' , None ) or
+                      ( len ( args ) if isinstance ( args , sized_types ) else None ) ) 
         
+        max_value = max_value if isinstance ( max_value , int ) and 1 <= max_value else None 
+
         if max_value is None :
             from ostap.utils.progress_bar import RunningBar
             the_bar = RunningBar ( **barconf )
         else :            
             from ostap.utils.progress_bar import ProgressBar
             the_bar = ProgressBar ( max_value = max_value , **barconf )
-                
+
         with the_bar as bar :
             
             ## HYPER-BLOCKS?
@@ -1185,7 +1171,7 @@ class TaskManager(ManagerBase) :
                 
                 jobs_args = zip ( repeat ( task ) , count ( index ) , hyper_block )
                 
-                for jobid , result , stat in self.iexecute ( task_executor , jobs_args , **myargs ) : 
+                for jobid , result , stat in self.iexecute ( task_executor , jobs_args , njobs = len ( hyper_block ) , **myargs ) : 
 
                     ## merge statistics 
                     merged_stat += stat
@@ -1376,11 +1362,12 @@ class TaskManager(ManagerBase) :
 
     # =========================================================================
     ## Guess for `chunksize` argument
-    def chunksize_guess ( self , jobs ) :
+    def chunksize_guess ( self , jobs , njobs = None ) :
         """ Guess for `chunksize` argument
         """
-        if   isinstance ( jobs , int ) and 0 <= jobs : njobs = jobs
-        elif isinstance ( jobs , sized_types )       : njobs = len ( jobs )
+        if   isinstance (  jobs , int ) and 0 <=  jobs : njobs = jobs
+        elif isinstance (  jobs , sized_types )        : njobs = len ( jobs )
+        elif isinstance ( njobs , int ) and 1 <= njobs : pass 
         else : return 1
         ## 
         return max ( 1 , njobs // ( 4 * ( self.ncpus + 1 ) ) )

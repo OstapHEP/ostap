@@ -454,9 +454,7 @@ class RunningBar(object):
     ...    do something here
     
     """
-    def __init__ ( self, * ,
-                   output  = sys.stdout ,
-                   **kwargs ) :
+    def __init__ ( self, * , output  = sys.stdout , **kwargs ) :
 
 
         ## tty ? 
@@ -469,7 +467,7 @@ class RunningBar(object):
         self.__start  =  time.time ()
         self.__last   =  None 
         self.__shown  =  0
-        self.__output = output 
+        self.__output =  output 
 
         if not isinstance ( self.freq , int ) or self.freq < 0 : self.freq = 0 
             
@@ -516,13 +514,13 @@ class RunningBar(object):
         elif self.amount <= 1000000 and 0 == self.amount % 5000      : return self.show_ ()
         elif                            0 == self.amount % 10000     : return self.show_ () 
 
-    def show_ ( self , now = None ) :
+    def show_ ( self , now = None , force = False ) :
 
         if   self.silent : return        
         elif now is None : now = time.time() 
 
         ## avoid very frequent printout        
-        if self.__last and now - self.__last < 0.1 : return
+        if not force and self.__last and now - self.__last < 0.1 : return
         
         ## index 
         bar = '%s %s %d' % ( self.prefix , _bar_ [ self.__shown % _lbar_ ] , self.amount ) 
@@ -566,7 +564,8 @@ class RunningBar(object):
     def __enter__ ( self      ) :
         self.__start  = time.time ()
         self.__last   = None 
-        self.__shown  = 0 
+        self.__shown  = 0
+        if not self.silent : self.show ( force = True )
         return self
     
     ## CONTEXT manager EXIT 

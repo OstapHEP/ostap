@@ -485,7 +485,7 @@ Labels = {
     'ZC'  : 'Zhang/ZC'           ,        
     'BJ'  : 'Berk-Jones'         ,        
     'NLL' : '-log L'             ,
-    'AIC' : 'Aikaike IC'         ,
+    'AIC' : 'Akaike IC'          ,
     'BIC' : 'Bayesian IC'        ,    
 }
 # =============================================================================
@@ -500,7 +500,7 @@ Keys = {
     'ZC'  : ( 'zc'  , 'zhangc'     , 'zhangzc'           ) , 
     'BJ'  : ( 'bj'  , 'berkjones'  , 'berk'              ) , 
     'NLL' : ( 'nll' ,              ) , 
-    'AIC' : ( 'aic' , 'aikaike'    ) ,  
+    'AIC' : ( 'aic' , 'akaike'     ) ,  
     'BIC' : ( 'bic' , 'bayesian'   ) , 
     }
 # =============================================================================
@@ -686,14 +686,15 @@ class PERMUTATOR(object) :
     def run ( self , nToys , silent = False , progress  = True ) :
         """ Run permutations in parallel using WorkManager
         """
-        me       = math.ceil ( memory_enough() ) + 1 
-        njobs    = min ( 2 * numcpu () + 3 , me ) 
+        ## how many processes can fit into available memory? 
+        me       = math.floor ( memory_enough() ) + 1 
+        njobs    = min ( 2 * numcpu () + 3 , me + 1 )
         the_list = [ n for n in splitter ( nToys , njobs ) ] 
         njobs    = len ( the_list ) 
         
         if not silent :
             logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with WorkManager' % njobs )
-            
+
         counter = EffCounter()
         tvalues = () 
         ## 
@@ -702,6 +703,7 @@ class PERMUTATOR(object) :
         with WorkManager ( silent = silent ) as manager : 
             for result in manager.iexecute ( self.run_toys ,
                                              the_list      ,
+                                             block_size    = min ( me , 2 * numcpu() ) , 
                                              progress      = progress        ,
                                              njobs         = njobs           ,
                                              description   = 'Permutations:' ) :
@@ -819,16 +821,16 @@ class TOYS(object) :
         ##
         assert isinstance ( nToys , int ) and 1 <= nToys , "Invalid nToys: %s" % nToys
         ##
-        ## how many processes fits into memory ?
-        me       = math.ceil ( memory_enough() ) + 1 
-        njobs    = min ( 2 * numcpu () + 3 , me ) 
+        ## how many processes fits into available memory ?
+        me       = math.floor ( memory_enough() ) + 1 
+        njobs    = min ( 2 * numcpu () + 3 , me + 1 )
         the_list = [ n for n in splitter ( nToys , njobs ) ] 
         njobs    = len ( the_list )
         
         if not silent :
             logger.info ( 'GoF-toys: #%d parallel subjobs to be used' % njobs )
             ##
-            
+
         counter = EffCounter()
         tvalues = ()
         ##        
@@ -837,6 +839,7 @@ class TOYS(object) :
         with WorkManager ( silent = silent ) as manager :            
             for result in manager.iexecute ( self.run_toys ,
                                              the_list      ,
+                                             block_size    = min ( me , 2 * numcpu() ) , 
                                              progress      = progress   ,
                                              njobs         = njobs      ,
                                              description   = 'Toys:'    ) :
@@ -1157,11 +1160,11 @@ def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
 
 
 # =============================================================================
-## use LigthGBM ?
+## use LightGBM ?
 #  - there is some mess with lightgbm&narwhals installation 
 def useLightGBM () :
-    """ Use LigthGBM ?
-    - there is soem mess with ligthgbm&narwhals installation 
+    """ Use LightGBM ?
+    - there is some mess with LightBM&Narwhals installation 
     """
     # ============================================================================
     try : # ======================================================================

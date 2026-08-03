@@ -104,12 +104,17 @@ class WorkManager(TaskManager) :
         myargs = cidict ( self.params , transform = cidict_fun )
         myargs.update   ( kwargs      )
 
+        ## number of jobs 
+        njobs = ( myargs.pop ( 'njobs'     , None ) or 
+                  myargs.pop ( 'max_value' , None ) or
+                  ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+        
         chunk_size = myargs.pop ( 'batch_size'   , None ) or myargs.pop ( 'chunk_size' , None  ) or 'auto'        
         block_size = myargs.pop ( 'pre_dispatch' , None ) or myargs.pop ( 'block_size' , None  ) or '2*n_jobs'
 
         if 'auto' != chunk_size and ( not isinstance ( chunk_size , int ) or chunk_size < 1 ) :
-            chunk_size = self.chunksize_guess ( jobs_args ) 
-            logger.info ( "`chunksize' is chosen to be %s'" % chunk_size )
+            chunk_size = self.chunksize_guess ( jobs_args , njobs ) 
+            logger.debug ( "`chunksize' is chosen to be %s'" % chunk_size )
             
         myargs.pop ( 'as_generator' , None )
         
@@ -120,11 +125,6 @@ class WorkManager(TaskManager) :
         ## progress-bar description
         description = myargs.pop ( 'description' , "Jobs:" )
         
-        ## number of jobs 
-        njobs = ( myargs.pop ( 'njobs'     , None ) or 
-                  myargs.pop ( 'max_value' , None ) or
-                  ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
-
         modules_to_import = myargs.pop ( "imports" , [] )
         if isinstance ( modules_to_import , str ) : modules_to_import = [ modules_to_import ]
 

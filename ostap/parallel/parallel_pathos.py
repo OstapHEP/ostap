@@ -306,12 +306,17 @@ class WorkManager (TaskManager) :
         from ostap.utils.cidict import cidict, cidict_fun
         myargs = cidict ( self.params , transform = cidict_fun )
         myargs.update   ( kwargs      )
-
+        
+        ## number of jobs 
+        njobs = ( myargs.pop ( 'njobs'     , None ) or 
+                  myargs.pop ( 'max_value' , None ) or
+                  ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+        
         chunk_size = myargs.pop ( 'chunk_size' , None ) or myargs.pop ( 'batch_size' , None )
         if   ordered and chunk_size is None : pass
         elif not isinstance ( chunk_size , int ) or chunk_size < 1 :
-            chunk_size = self.chunksize_guess ( jobs_args ) 
-            logger.info ( "`chunksize' is chosen to be %s'" % chunk_size )
+            chunk_size = self.chunksize_guess ( jobs_args , njobs ) 
+            logger.debug ( "`chunksize' is chosen to be %s'" % chunk_size )
         
         ## block-size is embedded deep into multiprocessing 
         myargs.pop ( 'block_size' , self.block_size )
@@ -319,11 +324,6 @@ class WorkManager (TaskManager) :
         ## progress-bar description        
         description = myargs.pop ( 'description' , "Jobs:" )
 
-        ## number of jobs 
-        njobs = ( myargs.pop ( 'njobs'     , None ) or 
-                  myargs.pop ( 'max_value' , None ) or
-                  ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
-        
         modules_to_import = myargs.pop ( "imports" , [] )
         if isinstance ( modules_to_import , str ) : modules_to_import = [ modules_to_import ]
   
@@ -347,7 +347,7 @@ class WorkManager (TaskManager) :
                 else       : jobs = pool.uimap ( job , jobs_args , chunksize = chunk_size )
                 
                 ## retrive (asynchronous) results from the jobs
-                for result in progress_bar ( jobs ,
+                for result in progress_bar ( jobs                       ,
                                              max_value   = njobs        ,
                                              description = description  , 
                                              silent      = not progress ) :

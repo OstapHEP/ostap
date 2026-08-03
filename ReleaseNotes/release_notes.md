@@ -1,5 +1,7 @@
 ## New features
 
+  1. set of tiny tweaks
+  
 ## Bug fixes 
 
 ## Backward incompatible

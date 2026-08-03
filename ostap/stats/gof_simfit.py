@@ -359,7 +359,8 @@ class GoFSimFit1DToys(GoFSimFit1D) :
     def run ( self ,
               nToys    = 1000  , * ,
               parallel = False ,
-              fitconf  = {}    , 
+              fitconf  = {}    ,
+              progress = True  , 
               silent   = False ,
               nSplit   = 0     ) :
         """ Run toys 
@@ -374,7 +375,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                                      nSplit   = nSplit     ,
                                      fitconf  = fitconf    , 
                                      silent   = True       ,
-                                     progress = not silent )
+                                     progress = progress   )
             if result : self+= result  
             return self 
         
@@ -382,7 +383,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
         counters = self.counters 
 
         from ostap.utils.progress_bar import progress_bar
-        for i in progress_bar ( nToys , silent = silent , description = 'Toys:') :
+        for i in progress_bar ( nToys , silent = not progress , description = 'Toys:') :
 
             self.pdf.load_params ( self.parameters , silent = True )            
             dset     = self.pdf.generate ( self.N  , sample = True )
@@ -909,7 +910,7 @@ class GoFSimFit(GoFSimFitBase) :
         
         ## all GoFs can run in parallel ? 
         self.__gofs_parallel = all ( hasattr ( gof , 'parallel' ) and gof.parallel for gof in self.gofs.values () ) 
-            
+
         ## run toys if requested
         if runconfig : self.run ( **runconfig )
 
@@ -1034,47 +1035,49 @@ class GoFSimFit(GoFSimFitBase) :
               parallel = False  ,
               fitconf  = {}     , 
               silent   = False  ,
+              progress = True   , 
               nSplit   = 0      ) :
         """ Run toys to get the p-value
         """        
         assert  isinstance ( nToys , int ) and 0 < nToys , "Invalid number of toys: %s" % nToys
-
+        
         if parallel and not self.gofs_parallel : 
             logger.warning  ( "Parallel processing is switched OFF!" ) 
             parallel  = False 
             
         if parallel :
-            
+
             from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
             result = parallel_toys ( gof      = self       ,
                                      nToys    = nToys      ,
                                      nSplit   = nSplit     ,
                                      fitconf  = {}         , 
-                                     silent   = True       ,
-                                     progress = not silent )
+                                     silent   = True       ,                                     
+                                     progress = progress   )
             
             if result : self += result
             
             return self 
 
         ## run with timer 
-        with timing ( logger = None ) as timer : result = self.__run ( nToys , silent )
+        with timing ( logger = None ) as timer :
+            result = self.__run ( nToys , progress = progress , silent = silent )
             
         if 0 < timer.delta : self.__time += timer.delta
         return result
-    
+
+    # ==================================================================================
     ## run toys to get p-value
     def __run ( self              ,
                 nToys    = 500    ,
+                progress = True   , 
                 silent   = False  ) : 
         """ Run toys to get the p-value
         """        
         assert  isinstance ( nToys , int ) and 0 < nToys , "Invalid number of toys: %s" % nToys
 
-        print ( 'RUN:' , nToys )
-        
         from ostap.utils.progress_bar import progress_bar
-        for t in progress_bar ( nToys , silent = silent , description = 'Toys:' ) : 
+        for t in progress_bar ( nToys , silent = not progress , description = 'Toys:' ) : 
               
             name = self.sample.name
             new_dataset = self.pdf.generate ( self.N , sample = True )
@@ -1111,7 +1114,7 @@ class GoFSimFit(GoFSimFitBase) :
             new_dataset.clear() 
             del new_dataset 
             
-    # ============================================================================
+    # ==================================================================================
     ## get dictionary of t-values & dictionary of p-values
     def pvalues  ( self ) :
         """ Get dictionaries of t and p-values 
