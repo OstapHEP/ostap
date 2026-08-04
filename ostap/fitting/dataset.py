@@ -3854,6 +3854,49 @@ _new_methods_ += [
 
 
 # ============================================================================
+## All weights are positive?
+#  @code
+#  data = ..
+#  if data.weights_positive : ...
+#  @endcode 
+def _weights_positive_ ( data ) :
+    """ All weights are positive?
+    >>> data = ..
+    >>> if data.weights_positive : ...
+    """
+    if not data.isWeighted() : return True
+    wstat    = data.statVar( "1" )
+    weights  =    wstat.weights()
+    wmin , _ = weights.minmax()
+    return 0 < wmin
+
+# ============================================================================
+## All weights are non-negative ?
+#  @code
+#  data = ..
+#  if data.weights_non_negative  : ...
+#  @endcode 
+def _weights_non_negative_ ( data ) :
+    """ All weights are non-negative?
+    >>> data = ..
+    >>> if data.weights_non_negative : ...
+    """
+    if not data.isWeighted() : return True
+    wstat    = data.statVar( "1" )
+    weights  =    wstat.weights()
+    wmin , _ = weights.minmax()
+    return 0 <= wmin
+
+
+ROOT.RooDataSet.weights_positive     = property ( _weights_positive_     , None , None , _weights_positive_    .__doc__ )
+ROOT.RooDataSet.weights_non_negative = property ( _weights_non_negative_ , None , None , _weights_non_negative_.__doc__ )
+
+_new_methods_ += [    
+    ROOT.RooDataSet.weights_positive     ,
+    ROOT.RooDataSet.weights_non_negative ,
+    ]
+
+# ============================================================================
 ## Convert RooDataSet to TTree
 #  @code
 #  dataset = ...

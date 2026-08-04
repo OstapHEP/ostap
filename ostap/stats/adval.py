@@ -240,7 +240,6 @@ class ADVAL_base (GoFnp):
         cv           = StratifiedKFold ( n_splits = self.n_splits , shuffle = True , random_state = random_state )
         oof_preds    = numpy.zeros( N )
 
-        
         ## feature imporances 
         importances = numpy.zeros( X.shape [ 1 ] , dtype = float ) if importance else None 
 
@@ -371,7 +370,6 @@ class ADVAL_LGBM (ADVAL_base) :
         ## predictions & importances 
         return predictions, model.feature_importance ( importance_type = 'gain' )
 
-        
 # =======================================================================================
 ## @class ADVAL_XGB
 #  XGBoost-based lass for Adversarial Validation for the difference between two (weighted) dataset

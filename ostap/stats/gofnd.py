@@ -197,9 +197,19 @@ class GoF(AGoF) :
         self.__mcFactor   = state.pop ( 'mcFactor' , 20    )
         self.__sample     = state.pop ( 'sample'   , False )
         self.__genconf    = state.pop ( 'genconf'  , {}    )
-        
+
     # =========================================================================
-    ## Calculate T-value for Goodness-of-Fit 
+    ## Check the weight
+    #  Weigted datatsets are accepted only if weighet are supported!
+    def check_weights ( self , data ) :
+        """ Check the weight
+        """
+        if not data.isWeighted ()   : return True
+        elif self.weights_supported : return True 
+        return False
+    
+    # =========================================================================
+    ## Calculate t-value for Goodness-of-Fit 
     #  @code
     #  ppd    = ...
     #  pdf    = ...  
@@ -213,13 +223,9 @@ class GoF(AGoF) :
         >>> data   = ... 
         >>> tvalue = gof.tvalue ( pdf , data ) 
         """
-        assert not data.isWeighted() or self.weights_supported , \
-            "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
-                                                                       typename ( self.gof ) )
-        ## 
-        ## ds1, ds2           = self. transform ( pdf , data )         
-        ## estimate the t-value 
-        ## return self.gof ( ds1 , ds2 , normalize = True )
+        if not self.check_weights ( data ) :
+            raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
+                                                                    typename ( self.gof ) ) )
     
         ds1, ds2 , weight1 = self.wtransform ( pdf , data )         
         return self.gof ( ds1 , ds2 , weight1 = weight1 , normalize = True )
@@ -239,13 +245,9 @@ class GoF(AGoF) :
         >>> data  = ... 
         >>> t , p = gof.pvalue ( pdf , data ) 
         """
-        assert not data.isWeighted() or self.weights_supported , \
-            "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
-                                                                       typename ( self.gof ) )
-        
-        ## ds1 , ds2 = self.transform ( pdf , data )         
-        ## estimate t&p-values
-        ## tv ,  pv  = self.gof.pvalue ( ds1 , ds2 , tvalue = tvalue )
+        if not self.check_weights ( data ) :
+            raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
+                                                                    typename ( self.gof ) ) )        
         ## 
         ds1, ds2 , weight1 = self.wtransform ( pdf , data )         
         tv , pv = self.gof.pvalue ( ds1 , ds2 , weight1 = weight1 , tvalue = tvalue )

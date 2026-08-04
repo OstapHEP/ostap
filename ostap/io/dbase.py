@@ -55,16 +55,19 @@ except ImportError : # ========================================================
     # =========================================================================
     db_gnu = None
 # =============================================================================
+db_gnu_types = 'dbm.gnu'  , 'gdbm' , 'gnu' , 'dbm'
+# =============================================================================
 try : # =======================================================================
     # =========================================================================
     import dbm.ndbm as db_dbm
-    db_ndbm_types =  'dbm.ndbm' , 'ndbm' 
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
     db_dbm = None
 # =============================================================================
 import dbm.dumb as db_dumb
+db_gnu_types  = 'dbm.gnu'  , 'gdbm' , 'gnu' , 'dbm'
+db_ndbm_types = 'dbm.ndbm' , 'ndbm' 
 db_dumb_types = 'dbm.dumb' , 'dumbdbm' , 'dumb' 
 db_std_types  = 'std' , 'stddb' , 'standard' 
 # =============================================================================
@@ -92,8 +95,7 @@ else : # ======================================================================
     # =========================================================================
     use_sqlite3 = False
 # =============================================================================
-if use_sqlite3 or SQLiteDict :
-    db_sqlite3_types = 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql'
+db_sqlite3_types = 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql'
 # =============================================================================
 ## Check for Berkeley DB
 # =============================================================================
@@ -132,14 +134,14 @@ try : # =======================================================================
         db = berkeleydb.db.DB ( dbenv )
         db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flag ]  , mode )
         
-        return db
-    
-    db_berkeley_types = 'berkeleydb' , 'berkeley' , 'dbhash'
+        return db    
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
     berkeleydb      = None
     use_berkeleydb  = False 
+# =============================================================================
+db_berkeley_types = 'berkeleydb' , 'berkeley' , 'dbhash' , 'bsddb3' 
 # =============================================================================
 ## Check for BSDDB3 
 # =============================================================================
@@ -147,7 +149,7 @@ use_bsddb3     = False
 # =============================================================================
 ## make a try for dbddb3 
 if sys.version_info < ( 3 , 10 ) :
-    # ==a=======================================================================
+    # =========================================================================
     try : # ===================================================================
         # =====================================================================
         import bsddb3
@@ -159,15 +161,15 @@ if sys.version_info < ( 3 , 10 ) :
             """
             return bsddb3.hashopen ( filename , flag = flag  , mode = mode , **kwargs )        
         use_bsddb3  = True
-        db_bsddb3_types = 'bsddb3' , 'berkeley' , 'berkeleydb' , 'dbhash' 
         # =====================================================================
     except ImportError  : # ===================================================
         # =====================================================================
         bsddb3      = None 
         use_bsddb3  = False 
 # =============================================================================
-use_duckdb     = False
-use_duckdblite = False 
+db_bsddb3_types = 'bsddb3' , 'berkeley' , 'berkeleydb' , 'dbhash' 
+use_duckdb      = False
+use_duckdblite  = False 
 # =============================================================================
 if ( 3 , 10 ) <= sys.version_info : # =========================================
     # =========================================================================
@@ -176,13 +178,14 @@ if ( 3 , 10 ) <= sys.version_info : # =========================================
         from ostap.io.duckdbdict import DuckDBDict, DuckDBLiteDict
         use_duckdb     = True if DuckDBDict     else False 
         use_duckdblite = True if DuckDBLiteDict else False 
-        db_duckdb_types     = 'duckdb'     , 'duck'
-        db_duckdblite_types = 'duckdblite' , 'ducklite', 'liteduckdb' , 'liteduck'     
         # =====================================================================
     except ImportError : # ====================================================
     # =========================================================================
         pass 
-        
+
+# =============================================================================
+db_duckdb_types     = 'duckdb'     , 'duck'
+db_duckdblite_types = 'duckdblite' , 'ducklite', 'liteduckdb' , 'liteduck'             
 # =============================================================================
 import dbm                    as std_db
 std_whichdb = std_db.whichdb
@@ -202,8 +205,8 @@ available_backends = frozenset ( available_backends )
 # ============================================================================
 ## check the environment variable for the preferred DBASE backends 
 from ostap.utils.env import get_env, OSTAP_DBTYPES
-preferrable_backends = tuple ( name_transform ( t ) for t in get_env ( OSTAP_DBTYPES , '' ).split ( os.pathsep ) )
-preferrable_backends = tuple ( t for t in preferrable_backends if  t and t in available_backends ) 
+preferrable_backends = tuple ( name_transform ( t ) for t in get_env ( OSTAP_DBTYPES , '' ).split ( ',' ) )
+preferrable_backends = tuple ( t for t in preferrable_backends if t and t in available_backends )
 # =============================================================================
 
 # =============================================================================
@@ -402,8 +405,8 @@ def dbopen ( file               ,
                 return DuckDBDict     ( filename = file , flag = flag , **kwargs )
             elif use_duckdblite and ( db in db_duckdblite_types  or not db ) : ## NB!!
                 return DuckDBLiteDict ( filename = file , flag = flag , **kwargs )
-            elif use_bsddb3     and db in db_bsddb3_types :  
-                return bsddb3_open    ( file            , flag , mode , **kwargs ) 
+            elif use_berkeleydb and db in db_bsddb3_types :  
+                return berkeleydb_open ( file            , flag , mode , **kwargs )            
             elif db_gnu  and db in db_gnu_types  : 
                 _extra_args_ ( **kwargs )
                 return db_gnu.open ( file , flag , mode )
