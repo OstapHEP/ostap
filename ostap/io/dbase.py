@@ -111,25 +111,33 @@ try : # =======================================================================
         'r' : berkeleydb.db.DB_RDONLY ,
         'w' : 0                       ,
         'c' : berkeleydb.db.DB_CREATE , 
-        'n' : berkeleydb.db.DB_CREATE
-    }
+        'n' : berkeleydb.db.DB_CREATE | berkeleydb.db.DB_TRUNCATE }
+    # ========================================================================
     ## open Berkeley DB 
-    def berkeleydb_open ( filename                          ,
-                          flag     = 'c'                    ,
-                          mode     = 0o660                  ,
-                          filetype = berkeleydb.db.DB_HASH  ,
-                          dbenv    = None                   ,
-                          dbname   = None                   ,
-                          decode   = lambda s : s           ,
-                          encode   = lambda s : s           ) :            
+    def berkeleydb_open ( filename                 ,
+                          flag     = 'c'           ,
+                          mode     = 0o660         ,
+                          filetype = None          ,
+                          dbenv    = None          ,
+                          dbname   = None          ,
+                          decode   = lambda s : s  ,
+                          encode   = lambda s : s  ) :            
         """ Open Berkeley DB
         """
         assert flag in berkeleydb_open_mode, \
             "berkeleydb_open: invalid open mode %s" % flag
         
-        if 'n' == flag and os.path.exists ( filename ) and os.path.isfile ( filename ) : 
+        if 'n' == flag and os.path.exists ( filename ) and os.path.isfile ( filename ) :
             try    : os.remove ( filename )
             except : pass
+
+        if filetype is None:
+            
+            if os.path.exists ( filename ) and flag in ( 'r' , 'w' ) :                
+                filetype = berkeleydb.db.DB_UNKNOWN
+            else : 
+                filetype = berkeleydb.db.DB_HASH
+            
             
         db = berkeleydb.db.DB ( dbenv )
         db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flag ]  , mode )
@@ -587,11 +595,3 @@ if '__main__' == __name__ :
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
-        
-        
-        
-        
-    
-    
-    
-    
