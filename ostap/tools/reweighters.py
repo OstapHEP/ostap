@@ -44,13 +44,16 @@ class Reweighter_base(abc.ABC) :
                    silent          = True          ,
                    method          = "UNSPECIFIED" , **params ) :
         
+        
+        config = { 'max_depth' : 3 }
+        config.update ( params )
+        
         assert isinstance ( n_splits , int ) and 0 <= n_splits , \
             "Invalid `n_splits':%s" % n_splits 
         
-        params [ 'max_depth' ] = params.pop ( 'max_depth' , 5 if n_splits else 3 ) 
         self.__n_splits    = n_splits
         self.__method      = method
-        self.__params      = params
+        self.__params      = config 
         self.__silent      = True if silent else False 
         
         ## MC weights are used in training?
@@ -145,7 +148,6 @@ class Reweighter_base(abc.ABC) :
                   original_weight = None ,   ## original/MC weights
                   target_weight   = None ) : ## target/DATA weights
         
-
         n_original  = len ( original )
         n_target    = len ( target   )
         
@@ -200,8 +202,12 @@ class Reweighter_base(abc.ABC) :
         ## common part
         # ===========================================================================
 
-        from sklearn.metrics import roc_auc_score
-        auc          = roc_auc_score ( Y , predictions , sample_weight = weights )
+        ## from sklearn.metrics import roc_auc_score
+        ## auc          = roc_auc_score ( Y , predictions , sample_weight = weights )
+        
+        from ostap.stats.adval import safe_roc_auc_score
+        auc          = safe_roc_auc_score ( Y , predictions , sample_weight = weights ) 
+        
         print(f"[{self.method.upper()}] OOF Weighted ROC AUC: {auc:.4f}")
         
         return tuple ( models )    
@@ -261,14 +267,28 @@ class Reweighter_LGBM(Reweighter_base):
                    n_splits       = 0     , ## Use Cross-vaildation for train? 
                    silent         = True  , **params ) :
         
-        conf = {
-            'n_estimators'  : 200 , 
-            'learning_rate' : 0.1 , 
-            'verbose'       : -1 if silent else 0       
-        }
+        config = { 'objective'        : 'binary',
+                   'metric'           : 'binary_logloss',   # LogLoss optimizes predicted probability calibration
+                    # Slow training for smooth probability transition
+                    'learning_rate'    : 0.01,               # Small step size prevents aggressive jumps
+                    'n_estimators'     : 300,
+                    # Drastically simplified trees (forces smooth density estimation)
+                    'max_depth'        : 3,                  # Shallow depth prevents isolated outlier leaves
+                    'num_leaves'       : 8,                  # Small leaf count keeps probabilities close to baseline
+                    'min_data_in_leaf' : 100,                # Large leaf capacity averages out extreme predictions
+                    # Heavy regularization (dampens logit outputs)
+                    'subsample'        : 0.8,
+                    'subsample_freq'   : 1,
+                    'colsample_bytree' : 0.8,
+                    'reg_alpha'        : 1.0,                # Higher L1 penalty
+                    'reg_lambda'       : 10.0,               # Strong L2 penalty to pull leaf outputs toward center
+                    'n_jobs'           : -1,
+                    'verbosity'        : -1
+                }
+        
         ## Attention! 
         params [ 'n_jobs' ] = num_jobs ( params , numcpu () - 1 )
-        conf.update ( params )
+        config.update ( params )
         
         ## initiailze the baze 
         Reweighter_base.__init__ ( self ,
@@ -279,7 +299,7 @@ class Reweighter_LGBM(Reweighter_base):
                                    ##
                                    n_splits        = n_splits ,
                                    silent          = silent   ,
-                                   method          = "Reweighter/LigthGBM" , **conf )
+                                   method          = "Reweighter/LigthGBM" , **config )
 
     # =======================================================================
     ## call model.predict_proba 
@@ -325,15 +345,29 @@ class Reweighter_XGB(Reweighter_base):
                    ## 
                    n_splits       = 0     , ## Use Cross-vaildation for train? 
                    silent         = True  , **params ) :
+           
+        config = {  'objective'        : 'binary:logistic',
+                    'eval_metric'      : 'logloss',          # Optimizes probability calibration
+                    'tree_method'      : 'hist',
+                    # Slow training for smooth probability transition
+                    'learning_rate'    : 0.01,               # Small learning rate avoids aggressive probability spikes
+                    'n_estimators'     : 300,
+                    # Drastically simplified trees (forces broad density estimation)
+                    'max_depth'        : 3,                  # Shallow depth prevents isolated outlier leaves
+                    'max_leaves'       : 8,                  # Equivalent to num_leaves in LightGBM
+                    'min_child_weight' : 10.0,               # High leaf threshold (~min_data_in_leaf=100 in LightGBM)
+                    # Heavy regularization (dampens logit outputs)
+                    'subsample'        : 0.8,
+                    'colsample_bytree' : 0.8,
+                    'alpha'            : 1.0,                # Stronger L1 penalty
+                    'lambda'           : 10.0,               # Strong L2 penalty to pull leaf scores toward center
+                    ##
+                    'n_jobs'           : -1,
+                    'verbosity'        : 0 }
         
-        conf = { 'n_estimators'  : 200       , 
-                 'learning_rate' : 0.10      , 
-                 'eval_metric'   : 'logloss' , 
-                 'verbosity'     : 0 if silent else 1       
-                }
         ## Attention! 
         params [ 'n_jobs' ] = num_jobs ( params , numcpu () - 1 )
-        conf.update ( params )
+        config.update ( params )
         
         ## initiailze the baze 
         Reweighter_base.__init__ ( self ,
@@ -344,7 +378,7 @@ class Reweighter_XGB(Reweighter_base):
                                    ##
                                    n_splits        = n_splits ,
                                    silent          = silent   ,
-                                   method          = "Reweighter/XGBoost" , **conf )
+                                   method          = "Reweighter/XGBoost" , **config )
 
     # =======================================================================
     ## create & train/fit the actual model
@@ -378,12 +412,27 @@ class Reweighter_CATB(Reweighter_base):
                    n_splits       = 0     , ## Use Cross-vaildation for train? 
                    silent         = True  , **params ) :
 
-        conf = { 'iterations'    : 200 , 
-                 'learning_rate' : 0.1 , 
-                 'verbose'       : 0 if silent else 1 }
+        
+        config = {  'loss_function'    : 'Logloss',
+                    'eval_metric'      : 'Logloss',          # Ensures probability calibration
+                    # Slow training for smooth probability transitions
+                    'learning_rate'    : 0.01,               # Small learning rate prevents sudden probability jumps
+                    'iterations'       : 300,
+                    # Drastically simplified trees (forces smooth density estimation)
+                    'max_depth'        : 3,                  # Shallow depth prevents isolated outlier leaves
+                    'min_data_in_leaf' : 100,                # High leaf threshold averages out extreme probabilities
+                    # Heavy L2 regularization (dampens logit outputs)
+                    'l2_leaf_reg'      : 15.0,               # Strong L2 penalty to pull leaf scores toward the center
+                    'subsample'        : 0.8,
+                    'bootstrap_type'   : 'Bernoulli',
+                    ##
+                    'thread_count'     : -1,
+                    'verbose'          : False
+                }
+        
         ## Attention! 
         params [ 'thread_count' ] = num_jobs ( params , numcpu () - 1 )
-        conf.update ( params )
+        config.update ( params )
         
         ## initialize the baze 
         Reweighter_base.__init__ ( self ,
@@ -394,7 +443,7 @@ class Reweighter_CATB(Reweighter_base):
                                    ##
                                    n_splits        = n_splits ,
                                    silent          = silent   ,
-                                   method          = "Reweighter/CatBoost" , **conf )
+                                   method          = "Reweighter/CatBoost" , **config )
         
     # =======================================================================
     ## create & train/fit the actual model
@@ -407,7 +456,7 @@ class Reweighter_CATB(Reweighter_base):
         - return the model 
         """
         import catboost as CatBoost
-        ## 
+        ##   
         model = CatBoost.CatBoostClassifier ( **self.params )    
         model.fit ( CatBoost.Pool ( X , Y , weight = weight ) ) 
         ## 

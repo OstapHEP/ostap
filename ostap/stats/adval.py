@@ -370,7 +370,6 @@ class ADVAL_base (GoFnp):
         cv           = StratifiedKFold ( n_splits = self.n_splits , shuffle = True , random_state = random_state )
         oof_preds    = numpy.zeros ( N )
         importances  = numpy.zeros ( X.shape [ 1 ] , dtype = float ) if importance else None
-
         
         # Cross-validation loop
         for fold, ( train_idx , val_idx ) in enumerate ( cv.split ( X , Y ) ) :
@@ -418,14 +417,26 @@ class ADVAL_LGBM (ADVAL_base) :
                    parallel = False ,
                    silent   = False ,
                    progress = True  , **params ) :
-        
-        config = { 'objective'        : 'binary'         ,
-                   'metric'           : 'binary_logloss' ,
-                   'learning_rate'    : 0.03 ,             
-                   'num_leaves'       : 24   ,
-                   'max_depth'        :  5   ,            
-                   'min_data_in_leaf' : 20   ,
-                   'verbosity'        : -1   }
+            
+        config = {  'objective'        : 'binary',
+                    'metric'           : 'auc',              # Explicitly measure ROC-AUC score
+                    # Speed and convergence
+                    'learning_rate'    : 0.03,               # Standard learning rate for stable training
+                    'n_estimators'     : 500,                # High upper limit (MUST be used with early stopping!)
+                    # Tree complexity (allows model to catch subtle feature shifts)
+                    'max_depth'        : 5,                  # Moderate tree depth
+                    'num_leaves'       : 24,                 # Sufficient leaf capacity
+                    'min_data_in_leaf' : 20,                 # Small threshold to detect fine-grained patterns
+                    # Mild regularization to prevent overfitting on random noise
+                    'subsample'        : 0.8,                # Row subsampling (80% per tree)
+                    'subsample_freq'   : 1,
+                    'colsample_bytree' : 0.8,                # Feature subsampling (80% per tree)
+                    'reg_alpha'        : 0.1,                # Slight L1 regularization
+                    'reg_lambda'       : 1.0,                # Slight L2 regularization
+                    ## 
+                    'n_jobs'           : -1,                 # Utilize all CPU cores
+                    'verbosity'        : -1                  # Suppress warning output
+                }
         
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
@@ -508,15 +519,26 @@ class ADVAL_XGB (ADVAL_base) :
                    parallel = False ,
                    silent   = False ,
                    progress = True  , **params ) :
-                
-        config = { 'objective'             : 'binary:logistic' , 
-                   'eval_metric'           : 'logloss'         ,
-                   'early_stopping_rounds' : 20                , 
-                   'learning_rate'         :  0.03             , 
-                   'max_depth'             :  4                , 
-                   'min_child_weight'      : 20                ,  
-                   'verbosity'             :  0                }
         ##
+        config = {  'objective'        : 'binary:logistic',  # Standard binary classification
+                    'eval_metric'      : 'logloss',          # LogLoss objective and evaluation
+                    'tree_method'      : 'hist',             # Fast histogram-based tree building algorithm
+                    # Speed and step size
+                    'learning_rate'    : 0.03,               # Standard step size
+                    'n_estimators'     : 500,                # High upper bound (use with early_stopping_rounds)
+                    # Tree complexity
+                    'max_depth'        : 5,                  # Equivalent to max_depth=5 in LightGBM
+                    'max_leaves'       : 24,                 # Limit total leaves per tree
+                    'min_child_weight' : 1.0,                # Minimum sum of instance weight needed in a child
+                    # Mild regularization
+                    'subsample'        : 0.8,                # Row subsampling (80% per tree)
+                    'colsample_bytree' : 0.8,                # Feature subsampling (80% per tree)
+                    'alpha'            : 0.1,                # L1 regularization (reg_alpha in LightGBM)
+                    'lambda'           : 1.0,                # L2 regularization (reg_lambda in LightGBM)
+                    ##
+                    'n_jobs'           : -1,                 # Utilize all CPU threads
+                    'verbosity'        : 0                   # Suppress warning output
+                }
 
         ## Attention! 
         params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu() - 1 )
@@ -601,13 +623,22 @@ class ADVAL_CATB (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params ) :
         
-        config = {  'loss_function'    : 'Logloss' ,
-                    'eval_metric'      : 'Logloss' , 
-                    'learning_rate'    :  0.03     ,
-                    'depth'            :  4        ,
-                    'min_data_in_leaf' : 20        ,
-                    'verbose'          : False     }
-        
+        config = {  'loss_function'    : 'Logloss',          # Standard binary classification loss
+                    'eval_metric'      : 'Logloss',          # Metric monitored for early stopping
+                    # Speed and convergence
+                    'learning_rate'    : 0.03,               # Standard step size
+                    'iterations'       : 500,                # Maximum boosting rounds (use with early_stopping_rounds)
+                    # Tree complexity
+                    'depth'            : 5,                  # Moderate depth (CatBoost trees are symmetric)
+                    'min_data_in_leaf' : 20,                 # Minimum samples per leaf
+                    # Regularization & Subsampling
+                    'l2_leaf_reg'      : 3.0,                # L2 regularization for leaf values (default is 3.0)
+                    'subsample'        : 0.8,                # Row subsampling ratio (used with Bootstrap types: MVS or Bernoulli)
+                    'bootstrap_type'   : 'Bernoulli',        # Enables subsampling
+                    ##   
+                    'thread_count'     : -1,                 # Utilize all CPU cores
+                    'verbose'          : False
+            }
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
             logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
@@ -619,6 +650,7 @@ class ADVAL_CATB (ADVAL_base) :
         if   'random_seed'  in params :                            params.pop ( 'random_state'      )
         elif 'random_state' in params : params [ 'random_seed' ] = params.pop ( 'random_state' , 42 )
         
+        config.update ( params )
         ## 
         import catboost as CatBoost 
         config.update ( params ) 
@@ -643,8 +675,6 @@ class ADVAL_CATB (ADVAL_base) :
 
         import catboost as CatBoost
         
-        from catboost import CatBoostClassifier, Pool
-
         # ============================================================================
         # Extract training pipeline controls
         iterations            = 500 ## params.pop('iterations', 500)
@@ -692,15 +722,21 @@ class ADVAL_HGBC (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params ) :
         
-        config =  { 'loss'             : 'log_loss' ,
-                    'learning_rate'    :   0.03     ,  
-                    'max_iter'         : 500        , ## number of trees 
-                    'n_iter_no_change' :  20        , 
-                    'max_depth'        :   4        ,
-                    'max_leaf_nodes'   :  16        , 
-                    'min_samples_leaf' :  20        ,
-                    'early_stopping'   : True       } 
-    
+        config = {  'loss'              : 'log_loss',      # Binary cross-entropy
+                    'learning_rate'     : 0.03,            # Moderate step size
+                    'max_iter'          : 500,             # Upper bound for boosting iterations
+                    # Tree complexity
+                    'max_depth'         : 5,               # Restrict max tree depth
+                    'max_leaf_nodes'    : 24,              # Controls tree capacity (similar to num_leaves in LGBM)
+                    'min_samples_leaf'  : 20,              # Minimum samples required in a leaf
+                    # Regularization
+                    'l2_regularization' : 0.1,             # Mild L2 regularization
+                    # Early stopping (built-in)
+                    'early_stopping'    : True,            # Enables built-in early stopping
+                    'n_iter_no_change'  : 20,              # Number of iterations to wait for improvement
+                    'scoring'           : 'roc_auc',        # Optimize directly for ROC-AUC
+                }
+        
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
             logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
@@ -766,13 +802,17 @@ class ADVAL_GBC (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params   ) :
         
-        config =  {  'loss'                : 'log_loss' , 
-                     'learning_rate'       : 0.03   ,
-                     'n_estimators'        : 500    , ## number of trees                      
-                     'n_iter_no_change'    :  20    ,
-                     'max_depth'           :   4    ,
-                     'tol'                 :  1.e-4 ,
-                     'validation_fraction' : 0.1    }  # Uses 10% of fold train set for internal early stopping check
+        config = {  'loss'              : 'log_loss',      # Binary cross-entropy
+                    'learning_rate'     : 0.05,            # Slightly higher rate for faster convergence
+                    'n_estimators'      : 200,             # Sequential trees (keep moderate to save time)
+                    # Tree complexity
+                    'max_depth'         : 4,               # Restrict tree depth (default is 3)
+                    'min_samples_split' : 20,              # Minimum samples to split an internal node
+                    'min_samples_leaf'  : 10,              # Minimum samples required in a leaf node
+                    # Regularization / Subsampling
+                    'subsample'         : 0.8,             # Stochastic Gradient Boosting (row subsampling)
+                    'max_features'      : 'sqrt',          # Feature subsampling per split
+                }
         
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
@@ -843,13 +883,20 @@ class ADVAL_RF (ADVAL_base) :
                    parallel = False ,
                    silent   = False ,
                    progress = True  , **params   ) :
-
-        config =  {
-            'n_estimators'     : 200 ,
-            'max_depth'        :   6 ,
-            'min_samples_leaf' :  20 ,             
-            }
-
+  
+        config = {  'n_estimators'      : 500,         # High tree count reduces variance and improves ROC-AUC stability
+                    'n_jobs'            : -1,          # Utilize all CPU cores for parallel tree construction
+                    # 2. Splitting Criterion
+                    'criterion'         : 'log_loss',  # Optimizes cross-entropy for well-calibrated probabilities
+                    # 3. Tree Complexity (Overfitting Prevention)
+                    'max_depth'         : 10,          # Restricted depth prevents memorizing noise and outlier samples
+                    'min_samples_split' : 10,          # Minimum samples required to split an internal node
+                    'min_samples_leaf'  : 5,           # Minimum samples required at a leaf node
+                    # 4. Subsampling & Randomization
+                    'max_features'      : 'sqrt',      # Feature subsampling ratio per split
+                    'bootstrap'         : True,        # Enables bootstrap sampling (bagging)
+                    'max_samples'       : 0.8,         # Subsample 80% of rows per tree for additional regularization
+                }  
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
             logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
