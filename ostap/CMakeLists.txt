@@ -454,6 +454,7 @@ find_python_module ( xgboost QUIET )
 if ( NOT ${PY_xgboost_FOUND} )
    message ( "----> warning                 xgboost is NOT found!" ) 
 endif()
+        
 
 # ========================================================================================
 ## catboost
@@ -468,6 +469,31 @@ if ( ${OSTAP_HAS_AVX2} )
   if ( NOT ${PY_catboost_FOUND} ) 
     message ( "----> warning                catboost is NOT found!" ) 
   endif()
+endif()
+
+# ========================================================================================
+## pytorch 
+# ========================================================================================
+##
+find_python_module ( torch  QUIET )
+if ( NOT ${PY_torch_FOUND} ) 
+   message ( "----> warning               (py)torch is NOT found!" ) 
+endif()
+
+# ========================================================================================
+## tensorflow & keras 
+# ========================================================================================
+##
+
+if ( ${OSTAP_HAS_AVX2} )
+  find_python_module ( tensorflow QUIET )
+  if ( NOT ${PY_tensorflow_FOUND} ) 
+    message ( "----> warning              tensorflow is NOT found!" ) 
+  endif()
+  find_python_module ( keras  QUIET )
+  if ( NOT ${PY_keras_FOUND} ) 
+    message ( "----> warning                   keras is NOT found!" ) 
+  endif()  
 endif() 
 
 # ========================================================================================
@@ -686,6 +712,21 @@ endif()
 if ( ${OSTAP_HAS_AVX2} AND ${PY_catboost_FOUND} )
   find_python_module_version ( catboost ) 
   message ( "----> catboost         version    : " ${PY_catboost_VERSION} " \t" ${PY_CATBOOST} ) 
+endif()
+##
+if ( ${PY_torch_FOUND} )
+  find_python_module_version ( torch ) 
+  message ( "----> torch            version    : " ${PY_torch_VERSION} " \t" ${PY_TORCH} ) 
+endif()
+##
+if ( ${OSTAP_HAS_AVX2} AND ${PY_tensorflow_FOUND} )
+  find_python_module_version ( tensorflow ) 
+  message ( "----> tensorflow       version    : " ${PY_tensorflow_VERSION} " \t" ${PY_TENSORFLOW} ) 
+endif()
+##
+if ( ${OSTAP_HAS_AVX2} AND ${PY_keras_FOUND} )
+  find_python_module_version ( keras ) 
+  message ( "----> keras            version    : " ${PY_keras_VERSION} " \t" ${PY_KERAS} ) 
 endif()
 ##
 if ( ${PY_hep_ml_FOUND} )

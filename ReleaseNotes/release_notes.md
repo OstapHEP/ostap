@@ -2,7 +2,11 @@
 
 ## New features
 
-  1. set of tiny tweaks
+  1. set of tiny tweaks for databases
+  1. Add tow new GoF Adversarial Validaiton methods, based on PyTorch and Keras.
+     They are not expected to have better CPU performance, but they can be useful
+     for cross-checks
+  1. Add treatment of negative weigths for all other Adversarial Vaildation GoF estimators 
   
 ## Bug fixes 
 
