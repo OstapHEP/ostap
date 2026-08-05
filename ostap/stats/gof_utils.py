@@ -23,7 +23,14 @@ __all__     = (
     'nearest_neighbors'  , ## get all nearest neigbours
     's2u'                , ## convert structured numpy array into non-structured
     'combine_pvalues'    , ## combine p-values 
-    'np2vct'             , ## nmpy array into SVectorWithError
+    'np2vct'             , ## numpy arrays into SVectorWithError
+    ##
+    'useLightGBM'        , ## Are LigthGBM  library and classificator available?
+    'useXGBoost'         , ## Are XGBoost   library and claffificators available?
+    'useCatBoost'        , ## Are CatBoost  library and claffificators available?
+    'useSkLearn'         , ## Are sckearn   library and claffificators available?
+    'usePyTorch'         , ## Are (Py)Torch library and claffificators available?
+    'useKeras'           , ## Are Keras    library and claffificators available?
 )
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
@@ -40,7 +47,9 @@ from   ostap.utils.basic        import ( numcpu   , num_jobs     ,
 from   ostap.utils.utils        import splitter
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.logger.symbols     import times, plus_minus, greek_lower_sigma
+from   ostap.logger.symbols     import ( times       , plus_minus  , greek_lower_sigma ,
+                                         subscript_A , subscript_K , subscript_C , 
+                                         likelihood  )                                         
 from   ostap.logger.pretty      import pretty_float
 from   ostap.plotting.color     import Orange, Green, Blue
 from   packaging.version        import Version 
@@ -224,8 +233,6 @@ except ImportError : # ========================================================
     has_sklearn = False # =====================================================
     # =========================================================================
     
-  
-
 # =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
 #  @code
@@ -272,22 +279,22 @@ def nEff ( weights ) :
     return s1 * s1 / s2
 
 # =============================================================================
-## Normalize several numpy arrays such that mean and rms for the pooled sample
+## Normalize/standartize several numpy arrays such that mean and rms for the pooled sample
 #  are equal to 0 and 1 correspondinly
 #  @code
 #  ds1 = ...
 #  ds2 = ...
 #  ds3 = ...
-#  ds1 , ds2 , ds3 = pool_normalize ( ds1 , ds2 , ds3 ) 
+#  ds1 , ds2 , ds3 = normalize_pooled ( ds1 , ds2 , ds3 ) 
 #  @endcode 
 def normalize_pooled ( *datasets ) :
-    """ Normalize several numpy arrays such that the mean and rms for the POOLED sample
+    """ Normalize/standartize several numpy arrays such that the mean and rms for the POOLED sample
     are equal to 0 and 1 correspondinly
     
     >>> ds1 = ...
     >>> ds2 = ...
     >>> ds3 = ...
-    >>> ds1 , ds2 , ds3 = np_normalize ( ds1 , ds2 , ds3 )
+    >>> ds1 , ds2 , ds3 = normalize_pooled ( ds1 , ds2 , ds3 )
     
     """
 
@@ -476,17 +483,17 @@ def normalize ( ds , *others , weight = () , first = True ) :
 # =============================================================================
 ## Short labels for various statitical estimators 
 Labels = {
-    'KS'  : 'Kolmogorov-Smirnov' ,
-    'K'   : 'Kuiper'             ,
-    'AD'  : 'Anderson-Darling'   ,
-    'CM'  : 'Cramer-von Mises'   ,
-    'ZK'  : 'Zhang/ZK'           ,
-    'ZA'  : 'Zhang/ZA'           ,
-    'ZC'  : 'Zhang/ZC'           ,        
-    'BJ'  : 'Berk-Jones'         ,        
-    'NLL' : '-log L'             ,
-    'AIC' : 'Akaike IC'          ,
-    'BIC' : 'Bayesian IC'        ,    
+    'KS'  : 'Kolmogorov-Smirnov'   ,
+    'K'   : 'Kuiper'               ,
+    'AD'  : 'Anderson-Darling'     ,
+    'CM'  : 'Cramer-von Mises'     ,
+    'ZK'  : "Zhang Z%s" % subscript_K ,
+    'ZA'  : "Zhang Z%s" % subscript_A ,
+    'ZC'  : "Zhang Z%s" % subscript_C ,        
+    'BJ'  : 'Berk-Jones'           ,        
+    'NLL' : '-log%s' % likelihood  ,
+    'AIC' : 'Akaike IC'            ,
+    'BIC' : 'Bayesian IC'          ,    
 }
 # =============================================================================
 ## lower-case shortcuts:
@@ -1160,10 +1167,12 @@ def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
 
 # =============================================================================
 ## use LightGBM ?
-#  - there is some mess with lightgbm&narwhals installation 
+# - Are LightGBM library & classificators available? 
+# - There is some mess with lightgbm&narwhals installation 
 def useLightGBM () :
     """ Use LightGBM ?
-    - there is some mess with LightBM&Narwhals installation 
+    - Are LightGBM library & classificators available? 
+    - There is some mess with LightBM&Narwhals installation 
     """
     # ============================================================================
     try : # ======================================================================
@@ -1181,8 +1190,10 @@ def useLightGBM () :
     
 # ===============================================================================
 ## use XGBoost ?
+# - Are XGBoost library & classificators available? 
 def useXGBoost () : 
     """ Use XGBoost
+     - Are XGBoost library & classificators available? 
     """
     # ==========================================================================
     try : # ====================================================================
@@ -1196,8 +1207,10 @@ def useXGBoost () :
 
 # ===============================================================================
 ## use CatBoost ?
+# - Are CatBoost library & classificators available? 
 def useCatBoost () : 
     """ Use CatBoost
+    - Are CatBoost library & classificators available? 
     """
     from ostap.core.cpu_info import HAS_AVX2
     if not HAS_AVX2 : return  False 
@@ -1212,29 +1225,59 @@ def useCatBoost () :
         return False 
 
 # =============================================================================
+## Use sklearn?
+# - Are sklearn library & classificators available? 
+def useSkLearn () :
+    """ Use sklearn?
+    - Are sklearn library & classificators available? 
+    """
+    if not has_sklearn : return False
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        import sklearn.ensemble 
+        from   sklearn.ensemble import HistGradientBoostingClassifier as _HGBC 
+        from   sklearn.ensemble import GradientBoostingClassifier     as _GBC        
+        from   sklearn.ensemble import RandomForestClassifier         as _RFC
+        # ======================================================================
+        return True 
+        # ======================================================================
+    except ImportError : # =====================================================
+        # ======================================================================
+        return False 
+            
+# ==============================================================================
 ## use PyTorch ?
+#  Are (Py)Torch library and claffificators available?
 def usePyTorch() :
     """ Use PyTorch ?
+    - Are (Py)Torch library and claffificators available?
     """
-    # ============================================================================
-    try : # ======================================================================
-        # ========================================================================
+    # ==========================================================================
+    try : # ====================================================================
+        # ======================================================================
         import torch
         return Version ( "1.10" ) <= Version ( torch.__version__ )
-        # ========================================================================
-    except ImportError : # =======================================================
-        # ========================================================================
+        # ======================================================================
+    except ImportError : # =====================================================
+        # ======================================================================
         return False 
     
-# ===============================================================================
+# ==============================================================================
 ## use Keras  ?
+#  - Are Keras    library and claffificators available?
 def useKeras() : 
-    """ Use Keras 
+    """ Use Keras
+    - Are Keras    library and claffificators available?
     """
     from ostap.core.cpu_info import HAS_AVX2
     if not HAS_AVX2 : return  False 
     # ==========================================================================
     try : # ====================================================================
+        # ======================================================================
+        ## silence TensorFlow & oneDNN
+        os.environ [ 'TF_CPP_MIN_LOG_LEVEL'  ] = '2'        
+        os.environ [ 'TF_ENABLE_ONEDNN_OPTS' ] = '0'
         # ======================================================================
         import keras 
         import torch 
@@ -1243,8 +1286,9 @@ def useKeras() :
         # ======================================================================
     except ImportError : # =====================================================
         # ======================================================================
-        return False 
-# =============================================================================
+        return False
+    
+# ==============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme

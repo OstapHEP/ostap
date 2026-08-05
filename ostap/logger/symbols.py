@@ -90,7 +90,9 @@ __all__     = (
     'difference'          ,
     ## 
     'iteration'           ,
-    'efficiency'          , 
+    'efficiency'          ,
+    ##
+    'likelihood'          , ## Likelihood: script L
     ##    
     'labels'               
 )
@@ -284,6 +286,14 @@ greek_upper_psi       = '\U000003A8'  if show else 'Psi'
 greek_upper_omega     = '\U000003A9'  if show else 'Omega'
 
 
+## likelihood: script L
+likelihood            = '\U00002112'  if show else 'L'
+subscript_a           = '\u2090'      if show else 'a'
+subscript_c           = '\uA700'      if show else 'c'
+subscript_k           = '\u2095'      if show else 'k'
+subscript_A           = '\u1D00'      if show else 'A'
+subscript_C           = '\u1D04'      if show else 'C'
+subscript_K           = '\u1D0B'      if show else 'K'
 
 ## use epsilon symbol for efficiency
 efficiency       = greek_lower_epsilon if show else 'eff'

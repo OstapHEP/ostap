@@ -223,7 +223,7 @@ class GoFnp (AGoFnp) :
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
             
         ## normalize
-        if normalize and self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
+        if normalize and self.normalize : uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
         
         return self.tvalue ( uds1      ,
                              uds2      ,
@@ -261,7 +261,7 @@ class GoFnp (AGoFnp) :
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
         
         ## normalize ? 
-        if self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
+        if self.normalize : uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
 
         ### calculate t-value
         t_value    = tvalue if not tvalue is None else self.tvalue ( uds1      ,
@@ -407,7 +407,25 @@ class GoFnp (AGoFnp) :
         self._hline = hline 
         ##
         return result, vline, hline   
-    
+
+    # ========================================================================
+    ## Normalize/standartize two numpy arrays such that mean and rms for the pooled sample
+    #  are equal to 0 and 1 correspondinly
+    #  @code
+    #  ds1 = ...
+    #  ds2 = ...
+    #  ds1 , ds2 = gof.normalize_pooled  ( ds1 , ds2 ) 
+    #  @endcode 
+    def normalize_pooled ( self , ds1 , ds2 ) :
+        """ Normalize/standartize two numpy arrays such that the mean and rms for the POOLED sample
+        are equal to 0 and 1 correspondinly
+        
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds1 , ds2 = gof.normalize_pooled  ( ds1 , ds2 )        
+        """
+        return normalize_pooled ( ds1 , ds2 )
+        
 # ============================================================================
 ## define configuration for psi-function for PPD method
 #   - distance type of <code>cdist</code>
@@ -543,8 +561,7 @@ class MIXnp(GoFnp) :
         uds1 , uds2 = self.unpack ( data1 , data2 )
 
         ## normalize
-        if normalize and self.normalize :
-            uds1, uds2  = normalize_pooled ( uds1 , uds2  ) 
+        if normalize and self.normalize : uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
             
         ## 
         n1 = len ( uds1 ) 
@@ -779,7 +796,7 @@ class PPDnp(GoFnp) :
         
         ## normalize
         if normalize and self.normalize :
-            uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
+            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
             
         n1 = len ( uds1 ) 
         n2 = len ( uds2 )
@@ -829,8 +846,9 @@ class PPDnp(GoFnp) :
         if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
         if 1 == len ( shape2 ) : uds2.reshape ( -1 , shape2 [ 0 ] ) 
         ## 
-        ## normalize
-        if normalize and self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 )            
+        ## normalize if requested 
+        if normalize and self.normalize :
+            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 )            
         ##        
         return self.tvalue ( uds1      ,
                              uds2      ,
@@ -1123,7 +1141,8 @@ class Mahalanobis(GoFnp) :
         uds1 , uds2 = self.unpack ( data1 , data2 )
 
         ## normalize
-        if normalize and self.normalize : uds1, uds2  = normalize_pooled ( uds1 , uds2  ) 
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
             
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
@@ -1179,7 +1198,7 @@ class KullbackLeibler(Mahalanobis) :
 
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = normalize_pooled ( uds1 , uds2  ) 
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
             
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
@@ -1231,7 +1250,7 @@ class Hotelling(Mahalanobis) :
 
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = normalize_pooled ( uds1 , uds2  ) 
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
 
         w1_trivial = weight_trivial ( weight1 )
         w2_trivial = weight_trivial ( weight2 )

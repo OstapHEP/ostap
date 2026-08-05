@@ -207,17 +207,18 @@ class ADVAL_base (GoFnp):
                    parallel   = False ,
                    silent     = False ,
                    progress   = True  ,
+                   normalize  = True  , 
                    method     = "Adversarial Validation" , **params ) :
         
         n_splits = params.pop ( 'n_splits' , 5 ) 
         assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
 
-        GoFnp.__init__ ( self                 ,
-                         nToys     = nToys    ,
-                         parallel  = parallel , 
-                         silent    = silent   ,
-                         progress  = progress ,
-                         normalize = False    , 
+        GoFnp.__init__ ( self                  ,
+                         nToys     = nToys     ,
+                         parallel  = parallel  , 
+                         silent    = silent    ,
+                         progress  = progress  ,
+                         normalize = normalize , 
                          method    = method   , **params )
         
         self.__n_splits            = n_splits 
@@ -232,7 +233,7 @@ class ADVAL_base (GoFnp):
     # ==================================================================================
     @property
     def config ( self ) :
-        """`config` : get all configuratino parameters"""
+        """`config` : get all configuration parameters"""
         conf = {}
         conf.update ( super().config ) 
         conf [ 'n_splits'   ] = self.n_splits 
@@ -309,7 +310,7 @@ class ADVAL_base (GoFnp):
                  data2              ,  * , 
                  weight1    = None  ,
                  weight2    = None  ,
-                 normalize  = False ,
+                 normalize  = True  ,
                  importance = False ) :
         """ Calculate t-value metric for two datasets under cross-validation.
         
@@ -330,10 +331,19 @@ class ADVAL_base (GoFnp):
             Calculated t-value metric: 100 * (1 - 2 * AUC)^2
         """
         data1, data2 = self.unpack ( data1 , data2 )
-        sh1, sh2 = data1.shape, data2.shape
-        assert len(sh1) == 2 and len(sh2) == 2 and sh1[1] == sh2[1] and sh1[0] and sh2[0], \
+        sh1, sh2     = data1.shape , data2.shape
+        assert len ( sh1 ) == 2 and len ( sh2 ) == 2 and sh1 [ 1 ] == sh2 [ 1 ] and sh1 [ 0 ] and sh2 [ 0 ], \
             f"Invalid dataset shapes: {sh1}, {sh2}"
         
+        ## normalize ? 
+        if self.normalize and normalize :
+            uds1 , uds2 = normalize_pooled ( data1 , data2 )
+            return self.tvalue ( uds1       , uds2       ,
+                                 weight1    = weight1    ,
+                                 weight2    = weight2    ,
+                                 normalize  = False      ,
+                                 importance = importance )
+            
         ## convert numpy arrays into pandas dataframes
         import pandas as pd 
 
@@ -381,7 +391,7 @@ class ADVAL_base (GoFnp):
 
             fold_predictions, fold_importances = self.work ( X_train , Y_train , W_train ,
                                                              X_val   , Y_val   , W_val   ,
-                                                             importance=importance       )
+                                                             importance = importance     )
 
             oof_preds [ val_idx ] = fold_predictions
 
@@ -450,11 +460,12 @@ class ADVAL_LGBM (ADVAL_base) :
         ## 
         import lightgbm as LightGBM
         ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/LightGBM" , **config   ) 
+                              nToys     = nToys    ,
+                              parallel  = parallel ,
+                              silent    = silent   , 
+                              progress  = progress ,
+                              normalize = False    ,
+                              method    = "Adversarial Validation/LightGBM" , **config   ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -547,11 +558,12 @@ class ADVAL_XGB (ADVAL_base) :
 
         import xgboost as XGBoost             
         ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/XGBoost" , **config ) 
+                              nToys     = nToys    ,
+                              parallel  = parallel ,
+                              silent    = silent   , 
+                              progress  = progress ,
+                              normalize = False    ,
+                              method    = "Adversarial Validation/XGBoost" , **config ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -623,21 +635,22 @@ class ADVAL_CATB (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params ) :
         
-        config = {  'loss_function'    : 'Logloss',          # Standard binary classification loss
-                    'eval_metric'      : 'Logloss',          # Metric monitored for early stopping
+        config = {  'loss_function'         : 'Logloss',          # Standard binary classification loss
+                    'eval_metric'           : 'Logloss',          # Metric monitored for early stopping
                     # Speed and convergence
-                    'learning_rate'    : 0.03,               # Standard step size
-                    'iterations'       : 500,                # Maximum boosting rounds (use with early_stopping_rounds)
+                    'learning_rate'         : 0.03,               # Standard step size
+                    'iterations'            : 500,                # Maximum boosting rounds (use with early_stopping_rounds)
+                    'early_stopping_rounds' : 20 ,
                     # Tree complexity
-                    'depth'            : 5,                  # Moderate depth (CatBoost trees are symmetric)
-                    'min_data_in_leaf' : 20,                 # Minimum samples per leaf
+                    'depth'                 : 5,                  # Moderate depth (CatBoost trees are symmetric)
+                    'min_data_in_leaf'      : 20,                 # Minimum samples per leaf
                     # Regularization & Subsampling
-                    'l2_leaf_reg'      : 3.0,                # L2 regularization for leaf values (default is 3.0)
-                    'subsample'        : 0.8,                # Row subsampling ratio (used with Bootstrap types: MVS or Bernoulli)
-                    'bootstrap_type'   : 'Bernoulli',        # Enables subsampling
+                    'l2_leaf_reg'           : 3.0,                # L2 regularization for leaf values (default is 3.0)
+                    'subsample'             : 0.8,                # Row subsampling ratio (used with Bootstrap types: MVS or Bernoulli)
+                    'bootstrap_type'        : 'Bernoulli',        # Enables subsampling
                     ##   
-                    'thread_count'     : -1,                 # Utilize all CPU cores
-                    'verbose'          : False
+                    'thread_count'          : -1,                 # Utilize all CPU cores
+                    'verbose'               : False
             }
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
@@ -655,11 +668,12 @@ class ADVAL_CATB (ADVAL_base) :
         import catboost as CatBoost 
         config.update ( params ) 
         ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/CatBoost" , **config   ) 
+                              nToys     = nToys    ,
+                              parallel  = parallel ,
+                              silent    = silent   , 
+                              progress  = progress ,
+                              normalize = False    ,
+                              method    = "Adversarial Validation/CatBoost" , **config   ) 
     
     # ==================================================================================
     ## Train the model and make predictions
@@ -676,11 +690,6 @@ class ADVAL_CATB (ADVAL_base) :
         import catboost as CatBoost
         
         # ============================================================================
-        # Extract training pipeline controls
-        iterations            = 500 ## params.pop('iterations', 500)
-        early_stopping_rounds =  20 ## params.pop('early_stopping_rounds', 20)
-        
-        # ============================================================================
         # 1. Transform targets and weights for train & val sets (handling w < 0)
         Y_tr, W_tr = transform_weighted_target ( Y_train , W_train )
         Y_va, W_va = transform_weighted_target ( Y_val   , W_val   )
@@ -691,9 +700,7 @@ class ADVAL_CATB (ADVAL_base) :
         val_pool   = CatBoost.Pool ( X_val   , label = Y_va , weight = W_va )
 
         # 3. Model Training
-        model = CatBoost.CatBoostClassifier ( iterations            = iterations            ,
-                                              early_stopping_rounds = early_stopping_rounds ,
-                                              **params ) 
+        model = CatBoost.CatBoostClassifier ( **self.params )
         model.fit ( train_pool , eval_set = val_pool )
 
         # ============================================================================
@@ -746,11 +753,12 @@ class ADVAL_HGBC (ADVAL_base) :
 
         import sklearn.ensemble 
         ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/HGBC" , **config   ) 
+                              nToys     = nToys    ,
+                              parallel  = parallel ,
+                              silent    = silent   , 
+                              progress  = progress , 
+                              normalize = False    ,
+                              method    = "Adversarial Validation/HGBC" , **config   ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -823,11 +831,12 @@ class ADVAL_GBC (ADVAL_base) :
 
         import sklearn.ensemble 
         ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/GBC" , **config   ) 
+                              nToys     = nToys    ,
+                              parallel  = parallel ,
+                              silent    = silent   , 
+                              progress  = progress ,
+                              normalize = False    ,
+                              method    = "Adversarial Validation/GBC" , **config   ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -909,11 +918,12 @@ class ADVAL_RF (ADVAL_base) :
 
         import sklearn.ensemble 
         ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/RandomForest" , **config  ) 
+                              nToys     = nToys    ,
+                              parallel  = parallel ,
+                              silent    = silent   , 
+                              progress  = progress ,
+                              normalize = False    ,                              
+                              method    = "Adversarial Validation/RandomForest" , **config  ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -991,11 +1001,12 @@ class ADVAL_TORCH (ADVAL_base) :
 
         import torch    as Torch 
         ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/PyTorch" , **config  ) 
+                              nToys     = nToys    ,
+                              parallel  = parallel ,
+                              silent    = silent   , 
+                              progress  = progress ,
+                              normalize = True     , ## ATTENTION: It MUST be TRUE!                                                            
+                              method    = "Adversarial Validation/PyTorch" , **config  ) 
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -1180,11 +1191,12 @@ class ADVAL_KERAS (ADVAL_base) :
 
         import keras
         ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/Keras" , **config  ) 
+                              nToys     = nToys    ,
+                              parallel  = parallel ,
+                              silent    = silent   , 
+                              progress  = progress , 
+                              normalize = True     , ## ATTENTION: It MUST be TRUE!                                                            
+                              method    = "Adversarial Validation/Keras" , **config  ) 
 
     # ==================================================================================
     ## Train the model and make predictions
