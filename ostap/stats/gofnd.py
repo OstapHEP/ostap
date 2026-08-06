@@ -970,7 +970,7 @@ class NLL(AGoF) :
                                 pvalue  = pvalue  if not pvalue  is None else self.__pvalue  ,
                                 ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
                                 counter = counter if not counter is None else self.__counter ,
-                                title   = title  if title else '%s GoF-report' % typename ( self ) , 
+                                title   = title  if title else '%s GoF-report [#%d]' %  ( typename ( self ) , self.nToys ) , 
                                 prefix  = prefix ,
                                 style   = style  )
     
@@ -995,7 +995,7 @@ class NLL(AGoF) :
                                  pvalue  = pvalue  if not pvalue  is None else self.__pvalue  ,
                                  ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
                                  counter = counter if not counter is None else self.__counter ,
-                                 title   = title  if title else '%s GoF-report' % typename ( self ) , 
+                                 title   = title  if title else '%s GoF-report [#%d]' %  ( typename ( self ) , self.nToys ) , 
                                  prefix  = prefix ,
                                  style   = style  )
     
