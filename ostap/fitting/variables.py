@@ -230,6 +230,7 @@ def _fix_const_par_ ( v ) :
 ROOT.RooConstVar      . release  = _rel_const_par_ 
 ROOT.RooConstVar      . Release  = _rel_const_par_ 
 
+# =====================================================================
 ## fix parameter at some value
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-09-20
@@ -244,6 +245,51 @@ def _fix_const_par_ ( var , value  = None ) :
 
 ROOT.RooConstVar      . fix  = _fix_const_par_ 
 ROOT.RooConstVar      . Fix  = _fix_const_par_ 
+
+# =====================================================================
+##  Set value *and* min/max simultaneously
+#   @code
+#   var = ..
+#   value = ...
+#   minmax = 0, 10
+#   var.set_Value_and_range  ( value , *minmax )
+#   var.set_Value_and_minmax ( value , *minmax ) ## ditto
+#   @endcode
+def _var_set_value_and_range_ ( var , value , vmin = None , vmax = None ) :
+    """ Set value *and* min/max simultaneously
+    >>> var = ..
+    >>> value = ...
+    >>> minmax = 0, 10
+    >>> var.set_Value_and_range  ( value , *minmax )
+    >>> var.set_Value_and_minmax ( value , *minmax ) ## ditto
+    """
+    mn , mx = False , False 
+    if not vmin is None and hasattr ( var , setMin ) :
+        if value < vmin : raise ValueError ( "%s: incompatible vmin&value: %s vs %s " % ( var.name , vmin , value ) )
+        mn = True
+        
+    if not vmax is None and hasattr ( var , setMax ) :
+        if vmax < value : raise ValueError ( "%s: incompatible value&vmax: %s vs %s " % ( var.name , value , vmax ) )
+        mx = True
+        
+    ## temporarily use *safe* min/max  
+    if mn and var.hasMin () : var.setMin (  min ( vmin , var.getMin () ) ) 
+    if mx and var.hasMax () : var.setMax (  max ( vmax , var.getMax () ) ) 
+
+    ## set the value 
+    var.setVal ( value )
+    if mn : var.setMin ( vmin )
+    if mx : var.setMax ( vmax )
+
+    return var
+
+ROOT.RooAbsRealLValue.set_value_and_range  = _var_set_value_and_range_
+ROOT.RooAbsRealLValue.set_value_and_minmax = _var_set_value_and_range_
+
+_new_methods_ += [
+    ROOT.RooAbsRealLValue.set_value_and_range  , 
+    ROOT.RooAbsRealLValue.set_value_and_minmax , 
+]
 
 # =====================================================================
 

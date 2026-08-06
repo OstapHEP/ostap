@@ -119,6 +119,10 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         dropts = draw_options ( **kwargs )
         self.__draw_options.update ( dropts )
 
+        ## store fixed/floating parameters for the context manager
+        self.__fixed_pars = {} 
+        self.__float_pars = {}
+        
         ## check for extra arguments 
         extra  = {}
         for k in kwargs :
@@ -593,6 +597,109 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                 if not_used : self.warning ("Following keys are not used: %s" % not_used ) 
                 
         return
+
+    # =========================================================================
+    ## Context manager for fun/pdf object
+    #  - save    all parameters at ENTER
+    #  - restore all parameters at EXIT
+    #  - it restores  also the ranges and float/fixed status
+    #
+    #  @code
+    #  fun = ...
+    #  with fun : ## save all parameters here
+    #     ... 
+    #     fun.sigma = 10            ## change the value 
+    #     fun.A.setMax ( 13 )       ## change the range 
+    #     fun.B.setMin ( -1 )       ## change the range 
+    #     fun.C.fix    ( 100 )      ## change the status 
+    #     fun.D.release()           ## change the status 
+    #     fun.E.setVal ( -1 )       ## change the value 
+    #     ...
+    #  ## restore everything at exit 
+    #  @endcode
+    # =========================================================================
+    def __enter__ ( self ) :
+        """ Context manager for fun/pdf object
+        - save    all parameters at ENTER
+        - restore all parameters at EXIT
+        - it restores  also the ranges and float/fixed status
+   
+        >>> fun = ...
+        >>> with fun : ## save all parameters here
+        ... 
+        ...    fun.sigma = 10       ## change value 
+        ...    fun.A.setMax ( 13 )  ## change range 
+        ...    fun.B.setMin ( -1 )  ## change range 
+        ...    fun.C.fix    ( 100 ) ## change status 
+        ...    fun.D.release()      ## change status
+        ...    fun.E.setVal ( -1 )  ## change the value 
+        ...
+        """
+        pars   = [ p for p in self.params ( dataset ) if isinstance ( p , ROOT.RooAbsReal ) ]
+        self.__fixed_pars = { p.name : ( float ( p ) , p.minmax() ) for p in pars if     p.isConstant () }
+        self.__float_pars = { p.name : ( float ( p ) , p.minmax() ) for p in pars if not p.isConstant () }
+        return self
+
+    # =========================================================================
+    ## Context manager for fun/pdf object
+    #  - save    all parameters at ENTER
+    #  - restore all parameters at EXIT
+    #  - it restores  also the ranges and float/fixed status
+    # 
+    #  @code
+    #  fun = ...
+    #  with fun : ## save all parameters here
+    #     ... 
+    #     fun.sigma = 10            ## change the value 
+    #     fun.A.setMax ( 13 )       ## change the range 
+    #     fun.B.setMin ( -1 )       ## change the range 
+    #     fun.C.fix    ( 100 )      ## change the status 
+    #     fun.D.release()           ## change the status 
+    #     fun.E.setVal ( -1 )       ## change the value 
+    #     ...
+    #  ## restore everything at exit 
+    #  @endcode
+    # =========================================================================
+    def __exit__ ( self , *_ ) :
+        """ Context manager for fun/pdf object
+        - save    all parameters at ENTER
+        - restore all parameters at EXIT
+        - it restores  also the ranges and float/fixed status
+
+        >>> fun = ...
+        >>> with fun : ## save all parameters here
+        ... 
+        ...    fun.sigma = 10       ## change value 
+        ...    fun.A.setMax ( 13 )  ## change range 
+        ...    fun.B.setMin ( -1 )  ## change range 
+        ...    fun.C.fix    ( 100 ) ## change status 
+        ...    fun.D.release()      ## change status 
+        ...    fun.E.setVal ( -1 )  ## change the value 
+        ...
+        """
+        ## loop over the parameters 
+        for p in self.params () :
+            if not isinstnce ( p , ROOT.RooAbsReal ) : continue 
+            pname = p.name
+            if   pname in self.__fixed_pars : 
+                value , minmax = self.__fixed_pars [ pname ]
+                p.set_value_and_range ( value , *minmax )
+                p.fix     ( value )
+                self.__fixed.pars.pop ( pname , None ) 
+            elif pname in self.__float_pars : 
+                value , minmax = self.__float_pars [ pname ]
+                p.set_value_and_range ( value , *minmax )
+                p.release ()
+                self.__float.pars.pop ( pname , None ) 
+            else :
+                self.warning ("__exit__: parameter `%s' is not found!" % pname )
+
+        if self.__fixed_pars : self.warning ("__exit__: non-empty fixed pars: %s" % ',' % ( k for k in self.__fixed_pars ) ) 
+        if self.__float_pars : self.warning ("__exit__: non-empty float pars: %s" % ',' % ( k for k in self.__float_pars ) ) 
+            
+        self.__fixed_pars = {} 
+        self.__float_pars = {}
+
     
     # =========================================================================
     ## get the certain predefined drawing option

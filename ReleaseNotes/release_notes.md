@@ -1,3 +1,12 @@
+## New features
+
+   1. improve the default title for GoF-report tables
+   1. add `__enter__/__exit__` context manager for `AFUN` (and thus for all derived pdfs). It restores the value, status and range for all parameters  
+
+## Bug fixes 
+
+## Backward incompatible
+
 # v3.8.1.0
 
 ## New features
