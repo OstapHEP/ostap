@@ -150,9 +150,9 @@ class BaseDensityReweighter(abc.ABC):
     # ==================================================================
     def __fit_and_compute ( self, 
                             original        : numpy.ndarray, 
-                            original_weight : numpy.ndarray | None , 
+                            original_weight : Optional[ numpy.ndarray ] , 
                             target          : numpy.ndarray, 
-                            target_weight   : numpy.ndarray | None ) :
+                            target_weight   : Optional[ numpy.ndarray ] ) :
 
         # ==============================================================
         # FAST PATH: Standard positive unit weights for both samples
@@ -277,9 +277,9 @@ class BaseDensityReweighter(abc.ABC):
     
     def __fit_eval_stream ( self, 
                             X_orig_sub: numpy.ndarray        , 
-                            w_orig_sub: numpy.ndarray | None , 
-                            X_targ_sub: numpy.ndarray | None , 
-                            w_targ_sub: numpy.ndarray | None , 
+                            w_orig_sub: Optional[ numpy.ndarray ] , 
+                            X_targ_sub: Optional[ numpy.ndarray ] , 
+                            w_targ_sub: Optional[ numpy.ndarray ] , 
                             stream_key: str                  ) -> numpy.ndarray:
         
         X_comb = numpy.vstack ( [ X_orig_sub , X_targ_sub ] )
@@ -355,7 +355,7 @@ class BaseDensityReweighter(abc.ABC):
     # ==================================================================
     def predict_weights ( self,
                           X_new : numpy.ndarray               ,
-                          w_new : numpy.ndarray | None = None ) -> numpy.ndarray:
+                          w_new : Optional[ numpy.ndarray ] = None ) -> numpy.ndarray:
         """ Apply the fitted immutable model ensemble to evaluate ratio factors r(x) on new data.
         """
         
