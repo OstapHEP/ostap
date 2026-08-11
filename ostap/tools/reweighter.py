@@ -162,7 +162,7 @@ if GBRW : # ===================================================================
             title = title if title else "%s configuration " % typename ( self ) 
             return map2table_ex ( self.config , 
                                 header      = ( 'Parameter' , 'type' , 'value' ) ,
-                                  ailgnment   = 'rcw'  , 
+                                  alignment   = 'rcw'  , 
                                   prefix      = prefix ,
                                   title       = title  )
         
