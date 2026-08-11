@@ -1,3 +1,4 @@
+
 ## New features
 
    1. improve the default title for GoF-report tables
