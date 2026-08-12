@@ -13,7 +13,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
-    'ConfigBase' , ## the abstract base clss for advanced reweighters 
+    'Config' , ## the abstract base clss for advanced reweighters 
 ) 
 # =============================================================================
 from   ostap.utils.basic     import typename 

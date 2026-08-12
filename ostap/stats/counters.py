@@ -756,15 +756,47 @@ _new_methods_ += [
     Ostap.Math.WCovariances .__reduce__ ,
 ]
 
-# ==============================================================================
-_new_methods_ = tuple ( _new_methods_ )
+
+ECDF  = Ostap.Math. ECDF
+WECDF = Ostap.Math.WECDF 
 
 # =============================================================================
+## projet (W)ECDF into 1D histogram 
+#  @code
+#  ecdf = ...
+#  histo = ... 
+#  ecdf >> histo 
+#  @endcode
+def _ecdf_project_ ( ecdf , histo ) :
+    """ Project (W)ECDF into 1D histogram 
+    >>> ecdf  = ...
+    >>> histo = ...
+    >>> ecdf  >> histo 
+    """
+    if isinstance ( histo , ROOT.TH1 ) and 1 == histo.GetDimenstion () : 
+        ecdf.project ( histo )
+        return ecdf 
+    return NotImplemented 
+
+for t in ( ECDF , WECDF ) :
+    t.__rshift__ = _ecdf_project_  
+    
+_new_methods_ += [
+    ECDF  .__rshift__ , 
+    WECDF .__rshift__ ,
+]
+
+# ==============================================================================
+_new_methods_ = tuple ( _new_methods_ )
+   
+# =============================================================================
 _decorated_classes_ = (
-    SE  ,
-    WSE ,
-    NSE ,
-    EE  ,
+    SE    ,
+    WSE   ,
+    NSE   ,
+    EE    ,
+    ECDF  , 
+    WECDF ,
     Ostap.Math.Covariance   ,
     Ostap.Math.WCovariance  ,
     Ostap.Math.Covariances  ,

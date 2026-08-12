@@ -748,7 +748,7 @@ class NLL(AGoF,Config) :
         conf [ 'nToys'     ] = self.nToys      
         conf [ 'sample'    ] = self.sample   
         conf [ 'parallel'  ] = self.parallel 
-        conf [ 'progress'  ] = self.progress  }
+        conf [ 'progress'  ] = self.progress 
         return conf
     
     ## serialize the object 

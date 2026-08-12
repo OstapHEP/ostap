@@ -19,7 +19,6 @@ __all__     = (
     'normalize_pooled'   , ## "normalize" variables in pooled dataset 
     'clip_pvalue'        , ## clip-value
     'pairwise_distances' , ## get array of all pair-wise distances between two datasets
-    'nearest_distances'  , ## get array of all nearest distances for the dataset 
     'nearest_neighbors'  , ## get all nearest neigbours
     's2u'                , ## convert structured numpy array into non-structured
     'combine_pvalues'    , ## combine p-values 

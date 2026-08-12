@@ -23,6 +23,10 @@
 #include "Ostap/Quantiles.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
+// ROOT 
+// ============================================================================
+#include "TH1.h"
+// ============================================================================
 // Local
 // ============================================================================
 #include "status_codes.h"
@@ -417,6 +421,21 @@ Ostap::Math::ECDF::statistics
   return stat ;
 }
 // ============================================================================
+// project data content into 1D histogram
+// ============================================================================
+void Ostap::Math::ECDF::project 
+( TH1& histo ) const 
+{
+  Ostap::Assert ( 1 == histo.GetDimension()      , 
+                  "Invalild histogram dimension" , 
+                  "Ostap::Math::ECDF::project"   , 
+                  INVALID_TH1                    ) ; 
+  histo.Reset() ;
+  if ( !histo.GetSumw2() ) { histo.Sumw2() ; }
+  histo.FillN ( m_data.size () , m_data.data () , nullptr ) ;
+}
+// ============================================================================
+  
 
 // ============================================================================
 // For weighted data 
@@ -864,6 +883,24 @@ double Ostap::Math::WECDF::quantile
   const Ostap::QuantileTypes::HarrellDavisType t {} ;
   return quantile ( p , t ) ;
 }
+// ============================================================================
+// project data content into 1D histogram
+// ============================================================================
+void Ostap::Math::WECDF::project 
+( TH1& histo ) const 
+{
+  Ostap::Assert ( 1 == histo.GetDimension()      , 
+                  "Invalild histogram dimension" , 
+                  "Ostap::Math::ECDF::project"   , 
+                  INVALID_TH1                    ) ; 
+  histo.Reset() ;
+  if ( !histo.GetSumw2() ) { histo.Sumw2() ; }
+  for ( const auto& item : m_data )
+  { histo.Fill ( item.first , item.second ) ; }
+}
+// ============================================================================
+  
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
