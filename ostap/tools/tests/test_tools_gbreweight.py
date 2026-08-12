@@ -239,18 +239,8 @@ def test_gbreweight() :
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
-        from ostap.tools.reweighter      import Reweighter
-        # =====================================================================
-    except ImportError : # ====================================================
-        # =====================================================================
-        logger.error ('(GB)Reweighter is not available!', exc_info = True )
-        return 
-    
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
         from ostap.tools.data_reweighter import DataReweighter
-        from ostap.tools.reweighter      import Reweighter as GBRW
+        from ostap.tools.reweighters     import GBReweighter as GBRW
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
@@ -266,6 +256,9 @@ def test_gbreweight() :
     data = Data ( testfiles , 'DATA_tree' )
     mc   = Data ( testfiles , tag_mc      ) 
        
+    # =========================================================================
+    ## Use GBReweighter directly 
+    # =========================================================================
     with timing ( "Use (GB)Reweighter directly" , logger = logger ) :
         
         ddata , wdata = data.chain.slice  ( [ 'x' , 'y' ] , structured = False )
@@ -281,15 +274,17 @@ def test_gbreweight() :
         ## (1b)
         mc.chain.add_new_buffer ( wnew , name = 'w1' , progress = True , report = True  )
     
-    
+    # ===========================================================================
+    ## Use (GB)Reweighting via smart&efficient wrapper
+    # ===========================================================================
     with timing ( "Use (GB)Reweighting via smart&efficient wrapper" , logger = logger ) : 
        ## (2) use smart wrapper 
        
        ## (2a) 
-       rw = DataReweighter ( GBRW     , 
+       rw = DataReweighter ( GBRW                  , 
                              original = mc.chain   , 
                              target   = data.chain , 
-                             target_variables = ['x','y'] ) 
+                             target_variables = [ 'x' , 'y' ] ) 
        
        ## (2b) add new weight into mc 
        rw.reweight ( mc.chain , name = 'w2' ) 

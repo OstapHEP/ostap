@@ -37,19 +37,20 @@ from   ostap.core.core          import SE, VE, Ostap, hID
 from   ostap.stats.counters     import EffCounter
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
-from   ostap.utils.core         import typename  
+from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu
+from   ostap.utils.config       import Config
 from   ostap.stats.gof          import AGoFnp
 from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          num_jobs           , 
                                          weight_trivial     ,
                                          normalize_pooled   ,
                                          pairwise_distances ,
-                                         nearest_distances  ,
                                          nearest_neighbors  , 
                                          draw_ecdf          , s2u , np2vct ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf
+from   ostap.logger.symbols     import symmetry 
 import ostap.math.math_base           
 import ROOT, os, abc, numpy, math 
 # =============================================================================
@@ -63,7 +64,7 @@ logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensiona
 # =============================================================================
 ## @class GoFnp 
 #  A base class for numpy-related family of methods to probe goodness-of-fit
-class GoFnp (AGoFnp) :
+class GoFnp (AGoFnp,Config) :
     """ A base class for numpy-related family of methods to probe goodness-of-fit
     """
     def __init__ ( self               ,
@@ -79,13 +80,11 @@ class GoFnp (AGoFnp) :
         
         self.__nToys    = nToys
         ## 
-        self.__silent    = True if silent    else False
         self.__parallel  = True if parallel  else False
         self.__progress  = True if progress  else False
         self.__normalize = True if normalize else False 
         ## 
         self.__method    = method
-        self.__params    = params
 
         ## Empirical CDF for t-value distribution from permutations/toys"""
         self.__ecdf      = None
@@ -98,12 +97,10 @@ class GoFnp (AGoFnp) :
             if mratio <= 1 :
                 logger.warning ( 'Available/used memory ratio: %.1f; switch-off parallel processing' % mratio )                
                 ## self.__parallel = False
-                
-    @property
-    def params ( self ) :
-        """`params` : configuration of underlying classifier"""
-        return self.__params
 
+        ## initiailze the base
+        Config.__init__ ( self , silent = silent , **params ) 
+                
     @property
     def normalize ( self ) :
         """`normalize` : scale and shift both datasets to have mean = 0 and rms=1 for each column of pooled data"""
@@ -116,7 +113,6 @@ class GoFnp (AGoFnp) :
         conf = {} 
         conf.update ( self.params )
         conf [ 'nToys'            ] = self.nToys
-        conf [ 'silent'           ] = self.silent
         conf [ 'progress'         ] = self.progress
         conf [ 'parallel'         ] = self.parallel
         conf [ 'normalize'        ] = self.normalize
@@ -125,31 +121,11 @@ class GoFnp (AGoFnp) :
         return conf 
     
     # =========================================================================
-    ## self-print get the configuration 
-    def table (  self , title = '' , prefix = '' ) : 
-        """ print configuration """
-        from ostap.logger.utils import map2table_ex
-        title = title if title else "%s configuration " % typename ( self )
-        return map2table_ex ( self.config , 
-                              header      = ( 'Parameter' , 'type' , 'value' ) ,
-                              alignment   = 'rcw'  , 
-                              prefix      = prefix ,
-                              title       = title  )
-    
-    __str__  = table
-    __repr__ = table 
-    
-    # =========================================================================
     @property 
     def nToys ( self ) :
         """`nToys` : number of permutations/toys used for permutation/toys test"""
         return self.__nToys
     # =========================================================================
-    @property
-    def silent  ( self ) :
-        """`silent` : silent processing?"""
-        return self.__silent
-    # ========================================================================
     @property
     def parallel ( self ) :
         """`parallel` : parallel processing where/when/if possible?"""
@@ -670,15 +646,6 @@ class PPDnp(GoFnp) :
                     
         n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
         
-        GoFnp.__init__ ( self                 ,
-                         nToys     = nToys    ,
-                         parallel  = parallel , 
-                         silent    = silent   ,
-                         progress  = progress , ## ATTENTION!                          
-                         normalize = True     ,
-                         n_jobs    = n_jobs   , 
-                         method    = 'Point-to-Point Dissimilarity' , **params )
-        
         self.__mc2mc     = True if mc2mc else False
         self.__transform = None
         self.__sigma     = sigma
@@ -691,6 +658,15 @@ class PPDnp(GoFnp) :
         scale = -0.5 / ( self.sigma ** 2 ) 
         self.__distance_type , _ , _ = psi_conf ( psi , scale )
 
+        GoFnp.__init__ ( self                 ,
+                         nToys     = nToys    ,
+                         parallel  = parallel , 
+                         silent    = silent   ,
+                         progress  = progress , ## ATTENTION!                          
+                         normalize = True     ,
+                         n_jobs    = n_jobs   , 
+                         method    = 'Point-to-Point Dissimilarity' , **params )
+                
     # ==================================================================================
     @property
     def config ( self ) :
@@ -894,6 +870,12 @@ class DNNnp(GoFnp) :
         if 'metric' in params : params.pop ( 'metric' )
         if 'p'      in params : params.pop ( 'p'      )
         
+        self.__histo = None 
+        if   isinstance ( histo , ROOT.TH1 ) :
+            self.__histo = histo
+        elif isinstance ( histo , int      ) and 1 < histo :
+            self.__histo = ROOT.TH1D ( hID () , 'U-values' , histo , -0.05 , 1.05 ) 
+
         GoFnp.__init__ ( self                      ,
                          nToys       = nToys       ,
                          parallel    = parallel    , 
@@ -903,13 +885,6 @@ class DNNnp(GoFnp) :
                          method      = 'Distance-to-Nearest-Neighbor' ,
                          n_jobs      = n_jobs      , **params )
         
-
-        self.__histo = None 
-        if   isinstance ( histo , ROOT.TH1 ) :
-            self.__histo = histo
-        elif isinstance ( histo , int      ) and 1 < histo :
-            self.__histo = ROOT.TH1D ( hID () , 'U-values' , histo , -0.05 , 1.05 ) 
-
     # ==================================================================================
     @property
     def config ( self ) :
@@ -990,7 +965,8 @@ class DNNnp(GoFnp) :
         distances       = distances [ : , 1]  # DNN (Distance to Nearest Neighbor)
         """
         
-        distances = nearest_distances ( uds1 , **self.params ) 
+        ## distances = nearest_distances ( uds1 , **self.params ) 
+        distances = nearest_neighbors ( uds1 , **self.params ) 
 
         
         if  1 != D : distances = distances ** D
@@ -1172,7 +1148,7 @@ class KullbackLeibler(Mahalanobis) :
                          parallel     = parallel         , 
                          silent       = silent           ,
                          progress     = progress         ,                           
-                         method       = 'Kullback-Leibler/symmetric' if self.__symmetric else 'Kullback-Leibler',
+                         method       = 'Kullback-Leibler/%s' % symmetry if self.__symmetric else 'Kullback-Leibler',
                          symmetric    = self.__symmetric , 
                          normalize    = True             , **params )
                                         
@@ -1210,7 +1186,7 @@ class KullbackLeibler(Mahalanobis) :
 #  Use Hotelling's tsquared statistics to discriminiate the datasets
 #  @attention it is *VERY* crude "estimator"
 class Hotelling(Mahalanobis) :
-    """ UseHotelling's t-squared statistics to discriminiate the dataset
+    """ Use Hotelling's t-squared statistics to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
     def __init__ ( self ,
@@ -1218,7 +1194,7 @@ class Hotelling(Mahalanobis) :
                    parallel    = False , 
                    silent      = False ,
                    progress    = True  , **params ) :         
-        
+
         ## initialize the base 
         GoFnp.__init__ ( self                            , 
                          nToys        = nToys            ,
@@ -1261,7 +1237,7 @@ class Hotelling(Mahalanobis) :
         if not w1_trivial :
             sumw  = numpy.sum ( weight1 )
             sumw2 = numpy.sum ( weight1 * weight1 )
-            nw1   = math.floor ( float ( sumw * sumw / sumw2) )
+            nw1   = math.floor ( float ( sumw * sumw / sumw2 ) )
             
         if not w2_trivial :
             sumw  = numpy.sum ( weight2 )

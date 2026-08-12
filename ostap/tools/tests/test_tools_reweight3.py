@@ -26,7 +26,7 @@ from   ostap.logger.symbols     import iteration, plus_minus
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
-from   ostap.stats.gof_utils    import useLightGBM, useXGBoost, useCatBoost   
+from   ostap.stats.tools        import useLightGBM, useXGBoost, useCatBoost, useHepML 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.logger.table       as     T 
@@ -64,7 +64,7 @@ tag_mc      = 'MC_tree'
 
 
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
-## dbname      = 'reweight3.db'
+dbname      = 'reweight3.db'
 
 small = numcpu () <= 8
 
@@ -267,10 +267,13 @@ use_catboost  = useCatBoost  ()
 if use_catboost :  logger.attention ( 'USE CatBoost!'              )
 else            :  logger.warning   ( 'CatBoost is not available!' )
 
+use_hepml     = useHepML  ()
+if use_hepml    :  logger.attention ( 'USE HepML!'                 )
+else            :  logger.warning   ( 'HepML    is not available!' )
+
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
-from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
 from ostap.stats.gof_np       import  ( MIXnp           as COMPARATOR4 , 
                                         KullbackLeibler as COMPARATOR3 , 
                                         Mahalanobis     as COMPARATOR2 , 
@@ -281,7 +284,7 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR3 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR4 ( parallel = True , nToys = 100 ) )
 
-if False and use_lightgbm :  
+if use_lightgbm :  
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
     comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) , ) 
 
@@ -409,6 +412,7 @@ memory_init = memory_usage()
 converged   = False
 
 maxIter     = 5 if small else 12
+maxIter = 3
 
 # =============================================================================
 ## start reweighting iterations:
@@ -506,12 +510,13 @@ else :
     converged = False 
     logger.error ( "No convergency!" )
 
-# ===========================================================================
+
+# =============================================================================
 logger.attention ( 'Memory:%+.2f[MB]' % ( memory_usage () - memory_init ) )                            
-# ===========================================================================
+# =============================================================================
 title = 'Weighter object'
 logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
-# ============================================================================
+# =============================================================================
 ## draw the convergency graphs 
 graphs = weighter.graphs ()
 for key in graphs : 
@@ -521,7 +526,7 @@ for key in graphs :
 # =============================================================================
 
 # =============================================================================
-## Add obtained weight into MC-tree
+## Add obtained weights into MC-tree
 # =============================================================================
 with timing ( "Add `%s' column to initial MC-tree" % weight_name , logger = logger ) : 
     mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
@@ -543,23 +548,25 @@ weights = [ '' , weight_name ]
 # =============================================================================
 ## (1) GBReweighter by Alex Rogozhnikov from hep_ml 
 # =============================================================================
-from ostap.tools.reweighter      import Reweighter     as GBRW 
-rw1 = DataReweighter ( GBRW                        , ## reweighter type 
-                       original         = mctree   ,
-                       target           = datatree ,
-                       target_variables = 'x,y,z'  ) 
-
-weight_GBRW = 'weight_GBRW'
-with timing ( "GBRW reweight" , logger = logger ) :    
-    rw1.reweight ( mctree , name = weight_GBRW ) 
-    weights.append ( weight_GBRW )
+if use_hepml : # ============================================================
+    # ========================================================================
+    from ostap.tools.reweighters     import GBReweighter   as GBRW 
+    rw1 = DataReweighter ( GBRW                        , ## reweighter type 
+                           original         = mctree   ,
+                           target           = datatree ,
+                           target_variables = 'x,y,z'  ) 
     
+    weight_GBRW = 'weight_GBRW'
+    with timing ( "GBRW reweight" , logger = logger ) :    
+        rw1.reweight ( mctree , name = weight_GBRW ) 
+        weights.append ( weight_GBRW )
+
 # =============================================================================
 ## (2) home-made reweighter based on LightGBM
 # =============================================================================
 if  use_lightgbm : # ==========================================================
     # =========================================================================
-    from ostap.tools.reweighters     import Reweighter_LGBM     as LGBM
+    from ostap.tools.reweighters     import LightGBMDensityReweighter as  LGBM
     rw2 = DataReweighter ( LGBM                        , ## reweighter type 
                            original         = mctree   ,
                            target           = datatree ,
@@ -570,13 +577,12 @@ if  use_lightgbm : # ==========================================================
         rw2.reweight ( mctree , name = weight_LGBM ) 
         weights.append ( weight_LGBM )
 
-        
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-if use_xgboost : # ===========================================================
-    # ========================================================================
-    from ostap.tools.reweighters     import Reweighter_XGB     as XGB
+if use_xgboost : # ============================================================
+    # =========================================================================
+    from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
     rw3 = DataReweighter ( XGB                         , ## reweighter type 
                        original         = mctree   ,
                        target           = datatree ,
@@ -591,7 +597,7 @@ if use_xgboost : # ===========================================================
 # =============================================================================
 if use_catboost : # ===========================================================
     # =========================================================================
-    from ostap.tools.reweighters     import Reweighter_CATB     as CATB
+    from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
     rw3 = DataReweighter ( CATB                        , ## reweighter type 
                            original         = mctree   ,
                            target           = datatree ,

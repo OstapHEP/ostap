@@ -212,6 +212,9 @@ class ADVAL_base (GoFnp):
         
         n_splits = params.pop ( 'n_splits' , 5 ) 
         assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
+        
+        self.__n_splits            = n_splits 
+        self.__importance_features = {}
 
         GoFnp.__init__ ( self                  ,
                          nToys     = nToys     ,
@@ -221,8 +224,6 @@ class ADVAL_base (GoFnp):
                          normalize = normalize , 
                          method    = method   , **params )
         
-        self.__n_splits            = n_splits 
-        self.__importance_features = {}
         
     # ============================================================================
     @property

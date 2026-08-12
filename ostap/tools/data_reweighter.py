@@ -20,19 +20,21 @@ from   ostap.utils.core         import typename
 from   ostap.math.math_base     import weight_trivial
 from   ostap.stats.statvars     import data_slice 
 from   ostap.trees.cuts         import vars_and_cuts 
-from   ostap.utils.progress_bar import progress_bar 
+from   ostap.utils.config       import Config
+from   ostap.utils.progress_bar import progress_bar
+from   ostap.tools.reweighter   import Reweighter 
 import ostap.trees.trees 
 import ROOT 
-# ============================================================================
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighter' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.data_reweighter' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 ## @class DataReweighter
 # Helper class to perform the reweighting using tree/source-interface
-class DataReweighter(object) : 
+class DataReweighter(Config) : 
     """ Helper class to perform (GB)reweighting using tree/source-interface
     """
     def __init__ ( self                      , 
@@ -46,57 +48,59 @@ class DataReweighter(object) :
                    silent             = True , 
                    progress           = True , **params ) :
         
-        ## 
+        ##
+        if not issubclass ( reweighter_type , Reweighter ) :
+            raise TypeError ( "Reweighet type %s is not subclass of %s" % ( typename ( reweighter_type ) , 
+                                                                            typename ( Reweighter      ) ) ) 
+
+        ## target variables&cuts&weights
         tvars, tweight, _ = vars_and_cuts ( target_variables , target_weight )
             
         ovars = original_variables if original_variables else tvars
         ovars, oweight, _ = vars_and_cuts ( ovars            , original_weight )
             
-        self.__silent   = True if silent else False
         self.__progress = True if progress else False   
         self.__tvars    = tuple ( tvars )  
         self.__ovars    = tuple ( ovars )
         self.__tweight  = tweight
         self.__oweight  = oweight 
-
+    
         ## 
         tdata, tw = data_slice ( target  , tvars, tweight , structured = False , progress = self.progress )
         odata, ow = data_slice ( original, ovars, oweight , structured = False , progress = self.progress ) 
 
         if not weight_trivial ( tw ) : tw /= numpy.sum ( tw )
         if not weight_trivial ( ow ) : ow /= numpy.sum ( ow )
-        
-        ## create the actual reweighter
-        self.__rw = reweighter_type ( original        = odata , 
-                                      target          = tdata , 
-                                      original_weight = ow    , 
-                                      target_weight   = tw    , 
-                                      silent          = self.silent , **params  )
 
+        ## create the actual reweighter
+        self.__rw = reweighter_type ( original        = odata  , 
+                                      target          = tdata  , 
+                                      original_weight = ow     , 
+                                      target_weight   = tw     , 
+                                      silent          = silent , **params  )
+        
+        
+        Config.__init__ ( self , silent = silent , **params ) 
+                                  
     @property
     def reweighter ( self ) :
-        """`reweighter` : get the ctual Reweighter object
+        """`reweighter` : get the actual Reweighter object
         """
         return self.__rw
     
     @property 
     def config ( self ) :
-        """`config` : Reweighter configuraton"""
-        conf = {} 
-        conf.update ( self.__rw.config )
-        conf [ 'progress'           ] = progress 
+        """`config` : Reweighter configuration"""
+        conf = {}
+        conf.update ( super().config   )        
+        conf [ 'progress'           ] = self.progress 
         conf [ 'Reweighter type'    ] = typename ( self.__rw )
+        conf [ 'Reweighter'         ] = str ( self.__rw  ) 
         conf [ 'target-variables'   ] = self.__tvars
         conf [ 'original-variables' ] = self.__ovars
         if self.__tweight : conf [ 'target-weight'   ] = self.__tweight 
-        if self.__oweight : conf [ 'originam-weight' ] = self.__oweight 
+        if self.__oweight : conf [ 'original-weight' ] = self.__oweight 
                    
-    @property
-    def silent ( self ) : 
-        """`silent`: silent processing?
-        """
-        return self.__silent
-    
     @property
     def progress ( self ) : 
         """`progress` : show progress bar?
@@ -114,7 +118,6 @@ class DataReweighter(object) :
             
         assert isinstance ( original ,  ( ROOT.TTree , ROOT.RooDataSet ) ) , \
             "Invalid `original` type %s" % typename ( original ) 
-
         
         ## (1) processing  TChain with several files?    
         if isinstance ( original , ROOT.TChain ) and 1 < original.nFiles : 
@@ -178,3 +181,12 @@ class DataReweighter(object) :
         """
         return self.reweight ( original , name = name  )
     
+# ============================================================================
+if '__main__' == __name__ :
+        
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+        
+# =============================================================================
+##                                                                      The END 
+# =============================================================================

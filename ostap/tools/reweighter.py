@@ -2,23 +2,28 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file
-#  Module with utilities for reweigting using GBReweighetr 
-#
+#  Utilities for advanced reweighting
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2021-09-22
 # =============================================================================
-""" Module with utilities for reweighting using GBReweighter
+""" Utilities for advanced reweighting
+- GBReweighter from hep_ml
+- custom family of DensityReweighters 
 """
 # =============================================================================
 __version__ = "$Revision$"
-__author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
+__author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
-    'Reweighter' , 
-    ) 
+    'num_features' , ## number of features for trainig data
+    'num_samples'  , ## number of samples/events (rows) in the dataset.
+    'Reweighter'   , ## the abstract base clss for advanced reweighters 
+) 
 # =============================================================================
-from   ostap.math.math_base  import weight_trivial
-import numpy, os  
+from   ostap.utils.basic    import typename
+from   ostap.math.math_base import weight_trivial
+from   ostap.utils.config   import Config
+import numpy, os, abc 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -26,181 +31,152 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighter' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    varname = 'NUMEXPR_MAX_THREADS'
-    if not varname in os.environ :
-        from ostap.utils.basic import numcpu 
-        os.environ[ varname ]  = '%d'% numcpu ()
-    # =========================================================================
-    ## some patch 
-    import sklearn.tree._classes as _cl
-    if hasattr ( _cl , 'CRITERIA_REG' ) :
-        if 'mse' in _cl.CRITERIA_REG and 'squared_error' not in _cl.CRITERIA_REG:
-            _cl.CRITERIA_REG [ 'squared_error' ] = _cl.CRITERIA_REG [ 'mse']
-        elif 'squared_error' in _cl.CRITERIA_REG and 'mse' not in _cl.CRITERIA_REG:
-            _cl.CRITERIA_REG [ 'mse'] = _cl.CRITERIA_REG [ 'squared_error' ]
+## Number of features for training data
+#  Safe extraction of n_features (supports DataFrame, 2D array, 1D vector)
+def num_features ( X ) :
+    """ Number of features for training data
+    - Safe extraction of n_features (supports DataFrame, 2D array, 1D vector)
+    """
+    return X.shape [ 1 ] if hasattr ( X , 'shape' ) and 1 < len ( X.shape ) else 1
+# ============================================================================
+## Returns the number of samples/events (rows) in the dataset.
+#  Supports NumPy arrays, Pandas DataFrames/Series, SciPy sparse matrices,
+#  PyTorch/TensorFlow tensors, and standard Python collections.
+def num_samples ( X ) :
+    """ Returns the number of samples/events (rows) in the dataset.
 
-    ## 
-    from hep_ml.reweight import GBReweighter as GBRW 
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    logger.error ( "Cannot import `GBReweighter` from `hep_ml.reweight`" , exc_info = True )
-    GBRW = None 
-    __all__ = () 
+    Supports NumPy arrays, Pandas DataFrames/Series, SciPy sparse matrices,
+    PyTorch/TensorFlow tensors, and standard Python collections.
+    """
+    if X is None : return 0
+
+    # Handle objects with a .shape attribute (NumPy, Pandas, SciPy, PyTorch, TensorFlow)
+    if hasattr ( X ,  "shape" ) :
+        shape = X.shape
+        if 0 == len ( shape ) :  return 1
+        return int ( shape [ 0 ] )
+
+    # Handle lists, tuples, and other standard Python sequences
+    if hasattr ( X , "__len__" ) : return len ( X )
+
+    raise TypeError ( "Unsupported data structure for determining sample count: %" % typename ( X )  )
 # =============================================================================
-if GBRW : # ===================================================================
-    # =========================================================================
-    ## if not hasattr ( numpy , 'float' ) :
-    ##    logger.warning ( 'No `numpy.float`... add it!')
-    ##    numpy.float = numpy.float64
-    # =========================================================================
-    ## @class Reweighter
-    #  Helper class for reweighting using <code>GBReweighter</code>
-    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    #  @date   2021-09-22 
-    class Reweighter(object) :
-        """ Helper class for reweighting using `GBReweighter`
-        - see hep_ml.reweight.GBReweighter
+## @class Reweighter
+#  Abstract base class class for Advanced Reweighters
+#  - GBReweighter from hep_ml
+#  - custom family of DensityReweighters 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2021-09-22 
+class Reweighter(abc.ABC,Config) :
+    """ Abstract base class for Advanced Reweighters 
+    - GBReweighter from hep_ml
+    - custom family of DensityReweighters 
+    """
+    def __init__ ( self                    , * , 
+                   original                ,
+                   target                  ,
+                   original_weight = None  ,
+                   target_weight   = None  , 
+                   silent          = False ,
+                   random_state    = 42    , **params  ) :
+        """ Abstract base class for Advanced Reweigters
         """
-        def __init__ ( self                    , * , 
-                       original                ,
-                       target                  ,
-                       original_weight = None  ,
-                       target_weight   = None  , 
-                       silent          = False , **params  ) :
-            """ Helper class for reweighting using `GBReweighter`
-            - see hep_ml.reweight.GBReweighter
-            """
-            cnf = { 'n_estimators'     : 60  , 
-                    'learning_rate'    : 0.1 , 
-                    'max_depth'        : 3   , 
-                    'min_samples_leaf' : 100 }
-            
-            params .pop ( 'n_splits' , None )
-            params .pop ( 'parallel' , None )
-            params .pop ( 'progress' , None )
-            cnf.update ( params ) 
-            
-            self.__params     = cnf 
-            self.__silent     = True if silent else False 
-            self.__reweighter = GBRW ( **self.params  ) 
-            shape1 = original.shape
-            shape2 = target.shape 
-            
-            assert len ( shape1 ) == len ( shape2 ) ,  "Inconsistent shapes: %s vs %s " % ( shape1 , shape2 )   
-            assert len ( shape1 ) == 1 or shape1[-1] == shape2[-1] , \
-                "Inconsistent shapes: %s vs %s " % ( shape1[-1] , shape2[-1] )   
-                       
-            assert ( original_weight is None ) or len ( original_weight ) == len ( original ) , \
-                "Invalid length of ``original weights''"       
-                 
-            assert ( target_weight   is None ) or len ( target_weight   ) == len ( target   ) , \
-                "Invalid length of ``target weights''"
-        
-            ## MC weights are used in training?
-            self.__weight_used = not weight_trivial ( original_weight )
-                
-            if not silent and self.params : 
-                title = '(GB)Reweighter configuration'
-                table = self.table ( title = title  , prefix = '# ' )
-                logger.info ( '%s:\n%s' %  ( title , table ) )
 
-            if silent : 
-                from ostap.logger.logger import logAttention as context
-            else      : 
-                from ostap.utils.basic   import NoContext    as context 
-            
-            with context () :
-                self.__reweighter.fit ( original        ,
-                                        target          ,
-                                        original_weight = original_weight , 
-                                        target_weight   = target_weight   )
-                         
+        if not isinstance ( random_state , int ) :
+            raise TypeError  ( "Invalid `random_state' type %s"    % typename ( random_state ) )
+        
+        self.__random_state = random_state
 
-        @property
-        def method ( self ) :
-            """`method` : underlying method/engine"""
-            return "GBReweighter"
-    
-        @property
-        def params ( self ) :
-            """`kwargs`: actual configuration usef for clreation of `GBReweighter`"""
-            return self.__params
-        
-        @property
-        def weight_used ( self ) :
-            """`weight_used` : was orignal weight used for training?"""
-            return self.__weight_used 
-        
-        @property
-        def silent ( self ) :
-            """`silent` : silent processing?"""
-            return self.__silent
-        
-        @property 
-        def config ( self ) :
-            """`config` : Reweighter configuraton"""
-            conf = {}
-            conf.update ( self.__params )
-            conf [ 'method'      ] = self.method
-            conf [ 'silent'      ] = self.silent 
-            conf [ 'weight_used' ] = self.weight_used
-            return conf 
-                    
-        @property
-        def reweighter ( self ) :
-            """`reweighter' : get the underlying reweighter object"""
-            return self.__reweighter
-         
-        # =========================================================================
-        ## self-print get the configuration 
-        def table (  self , title = '' , prefix = '# ') : 
-            """ print configuration """
-            from ostap.logger.utils import map2table_ex
-            title = title if title else "%s configuration " % typename ( self ) 
-            return map2table_ex ( self.config , 
-                                header      = ( 'Parameter' , 'type' , 'value' ) ,
-                                  alignment   = 'rcw'  , 
-                                  prefix      = prefix ,
-                                  title       = title  )
-        
-        def __str__  ( self ) : return self.table ( prefix = '' )
-        def __repr__ ( self ) : return self.__str__ () 
-        
-        # =========================================================================
-        ## Get/predict new weights for (new) original
-        def weight ( self                   ,
-                     original               ,
-                     original_weight = None ) :
-            """ Get/predict  new weights for (new) original
-            """
-            if not self.silent and self.weight_used and weight_trivial ( original_weight ) :
-                logger.warning ( "Reweighter: `original-weight' was used for training but not provided for evaluation" ) 
-                
-            return self.reweighter.predict_weights (
-                original        = original        ,
-                original_weight = original_weight )
-
-        weights     = weight 
-        new_weight  = weight
-        new_weights = weight
-    
         # ==========================================================================
-        ## Get/predict new weights for (new) original
-        def __call__ ( self                   ,
-                       original               ,
-                       original_weight = None ) :
-            """ Get/predict  new weights for (new) original
-            """
-            return self.weight ( original , original_weight = original_weight )
+        ## Check input data
+        # ==========================================================================
+        
+        shape1  = original.shape
+        shape2  = target.shape 
 
-    ## extend a  bit the documentation string
-    __doc__                     += '\n\nGBReweighter documentation:\n%s' % GBRW.__init__.__doc__ 
-    Reweighter.__doc__          += '\n\nGBReweighter documentation:\n%s' % GBRW.__init__.__doc__ 
-    Reweighter.__init__.__doc__ += '\n\nGBReweighter documentation:\n%s' % GBRW.__init__.__doc__ 
-     
+        nf_orig = num_features ( original )
+        nf_targ = num_features ( target   )
+        
+        if nf_orig != nf_targ : raise TypeError ( "Inconsistent original/targer shapes: %s vs %s " % ( original.shape , target.shape ) )
+
+        ns_orig = num_samples  ( original )
+        ns_targ = num_features ( target   )
+        
+        if original_weight is None or len ( original_weight ) == ns_orig : pass
+        else : raise TypeError ( "Inconsistent original/weight : %s vs %s " % ( ns_orig , len ( original_weight ) ) )
+
+        if target_weight   is None or len ( target_weight   ) == ns_targ : pass
+        else : raise TypeError ( "Inconsistent target/weight   : %s vs %s " % ( ns_targ , len ( target_weight ) ) )
+
+        if not weight_trivial ( target_weight ) :
+            sw = numpy.sum ( target_weight )
+            if sw <= 0 : logger.error ( "Sum of target   weigths is non-positive: %s" % float ( sw ) )
+            
+        if not weight_trivial ( original_weight ) :
+            sw = numpy.sum ( original_weight )
+            if sw <= 0 : logger.error ( "Sum of original weigths is non-positive: %s" % float ( sw ) )
+            
+        # ==========================================================================
+        ## initialize the base 
+        # ==========================================================================
+        Config.__init__ ( self , silent = silent , **params ) 
+
+    @property
+    @abc.abstractmethod
+    def method ( self ) :
+        """`method` : underlying method/engine"""
+        pass 
+
+    @property
+    def random_state ( self ) :
+        """`random_state` : random number seed for shuffling/splitting/k-fold/..."""
+        return self.__random_state
+
+    @property 
+    def config ( self ) :
+        """`config` : Reweighter configuraton"""
+        conf = {}
+        conf.update ( super().config  )
+        conf [ 'method'       ] = self.method
+        conf [ 'random_state' ] = self.random_state 
+        return conf 
+                    
+    # ==============================================================================
+    ## Get/predict new weights for (new) original
+    @abc.abstractmethod 
+    def weights ( self                   ,
+                  original               ,
+                  original_weight = None ) :
+        """ Get/predict  new weights for (new) original
+        """
+        pass
+
+    # ==============================================================================
+    ## alias 
+    def new_weights ( self                   ,
+                      original               ,
+                      original_weight = None ) :
+        """ Get/predict  new weights for (new) original
+        """
+        return self.weights ( original , original_weight )
+
+    # ==============================================================================
+    ## alias 
+    def get_weights ( self                   ,
+                      original               ,
+                      original_weight = None ) :
+        """ Get/predict  new weights for (new) original
+        """
+        return self.weights ( original , original_weight )
+    
+    # ==============================================================================
+    ## Get/predict new weights for (new) original
+    def __call__ ( self                   ,
+                   original               ,
+                   original_weight = None ) :
+        """ Get/predict  new weights for (new) original
+            """
+        return self.weights ( original , original_weight )
      
 # ============================================================================
 if '__main__' == __name__ :

@@ -54,6 +54,7 @@ from   ostap.fitting.ds2numpy   import ds2numpy
 from   ostap.stats.counters     import EffCounter 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import random_name
+from   ostap.utils.config       import Config
 from   ostap.stats.gof_utils    import TOYS
 from   ostap.stats.ustat        import USTAT
 from   ostap.plotting.color     import Navy, DarkGreen
@@ -72,7 +73,7 @@ logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensiona
 # =============================================================================
 ## @class GoF
 #  A base class for family of methods to probe Goodness-of-Git
-class GoF(AGoF) :
+class GoF(AGoF,Config) :
     """ A base class for family of methods to probe Goodness-of-Fit
     """
     def __init__ ( self             ,
@@ -89,30 +90,19 @@ class GoF(AGoF) :
         self.__sample     = True if sample else False
         self.__genconf    = genconf
         
+        Config.__init__ ( self , silent = self.silent ) 
     # =======================================================================
     ## get all configration parameters
     @property 
     def config ( self ) :
-        return { 'estimator' : self.estimator ,
-                 'mcFactor'  : self.mcFactor  ,
-                 'sample'    : self.sample    , 
-                 'genconf'   : self.genconf   }
-    
-    # =========================================================================
-    ## self-print get the configuration 
-    def table (  self , title = '' , prefix = '# ' ) : 
-        """ print configuration """
-        from ostap.logger.utils import map2table_ex
-        title = title if title else "%s configuration " % typename ( self )
-        return map2table_ex ( self.config , 
-                              header      = ( 'Parameter' , 'type' , 'value' ) ,
-                              alignment   = 'rcw'  , 
-                              prefix      = prefix ,
-                              title       = title  )
-    
-    def __str__  ( self ) : return self.table ( prefix = '' ) 
-    def __repr__ ( self ) : return self.__str__ ()
-    
+        conf = {}
+        conf.update ( super().config )
+        conf [ 'estimator' ] = self.estimator
+        conf [ 'mcFactor'  ] = self.mcFactor 
+        conf [ 'sample'    ] = self.sample   
+        conf [ 'genconf'   ] = self.genconf  
+        return conf 
+
     @property
     def estimator( self ) :
         """`estimator` : Actual Goodness-of-Fit estimator, same as `gof`"""
@@ -143,11 +133,6 @@ class GoF(AGoF) :
         """`genconf` : additinnal papameter for `pdf.generate`"""
         return self.__genconf     
     
-    @property
-    def silent ( self ) :
-        """`silent` : silent processing?"""
-        return self.gof.silent
-
     @property
     def progress ( self ) :
         """`progress` : show progress bar?"""
@@ -712,7 +697,7 @@ class DNN(GoF) :
 #  Trivial `estimator' for -log N as `fit-quality'
 #  - @attention the absolute value of -log L is *not* a true GoF-estimator
 #  toys are needed!
-class NLL(AGoF) :
+class NLL(AGoF,Config) :
     """  Trivial `estimator' for -log N as fit-quality.
     - attention the absolute value of -log L is not a true GoF-estimator
     - toys are needed!
@@ -734,7 +719,6 @@ class NLL(AGoF) :
 
         self.__sample    = True if sample   else False 
         self.__parallel  = True if parallel else False 
-        self.__silent    = True if silent   else False 
         self.__progress  = True if progress else False 
         self.__fitconf   = fitconf
         self.__nToys     = nToys 
@@ -744,6 +728,8 @@ class NLL(AGoF) :
         self.__tvalue    = None
         self.__pvalue    = None
 
+        Config.__init__ ( self , silent = silent ) 
+        
     ## Are weights supported by this GoF estimator?
     @property 
     def weights_supported ( self ) :
@@ -755,29 +741,16 @@ class NLL(AGoF) :
     ## get all configration parameters
     @property 
     def config ( self ) :
-        return { 'fitresult' : self.fitresult , 
-                 'fitconf'   : self.fitconf   , 
-                 'nToys'     : self.nToys     , 
-                 'sample'    : self.sample    , 
-                 'parallel'  : self.parallel  , 
-                 'silent'    : self.silent    , 
-                 'progress'  : self.progress  }
+        conf = {}
+        conf.update ( super().config )
+        conf [ 'fitresult' ] = self.fitresult 
+        conf [ 'fitconf'   ] = self.fitconf   
+        conf [ 'nToys'     ] = self.nToys      
+        conf [ 'sample'    ] = self.sample   
+        conf [ 'parallel'  ] = self.parallel 
+        conf [ 'progress'  ] = self.progress  }
+        return conf
     
-    # =========================================================================
-    ## self-print get the configuration 
-    def table (  self , prefix = '# ') : 
-        """ print configuration """
-        from ostap.logger.utils import map2table_ex
-        title = "%s configuration " % typename ( self )
-        return map2table_ex ( self.config , 
-                              header      = ( 'Parameter' , 'type' , 'value' ) ,
-                              alignment   = 'rcw'  , 
-                              prefix      = prefix ,
-                              title       = title  )
-    
-    def __str__  ( self ) : return self.table ( prefix = '' ) 
-    def __repr__ ( self ) : return self.__str__ ()
-        
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object
@@ -798,9 +771,9 @@ class NLL(AGoF) :
     def __setstate__ ( self , state ) :
         """ De-serialize the object
         """
+        self.  silent    = state.pop ( 'silent'    )        
         self.__sample    = state.pop ( 'sample'    )
         self.__parallel  = state.pop ( 'parallel'  )
-        self.__silent    = state.pop ( 'silent'    )
         self.__progress  = state.pop ( 'progress'  )        
         self.__fitconf   = state.pop ( 'fitconf'   )
         self.__fitresult = state.pop ( 'fitresult' )        

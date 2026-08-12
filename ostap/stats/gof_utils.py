@@ -25,12 +25,6 @@ __all__     = (
     'combine_pvalues'    , ## combine p-values 
     'np2vct'             , ## numpy arrays into SVectorWithError
     ##
-    'useLightGBM'        , ## Are LigthGBM  library and classificator available?
-    'useXGBoost'         , ## Are XGBoost   library and claffificators available?
-    'useCatBoost'        , ## Are CatBoost  library and claffificators available?
-    'useSkLearn'         , ## Are sckearn   library and claffificators available?
-    'usePyTorch'         , ## Are (Py)Torch library and claffificators available?
-    'useKeras'           , ## Are Keras    library and claffificators available?
 )
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
@@ -121,117 +115,75 @@ except ImportError : # ========================================================
     # =========================================================================
     has_sklearn = False # =====================================================
     # =========================================================================
+
 # =============================================================================
-## (1) use scipy 
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import scipy # ============================================================
-    import scipy.spatial # ====================================================
-    # =========================================================================   
-    if Version ( "1.6.0" ) <=  Version ( scipy.__version__ ) : # ==============
-        # =====================================================================
-        ## Get nearest distances using scipy.spatial.cKDTree 
-        def nearest_distances ( data        ,
-                                n_jobs = -1 , **config ) :
-            """ Get nearest distances using scipy.spatial.cKDTree 
-            """
-            config [ 'workers' ] = n_jobs 
-            tree          = scipy.spatial.cKDTree ( data )
-            distances , _ = tree.query ( data , k = [ 2 ]  , **config )
-            ## distances     = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 
-            return distances.flatten() 
-        # ====================================================================
-    else : # =================================================================
-        # ====================================================================
-        ## Get nearest distances using scipy.spatial.cKDTree         
-        def nearest_distances ( data , n_jobs = -1 , **config ) :
-            """ Get nearest distances using scipy.spatial.cKDTree 
-            """
-            tree          = scipy.spatial.cKDTree ( data )
-            distances , _ = tree.query ( data , k = 2 , **config )
-            distances     = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 
-            return distances.flatten() 
-        # =====================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    pass # ====================================================================
-# =============================================================================
-## (2) make a try to use NearestNeighbours from sklearn 
+## Nearest distances 
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
-    import sklearn # ==========================================================
-    import sklearn.neighbors # ================================================
-    # =========================================================================
-    ## Get nearest distances using sklearn 
-    def nearest_distances ( data , n_jobs = -1 , **config ) :
-        """ Get nearest distances using sklearn 
-        """
-        nn = sklearn.neighbors.NearestNeighbors ( n_jobs      = n_jobs ,
-                                                  n_neighbors = 2      , **config )
-        nn.fit ( data )
-        distances ,  _  = nn.kneighbors( data )
-        distances       = distances [ : , 1 ]  # DNN (Distance to Nearest Neighbour 
-        return distances.flatten()
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    has_sklearn = False # =====================================================
-    # =========================================================================
-# =============================================================================
-## (1) use scipy
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import scipy # ============================================================
-    import scipy.spatial # ====================================================
-    if Version ( "1.6.0" ) <= Version ( scipy.__version__  ) : # ==============
-        # =====================================================================
-        ## Get nearest neighbors using scipy.spatial.cKDTree 
-        def nearest_neighbors ( data , n_jobs = -1 , n_neighbors = 10 , **config ) :            
-            """ Get nearest neighbors using scipy.spatial.cKDTree
-            """
-            config [ 'workers' ] = n_jobs 
-            tree        = scipy.spatial.cKDTree ( data )
-            _ , indices = tree.query ( data , k = n_neighbors + 1 , **config )
-            return indices [:, 1: ]
-        # ====================================================================
-    else : # =================================================================
-        # ====================================================================
-        ## Get nearest neighbors using scipy.spatial.cKDTree 
-        def nearest_neighbors ( data , n_jobs = -1 , n_neighbors = 10 , **config ) :            
-            """ Get nearest neighbors using scipy.spatial.cKDTree
-            """
-            config [ 'workers' ] = n_jobs 
-            tree        = scipy.spatial.cKDTree ( data )
-            _ , indices = tree.query ( data , k = n_neighbors + 1 , **config )
-            return indices [:, 1: ]
-    # ========================================================================
-except ImportError : # =======================================================
-    # ========================================================================
-    pass
-# ============================================================================
-## (2) make try to use sklearn 
-# ============================================================================
-try : # ======================================================================
-    # ========================================================================
-    import sklearn
     import sklearn.neighbors 
     # =========================================================================
-    ## Get nearest neighbors using scipy.spatial.cKDTree 
-    def nearest_neighbors ( data , n_jobs = -1 , n_neighbors = 10 , **config ) :            
-        """ Get nearest neighbors using scipy.spatial.cKDTree
-        """
-        nn = sklearn.neighbors.NearestNeighbors ( n_jobs = n_jobs , n_neighbors = n_neighbors , **config )
-        nn.fit ( data )
-        _ , indices  = nn.kneighbors( data )
-        return indices [ :, 1: ]
-    # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    has_sklearn = False # =====================================================
+    has_sklearn = False 
+
+# =============================================================================
+## (2) Helper constants
+# =============================================================================
+WORKER_KEY    = 'workers' if Version ( "1.6.0" ) <= Version ( scipy.__version__ ) else 'n_jobs'
+SCIPY_METRICS = {
+    'minkowski' , 'euclidean' , 'l2' , 'sqeuclidean' , 
+    'manhattan' , 'cityblock' , 'l1' ,
+    'chebyshev' , 'infinity'
+}
+# =============================================================================
+## (3) Nearest Neighbors implementation
+# =============================================================================
+def nearest_neighbors ( data ,
+                        n_neighbors = 10 ,
+                        metric      = 'euclidean' ,
+                        p           = 2           ,
+                        n_jobs      = -1           , **config ) : 
+    """ Get nearest neighbors using scipy.spatial.cKDTree (fast L_p metrics) 
+        or sklearn.neighbors (advanced metrics)
+    """
+    metric_clean = str ( metric ).lower ()
+    
     # =========================================================================
+    ## Use scipy.spatial.cKDTree for standard L_p metrics
+    # =========================================================================
+    if metric_clean in SCIPY_METRICS or isinstance ( metric , ( int , float ) ) :
+        
+        if   metric_clean in ( 'euclidean' , 'sqeuclidean' , 'l2' ) : p_val = 2
+        elif metric_clean in ( 'manhattan' , 'cityblock'   , 'l1' ) : p_val = 1
+        elif metric_clean in ( 'chebyshev' , 'infinity'           ) : p_val = numpy.inf
+        else : p_val = p
+
+        config [ WORKER_KEY ] = n_jobs
+        tree = scipy.spatial.cKDTree ( data )
+        _ , indices = tree.query ( data , k = n_neighbors + 1 , p = p_val , **config )
+        return indices [ :, 1: ]
+
+    # =========================================================================
+    ## Use sklearn.neighbors for advanced metrics (cosine, haversine, etc.)
+    # =========================================================================
+    elif has_sklearn :
+        
+        nn = sklearn.neighbors.NearestNeighbors ( n_neighbors = n_neighbors + 1 , 
+                                                  metric      = metric          , 
+                                                  p           = p               , 
+                                                  n_jobs      = n_jobs          , **config )
+        nn.fit ( data )
+        _ , indices = nn.kneighbors ( data )
+        return indices [ :, 1: ]
+    
+    # =========================================================================
+    ## Error handling
+    # =========================================================================
+    else : # ==================================================================
+        # =====================================================================
+        raise ValueError ( f"Metric '{metric}' requires sklearn, which is not installed." )
+        # =====================================================================
     
 # =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
@@ -1096,7 +1048,7 @@ def np2vct ( data , weight = None ) :
     """ Convert numpy-array statistics into `Ostap.Math.SVectorWithError`
     - see `Ostap.Math.SVectorWithError`
     """
-    
+
     shape     = data.shape
     n , N     = shape
     
@@ -1106,6 +1058,9 @@ def np2vct ( data , weight = None ) :
     dsw       = DSW  ( data , weights = w )
     mean      = dsw.mean
     covmtrx   = dsw.cov
+
+    ## load corresponding linear-algebra tricks:
+    MN        = Ostap.Math.SymMatrix(N)
     
     ## prepare output 
     RT        = Ostap.Math.SVectorWithError [ N ]
@@ -1122,7 +1077,7 @@ def np2vct ( data , weight = None ) :
             covs [ i , j ] = cc
             covs [ j , i ] = cc  
         
-        return RT ( values ,  covs ) 
+    return RT ( values ,  covs ) 
         
 # ==============================================================================
 from scipy.stats import combine_pvalues as _combine_pvs_ # =====================
@@ -1165,129 +1120,8 @@ def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
     pvs = ( min ( max ( tol , float ( p ) ) , 1 - tol ) for p in pvalues )            
     return _combine_pvalues ( pvs , method = method )
 
-# =============================================================================
-## use LightGBM ?
-# - Are LightGBM library & classificators available? 
-# - There is some mess with lightgbm&narwhals installation 
-def useLightGBM () :
-    """ Use LightGBM ?
-    - Are LightGBM library & classificators available? 
-    - There is some mess with LightBM&Narwhals installation 
-    """
-    # ============================================================================
-    try : # ======================================================================
-        # ========================================================================
-        import lightgbm
-        logger.info ( 'LightGBM version : %s' % lightgbm.__version__ ) 
-        if Version ( lightgbm.__version__ ) <  Version ( "4.7.0"  ) : return True
-        import narwhals
-        logger.info ( 'Narwhals version : %s' % narwhals.__version__ ) 
-        return Version ( "2.0" ) <= Version ( narwhals.__version__ )
-        # ========================================================================
-    except ImportError : # =======================================================
-        # ========================================================================
-        return False 
-    
-# ===============================================================================
-## use XGBoost ?
-# - Are XGBoost library & classificators available? 
-def useXGBoost () : 
-    """ Use XGBoost
-     - Are XGBoost library & classificators available? 
-    """
-    # ==========================================================================
-    try : # ====================================================================
-        # ======================================================================
-        import xgboost        
-        return Version ( "1.0" ) <= Version ( xgboost.__version__ )
-        # ======================================================================
-    except ImportError : # =====================================================
-        # ======================================================================
-        return False 
 
-# ===============================================================================
-## use CatBoost ?
-# - Are CatBoost library & classificators available? 
-def useCatBoost () : 
-    """ Use CatBoost
-    - Are CatBoost library & classificators available? 
-    """
-    from ostap.core.cpu_info import HAS_AVX2
-    if not HAS_AVX2 : return  False 
-    # ==========================================================================
-    try : # ====================================================================
-        # ======================================================================
-        import catboost
-        return True 
-        # ======================================================================
-    except ImportError : # =====================================================
-        # ======================================================================
-        return False 
 
-# =============================================================================
-## Use sklearn?
-# - Are sklearn library & classificators available? 
-def useSkLearn () :
-    """ Use sklearn?
-    - Are sklearn library & classificators available? 
-    """
-    if not has_sklearn : return False
-    # ===========================================================================
-    try : # =====================================================================
-        # =======================================================================
-        import sklearn.ensemble 
-        from   sklearn.ensemble import HistGradientBoostingClassifier as _HGBC 
-        from   sklearn.ensemble import GradientBoostingClassifier     as _GBC        
-        from   sklearn.ensemble import RandomForestClassifier         as _RFC
-        # ======================================================================
-        return True 
-        # ======================================================================
-    except ImportError : # =====================================================
-        # ======================================================================
-        return False 
-            
-# ==============================================================================
-## use PyTorch ?
-#  Are (Py)Torch library and claffificators available?
-def usePyTorch() :
-    """ Use PyTorch ?
-    - Are (Py)Torch library and claffificators available?
-    """
-    # ==========================================================================
-    try : # ====================================================================
-        # ======================================================================
-        import torch
-        return Version ( "1.10" ) <= Version ( torch.__version__ )
-        # ======================================================================
-    except ImportError : # =====================================================
-        # ======================================================================
-        return False 
-    
-# ==============================================================================
-## use Keras  ?
-#  - Are Keras    library and claffificators available?
-def useKeras() : 
-    """ Use Keras
-    - Are Keras    library and claffificators available?
-    """
-    from ostap.core.cpu_info import HAS_AVX2
-    if not HAS_AVX2 : return  False 
-    # ==========================================================================
-    try : # ====================================================================
-        # ======================================================================
-        ## silence TensorFlow & oneDNN
-        os.environ [ 'TF_CPP_MIN_LOG_LEVEL'  ] = '2'        
-        os.environ [ 'TF_ENABLE_ONEDNN_OPTS' ] = '0'
-        # ======================================================================
-        import keras 
-        import torch 
-        return  ( Version ( "3.0" ) <= Version ( keras.__version__ ) and
-                  Version ( "2.0" ) <= Version ( torch.__version__ ) )
-        # ======================================================================
-    except ImportError : # =====================================================
-        # ======================================================================
-        return False
-    
 # ==============================================================================
 if '__main__' == __name__ :
     

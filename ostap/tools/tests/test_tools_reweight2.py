@@ -27,7 +27,7 @@ from   ostap.logger.symbols     import iteration, plus_minus
 from   ostap.logger.pretty      import pretty_float 
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.stats.gof_utils    import useLightGBM 
+from   ostap.stats.tools        import useLightGBM 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T
 import ostap.core.pyrouts    

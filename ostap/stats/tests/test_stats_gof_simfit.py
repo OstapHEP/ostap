@@ -30,7 +30,7 @@ from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          GoFSimFitType   , 
                                          GoFSimFit1D     , 
                                          GoFSimFit1DToys )
-from   ostap.stats.gof_utils    import useLightGBM, useXGBoost, useCatBoost
+from   ostap.stats.tools        import useLightGBM, useXGBoost, useCatBoost
 from   ostap.stats.gof1d        import GoF_1D
 import ostap.stats.gofnd        as     GnD 
 import ostap.logger.table       as     T 

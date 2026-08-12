@@ -233,6 +233,9 @@ chisq            = chi2
 ## chi2/ndf 
 chi2ndf          = '%s/ndf' % chi2 
 
+## symmetric
+symmetry         = '\U0000232F'           if show else 'sym'
+
 ## Lowercase Greek letters 
 greek_lower_alpha     = '\U000003B1'  if show else 'alpha'
 greek_lower_beta      = '\U000003B2'  if show else 'beta'
