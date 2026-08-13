@@ -925,20 +925,19 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     >>> graph    = ...
     >>> graph[4] = x,y 
     """
-    #
-    
+    ###
     if ipoint < 0 : ipoint += len ( graph )
-    
+    ## 
     if not 2 == len ( point ) :
         raise AttributeError("Invalid dimension of 'point' %s" % str ( point ) ) 
-
+    ## 
     x , y = point
-    
+    ## 
     x = VE ( x ) 
     y = VE ( y ) 
-
+    ## 
     _gr_setitem_ ( graph , ipoint , ( x.value() , y.value() ) )
-    
+    ## 
     graph.SetPointError ( ipoint , x . error () , y . error () )
     
 # =============================================================================
@@ -1065,14 +1064,14 @@ def _grae_setitem_ ( graph , ipoint , point ) :
     >>> grae[1] = xve,yve  
     
     """
-    
+    ## 
     if ipoint < 0 : ipoint += len ( graph )
-    
+    ## 
     n = len ( point)
     assert 2 <= n <= 6 , "Invalid length of `point` object"
-
+    ## 
     pars = point
-        
+    ##
     ## extract X
     p0 = pars [ 0 ]
     ## "ready-to-use" 
@@ -2451,25 +2450,6 @@ ROOT.TGraphAsymmErrors.__irshift__   = _grae_irshift_
 
 
 # =============================================================================
-## append the graph with new point
-#  @code
-#  point = x , y
-#  graph.append ( *point ) 
-#  @endcode
-def _gr_append_ ( graph , *point ) :
-    """ Append the graph with new point
-    >>> point = x , y
-    >>> graph.append ( *point ) 
-    """
-    last = len ( graph )
-    graph.SetPoint ( last , 0 , 0 )
-    graph [ last ] = point
-    if 1 <= last and graph.pointX ( last ) <  graph.pointX ( last -1 ) :
-        graph.SetBit ( ROOT.TGraph.kIsSortedX , False ) 
-    ##
-    return len ( graph )
-
-# =============================================================================
 ## pop the point from the graph
 #  @code
 #  graph = ...
@@ -2529,7 +2509,6 @@ def _gr_swap_ ( grap , i , j ) :
     
     return graph
 
-ROOT.TGraph.append    =  _gr_append_
 ROOT.TGraph.swap      =  _gr_swap_ 
 ROOT.TGraph.pop       =  _gr_pop_ 
 
@@ -2751,6 +2730,43 @@ def _gr_merge_ ( graph , graph2 , sort = False ) :
     
 # ==============================================================================
 ROOT.TGraph            .merge         = _gr_merge_
+
+# ===============================================================================
+## Append point to the graph 
+# ===============================================================================
+
+# =============================================================================
+## append the graph with new point
+#  @code
+#  point = x , y
+#  graph.append    ( *point ) 
+#  graph.add_point ( *point ) ## ditto
+#  graph.push_back ( *point ) ## ditto 
+#  graph.push      ( *point ) ## ditto 
+#  @endcode
+def _gr_append_ ( graph , *point ) :
+    """ Append the graph with new point
+    >>> point = x , y
+    >>> graph.append ( *point ) 
+    >>> graph.append ( *point ) ## ditto 
+    >>> graph.append ( *point ) ## ditto 
+    >>> graph.append ( *point ) ## ditto 
+    >>> graph.append ( *point ) ## ditto 
+    """
+    last = len ( graph )
+    graph.SetPoint ( last , 0 , 0 )
+    ## 
+    graph [ last ] = point ## ATTENTION! 
+    ##
+    if 1 <= last and graph.pointX ( last ) <  graph.pointX ( last -1 ) :
+        graph.SetBit ( ROOT.TGraph.kIsSortedX , False ) 
+    ##
+    return len ( graph )
+
+ROOT.TGraph .append    = _gr_append_
+ROOT.TGraph .add_point = _gr_append_
+ROOT.TGraph .push      = _gr_append_
+ROOT.TGraph .push_back = _gr_append_
 
 # ===============================================================================
 ## Graph as table
@@ -3388,10 +3404,8 @@ def _rplot_add_ ( plot1 , plot2 ) :
 
     result.SetDirectory ( ROOT.nullptr )    
     return result
-
         
 ROOT.RooPlot.__add__  = _rplot_add_
-
 
 # =============================================================================
 ## Get the new RooPlot object that contains only selected components
