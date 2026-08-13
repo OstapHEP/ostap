@@ -109,7 +109,8 @@ namespace
     INVALID_SUMW               = 871 ,    
     INVALID_SUMW2              = 872 ,
     //
-    INVALID_DATA_WEIGHT        = 873 ,    
+    INVALID_DATA_WEIGHT        = 873 ,
+    INVALID_PRESCALE           = 874 , 
     // =========================================================================
     ERROR_BOOK_MVA             = 880 ,
     INVALID_CHOPPING_SIZE      = 881 ,

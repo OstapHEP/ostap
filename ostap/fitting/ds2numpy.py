@@ -25,13 +25,14 @@ __all__     = (
 from   ostap.core.meta_info         import root_info
 from   ostap.core.ostap_types       import string_types, dictlike_types, sized_types
 from   ostap.core.core              import Ostap
-from   ostap.utils.core             import typename  
+from   ostap.math.math_base         import evt_range, FIRST_ENTRY, LAST_ENTRY
+from   ostap.utils.basic            import typename  
 from   ostap.utils.utils            import split_range
 from   ostap.math.math_base         import doubles
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
 from   ostap.utils.progress_bar     import progress_bar
-from   ostap.trees.cuts             import vars_and_cuts, expression_types  
+from   ostap.trees.cuts             import vars_and_cuts, expression_types
 import ostap.fitting.roocollections
 import ROOT, numpy 
 # =============================================================================
@@ -59,15 +60,18 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
     #  Unlike <code>to_numpy</code> method it allows more flexible output 
     #   - structured array (default) vs unstructured array
     #   - split data and weight columns     
-    def ds2numpy ( dataset                , 
-                   var_lst                , * , 
-                   cuts        = ''       ,
-                   cut_range   = ''       , 
-                   silent      = True     ,
-                   more_vars   = {}       ,
-                   structured  = True     ,
-                   weight_name = 'weight' , 
-                   weight_split = False   ) :
+    def ds2numpy ( dataset                    , 
+                   var_lst                    , * , 
+                   cuts         = ''          ,
+                   cut_range    = ''          ,
+                   prescale     = None        , 
+                   silent       = True        ,
+                   more_vars    = {}          ,
+                   structured   = True        ,
+                   weight_name  = 'weight'    , 
+                   weight_split = False       ,
+                   first        = FIRST_ENTRY ,
+                   last         = LAST_ENTRY  ) :
         """ Convert dataset into numpy array using `ROOT.RooAbsData` interface 
         - see ROOT.RooAbsData.getBatches
         - see ROOT.RooAbsData.getCategoryBatches
@@ -82,11 +86,13 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         - optional split data and weight columns     
 
         """
-        
         if isinstance ( var_lst , expression_types ) : var_lst = [ str ( var_lst ) ]
         
         assert not more_vars or isinstance ( more_vars , dictlike_types ) , \
             "ds2numpy: invalid type of `more_vars`" % typename ( more_vars )
+        
+        ## check the range:
+        first, last = evt_range ( dataset , first , last )
         
         # =====================================================================
         ## (1) get names of all requested variables
@@ -107,39 +113,68 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         assert all ( ( v in dataset ) for v in vnames ) , 'Not all variables are in dataset!'
 
         # =====================================================================
+        ## check prescaling
+        from ostap.stats.statvars import check_prescale
+        check_prescale ( prescale ) 
+
+        if   prescale is None : prescale = 1
+        elif prescale is True : prescale = 1
+        elif prescale is None : prescale = 1
+        
+        # =====================================================================
         ## (3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
+        dstmp = None
+
+        # =====================================================================
+        ## (4) not too much variables: filter dataset before processing 
         if 2 * len ( vnames )  <= nvars and not more_vars  :            
-            with useStorage ( ROOT.RooAbsData.Vector ) : 
-                dstmp  = dataset.subset ( vnames , cuts = cuts , cut_range = cut_range )
-                
-            result = ds2numpy ( dstmp     ,
-                                vnames    ,
-                                more_vars    = more_vars    ,
-                                silent       = silent       ,
-                                structured   = structured   , 
-                                weight_name  = weight_name  ,
-                                weight_split = weight_split )
-            ## 
-            del dstmp 
-            return result
-
-        # =========================================================================
-        ## (4) if cuts or cut-range is specified, assume cuts are harsh and make a filtering 
-        if cuts or cut_range :
             with useStorage ( ROOT.RooAbsData.Vector ) :
-                dstmp = dataset.subset ( vnames if not more_vars else [] , cuts = cuts , cut_range = cut_range )
-            result = ds2numpy ( dstmp        ,
-                                vnames       ,
-                                more_vars    = more_vars    ,
-                                silent       = silent       ,
-                                structured   = structured   ,
-                                weight_name  = weight_name  ,
-                                weight_split = weight_split )
-            ## 
-            del dstmp 
-            return result
+                ds_reduced = dataset.subset ( vnames    ,
+                                              cuts      = cuts      ,
+                                              cut_range = cut_range ,
+                                              prescale  = prescale  ,
+                                              first     = first     ,
+                                              last      = last      )
+                ## 
+                result     = ds2numpy ( ds_reduced   ,
+                                        vnames       ,
+                                        more_vars    = more_vars    ,
+                                        silent       = silent       ,
+                                        structured   = structured   , 
+                                        weight_name  = weight_name  ,
+                                        weight_split = weight_split )
+                ## 
+                del ds_reduced 
+                return result
+                
+        # =====================================================================
+        ## (5) if cuts or cut-range or prescaling is specified: make a filtering 
+        if 1 != prescale or cuts or cut_range or ( last - first ) < len ( dataset ) :
+            with useStorage ( ROOT.RooAbsData.Vector ) :
+                ds_reduced = dataset.subset ( vnames if not more_vars else [] ,
+                                              cuts      = cuts      ,
+                                              cut_range = cut_range ,
+                                              prescale  = prescale  ,
+                                              first     = first     ,
+                                              last      = last      )
+                ## 
+                result     = ds2numpy ( ds_reduced   ,
+                                        more_vars    = more_vars    ,
+                                        silent       = silent       ,
+                                        structured   = structured   , 
+                                        weight_name  = weight_name  ,
+                                        weight_split = weight_split )
+                ## 
+                del ds_reduced 
+                return result
 
+        ## from here:
+        #  (1) no prescal
+        #  (2) no cuts
+        #  (3) no cut-range
+        #  (4) first/last are OK
+                
         weighted          = dataset.isWeighted ()
         store_errors      = weighted and dataset.store_errors      ()
         store_asym_errors = weighted and dataset.store_asym_errors ()         
@@ -225,17 +260,17 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
 
         for f in funcs           : dtypes.append ( ( str ( f[0]   ) , float ) ) 
         if weight                : dtypes.append ( ( str ( weight ) , float ) ) 
-            
-        ## get data in batches
+
+        ## re-check the range:
         nevts  = len ( dataset ) 
 
         data   = None
 
         ## maximal size of data chunk 
-        nmax   = max ( nevts // 6 , 30000 // nvars )
+        nmax   = max ( 1000 , nevts // 10 , 50000 // nvars )
         
         ## get data in chunks/batches 
-        for first, last in progress_bar ( split_range ( 0 , nevts , nmax ) , silent = silent , description = 'Chunks:' ) :
+        for first, ilast in progress_bar ( split_range ( 0 , nevts , nmax ) , silent = silent , description = 'Chunks:' ) :
             
             num   = last - first            
             wget  = False 
@@ -323,15 +358,18 @@ else :
     #  Unlike <code>to_numpy</code> method it allows more flexible outp
     #   - structured array (default) vs unstructured array
     #   - split data and weight columns     
-    def ds2numpy ( dataset                 ,
-                   var_lst                 ,
-                   cuts         = ''       , * , 
-                   cut_range    = ''       ,  
-                   silent       = False    ,
-                   more_vars    = {}       ,
-                   structured   = True     ,
-                   weight_name  = 'weight' , 
-                   weight_split = False    ) :
+    def ds2numpy ( dataset                    ,
+                   var_lst                    ,
+                   cuts         = ''          , * , 
+                   cut_range    = ''          ,
+                   prescale     = None        , 
+                   silent       = False       ,
+                   more_vars    = {}          ,
+                   structured   = True        ,
+                   weight_name  = 'weight'    , 
+                   weight_split = False       , 
+                   first        = FIRST_ENTRY ,
+                   last         = LAST_ENTRY  ) :
         """ Convert dataset into numpy array using (slow) explicit loops
         Unlike `ROOT.RooDataSet.to_numpy` method it allows more flexible outp
         - structured array (default) vs unstructured array
@@ -343,6 +381,9 @@ else :
         assert not more_vars or isinstance ( more_vars , dictlike_types ) , \
             "ds2numpy: invalid type of `more_vars`" % typename ( more_vars )
 
+        ## check the range:
+        first, last = evt_range ( dataset , first , last )
+        
         # =====================================================================
         ## 1) check that all variables are present in dataset 
         if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
@@ -356,6 +397,11 @@ else :
         cut_range = str ( cut_range ).strip () if cut_range else ''
         
         assert vnames or more_vars , "No variables are specified! "
+
+        # =====================================================================
+        ## check prescaling
+        from ostap.stats.statvars import check_prescale
+        check_prescale ( prescale ) 
         
         # =====================================================================
         ## 2) check that all variables are present in the dataset 
@@ -365,34 +411,50 @@ else :
         ## 3) reduce dataset if only a small subset of variables is requested 
         nvars = len ( dataset.get() )
         if 2 * len ( vnames )  <= nvars and not more_vars  :
-            dstmp  = dataset.subset ( vnames )
-            result = ds2numpy ( dstmp                       ,
-                                vnames                      ,
-                                cuts         = cuts         ,
-                                cut_range    = cut_range    ,
-                                structured   = structured   ,
-                                weight_name  = weight_name  ,
-                                weight_split = weight_split )
+            ds_reduced = dataset.subset ( vnames    ,
+                                          cuts      = cuts      ,
+                                          cut_range = cut_range ,
+                                          prescale  = prescale  ,
+                                          first     = first     ,
+                                          last      = last      )
+            result     = ds2numpy ( ds_reduced                  ,
+                                    vnames                      ,
+                                    cuts         = cuts         ,
+                                    cut_range    = cut_range    ,
+                                    structured   = structured   ,
+                                    weight_name  = weight_name  ,
+                                    weight_split = weight_split )
             ## 
-            del dstmp 
+            del ds_reduced 
             return result
-        
+
         # =========================================================================
         ## 4) if cuts or cut-range is specified, assume cuts are hash and make a filtering 
-        if cuts or cut_range :
+        if 1 != prescale or cuts or cut_range or  last - first < len ( dataset ) :
             with useStorage ( ROOT.RooAbsData.Vector ) :
-                dstmp = dataset.subset ( vnames if not more_vars else [] ,  cuts = cuts , cut_range = cut_range )
-            result = ds2numpy ( dstmp        ,
-                                vnames       ,
-                                more_vars    = more_vars    ,
-                                structured   = structured   ,
-                                weight_name  = weight_name  ,
-                                weight_split = weight_split )
-            ## 
-            del dstmp 
-            return result
+                ds_reduced = dataset.subset ( vnames if not more_vars else [] ,
+                                              cuts      = cuts      ,
+                                              cut_range = cut_range ,
+                                              prescale  = prescale  , 
+                                              first     = first     ,
+                                              last      = last      )
+                result     = ds2numpy ( ds_reduced   ,
+                                        vnames       ,
+                                        more_vars    = more_vars    ,
+                                        structured   = structured   ,
+                                        weight_name  = weight_name  ,
+                                        weight_split = weight_split )
+                ## 
+                del ds_reduced 
+                return result
+
+        ## from here:
+        #  (1) no prescal
+        #  (2) no cuts
+        #  (3) no cut-range
+        #  (4) first/last are OK
         
-        # =======================================================
+        # =======================================================        
         weighted          = dataset.isWeighted ()
         store_errors      = weighted and dataset.store_errors      ()
         store_asym_errors = weighted and dataset.store_asym_errors ()         

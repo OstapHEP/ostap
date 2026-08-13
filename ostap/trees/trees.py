@@ -1201,10 +1201,11 @@ def tree_slice ( tree                       ,
                  cuts         = ''          , * ,
                  first        = FIRST_ENTRY ,          
                  last         = LAST_ENTRY  ,
-                 weight_total = True        , ## final weigth is a product of internal weight and weigth from (non-zero) cuts? 
+                 prescale     = None        , ## addtional prescale of data 
+                 weight_total = True        , ## final weight is a product of internal weight and weight from (non-zero) cuts? 
                  structured   = True        ,
                  transpose    = True        , 
-                 progress     = False       , 
+                 progress     = False       ,                 
                  use_frame    = False       ,
                  parallel     = False       ) : 
     
@@ -1218,6 +1219,10 @@ def tree_slice ( tree                       ,
     if last <= first :
         return () , None 
 
+    ## (0) check for prescale
+    from ostap.stats.statvars import check_prescale
+    check_prescale ( prescale )
+
     if  use_frame and good_for_frame ( tree , first , last ) : 
         from ostap.stats.statvars import data_slice as _data_s_slice_ 
         return _data_s_slice_ ( tree         ,
@@ -1225,7 +1230,8 @@ def tree_slice ( tree                       ,
                                 cuts         = cuts         ,
                                 first        = first        ,
                                 last         = last         ,
-                                weight_total = weight_total , 
+                                weight_total = weight_total ,
+                                prescale     = prescale     , 
                                 structured   = structured   ,
                                 transpose    = transpose    , 
                                 progress     = progress     ,
@@ -1239,7 +1245,8 @@ def tree_slice ( tree                       ,
                                 cuts         = cuts         ,
                                 first        = first        ,
                                 last         = last         ,
-                                weight_total = weight_total ,                                 
+                                weight_total = weight_total ,
+                                prescale     = prescale     , 
                                 structured   = structured   ,
                                 transpose    = transpose    , 
                                 progress     = progress     ,
@@ -1250,7 +1257,17 @@ def tree_slice ( tree                       ,
     varlst , cuts , _ = vars_and_cuts  ( expressions , cuts )
     ## sort it? NO! 
     ## varlst = tuple ( sorted ( varlst ) )
+
+    the_cuts = ROOT.TCut ( cuts ) 
     
+    if   prescale is None  : pass
+    elif prescale is True  : pass
+    elif prescale is False : pass
+    elif isintance ( prescale , integer_types ) and 2 <= prescale :
+        the_cuts = ( 'Entry$ %% %d == 0' % prescale ) * the_cuts     
+    elif isintance ( prescale , num_types     ) and 0 < prescale < 1 :
+        the_cuts = ( 'rndm() <= %.14f'   % prescale ) * the_cuts     
+        
     ## preliminary result: list of arrays 
     result = [] 
 
@@ -1267,12 +1284,12 @@ def tree_slice ( tree                       ,
         tree.SetEstimate ( last - first )
         
         ## run internal ROOT machinery 
-        num = tree.Draw ( vars , cuts , "goff" , last - first , first )
+        num = tree.Draw ( vars , the_cuts , "goff" , last - first , first )
         num = tree.GetSelectedRows ()    
         if tree.GetEstimate() < num :
             tree.SetEstimate ( num )
             logger.debug ( 'Re-run Draw(goff) machinery' ) 
-            num = tree.Draw ( vars , cut , "goff" , last - first , first )
+            num = tree.Draw ( vars , the_cuts , "goff" , last - first , first )
             num = tree.GetSelectedRows ()
             
         assert num <= tree.GetEstimate  () , "Something wrong with SetEstimate/GetEstimate/GetSelectedRows"

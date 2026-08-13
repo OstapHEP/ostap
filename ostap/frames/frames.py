@@ -237,7 +237,11 @@ mt_global = config.implicitMT
 #  frame = ...
 #  currnt , vexpr , cexpr, input_string  = _fr_helper_ ( frame , 'x*x' , 'z<0' )
 #  #endcode 
-def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
+def _fr_helper_ ( frame             ,
+                  expressions       ,
+                  cuts      = ''    ,
+                  prescale  = None  , 
+                  progress  = False ) :
     """ Helper function that define expressions and cuts 
     >>> frame = ...
     >>> current, vexpr , cexpr = _fr_helper_ ( frame , 'x*x' , 'z<0' )
@@ -254,6 +258,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
     elif isinstance ( frame , frame_types ) : node = frame 
     else                                    : node = as_rnode  ( frame ) 
 
+    
     ## get the list of currently known names
     vars     = frame_columns ( node ) 
     all_vars = set ( vars ) 
@@ -269,6 +274,8 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
     elif progress :
         current , cnt = frame_progress ( current , length   ) 
 
+    current = frame_prescale ( current , prescale ) 
+        
     vnames   = ordered_dict ()
     added    = ordered_dict ()
     for i , expr in enumerate ( exprs , start = 1 ) :
@@ -522,8 +529,11 @@ def frame_prescale ( frame , prescale , name = '' ) :
     
     if isinstance   ( frame  , ROOT.TTree ) : node = DataFrame ( frame )
     else                                    : node = as_rnode  ( frame )
-    
-    if isinstance ( prescale , integer_types ) and 1 < prescale :
+
+    if   isinstance ( prescale , None          ) : return node
+    elif isinstance ( prescale , True          ) : return node
+    elif isinstance ( prescale , False         ) : return node    
+    elif isinstance ( prescale , integer_types ) and 2 <= prescale :
 
         name = name if name else 'PRESCALE_%d' % prescale        
         code = '( 0 == ( ( rdfentry_ + %d * rdfslot_ ) %% %d ) )'
@@ -534,7 +544,7 @@ def frame_prescale ( frame , prescale , name = '' ) :
     elif isinstance ( prescale , float ) and 0 < prescale < 1 :
 
         name = name if name else 'PRESCALE_%.6g' % prescale        
-        code = 'gRandom->Rndm() <= %.12g'        % prescale
+        code = 'gRandom->Rndm() <= %.14g'        % prescale
         return node.Filter ( code , name )
     
     elif 1 == prescale : return node 
@@ -1976,6 +1986,7 @@ class SliceHelper(object) :
 def frame_slice ( frame               ,
                   expressions         , 
                   cuts        = ""    ,
+                  prescale    = None  , 
                   structured  = True  ,
                   transpose   = True  ,
                   progress    = False , 
@@ -1985,18 +1996,22 @@ def frame_slice ( frame               ,
     """
     
     ## decode expressions & cuts 
-    current , items , cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
+    current , items , cname , _ = _fr_helper_ ( frame               ,
+                                                expressions         ,
+                                                cuts                ,
+                                                prescale = prescale ,
+                                                progress = progress )
     
     columns = [ v for v in items.values () ]
     if cname : columns.append ( cname )
     
     result = current.AsNumpy ( columns = columns , lazy = True )
     
-    result  = SliceHelper ( result                  ,
-                            items                   ,
-                            cname                   ,
-                            structured = structured ,
-                            transpose  = transpose  ) 
+    result = SliceHelper ( result                  ,
+                           items                   ,
+                           cname                   ,
+                           structured = structured ,
+                           transpose  = transpose  ) 
     
     return ( result , current ) if lazy else result.GetValue()
     

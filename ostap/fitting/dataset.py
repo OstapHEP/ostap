@@ -27,7 +27,7 @@ __all__     = (
 from   collections                  import defaultdict 
 from   ostap.core.meta_info         import root_info
 from   ostap.core.core              import ( Ostap          ,
-                                             VE , SE , dsID , 
+                                             VE , SE , dsID , rootID ,  
                                              valid_pointer  )
 from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              num_types     , sequence_types ,
@@ -46,8 +46,8 @@ from   ostap.logger.pretty          import pretty_float
 from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis
 from   ostap.logger.colorized       import allright,  attention
 import ostap.logger.table           as     T
-import ostap.fitting.roocollections
 import ostap.fitting.variables  
+import ostap.fitting.roocollections
 import ostap.fitting.printable
 import ostap.io.root_file
 import ROOT, random, math, sys, ctypes, numpy   
@@ -263,6 +263,7 @@ def _rad_getitem_ ( data , index ) :
         else : 
             result.add ( vars ) 
             
+    ROOT.SetOwnership ( result , True )
     return result
 
 # ==============================================================================
@@ -845,6 +846,7 @@ def _rad_subset_ ( dataset                  ,
                    variables  = []          ,
                    cuts       = ''          ,
                    cut_range  = ''          ,
+                   prescale   = None        , 
                    first      = FIRST_ENTRY ,
                    last       = LAST_ENTRY  ) :
 
@@ -861,6 +863,21 @@ def _rad_subset_ ( dataset                  ,
     
     cut_range   = str ( cut_range ).strip() if cut_range else ''
     
+    ## check the range:
+    first, last = evt_range ( dataset , first , last )
+
+    ## check prescale
+    from ostap.stats.statvars import check_prescale 
+    check_prescale ( prescale )
+
+    if   prescale is None  : prescale = 1
+    elif prescale is True  : prescale = 1
+    elif prescale is False : prescale = 1
+
+    ## some quick shortcut 
+    if 2 <= prescale and not cuts and not cut_range and not variables :
+        return dataset [ first : last : prescale ] 
+        
     ## variables in this dataset 
     vset = dataset.get()
 
@@ -889,7 +906,7 @@ def _rad_subset_ ( dataset                  ,
 
     ## remove duplicates, if any 
     varlst  = tuple ( set ( varlst ) )
-    
+
     ## 
     ## extra items? 
     extra  = [ v for v in varlst if not v in dataset ]
@@ -906,14 +923,31 @@ def _rad_subset_ ( dataset                  ,
     if aset      : args.append ( ROOT.RooFit.SelectVars ( aset      ) ) 
     if cuts      : args.append ( ROOT.RooFit.Cut        ( cuts      ) )
     if cut_range : args.append ( ROOT.RooFit.CutRange   ( cut_range ) )
-    ## 
+    ##
+    if 0 < prescale < 1 : 
+        expression = 'Ostap::Math::rndm () <= %.14f' % prescale
+        varlst     = ROOT.RooArgList () 
+        formula    = ROOT.RooFormulaVar ( rootID ( 'prescale' , 'var' ) ,
+                                          "prescale-variable"           ,
+                                          varlst                        )
+        args.append ( ROOT.RooFit.Cut ( formula ) ) 
+        
+                                          
+                                          
     ## check the range:
     first, last = evt_range ( dataset , first , last )
-    if 0 < first or last < len ( dataset ) : 
-        args.append ( ROOT.RooFit.EventRange ( first , last ) )
+    if 0 < first or last < len ( dataset ) : args.append ( ROOT.RooFit.EventRange ( first , last ) )
     ##
+    
     result = dataset.reduce ( *args )
     ROOT.SetOwnership ( result , True )
+    
+    if 2 <= prescale :
+        result2 = result[::prescale]
+        ROOT.SetOwnership ( result , True )
+        del result
+        result  = result2 
+                
     return result 
 
 # =============================================================================
@@ -3330,8 +3364,6 @@ _new_methods_ += [
     ROOT.RooDataSet.asTree
     ]
   
-  
-  
 # =============================================================================d
 ## Get "slice" from <code>RooAbsData</code> in form of numpy array
 #  @code
@@ -3346,6 +3378,7 @@ def ds_slice ( data                       ,
                first        = FIRST_ENTRY ,
                last         = LAST_ENTRY  ,
                cut_range    = ''          ,
+               prescale     = None        , 
                weight_total = True        , ## final weigth is a product of internal weight and weigth from (non-zero) cuts? 
                structured   = True        ,
                transpose    = True        ,
@@ -3374,6 +3407,14 @@ def ds_slice ( data                       ,
     assert len ( varlst ) == len ( set ( varlst ) ) , \
         "Variables are not unique: %s" % ( ','.join ( varlst ) ) 
 
+    ## check prescale
+    from ostap.stats.statvars import check_prescale
+    check_prescale ( prescale )
+    
+    if   prescale is None  : prescale = 1 
+    elif prescale is True  : prescale = 1 
+    elif prescale is False : prescale = 1 
+
     ## (4) display progress ? 
     progress = progress_conf ( progress )
     
@@ -3389,6 +3430,7 @@ def ds_slice ( data                       ,
                         table        ,
                         cuts         ,
                         cut_range    ,
+                        prescale     , 
                         weight_total , 
                         first        ,
                         last         )        

@@ -3,11 +3,17 @@
 
    1. improve the default title for GoF-report tables
    1. add `__enter__/__exit__` context manager for `AFUN` (and thus for all derived pdfs). It restores the value, status and range for all parameters  
+   1. add WALL-time to the Timer, change from `timeit.detault_timer` to `time.perf_cuunter` and `time.process_time`
+   1. update timing utilities, in particular, the output print format
+   1. add `PeakMemory` context manmager to estimate the peak memory usage
+   1, add wall-time to `Memory` context manager  
+   1. add `prescale` argument to `data_slice`, `tree_slice`, `frame_slice`, `ds_silce` and ``ds2numpy` functions
 
 ## Bug fixes 
 
 ## Backward incompatible
-
+   1.
+   
 # v3.8.1.0
 
 ## New features

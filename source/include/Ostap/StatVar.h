@@ -982,6 +982,7 @@ namespace Ostap
      *  @param table        (UPDATE) tale 
      *  @param selection    (INPUT)  selection/cut (treated as weight!)
      *  @param cut_range    (INPUT)  if non empty: use events only from this cut-range
+     *  @param prescale     (INPUT)  prescale 
      *  @param weight_total (INPUT   add selection/cut weight to data-weight 
      *  @param first        (INPUT)  the first event to process (inclusive) 
      *  @param last         (INPUT)  the last event to process (exclusive) 
@@ -992,7 +993,8 @@ namespace Ostap
       Ostap::StatVar::Table&    table                ,
       const std::string&        selection    = ""    ,
       const std::string&        cut_range    = ""    ,
-      const bool                weight_total = false , 
+      const double              prescale     = 1     , 
+      const bool                weight_total = false ,
       const Ostap::EventIndex   first        = Ostap::FirstEvent ,
       const Ostap::EventIndex   last         = Ostap::LastEvent  ) const ; 
     // ========================================================================

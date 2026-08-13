@@ -13,6 +13,7 @@
 // ROOT
 // ============================================================================
 #include "TTree.h"
+#include "TRandom.h"
 #include "TMatrixTSym.h"
 #include "RooDataSet.h"
 #include "RooAbsReal.h"
@@ -22,6 +23,7 @@
 // ============================================================================
 #include "Ostap/Names.h"
 #include "Ostap/StatusCode.h"
+#include "Ostap/Math.h"
 #include "Ostap/Combiner.h"
 #include "Ostap/Formula.h"
 #include "Ostap/Notifier.h"
@@ -408,10 +410,10 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       formulae.evaluate ( 1 , results [ 1 ] ) ;
       //
       for ( const double x : results [ 0 ] )
-	{ if ( !in_range ( x , xmin , xmax ) ) { continue ; } 
-	  for ( const double y : results [ 1 ] )
-	    { if ( !in_range ( y , ymin , ymax ) ) { continue ; } 
-	      stat.update ( x , y ) ; } }       
+        { if ( !in_range ( x , xmin , xmax ) ) { continue ; } 
+          for ( const double y : results [ 1 ] )
+            { if ( !in_range ( y , ymin , ymax ) ) { continue ; } 
+              stat.update ( x , y ) ; } }       
     }
   //
   return Ostap::StatusCode::SUCCESS ;
@@ -482,10 +484,10 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       formulae.evaluate ( 1 , results [ 1 ] ) ;
       //
       for ( const double x : results [ 0 ] )
-	{ if ( !in_range ( x , xmin , xmax ) ) { continue ; } 
-	  for ( const double y : results [ 1 ] )
-	    { if ( !in_range ( y , ymin , ymax ) ) { continue ; } 
-	      stat.update ( x , y , weight ) ; } } 
+        { if ( !in_range ( x , xmin , xmax ) ) { continue ; } 
+          for ( const double y : results [ 1 ] )
+            { if ( !in_range ( y , ymin , ymax ) ) { continue ; } 
+              stat.update ( x , y , weight ) ; } } 
     }
   //
   return Ostap::StatusCode::SUCCESS ;
@@ -807,12 +809,12 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       formulae.evaluate ( 2 , results [ 2 ] ) ;
       //
       for ( const double x : results [ 0 ] )
-	{ if ( !in_range ( x , xmin , xmax ) ) { continue ; } // CONTINUE 
-	  for ( const double y : results [ 1 ] )
-	    { if ( !in_range ( y , ymin , ymax ) ) { continue ; } // CONTINUE 
-	      for ( const double z : results [ 2 ] )
-		{ if ( !in_range ( z , zmin , zmax ) ) { continue ; } // CONTINUE 
-		  stat.update ( x , y , z , weight ) ; } } }
+        { if ( !in_range ( x , xmin , xmax ) ) { continue ; } // CONTINUE 
+          for ( const double y : results [ 1 ] )
+            { if ( !in_range ( y , ymin , ymax ) ) { continue ; } // CONTINUE 
+              for ( const double z : results [ 2 ] )
+                { if ( !in_range ( z , zmin , zmax ) ) { continue ; } // CONTINUE 
+                  stat.update ( x , y , z , weight ) ; } } }
       //
     }
   //
@@ -1072,14 +1074,14 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       formulae.evaluate ( 3 , results [ 3 ] ) ;
       //
       for ( const double x : results [ 0 ] )
-	{ if ( !in_range ( x , xmin , xmax ) ) { continue ; } // CONTINUE 
-	  for ( const double y : results [ 1 ] )
-	    { if ( !in_range ( y , ymin , ymax ) ) { continue ; } // CONTINUE 
-	      for ( const double z : results [ 2 ] )
-		{ if ( !in_range ( z , zmin , zmax ) ) { continue ; } // CONTINUE
-		  for ( const double t : results [ 3 ] )
-		    { if ( !in_range ( t , tmin , tmax ) ) { continue ; } // CONTINUE
-		      stat.update ( x , y , z , t ) ; } } } } 
+        { if ( !in_range ( x , xmin , xmax ) ) { continue ; } // CONTINUE 
+          for ( const double y : results [ 1 ] )
+            { if ( !in_range ( y , ymin , ymax ) ) { continue ; } // CONTINUE 
+              for ( const double z : results [ 2 ] )
+                { if ( !in_range ( z , zmin , zmax ) ) { continue ; } // CONTINUE
+                  for ( const double t : results [ 3 ] )
+                    { if ( !in_range ( t , tmin , tmax ) ) { continue ; } // CONTINUE
+                      stat.update ( x , y , z , t ) ; } } } } 
     }
   //
   return Ostap::StatusCode::SUCCESS ;
@@ -1160,14 +1162,14 @@ Ostap::StatusCode Ostap::StatVar::get_stat
       formulae.evaluate ( 3 , results [ 3 ] ) ;
       //
       for ( const double x : results [ 0 ] )
-	{ if ( !in_range ( x , xmin , xmax ) ) { continue ; } // CONTINUE 
-	  for ( const double y : results [ 1 ] )
-	    { if ( !in_range ( y , ymin , ymax ) ) { continue ; } // CONTINUE 
-	      for ( const double z : results [ 2 ] )
-		{ if ( !in_range ( z , zmin , zmax ) ) { continue ; } // CONTINUE
-		  for ( const double t : results [ 3 ] )
-		    { if ( !in_range ( t , tmin , tmax ) ) { continue ; } // CONTINUE
-		      stat.update ( x , y , z , t , weight ) ; } } } } 
+        { if ( !in_range ( x , xmin , xmax ) ) { continue ; } // CONTINUE 
+          for ( const double y : results [ 1 ] )
+            { if ( !in_range ( y , ymin , ymax ) ) { continue ; } // CONTINUE 
+              for ( const double z : results [ 2 ] )
+                { if ( !in_range ( z , zmin , zmax ) ) { continue ; } // CONTINUE
+                  for ( const double t : results [ 3 ] )
+                    { if ( !in_range ( t , tmin , tmax ) ) { continue ; } // CONTINUE
+                      stat.update ( x , y , z , t , weight ) ; } } } } 
     }
   //
   return Ostap::StatusCode::SUCCESS ;
@@ -1482,11 +1484,11 @@ Ostap::StatusCode Ostap::StatVar::statVars
       if ( !weight || !std::isfinite ( weight ) ) { continue  ; }     // CONTNUE 
       //
       for ( std::size_t i = 0 ; i < N ; ++i ) 
-	{
-	  formulae.evaluate ( i , results ) ;
-	  for ( const double value : results )
-	    { if ( std::isfinite ( value ) ) {  result[i].add ( value , weight ) ; } }
-	}
+        {
+          formulae.evaluate ( i , results ) ;
+          for ( const double value : results )
+            { if ( std::isfinite ( value ) ) {  result[i].add ( value , weight ) ; } }
+        }
     }
   //
   return Ostap::StatusCode::SUCCESS ;
@@ -1917,18 +1919,18 @@ Ostap::WStatEntity Ostap::StatVar::statVar
   ///
   Ostap::WStatEntity result {} ;
   const Ostap::StatusCode sc = get_stat ( data       ,
-					  result     , 
-					  expression ,
-					  selection  ,
-					  cut_range  , 
-					  first      ,
-					  last       ,
-					  xmin       ,
-					  xmax       ) ;
+                                          result     , 
+                                          expression ,
+                                          selection  ,
+                                          cut_range  , 
+                                          first      ,
+                                          last       ,
+                                          xmin       ,
+                                          xmax       ) ;
   // check status code 
   Ostap::Assert ( sc.isSuccess ()  ,
-		  "Error from Ostap::StatVar::get_stat( " + expression + " , " + selection + " ) " ,
-		  "Ostap::StatVar::statVar" , sc , __FILE__ , __LINE__ ) ;
+                  "Error from Ostap::StatVar::get_stat( " + expression + " , " + selection + " ) " ,
+                  "Ostap::StatVar::statVar" , sc , __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -1963,16 +1965,16 @@ Ostap::StatVar::statCov
   const Ostap::DataType    ymax      ) const 
 {
   return get_stat ( data  ,
-		    stat  , 
-		    exp1  , 
-		    exp2  , 
-		    selection ,
-		    first ,
-		    last  ,
-		    xmin  ,
-		    xmax  ,
-		    ymin  ,
-		    ymax  ) ;
+                    stat  , 
+                    exp1  , 
+                    exp2  , 
+                    selection ,
+                    first ,
+                    last  ,
+                    xmin  ,
+                    xmax  ,
+                    ymin  ,
+                    ymax  ) ;
 }
 // ============================================================================
 /*  calculate the covariance of two expressions 
@@ -2000,16 +2002,16 @@ Ostap::StatVar::statCov
   const Ostap::DataType     ymax      ) const 
 {
   return get_stat ( data  ,
-		    stat  , 
-		    exp1  , 
-		    exp2  , 
-		    selection ,
-		    first ,
-		    last  ,
-		    xmin  ,
-		    xmax  ,
-		    ymin  ,
-		    ymax  ) ;
+                    stat  , 
+                    exp1  , 
+                    exp2  , 
+                    selection ,
+                    first ,
+                    last  ,
+                    xmin  ,
+                    xmax  ,
+                    ymin  ,
+                    ymax  ) ;
 }
 // ============================================================================
 /*  calculate the covariance of two expressions 
@@ -2284,6 +2286,7 @@ Ostap::StatusCode Ostap::StatVar::statCov
  *  @param table        (UPDATE) table 
  *  @param selection    (INPUT)  selection/cut (treated as weight!)
  *  @param cut_range    (INPUT)  if non empty: use events only from this cut-range
+ *  @param prescale     (INPUT)  prescale 
  *  @param weight_total (INPUT   add selection/cut weight to data-weight 
  *  @param first        (INPUT)  the first event to process (inclusibe) 
  *  @param last         (INPUT)  the last event to process (exclusive) 
@@ -2295,6 +2298,7 @@ Ostap::StatusCode Ostap::StatVar::get_table
   Ostap::StatVar::Table&    table        ,
   const std::string&        selection    ,
   const std::string&        cut_range    ,
+  const double              prescale     , 
   const bool                weight_total , 
   const Ostap::EventIndex   first        ,
   const Ostap::EventIndex   last         ) const
@@ -2304,9 +2308,21 @@ Ostap::StatusCode Ostap::StatVar::get_table
   //
   if  ( nullptr == data     ) { table.clear() ; return INVALID_DATA ; }
   //
-  const Ostap::EventIndex num_entries =  data -> numEntries () ;
+  const Ostap::EventIndex num_entries = data -> numEntries () ;
   const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { table.clear() ; return Ostap::StatusCode::SUCCESS ; }
+  //
+  const bool use_fraction = 0 < prescale  && prescale < 1.0 ;
+  const bool use_step     = !use_fraction && Ostap::Math::isuint ( prescale ) && 2 <= Ostap::Math::round ( prescale ) ;
+  const bool no_prescale  = !use_fraction && !use_step && ( 1 == prescale || 0 == prescale )   ;
+  /// valid prescale configurations ?
+  Ostap::Assert ( use_fraction || use_step || no_prescale  ,
+                  "Invalid prescale value"    ,
+                  "Ostap::StatVar::get_table" , 
+                  INVALID_PRESCALE            , __FILE__ , __LINE__ ) ;
+  //
+  const Ostap::EventIndex n_prescale =
+    use_step ? static_cast<Ostap::EventIndex> ( Ostap::Math::round ( prescale ) ) : 1 ;
   //
   std::vector<std::string> expressions{} ; expressions.reserve ( table.size() + 1 ) ;
   for ( Table::const_iterator i = table.begin () ; table.end() != i ; ++i )
@@ -2335,6 +2351,10 @@ Ostap::StatusCode Ostap::StatVar::get_table
   Ostap::Utils::ProgressBar bar { the_last - first , m_progress } ; 
   for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )
     {
+      //
+      if      ( use_fraction && gRandom->Rndm() < prescale ) { continue ; }  // CONTINUE
+      else if ( use_step     && 0 != entry % n_prescale    ) { continue ; }  // CONTINUE
+      //
       const RooArgSet* vars = data -> get ( entry ) ;
       if ( nullptr == vars )                             { break    ; } // BREAK 
       //
