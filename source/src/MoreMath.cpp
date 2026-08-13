@@ -1463,7 +1463,7 @@ Ostap::Math::beta
   const std::complex<double>& y )
 {
   const auto result = beta ( std::complex<long double> ( x ) ,
-			     std::complex<long double> ( y ) ) ;
+                             std::complex<long double> ( y ) ) ;
   return std::complex<double> ( result ) ; 
 }
 // ============================================================================
@@ -1915,8 +1915,8 @@ namespace
     // negative case :
     if ( -1 > n )
       {
-	const unsigned long np1 = std::abs ( n + 1 ) ;
-	return  ( Ostap::Math::POW ( 1/xh , np1 ) - Ostap::Math::POW ( 1/xl , np1 ) ) / ( n + 1 ) ;	
+        const unsigned long np1 = std::abs ( n + 1 ) ;
+        return  ( Ostap::Math::POW ( 1/xh , np1 ) - Ostap::Math::POW ( 1/xl , np1 ) ) / ( n + 1 ) ;     
       }
     //
     // the regular (positive) case
@@ -1956,19 +1956,19 @@ namespace
     //
     if ( std::abs ( delta ) <= 0.10 ) // "almost log"
       {
-	//
-	const long double log_h = std::log ( std::abs ( xhigh ) * 1.0L ) ;
+        //
+        const long double log_h = std::log ( std::abs ( xhigh ) * 1.0L ) ;
         const long double log_l = std::log ( std::abs ( xlow  ) * 1.0L ) ;
-	//
-	return
-	  Ostap::Math::expm1_x ( delta * log_h ) * log_h -
-	  Ostap::Math::expm1_x ( delta * log_l ) * log_l ;	  	
+        //
+        return
+          Ostap::Math::expm1_x ( delta * log_h ) * log_h -
+          Ostap::Math::expm1_x ( delta * log_l ) * log_l ;              
       }
     //
     /// regular  case
     return
       ( std::pow ( xhigh * 1.0L , delta ) -
-	std::pow ( xlow  * 1.0L , delta ) ) / delta ;
+        std::pow ( xlow  * 1.0L , delta ) ) / delta ;
   }
   // ==========================================================================
 }
@@ -2287,48 +2287,48 @@ namespace
     // Blended bisection/regular falsi iterations 
     for ( std::size_t i = 0 ; i < s_N1 ; ++i )
       {
-	// (1) normal bisection:
-	double xmid = 0.5 * ( xlow + xhigh ) ;
-	// (2) regular falsi step 
-	const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
-	//
-	if ( xlow < xrf && xrf < xhigh )
-	  {
-	    const double frf  = f ( xrf ) ;
-	    //
-	    const double x1 = std::min ( xmid , xrf ) ;
-	    const double x2 = std::max ( xmid , xrf ) ;
-	    // 
-	    const double f1 = f ( x1 ) ;
-	    if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
-	    const double f2 = f ( x2 ) ; 
-	    if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
-	    //
-	    const int sl = ( 0 < flow  ) ? +1 : -1 ;
-	    const int s1 = ( 0 < f1    ) ? +1 : -1 ;
-	    const int s2 = ( 0 < f2    ) ? +1 : -1 ;
-	    const int sh = ( 0 < fhigh ) ? +1 : -1 ;
-	    //
-	    if      ( sl * s1 < 0 )  { xhigh = x1 ; fhigh = f1 ; } 
-	    else if ( s1 * s2 < 0 )  { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
-	    else if ( s2 * sh < 0 )  { xlow  = x2 ; flow  = f2 ; }
-	    //
-	    if ( std::abs ( xhigh - xlow ) < s_DX   ) { return  0.5 * ( xlow + xhigh ) ; }
-	    if ( std::abs ( xhigh - xlow ) <   DD   ) { break ; }  // BREAK 
-	  }
-	//
-	// normal bisection:
-	xmid = 0.5 * ( xlow + xhigh ) ;
-	//
-	const double fmid = f ( xmid ) ;	
-	if   ( s_zero ( fmid ) ) { return xmid ; }                  // RETURN 
-	//
-	if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
-	else                     { xlow  = xmid ; flow  = fmid ; }
-	//
-	if ( std::abs ( xhigh - xlow ) < s_DX ) { return  0.5 * ( xlow + xhigh ) ; } 
-	if ( std::abs ( xhigh - xlow ) <   DD ) { break ; }  // BREAK 
-	//
+        // (1) normal bisection:
+        double xmid = 0.5 * ( xlow + xhigh ) ;
+        // (2) regular falsi step 
+        const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
+        //
+        if ( xlow < xrf && xrf < xhigh )
+          {
+            const double frf  = f ( xrf ) ;
+            //
+            const double x1 = std::min ( xmid , xrf ) ;
+            const double x2 = std::max ( xmid , xrf ) ;
+            // 
+            const double f1 = f ( x1 ) ;
+            if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
+            const double f2 = f ( x2 ) ; 
+            if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
+            //
+            const int sl = ( 0 < flow  ) ? +1 : -1 ;
+            const int s1 = ( 0 < f1    ) ? +1 : -1 ;
+            const int s2 = ( 0 < f2    ) ? +1 : -1 ;
+            const int sh = ( 0 < fhigh ) ? +1 : -1 ;
+            //
+            if      ( sl * s1 < 0 )  { xhigh = x1 ; fhigh = f1 ; } 
+            else if ( s1 * s2 < 0 )  { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
+            else if ( s2 * sh < 0 )  { xlow  = x2 ; flow  = f2 ; }
+            //
+            if ( std::abs ( xhigh - xlow ) < s_DX   ) { return  0.5 * ( xlow + xhigh ) ; }
+            if ( std::abs ( xhigh - xlow ) <   DD   ) { break ; }  // BREAK 
+          }
+        //
+        // normal bisection:
+        xmid = 0.5 * ( xlow + xhigh ) ;
+        //
+        const double fmid = f ( xmid ) ;        
+        if   ( s_zero ( fmid ) ) { return xmid ; }                  // RETURN 
+        //
+        if   ( flow * fmid < 0 ) { xhigh = xmid ; fhigh = fmid ; }
+        else                     { xlow  = xmid ; flow  = fmid ; }
+        //
+        if ( std::abs ( xhigh - xlow ) < s_DX ) { return  0.5 * ( xlow + xhigh ) ; } 
+        if ( std::abs ( xhigh - xlow ) <   DD ) { break ; }  // BREAK 
+        //
       }
     // ==========================================================================
     // (2) switch to Newton method
@@ -2341,81 +2341,81 @@ namespace
     // (1) several Newton iterations 
     for ( std::size_t i = 0 ; i < s_N2 ; ++i )
       {
-	const double x1 = x0 - f ( x0 ) / df ( x0 ) ;
-	/// if Newton jumps outside the interval: more bisection iterations!
-	if ( x1 <= xlow || xhigh <= x1 ) 
-	  {
-	    for ( std::size_t j = 0 ; j < s_N3 ; ++j )
-	      {
-		// (a) bisection:  
-		const double xmid = 0.5 * ( xlow + xhigh ) ;
-		// (b) regular falsi: 
-		const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
-		//	       
-		const double x1 = std::min ( xmid , xrf ) ;
-		const double x2 = std::max ( xmid , xrf ) ;
-		// 
-		const double f1 = f ( x1 ) ;
-		if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
-		const double f2 = f ( x2 ) ; 
-		if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
-		//
-		const int sl = ( 0 < flow  ) ? +1 : -1 ;
-		const int s1 = ( 0 < f1    ) ? +1 : -1 ;
-		const int s2 = ( 0 < f2    ) ? +1 : -1 ;
-		const int sh = ( 0 < fhigh ) ? +1 : -1 ;
-		//
-		if      ( sl * s1 < 0 ) { xhigh = x1 ; fhigh = f1 ; } 
-		else if ( s1 * s2 < 0 ) { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
-		else if ( s2 * sh < 0 ) { xlow  = x2 ; flow  = f2 ; }
-		//		
-		if ( std::abs ( xhigh - xlow ) < s_DX )
-		  { return 0.5 * ( xlow + xhigh ) ; }                 // RETURN
-		//	      
-	      }
-	    x0 = 0.5 * ( xlow + xhigh ) ;
-	    continue ;
-	  }
-	//
-	// check convergency:
-	//
-	// (a) function is zero 
-	if ( s_zero ( f ( x1 ) )         ) { return x1 ; } // RETURN 
-	// (b) step is very small 
-	if ( std::abs ( x1 - x0 ) < s_DX ) { return x1 ; } // RETURN 
-	//
-	x0 = x1 ;
+        const double x1 = x0 - f ( x0 ) / df ( x0 ) ;
+        /// if Newton jumps outside the interval: more bisection iterations!
+        if ( x1 <= xlow || xhigh <= x1 ) 
+          {
+            for ( std::size_t j = 0 ; j < s_N3 ; ++j )
+              {
+                // (a) bisection:  
+                const double xmid = 0.5 * ( xlow + xhigh ) ;
+                // (b) regular falsi: 
+                const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
+                //             
+                const double x1 = std::min ( xmid , xrf ) ;
+                const double x2 = std::max ( xmid , xrf ) ;
+                // 
+                const double f1 = f ( x1 ) ;
+                if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
+                const double f2 = f ( x2 ) ; 
+                if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
+                //
+                const int sl = ( 0 < flow  ) ? +1 : -1 ;
+                const int s1 = ( 0 < f1    ) ? +1 : -1 ;
+                const int s2 = ( 0 < f2    ) ? +1 : -1 ;
+                const int sh = ( 0 < fhigh ) ? +1 : -1 ;
+                //
+                if      ( sl * s1 < 0 ) { xhigh = x1 ; fhigh = f1 ; } 
+                else if ( s1 * s2 < 0 ) { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
+                else if ( s2 * sh < 0 ) { xlow  = x2 ; flow  = f2 ; }
+                //              
+                if ( std::abs ( xhigh - xlow ) < s_DX )
+                  { return 0.5 * ( xlow + xhigh ) ; }                 // RETURN
+                //            
+              }
+            x0 = 0.5 * ( xlow + xhigh ) ;
+            continue ;
+          }
+        //
+        // check convergency:
+        //
+        // (a) function is zero 
+        if ( s_zero ( f ( x1 ) )         ) { return x1 ; } // RETURN 
+        // (b) step is very small 
+        if ( std::abs ( x1 - x0 ) < s_DX ) { return x1 ; } // RETURN 
+        //
+        x0 = x1 ;
       }
     // ========================================================================
     // (3) no Newton convergency ? more bisection/regular falsi  iterations!
     // ========================================================================
     for ( std::size_t j = 0 ; j < s_N4 ; ++j )
       {
-	// (a) bisection:  
-	const double xmid = 0.5 * ( xlow + xhigh ) ;
-	// (b) regular falsi: 
-	const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
-	//	       
-	const double x1 = std::min ( xmid , xrf ) ;
-	const double x2 = std::max ( xmid , xrf ) ;
-	// 
-	const double f1 = f ( x1 ) ;
-	if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
-	const double f2 = f ( x2 ) ; 
-	if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
-	//
-	const int sl = ( 0 < flow  ) ? +1 : -1 ;
-	const int s1 = ( 0 < f1    ) ? +1 : -1 ;
-	const int s2 = ( 0 < f2    ) ? +1 : -1 ;
-	const int sh = ( 0 < fhigh ) ? +1 : -1 ;
-	//
-	if      ( sl * s1 < 0 )  { xhigh = x1 ; fhigh = f1 ; } 
-	else if ( s1 * s2 < 0 )  { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
-	else if ( s2 * sh < 0 )  { xlow  = x2 ; flow  = f2 ; }
-	//
-	if ( std::abs ( xhigh - xlow ) < s_DX )
-	  { return 0.5 * ( xlow + xhigh ) ; }                 // RETURN
-	//	      
+        // (a) bisection:  
+        const double xmid = 0.5 * ( xlow + xhigh ) ;
+        // (b) regular falsi: 
+        const double xrf  = ( xlow * fhigh - xhigh * flow ) / ( fhigh - flow ) ;
+        //             
+        const double x1 = std::min ( xmid , xrf ) ;
+        const double x2 = std::max ( xmid , xrf ) ;
+        // 
+        const double f1 = f ( x1 ) ;
+        if   ( s_zero ( x1  ) ) { return x1 ; }               // RETURN
+        const double f2 = f ( x2 ) ; 
+        if   ( s_zero ( x2  ) ) { return x2 ; }               // RETURN
+        //
+        const int sl = ( 0 < flow  ) ? +1 : -1 ;
+        const int s1 = ( 0 < f1    ) ? +1 : -1 ;
+        const int s2 = ( 0 < f2    ) ? +1 : -1 ;
+        const int sh = ( 0 < fhigh ) ? +1 : -1 ;
+        //
+        if      ( sl * s1 < 0 )  { xhigh = x1 ; fhigh = f1 ; } 
+        else if ( s1 * s2 < 0 )  { xlow  = x1 ; flow  = f1 ; xhigh = x2 ; fhigh = f2 ; } 
+        else if ( s2 * sh < 0 )  { xlow  = x2 ; flow  = f2 ; }
+        //
+        if ( std::abs ( xhigh - xlow ) < s_DX )
+          { return 0.5 * ( xlow + xhigh ) ; }                 // RETURN
+        //            
       }
     // ========================================================================
     // (4) What else can we do here ? nothing... just the final bisection step..
@@ -2541,8 +2541,8 @@ namespace
       const RESULT r2 = __pochhammer2__ ( xk , M ) ;
       //
       return std::make_pair ( r1.first  * r2.first  ,
-			      r1.first  * r2.second +
-			      r1.second * r2.first  ) ;
+                              r1.first  * r2.second +
+                              r1.second * r2.first  ) ;
     }
     ///
     /// use the generic formula 
@@ -2928,7 +2928,7 @@ double Ostap::Math::elliptic_Fm
     {
       const double nc = std::floor ( phi * s_1_pi + 0.5 ) ;
       const double kk = elliptic_Km ( m ) ;      
-      return elliptic_Fm ( phi - nc * s_pi , m ) + 2 * nc * kk ;	
+      return elliptic_Fm ( phi - nc * s_pi , m ) + 2 * nc * kk ;        
     }
   //
   const long double sinphi = std::sin ( phi ) ;
@@ -2954,7 +2954,7 @@ double Ostap::Math::elliptic_Em
     {
       const double nc = std::floor ( phi * s_1_pi + 0.5 ) ;
       const double ee = elliptic_Em ( m ) ;      
-      return elliptic_Em ( phi - nc * s_pi , m ) + 2 * nc * ee ;	
+      return elliptic_Em ( phi - nc * s_pi , m ) + 2 * nc * ee ;        
     }
   //  
   const long double sinphi = std::sin ( phi ) ;
@@ -4457,20 +4457,20 @@ double Ostap::Math::cn
       else if ( s_equal ( u , 3 * KK ) ) { return u - 3 * KK ; }
       else if ( s_equal ( u , 4 * KK ) ) { return  1         ; }
       else if ( 4 * KK < u )
-       	{      
-       	  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) ) ;
-       	  return cn ( uk , m ) ;
-       	}
+                {      
+                  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) ) ;
+                  return cn ( uk , m ) ;
+                }
       else if ( 2 * KK < u )
-       	{      
-       	  const double uk = 4 * KK - u ;
-       	  return cn ( uk , m ) ;
-       	}
+                {      
+                  const double uk = 4 * KK - u ;
+                  return cn ( uk , m ) ;
+                }
       else if ( KK < u )
-       	{
-      	  const double uk = 2 * KK - u ;
-       	  return - cn ( uk , m ) ;      
-       	}
+                {
+          const double uk = 2 * KK - u ;
+                  return - cn ( uk , m ) ;      
+                }
     }
   //
   return std::cos ( am ( u , m ) ) ;
@@ -6099,7 +6099,7 @@ Ostap::Math::heinz_mean
     ( x   <= 0 ) || s_zero  ( x       ) ? 0.5 *     ( a + b ) : 
     ( 0.5 <= x ) || s_equal ( x , 0.5 ) ? std::sqrt ( a * b ) : 
     0.5 * ( std::pow ( a ,     x ) * std::pow ( b ,  1 - x ) +
-	    std::pow ( a , 1 - x ) * std::pow ( b ,      x ) ) ;
+            std::pow ( a , 1 - x ) * std::pow ( b ,      x ) ) ;
 }
 // ============================================================================
 /*  Lehmer mean for two real numbers (just for completeness)
@@ -6853,7 +6853,7 @@ double Ostap::Math::bring   ( const double x )
     {
       // few fixed point iterations 
       for ( unsigned short i = 0 ; i < 4 ; ++ i )
-	{ x0 = - std::pow ( xx + x0 , 0.2 ) ; }
+        { x0 = - std::pow ( xx + x0 , 0.2 ) ; }
     }
   /// Halley's method 
   auto fun  = [ xx ] ( const long double z ) -> long double
@@ -6916,7 +6916,7 @@ std::complex<double> Ostap::Math::bring   ( const std::complex<double>& x )
     {
       // few fixed point iterations 
       for ( unsigned short i = 0 ; i < 4 ; ++ i )
-	{ x0 = - std::pow ( xx + x0 , 0.2 ) ; }
+        { x0 = - std::pow ( xx + x0 , 0.2 ) ; }
     }
   //  
   /// Halley's method 
@@ -7057,7 +7057,7 @@ namespace
 /*  smooth transition function 
  *   \f[ \phix() = left\{ 
  *   \begin{array}{ll}
- *     0 &  x\le a \				\
+ *     0 &  x\le a \                            \
  *     1 &  x\ge b \\ 
  *    smooth & 
  *    \end{array} \right. \f] 
@@ -7156,7 +7156,7 @@ double Ostap::Math::hyperg_1F1
     {
       gsl_error ( "Error from gsl_sf_hyperg_1F1_int_e" , __FILE__ , __LINE__ , ierror ) ;
       if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-	{ return std::numeric_limits<double>::quiet_NaN(); }
+        { return std::numeric_limits<double>::quiet_NaN(); }
     }
   return result.val ;  
 }
@@ -7180,7 +7180,7 @@ double Ostap::Math::hyperg_U
   {
     gsl_error ( "Error from gsl_sf_hyperg_U_int_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-	  { return std::numeric_limits<double>::quiet_NaN(); }
+          { return std::numeric_limits<double>::quiet_NaN(); }
   }
   return result.val ;  
 }
@@ -7453,9 +7453,9 @@ Ostap::Math::sigmoid_type
   //
   auto i = s_map1.find ( _name ) ;
   Ostap::Assert ( s_map1.end() != i ,
-		  "Invalid Sigmoid Type:" + name ,
-		  "Ostap::Math::sigmoid_type"    ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid Sigmoid Type:" + name ,
+                  "Ostap::Math::sigmoid_type"    ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   return i->second ;
 }
@@ -7470,10 +7470,10 @@ std::string Ostap::Math::sigmoid_name
 {
   //
   Ostap::Assert ( Ostap::Math::SigmoidType::First <= stype &&
-		  stype <= Ostap::Math::SigmoidType::Last    , 		  
-		  "Invalid Sigmoid Type"       ,
-		  "Ostap::Math::sigmoid_type"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  stype <= Ostap::Math::SigmoidType::Last    ,                    
+                  "Invalid Sigmoid Type"       ,
+                  "Ostap::Math::sigmoid_type"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   switch ( stype )
     {
@@ -7502,9 +7502,9 @@ std::string Ostap::Math::sigmoid_name
     } ;
   //
   Ostap::Assert ( false                        , 
-		  "Invalid Sigmoid Type"       ,
-		  "Ostap::Math::sigmoid_type"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid Sigmoid Type"       ,
+                  "Ostap::Math::sigmoid_type"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   return "" ;
 }  
@@ -7522,9 +7522,9 @@ double Ostap::Math::sigmoid
   const Ostap::Math::SigmoidType t )
 {
   Ostap::Assert ( Ostap::Math::SigmoidType::First <= t && t <= Ostap::Math::SigmoidType::Last ,
-		  "Invaild sigmoid Type!" ,
-		  "Ostap::Math::sigmoid"  ,
-		  INVALID_PARAMETER       , __FILE__ , __LINE__ ) ;
+                  "Invaild sigmoid Type!" ,
+                  "Ostap::Math::sigmoid"  ,
+                  INVALID_PARAMETER       , __FILE__ , __LINE__ ) ;
   //
   static const double s_bias     = s_pi_2  ;
   static const double s_scale    = s_1_pi  ;
@@ -7596,15 +7596,15 @@ double Ostap::Math::variance
   else if ( !std::isfinite ( m1 ) ) { return m1 ; }
   //
   Ostap::Assert ( 0 <= m2 ,
-		  "Invalid 2nd-moment!"    ,
-		  "Ostap::Math::variance"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid 2nd-moment!"    ,
+                  "Ostap::Math::variance"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   const double v2 = m2 - m1 * m1 ;
   Ostap::Assert ( 0 <= v2 || s_zero ( v2 ) ,
-		  "Invalid raw-moments!"   ,
-		  "Ostap::Math::variance"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid raw-moments!"   ,
+                  "Ostap::Math::variance"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   return std::max ( v2 , 0.0 ) ;
 }
@@ -7622,15 +7622,15 @@ double Ostap::Math::rms
   else if ( !std::isfinite ( m1 ) ) { return m1 ; }
   //
   Ostap::Assert ( 0 <= m2 ,
-		  "Invalid 2nd-moment!"    ,
-		  "Ostap::Math::rms"       ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid 2nd-moment!"    ,
+                  "Ostap::Math::rms"       ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   const double v2 = m2 - m1 * m1 ;
   Ostap::Assert ( 0 <= m2 && 0 <= v2 || s_zero ( v2 ) ,
-		  "Invalid raw-moments!"   ,
-		  "Ostap::Math::rms"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid raw-moments!"   ,
+                  "Ostap::Math::rms"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   return std::sqrt ( std::max ( v2 , 0.0 ) ) ;
 }
@@ -7652,15 +7652,15 @@ double Ostap::Math::skewness
   else if ( !std::isfinite ( m1 ) ) { return m1 ; }
   //
   Ostap::Assert ( 0 <= m2 ,
-		  "Invalid 2nd-moment!"    ,
-		  "Ostap::Math::skewness"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid 2nd-moment!"    ,
+                  "Ostap::Math::skewness"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   const double v2 = variance ( m2 , m1 ) ;
   Ostap::Assert ( std::isfinite ( v2 ) && 0 <= v2 ,
-		  "Invalid variance"       ,
-		  "Ostap::Math::skewness"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid variance"       ,
+                  "Ostap::Math::skewness"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   const double v3 = m3 - m1 * ( 3 * m2 - 2 * m1 * m1 ) ;
   return v3 / std::pow ( v2 , 3.0/2 ) ;
@@ -7685,28 +7685,28 @@ double Ostap::Math::kurtosis
   else if ( !std::isfinite ( m1 ) ) { return m1 ; }
   //
   Ostap::Assert ( 0 <= m4 ,
-		  "Invalid 4th-moment!"    ,
-		  "Ostap::Math::kurtosis"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid 4th-moment!"    ,
+                  "Ostap::Math::kurtosis"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   Ostap::Assert ( 0 <= m2 ,
-		  "Invalid 2nd-moment!"    ,
-		  "Ostap::Math::kurtosis"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid 2nd-moment!"    ,
+                  "Ostap::Math::kurtosis"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   const double v2 = variance ( m2 , m1 ) ;
   Ostap::Assert ( std::isfinite ( v2 ) && 0 <= v2 ,
-		  "Invalid variance"       ,
-		  "Ostap::Math::skewness"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid variance"       ,
+                  "Ostap::Math::skewness"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   const std::array<double,5> h {{ m4 , -4.0 * m3  , +6.0 * m2 , 0.0 , -3.0 }} ;   
   const double v4 = Ostap::Math::Clenshaw::monomial_sum ( h.rbegin() , h.rend () , m1 ).first ;
   //
   Ostap::Assert ( 0 <= v4 || s_zero ( v4 ) ,
-		  "Invalid 4th central moment!"    ,
-		  "Ostap::Math::kurtosis"  ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+                  "Invalid 4th central moment!"    ,
+                  "Ostap::Math::kurtosis"  ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //  
   return std::max ( v4 , 0.0 ) / ( v2 * v2 ) - 3 ;
 }
@@ -7818,9 +7818,9 @@ double Ostap::Math::kolmogorov_pdf
   const double       x ) 
 {
   Ostap::Assert ( n , 
-		  "n must be positive" , 
-		  "kolmogorov_pdf"    , 
-		  INVALID_PARAMETER , __FILE__, __LINE__) ;
+                  "n must be positive" , 
+                  "kolmogorov_pdf"    , 
+                  INVALID_PARAMETER , __FILE__, __LINE__) ;
   if ( x <= 0 || x >= 1 ) { return  0 ; }
   //
   // make numerical differentiation 
@@ -8594,6 +8594,16 @@ double Ostap::Math::harmonic
 { return _harmonic_ ( n , m ) ; }
 
 
+#include "TRandom.h"
+// ========================================================================
+/* @fn rndm
+ *  get the random number from ROOT  <code>gRandom->Rdnm</code>
+ *  @see TRandom
+ *  @see TRandom
+ */
+// ========================================================================
+double Ostap::Math::rndm () { return gRandom->Rndm() ; }
+   
 // ============================================================================
 namespace Ostap
 {
@@ -8603,28 +8613,28 @@ namespace Ostap
     /// not available for osx_arm64
     /// not available for osx_arm64    
     /** 
-	void math_test ()
-	{
-	
-	std::comp_ellint_1 ( 0.5 ) ;
-	std::comp_ellint_2 ( 0.5 ) ;
-	std::comp_ellint_3 ( 0.5 , 0.5 ) ;
-	
-	std::cyl_bessel_i ( 1.0 , 1.0 ) ;
-	std::cyl_bessel_k ( 1.0 , 1.0 ) ;
-	std::cyl_bessel_k ( 1.0 , 1.0 ) ;
-	
-	std::cyl_neumann  ( 1.0 , 1.0 ) ;
-	
-	std::ellint_1 ( 0.1 , 0.5 ) ;
-	std::ellint_2 ( 0.1 , 0.5 ) ;
-	std::ellint_3 ( 0.1 , 0.5 , 0.5 ) ;
-	
-	std::expint       ( 0.1  ) ;
-	
-	std::riemann_zeta ( 1.0 ) ;
-	
-	std::beta         ( 1.0 , 1.0 ) ;
+        void math_test ()
+        {
+        
+        std::comp_ellint_1 ( 0.5 ) ;
+        std::comp_ellint_2 ( 0.5 ) ;
+        std::comp_ellint_3 ( 0.5 , 0.5 ) ;
+        
+        std::cyl_bessel_i ( 1.0 , 1.0 ) ;
+        std::cyl_bessel_k ( 1.0 , 1.0 ) ;
+        std::cyl_bessel_k ( 1.0 , 1.0 ) ;
+        
+        std::cyl_neumann  ( 1.0 , 1.0 ) ;
+        
+        std::ellint_1 ( 0.1 , 0.5 ) ;
+        std::ellint_2 ( 0.1 , 0.5 ) ;
+        std::ellint_3 ( 0.1 , 0.5 , 0.5 ) ;
+        
+        std::expint       ( 0.1  ) ;
+        
+        std::riemann_zeta ( 1.0 ) ;
+        
+        std::beta         ( 1.0 , 1.0 ) ;
     */    
   }
 }
