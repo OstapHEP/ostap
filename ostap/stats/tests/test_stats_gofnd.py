@@ -24,7 +24,7 @@ from   ostap.utils.root_utils import batch_env
 from   ostap.utils.core       import typename 
 from   ostap.utils.basic      import numcpu
 from   ostap.logger.symbols   import plus_minus , greek_lower_sigma 
-from   ostap.stats.gof_utils  import clip_pvalue ,
+from   ostap.stats.gof_utils  import clip_pvalue 
 from   ostap.stats.tools      import ( useLightGBM , useXGBoost ,
                                        useCatBoost , useSkLearn , 
                                        usePyTorch  , useKeras   )

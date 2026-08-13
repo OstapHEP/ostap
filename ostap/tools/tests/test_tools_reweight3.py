@@ -412,7 +412,6 @@ memory_init = memory_usage()
 converged   = False
 
 maxIter     = 5 if small else 12
-maxIter = 3
 
 # =============================================================================
 ## start reweighting iterations:

@@ -89,8 +89,10 @@ class GoF(AGoF,Config) :
         self.__mcFactor   = mcFactor 
         self.__sample     = True if sample else False
         self.__genconf    = genconf
+
+        silent = estimator.silent if hasattr ( estimator , 'silent' ) else False 
+        Config.__init__ ( self , silent = silent )
         
-        Config.__init__ ( self , silent = self.silent ) 
     # =======================================================================
     ## get all configration parameters
     @property 
@@ -790,11 +792,6 @@ class NLL(AGoF,Config) :
         return self.__sample
     
     @property
-    def silent    ( self ) :
-        """`silent` : silent prpcessing ?"""
-        return self.__silent
-    
-    @property
     def progress    ( self ) :
         """`progress` : show progress bar?"""
         return self.__progress
@@ -1009,6 +1006,8 @@ class BayesianIC(NLL) :
         assert data and isinstance ( data , integer_types ) and 1 <= data , \
             "Invalid data %s" % typename ( data )
         
+        self.__ndata = data 
+
         NLL.__init__ ( self      ,
                        fitresult = fitresult , 
                        fitconf   = fitconf   ,
@@ -1018,8 +1017,16 @@ class BayesianIC(NLL) :
                        silent    = silent    ,
                        progress  = progress  ) 
 
-        self.__ndata = data 
 
+    # =======================================================================
+    ## get all configration parameters
+    @property 
+    def config ( self ) :
+        conf = {}
+        conf.update ( super().config )
+        conf [ '#data' ] = self.__ndata 
+        return conf 
+        
     ## get the actual t-value from the fit-result 
     def the_tvalue   ( self , fitresult ) : return fitresult.bic ( self.__ndata ) 
 
@@ -1047,14 +1054,14 @@ class BayesianIC(NLL) :
         """ Serialize the object
         """
         state = NLL.__getstate__ ( self )
-        state [ 'ndata' ] = self.__ndata
+        state [ '#data' ] = self.__ndata
         return state
     
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
         """ De-serialize the object
         """
-        self.__ndata = state.pop ( 'ndata' ) 
+        self.__ndata = state.pop ( '#data' ) 
         NLL.__setstate__ ( self , state )
     
 # =============================================================================

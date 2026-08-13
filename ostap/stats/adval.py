@@ -223,8 +223,7 @@ class ADVAL_base (GoFnp):
                          progress  = progress  ,
                          normalize = normalize , 
                          method    = method   , **params )
-        
-        
+                
     # ============================================================================
     @property
     def n_splits ( self ) :

@@ -8,7 +8,8 @@
    1. add `PeakMemory` context manmager to estimate the peak memory usage
    1, add wall-time to `Memory` context manager  
    1. add `prescale` argument to `data_slice`, `tree_slice`, `frame_slice`, `ds_silce` and ``ds2numpy` functions
-
+   1. remove some suspicious blancks 
+   
 ## Bug fixes 
 
 ## Backward incompatible

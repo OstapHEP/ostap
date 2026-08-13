@@ -23,6 +23,7 @@ from   ostap.utils.timing     import timing
 from   ostap.trees.data_utils import Data 
 from   ostap.logger.colorized import attention, allright  
 from   ostap.utils.cleanup    import CleanUp
+from   ostap.stats.tools      import useHepML 
 import ostap.io.zipshelve     as     DBASE
 import ROOT, array, random, math, os, time 
 # =============================================================================
@@ -236,16 +237,15 @@ def test_gbreweight() :
 
     logger = getLogger("test_gbreweight")
 
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        from ostap.tools.data_reweighter import DataReweighter
-        from ostap.tools.reweighters     import GBReweighter as GBRW
-        # =====================================================================
-    except ImportError : # ====================================================
-        # =====================================================================
-        logger.error ('(Data)Reweighter is not available!', exc_info = True )
+    use_hepml = useHepML()
+    if not use_hepml :
+        logger.warning ( "HepMC is not available, skip the test!" )
         return 
+    
+    # =========================================================================
+    from ostap.tools.data_reweighter import DataReweighter
+    from ostap.tools.reweighters     import GBReweighter as GBRW
+    # =========================================================================
     
     with timing ( "Prepare input data" , logger = logger ) :
         testfiles = prepare_data ( 10 )
@@ -266,7 +266,7 @@ def test_gbreweight() :
 
         ## (1)  Use GB-Reweigher  explicitely
         
-        rw = Reweighter ( original = dmc , target = ddata ) 
+        rw = GBRW ( original = dmc , target = ddata ) 
     
         ## (1a) new weights 
         wnew = rw ( original = dmc )
