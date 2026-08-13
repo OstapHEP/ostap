@@ -91,6 +91,9 @@ except ImportError : from string import letters as ascii_letters
 ## possible numerical types for variables 
 numvar_types = num_types + ( VE , )
 # =============================================================================
+
+
+# =============================================================================
 ## @class NameDuplicates
 #  Are name duplicates allowed?
 #  @code

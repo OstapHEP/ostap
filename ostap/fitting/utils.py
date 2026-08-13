@@ -405,7 +405,7 @@ def add_topic ( topics , stream  = -1 ) :
 #  suppress_topics ( 'Fitting'  , 'Caching' ) 
 #  @endcode 
 def suppress_topics ( *topics ) :
-    """suppress certain message topics
+    """ Suppress certain message topics
     >>> suppress_topics ( 'Fitting'  , 'Caching' ) 
     """
     if topics and 1 == len( topics ) :
