@@ -235,6 +235,8 @@ chi2ndf          = '%s/ndf' % chi2
 
 ## symmetric
 symmetry         = '\U0000232F'           if show else 'sym'
+enough           = '\U00002203'           if show else 'enough'
+mountain         = '\U000026F0'           if show else 'peak'
 
 ## Lowercase Greek letters 
 greek_lower_alpha     = '\U000003B1'  if show else 'alpha'
