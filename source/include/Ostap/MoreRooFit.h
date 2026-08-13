@@ -115,18 +115,18 @@ namespace Ostap
         RooAbsReal&        x     ,
         RooAbsReal&        y     ,
         ARGS const&...     args  )
-	: Addition ( name , title , x , y )
+        : Addition ( name , title , x , y )
       { this -> add ( args... ) ; }      
       /// several variables 
       Addition
       ( const std::string& name  ,  
-	const std::string& title ,
-	const RooArgList&  vars  ) ;
+        const std::string& title ,
+        const RooArgList&  vars  ) ;
       /// several variables 
       Addition
       ( const std::string& name  ,  
-	const std::string& title ,
-	const RooArgSet&   vars  ) ;
+        const std::string& title ,
+        const RooArgSet&   vars  ) ;
       /// copy 
       Addition
       ( const Addition&    right       ,        
@@ -221,12 +221,12 @@ namespace Ostap
       Addition2 
       ( const std::string& name  ,  
         const std::string& title ,
-	const RooArgList&  a     ,
-	const RooArgList&  c     ) ;
+        const RooArgList&  a     ,
+        const RooArgList&  c     ) ;
       /// copy 
       Addition2
       ( const Addition2&    right       , 
-	const char*        newname = 0 ) ;
+        const char*        newname = 0 ) ;
       /// destructor
       virtual ~Addition2 () ;
       /// clone 
@@ -305,22 +305,22 @@ namespace Ostap
       template<typename... Args>
       Product
       ( const std::string& name  ,  
-	const std::string& title ,
-	RooAbsReal&        x     ,
-	RooAbsReal&        y     ,
-	Args const&...     args  ) 	
+        const std::string& title ,
+        RooAbsReal&        x     ,
+        RooAbsReal&        y     ,
+        Args const&...     args  )      
         : Product ( name , title , x , y )
       { this -> add ( args... ) ; }
       /// several variables 
       Product
       ( const std::string& name  ,  
-	const std::string& title ,
-	const RooArgList&  vars  ) ;
+        const std::string& title ,
+        const RooArgList&  vars  ) ;
       /// several variables 
       Product
       ( const std::string& name  ,  
-	const std::string& title ,
-	const RooArgSet&   vars  ) ;
+        const std::string& title ,
+        const RooArgSet&   vars  ) ;
       /// copy 
       Product
       ( const Product&    right       , 
@@ -618,9 +618,9 @@ namespace Ostap
       static inline FunOneVar 
       create
       ( FUNCTION    fun               , 
-	RooAbsReal& x                 ,
-	const std::string& name  = "" , 
-	const std::string& title = "" )
+        RooAbsReal& x                 ,
+        const std::string& name  = "" , 
+        const std::string& title = "" )
       { return FunOneVar ( fun , x , name , title ) ; }
       // ======================================================================
     public:
@@ -724,10 +724,10 @@ namespace Ostap
       template <class FUNCTION>
       FunTwoVars
       ( const std::string& name  , 
-	const std::string& title , 
-	FUNCTION           fun   , 
-	RooAbsReal&        x     , 
-	RooAbsReal&        y     ) 
+        const std::string& title , 
+        FUNCTION           fun   , 
+        RooAbsReal&        x     , 
+        RooAbsReal&        y     ) 
         : TwoVars ( name , title , x , y ) 
         , m_fun2  ( fun )
       {}  
@@ -743,10 +743,10 @@ namespace Ostap
       template <class FUNCTION>
       FunTwoVars
       ( FUNCTION fun                    , 
-	RooAbsReal&         x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         x           , 
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : FunTwoVars ( name , title , fun , x , y )
       {}
       // ======================================================================
@@ -761,10 +761,10 @@ namespace Ostap
       template <class FUNCTION>
       FunTwoVars
       ( FUNCTION fun                    , 
-	const double        x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        x           , 
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : FunTwoVars ( name , title , fun , RooFit::RooConst ( x ) , y )
       {}
       // ======================================================================
@@ -779,10 +779,10 @@ namespace Ostap
       template <class FUNCTION>
       FunTwoVars
       ( FUNCTION fun                    , 
-	RooAbsReal&         x           ,
-	const double        y           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         x           ,
+        const double        y           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : FunTwoVars ( name , title , fun , x , RooFit::RooConst ( y ) )
       {}
       // ======================================================================
@@ -808,10 +808,10 @@ namespace Ostap
       static inline FunTwoVars 
       create
       ( FUNCTION fun                    , 
-	RooAbsReal&         x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         x           , 
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
       { return FunTwoVars ( fun , x , y , name , title ) ; }
       // ======================================================================
     public:
@@ -894,7 +894,7 @@ namespace Ostap
         const std::string& title ,
         RooAbsReal&        x     ,
         RooAbsReal&        y     ,
-        Args const&...     args  ) 	
+        Args const&...     args  )      
         : NVars ( name , title , x , y )
       { this -> add ( args... ) ;  }
       /// copy 
@@ -956,31 +956,31 @@ namespace Ostap
       // ======================================================================
       Division 
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        x     , 
-	RooAbsReal&        y     ) ;
+        const std::string& title , 
+        RooAbsReal&        x     , 
+        RooAbsReal&        y     ) ;
       /// constructor with two variables 
       Division 
       ( RooAbsReal&         x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Division ( name , title , x , y )
       {}
       /// constructor with two variables 
       Division 
       ( const double        x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Division ( name , title , RooFit::RooConst ( x ) , y )
       {}
       /// constructor with two variables 
       Division
       ( RooAbsReal&         x           ,
-	const double        y           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        y           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Division ( name , title , x , RooFit::RooConst ( y ) )
       {}
       // ======================================================================
@@ -990,7 +990,7 @@ namespace Ostap
       // copy 
       Division 
       ( const Division& right , 
-	const char* newname = 0 ) 
+        const char* newname = 0 ) 
         : TwoVars ( right , newname ) 
       {}
       // ======================================================================
@@ -1017,43 +1017,43 @@ namespace Ostap
       /// constructor with two variables 
       Combination 
       ( const std::string& name        , 
-	const std::string& title       , 
-	RooAbsReal&        x           , 
-	RooAbsReal&        y           ,
-	const double       alpha = 1   , 
-	const double       beta  = 1   , 
-	const double       gamma = 1   ) ;
+        const std::string& title       , 
+        RooAbsReal&        x           , 
+        RooAbsReal&        y           ,
+        const double       alpha = 1   , 
+        const double       beta  = 1   , 
+        const double       gamma = 1   ) ;
       /// constructor with two variables 
       Combination
       ( RooAbsReal&         x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  , 
-	const double        alpha = 1   , 
-	const double        beta  = 1   , 
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  , 
+        const double        alpha = 1   , 
+        const double        beta  = 1   , 
           const double        gamma = 1   ) 
         : Combination ( name , title , x , y , alpha , beta , gamma )
       {}
       /// constructor with two variables 
       Combination
       ( const double        x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  , 
-	const double        alpha = 1   , 
-	const double        beta  = 1   , 
-	const double        gamma = 1   )
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  , 
+        const double        alpha = 1   , 
+        const double        beta  = 1   , 
+        const double        gamma = 1   )
         : Combination ( name , title , RooFit::RooConst ( x ) , y , alpha , beta , gamma )
       {}
       /// constructor with two variables 
       Combination
       ( RooAbsReal&         x           ,
-	const double        y           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ,
-	const double        alpha = 1   , 
-	const double        beta  = 1   , 
-	const double        gamma = 1   )
+        const double        y           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ,
+        const double        alpha = 1   , 
+        const double        beta  = 1   , 
+        const double        gamma = 1   )
         : Combination ( name , title , x , RooFit::RooConst ( y ) , alpha , beta , gamma )
       {}
       // ======================================================================
@@ -1063,7 +1063,7 @@ namespace Ostap
       // copy 
       Combination
       ( const Combination& right , 
-	const char* newname = 0 ) 
+        const char* newname = 0 ) 
         : TwoVars ( right , newname ) 
         , m_alpha ( right.m_alpha ) 
         , m_beta  ( right.m_beta  ) 
@@ -1110,31 +1110,31 @@ namespace Ostap
       /// constructor with two variables 
       Fraction
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        x     , 
-	RooAbsReal&        y     ) ;
+        const std::string& title , 
+        RooAbsReal&        x     , 
+        RooAbsReal&        y     ) ;
       /// constructor with two variables 
       Fraction
       ( RooAbsReal&         x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Fraction ( name , title , x , y )
       {}
       /// constructor with two variables 
       Fraction
       ( const double        x           , 
-	RooAbsReal&         y           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         y           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Fraction ( name , title , RooFit::RooConst ( x ) , y )
       {}
       /// constructor with two variables 
       Fraction 
       ( RooAbsReal&         x           ,
-	const double        y           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        y           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Fraction ( name , title , x , RooFit::RooConst ( y ) )
       {}
       // ======================================================================
@@ -1171,35 +1171,35 @@ namespace Ostap
       /// constructor with two variables 
       Asymmetry
       ( const std::string& name         , 
-	const std::string& title        , 
-	RooAbsReal&        a            , 
-	RooAbsReal&        b            , 
-	const double       scale  = 1   ) ;
+        const std::string& title        , 
+        RooAbsReal&        a            , 
+        RooAbsReal&        b            , 
+        const double       scale  = 1   ) ;
       /// constructor with two variables 
       Asymmetry
       ( RooAbsReal&         a           , 
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  , 
-	const double        scale = 1   ) 
-	: Asymmetry ( name , title , a , b , scale )
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  , 
+        const double        scale = 1   ) 
+        : Asymmetry ( name , title , a , b , scale )
       {}
       /// constructor with two variables 
       Asymmetry
       ( RooAbsReal&         a           , 
-	const double        b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ,
-	const double        scale = 1   ) 
+        const double        b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ,
+        const double        scale = 1   ) 
         : Asymmetry ( name , title , a , RooFit::RooConst ( b ) , scale )
       {}
       /// constructor with two variables 
       Asymmetry
       ( const double        a           ,
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  , 
-	const double        scale = 1   ) 
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  , 
+        const double        scale = 1   ) 
         : Asymmetry ( name , title , RooFit::RooConst ( a ) , b , scale )
       {}
       // ======================================================================
@@ -1249,31 +1249,31 @@ namespace Ostap
       /// constructor with two variables 
       Power  
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     , 
-	RooAbsReal&        b     ) ;
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        RooAbsReal&        b     ) ;
       /// constructor with two variables 
       Power
       ( RooAbsReal&         a           , 
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Power ( name , title , a , b )
       {}
       /// constructor with two variables 
       Power 
       ( RooAbsReal&         a           , 
-	const double        b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Power ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       /// constructor with two variables 
       Power 
       ( const double        a           ,
-	RooAbsReal&         b           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Power ( name , title , RooFit::RooConst ( a ) , b ) 
       {}
       // ======================================================================
@@ -1283,7 +1283,7 @@ namespace Ostap
       // copy 
       Power 
       ( const Power& right , 
-	const char* newname = 0 ) 
+        const char* newname = 0 ) 
         : TwoVars ( right , newname ) 
       {}
       // ======================================================================
@@ -1315,40 +1315,40 @@ namespace Ostap
       /// constructor with two variables 
       Abs 
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     , 
-	RooAbsReal&        b     ) ;
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        RooAbsReal&        b     ) ;
       /// constructor with two variables 
       Abs 
       ( RooAbsReal&         a           , 
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Abs ( name , title , a , b )
       {}
       /// constructor with two variables 
       Abs 
       ( RooAbsReal&         a           , 
-	const double        b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Abs ( name , title , a , RooFit::RooConst ( b ) )
       {}
       /// constructor with two variables 
       Abs
       ( const double        a           ,
-	RooAbsReal&         b           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Abs ( name , title , RooFit::RooConst ( a ) , b )
       {}
       /// constructor with one variable
       Abs
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     ,
-	const double       b = 1 )
-	: Abs ( name , title , a , RooFit::RooConst ( b ) )
+        const std::string& title , 
+        RooAbsReal&        a     ,
+        const double       b = 1 )
+        : Abs ( name , title , a , RooFit::RooConst ( b ) )
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1384,40 +1384,40 @@ namespace Ostap
       /// constructor with two variables 
       Exp 
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     , 
-	RooAbsReal&        b     ) ;
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        RooAbsReal&        b     ) ;
       /// constructor with two variables 
       Exp 
       ( RooAbsReal&         a           , 
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Exp ( name , title , a , b )
       {}
       /// constructor with two variables 
       Exp
       ( RooAbsReal&         a           , 
-	const double        b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Exp ( name , title , a , RooFit::RooConst ( b )  )
       {}
       /// constructor with two variables 
       Exp
       ( const double        a           ,
-	RooAbsReal&         b           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Exp ( name , title , RooFit::RooConst ( a ) , b  )
       {}
       /// constructor with one variable
       Exp 
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     , 
-	const double       b = 1 )
-	: Exp ( name , title , a , RooFit::RooConst ( b ) ) 
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        const double       b = 1 )
+        : Exp ( name , title , a , RooFit::RooConst ( b ) ) 
       {}
       // ======================================================================
       /// fake defautl constructor (needed for serisalization) 
@@ -1453,32 +1453,32 @@ namespace Ostap
       /// constructor with two variables 
       Log 
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     , 
-	RooAbsReal&        b     ) ;
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        RooAbsReal&        b     ) ;
       /// constructor with two variables
       Log 
       ( RooAbsReal&         a           , 
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Log  ( name , title , a , b )
       {}
       /// constructor with two variables
       Log 
       ( RooAbsReal&         a           , 
-	const double        b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Log  ( name , title , a , RooFit::RooConst ( b ) )
       {}
       /// constructor with two variables
       Log 
       ( const double        a           ,
-	RooAbsReal&         b           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
-	: Log  ( name , title , RooFit::RooConst ( a ) , b )
+        RooAbsReal&         b           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
+        : Log  ( name , title , RooFit::RooConst ( a ) , b )
       {}
       /// constructor with one variable
       Log 
@@ -1495,7 +1495,7 @@ namespace Ostap
       // copy 
       Log 
       ( const Log& right , 
-	const char* newname = 0 ) 
+        const char* newname = 0 ) 
         : TwoVars ( right , newname ) 
       {}
       // ======================================================================
@@ -1524,31 +1524,31 @@ namespace Ostap
       /// constructor with two variables 
       Log10
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     , 
-	RooAbsReal&        b     ) ;
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        RooAbsReal&        b     ) ;
       /// constructor with two variables
       Log10
       ( RooAbsReal&         a           , 
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Log10  ( name , title , a , b )
       {}
       /// constructor with two variables
       Log10
       ( RooAbsReal&         a           , 
-	const double        b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Log10  ( name , title , a , RooFit::RooConst ( b ) )
       {}
       /// constructor with two variables
       Log10
       ( const double        a           ,
-	RooAbsReal&         b           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : Log10  ( name , title , RooFit::RooConst ( a ) , b )
       {}
       /// constructor with one variable
@@ -1566,7 +1566,7 @@ namespace Ostap
       // copy 
       Log10 
       ( const Log10& right , 
-	const char* newname = 0 ) 
+        const char* newname = 0 ) 
         : TwoVars ( right , newname ) 
       {}
       // ======================================================================
@@ -2942,21 +2942,21 @@ namespace Ostap
         const std::string& title , 
         RooAbsReal&        a     , 
         RooAbsReal&        b     , 
-	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic ) ;      
+        const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic ) ;      
       /// constructor with two variables 
       Sigmoid
       ( const std::string& name         , 
         const std::string& title        , 
         RooAbsReal&        a            , 
         RooAbsReal&        b            ,
-	const std::string& sigmoid_name ) ;
+        const std::string& sigmoid_name ) ;
       /// constructor with two variables
       Sigmoid 
       ( RooAbsReal&         a           , 
         RooAbsReal&         b           ,
         const std::string&  name  = ""  , 
         const std::string&  title = ""  , 
-	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )
+        const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )
       : Sigmoid ( name , title , a , b , st )
       {}
       /// constructor with two variables
@@ -2965,7 +2965,7 @@ namespace Ostap
         const double        b           ,
         const std::string&  name  = ""  , 
         const std::string&  title = ""  , 
-	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )
+        const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )
       : Sigmoid ( name , title , a , RooFit::RooConst ( b ) , st )
       {}
       /// constructor with two variables
@@ -2974,7 +2974,7 @@ namespace Ostap
         RooAbsReal&         b           , 
         const std::string&  name  = ""  , 
         const std::string&  title = ""  , 
-	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )        
+        const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )        
       : Sigmoid ( name , title , RooFit::RooConst ( a ) , b , st )
       {}
       /// constructor with one variable
@@ -2983,7 +2983,7 @@ namespace Ostap
         const std::string& title , 
         RooAbsReal&        a     ,
         const double       b = 1 , 
-	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )        
+        const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )        
       : Sigmoid ( name , title , a , RooFit::RooConst ( b ) , st ) 
       {}
       // ======================================================================
@@ -2992,9 +2992,9 @@ namespace Ostap
       // ======================================================================
       // copy 
       Sigmoid ( const Sigmoid& right ,
-		const char* newname = 0 ) 
+                const char* newname = 0 ) 
         : TwoVars ( right , newname )
-	, m_stype ( right.m_stype   ) 
+        , m_stype ( right.m_stype   ) 
       {}
       // ======================================================================
       Sigmoid* clone ( const char* newname ) const override 
@@ -3479,31 +3479,31 @@ namespace Ostap
       /// constructor with two variables 
       MaxV 
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     , 
-	RooAbsReal&        b     ) ;
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        RooAbsReal&        b     ) ;
       /// constructor with two variables
       MaxV 
       ( RooAbsReal&         a           , 
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : MaxV ( name , title , a , b )
       {}
       /// constructor with two variables
       MaxV 
       ( RooAbsReal&         a           , 
-	const double        b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : MaxV ( name , title , a , RooFit::RooConst ( b ) )
       {}
       /// constructor with two variables
       MaxV
       ( const double        a           ,
-	RooAbsReal&         b           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : MaxV ( name , title , RooFit::RooConst ( a ) , b )
       {}
       // ======================================================================
@@ -3513,7 +3513,7 @@ namespace Ostap
       // copy 
       MaxV 
       ( const MaxV& right , 
-	const char* newname = 0 ) 
+        const char* newname = 0 ) 
         : TwoVars ( right , newname ) 
       {}
       // ======================================================================
@@ -3542,31 +3542,31 @@ namespace Ostap
       /// constructor with two variables 
       MinV 
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     , 
-	RooAbsReal&        b     ) ;
+        const std::string& title , 
+        RooAbsReal&        a     , 
+        RooAbsReal&        b     ) ;
       /// constructor with two variables
       MinV 
       ( RooAbsReal&         a           , 
-	RooAbsReal&         b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : MinV ( name , title , a , b )
       {}
       /// constructor with two variables
       MinV 
       ( RooAbsReal&         a           , 
-	const double        b           ,
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        const double        b           ,
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : MinV ( name , title , a , RooFit::RooConst ( b ) )
       {}
       /// constructor with two variables
       MinV
       ( const double        a           ,
-	RooAbsReal&         b           , 
-	const std::string&  name  = ""  , 
-	const std::string&  title = ""  ) 
+        RooAbsReal&         b           , 
+        const std::string&  name  = ""  , 
+        const std::string&  title = ""  ) 
         : MinV ( name , title , RooFit::RooConst ( a ) , b )
       {}
       // ======================================================================
@@ -3576,7 +3576,7 @@ namespace Ostap
       // copy 
       MinV 
       ( const MinV& right , 
-	const char* newname = 0 ) 
+        const char* newname = 0 ) 
         : TwoVars ( right , newname ) 
       {}
       // ======================================================================
@@ -3606,16 +3606,16 @@ namespace Ostap
       /// constructor with the name, title and variable 
       Id 
       ( const std::string& name  , 
-	const std::string& title , 
-	RooAbsReal&        a     ) ;
+        const std::string& title , 
+        RooAbsReal&        a     ) ;
       /// constructor with the name and variable 
       Id 
       ( const std::string& name  , 
-	RooAbsReal&        a     ) ;
+        RooAbsReal&        a     ) ;
       /// copy 
       Id 
       ( const Id&   right       , 
-	const char* newname = 0 ) ;
+        const char* newname = 0 ) ;
       /// destructor 
       virtual ~Id () ;
       /// clone 
@@ -3791,7 +3791,7 @@ namespace Ostap
         const std::string& title ,
         RooAbsReal&        x     ,
         RooAbsReal&        y     ,
-        Args const&...     args  ) 	
+        Args const&...     args  )      
         : NVars ( name , title , x , y )
       { this -> add ( args... ) ; }
       /// copy 
@@ -3869,7 +3869,7 @@ namespace Ostap
         const std::string& title ,
         RooAbsReal&        x     ,
         RooAbsReal&        y     ,
-        Args const&...     args  ) 	
+        Args const&...     args  )      
         : NVars ( name , title , x , y )
       { this -> add ( args... ) ; }
       /// copy 
@@ -3918,7 +3918,7 @@ namespace Ostap
         RooAbsReal&        a1    ,
         RooAbsReal&        a2    ,
         RooAbsReal&        a3    ) ;
-      // =======================================================================	  
+      // =======================================================================          
       /// constructor with four variables 
       Rank 
       ( const std::string& name  , 
@@ -3928,7 +3928,7 @@ namespace Ostap
         RooAbsReal&        a2    ,
         RooAbsReal&        a3    ,
         RooAbsReal&        a4    ) ;
-      // =======================================================================	  
+      // =======================================================================          
       /// constructor with five variables 
       Rank 
       ( const std::string& name  , 
@@ -3956,8 +3956,8 @@ namespace Ostap
       Rank 
       ( const std::string&      name  , 
         const std::string&      title ,
-	const int               rank  ,
-	const RooAbsCollection& vars  ) ;
+        const int               rank  ,
+        const RooAbsCollection& vars  ) ;
       // ========================================================================
       /// default constructor 
       Rank   () =  default ;
@@ -3965,7 +3965,7 @@ namespace Ostap
       // copy 
       Rank 
       ( const Rank& right       , 
-	const char* newname = 0 ) ;
+        const char* newname = 0 ) ;
       // ======================================================================
       Rank* clone ( const char* newname ) const override ;
       // ======================================================================
@@ -4087,17 +4087,17 @@ namespace Ostap
       /// varable location and scale 
       LocationScale
       ( const std::string&   name  ,
-	const std::string&   title ,
-	RooAbsReal&          x     ,
-	RooAbsReal&          x0    ,
-	RooAbsReal&          scale ) ;
+        const std::string&   title ,
+        RooAbsReal&          x     ,
+        RooAbsReal&          x0    ,
+        RooAbsReal&          scale ) ;
       /// constant location and scale 
       LocationScale
       ( const std::string&   name       ,
-	const std::string&   title      ,
-	RooAbsReal&          x          ,
-	const double         x0     = 0 ,
-	const double         scale  = 1 ) ;
+        const std::string&   title      ,
+        RooAbsReal&          x          ,
+        const double         x0     = 0 ,
+        const double         scale  = 1 ) ;
       /// copy 
       LocationScale 
       ( const LocationScale& right       , 
@@ -4137,21 +4137,21 @@ namespace Ostap
       /// varable location and scale 
       Moebius
       ( const std::string&   name  ,
-	const std::string&   title ,
-	RooAbsReal&          x     ,
-	RooAbsReal&          a     ,
-	RooAbsReal&          b     ,
-	RooAbsReal&          c     ,
-	RooAbsReal&          d     ) ;
+        const std::string&   title ,
+        RooAbsReal&          x     ,
+        RooAbsReal&          a     ,
+        RooAbsReal&          b     ,
+        RooAbsReal&          c     ,
+        RooAbsReal&          d     ) ;
       /// constant location and scale 
       Moebius
       ( const std::string&   name       ,
-	const std::string&   title      ,
-	RooAbsReal&          x          ,
-	const double         a      = 1 ,
-	const double         b      = 0 ,
-	const double         c      = 0 ,
-	const double         d      = 1 ) ;
+        const std::string&   title      ,
+        RooAbsReal&          x          ,
+        const double         a      = 1 ,
+        const double         b      = 0 ,
+        const double         c      = 0 ,
+        const double         d      = 1 ) ;
       /// copy 
       Moebius
       ( const Moebius&       right       , 

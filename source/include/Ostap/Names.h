@@ -32,7 +32,7 @@ namespace  Ostap
     const std::string& suffix = ""   , 
     const bool         random = true ) ;
   // ==========================================================================
-  /** Generate some valid (ranodm) name
+  /** Generate some valid (random) name
    *  @param prefix (INPUT) prefix 
    *  @param name   (INPUT) the base name 
    *  @param name   (INPUT) the nase name 

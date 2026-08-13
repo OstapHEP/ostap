@@ -108,9 +108,9 @@ Ostap::makeFormula
     //                             dependents          , 
     //                             false             ) ) ;
     ptr = std::make_unique<RooFormula> ( vname     .c_str () ,                                                        
-					 expression.c_str () , 
-					 dependents          , 
-					 false             ) ;
+                                         expression.c_str () , 
+                                         dependents          , 
+                                         false             ) ;
   }
   catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
   catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
@@ -133,10 +133,10 @@ Ostap::makeFormula
     //                                dependents          , 
     //                                false             ) ) ;
     ptr = std::make_unique<RooFormulaVar> ( vname     .c_str () ,                                                        
-					    expression.c_str () , 
-					    expression.c_str () , 
-					    dependents          , 
-					    false               ) ;
+                                            expression.c_str () , 
+                                            expression.c_str () , 
+                                            dependents          , 
+                                            false               ) ;
   }
   catch ( std::invalid_argument& /* e1 */ ){ return nullptr ;  }
   catch ( std::runtime_error&    /* e2 */ ){ return nullptr ;  }
@@ -151,10 +151,10 @@ Ostap::makeFormula
   //
   std::unique_ptr<Ostap::FormulaVar> result
     ( new Ostap::FormulaVar ( name       , 
-			      title      , 
-			      expression , 
-			      used       , 
-			      true       ) ) ;
+                              title      , 
+                              expression , 
+                              used       , 
+                              true       ) ) ;
   //
   if ( !result || !result->ok() ) { return nullptr ; }
   //
@@ -213,17 +213,17 @@ Ostap::makeFormula
   if ( allow_null  && !data                         ) { return nullptr ; } // RETURN
   //
   Ostap::Assert ( nullptr != data                       ,  
-		  "Invalid RooAbsData"                  , 
-		  "Ostap::FormulaVar::makeFormula"      , 
-		  INVALID_DATA , __FILE__ , __LINE__    ) ;
+                  "Invalid RooAbsData"                  , 
+                  "Ostap::FormulaVar::makeFormula"      , 
+                  INVALID_DATA , __FILE__ , __LINE__    ) ;
   //
   const RooArgSet*  aset = data -> get() ;
   if ( allow_null && nullptr == aset ) { return nullptr ; }
   //
   Ostap::Assert ( nullptr != aset                       ,  
-		  "Invalid varset"                      , 
-		  "Ostap::FormulaVar::makeFormula"      , 
-		  INVALID_ARGSET , __FILE__ , __LINE__  ) ;
+                  "Invalid varset"                      , 
+                  "Ostap::FormulaVar::makeFormula"      , 
+                  INVALID_ARGSET , __FILE__ , __LINE__  ) ;
   // convert set to list 
   const RooArgList alst { *aset } ;
   // make formula 
@@ -231,9 +231,9 @@ Ostap::makeFormula
   if ( allow_null && ( !result || !result->ok () ) ) { return nullptr ; } 
   //
   Ostap::Assert ( result && result->ok ()               ,  
-		  "Invalid formula: " + expression      , 
-		  "Ostap::FormulaVar::makeFormula"      , 
-		  INVALID_FORMULA , __FILE__ , __LINE__ ) ;
+                  "Invalid formula: " + expression      , 
+                  "Ostap::FormulaVar::makeFormula"      , 
+                  INVALID_FORMULA , __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -381,7 +381,7 @@ Ostap::FormulaVar::FormulaVar
 ( const std::string& name       , 
   const std::string& expression , 
   const RooArgList & dependents ,
-  const bool 	       check      )
+  const bool           check      )
   : FormulaVar ( name ,  expression , expression ,  dependents , check )
 {}
 // ============================================================================
@@ -426,8 +426,8 @@ Ostap::FormulaVar::~FormulaVar(){}
 // ============================================================================
 Ostap::FormulaVar::FormulaVar()
   : FormulaVar ( Ostap::tmp_name ( "formula_" , "1" ) ,
-		 "1" ,
-		 RooArgList() ) 
+                 "1" ,
+                 RooArgList() ) 
 {}    
 // ============================================================================
 // get true formula expression 
