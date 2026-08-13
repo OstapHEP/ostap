@@ -530,9 +530,9 @@ def frame_prescale ( frame , prescale , name = '' ) :
     if isinstance   ( frame  , ROOT.TTree ) : node = DataFrame ( frame )
     else                                    : node = as_rnode  ( frame )
 
-    if   isinstance ( prescale , None          ) : return node
-    elif isinstance ( prescale , True          ) : return node
-    elif isinstance ( prescale , False         ) : return node    
+    if   prescale is None  : return node
+    elif prescale is True  : return node
+    elif prescale is False : return node    
     elif isinstance ( prescale , integer_types ) and 2 <= prescale :
 
         name = name if name else 'PRESCALE_%d' % prescale        

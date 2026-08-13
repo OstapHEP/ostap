@@ -165,7 +165,7 @@ class Memory(object):
     
     >>> delta = M.delta    
     """
-    _logger  = logger     
+    _logger  = logger.info      
     
     def __init__  ( self ,
                     name   = ''   , * , 
@@ -265,7 +265,7 @@ memory = virtualMemory  ## ditto
 
 # =============================================================================
 ## format for memory prints 
-PEAK_MEMORY_FORMAT = 'Peak memory %%-20s %s=%%.3fGB %s=%%.3fGB' % ( peak_symbol , sum_symbol )
+PEAK_MEMORY_FORMAT = 'Peak memory %%-20s %s=%%.3fGB %s=%%.3fGB' % ( peak_ram , sum_symbol )
 # =============================================================================
 ## @class PeakMemory
 #  Context manager reprting the peak memory consumption
@@ -280,7 +280,7 @@ class PeakMemory ( object ) :
     >>> with PeakMemory ( "my code block" ) :
     ...  <some code here> 
     """
-    _logger  = logger     
+    _logger  = logger.info
     
     def __init__ ( self ,
                    name     = ''                 , * ,

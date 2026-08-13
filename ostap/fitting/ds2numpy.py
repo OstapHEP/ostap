@@ -270,7 +270,7 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         nmax   = max ( 1000 , nevts // 10 , 50000 // nvars )
         
         ## get data in chunks/batches 
-        for first, ilast in progress_bar ( split_range ( 0 , nevts , nmax ) , silent = silent , description = 'Chunks:' ) :
+        for first, last in progress_bar ( split_range ( 0 , nevts , nmax ) , silent = silent , description = 'Chunks:' ) :
             
             num   = last - first            
             wget  = False 
@@ -318,11 +318,6 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         if delsource :
             source.reset()
             del source
-
-        if not cuts and not cut_range :
-            assert len ( data ) == len ( dataset ) , "Mismatch in input/output lengths!"
-        else :
-            assert len ( data ) <= len ( dataset ) , "Mismatch in input/output lengths!"
 
         del    funcs
         del    formulas
