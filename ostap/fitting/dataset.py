@@ -321,7 +321,6 @@ def _rad_contains_ ( self , aname ) :
 ## merge/append two datasets into a single one
 # ATTENTION: two datasets must have *compatible* structure:
 # - both             weighted or non-weighted 
-# - both non-Poisson-weighted or non-weighted 
 # - ds2 must contain all vars from ds1
 # - only variables in ds1 are copied from ds2 
 # @code
@@ -333,7 +332,6 @@ def _rad_iadd_ ( ds1 , ds2 ) :
     """ Merge/append two datasets into a single one
     ATTENTION: two datasets must have compatible structure:
     - both             weighted or non-weighted
-    - both non-Poisson-weighted or non-weighted 
     - either weighted or non-weighted (simultaneously)
     - either no-Poisson-weighted or non-weighted (simultaneously)
     - ds2 must containt all vars from ds1
@@ -341,7 +339,7 @@ def _rad_iadd_ ( ds1 , ds2 ) :
     >>> dset1  = ...
     >>> dset2  = ...
     >>> dset1 += dset2
-    """    
+    """
     if isinstance ( ds1 , ROOT.RooDataSet ) and isinstance ( ds2 , ROOT.RooDataSet ) :
         ##
         w1 = ds1.isWeighted()
@@ -351,13 +349,6 @@ def _rad_iadd_ ( ds1 , ds2 ) :
         elif w1        : return NotImplemented 
         elif w2        : return NotImplemented 
         ##        
-        npw1 = w1 and ds1.isNonPoissonWeighted ()
-        npw2 = w2 and ds2.isNonPoissonWeighted ()
-        ##
-        if   npw1 and npw2 : pass
-        elif npw1          : return NotImplemented 
-        elif npw2          : return NotImplemented 
-        ##
         vs1 = set ( v.name for v in ds1.get() )
         vs2 = set ( v.name for v in ds2.get() )
         ##
@@ -397,23 +388,16 @@ def _rad_add_ ( ds1 , ds2 ) :
         elif w1           : return NotImplemented 
         elif w2           : return NotImplemented 
         ##
-        npw1 = ds1.isNonPoissonWeighted()
-        npw2 = ds2.isNonPoissonWeighted()
-        ##
-        if   npw1 and npw2 : pass
-        elif npw1          : return NotImplemented 
-        elif npw2          : return NotImplemented 
-        ## 
         vs1 = set ( v.name for v in ds1.get() )
         vs2 = set ( v.name for v in ds2.get() )
         ##
         if vs1 != vs2  : return NotImplemented
-        ##        
+        ##
         result = ds1.emptyClone( dsID() ) 
         result.append ( ds1 )
         result.append ( ds2 )
         return result
-    
+
     return NotImplemented
 
 # =============================================================================
@@ -435,13 +419,6 @@ def _rad_imul_ ( ds1 , ds2 ) :
         elif w1           : return NotImplemented 
         elif w2           : return NotImplemented 
         ##
-        npw1 = ds1.isNonPoissonWeighted()
-        npw2 = ds2.isNonPoissonWeighted()
-        ##
-        if   npw1 and npw2 : pass
-        elif npw1          : return NotImplemented 
-        elif npw2          : return NotImplemented 
-        ## 
         ds1.merge ( ds2 )
         return ds1
     
@@ -475,13 +452,6 @@ def _rad_mul_ ( ds1 , ds2 ) :
         elif w1           : return NotImplemented 
         elif w2           : return NotImplemented 
         ##
-        npw1 = ds1.isNonPoissonWeighted()
-        npw2 = ds2.isNonPoissonWeighted()
-        ##
-        if   npw1 and npw2 : pass
-        elif npw1          : return NotImplemented 
-        elif npw2          : return NotImplemented 
-        ##         
         result = ds1.emptyClone( dsID() )
         result.append ( ds1 )
         result.merge  ( ds2 )
