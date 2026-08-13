@@ -18,8 +18,7 @@ __all__     = (
     ##
    )
 # =============================================================================
-from   timeit               import default_timer as _timer 
-from   ostap.logger.symbols import clock         as clock_symbol
+from   ostap.logger.symbols import clock as clock_symbol
 import time 
 # =============================================================================
 from   ostap.logger.logger  import getLogger
@@ -91,19 +90,18 @@ class Timer(object):
     def __init__  ( self                          ,
                     name   = ''                   ,
                     logger = ''                   ,
-                    format = 'Timing %-18s %.3fs' ,
+                    format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' ,
                     start  = ''                   ) : 
         
         self.__name   = name
 
-        if   logger and isinstance ( logger , _logger_t ) :
-            self.logger = logger.info
-        elif logger and callable   ( logger ) :
-            self.logger = logger
-        elif logger is None :
-            self.logger = None 
-        else :
-            self.logger = self.__logger 
+        if   logger and isinstance ( logger , _logger_t ) : self.logger = logger.info
+        elif logger and callable   ( logger )             : self.logger = logger
+        elif logger is None                               : self.logger = None 
+        else                                              : self.logger = self.__logger 
+
+        
+        if not format : format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%'
 
         self.format        = format
         
@@ -111,57 +109,103 @@ class Timer(object):
         elif name and not start : self.start_message = 'Start  %s' % name
         else                    : self.start_message = ''
         
-        self.__start = -100000
-        self.__stop  = -100000
-        self.__delta = -100000
-
+        self.__start_wall = 0
+        self.__start_cpu  = 0
+        self.__delta_wall = 0
+        self.__delta_cpu  = 0
+        
     # ==========================================================================
     ## context manager: ENTER 
     def __enter__ ( self ) :
         """ Context manager: ENTER
         """
-        if self.logger and self.start_message :
+        if self.start_message and self.logger :
             self.logger ( clock_symbol + self.start_message )
-        self.__delta = 0 
-        self.__start = _timer ()
+            
+        self.__delta_wall = 0
+        
+        self.__delta_cpu  = 0        
+        self.__start_wall = time.perf_counter ()
+        self.__start_cpu  = time.process_time () 
+        
         return self
     
     # ==========================================================================
     ## context manager: EXIT 
     def __exit__  ( self, *_ ) :
         """ Context manager: EXIT
-        """        
-        self.__stop  = _timer ()
-        self.__delta = self.__stop - self.__start
+        """
+
+        delta_wall = time.perf_counter () - self.__start_wall
+        delta_cpu  = time.process_time () - self.__start_cpu
         
-        if self.logger :            
-            try :
-                message = self.format       % ( self.__name , self.__delta ) 
-            except TypeError :
-                message = 'Timing %-18s %s' % ( self.__name , self.__delta )
-                
+        # Calculate CPU utilization (can exceed 100% with multi-threading)
+        cpu_util = delta_cpu / delta_wall * 100 if 0 < delta_wall else 0 
+
+        self.__delta_wall = delta_wall 
+        self.__delta_cpu  = delta_cpu
+        
+
+        # =====================================================================
+        if self.logger : # ====================================================
+            # =================================================================
+            try : # ===========================================================
+                # =============================================================
+                message = self.format % ( self.__name , delta_wall , delta_cpu , cpu_util )
+                # =============================================================
+            except TypeError : # ==============================================
+                # =============================================================
+                format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' 
+                message = format % ( self.__name , delta_wall , delta_cpu , cpu_util  )
+
+            ## print it! 
             self.logger ( clock_symbol + message )
             
     @property
     def name ( self ) :
         """`name' : Timer name"""
         return self.__name
+
+    @property
+    def start_cpu  ( selt ) :
+        """`start_cpu`: start CPU timer"""
+        return self.__start_cpu
     
     @property
-    def start ( self ):
-        """`start' : Timer start"""
-        return self._start
+    def start_wall ( selt ) :
+        """`start_wall`: start WALL timer"""
+        return self.__start_wall 
     
     @property
-    def stop  ( self ):
-        """`stop' : Timer stop"""
-        return self.__stop
+    def delta_cpu ( self ) :
+        """`delta_cpu' : stop - start for CPU timer """
+        return max ( 0 , self.__delta_cpu ) 
     
     @property
-    def delta ( self ) :
-        """`delta' : stop - start for Timer"""
-        return self.__delta
-    
+    def delta_wall ( self ) :
+        """`delta_wall' : stop - start for WALL timer """
+        return max ( 0 , self.__delta_wall ) 
+
+    @property
+    def start ( self ) :
+        """`start` : start Timer(s)"""
+        return 0.5 * ( self.__start_wall + self.__start__cpu )
+
+    @property
+    def delta  ( self ) :
+        """`delta` : stop - start for CPU timer"""
+        return self.delta_cpu 
+
+    # =========================================================================
+    ## Calculate CPU utilization [%] (can exceed 100% with multi-threading)
+    @property
+    def cpu_utilization ( self ) :
+        """`cpu_utlization` : CPU utilization [%] (can exceed 100% with multi-threading)
+        """
+        if self.__delta_wall <= 0 : return 0
+        cpu_util = self.__delta_cpu / self.__delta_wall * 100
+        return cpu_util
+
 # =============================================================================
 ## Simple context manager to measure the time
 #
@@ -179,7 +223,10 @@ class Timer(object):
 #     ... at the exit it prints the clock counts 
 #  print t.delta 
 #  @endcode
-def timing ( name = '' , logger = None , format = 'Timing %-18s %.3fs' , **kwargs  ) :
+def timing ( name   = ''   , * , 
+             logger = None ,
+             format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' , 
+             **kwargs  ) :
     """ Simple context manager to measure the clock counts 
     
     >>> with timing () :
