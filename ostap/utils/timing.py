@@ -29,6 +29,9 @@ del getLogger
 # =============================================================================
 clock_symbol = clock_symbol + ' ' if clock_symbol else '' 
 # =============================================================================
+## format for timing prints 
+TIMING_FORMAT = 'Timing %-20s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' 
+# =============================================================================
 ## @class Timer
 #  Simple context manager to measure the time 
 #  @code
@@ -87,10 +90,10 @@ class Timer(object):
     """
     __logger = logger.info
     ##
-    def __init__  ( self                          ,
-                    name   = ''                   ,
-                    logger = ''                   ,
-                    format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' ,
+    def __init__  ( self                   ,
+                    name   = ''            , * , 
+                    logger = ''            ,
+                    format = TIMING_FORMAT ,
                     start  = ''                   ) : 
         
         self.__name   = name
@@ -101,8 +104,8 @@ class Timer(object):
         else                                              : self.logger = self.__logger 
 
         
-        if not format : format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%'
-
+        if not format : format = TIMING_FORMAT 
+        
         self.format        = format
         
         if   start              : self.start_message = start
@@ -155,7 +158,7 @@ class Timer(object):
                 # =============================================================
             except TypeError : # ==============================================
                 # =============================================================
-                format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' 
+                format  = TIMING_FORMAT 
                 message = format % ( self.__name , delta_wall , delta_cpu , cpu_util  )
 
             ## print it! 
@@ -223,8 +226,8 @@ class Timer(object):
 #     ... at the exit it prints the clock counts 
 #  print t.delta 
 #  @endcode
-def timing ( name   = ''   , * , 
-             logger = None ,
+def timing ( name   = ''   , 
+             logger = None , * , 
              format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' , 
              **kwargs  ) :
     """ Simple context manager to measure the clock counts 
@@ -239,7 +242,7 @@ def timing ( name   = ''   , * ,
     
     >>> print c.delta
     """
-    return Timer ( name , logger , format , **kwargs ) 
+    return Timer ( name = name , logger = logger , format = format , **kwargs ) 
 
 ## ditto 
 timer = timing   # ditto
