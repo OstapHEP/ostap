@@ -82,6 +82,7 @@ __all__     = (
     ##
     'data_decorate'        , ## technical function to decorate the classes
     'expression_types'     , ## valid types for expressions/cuts/weights
+    'check_prescale'       , ## check the prescale factor
 )
 # =============================================================================
 from   ostap.math.math_base            import ( isequal     , iszero     ,
@@ -115,6 +116,30 @@ LARGE   = 50000    ## allow frames or parallel for LARGE datasets
 MIN_ENTRIES_FOR_FRAME    = 100000
 MIN_ENTRIES_FOR_PARALLEL = 200000
 MIN_FILES_FOR_PARALLEL   = 2
+# =============================================================================
+## Valid prescale ?
+#  - None
+#  - float:  0 < prescale <= 1.0
+#  - int:    1 <= prescale
+#  - None,True, False : no prescale 
+def check_prescale ( prescale ) :
+    """ Valid prescale ?
+    - None
+    - float:  0 < prescale <= 1.0
+    - int:    1 <= prescale 
+    - None,True, False : no prescale 
+    """
+    if   prescale is None          : return True
+    elif prescale is True          : return True
+    elif prescale is False         : return True    
+    elif isinstance ( prescale , integer_types ) :
+        if prescale < 1            : raise ValueError ( "Invalid value of `prescale` : %d" % int      ( prescale ) )
+    elif isinstance ( prescale , num_types     ) :
+        if not 0 < prescale <= 1.0 : raise ValueError ( "Invalid value of `prescale` : %g" % float    ( prescale ) )
+    else                           : raise TypeError  ( "Invalid type  of `prescale` : %s" % typename ( prescale ) )
+    # 
+    return True 
+    
 # =============================================================================
 ## Good for provcssing via frames?
 def good_for_frame    ( data       ,
@@ -2307,6 +2332,7 @@ def data_slice ( data        ,
                  first        = FIRST_ENTRY ,
                  last         =  LAST_ENTRY ,                                                                 
                  cut_range    = ""    ,
+                 prescale     = None  , ## addtional prescale of data 
                  weight_total = True  , ## final weigth is a product of internal weight and weigth from (non-zero) cuts 
                  structured   = True  ,
                  transpose    = True  ,
@@ -2317,9 +2343,8 @@ def data_slice ( data        ,
     >>> data = ...
     >>> arr , weight = data_slice ( data , "x,y,x" , "pt>1" ) 
     """
-
-    ## (1) decode expressions & cuts
-    var_lst , cuts, _  = vars_and_cuts ( expressions , cuts )
+    ## (0) check for prescale
+    check_prescale ( prescale )
     
     ## (2) adjust first/last 
     first , last = evt_range ( data , first , last )
@@ -2338,6 +2363,7 @@ def data_slice ( data        ,
                           last         = last         ,
                           weight_total = weight_total , 
                           cut_range    = cut_range    ,
+                          prescale     = prescale     , 
                           structured   = structured   ,
                           transpose    = transpose    ) 
 
@@ -2346,6 +2372,7 @@ def data_slice ( data        ,
         return F.frame_slice ( data                    ,
                                expression              ,
                                cuts       = cuts       ,
+                               prescale   = prescale   , 
                                structured = structured ,
                                transpose  = transpose  , 
                                progress   = prorgess   )
@@ -2357,6 +2384,7 @@ def data_slice ( data        ,
                                 cuts        = cuts       ,
                                 first       = first      ,
                                 last        = last       ,
+                                prescale    = prescale   , 
                                 structured  = structured ,
                                 transpose   = transpose  , 
                                 progress    = prorgess   ,
@@ -2369,7 +2397,8 @@ def data_slice ( data        ,
                         expressions ,
                         cuts        = cuts       ,
                         first       = first      ,
-                        last        = last       , 
+                        last        = last       ,
+                        prescale    = prescale   , 
                         structured  = structured ,
                         transpose   = transpose  , 
                         progress    = progress   , 
