@@ -28,6 +28,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Uniformity.h"
 #include "Ostap/Power.h"
 #include "Ostap/UStat.h"
 #include "Ostap/Iterator.h"
@@ -84,11 +85,12 @@ namespace
  */
 // ============================================================================
 Ostap::StatusCode Ostap::UStat::calculate
-( const RooAbsPdf&  pdf   , 
-  const RooDataSet& data  ,  
-  double&           tStat ,
-  TH1*              hist  ,
-  const RooArgSet*  args  ) 
+( const RooAbsPdf&               pdf   , 
+  const RooDataSet&              data  ,  
+  double&                        tStat ,
+  TH1*                           hist  ,
+  const RooArgSet*               args  , 
+  const Ostap::UStat::Uniformity algo  )  
 {
   /// make a fake progress bar 
   Ostap::Utils::ProgressConf progress { 0 } ;
@@ -97,7 +99,8 @@ Ostap::StatusCode Ostap::UStat::calculate
                      data     ,
                      tStat    ,
                      hist     ,
-                     args     ) ;                  
+                     args     ,
+                     algo     ) ;                  
 }
 // ============================================================================
 /*  calculate U-statistics 
@@ -114,11 +117,17 @@ Ostap::StatusCode Ostap::UStat::calculate
   const RooDataSet&                 data     ,  
   double&                           tStat    ,
   TH1*                              hist     ,
-  const RooArgSet*                  args     ) 
+  const RooArgSet*                  args     , 
+  const Ostap::UStat::Uniformity    algo     )  
 {
   //
   if ( nullptr == args ) { args = pdf.getObservables ( data ) ; }
   if ( nullptr == args ) { return INVALID_OBSERVABLES ; }
+  //
+  Ostap::Assert ( Uniformity::First <= algo && algo <= Uniformity::Last ,
+                  "Unvalid algorithm to test uniformity"    ,
+                  "Ostap::UStat::calculate"                 ,
+                  INVALID_PARAMETER   , __FILE__ , __LINE__ ) ; 
   //
   RooArgSet rargs {} ;
   for ( auto *a : *args )
@@ -141,7 +150,7 @@ Ostap::StatusCode Ostap::UStat::calculate
   const unsigned int num    = data.numEntries () ;
   //
   typedef std::vector<double> StatU ;
-  StatU ustat ( num , 0.0 ) ; 
+  StatU uvalues ( num , 0.0 ) ; 
   //
   const RooArgSet* event_x = 0 ;
   const RooArgSet* event_y = 0 ;
@@ -203,35 +212,30 @@ Ostap::StatusCode Ostap::UStat::calculate
     //
     const double value = std::exp ( - vol * num * pdfValue ) ;
     //
-    if ( hist ) { hist -> Fill ( value ) ; }
-    //
-    ustat [ i ] = value ; 
+    uvalues [ i ] = value ; 
     //
   }
   //
+  if ( hist ) { hist -> FillN ( uvalues.size() , uvalues.data() , nullptr ) ; }
   //
-  // Calculate Cramér–von Mises statistic (W^2) from U-distribution
-  //
-  std::stable_sort(ustat.begin(), ustat.end());
-  //
-  const double nD = ustat.size();
-  double tS = 0.0;
-  //
-  for ( auto u = ustat.begin() ; ustat.end() != u ; ++u ) 
+  switch ( algo )
   {
-    const double i = static_cast<double>(u - ustat.begin() + 1 ) ;
-    // e = (2i - 1) / (2N) - midpoint of the i-th step
-    const double e = ( 2.0 * i - 1.0 ) / ( 2.0 * nD ) ;
-    const double d = ( *u ) - e;
-    //
-    tS += d * d;
+  case Uniformity::Greenwood       :
+    tStat = Ostap::Math::greenwood_t_value          ( uvalues ) ; break ;
+  case Uniformity::CramerVonMises  : 
+    tStat = Ostap::Math::cramer_von_mises_t_value   ( uvalues ) ; break ; 
+  case Uniformity::KolmogorovSmirnov :
+    tStat = Ostap::Math::kolmogorov_smirnov_t_value ( uvalues ) ; break ;
+  case Uniformity::LogarithmicTail :
+    tStat = Ostap::Math::logarithmic_tail_t_value   ( uvalues ) ; break ; 
+  default :
+    tStat = Ostap::Math::greenwood_t_value          ( uvalues ) ; break ;
   }
   // 
-  // Add boundary shift correction term 1 / (12 * N)
-  tStat = tS + 1.0 / (12.0 * nD);
-  // 
- return Ostap::StatusCode::SUCCESS ;
+  return Ostap::StatusCode::SUCCESS ;
 }
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

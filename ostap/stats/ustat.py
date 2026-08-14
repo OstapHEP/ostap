@@ -64,8 +64,9 @@ __all__     = (
     "USTAT" ,  ## the same but using  a common GoF interface 
     )
 # ============================================================================
-from   ostap.core.ostap_types   import integer_types, num_types  
+from   ostap.core.ostap_types   import integer_types, num_types, string_types   
 from   ostap.core.core          import Ostap, hID
+from    ostap.utils.cidict      import cidict_fun 
 from   ostap.utils.config       import Config 
 from   ostap.stats.counters     import EffCounter
 from   ostap.stats.gof          import AGoF
@@ -92,14 +93,29 @@ else                       : logger = getLogger ( __name__      )
 #   @see Analysis::UStat
 #   @see Analysis::UStat::calculate
 #   @date 2011-09-21
-def uCalc ( pdf            ,
-            data           ,
-            args   = None  , 
-            histo  = None  ,
-            silent = False )  :
+def uCalc ( pdf       ,
+            data      , *           , 
+            args      = None        , 
+            histo     = None        ,
+            silent    = False       , 
+            algorithm = 'Greenwood' ) :
     """ Calculate U-statistics 
     """
+    if isinstance ( algorithm , string_types ) :
+        algo  = cidict_fun ( algorithm )
+        if   'greenwood'         == algo : algo = Ostap.UStat.Uniformity.Greenwood
+        elif 'cramervonmises'    == algo : algo = Ostap.UStat.Uniformity.CramerVonMises
+        elif 'logarithmictail'   == algo : algo = Ostap.UStat.Uniformity.LogarithmicTail
+        elif 'kolmogorovsmirnov' == algo : algo = Ostap.UStat.Uniformity.KolmogorovSmirnov
+        else : raise ValueError ( "Invaild `algorithm` value: %s" % algorithm )
+        algorithm = algo
+        
+    if not isinstance ( algorithm , integer_types ) :
+        raise TypeError  ( "Invalid `algorithm` type: %s" % typename ( algorithm ) )
     
+    if not Ostap.UStat.Uniformity.First <= algorithm <= Ostap.UStat.Uniformity.Last :
+        raise ValueError ( "Invalid `algorithm` value: %s" % algorithm )
+
     if not isinstance ( pdf , ROOT.RooAbsPdf ) or not pdf :
         from   ostap.fitting.pdfbasic import APDF1 
         assert pdf and isinstance ( pdf , APDF1 ) , "Invalid type of `pdf'!"
@@ -111,21 +127,22 @@ def uCalc ( pdf            ,
     ##
     tStat = ctypes.c_double ( -1 )
     if silent : 
-        sc = Ostap.UStat.calculate ( pdf   ,
-                                     data  ,
-                                     tStat ,
-                                     histo ,
-                                     args  )
+        sc = Ostap.UStat.calculate ( pdf       ,
+                                     data      ,
+                                     tStat     ,
+                                     histo     ,
+                                     args      ,
+                                     algorithm )
     else :
         from ostap.utils.progress_conf import progress_conf
         sc = Ostap.UStat.calculate ( progress_conf ( description = 'Entries:') ,
-                                     pdf              ,
-                                     data             ,
-                                     tStat            ,
-                                     histo            ,
-                                     args             )
+                                     pdf       ,
+                                     data      ,
+                                     tStat     ,
+                                     histo     ,
+                                     args      ,
+                                     algorithm )
     
-        
     if sc.isFailure() : logger.error ( "Error from Ostap::UStat::calculate %s" % sc )
 
     if not histo : histo = None 
@@ -156,11 +173,12 @@ def uCalc ( pdf            ,
 #   @param data   (input) dataset 
 #   @param bins   (input) number  of bins in histogram 
 #   @param silent (input) keep the silence 
-def uPlot ( pdf            ,
-            data           ,
-            histo  = None  ,
-            args   = None  ,
-            silent = False ) :
+def uPlot ( pdf       ,
+            data      , * , 
+            histo     = None        ,
+            args      = None        ,
+            silent    = False       , 
+            algorithm = 'Greenwood' ) :
     """ Make the plot of U-statistics 
     
     >>> pdf  = ...               ## pdf
@@ -198,10 +216,11 @@ def uPlot ( pdf            ,
     histo.SetMinimum ( 0 )
     tStat , hh = uCalc ( pdf       ,
                          data      ,
-                         args      ,
-                         histo     ,
-                         silent    )    
-
+                         args      =  args     ,
+                         histo     = histo     ,
+                         silent    = silent    ,
+                         algorithm = algorithm )    
+    
     res  = histo.Fit         ( 'pol0' , 'SLQ0+' )
     func = histo.GetFunction ( 'pol0' )
     if func :
@@ -218,29 +237,35 @@ def uPlot ( pdf            ,
 #  data = ...
 #  t_value , p_value , histo = uToys ( pdf , data , nToys = 1000 )
 #  @endcode 
-def uToys ( pdf            ,
-            data           ,
-            nToys  = 1000  ,
-            histo  = None  , 
-            args   = None  ,
-            silent = False ,
-            sample = True  ) :
+def uToys ( pdf       ,
+            data      , * , 
+            nToys     = 1000        ,
+            histo     = None        , 
+            args      = None        ,
+            silent    = False       ,
+            sample    = True        ,
+            algorithm = 'Greenwood' ) :
     """ Get p-value for GoF using toys
     >>> pdf  = ...
     >>> data = ...
     >>> t_value , p_value , histo = uToys ( pdf , data , nToys = 1000 )
     """
-    t_value, histo, _ = uPlot ( pdf , data , histo = histo , args = args , silent = silent )
-
+    t_value, histo, _ = uPlot ( pdf       ,
+                                data      ,
+                                histo     = histo     ,
+                                args      = args      ,
+                                silent    = silent    ,
+                                algorithm = algorithm )
+    
     N       = len ( data )
     counter = EffCounter()
     
     for i in progress_bar ( nToys , silent = silent , description = 'Toys: ' ) :
         
-        ds = pdf.generate ( N , sample = sample )
-        ti, _ = uCalc ( pdf , ds , silent = True )
+        ds       = pdf.generate ( N , sample = sample )
+        ti , _   = uCalc ( pdf , ds , silent = True , algorithm = algorithm )
         counter += bool ( t_value < ti  )
-
+    
         if isinstance ( ds , ROOT.RooDataSet ) :
             ROOT.SetOwnership ( ds ,True ) 
             
@@ -266,13 +291,14 @@ class USTAT(AGoF,Config) :
     - see http://arxiv.org/abs/arXiv:1003.1768
     - see `Ostap.UStat`
     """
-    def __init__ ( self             ,
-                   histo    = None  ,
-                   nToys    = 1000  ,
-                   sample   = False ,
-                   parallel = False , 
-                   silent   = False ,
-                   progress = True  ) :
+    def __init__ ( self             , * , 
+                   histo     = None  ,
+                   nToys     = 1000  ,
+                   sample    = False ,
+                   parallel  = False , 
+                   silent    = False ,
+                   progress  = True  ,
+                   algorithm = "Greenwood" ) :
         
         self.__sample   = True if sample else False 
         self.__histo    = None 
@@ -285,15 +311,14 @@ class USTAT(AGoF,Config) :
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')            
             self.__parallel = False
 
-        self.__pvalue  = None
-        self.__tvalue  = None
-        self.__ecdf    = None
-        self.__counter = None
-
+        self.__pvalue    = None
+        self.__tvalue    = None
+        self.__ecdf      = None
+        self.__counter   = None
+        self.__algorithm = algorithm
+        
         Config.__init__ ( self , silent = silent or progress ) 
 
-        print ( 'USTAT:', self.silent )
-        
     ## Are weights supported by this GoF estimator?
     @property 
     def weights_supported ( self ) :
@@ -307,12 +332,13 @@ class USTAT(AGoF,Config) :
     def config ( self ) :
         conf = {}
         conf.update ( super().config )
-        conf [ 'nToys'    ] = self.__nToys   
-        conf [ 'sample'   ] = self.__sample  
-        conf [ 'parallel' ] = self.__parallel
-        conf [ 'sample'   ] = self.__sample  
-        conf [ 'histo'    ] = self.__histo
-        conf [ 'progress' ] = self.__progress 
+        conf [ 'nToys'     ] = self.__nToys   
+        conf [ 'sample'    ] = self.__sample  
+        conf [ 'parallel'  ] = self.__parallel
+        conf [ 'sample'    ] = self.__sample  
+        conf [ 'histo'     ] = self.__histo
+        conf [ 'progress'  ] = self.__progress 
+        conf [ 'algorithm' ] = self.__algorithm
         return conf
     
     # =========================================================================
@@ -351,10 +377,11 @@ class USTAT(AGoF,Config) :
             "Data is weighted but weights are not supported %s" % ( typename ( self ) )
 
         ## get t-value 
-        t_value , histo , _ = uPlot ( pdf  ,
-                                      data , 
-                                      histo  = self.__bins , 
-                                      silent = self.silent or self.progress ) 
+        t_value , histo , _ = uPlot ( pdf       ,
+                                      data      , 
+                                      histo     = self.__bins , 
+                                      silent    = self.silent or self.progress ,
+                                      algorithm = self.algorithm ) 
 
         if histo and not self.__histo :
             self.__histo = histo.clone()
@@ -428,6 +455,11 @@ class USTAT(AGoF,Config) :
     def parallel ( self ) :
         """`parallel` : parallel processing where/when/if possible?"""
         return self.__parallel
+
+    @property
+    def algorithm( self )  :
+        """`algorithm` : algorithm to test uniformity of u-values"""
+        return self.__algorithm
 
     @property
     def ecdf ( self ) :

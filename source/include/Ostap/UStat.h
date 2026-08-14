@@ -15,6 +15,7 @@ class RooDataSet ;
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
+#include "Ostap/Uniformity.h"
 // ============================================================================
 // Forward declarations 
 // ============================================================================
@@ -30,6 +31,21 @@ namespace Ostap
   class UStat 
   {
     // ========================================================================
+  public :
+    // ========================================================================
+    /// the uniformity criterion
+    enum class Uniformity 
+    {
+      //
+      Greenwood                , // the most suitable for DNN/uStat ,
+      CramerVonMises           , // classic 
+      KolmogorovSmirnov        , // classic 
+      LogarithmicTail          , // the most CPU efficient - no sorting involved 
+      //
+      First = Greenwood       , 
+      Last  = LogarithmicTail ,  
+    } ;         
+    // ========================================================================
   public: 
     // ========================================================================
     /** calculate U-statistics 
@@ -40,11 +56,12 @@ namespace Ostap
      *  @param args  (input)  the arguments
      */
     static Ostap::StatusCode calculate
-    ( const RooAbsPdf&  pdf             , 
-      const RooDataSet& data            ,  
-      double&           tStat           ,
-      TH1*              hist  = nullptr ,
-      const RooArgSet*  args  = nullptr ) ;
+    ( const RooAbsPdf&  pdf               , 
+      const RooDataSet& data              ,  
+      double&           tStat             ,
+      TH1*              hist  = nullptr   ,
+      const RooArgSet*  args  = nullptr   ,
+      const Uniformity  algo  = Uniformity::Greenwood ) ;
     // ========================================================================
     /** calculate U-statistics 
      *  @param pdf   (input) PDF
@@ -54,12 +71,13 @@ namespace Ostap
      *  @param args  (input)  the arguments
      */
     static Ostap::StatusCode calculate
-    ( const Ostap::Utils::ProgressConf& conf            , 
-      const RooAbsPdf&                  pdf             , 
-      const RooDataSet&                 data            ,  
-      double&                           tStat           ,
-      TH1*                              hist  = nullptr ,
-      const RooArgSet*                  args  = nullptr ) ;
+    ( const Ostap::Utils::ProgressConf& conf  , 
+      const RooAbsPdf&  pdf               , 
+      const RooDataSet& data              ,  
+      double&           tStat             ,
+      TH1*              hist  = nullptr   ,
+      const RooArgSet*  args  = nullptr   , 
+      const Uniformity  algo  = Uniformity::Greenwood ) ;
     // ========================================================================
   };
   // ==========================================================================
