@@ -35,8 +35,10 @@ namespace
   inline RooEllipse*  copy_ellipse ( const RooEllipse& p ) { return new RooEllipse ( p ) ; }
   inline TH1*         copy_th1     ( const TH1&        p ) 
   { 
-    TObject* result = p.Clone () ;
-    return dynamic_cast<TH1*> ( result ) ;
+    TObject* cloned = p.Clone () ;
+    TH1*     result = dynamic_cast<TH1*> ( result ) ;
+    if ( result ) { result->SetDirectory ( nullptr ) ; }
+    return result ;
   }
   // ==========================================================================
   RooPlotable* copy_plotable  ( const RooPlotable& p )
@@ -133,7 +135,10 @@ void Ostap::Utils::add_copy
   const char*        opts      ,
   const bool         invisible ) 
 {
-  if ( th1 ) { plot.addTH1( ::copy_th1 ( *th1 ) , opts , invisible ) ; } 
+  if ( th1 )
+    {
+      plot.addTH1( ::copy_th1 ( *th1 ) , opts , invisible ) ;
+    } 
 }
 // ============================================================================
 //  add a copy of object to the plot 
@@ -157,14 +162,14 @@ RooPlot* Ostap::Utils::copy_plot
 #if ROOT_VERSION(6,32,0) <= ROOT_VERSION_CODE // ==============================
   // ==========================================================================
   auto newplot { std::make_unique<RooPlot> ( plot->GetXaxis()->GetXmin () ,
-					     plot->GetXaxis()->GetXmin () ,
-					     plot->GetNbinsX ()           ) } ;
+                                             plot->GetXaxis()->GetXmin () ,
+                                             plot->GetNbinsX ()           ) } ;
   
   // ==========================================================================
 #else // ======================================================================
   // ==========================================================================
   auto newplot { std::make_unique<RooPlot> ( plot->GetXaxis()->GetXmin () ,
-					     plot->GetXaxis()->GetXmin () ) } ;
+                                             plot->GetXaxis()->GetXmin () ) } ;
   // ==========================================================================
 #endif // =====================================================================
   // ==========================================================================
@@ -212,7 +217,7 @@ RooPlot* Ostap::Utils::copy_plot
   // ==========================================================================     
   newplot->SetAxisColor ( plot->GetXaxis() -> GetAxisColor () , "x" ) ;
   newplot->SetAxisColor ( plot->GetYaxis() -> GetAxisColor () , "y" ) ; 
-  //		
+  //            
   newplot->SetNdivisions ( plot->GetNdivisions ( "x" ) , "x") ;
   newplot->SetNdivisions ( plot->GetNdivisions ( "y" ) , "y") ;
   newplot->SetNdivisions ( plot->GetNdivisions ( "z" ) , "z") ;
