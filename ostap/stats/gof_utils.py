@@ -20,6 +20,7 @@ __all__     = (
     'clip_pvalue'        , ## clip-value
     'pairwise_distances' , ## get array of all pair-wise distances between two datasets
     'nearest_neighbors'  , ## get all nearest neigbours
+    'nearest_distances'  , ## get all nearest distances 
     's2u'                , ## convert structured numpy array into non-structured
     'combine_pvalues'    , ## combine p-values 
     'np2vct'             , ## numpy arrays into SVectorWithError
@@ -183,6 +184,85 @@ def nearest_neighbors ( data ,
         # =====================================================================
         raise ValueError ( f"Metric '{metric}' requires sklearn, which is not installed." )
         # =====================================================================
+        
+
+# =============================================================================
+## Compute distances to the k-th nearest neighbor for each point in data.
+# 
+#  Parameters:
+#    data (array-like): Input dataset of shape (N, D).
+#    k (int): Target neighbor index (default is 1 for the immediate nearest neighbor).
+#       metric (str or int): Distance metric to use.
+#       p (int): Power parameter for the Minkowski metric.
+#         n_jobs (int): Number of parallel jobs for neighbor search (-1 uses all cores).
+#         **config: Additional parameters passed to the tree search backend.
+#        
+#    Returns:
+#        numpy.ndarray: 1D array of shape (N,) containing distances to the k-th neighbor.
+def nearest_distances (  data   ,
+                         k      =  1            ,
+                         metric = 'euclidean'   ,
+                         p      =  2            ,
+                         n_jobs = -1 , **config ):
+    """ Compute distances to the k-th nearest neighbor for each point in data.
+    
+    Parameters:
+        data (array-like): Input dataset of shape (N, D).
+        k (int): Target neighbor index (default is 1 for the immediate nearest neighbor).
+        metric (str or int): Distance metric to use.
+        p (int): Power parameter for the Minkowski metric.
+        n_jobs (int): Number of parallel jobs for neighbor search (-1 uses all cores).
+        **config: Additional parameters passed to the tree search backend.
+        
+    Returns:
+        numpy.ndarray: 1D array of shape (N,) containing distances to the k-th neighbor.
+    """
+    metric_clean = str(metric).lower()
+    
+    # =========================================================================
+    ## (1) Use scipy.spatial.cKDTree for fast standard L_p metrics
+    # =========================================================================
+    if metric_clean in SCIPY_METRICS or isinstance(metric, (int, float)):
+        
+        if   metric_clean in ( 'euclidean' , 'sqeuclidean' , 'l2' ) : p_val = 2
+        elif metric_clean in ( 'manhattan' , 'cityblock'   , 'l1' ) : p_val = 1
+        elif metric_clean in ( 'chebyshev' , 'infinity'           ) : p_val = numpy.inf
+        else                                                        : p_val = p
+
+        config [ WORKER_KEY ] = n_jobs
+        tree = scipy.spatial.cKDTree( data )
+        
+        # Query k + 1 neighbors because the 0-th neighbor is the point itself (distance = 0.0)
+        distances, _ = tree.query(data, k=k + 1, p=p_val, **config)
+        
+        # Extract the k-th neighbor column to guarantee a flat 1D array of shape (N,)
+        return distances[:, k]
+
+    # =========================================================================
+    ## (2) Use sklearn.neighbors for advanced metrics (cosine, haversine, etc.)
+    # =========================================================================
+    elif has_sklearn:
+        
+        nn = sklearn.neighbors.NearestNeighbors ( n_neighbors = k + 1  ,
+                                                  metric      = metric ,
+                                                  p           = p      ,
+                                                  n_jobs      = n_jobs , **config ) 
+        nn.fit ( data )
+        
+        distances , _ = nn.kneighbors(data)
+        
+        # Extract the k-th neighbor column to guarantee a flat 1D array of shape (N,)
+        return distances[:, k]
+    
+    # =========================================================================
+    ## Error handling
+    # =========================================================================
+    else: # ===================================================================
+        # =====================================================================
+        raise ValueError(f"Metric '{metric}' requires scikit-learn, which is not installed.")
+
+
+
     
 # =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array

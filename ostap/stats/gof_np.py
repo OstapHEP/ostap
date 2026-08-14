@@ -47,6 +47,7 @@ from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          normalize_pooled   ,
                                          pairwise_distances ,
                                          nearest_neighbors  , 
+                                         nearest_distances  , 
                                          draw_ecdf          , s2u , np2vct ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf
@@ -535,7 +536,6 @@ class MIXnp(GoFnp) :
 
         ## transform ?
         uds1 , uds2 = self.unpack ( data1 , data2 )
-
         ## normalize
         if normalize and self.normalize : uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
             
@@ -862,7 +862,7 @@ class DNNnp(GoFnp) :
                    histo    = None   ,
                    nToys    = 1000   ,
                    parallel = False  , 
-                   silent   = False  ,
+                   silent   = True   ,
                    progress = True   , **params ) :
         
         n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
@@ -965,8 +965,9 @@ class DNNnp(GoFnp) :
         distances       = distances [ : , 1]  # DNN (Distance to Nearest Neighbor)
         """
         
-        ## distances = nearest_distances ( uds1 , **self.params ) 
-        distances = nearest_neighbors ( uds1 , **self.params ) 
+        ## distances = nearest_neighbors ( uds1 , **self.params )
+        
+        distances = nearest_distances ( uds1 , **self.params ) 
 
         
         if  1 != D : distances = distances ** D
@@ -981,19 +982,20 @@ class DNNnp(GoFnp) :
         factor = - WT * VD * jacobian
         
         ## get u-values 
-        ##  expected weight in sphere
+        ## expected weight in sphere
         uvalues = factor * distances 
         if not w1_trivial : uvalues /= weight1 
         uvalues = 1.0 - numpy.exp ( uvalues )
 
-        delta   = 1.e-8 
+        delta   = 1.e-7
         uvalues = numpy.clip ( uvalues , delta , 1.0 - delta )
 
         ## fill the histogram of u-values (if defined)
         if self.__histo :
-            self.__histo.Reset () 
+            self.__histo.Reset ()
             for u in uvalues : self.__histo.Fill ( u ) 
-            
+
+        # =======================================================================
         ## t-value as Gemini AI suggests: (modified Anderson-Darling criteria)
         result = - numpy.mean ( numpy.log ( uvalues ) + numpy.log ( 1.0 - uvalues ) )
         result = float ( result )
