@@ -20,7 +20,7 @@ __all__     = (
     'Reweighter'   , ## the abstract base clss for advanced reweighters 
 ) 
 # =============================================================================
-from   ostap.utils.basic    import typename
+from   ostap.utils.core     import typename
 from   ostap.math.math_base import weight_trivial
 from   ostap.utils.config   import Config
 import numpy, os, abc 

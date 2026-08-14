@@ -16,7 +16,7 @@ __all__     = (
     'Config' , ## the abstract base clss for advanced reweighters 
 ) 
 # =============================================================================
-from   ostap.utils.basic     import typename 
+from   ostap.utils.core import typename 
 import numpy, os, abc 
 # =============================================================================
 # logging 
