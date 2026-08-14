@@ -66,6 +66,7 @@ __all__     = (
 # ============================================================================
 from   ostap.core.ostap_types   import integer_types, num_types  
 from   ostap.core.core          import Ostap, hID
+from   ostap.utils.config       import Config 
 from   ostap.stats.counters     import EffCounter
 from   ostap.stats.gof          import AGoF
 from   ostap.stats.gof_utils    import TOYS, draw_ecdf   
@@ -176,7 +177,7 @@ def uPlot ( pdf            ,
     if   isinstance ( histo , ROOT.TH1 )                    : pass
     elif isinstance ( histo , integer_types ) and 1 < histo :
         histo = ROOT.TH1F ( hID () ,'U-statistics', histo , -0.1 , 1.1 )
-        histo.Sumw2()         
+        histo.Sumw2 ()         
     elif not histo :   
         nEntries = float ( len ( data ) )
         bins     = 10 
@@ -257,7 +258,7 @@ def uToys ( pdf            ,
 # @see https://doi.org/10.1088/1748-0221/5/09/P09004
 # @see http://arxiv.org/abs/arXiv:1003.1768
 # @see Ostap::
-class USTAT(AGoF) :
+class USTAT(AGoF,Config) :
     """ Goodness-of-Fit estimator for Distance-to-Nearest-Neighbour GoF test
     It is a numpy-free version of `Distance-t0-Nearedt-Neighbour" method described in M.Williams' paper
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
@@ -270,14 +271,15 @@ class USTAT(AGoF) :
                    nToys    = 1000  ,
                    sample   = False ,
                    parallel = False , 
-                   silent   = False ) :
+                   silent   = False ,
+                   progress = True  ) :
         
-        self.__silent   = True if silent else False
         self.__sample   = True if sample else False 
         self.__histo    = None 
         self.__bins     = histo
         self.__nToys    = nToys 
         self.__parallel = True if parallel else False
+        self.__progress = True if progress else False
 
         if self.__parallel and memory_enough () < numcpu ()  : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')            
@@ -288,6 +290,10 @@ class USTAT(AGoF) :
         self.__ecdf    = None
         self.__counter = None
 
+        Config.__init__ ( self , silent = silent or progress ) 
+
+        print ( 'USTAT:', self.silent )
+        
     ## Are weights supported by this GoF estimator?
     @property 
     def weights_supported ( self ) :
@@ -299,26 +305,15 @@ class USTAT(AGoF) :
     ## get all configration parameters
     @property 
     def config ( self ) :
-        return { 'nToys'    : self.__nToys    ,  
-                 'sample'   : self.__sample   , 
-                 'parallel' : self.__parallel , 
-                 'sample'   : self.__sample   , 
-                 'histo'    : self.__histo    }
-    
-    # =========================================================================
-    ## self-print get the configuration 
-    def table (  self , title = '' , prefix = '' ) : 
-        """ print configuration """
-        from ostap.logger.utils import map2table_ex
-        title = title if title else "%s configuration" % typename ( self )
-        return map2table_ex ( self.config , 
-                              header      = ( 'Parameter' , 'type' , 'value' ) ,
-                              alignment   = 'rcw'  , 
-                              prefix      = prefix ,
-                              title       = title  )
-
-    __str__  = table
-    __repr__ = table
+        conf = {}
+        conf.update ( super().config )
+        conf [ 'nToys'    ] = self.__nToys   
+        conf [ 'sample'   ] = self.__sample  
+        conf [ 'parallel' ] = self.__parallel
+        conf [ 'sample'   ] = self.__sample  
+        conf [ 'histo'    ] = self.__histo
+        conf [ 'progress' ] = self.__progress 
+        return conf
     
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 
@@ -338,7 +333,7 @@ class USTAT(AGoF) :
         return self.tvalue ( pdf , data )
 
     # =========================================================================
-    ## Calculate T-value for Goodness-of-Git 
+    ## Calculate T-value for Goodness-of-Fit 
     #  @code
     #  ustat   = ...
     #  pdf     = ...  
@@ -354,12 +349,12 @@ class USTAT(AGoF) :
         """
         assert not data.isWeighted() or self.weights_supported , \
             "Data is weighted but weights are not supported %s" % ( typename ( self ) )
-            
+
         ## get t-value 
         t_value , histo , _ = uPlot ( pdf  ,
                                       data , 
                                       histo  = self.__bins , 
-                                      silent = self.silent ) 
+                                      silent = self.silent or self.progress ) 
 
         if histo and not self.__histo :
             self.__histo = histo.clone()
@@ -383,9 +378,11 @@ class USTAT(AGoF) :
         """
         assert not data.isWeighted() or self.weights_supported , \
             "Data is weighted but weights are not supported %s" % ( typename ( self ) )
+
         
-        silent = self.silent
-        self.__silent = True
+        old_silent = self.silent
+        if self.progress : self.silent = True 
+
         
         estimator = self 
         t_value   = estimator ( pdf , data ) if tvalue is None else tvalue 
@@ -396,12 +393,11 @@ class USTAT(AGoF) :
                       pdf     = pdf          ,
                       Ndata   = len ( data ) ,
                       sample  = self.sample  )
-        
+                
+        if self.parallel : counter = toys.run ( self.nToys , progress = self.progress )
+        else             : counter = toys     ( self.nToys , progress = self.progress )            
 
-        if self.parallel : counter = toys.run ( self.nToys , progress = not self.silent )
-        else             : counter = toys     ( self.nToys , progress = not self.silent )            
-
-        self.__silent = silent 
+        self.silent = old_silent 
        
         ## get ECDF from toys
         self.__ecdf = toys.ecdf
@@ -424,11 +420,6 @@ class USTAT(AGoF) :
         return self.__nToys
     
     @property
-    def silent ( self ) :
-        """`silent` : silent processing?"""
-        return self.__silent
-    
-    @property
     def sample ( self ) :
         """`sample` : sample number of events for toys?"""
         return self.__sample
@@ -440,7 +431,7 @@ class USTAT(AGoF) :
 
     @property
     def ecdf ( self ) :
-        """`ecdf` : empirical cumulatiove distirbtuo function (from toys)
+        """`ecdf` : empirical cumulative distirbution function (from toys)
         """
         return self.__ecdf
     
