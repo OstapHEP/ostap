@@ -1888,7 +1888,7 @@ class APDF1 ( Components ) :
                     dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm ) ** 2 )
                     
             ## apply scale factor
-            if 1 != sf :  self.info ('Scale factor of %.4g is applied' % sf )
+            if 1 != sf :  self.info ( "Wilks': scale factor of %.4g is applied" % sf )
             dnll *= sf            
                 
             ## convert the difference in likelihoods into sigmas 
@@ -1957,7 +1957,7 @@ class APDF1 ( Components ) :
         del pars
 
         if fixed and not silent :
-            self.info ( "Wilks2: fixed variables: %s" % [ f.GetName()  for f in fixed] )
+            self.info ( "Wilks': fixed variables: %s" % [ f.GetName()  for f in fixed] )
 
         ## unpack the range 
         minv , maxv = range        
@@ -2011,7 +2011,7 @@ class APDF1 ( Components ) :
             dnll = nll_min - nll_max
 
             ## apply scale factor
-            if 1 != sf :  self.info ('Scale factor of %.4g is applied' % sf )
+            if 1 != sf :  self.info ( "Wilks': scale factor of %.4g is applied" % sf )
             dnll *= sf            
         
             ## convert the difference in likelihoods into sigmas/significance

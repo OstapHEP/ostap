@@ -264,11 +264,11 @@ def _var_set_value_and_range_ ( var , value , vmin = None , vmax = None ) :
     >>> var.set_Value_and_minmax ( value , *minmax ) ## ditto
     """
     mn , mx = False , False 
-    if not vmin is None and hasattr ( var , setMin ) :
+    if not vmin is None and hasattr ( var , 'setMin' ) :
         if value < vmin : raise ValueError ( "%s: incompatible vmin&value: %s vs %s " % ( var.name , vmin , value ) )
         mn = True
         
-    if not vmax is None and hasattr ( var , setMax ) :
+    if not vmax is None and hasattr ( var , 'setMax' ) :
         if vmax < value : raise ValueError ( "%s: incompatible value&vmax: %s vs %s " % ( var.name , value , vmax ) )
         mx = True
         
