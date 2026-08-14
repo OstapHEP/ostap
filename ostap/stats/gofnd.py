@@ -30,7 +30,7 @@ __all__     = (
     ##
     'USTAT'              , ## Alternative implementation of DNN method
     'NLL'                , ## Use -log L as GoF estimator 
-    'AikaikeIC'          , ## Use Aikaike IC  as GoF estimator 
+    'AkaikeIC'           , ## Use Akaike IC  as GoF estimator 
     'BayesianIC'         , ## Use Bayesian IC  as GoF estimator
     ## 
     'ADVAL_LightGBM'     , ## Use Adversarial Validation as GoF estimator 
@@ -970,10 +970,10 @@ class NLL(AGoF,Config) :
                                  style   = style  )
     
 # =============================================================================
-## @class AikaikeIC
-#  Use Aikaike information criterion as `estimate` for Goodness-of-Fit
-class AikaikeIC(NLL) :
-    """  Trivial `estimator' for Aikaike informatio criterion as fit-quality.
+## @class AkaikeIC
+#  Use Akaike information criterion as `estimate` for Goodness-of-Fit
+class AkaikeIC(NLL) :
+    """  Trivial `estimator' for Akaike information criterion as fit-quality.
     - attention: the absolute value of -log L is not a true GoF-estimator
     - toys are needed!
     """

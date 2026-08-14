@@ -224,7 +224,7 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
     with use_canvas ( title = '%s:GoF/NLL'                 % label ) :
         dnl = toys.draw ( 'BLL')
         plots.append ( dnl )         
-    with use_canvas ( title = '%s:GoF/AikaikeIC'           % label ) :
+    with use_canvas ( title = '%s:GoF/AkaikeIC'            % label ) :
         dai = toys.draw ( 'AIC')
         plots.append ( dai )         
     with use_canvas ( title = '%s:GoF/BayesianIC'          % label ) :

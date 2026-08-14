@@ -699,12 +699,12 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     if 0 < nbadnll :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
-    ## Aikaike's information criteria 
+    ## Akaike's information criteria 
     #  https://ieeexplore.ieee.org/document/1100705
     s , n = pretty_float ( r.aic () )
     if n : n = '[10^%+d]' % n
     else : n = '' 
-    rows.append ( ( "Aikaike's IC"    , n , '  ' + s , '' ) )
+    rows.append ( ( "Akaike's IC"    , n , '  ' + s , '' ) )
         
     with_globcorr = True 
 
@@ -850,7 +850,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'lcclcccc' )
 
 # =============================================================================
-## Aikaike's information criteria 
+## Akaike's information criteria 
 #  @see https://ieeexplore.ieee.org/document/1100705
 #  It is useful to compare diffent fit models
 #  with different number of free parameters 
@@ -863,7 +863,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 #  aic = fit_result.aic () 
 #  #endcode 
 def _rfr_aic_ ( self ) :
-    """ Aikaike's information criteria,
+    """ Akaike's information criteria,
     
     It is useful to compare diffent fit models
     with different number of free parameters
@@ -1464,7 +1464,7 @@ ROOT.RooFitResult.failure = property ( _rfr_failure_ , None , None, _rfr_failure
 
 ROOT.RooFitResult . aic              = _rfr_aic_
 ROOT.RooFitResult . bic              = _rfr_bic_
-ROOT.RooFitResult . aikaike_IC       = _rfr_aic_
+ROOT.RooFitResult . akaike_IC        = _rfr_aic_
 ROOT.RooFitResult . bayes_IC         = _rfr_bic_
 
 ROOT.RooFitResult . __str__          = _rfr_table_
@@ -1527,7 +1527,7 @@ _new_methods_ += [
     #
     ROOT.RooFitResult . aic                 , 
     ROOT.RooFitResult . bic                 , 
-    ROOT.RooFitResult . aikaike_IC          , 
+    ROOT.RooFitResult . akaike_IC           , 
     ROOT.RooFitResult . bayes_IC            , 
     #    
     ROOT.RooFitResult . __repr__            ,

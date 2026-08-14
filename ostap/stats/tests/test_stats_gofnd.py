@@ -299,11 +299,11 @@ def test_GOF () :
     to_test.append ( entry )
 
     # ===========================================================================
-    ## Aikaike IC 
+    ## Akaike IC 
     # ===========================================================================
-    aic_good = GnD.AikaikeIC ( nToys = nToys , fitresult = rgood , parallel = True )
-    aic_bad  = GnD.AikaikeIC ( nToys = nToys , fitresult = rbad  , parallel = True )
-    entry    = aic_good , aic_bad , 'Aikaike IC'
+    aic_good = GnD.AkaikeIC ( nToys = nToys , fitresult = rgood , parallel = True )
+    aic_bad  = GnD.AkaikeIC ( nToys = nToys , fitresult = rbad  , parallel = True )
+    entry    = aic_good , aic_bad , 'Akaike IC'
     to_test.append ( entry )
 
     # ===========================================================================

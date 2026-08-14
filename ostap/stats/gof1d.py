@@ -642,7 +642,7 @@ class GoF1D(object) :
     # =========================================================================
     ## Get AIC statistic
     @property 
-    def aikaike_estimator ( self ) :
+    def akaike_estimator ( self ) :
         """ Get AIC statistic
         """        
         return self.__estimators.get ( 'AIC' , None ) 
