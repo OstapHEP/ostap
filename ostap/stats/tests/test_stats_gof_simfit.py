@@ -143,7 +143,6 @@ model2.S = NS2
 model2.B = NB2 
 
 
-
 # ==================================================================================
 ## combine PDFs
 model_sim  = Models.SimFit ( sample , { 'A' : model1  , 'B' : model2 } , name = 'X' )
@@ -235,8 +234,8 @@ def test_gof_simfit () :
 
     gofs = [] 
     
-    gof_configs = [ GnD.MIX ( mcFactor = mcFactor               ) , 
-                    GnD.PPD ( mcFactor = mcFactor , sigma = 0.1 ) , 
+    gof_configs = [ GnD.MIX   ( mcFactor = mcFactor               ) , 
+                    GnD.PPD   ( mcFactor = mcFactor , sigma = 0.1 ) , 
                     GnD.DNN   () ,
                     GnD.USTAT ()
                    ]
@@ -262,16 +261,13 @@ def test_gof_simfit () :
         from   ostap.stats.gofnd import ADVAL_CatBoost as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
         
-    
     gofs = [ GoFSimFitType ( GOF        = gof       ,
                              pdf        = model_sim ,
                              dataset    = dataset   ,
                              parameters = r         ) for gof in gof_configs ]
-
     
-
     # ========================================================================
-    ## use differnt methods
+    ## use different methods
     # =======================================================================
     estimators = { 'A' : GoF_1D  ( 'KS' ) , 
                    'B' : GnD.MIX ( parallel = True      ) }
@@ -283,7 +279,7 @@ def test_gof_simfit () :
                               nToys       = nToys      , 
                               silent      = False      , 
                               parallel    = True       ) )
-    
+
     # ========================================================================
     for gof in gofs : 
         
