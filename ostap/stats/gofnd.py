@@ -61,7 +61,7 @@ from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.stats.gof_utils    import format_row, draw_ecdf  
 import ostap.stats.gof_np       as     GNP
 import ostap.logger.table       as     T 
-import ROOT, numpy
+import ROOT, numpy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1421,7 +1421,6 @@ class ADVAL_PyTorch(ADVAL_LightGBM) :
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
             
-
 # ============================================================================
 ## @class ADVAL_Keras
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
@@ -1463,7 +1462,6 @@ class ADVAL_Keras(ADVAL_LightGBM) :
                                   parallel   = parallel ,
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
-
         
 # =============================================================================
 if '__main__' == __name__ :
