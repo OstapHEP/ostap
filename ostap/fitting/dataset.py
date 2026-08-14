@@ -184,9 +184,16 @@ def _rad_getitem_ ( data , index ) :
     """
     
     N = len ( data )
-    
+
+    # ======================================================================
+    ## alllow "silghtly negative" indices 
     if isinstance ( index , integer_types ) and index < 0 : index += N
 
+    weighted          = data.isWeighted                     ()
+    store_errors      = weighted and data.store_errors      ()
+    store_asym_errors = weighted and data.store_asym_errors ()
+
+    # ======================================================================
     ## simple entry index 
     if isinstance ( index , integer_types ) and 0 <= index  < N :
         
@@ -194,15 +201,16 @@ def _rad_getitem_ ( data , index ) :
         if not data.isWeighted() : return entry, None       ## RETURN 
 
         weight = data.weight()        
-        if   data.store_asym_error () :
+        if  store_asym_errors :
             wel , weh = data.weight_errors ()
             weight    = VAE ( weight , wel , weh ) 
-        elif data.store_error      () :
+        elif store_errors     :
             we = data.weightError  ()
             if 0 <= we : weight = VE ( weight , we * we ) 
             
         return entry, weight                               ## RETUR N
 
+    # ======================================================================
     ## range -> range 
     elif isinstance ( index , range ) :
 
@@ -215,6 +223,7 @@ def _rad_getitem_ ( data , index ) :
         
         index = range ( start , stop , step ) 
 
+    # ======================================================================
     ## slice -> range 
     elif isinstance ( index , slice ) :
         
@@ -226,13 +235,10 @@ def _rad_getitem_ ( data , index ) :
         
         index = range ( start , stop , step ) 
 
+    # ======================================================================
     ## require sequence of indices here 
     if not isinstance ( index , sequence_types ) :
-        raise IndexError ( "Invalid type of `index':%s" % type ( index ) )
-
-    weighted          = data.isWeighted                     ()
-    store_errors      = weighted and data.store_errors      ()
-    store_asym_errors = weighted and data.store_asym_errors ()
+        raise IndexError ( "Invalid type of `index':%s" % typename ( index ) )
 
     ## prepare the result 
     result = data.emptyClone ( dsID () )
@@ -269,16 +275,16 @@ def _rad_getitem_ ( data , index ) :
 # ==============================================================================
 
 # ==============================================================================
-## Get (asymmetric) weigth errors for the current entry in dataset
+## Get (asymmetric) weight errors for the current entry in dataset
 #  @code
 #  dataset = ...
 #  weight_error_low, weight_error_high = dataset.weight_errors () 
 #  @endcode
 #  @see RooAbsData::weightError
 def _rad_weight_errors ( data , *etype ) :
-    """ Get (asymmetric) weigth errors for the current entry in dataset
+    """ Get (asymmetric) weight errors for the current entry in dataset
     >>> dataset = ...
-    >>> weight_error_low, weigth_error_high = dataset.weight_errors () 
+    >>> weight_error_low, weight_error_high = dataset.weight_errors () 
     - see ROOT.RooAbsData.weightError
     """
     ##
@@ -333,7 +339,6 @@ def _rad_iadd_ ( ds1 , ds2 ) :
     ATTENTION: two datasets must have compatible structure:
     - both             weighted or non-weighted
     - either weighted or non-weighted (simultaneously)
-    - either no-Poisson-weighted or non-weighted (simultaneously)
     - ds2 must containt all vars from ds1
     - only variables in ds1 are copied from ds2 
     >>> dset1  = ...
@@ -345,8 +350,8 @@ def _rad_iadd_ ( ds1 , ds2 ) :
         w1 = ds1.isWeighted()
         w2 = ds2.isWeighted()
         ##
-        if   w1 and w2 : pass
-        elif w1        : return NotImplemented 
+        if   w1 and w2 : pass   ## OK: both weighted 
+        elif w1        : pass   ## OK: first weighted 
         elif w2        : return NotImplemented 
         ##        
         vs1 = set ( v.name for v in ds1.get() )
@@ -358,7 +363,7 @@ def _rad_iadd_ ( ds1 , ds2 ) :
         dv2 = vs2 - vs1        
         ## 
         if   dv1 : return NotImplemented 
-        elif dv2 : logger.info ( 'iadd: %d variables will not be appended: [%s]' % ( len ( dv2 ) ,  ', '.join ( v for v in dv2 ) ) ) 
+        elif dv2 : logger.info ( 'iadd: %d variables will not be added: [%s]' % ( len ( dv2 ) ,  ', '.join ( v for v in dv2 ) ) ) 
         ## 
         ds1.append ( ds2 )
         return ds1 
@@ -374,7 +379,7 @@ def _rad_iadd_ ( ds1 , ds2 ) :
 #  @endcode 
 def _rad_add_ ( ds1 , ds2 ) :
     """ Merge/append two datasets into a single one
-    - two datasets must have identical structure 
+    - two datasets must have compatible structure 
     >>> dset1  = ...
     >>> dset2  = ...
     >>> dset   = dset1 + dset2 
@@ -384,9 +389,9 @@ def _rad_add_ ( ds1 , ds2 ) :
         w1 = ds1.isWeighted()
         w2 = ds2.isWeighted()
         ##
-        if   w1 and w2    : pass
-        elif w1           : return NotImplemented 
-        elif w2           : return NotImplemented 
+        if   w1 and w2    : pass  ## OK: both weighted 
+        elif w1           : pass  ## OK: the first is weighted 
+        elif w2           : ds1 , ds2 = ds2, ds1  ## swap them!             
         ##
         vs1 = set ( v.name for v in ds1.get() )
         vs2 = set ( v.name for v in ds2.get() )
@@ -415,8 +420,8 @@ def _rad_imul_ ( ds1 , ds2 ) :
         w1 = ds1.isWeighted()
         w2 = ds2.isWeighted()
         ##
-        if   w1 and w2    : pass
-        elif w1           : return NotImplemented 
+        if   w1 and w2    : pass ## OK : both  weighted 
+        elif w1           : pass ## OK : first weighted 
         elif w2           : return NotImplemented 
         ##
         ds1.merge ( ds2 )
@@ -448,11 +453,11 @@ def _rad_mul_ ( ds1 , ds2 ) :
         w1 = ds1.isWeighted()
         w2 = ds2.isWeighted()
         ##
-        if   w1 and w2    : pass
-        elif w1           : return NotImplemented 
-        elif w2           : return NotImplemented 
+        if   w1 and w2    : pass ## OK: both weighted 
+        elif w1           : pass ## OK: first weighetd 
+        elif w2           : ds1 , ds2 = ds2 , ds1 ## swap them 
         ##
-        result = ds1.emptyClone( dsID() )
+        result = ds1.emptyClone ( dsID() )
         result.append ( ds1 )
         result.merge  ( ds2 )
         return ds1 
@@ -492,23 +497,31 @@ def _rad_mul_ ( ds1 , ds2 ) :
     return NotImplemented
 
 # =============================================================================
-## merge two dataset (of same  length) OR get small (random) fraction of  dataset
+## Prescale dataset/get smaller dataset  
 #  @code
 #  ## get smaller dataset:
 #  dataset = ....
 #  small   = 0.1 * dataset 
-#  ## merge two dataset of the same lenth
-#  merged  = dataset1 * dataset2 
 #  @endcode
-def _rad_rmul_ ( ds1 , ds2 ) :
-    """
-    - (1) Get small (random) fraction of  dataset:
+def _rad_rmul_ ( ds1 , fraction ) :
+    """ Get small (random) fraction of dataset:
     >>> dataset = ....
     >>> small   = 0.1 * dataset
-    - (2) Merge two dataset (of the same length)
-    >>> dataset3 = dataset1 * dataset2 
     """
-    return _rad_mul_ ( ds1 , ds2 )
+    if    fraction is True  : return NotImplemented
+    elif  fraction is False : return NotImplemented    
+    elif  isinstance ( fraction , int ) :
+        
+        if   0 == fraction     : return ds1.emptyClone ()
+        elif 1 == fraction     : return ds1.     clone ()
+        
+    elif  isinstance ( fraction , float ) :
+        
+        if   0 <  fraction < 1 : return _rad_mul_ ( ds1 , fraction ) 
+        elif 0 == fraction     : return ds1.emptyClone ()
+        elif 1 == fraction     : return ds1.     clone ()
+
+    return NotImplemented 
 
 # =============================================================================
 ## get small (random) fraction of  dataset
@@ -522,6 +535,7 @@ def  _rad_div_ ( self , fraction ) :
     >>> small   = dataset / 10 
     """
     if  isinstance ( fraction , num_types ) :
+        fraction = float ( fraction ) 
         if    1.0 <  fraction : return _rad_mul_  ( self , 1.0 / fraction )
         elif  1   == fraction : return self.clone ()
     
@@ -533,20 +547,16 @@ def  _rad_div_ ( self , fraction ) :
 #  dataset = ....
 #  small   = dataset % 10  
 #  @endcode
-def  _rad_mod_ ( self , fraction ) :
+def  _rad_mod_ ( dataset , fraction ) :
     """ Get small (fixed) fraction of  dataset
     >>> dataset = ....
     >>> small   = dataset % 10 
     """
-    if  isinstance ( fraction , integer_types ) and 1 < fraction :
+    if  isinstance ( fraction , integer_types ) :
 
-        res = self.emptyClone()
-        s    = slice ( 0 , -1 , fraction )
-        for i in range ( *s.indices ( len ( self ) ) ) : 
-            res.add ( self [ i ] ) 
-        return res 
-        
-    elif 1 == fraction : return self.clone      ()
+        fraction = int ( fraction )
+        if   1 == fraction : return dataset.clone () 
+        elif 2 <= fraction : return datatast [::fraction]
 
     return NotImplemented
 
@@ -1961,7 +1971,7 @@ _new_methods_ += [
 #  dataset = ...
 #  sf = dataset.sFactor() 
 #  @endcode
-#  when the weigths comes from sPlot, the factor effectively accounts
+#  when the weights comes from sPlot, the factor effectively accounts
 #  statitical fluctuations in background subtraction
 #  @see W. T. Eadie et al., Statistical methods in experimental physics,
 #       North Holland, Amsterdam, 1971.
@@ -2275,7 +2285,7 @@ def _rds_makeWeighted_ ( dataset           ,
                                                                                   dataset.GetTitle () )
     
     assert isinstance ( weightvar , expression_types ) , \
-        "Invalid type of `weigthvar':%s" % type ( weightvar )
+        "Invalid type of `weightvar':%s" % type ( weightvar )
     assert isinstance ( cuts      , expression_types ) or not cuts , \
         "Invalid type of `cuts':%s" % type ( cuts )
 
@@ -2351,7 +2361,7 @@ _new_methods_ += [
 #  if data.weight_trivial : ...
 #  @endcdode
 def _rds_wtrivial_  ( dataset ) :
-    """ Trivial weigth for dataset ?
+    """ Trivial weight for dataset ?
     -   non-weighted 
     -   or all weights are equal to the same (positive) constants
     >>> data = ...
@@ -3067,7 +3077,7 @@ _new_methods_ += [
 #  @endcode 
 #  @see Ostap::Utils::getWeight
 def _ds_wname_ ( dataset ) :
-    """ Get the name of weigth variable in dataset
+    """ Get the name of weight variable in dataset
     >>> dataset = ...
     >>> wname   = dataset.wname() 
     """
@@ -3229,7 +3239,7 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
     if weighted and not weight_var :
         weight_var = dataset.wname()
                 
-    if   weighted and sae : vnames += [ weight_var , '%sErrorLow' % weight_var , '%sErrorHigh' % weigth_var  ]
+    if   weighted and sae : vnames += [ weight_var , '%sErrorLow' % weight_var , '%sErrorHigh' % weight_var  ]
     elif weighted and se  : vnames += [ weight_var , '%sError'    % weight_var ]
     elif weighted         : vnames += [ weight_var ]
 
@@ -3349,7 +3359,7 @@ def ds_slice ( data                       ,
                last         = LAST_ENTRY  ,
                cut_range    = ''          ,
                prescale     = None        , 
-               weight_total = True        , ## final weigth is a product of internal weight and weigth from (non-zero) cuts? 
+               weight_total = True        , ## final weight is a product of internal weight and weight from (non-zero) cuts? 
                structured   = True        ,
                transpose    = True        ,
                progress     = True        ) :  
@@ -3553,7 +3563,7 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
         new_weight = "%s_%d" % ( new_weight , i )
         i += 1
 
-    ## define new weigths for datasets
+    ## define new weights for datasets
     if 1 == r1 : weight1 =       '%s' %        w1   if w1 else '1'
     else       : weight1 = '%.16g*%s' % ( r1 , w1 ) if w1 else '%.16g' % r1
     if 1 == r2 : weight2 =       '%s' %        w2   if w2 else '1'

@@ -5,11 +5,12 @@
    1. add `__enter__/__exit__` context manager for `AFUN` (and thus for all derived pdfs). It restores the value, status and range for all parameters  
    1. add WALL-time to the Timer, change from `timeit.detault_timer` to `time.perf_cuunter` and `time.process_time`
    1. update timing utilities, in particular, the output print format
-   1. add `PeakMemory` context manmager to estimate the peak memory usage
+   1. add `PeakMemory` context manager to estimate the peak memory usage
    1, add wall-time to `Memory` context manager  
    1. add `prescale` argument to `data_slice`, `tree_slice`, `frame_slice`, `ds_silce` and ``ds2numpy` functions
    1. remove some suspicious blancks 
-   
+   1. release constraints for dataset' append/merge operators  
+
 ## Bug fixes 
 
 ## Backward incompatible
@@ -36,11 +37,11 @@
    1. make a try to use custom cpp-aware pickling the cpp-metatypes by name wthni direct reference to the libraries
    1. make a try to use custom cross-version unpickling withon-flith substituton of `libROOTTPytho*`
    1. small improvement for `RooFitResult` serialization 
-   1. remove unpicklnig from `compress_shelbve.uncompress_item` and call it explicitely afterward
+   1. remove unpickling from `compress_shelve.uncompress_item` and call it explicitely afterward
    1. add `pickle_dependencies` funtion to get the importan content of pickel stream (foe debugging)
    1. add `dependencies` method for `ostap.io.compressed_shelve.CompressShelf` base class
    1. add `__get_raw_bytes__` method for `ostap.io.compressed_shelve.CompressShelf` base class
-   1. move some functions from `ostap.utils.basic` to new module `sstap.utils.core`
+   1. move some functions from `ostap.utils.basic` to new module `ostap.utils.core`
    1. fix uncompression of `Ostap.BLOB` for python<3.12 
    1. larger unification of parallel managers
    1. add uniform treatment of `chunksize` & `block_size` for parallel managers
