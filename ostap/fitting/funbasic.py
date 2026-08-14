@@ -700,7 +700,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         self.__fixed_pars = {} 
         self.__float_pars = {}
 
-    
     # =========================================================================
     ## get the certain predefined drawing option
     #  @code
@@ -953,8 +952,9 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             if kwargs :
                 self.warning ( "draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
                 
-            ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
-            if frame :                
+            ## a bit strange action but it helps to avoid "decolorization"/"reset" for the last created frame
+            if frame : frame.SetDirectroy ( ROOT.nullptr ) 
+            if frame and root_info < ( 6 , 41 ) :                
                 self.__aux_fframe = frame                
                 frame             = frame.Clone() 
             

@@ -1215,12 +1215,14 @@ class APDF1 ( Components ) :
                         binw = ( xmx - xmn ) / float ( nbins )
                 if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %.4g' % ( frame.chi2ndf , binw ) )
                 else        : self.info ( 'chi2/ndf: %.3f' %                   frame.chi2ndf          )
-
-
-            if not residual and not pull:
-                ## 
+                
+            copy_frame = root_info < ( 6 , 41 ) 
+            if frame : frame.SetDirectory ( ROOT.nullptr )
+            if copy_frame and frame : 
                 frame = frame.copy () ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
-                if frame and not kwargs.get ( 'draw_axis_title' , False ) : 
+            
+            if not residual and not pull and frame : 
+                if not kwargs.get ( 'draw_axis_title' , False ) : 
                     frame.SetXTitle ( '' )
                     frame.SetYTitle ( '' )
                     frame.SetZTitle ( '' )                    
@@ -1234,7 +1236,9 @@ class APDF1 ( Components ) :
                 rh      = frame.residHist()
                 rframe.addPlotable ( rh , *residual )
                 ## 
-                rframe = rframe.copy()                
+                if rframe : rframe.SetDirectory ( ROOT.nullptr )
+                if copy_frame and rframe : rframe = rframe.copy()
+
                 if not kwargs.get( 'draw_axis_title' , False ) :  
                     rframe.SetXTitle ( '' )
                     rframe.SetYTitle ( '' )
@@ -1247,8 +1251,9 @@ class APDF1 ( Components ) :
                 pframe  = frame.emptyClone ( rootID ( 'pull_' ) )
                 ph      = frame.pullHist()
                 pframe.addPlotable ( ph , *pull )
-                ## 
-                pframe = pframe.copy()                
+                ##
+                if pframe : pframe.SetDirectory ( ROOT.nullptr )                
+                if copy_frame and pframe : pframe = pframe.copy()                
                 if not kwargs.get( 'draw_axis_title' , False ) :  
                     pframe.SetXTitle ( '' )
                     pframe.SetYTitle ( '' )

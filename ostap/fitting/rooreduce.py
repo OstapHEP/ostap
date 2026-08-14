@@ -820,6 +820,9 @@ def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items , nbins = 100 ) 
 def _rplot_reduce_ ( plot ) :
     """ Reduce `ROOT.RooPlot` object
     """
+    for ( obj , _ , _ ) in items :
+        if hasattr ( obj , 'SetDirectory' ) : cmp.SetDirectory ( ROOT.nullptr ) 
+        
     return _rplot_factory_ , ( type ( plot )   ,
                                plot.GetXaxis().GetXmin() ,
                                plot.GetXaxis().GetXmax() ,

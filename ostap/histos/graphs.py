@@ -3313,7 +3313,6 @@ def _text_transpose_ ( text ) :
 ROOT.TText.transpose = _text_transpose_
 ROOT.TText.T         = _text_transpose_
 
-
 # =============================================================================
 ## Use <code>TSpline</code> as a function
 #  @code
@@ -3334,7 +3333,6 @@ def _spl_call_ ( spline , x ) :
     return spline.Eval ( x )
 
 ROOT.TSpline. __call__  = _spl_call_
-
 
 # =============================================================================
 ## Add two <code>RooPlot</code> objects
@@ -3430,7 +3428,9 @@ def _rplot_copy_ ( plot , *components ) :
 
     result.SetMinimum ( plot.GetMinimum () )
     result.SetMaximum ( plot.GetMaximum () )    
-    copy_graph_attributes ( plot , result ) 
+    copy_graph_attributes ( plot , result )
+    
+    result.SetDirectory ( ROOT.nullptr ) 
     return result
 
 ## ROOT.RooPlot.copy = _rplot_copy_ 
@@ -3505,10 +3505,7 @@ def _rplot_iadd_ ( rp , other ) :
 
 ROOT.RooPlot.__iadd__ = _rplot_iadd_ 
 
-
 # =============================================================================
-
-
 
 # =============================================================================
 _decorated_classes_ += (
@@ -3524,7 +3521,6 @@ _decorated_classes_ += (
     ROOT.TSpline           ,
     ROOT.RooPlot           ,    
     )
-
 
 _new_methods_     += (
     #
