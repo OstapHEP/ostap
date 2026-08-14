@@ -180,6 +180,7 @@
 #include "Ostap/TreeGetter.h"
 #include "Ostap/TypeWrapper.h"
 #include "Ostap/Types.h"
+#include "Ostap/Uniformity.h"
 #include "Ostap/UStat.h"
 #include "Ostap/Utils.h"
 #include "Ostap/Valid.h"
@@ -283,10 +284,10 @@ namespace Ostap
       static inline ROOT::Math::SVector<T,D>
       eigenValues
       ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx          ,
-	const bool                                                    sorted = true )
+        const bool                                                    sorted = true )
       {
-	const Ostap::Math::GSL::EigenSystem system {};
-	return system.eigenValues ( mtrx , sorted ) ;
+        const Ostap::Math::GSL::EigenSystem system {};
+        return system.eigenValues ( mtrx , sorted ) ;
       }
       // ======================================================================
     public: // eigen vectors
@@ -294,12 +295,12 @@ namespace Ostap
       template <class T, unsigned int D>
       static StatusCode eigenVectors
       ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
-	ROOT::Math::SVector<T,D>&                                     vals , 
-	std::vector<ROOT::Math::SVector<T,D> >&                       vecs , 
-	const bool                   sorted = true )
+        ROOT::Math::SVector<T,D>&                                     vals , 
+        std::vector<ROOT::Math::SVector<T,D> >&                       vecs , 
+        const bool                   sorted = true )
       {
-	Ostap::Math::GSL::EigenSystem system ;
-	return system.eigenVectors ( mtrx , vals , vecs , sorted ) ;
+        Ostap::Math::GSL::EigenSystem system ;
+        return system.eigenVectors ( mtrx , vals , vecs , sorted ) ;
       }      
       // ======================================================================
     } ;

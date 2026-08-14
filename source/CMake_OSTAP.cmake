@@ -30,7 +30,7 @@ add_library(ostap SHARED src/format.cpp
                          src/DataFrameUtils.cpp
                          src/Differences.cpp
                          src/ECDF.cpp
-                                     src/EffEntity.cpp
+                         src/EffEntity.cpp
                          src/EPDF.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
@@ -137,6 +137,7 @@ add_library(ostap SHARED src/format.cpp
                          src/TreeGetter.cpp
                          src/Types.cpp
                          src/qMath.cpp
+                         src/Uniformity.cpp
                          src/UStat.cpp
                          src/Valid.cpp
                          src/ValueWithError.cpp
