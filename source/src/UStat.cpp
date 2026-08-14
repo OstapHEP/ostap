@@ -209,21 +209,26 @@ Ostap::StatusCode Ostap::UStat::calculate
     //
   }
   //
-  // calculate T-statistics from U-distribution
   //
-  std::stable_sort ( ustat.begin() , ustat.end() ) ;
+  // Calculate Cramér–von Mises statistic (W^2) from U-distribution
   //
-  double tS = 0 ;
-  double nD = ustat.size() ;
-  for ( StatU::const_iterator u = ustat.begin() ; ustat.end() != u  ; ++u ) 
+  std::stable_sort(ustat.begin(), ustat.end());
+  //
+  const double nD = ustat.size();
+  double tS = 0.0;
+  //
+  for ( auto u = ustat.begin() ; ustat.end() != u ; ++u ) 
   {
-    const double e = ( double ( u - ustat.begin() + 1 ) )  / nD ;
-    const double d = (*u) - e ;
+    const double i = static_cast<double>(u - ustat.begin() + 1 ) ;
+    // e = (2i - 1) / (2N) - midpoint of the i-th step
+    const double e = ( 2.0 * i - 1.0 ) / ( 2.0 * nD ) ;
+    const double d = ( *u ) - e;
     //
-    tS += d * d ;
+    tS += d * d;
   }
-  // finally return the value:
-  tStat = tS ;
+  // 
+  // Add boundary shift correction term 1 / (12 * N)
+  tStat = tS + 1.0 / (12.0 * nD);
   // 
  return Ostap::StatusCode::SUCCESS ;
 }
