@@ -1900,8 +1900,9 @@ class FitHelper(VarMaker) :
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
                 
             elif key in args_clonedata and ( 6 , 28 ) <= root_info :
-                
-                self.warning ( "Ignore obsolete `CloneData' argument" ) 
+
+                pass 
+                ## self.warning ( "Ignore obsolete `CloneData' argument" ) 
             
             elif key in args_clonedata and isinstance ( a , bool ) and root_info < ( 6 , 28 ) :
                 
@@ -2538,8 +2539,7 @@ class FitHelper(VarMaker) :
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
         """
 
-        if   isinstance ( nEvents , integer_types ) and 0 < nEvents and not sample :
-            return nEvents  
+        if   isinstance ( nEvents , integer_types ) and 0 < nEvents and not sample : return nEvents  
         elif isinstance ( nEvents , num_types     ) and 0 < nEvents :
             nn = -1
             mu = float ( nEvents ) 

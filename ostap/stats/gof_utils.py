@@ -651,12 +651,14 @@ def make_permutations ( nToys    ,
             
     del pooled
     del weights
-                    
+
+
 # =============================================================================
 ## @class PERMUTATOR
-#  Helper class that allow to run permutation test in parallel 
+#  Helper class to run permutation test in parallel with optional dataset slicing.
 class PERMUTATOR ( object ) :
-    """ Helper class that allow to run permutation test in parallel 
+    """ Helper class that allows running permutation tests in parallel,
+    with support for slicing large datasets (ds2) into sub-samples.
     """
     def __init__ ( self    ,
                    gof     ,
@@ -664,11 +666,13 @@ class PERMUTATOR ( object ) :
                    ds1     ,
                    ds2     ,
                    weight1 = None ,
-                   weight2 = None ) :
+                   weight2 = None ,
+                   nGroups = None ) :
         
         self.gof     = gof
         self.ds1     = ds1
-        self.ds2     = ds2
+        self.t_value = t_value
+        self.ecdf    = None
 
         w1_trivial = weight_trivial ( weight1 )
         w2_trivial = weight_trivial ( weight2 )
@@ -677,36 +681,67 @@ class PERMUTATOR ( object ) :
             weight1 , weight2 = None, None 
 
         self.weight1 = weight1
-        self.weight2 = weight2 
-        self.t_value = t_value
-        self.ecdf    = None
+
+        # --- Inline slice preparation ---
+        n_data2 = len ( ds2 )
+
+
+        if not nGroups or nGroups <= 1:
+            self.groups = [(ds2, weight2)]
+        else:
+            group_size = n_data2 // nGroups
+            idx_shuffled = numpy.random.permutation(n_data2)
+
+            self.groups = []
+            for i in range(nGroups):
+                sub_idx = idx_shuffled[i * group_size : (i + 1) * group_size]
+                ds2_sub = ds2[sub_idx]
         
-    ## serialize the object 
+                if weight2 is None or isinstance ( weight2 , ( int, float ) ) : w2_sub_i = weight2
+                else                                                          : w2_sub_i = weight2 [ sub_idx ]
+
+                self.groups.append((ds2_sub, w2_sub_i))
+
+        # --- Automatic evaluation of observed t_value ---
+        if t_value is None or 1 < len ( self.groups ) :
+            
+            # Compute observed T-value averaged over slices to match toys scale
+            t_vals = [ float ( self.gof.tvalue ( self.ds1  ,
+                                                 ds2_sub   , 
+                                                 weight1   = self.weight1 , 
+                                                 weight2   = w2_sub       , 
+                                                 normalize = False        ) ) 
+                    for ds2_sub, w2_sub in self.groups ]
+
+            print ( 'T-VALUES ARE:' , t_vals ) 
+            self.t_value = float ( numpy.mean ( t_vals ) )
+
+            
+    # =========================================================================
+    ## Serialize the object for multiprocessing
     def __getstate__ ( self ) :
-        """ Serialize the object
+        """ Serialize state dictionary without redundant original ds2
         """
-        return { 'gof'        : self.gof      ,
-                 'ds1'        : self.ds1      ,   
-                 'ds2'        : self.ds2      ,   
-                 'weight1'    : self.weight1  ,
-                 'weight2'    : self.weight2  ,   
-                 't_value'    : self.t_value  , 
-                 'ecdf'       : self.ecdf     }
+        return { 'gof'     : self.gof     ,
+                 'ds1'     : self.ds1     ,   
+                 'weight1' : self.weight1 ,
+                 't_value' : self.t_value , 
+                 'groups'  : self.groups  ,
+                 'ecdf'    : self.ecdf    }
     
-    ## De-serialize the object 
+    ## De-serialize the object
     def __setstate__ ( self , state ) :
-        """ De-serialize the object
+        """ Restore object state from dictionary
         """
-        self.gof     = state.pop ( 'gof'        )
-        self.ds1     = state.pop ( 'ds1'        )
-        self.ds2     = state.pop ( 'ds2'        )        
-        self.weight1 = state.pop ( 'weight1'    )
-        self.weight2 = state.pop ( 'weight2'    )
-        self.t_value = state.pop ( 't_value'    )
-        self.ecdf    = state.pop ( 'ecdf'       )
+        self.gof     = state.pop ( 'gof'     )
+        self.ds1     = state.pop ( 'ds1'     )
+        self.weight1 = state.pop ( 'weight1' )
+        self.t_value = state.pop ( 't_value' )
+        self.groups  = state.pop ( 'groups'  )
+        self.ecdf    = state.pop ( 'ecdf'    )
         
     # =========================================================================
-    ## run N-permutations 
+    ## Run N-permutations on callable execution
     def __call__ ( self , N , silent = True , progress = False ) :
         
         counter, tvalues = self.run_toys ( N = N , silent = silent , progress = progress )
@@ -717,51 +752,57 @@ class PERMUTATOR ( object ) :
         return counter 
 
     # =========================================================================
-    ## run N-toys 
+    ## Run N-toys over prepared slices
     def run_toys ( self, N , silent = True , progress = False ) :
-        """ Run N-toys
+        """ Run N pseudo-experiments (toys) across pre-calculated slices
         """        
         counter = EffCounter()
         tvalues = []
 
-        for data1 , data2 , weight1 , weight2 in make_permutations ( N                       ,
-                                                                     self.ds1                ,
-                                                                     self.ds2                ,
-                                                                     weight1  = self.weight1 ,
-                                                                     weight2  = self.weight2 , 
-                                                                     progress = progress     ,   
-                                                                     silent   = silent       ) :
+        # Divide toy count evenly among available slices
+        base_toys , reminder = divmod ( N , len ( self.groups ) )
+        
+        for i , ( ds2 , weight2 ) in enumerate ( self.groups ) :
+            
+            # Ensure at least 1 toy per slice, then distribute remaining toys
+            current_n = max ( 1 , base_toys ) + ( 1 if i < reminder else 0 )
+            
+            for data1 , data2 , weight1 , weight2 in make_permutations ( current_n             ,
+                                                                         self.ds1              ,
+                                                                         ds2                   ,
+                                                                         weight1  = self.weight1 ,
+                                                                         weight2  = weight2     , 
+                                                                         progress = progress   ,   
+                                                                         silent   = silent     ) :
 
-            ## attention: normalize = False 
-            tv       = self.gof.tvalue ( data1     ,
-                                         data2     ,
-                                         weight1   = weight1 ,
-                                         weight2   = weight2 ,
-                                         normalize = False   )
-            tv       = float ( tv )
-            tvalues.append   ( tv  )
-            counter += bool  ( self.t_value < tv  )
+                ## Note: normalize = False is required for sliced evaluation
+                tv       = self.gof.tvalue ( data1     ,
+                                             data2     ,
+                                             weight1   = weight1 ,
+                                             weight2   = weight2 ,
+                                             normalize = False   )
+                tv       = float ( tv )
+                tvalues.append   ( tv  )
+                counter += bool  ( self.t_value < tv  )
 
         return counter, tuple ( tvalues )
 
     # =========================================================================
     ## Run NN-permutations in parallel using the default WorkManager
     def run ( self , nToys , silent = False , progress  = True ) :
-        """ Run permutations in parallel using WorkManager
+        """ Execute permutations in parallel using Ostap WorkManager
         """
-        ## how many processes can fit into available memory? 
         me       = math.floor ( memory_enough() ) + 1 
-        njobs    = min ( 5 * numcpu () + 1 , me + 1 )
+        njobs    = 4 * numcpu () + 1 
         the_list = [ n for n in splitter ( nToys , njobs ) ] 
         njobs    = len ( the_list ) 
-        
+
         if not silent :
             logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with WorkManager' % njobs )
 
         counter = EffCounter()
         tvalues = () 
-        ## 
-        ## use *BARE* interface here
+        
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager : 
             for result in manager.iexecute ( self.run_toys ,
@@ -773,12 +814,12 @@ class PERMUTATOR ( object ) :
                 cnt , tvals = result 
                 counter += cnt
                 tvalues += tvals 
-        ##
+        
         if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
         else             : self.ecdf.add    ( data2vct ( tvalues )     )
-        ##
+        
         return counter
-
+    
 # =============================================================================
 ## @class TOYS
 #  Helper class to run toys for Goodness-of-Fit studies 

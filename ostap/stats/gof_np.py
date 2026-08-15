@@ -68,18 +68,24 @@ logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensiona
 class GoFnp (AGoFnp,Config) :
     """ A base class for numpy-related family of methods to probe goodness-of-fit
     """
-    def __init__ ( self               ,
+    def __init__ ( self               , * , 
                    nToys     = 0      ,
                    silent    = False  , 
                    parallel  = False  ,
                    method    = 'GoF'  ,
                    progress  = True   ,
+                   nGroups   = None   , 
                    normalize = True   , **params ) : 
-
-        assert isinstance ( nToys , int ) and 0 <= nToys  , \
-            "Invalid number of permulations/toys:%s" % nToys
         
+        if not isinstance ( nToys   , int ) : raise TypeError  ( "Invalid type  for `nToys`  : %s" % typename ( nToys   ) )
+        if not 0 <= nToys                   : raise ValueError ( "Invalid value for `nToys`  : %d" %            nToys     )
+
+        if  nGroups is None : nGroups = 1        
+        if not isinstance ( nGroups , int ) : raise TypeError  ( "Invalid type  for `nGroups`: %s" % typename ( nGroups ) )
+        if not 0 <= nGroups                 : raise ValueError ( "Invalid value for `nGroups`: %d" %            nGroups   )
+            
         self.__nToys    = nToys
+        self.__nGroups  = nGroups  
         ## 
         self.__parallel  = True if parallel  else False
         self.__progress  = True if progress  else False
@@ -119,6 +125,7 @@ class GoFnp (AGoFnp,Config) :
         conf [ 'normalize'        ] = self.normalize
         conf [ 'method'           ] = self.method  
         conf [ 'weight_supported' ] = self.weights_supported
+        conf [ 'nGroups'          ] = self.nGroups 
         return conf 
     
     # =========================================================================
@@ -126,6 +133,13 @@ class GoFnp (AGoFnp,Config) :
     def nToys ( self ) :
         """`nToys` : number of permutations/toys used for permutation/toys test"""
         return self.__nToys
+
+    # =========================================================================
+    @property 
+    def nGroups ( self ) :
+        """`nGroups` : split 2nd datasets into #groups for permutations"""
+        return self.__nGroups 
+    
     # =========================================================================
     @property
     def parallel ( self ) :
@@ -248,12 +262,13 @@ class GoFnp (AGoFnp,Config) :
                                                                      normalize = False   )
         
         ## use permutations to get the p-value 
-        permutator = PERMUTATOR ( self              ,
-                                  t_value           ,
-                                  uds1              ,
-                                  uds2              ,
-                                  weight1 = weight1 ,
-                                  weight2 = weight2 )
+        permutator = PERMUTATOR ( self                   ,
+                                  t_value                , 
+                                  uds1                   ,
+                                  uds2                   ,
+                                  weight1 = weight1      ,
+                                  weight2 = weight2      ,
+                                  nGroups = self.nGroups )
         
         if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
         else                                : counter = permutator     ( self.nToys , progress = self.progress )
@@ -273,10 +288,10 @@ class GoFnp (AGoFnp,Config) :
 
         self.ecdf    = permutator.ecdf
         self.counter = counter
-        self.t_value = t_value
+        self.t_value = permutator.t_value 
         self.p_value = p_value 
         
-        return t_value , p_value
+        return self.t_value , self.p_value
     
     @property
     def ecdf ( self ) :

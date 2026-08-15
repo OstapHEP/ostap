@@ -2465,7 +2465,6 @@ _new_methods_ += [
     RAD.fitTo
     ]
 
-
 # =============================================================================
 ## get nth moment of the distribution
 def _rad_moment_ ( data , var , order , value = 0 , error = True , *args ) :
@@ -4149,11 +4148,8 @@ ROOT.RooAbsData.copy         = _ds_copy_
 ROOT.RooAbsData.__copy__     = _ds_copy_
 ROOT.RooAbsData.__deepcopy__ = _ds_copy_
 
-
-
 ## add sweetviz-based methods 
 import ostap.stats.sweet_viz
-
 
 _new_methods_ += list ( data_decorate ( ROOT.RooAbsData ) )
 del data_decorate

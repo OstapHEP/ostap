@@ -61,7 +61,7 @@ from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.stats.gof_utils    import format_row, draw_ecdf  
 import ostap.stats.gof_np       as     GNP
 import ostap.logger.table       as     T 
-import ROOT, numpy 
+import ROOT, numpy, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -78,13 +78,15 @@ class GoF(AGoF,Config) :
     """
     def __init__ ( self             ,
                    estimator        , ## actual GoF-evaluator
-                   mcFactor = 20    ,
+                   mcFactor         ,
                    sample   = False ,
+                   nGorups  = None  , 
                    genconf  = {}    ) : 
-        ## 
-        assert isinstance ( mcFactor  , int ) and 1 <= mcFactor , "Invalid `mcFactor':%s" % mcFactor
-        assert isinstance ( estimator , AGoFnp ) , "Invalid `estmator':%s" % typename ( estimator ) 
-        ## 
+        ##
+        if not isinstance ( estimator  , AGoFnp ) : raise TypeError  ( "Invalid type  for `estimator` : %s" % typename ( estimator ) )
+        if not isinstance ( mcFactor   , int    ) : raise TypeError  ( "Invalid type  for `mcFactor`  : %s" % typename ( mcFactor ) )
+        if not 1 <= mcFactor                      : raise ValueError ( "Invalid value for `mcFactor` : %d" %            mcFactor   )
+        ##
         self.__estimator  = estimator 
         self.__mcFactor   = mcFactor 
         self.__sample     = True if sample else False
@@ -245,7 +247,7 @@ class GoF(AGoF,Config) :
         tv , pv = self.gof.pvalue ( ds1     ,
                                     ds2     ,
                                     weight1 = weight1 ,
-                                    weight1 = weight2 ,
+                                    weight2 = weight2 ,
                                     tvalue  = tvalue  )
         ## 
         return tv , pv 
@@ -269,10 +271,16 @@ class GoF(AGoF,Config) :
 
     # =======================================================================
     ## Generate MC dataset from PDF according to the model data
-    def generate ( self ,  pdf , data ) :
+    def generate ( self , pdf , data ) :
         """ Generate MC dataset from PDF according to data 
         """
-        nEvents = len ( data ) * self.mcFactor
+        
+        ## nEvents = len ( data ) * self.mcFactor
+        ## use the effective number of entries here! 
+        nEvents = data.nEff () * self.mcFactor
+        
+        if not self.sample : nEvents = math.ceil ( nEvents )
+        
         dset    = pdf.generate ( nEvents = nEvents     ,
                                  varset  = data        ,
                                  sample  = self.sample , **self.genconf )        
@@ -474,7 +482,7 @@ class MIX(GoF) :
     ## create the estimator
     #  @param nToys    : (int)  number of permutations/toys 
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
-    def __init__ ( self                  ,
+    def __init__ ( self                 ,
                    nToys       = 1000   ,
                    silent      = False  ,
                    parallel    = False  ,
@@ -1084,12 +1092,12 @@ class ADVAL_LightGBM(GoF) :
     ## create the estimator
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     #  @param nToys    : (int)  number of permutations/toys 
-    def __init__ ( self               ,
-                   mcFactor   = 20    , 
+    def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
                    silent     = False ,
                    progress   = True  ,
+                   mcFactor   = 20    , 
                    ADVAL_TYPE = None  , **params ) : 
     
         """ Create the Adversarial Validation estimator 
@@ -1109,7 +1117,8 @@ class ADVAL_LightGBM(GoF) :
         GoF.__init__ ( self ,
                        estimator = ADVAL_TYPE ( nToys    = nToys    ,
                                                 parallel = parallel ,
-                                                silent   = silent   , 
+                                                silent   = silent   ,
+                                                nGroups  = mcFactor , 
                                                 progress = progress , **params ) ,                       
                        mcFactor = mcFactor )
         

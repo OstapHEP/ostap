@@ -201,12 +201,12 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     # =========================================================================
     # Internal Fitting Pipeline
     # =========================================================================
-    def __fit_and_compute( self            ,
-                           original        ,
-                           original_weight ,
-                           target          ,
-                           target_weight   ) :
-
+    def __fit_and_compute ( self            ,
+                            original        ,
+                            original_weight ,
+                            target          ,
+                            target_weight   ) :
+        
         # =====================================================================
         ## FAST PATH: Standard positive unit weights for both samples
         # =====================================================================
