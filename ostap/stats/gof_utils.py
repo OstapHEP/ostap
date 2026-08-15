@@ -260,9 +260,6 @@ def nearest_distances (  data   ,
     else: # ===================================================================
         # =====================================================================
         raise ValueError(f"Metric '{metric}' requires scikit-learn, which is not installed.")
-
-
-
     
 # =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
@@ -510,6 +507,32 @@ def normalize ( ds , *others , weight = () , first = True ) :
         result.append ( nds )
             
     return tuple ( result ) 
+
+# =============================================================================
+## Normalize sample weights to match effective dataset sizes sum(|w|) = N.
+def normalize_weights_to_N ( weight1 ,
+                             weight2 ,
+                             N1      ,
+                             N2      ) :
+    """ Normalize sample weights using sum of absolute values 
+    such that sum(|w1|) == N1 and sum(|w2|) == N2.
+    """
+    w1_trivial = weight_trivial ( weight1 )
+    w2_trivial = weight_trivial ( weight2 )
+
+    if w1_trivial and w2_trivial :
+        return None , None
+
+    w1 = numpy.ones ( N1 , dtype = numpy.float32 ) if w1_trivial else numpy.asarray ( weight1 , dtype = numpy.float32 )
+    w2 = numpy.ones ( N2 , dtype = numpy.float32 ) if w2_trivial else numpy.asarray ( weight2 , dtype = numpy.float32 )
+
+    s1 = numpy.sum ( numpy.abs ( w1 ) , dtype = numpy.float64 )
+    s2 = numpy.sum ( numpy.abs ( w2 ) , dtype = numpy.float64 )
+
+    if 0 < s1 : w1 = w1 * ( N1 / s1 )
+    if 0 < s2 : w2 = w2 * ( N2 / s2 )
+
+    return w1 , w2
 
 # =============================================================================
 ## Short labels for various statitical estimators 

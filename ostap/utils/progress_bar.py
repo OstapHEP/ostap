@@ -102,7 +102,7 @@ __all__      = (
     )
 # =============================================================================
 from   ostap.core.ostap_types import sized_types 
-from   ostap.utils.basic      import isatty, terminal_size
+from   ostap.utils.basic      import isatty, is_ci, interactive , terminal_size
 from   ostap.logger.symbols   import clock_ticks, runner, finish, clock, arrow_right     
 from   ostap.logger.colorized import allright, infostr 
 import sys , os, time, datetime 
@@ -118,6 +118,9 @@ def columns () :
     width , height = terminal_size()
     return width
 
+# =============================================================================
+_is_ci       = is_ci       ()
+_interactive = interactive () 
 # =============================================================================
 ## @class ProgressBar
 #
@@ -215,7 +218,7 @@ class ProgressBar(object):
                   output    = sys.stdout , **kwargs ) :
         
         ## tty ? 
-        tty = isatty ( output )
+        tty = not _is_ci and ( _interactive or isatty ( output ) )
         
         self.__silent = kwargs.get ( 'silent' , not tty )
         self.__r      = '\r' ## '\r' if tty else '\n'
@@ -227,9 +230,10 @@ class ProgressBar(object):
         self.__mode = kwargs.get ( 'mode' , 'fixed'   ) ## fixed or dynamic
         if not self.__mode in ( 'fixed' , 'dynamic'   ) : self.__mode = 'fixed'
             
-        self.__hashes = -1 
-        self.__last   = '' 
-        self.__output = output 
+        self.__hashes    = -1 
+        self.__last      = '' 
+        self.__last_time = None
+        self.__output    = output 
         
         ncols         = columns () - 12
         self.__width  = ncols if ncols > 10 else width
@@ -281,7 +285,14 @@ class ProgressBar(object):
         ##))
         if self.__silent : return self
         ##
-        if self.__max == self.__amount and self.__the_end is None : self.__the_end = time.time() 
+        now = time.time ()
+        # Avoid very frequent redraws (max 10 times per second),
+        # but always allow drawing the start (min) and completion (max).
+        if self.__last_time and ( now - self.__last_time < 0.1 ) and ( self.__min < self.__amount < self.__max ) :
+            return self
+        self.__last_time = now
+
+        if self.__max == self.__amount and self.__the_end is None : self.__the_end = now
         ##  
         if self.build_bar() : self.show()
         else :
@@ -458,7 +469,7 @@ class RunningBar(object):
 
 
         ## tty ? 
-        tty = isatty ( output )        
+        tty = not _is_ci and ( _interactive or isatty ( output ) )
         self.__silent = kwargs.get ( 'silent' , not tty )
 
         self.amount   =  0 
@@ -622,42 +633,35 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
             yield item
             bar += 1
                         
-# =============================================================================
-## simple test 
-def test_bars ():
-
-    limit = 1000 
-    
-    import time
-
-    print ( 'Example 1: Fixed Bar' )
-    with ProgressBar ( limit ,  mode = 'fixed' ) as bar : 
-        for i in range ( limit + 1 ):
-            bar += 1 
-            time.sleep ( 0.005 )
- 
-    print ( 'Example 2: Dynamic Bar' )
-    with ProgressBar( limit , mode = 'dynamic' , char = '-' ) as bar : 
-        for i in range ( limit + 1 ):
-            bar += 1 
-            time.sleep ( 0.005 )
-
-    for i in progress_bar ( range ( 5000  ) , description = "Doing something ") : 
-        time.sleep(0.001)
-    
-    for i in running_bar  ( range ( 120000 ) , description = "Empty looping ") :         
-        time.sleep(0.0001)
 
 # ==============================================================================
 if __name__ == '__main__':
 
     from   ostap.logger.logger import getLogger
-    logger = getLogger('ostap.utils.progress_bar')
+    logger = getLogger ( 'ostap.utils.progress_bar' )
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-  
-    test_bars ()
+
+    limit = 1000 
+    logger.info ( 'Example 1: Fixed Bar' )
+    with ProgressBar ( limit ,  mode = 'fixed' ) as bar : 
+        for i in range ( limit + 1 ):
+            bar += 1 
+            time.sleep ( 0.005 )
+                
+    logger.info ( 'Example 2: Dynamic Bar' )
+    with ProgressBar( limit , mode = 'dynamic' , char = '-' ) as bar : 
+        for i in range ( limit + 1 ):
+            bar += 1 
+            time.sleep ( 0.005 )
+            
+    for i in progress_bar ( range ( 5000  ) , description = "Doing something ") : 
+        time.sleep(0.001)
+    
+    for i in running_bar  ( range ( 120000 ) , description = "Empty looping ") :         
+        time.sleep(0.0001)
+    
     logger.info ( 80*'*' ) 
     
 # =============================================================================

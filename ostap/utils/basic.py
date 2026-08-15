@@ -23,8 +23,9 @@ __all__     = (
     ## 
     'with_ipython'         , ## do we run IPython ?
     'interactive'          , ## interactive processing?
-    ##
     'isatty'               , ## is the stream ``isatty'' ?
+    'is_ci'                , ## 
+    ##
     'terminal_size'        , ## get the size of terminal cosole
     'whoami'               , ## who am I?
     ##
@@ -60,6 +61,7 @@ def interactive () :
     - see https://stackoverflow.com/questions/2356399/tell-if-python-is-in-interactive-mode
     """
     return hasattr ( sys , 'ps1' )
+
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
 #  @code
@@ -84,6 +86,25 @@ def isatty ( stream = None ) :
         except : pass
     ## 
     return False
+
+# =============================================================================
+## Check if the execution context is inside a CI/CD pipeline
+#  @code
+#  if is_ci() : print('Running in CI/CD environment')
+#  @endcode
+def is_ci () :
+    """ Is the script running inside a CI/CD environment?
+    (Azure Pipelines, GitHub Actions, GitLab CI, etc.)
+    >>> if is_ci() : print('CI environment!')
+    """
+    ci_vars = (
+        'TF_BUILD'               , ## Azure Pipelines
+        'GITHUB_ACTIONS'         , ## GitHub Actions
+        'GITLAB_CI'              , ## GitLab CI
+        'CI'                     , ## Generic CI (Travis, CircleCI, etc.)
+        'CONTINUOUS_INTEGRATION'   ## Generic CI flag
+    )
+    return any ( os.environ.get ( var ) for var in ci_vars )
 
 # ==============================================================================
 ## does the atream support unicode? 

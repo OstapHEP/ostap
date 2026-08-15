@@ -188,13 +188,15 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ Predict probability p(y=1|x) using a single trained model."""
         raise NotImplementedError
 
-    def use_strong_regularization( self , X ) :
+    # ========================================================================
+    ## Checks if dataset size is small relative to feature count indicating a need for stronger regularization.
+    def use_strong_regularization ( self , X ) :
         """ Checks if dataset size is small relative to feature count,
         indicating a need for stronger regularization.
         """
         ns = num_samples( X )
         nf = num_features( X )
-        return ns < max( 300 if nf <= 3 else 1000, nf * 50 )
+        return ns < max ( 300 if nf <= 3 else 1000 , nf * 50 )
 
     # =========================================================================
     # Internal Fitting Pipeline
