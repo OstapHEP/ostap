@@ -749,7 +749,7 @@ class PERMUTATOR(object) :
         """
         ## how many processes can fit into available memory? 
         me       = math.floor ( memory_enough() ) + 1 
-        njobs    = min ( 2 * numcpu () + 3 , me + 1 )
+        njobs    = min ( 5 * numcpu () + 1 , me + 1 )
         the_list = [ n for n in splitter ( nToys , njobs ) ] 
         njobs    = len ( the_list ) 
         

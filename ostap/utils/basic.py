@@ -130,13 +130,16 @@ def with_ipython()  :
         return False
 
 # ============================================================================
-fallback      = 80 , 50
+fallback      = 100 , 50
 # ============================================================================
 def terminal_size ( fallback = fallback ) :
     """ Get the terminal console size (use shutil.get_terminal_size)
     >>> width, height = terminal_size () 
     """
-    return shutil.get_terminal_size ( fallback ) 
+    width , height = shutil.get_terminal_size ( fallback )
+    if not width  or width  <= 0 : width  = fallback [ 0 ]
+    if not height or height <= 0 : height = fallback [ 1 ]
+    return width , height 
 
 # =============================================================================
 ## is this directory writeable?

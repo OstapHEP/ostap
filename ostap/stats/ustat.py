@@ -326,6 +326,13 @@ class USTAT(AGoF,Config) :
         """
         return False 
     
+    ## show progress-bar?
+    @property 
+    def progress ( self ) :
+        """`progress` : show progress bar?
+        """
+        return self.__progress 
+    
     # =======================================================================
     ## get all configration parameters
     @property 
@@ -340,6 +347,7 @@ class USTAT(AGoF,Config) :
         conf [ 'progress'  ] = self.__progress 
         conf [ 'algorithm' ] = self.__algorithm
         return conf
+
     
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 

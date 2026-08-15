@@ -42,7 +42,7 @@ class Config ( object ) :
     - method `table`
     - prints ...
     """
-    def __init__ ( self , silent = False , **params  ) :
+    def __init__ ( self , silent = True , **params  ) :
         """ The base class for configuration holders
         """
         self.__params = params 
