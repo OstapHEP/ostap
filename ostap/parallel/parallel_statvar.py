@@ -960,7 +960,7 @@ def parallel_slice ( chain                      ,
                      cuts         = ''          , *  ,
                      first        = FIRST_ENTRY ,
                      last         =  LAST_ENTRY ,
-                     weight_total = False       , ## final weigth is a product of internal weight and weigth from (non-zero) cuts? 
+                     weight_total = False       , ## final weight is a product of internal weight and weight from (non-zero) cuts? 
                      structured   = True        ,
                      transpose    = True        , 
                      progress     = False       ,

@@ -510,6 +510,17 @@ def normalize ( ds , *others , weight = () , first = True ) :
 
 # =============================================================================
 ## Normalize sample weights to match effective dataset sizes sum(|w|) = N.
+def normalize_weight_to_N ( weight , N ) :
+    """ Normalize sample weights using sum of absolute values 
+    such that sum(|w1|) == N1 and sum(|w2|) == N2.
+    """
+    weight = numpy.ones ( N , dtype = numpy.float32 ) if weight_trivial ( weight ) else numpy.asarray ( weight , dtype = numpy.float32 )
+    weight *= N / numpy.sum ( numpy.abs ( weight ) , dtype = numpy.float64 )
+    ## 
+    return weight 
+
+# =============================================================================
+## Normalize sample weights to match effective dataset sizes sum(|w|) = N.
 def normalize_weights_to_N ( weight1 ,
                              weight2 ,
                              N1      ,
@@ -523,16 +534,10 @@ def normalize_weights_to_N ( weight1 ,
     if w1_trivial and w2_trivial :
         return None , None
 
-    w1 = numpy.ones ( N1 , dtype = numpy.float32 ) if w1_trivial else numpy.asarray ( weight1 , dtype = numpy.float32 )
-    w2 = numpy.ones ( N2 , dtype = numpy.float32 ) if w2_trivial else numpy.asarray ( weight2 , dtype = numpy.float32 )
-
-    s1 = numpy.sum ( numpy.abs ( w1 ) , dtype = numpy.float64 )
-    s2 = numpy.sum ( numpy.abs ( w2 ) , dtype = numpy.float64 )
-
-    if 0 < s1 : w1 = w1 * ( N1 / s1 )
-    if 0 < s2 : w2 = w2 * ( N2 / s2 )
-
-    return w1 , w2
+    weight1 = normalize_weight_to_N ( weight1 , N1 )
+    weight2 = normalize_weight_to_N ( weight2 , N2 )
+    
+    return weight1 , weight2 
 
 # =============================================================================
 ## Short labels for various statitical estimators 
@@ -650,7 +655,7 @@ def make_permutations ( nToys    ,
 # =============================================================================
 ## @class PERMUTATOR
 #  Helper class that allow to run permutation test in parallel 
-class PERMUTATOR(object) :
+class PERMUTATOR ( object ) :
     """ Helper class that allow to run permutation test in parallel 
     """
     def __init__ ( self    ,
@@ -667,13 +672,10 @@ class PERMUTATOR(object) :
 
         w1_trivial = weight_trivial ( weight1 )
         w2_trivial = weight_trivial ( weight2 )
-        
+
         if w1_trivial and w2_trivial :
             weight1 , weight2 = None, None 
-        else :
-            if w1_trivial : weight1 = numpy.ones ( len ( self.ds1 ) , dtype = float )
-            if w2_trivial : weight2 = numpy.ones ( len ( self.ds2 ) , dtype = float )
-        
+
         self.weight1 = weight1
         self.weight2 = weight2 
         self.t_value = t_value
@@ -780,7 +782,7 @@ class PERMUTATOR(object) :
 # =============================================================================
 ## @class TOYS
 #  Helper class to run toys for Goodness-of-Fit studies 
-class TOYS(object) :
+class TOYS ( object ) :
     """ Helper class that allow to run toys in parallel 
     """
     def __init__ ( self    , 

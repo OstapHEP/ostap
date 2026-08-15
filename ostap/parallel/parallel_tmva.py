@@ -84,7 +84,7 @@ class AddTMVA(Task) :
 #  @endcode
 #  @param dataset  input dataset to be updated 
 #  @param inputs   input variables
-#  @param weights_files files with TMVA weigths (tar/gz or xml)
+#  @param weights_files files with TMVA weights (tar/gz or xml)
 #  @param prefix   prefix for TMVA-variable
 #  @param suffix   suffix for TMVA-variable
 #  @param options  options to be used in TMVA Reader
@@ -92,7 +92,7 @@ class AddTMVA(Task) :
 #  @param aux       obligatory for the cuts method, where it represents the efficiency cutoff
 def addTMVAResponse ( chain                         , ## input chain 
                       inputs                        , ## input variables 
-                      weights_files                 , ## files with TMVA weigths (tar/gz or xml)
+                      weights_files                 , ## files with TMVA weights (tar/gz or xml)
                       spectators      = ()          , ## spectator variables                       
                       prefix          = 'tmva_'     , ## prefix for TMVA-variable 
                       suffix          = '_response' , ## suffix for TMVA-variable

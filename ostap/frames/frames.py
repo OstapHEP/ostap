@@ -1467,7 +1467,7 @@ _types_nD = _types_1D + _types_2D + _types_3D + _types_4D
 #  h3       = frame_project ( frame , h3_model , ( 'pt' , 'x'  , 'y' ) )
 #  ...
 #  @endcode
-#  Cuts/weigth are also can be specified
+#  Cuts/weight are also can be specified
 #  @code
 #  frame    = ...
 #  h1_model = ...
@@ -2191,7 +2191,7 @@ def frame_efficiency ( frame               ,
         all_vars.add ( wcut  ) 
         current = current.Define ( wname , '1.0*(%s)' % weight ) ## weight as variable
         current = current.Define ( wcut  , '!!(%s)'   % wname  ) ## weight as cut 
-        current = current.Filter ( wcut  , "FILTER-WEIGTH: %s" % weight)
+        current = current.Filter ( wcut  , "FILTER-WEIGHT: %s" % weight)
         
     ## add criterion 
     critname = var_name ( 'criterion_' , all_vars , *all_cols )

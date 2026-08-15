@@ -1052,20 +1052,21 @@ def np2raw ( data ) :
 # =============================================================================
 ## Trvial weight ? 
 #  - None
-#  - positive constant
+#  - one 
 #  - all ones
 def weight_trivial ( weight ) :
-    """ Trvial weight ? 
+    """ Trivial weight ? 
     - None
-    - positive constant
+    - one 
     - all ones
     """
     ## 
     if    weight is None                             : return True
-    elif  isinstance ( weight , num_types          ) : return 0 < weight 
-    elif  isinstance ( weight , numpy_buffer_types ) : return 0 < float ( weight ) 
+    elif  isinstance ( weight , num_types          ) : return 1 == weight 
+    elif  isinstance ( weight , numpy_buffer_types ) : return 1 == weight 
     elif  isinstance ( weight , numpy.ndarray      ) : return numpy.all ( weight == 1 ) 
     return False
+
 # =============================================================================
 ## Make a product over iterable `data`
 #  @code

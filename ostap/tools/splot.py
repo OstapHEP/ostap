@@ -181,8 +181,8 @@ class COWs ( object ) :
 # pdf     = ...
 # r , f   = pdf.fitTo ( dataset , ... )
 # s = sPlot1D ( pdf , dataset )
-# weigths  = s. weights
-# hweigths = s.hweights
+# weights  = s. weights
+# hweights = s.hweights
 # @endcode
 # @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 class sPLOT(COWs) :
@@ -198,8 +198,8 @@ class sPLOT(COWs) :
     >>> pdf     = ...
     >>> r , f   = pdf.fitTo ( dataset , ... )
     >>> s = sPlot1D ( pdf , dataset )
-    >>> weigths  = s. weights
-    >>> hweigths = s.hweights
+    >>> weights  = s. weights
+    >>> hweights = s.hweights
     """
     def __init__ ( self              ,
                    pdf               ,                   
@@ -336,8 +336,8 @@ class sPLOT(COWs) :
 # pdf     = ...
 # r , f   = pdf.fitTo ( dataset , ... )
 # s = hPlot1D ( pdf , dataset )
-# weigths  = s. weights
-# hweigths = s.hweights
+# weights  = s. weights
+# hweights = s.hweights
 # @endcode
 # @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 class hPlot(sPLOT) :
@@ -353,8 +353,8 @@ class hPlot(sPLOT) :
     >>> pdf     = ...
     >>> r , f   = pdf.fitTo ( dataset , ... )
     >>> s = hPlot1D ( pdf , dataset )
-    >>> weigths  = s. weights
-    >>> hweigths = s.hweights
+    >>> weights  = s. weights
+    >>> hweights = s.hweights
     """
     def __init__ ( self              ,
                    pdf               ,                   
@@ -562,8 +562,8 @@ class hPlot(sPLOT) :
 #  pdf     = ...
 #  r , f   = pdf.fitTo ( dataset , ... )
 #  s = sPlot1D ( pdf , dataset )
-#  weigths  = s. weights
-#  hweigths = s.hweights
+#  weights  = s. weights
+#  hweights = s.hweights
 #  @endcode
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 class hPlot1D(hPlot) :
@@ -579,8 +579,8 @@ class hPlot1D(hPlot) :
     >>> pdf     = ...
     >>> r , f   = pdf.fitTo ( dataset , ... )
     >>> s = sPlot1D ( pdf , dataset )
-    >>> weigths  = s. weights
-    >>> hweigths = s.hweights
+    >>> weights  = s. weights
+    >>> hweights = s.hweights
     """
     def __init__ ( self             ,
                    pdf              ,
@@ -661,8 +661,8 @@ class hPlot1D(hPlot) :
 #  pdf     = ...
 #  r , f   = pdf.fitTo ( dataset , ... )
 #  s = sPlot2D ( pdf , dataset )
-#  weigths  = s. weights
-#  hweigths = s.hweights
+#  weights  = s. weights
+#  hweights = s.hweights
 #  @endcode
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 class hPlot2D(hPlot) :
@@ -678,8 +678,8 @@ class hPlot2D(hPlot) :
     >>> pdf     = ...
     >>> r , f   = pdf.fitTo ( dataset , ... )
     >>> s = sPlot2D ( pdf , dataset )
-    >>> weigths  = s. weights
-    >>> hweigths = s.hweights
+    >>> weights  = s. weights
+    >>> hweights = s.hweights
     """
     def __init__ ( self                      ,
                    pdf                       ,
@@ -763,8 +763,8 @@ class hPlot2D(hPlot) :
 #  pdf     = ...
 #  r , f   = pdf.fitTo ( dataset , ... )
 #  s = sPlot3D ( pdf , dataset )
-#  weigths  = s. weights
-#  hweigths = s.hweights
+#  weights  = s. weights
+#  hweights = s.hweights
 #  @endcode
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
 class hPlot3D(hPlot) :
@@ -780,8 +780,8 @@ class hPlot3D(hPlot) :
     >>> pdf     = ...
     >>> r , f   = pdf.fitTo ( dataset , ... )
     >>> s = sPlot3D ( pdf , dataset )
-    >>> weigths  = s. weights
-    >>> hweigths = s.hweights
+    >>> weights  = s. weights
+    >>> hweights = s.hweights
     """
     def __init__ ( self                      ,
                    pdf                       ,

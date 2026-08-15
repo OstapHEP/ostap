@@ -110,11 +110,11 @@ class Reweighter(abc.ABC,Config) :
 
         if not weight_trivial ( target_weight ) :
             sw = numpy.sum ( target_weight )
-            if sw <= 0 : logger.error ( "Sum of target   weigths is non-positive: %s" % float ( sw ) )
+            if sw <= 0 : logger.error ( "Sum of target   weights is non-positive: %s" % float ( sw ) )
             
         if not weight_trivial ( original_weight ) :
             sw = numpy.sum ( original_weight )
-            if sw <= 0 : logger.error ( "Sum of original weigths is non-positive: %s" % float ( sw ) )
+            if sw <= 0 : logger.error ( "Sum of original weights is non-positive: %s" % float ( sw ) )
             
         # ==========================================================================
         ## initialize the base 

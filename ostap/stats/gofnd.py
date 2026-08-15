@@ -214,10 +214,13 @@ class GoF(AGoF,Config) :
         """
         if not self.check_weights ( data ) :
             raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
-                                                                    typename ( self.gof ) ) )
-    
-        ds1, ds2 , weight1 = self.wtransform ( pdf , data )         
-        return self.gof ( ds1 , ds2 , weight1 = weight1 , normalize = True )
+                                                                    typename ( self.gof ) ) )    
+        ds1, ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        return self.gof ( ds1        ,
+                          ds2       ,
+                          weight1   = weight1 ,
+                          weight2   = weight2 ,
+                          normalize = True    )
 
     # =========================================================================
     ## Calculate the t & p-values
@@ -238,8 +241,12 @@ class GoF(AGoF,Config) :
             raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
                                                                     typename ( self.gof ) ) )        
         ## 
-        ds1, ds2 , weight1 = self.wtransform ( pdf , data )         
-        tv , pv = self.gof.pvalue ( ds1 , ds2 , weight1 = weight1 , tvalue = tvalue )
+        ds1, ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        tv , pv = self.gof.pvalue ( ds1     ,
+                                    ds2     ,
+                                    weight1 = weight1 ,
+                                    weight1 = weight2 ,
+                                    tvalue  = tvalue  )
         ## 
         return tv , pv 
     
@@ -290,9 +297,8 @@ class GoF(AGoF,Config) :
         >>> pdf  = ...
         >>> data = ... ## as ROOT.RooAbsData
         >>> ds1, ds2 = gof.transform ( pdf , data ) 
-        """
-        
-        assert not data.isWeighted() or self.weights_supported , \
+        """        
+        assert self.weights_supported or not data.isWeighted () , \
             "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
                                                                        typename ( self.gof ) )
         
@@ -321,50 +327,45 @@ class GoF(AGoF,Config) :
     #  gof  = ...
     #  pdf  = ...
     #  data = ... ## as *WEIGHTED* ROOT.RooAbsData 
-    #  ds1 , ds2 , w = gof.wtransform ( pdf , data ) 
+    #  ds1 , ds2 , w1 , w2 = gof.wtransform ( pdf , data ) 
     #  @endcode
     def wtransform  ( self , pdf , data ) :
         """ Transform a (pdf,data) pair into (data_np, mc_np) pair 
         >>> gof  = ...
         >>> pdf  = ...
         >>> data = ... ## as ROOT.RooAbsData
-        >>> ds1, ds2 , w1 = gof.wtransform ( pdf , data ) 
+        >>> ds1, ds2 , w1 , w2 = gof.wtransform ( pdf , data ) 
         """
-
-        if not data.isWeighted() :
+        if not data.isWeighted () :
             ds1 , ds2 = self.transform ( pdf , data )
-            w1  = None 
-            return ds1 , ds2 , w1 
+            return ds1 , ds2 , None , None 
 
         data1 = data
         data2 = self.generate ( pdf , data )
 
-        vars1 = data1.get() 
-        vars2 = data2.get()
+        vars1 = data1.get () 
+        vars2 = data2.get ()
         
         wname = data1.wname
         
         var_lst  = tuple ( sorted ( v.name for v in vars1 if v in vars2 and v.name != wname ) )  
                    
-        ds1 , w1 = data1.slice ( var_lst , progress = False , structured = True ) ## , weight_name = data.wname() )
+        ds1 , w1 = data1.slice ( var_lst , progress = False , structured = True )
         ds2 , _  = data2.slice ( var_lst , progress = False , structured = True )
 
-        if not weight_trivial ( w1 ) : w1 /= numpy.sum ( w1 )
-                        
-        ## scale the weights properly, such as sum(w) === N 
-        if w1 is None                                 : pass
-        elif isinstance ( w1 , num_types ) and 0 < w1 : w1 = numpy.ones ( len ( ds1 ) , dtype = float ) 
-        elif numpy.all  ( w1 == 1 )                   : pass 
-        else                       :
-            wsum = numpy.sum ( w1 )
-            assert 0 < wsum , "Sum of weights is non-positive: %g" % wsum
-            w1   = w1 * ( len ( w1 ) * 1.0 / wsum )
+        ## scale the weights
+        if weight_trivial ( w1 ) :
+            w1 , w2  = None , None
+        else :
+            NW  = 1.0 * numpy.sum ( numpy.abs ( w1 ) )
+            N2  = len ( data2 )
+            w2  = numpy.full ( N2 , fill_value = ( NW * 1.0 / N2 ) , dtype = numpy.float32 )
             
         ## delete 
-        if isinstance ( data2  , ROOT.RooDataSet ) : data2.clear()            
+        if isinstance ( data2 , ROOT.RooDataSet ) : data2.clear()            
         del data2 
             
-        return ds1 , ds2 , w1 
+        return ds1 , ds2 , w1 , None 
     
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
@@ -1136,12 +1137,12 @@ class ADVAL_LightGBM(GoF) :
         >>> data   = ... 
         >>> tvalue = ppd.tvalue ( pdf , data ) 
         """
-        ds1 , ds2 , weight1 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
         ## estimate the t-value 
         return self.gof ( ds1                 ,
                           ds2                 ,
                           weight1   = weight1 ,
-                          weight2   = None    ,
+                          weight2   = weight2 ,
                           normalize = True    )
     
     # =========================================================================
@@ -1159,12 +1160,12 @@ class ADVAL_LightGBM(GoF) :
         >>> data = ... 
         >>> t , p = ppd.pvalue ( pdf , data ) 
         """
-        ds1 , ds2 , weight1 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
         ## estimate t&p-values 
         return self.gof.pvalue ( ds1               ,
                                  ds2               ,
                                  weight1 = weight1 , 
-                                 weight2 = None    ,
+                                 weight2 = weight2 ,
                                  tvalue  = tvalue  )        
 
     

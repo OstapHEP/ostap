@@ -140,7 +140,7 @@ class ChopperTraining(Task) :
 #  @param chopper       chopping category/formula
 #  @param N             number of categories
 #  @param inputs        input variables
-#  @param weights_files files with TMVA weigths (tar/gz or xml)
+#  @param weights_files files with TMVA weights (tar/gz or xml)
 #  @param category_name the category
 #  @param prefix        prefix for TMVA-variable
 #  @param suffix        suffix for TMVA-variable
@@ -152,7 +152,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                           chopper                     , ## chopping category/formula 
                           N                           , ## number of categrories
                           inputs                      , ## input variables 
-                          weights_files               , ## files with TMVA weigths (tar/gz or xml)
+                          weights_files               , ## files with TMVA weights (tar/gz or xml)
                           spectators    = ()          , ## spectators 
                           category_name = 'chopping'  , ## category name 
                           prefix        = 'tmva_'     , ## prefix for TMVA-variable         

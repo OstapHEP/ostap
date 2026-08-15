@@ -348,7 +348,6 @@ class USTAT(AGoF,Config) :
         conf [ 'algorithm' ] = self.__algorithm
         return conf
 
-    
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 
     #  @code

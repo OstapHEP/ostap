@@ -208,7 +208,7 @@ class Weight(object) :
     The quantity `w' will be an event  weight
     
     If list of `factors' constains more than one entry,
-    to each entry weigth is calculated independently and total weight
+    to each entry weight is calculated independently and total weight
     is a product of individual weights.
 
     For simplistic case one can put some storable function or function object
@@ -390,7 +390,7 @@ class Weight(object) :
 
     ## calculate the weight for the given "event"
     def __call__ ( self , s ) :
-        """ Calculate the weigth for the given `event' (==record in TTree/TChain or RooDataSet):
+        """ Calculate the weight for the given `event' (==record in TTree/TChain or RooDataSet):
         >>> weight = Weight ( ... )
         >>> tree   = ...
         >>> w = weight ( tree )
@@ -532,7 +532,7 @@ class Weight(object) :
     #  - merge    : merge list of callables from DB into the single callable ?
     #  - skip     : use only certain elements from the list of callables from DBASE
     #
-    # Schematic data flow to get the weigth for the given event 
+    # Schematic data flow to get the weight for the given event 
     #  - tree/chain/dataset -> accessor -> database(address) -> weight
     class  Var(object) :
         """ Helper class to keep information about single reweighting
@@ -541,13 +541,13 @@ class Weight(object) :
         - `merge'     : merge list of callables from DB into the single callable ?
         - `skip'      : use only certain elements from the list of callables from DBASE
         
-        Schematic data flow to get the weigth for the given event 
+        Schematic data flow to get the weight for the given event 
         - tree/chain/dataset -> accessor -> database(address) -> weight
         """
         ##  constructor
         #   @param sccessor  the accessor function:  tree -> variable(s) 
         #   @param address   the address of   reweighintg object in DBASE 
-        #   @param merge     merge sequence of reweigthing objects ?
+        #   @param merge     merge sequence of reweighting objects ?
         #   @param skip      skip some reweigting objects ?
         def __init__ ( self ,
                        accessor         ,   ## accessor function:  tree -> variable(s) 
@@ -560,7 +560,7 @@ class Weight(object) :
             - `merge'    : merge list of callables from DB into the single callable ?
             - `skip'     : use only certain elements from the list of callables from DBASE
             
-            Schematic data flow to get the weigth for the given event 
+            Schematic data flow to get the weight for the given event 
             - tree/chain/dataset -> accessor -> database(address) -> weight
             """
 
@@ -1019,7 +1019,7 @@ ComparisonPlot. draw = _cmp_draw_
 #   database             , ## datadabse to store/update reweigting results
 #   delta                , ## stopping criteria for "mean"    weight variation
 #   minmax               , ## stopping criteria for "min/max" weight variation
-#   power                , ## effective power to apply to the weigths
+#   power                , ## effective power to apply to the weights
 #   debug        = True  , ## store debuig information in database
 #   make_plots   = True  , ## produce useful comparison plots
 #   force_update = False , ## force DB update even for "good" results 
@@ -1062,7 +1062,7 @@ def makeWeights  ( dataset                      ,
     ... database          , ## datadabse to store/update reweigting results
     ... delta             , ## stopping criteria for `mean`    weight variation
     ... minmax            , ## stopping criteria for `min/max` weight variation
-    ... power             , ## effective power to apply to the weigths
+    ... power             , ## effective power to apply to the weights
     ... debug      = True , ## store debuig information in database
     ... make_plots = True , ## produce useful comparison plots
     ... tag        = 'RW' ) ## tag for better printout

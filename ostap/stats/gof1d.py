@@ -411,7 +411,7 @@ class GoF1D(object) :
         if dataset.isWeighted () :
             wstat      = dataset.statVar ( "1" )
             wmin, wmax = wstat.wminmax()
-            ## the weigth is fake/trival, remove it
+            ## the weight is fake/trival, remove it
             assert dataset.weight_trivial , \
                 "Non-trivial weights are not supported %s" % typename ( self )
         

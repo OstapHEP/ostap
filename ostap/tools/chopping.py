@@ -624,7 +624,7 @@ class Trainer(object) :
             "The weight %s is not accessible in background sample!" % self.background_weight 
           
         # =====================================================================
-        ## check for signal weigths
+        ## check for signal weights
         # =====================================================================
         if self.signal_weight :
             from ostap.stats.statvars import data_statistic
@@ -1792,7 +1792,7 @@ class Reader(object) :
 
     @property
     def weights ( self ) :
-        """`weights' : input structure of weigth  files """
+        """`weights' : input structure of weight  files """
         return self.__weights
     
     @property
@@ -2224,7 +2224,7 @@ def _add_response_chain_ ( chain      , * ,
 #  @param chopper       chopping category/formula
 #  @param N             number of categories
 #  @param inputs        input variables
-#  @param weights_files files with TMVA weigths (tar/gz or xml)
+#  @param weights_files files with TMVA weights (tar/gz or xml)
 #  @param category_name the category
 #  @param prefix        prefix for TMVA-variable
 #  @param suffix        suffix for TMVA-variable
@@ -2236,7 +2236,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
                           chopper                     , ## chopping category/formula 
                           N                           , ## number of categrories
                           inputs                      , ## input variables 
-                          weights_files               , ## files with TMVA weigths (tar/gz or xml)
+                          weights_files               , ## files with TMVA weights (tar/gz or xml)
                           spectators    =  ()         , 
                           category_name = 'chopping'  , ## category name 
                           prefix        = 'tmva_'     , ## prefix for TMVA-variable         

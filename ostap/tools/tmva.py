@@ -2350,7 +2350,7 @@ class Reader(object)  :
         self.__reader.SetOptions ( options ) 
         self.__reader.SetVerbose ( True if verbose else False )
 
-        ## treat the weigths files
+        ## treat the weights files
         self.__weights = WeightsFiles ( weights_files )
 
         ##  book the variables:
@@ -2455,7 +2455,7 @@ class Reader(object)  :
 
     @property
     def weights ( self ) :
-        """'weigths' : weights-files """
+        """'weights' : weights-files """
         return self.__weights 
         
     @property
@@ -2940,7 +2940,7 @@ def _add_response_chain_ ( chain      , *          ,
 #  @endcode
 #  @param dataset  input dataset to be updated 
 #  @param inputs   input variables
-#  @param weights_files files with TMVA weigths (tar/gz or xml)
+#  @param weights_files files with TMVA weights (tar/gz or xml)
 #  @param prefix   prefix for TMVA-variable
 #  @param suffix   suffix for TMVA-variable
 #  @param options  options to be used in TMVA Reader
@@ -2949,7 +2949,7 @@ def _add_response_chain_ ( chain      , *          ,
 def addTMVAResponse ( dataset                     ,   ## input dataset to be updated
                       * , 
                       inputs                      ,   ## input variables 
-                      weights_files               ,   ## files with TMVA weigths (tar/gz or xml)
+                      weights_files               ,   ## files with TMVA weights (tar/gz or xml)
                       spectators    = ()          ,   ## spectator variables 
                       prefix        = 'tmva_'     ,   ## prefix for TMVA-variable 
                       suffix        = '_response' ,   ## suffix for TMVA-variable
@@ -3036,7 +3036,7 @@ def addTMVAResponse ( dataset                     ,   ## input dataset to be upd
 #  - due to some mistic reasons the standard macro `TMVA::variables` often
 #  crashes
 # 
-#  This function is a ligthweigth replacement
+#  This function is a ligthweight replacement
 #  @see `TMVA::variables`
 #
 #  @code

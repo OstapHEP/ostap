@@ -785,13 +785,13 @@ def points ( func , abscissas  = None ) :
     return Ostap.Math.Interpolation.Table ( doubles ( abscissas ) , doubles ( func ) )
 
 # =============================================================================
-## get all weigths from Berrut1st and Berrut2nd interpolants
+## get all weights from Berrut1st and Berrut2nd interpolants
 #  @code
 #  interpolant = ....
 #  interpolant.weights()
 #  @endcode 
 def _b12_weights_ ( self ) :
-    """Get all weigths from Berrut1st and Berrut2nd interpolants
+    """Get all weights from Berrut1st and Berrut2nd interpolants
     >>> interpolant = ....
     >>> interpolant.weights()
     """
@@ -943,7 +943,7 @@ class BaseInterpolant(abc.ABC) :
     # =========================================================================
     @abc.abstractmethod
     def weight ( self , index ) :
-        """Get the weigth for the given interpolation node"""
+        """Get the weight for the given interpolation node"""
         return NotImplemented
          
     # =========================================================================
@@ -962,7 +962,7 @@ class BaseInterpolant(abc.ABC) :
         return len ( self.__table )
 
     # ==========================================================================
-    ## array of weigths
+    ## array of weights
     def weights ( self ) :
         """Get array of weights
         """
@@ -1014,7 +1014,7 @@ class Berrut1st(BaseInterpolant) :
     """Berrut's 1st barycentric rational interpolant
     """ 
     def weight ( self , index ) :
-        """Get the weigth for the given interpolation node"""
+        """Get the weight for the given interpolation node"""
         return 1.0 if ( index % 2 ) else -1.0 
     
 # =============================================================================
@@ -1023,7 +1023,7 @@ class Berrut2nd(BaseInterpolant) :
     """Berrut's 2nd  barycentric rational interpolant
     """ 
     def weight ( self , index ) :
-        """Get the weigth for the given interpolation node"""
+        """Get the weight for the given interpolation node"""
         
         if index == 0 : return 1.0
         N = len ( self ) 
@@ -1060,11 +1060,11 @@ class Barycentric(BaseInterpolant) :
                     
             ws.append ( 1.0 / ww )
             
-        self.__weigths = array.array ( 'd' , ws ) 
+        self.__weights = array.array ( 'd' , ws ) 
         
     def weight ( self , index ) :
-        """Get the weigth for the given interpolation node"""
-        return self.__weigths [ index ]
+        """Get the weight for the given interpolation node"""
+        return self.__weights [ index ]
     
     @property
     def weights ( self ) :
@@ -1121,7 +1121,7 @@ class FloaterHormann(BaseInterpolant) :
         self.__weights = array.array( 'd',  ws ) 
 
     def weight ( self , index ) :
-        """Get the weigth for the given interpolation node"""
+        """Get the weight for the given interpolation node"""
         return self.__weights [ index ]
     
     @property
