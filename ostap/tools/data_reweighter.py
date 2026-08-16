@@ -17,7 +17,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.utils.core         import typename
-from   ostap.math.math_base     import weight_trivial
+from   ostap.stats.utils        import weight_trivial, num_features, num_samples  
 from   ostap.stats.statvars     import data_slice 
 from   ostap.trees.cuts         import vars_and_cuts 
 from   ostap.utils.config       import Config

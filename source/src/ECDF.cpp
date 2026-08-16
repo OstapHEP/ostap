@@ -502,9 +502,9 @@ Ostap::Math::WECDF::WECDF
   const std::size_t nw = weights.size() ;
   //
   Ostap::Assert ( nw <= nd                               ,
-		  "Mismatch wth data/weigth structures!" ,
-		  "Ostap::Math::WECDF"                   ,
-		  INVALID_DATA , __FILE__ , __LINE__     ) ;
+                  "Mismatch wth data/weigth structures!" ,
+                  "Ostap::Math::WECDF"                   ,
+                  INVALID_DATA , __FILE__ , __LINE__     ) ;
   //
   m_data.reserve ( nd ) ;
   for ( std::size_t i = 0 ; i < nd ; ++i )
@@ -601,7 +601,7 @@ Ostap::Math::WECDF::add
                values.m_data.begin () ,
                values.m_data.end   () ,
                tmp.begin           () ,
-	       COMPARE             () ) ;
+               COMPARE             () ) ;
   ///
   std::swap ( m_data , tmp  ) ;
   /// update the counter 
@@ -625,7 +625,7 @@ Ostap::Math::WECDF::add
                aux.begin    () ,
                aux.end      () ,
                tmp.begin    () ,
-	       COMPARE      () ) ;
+               COMPARE      () ) ;
   ///
   std::swap ( m_data , tmp  ) ;
   ///
@@ -657,12 +657,12 @@ Ostap::Math::WECDF::add
       values2 = values ;
       /// remove bad elements 
       Data::iterator remove = std::remove_if
-	( values2.begin () ,
-	  values2.end   () ,
-	  [] ( const Data::value_type& item ) -> bool
-	  { return
-	      !std::isfinite ( item.first  ) ||
-	      !std::isfinite ( item.second ) || !item.second ; } ) ;
+        ( values2.begin () ,
+          values2.end   () ,
+          [] ( const Data::value_type& item ) -> bool
+          { return
+              !std::isfinite ( item.first  ) ||
+              !std::isfinite ( item.second ) || !item.second ; } ) ;
       if ( values2.end() != remove ) { values2.erase ( remove , values2.end() ) ; } 
       /// sort it 
       std::sort ( values2.begin() , values2.end  () , COMPARE () ) ;      
@@ -676,7 +676,7 @@ Ostap::Math::WECDF::add
                input->begin  () ,
                input->end    () ,
                tmp.begin     () ,
-	       COMPARE       () ) ;
+               COMPARE       () ) ;
   /// 
   std::swap ( m_data , tmp ) ;
   /// (1) adjust the content 
@@ -752,7 +752,7 @@ Ostap::Math::WECDF::ranks
 ( const Ostap::Math::ECDF& sample ) const
 {
   const Data::size_type N  = size() ;
-  // fill outptut array with N
+  // fill output array with N
   Indices result ( sample.size () ,  N ) ;
   Data::size_type NS = sample.size() ;
   for ( Data::size_type i = 0 ; i < NS ; ++i )

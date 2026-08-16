@@ -19,11 +19,11 @@ __all__     = (
     'GBReweighter'              , ## Reweighter based on GBReweighter from hep_ml 
 ) 
 # =============================================================================
-from   ostap.math.math_base   import weight_trivial
 from   ostap.core.ostap_types import num_types 
 from   ostap.utils.core       import typename
 from   ostap.utils.basic      import numcpu, num_jobs, NoContext 
-from   ostap.tools.reweighter import Reweighter, num_features, num_samples  
+from   ostap.tools.reweighter import Reweighter
+from   ostap.stats.utils      import weight_trivial , num_features, num_samples  
 import numpy, abc, warnings
 # =============================================================================
 # logging 
@@ -197,6 +197,11 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         ns = num_samples( X )
         nf = num_features( X )
         return ns < max ( 300 if nf <= 3 else 1000 , nf * 50 )
+
+    # =========================================================================
+    ## get the regularized params 
+    def regularized_config ( self , config , n_features , n_samples ) :
+        return None 
 
     # =========================================================================
     # Internal Fitting Pipeline
@@ -617,7 +622,7 @@ class LightGBMDensityReweighter ( DensityReweighter ):
             num_leaves = 2 ** max_depth - 1
             params [ 'max_depth'         ] = max_depth 
             params [ 'num_leaves'        ] = min ( num_leaves , params.pop ( 'num_leaves'  , 31 ) )
-            params [ 'min_child_samples' ] = max ( 75 , params.pop ( 'min_child_samples' , 50 ) )
+            params [ 'min_child_samples' ] = max ( 75   , params.pop ( 'min_child_samples' , 50 ) )
             params [ 'colsample_bytree'  ] = 1.0 
             params [ 'reg_alpha'         ] = max ( 0.5  , params.pop ( 'reg_alpha'     , 0.1  ) )
             params [ 'reg_lambda'        ] = max ( 2.0  , params.pop ( 'reg_lambda'    , 1.0  ) )
@@ -740,11 +745,11 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         else : early_stopping_rounds = 10 
         
         if self.use_strong_regularization ( X_train ) :  
-            params [ 'max_depth'         ] = min (  3 , params.pop ( 'max_depth'   ,  5 ) ) 
-            params [ 'min_child_weight'  ] = max ( 20 , params.pop ( 'min_child_weight' , 5 ) )
+            params [ 'max_depth'         ] = min (  3   , params.pop ( 'max_depth'   ,  5 ) ) 
+            params [ 'min_child_weight'  ] = max ( 20   , params.pop ( 'min_child_weight' , 5 ) )
             params [ 'colsample_bytree'  ] = 1.0 
-            params [ 'alpha'             ] = max ( 0.5 , params.pop ( 'alpha'  , 0.1 ) )
-            params [ 'lambda'            ] = max ( 2.0 , params.pop ( 'lambda' , 1.0 ) )
+            params [ 'alpha'             ] = max ( 0.5  , params.pop ( 'alpha'  , 0.1 ) )
+            params [ 'lambda'            ] = max ( 2.0  , params.pop ( 'lambda' , 1.0 ) )
             params [ "learning_rate"     ] = min ( 0.02 , params.get ( "learning_rate" , 0.03 ) )
             num_boost_round       = min ( 150 , num_boost_round       )
             early_stopping_rounds = min (  10 , early_stopping_rounds )
@@ -867,7 +872,7 @@ class CatBoostDensityReweighter ( DensityReweighter ):
             params [ 'rsm'               ] = 1.0
             params [ 'l2_leaf_reg'       ] = max ( 2.0  , params.pop ( 'l2_leaf_reg'       , 3.0 ) )
             params [ "learning_rate"     ] = min ( 0.02 , params.get ( "learning_rate"     , 0.03 ) )
-            iterations       = min ( 150 , iterations       )
+            iterations            = min ( 150 , iterations       )
             early_stopping_rounds = min (  10 , early_stopping_rounds )
         
         params [ 'iterations'            ] = iterations

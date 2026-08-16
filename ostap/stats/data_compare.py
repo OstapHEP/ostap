@@ -18,7 +18,8 @@ __all__     = (
 from   collections            import namedtuple 
 from   ostap.core.ostap_types import sequence_types
 from   ostap.utils.core       import typename 
-from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY, weight_trivial
+from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
+from   ostap.stats.utils      import weight_trivial
 from   ostap.stats.gof        import AGoFnp 
 import ROOT 
 # =============================================================================

@@ -40,12 +40,21 @@ __all__     = (
     'ADVAL_XGBoost'      , ## Use Adversarial Validation as GoF estimator 
     'ADVAL_RandomForest' , ## Use Adversarial Validation as GoF estimator 
     'ADVAL_PyTorch'      , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_Keras'        , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_Keras'        , ## Use Adversarial Validation as GoF estimator
+    ##
+    ## 1D-(weighted) case
+    'KolmogorovSmirnov'  , ## Kolmogorov-Sminov GoF estimator 
+    'Kuiper'             , ## Kuiper            GoF estimator 
+    'AndersonDarling'    , ## Anderson-Darling  GoF estimator 
+    'CramerVonMises'     , ## Cramer-von Mises  GoF estimator 
+    'BerkJones'          , ## Berk-Jones        GoF estimator     
+    'ZK'                 , ## ZK               GoF estimator
+    'ZA'                 , ## ZA               GoF estimator
+    'ZC'                 , ## ZC               GoF estimator
 )
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
 from   ostap.core.cpu_info      import HAS_AVX2 
-from   ostap.math.math_base     import weight_trivial 
 from   ostap.utils.core         import typename  
 from   ostap.stats.gof          import AGoF, AGoFnp 
 from   ostap.core.core          import Ostap, VE 
@@ -59,6 +68,7 @@ from   ostap.stats.gof_utils    import TOYS
 from   ostap.stats.ustat        import USTAT
 from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.stats.gof_utils    import format_row, draw_ecdf  
+from   ostap.stats.utils        import weight_trivial 
 import ostap.stats.gof_np       as     GNP
 import ostap.logger.table       as     T 
 import ROOT, numpy, math  
@@ -158,7 +168,15 @@ class GoF(AGoF,Config) :
     def weights_supported ( self ) :
         """`weghts_supported`: Are weights supported by this estimator?
         """
-        return self.gof.weights_supported 
+        return self.gof.weights_supported
+    
+    # =========================================================================
+    ## Are negative weights supported by this GoF estimator?
+    @property 
+    def negative_weights_supported ( self ) :
+        """`negative_weghts_supported`: Are weights supported by this estimator?
+        """
+        return self.gof.negative_weights_supported
     
     @property
     def t_value ( self ) : return self.gof.t_value
@@ -243,7 +261,8 @@ class GoF(AGoF,Config) :
             raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
                                                                     typename ( self.gof ) ) )        
         ## 
-        ds1, ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )
+        
         tv , pv = self.gof.pvalue ( ds1     ,
                                     ds2     ,
                                     weight1 = weight1 ,
@@ -347,7 +366,10 @@ class GoF(AGoF,Config) :
         if not data.isWeighted () :
             ds1 , ds2 = self.transform ( pdf , data )
             return ds1 , ds2 , None , None 
-
+        
+        if not data.weight_trivial and not self.weights_supported :
+            raise RuntimeError ( "%s.wtransform: input dataset has non-trivial weights!" % typename ( self ) )
+        
         data1 = data
         data2 = self.generate ( pdf , data )
 
@@ -364,10 +386,12 @@ class GoF(AGoF,Config) :
         ## scale the weights
         if weight_trivial ( w1 ) :
             w1 , w2  = None , None
+        elif w1.min()< 0 and not self.negative_weights_supported :
+            raise RuntimeError ( "%s.wtransform: input dataset has negative weights!" % typename ( self ) )
         else :
-            NW  = 1.0 * numpy.sum ( numpy.abs ( w1 ) )
-            N2  = len ( data2 )
-            w2  = numpy.full ( N2 , fill_value = ( NW * 1.0 / N2 ) , dtype = numpy.float32 )
+            N1 , N2  = len ( data1 ) , len ( data2 ) 
+            ## w1      *= N1 / numpy.sum ( w1 )            
+            w2       = numpy.ones ( N2 , dtype = numpy.float32 )
             
         ## delete 
         if isinstance ( data2 , ROOT.RooDataSet ) : data2.clear()            
@@ -1118,7 +1142,6 @@ class ADVAL_LightGBM(GoF) :
                        estimator = ADVAL_TYPE ( nToys    = nToys    ,
                                                 parallel = parallel ,
                                                 silent   = silent   ,
-                                                nGroups  = mcFactor , 
                                                 progress = progress , **params ) ,                       
                        mcFactor = mcFactor )
         
@@ -1472,7 +1495,257 @@ class ADVAL_Keras(ADVAL_LightGBM) :
                                   parallel   = parallel ,
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
+
         
+# =============================================================================
+## @class KolmogorovSmirnov
+#  Goodness of 1D (weighted) fit estimator using Kolmogorov-Smirnot test 
+class KolmogorovSmirnov(GoF) :
+    """ Goodness of 1D (weighted) fit estimator using Kolmogorov-Smirnot test 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = False ,
+                   progress       = True  ,
+                   ESTIMATOR_TYPE = None  ,
+                   mcFactor       = 20    , **params     ) : 
+        
+        from ostap.stats.gof1dw import KolmogorovSmirnov as KS, BootstrapGoF as BS 
+        if not ESTIMATOR_TYPE : ESTIMATOR_TYPE = KS        
+        assert issubclass ( ESTIMATOR_TYPE , BS ) , "Invalid ESTIMATOR %s" % ESTIMATOR_TYPE
+        
+        GoF.__init__ ( self ,
+                       estimator = ESTIMATOR_TYPE ( nToys    = nToys    ,
+                                                    parallel = parallel ,
+                                                    silent   = silent   ,
+                                                    progress = progress , **params ) ,                       
+                       mcFactor = mcFactor )
+        
+    @property
+    def t_value ( self ) : return self.gof.t_value
+    @property
+    def p_value ( self ) : return self.gof.p_value
+    @property
+    def ecdf    ( self ) : return self.gof.ecdf 
+    @property
+    def counter ( self ) : return self.gof.counter 
+
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Fit 
+    #  @code
+    #  ppd    = ...
+    #  pdf    = ...  
+    #  data   = ... 
+    #  tvalue = ppd ( pdf , data ) 
+    #  @endcode
+    def tvalue ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> ppd    = ...
+        >>> pdf    = ... 
+        >>> data   = ... 
+        >>> tvalue = ppd.tvalue ( pdf , data ) 
+        """
+        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        ## estimate the t-value 
+        return self.gof ( ds1                 ,
+                          ds2                 ,
+                          weight1   = weight1 ,
+                          weight2   = weight2 ,
+                          normalize = True    )
+    
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  ppd  = ...
+    #  pdf  = ...
+    #  data = ... 
+    #  t , p = ppd.pvalue ( pdf , data )
+    #  @endcode 
+    def pvalue ( self , pdf , data , * , tvalue = None ) :
+        """ Calculate the t & p-values
+        >>> ppd  = ...
+        >>> pdf  = ... 
+        >>> data = ... 
+        >>> t , p = ppd.pvalue ( pdf , data ) 
+        """
+        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        ## estimate t&p-values 
+        return self.gof.pvalue ( ds1               ,
+                                 ds2               ,
+                                 weight1 = weight1 , 
+                                 weight2 = weight2 ,
+                                 tvalue  = tvalue  )        
+
+# =============================================================================
+## @class Kuiper
+#  Goodness of 1D (weighted) fit estimator using Kuiper test 
+class Kuiper ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Kolmogorov-Smirnot test 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self               , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = False ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
+        
+        from ostap.stats.gof1dw import Kuiper as KS
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = KS       ,
+                           mcFactor       = mcFactor , **params )
+
+# =============================================================================
+## @class AndersonDarling
+#  Goodness of 1D (weighted) fit estimator using Anderson-Darling test 
+class AndersonDarling ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Anderson-Darlinh test 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self               , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = False ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
+        
+        from ostap.stats.gof1dw import AndersonDarling as AD 
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = AD       ,
+                           mcFactor       = mcFactor , **params )
+
+# =============================================================================
+## @class CramerVonMises
+#  Goodness of 1D (weighted) fit estimator using Cramer-von Mises test 
+class CramerVonMises ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Cramer-von Mises test 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self               , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = False ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
+        
+        from ostap.stats.gof1dw import CramerVonMises as CvM 
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = CvM      ,
+                           mcFactor       = mcFactor , **params )
+        
+# =============================================================================
+## @class BerkJones 
+#  Goodness of 1D (weighted) fit estimator using Berk-Jones test 
+class BerkJones ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Berk-Jones test 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self               , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = False ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
+        
+        from ostap.stats.gof1dw import BerkJones as BJ
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = BJ     ,
+                           mcFactor       = mcFactor , **params )
+        
+# =============================================================================
+## @class ZA
+#  Goodness of 1D (weighted) fit estimator using Zhang' ZAtest 
+class ZA ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Zhang' ZA test 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self               , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = False ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
+        
+        from ostap.stats.gof1dw import ZA 
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = ZA    ,
+                           mcFactor       = mcFactor , **params )
+
+# =============================================================================
+## @class ZC
+#  Goodness of 1D (weighted) fit estimator using Zhang' ZC test 
+class ZC ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Zhang' ZC test 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self               , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = False ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
+        
+        from ostap.stats.gof1dw import ZC 
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = ZC    ,
+                           mcFactor       = mcFactor , **params )
+
+# =============================================================================
+## @class ZK
+#  Goodness of 1D (weighted) fit estimator using Zhang' ZK test 
+class ZK ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Zhang' ZK test 
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self               , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = False ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
+        
+        from ostap.stats.gof1dw import ZK 
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = ZK    ,
+                           mcFactor       = mcFactor , **params )
+        
+
 # =============================================================================
 if '__main__' == __name__ :
     

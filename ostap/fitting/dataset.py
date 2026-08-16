@@ -2369,11 +2369,11 @@ def _rds_wtrivial_  ( dataset ) :
     """
     if not dataset.isWeighted() : return True
     wstat = dataset.statVar ( "1" )
-    if hasattr ( vstat , 'wminmax' ) :
+    if hasattr ( wstat , 'wminmax' ) :
         wmin , wmax = wstat.wminmax()
         return 0 < wmin < wmax and isequal ( wmin , wmax )
     ## 
-    return isequal ( wstat.nEff ()  , len ( dataset ) ) 
+    return isequal ( wstat.nEff () , len ( dataset ) ) 
 
 
 ## define it as property 

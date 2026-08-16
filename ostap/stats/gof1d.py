@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/stats/gof_1d.py
+## @file ostap/stats/gof1d.py
 #  Set of utulities for goodness-of-fit studies for 1D-fits
 #  @see https://doi.org/10.1111/1467-9868.00337 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -166,7 +166,7 @@ def cramer_von_mises ( cdf_data  ) :
     result  = sum ( ( Fi - ( i + 0.5 ) / n ) ** 2 for ( i, Fi ) in enumerate ( cdf_data ) ) 
     return result + 1 / ( 12.0 * n ) 
 # =============================================================================
-## Get Kuiper's statistis K
+## Get Kuiper's statistic K
 #  @code
 #  cdf_data =...
 #  k        = kuiper ( cdf_data )
@@ -1291,7 +1291,7 @@ class GoF_1D(AGoF) :
         pval = gof_toys.result ( self.__what ).pvalue 
         
         return tval , pval 
-    
+
 # =============================================================================
 if '__main__' == __name__ :
     

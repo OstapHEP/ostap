@@ -56,12 +56,13 @@ __all__     = (
     'ADVAL_KERAS' , ## Keras-based class for Adversarial Validation    
 )
 # =============================================================================
-from   ostap.core.ostap_types   import string_types
-from   ostap.utils.core         import typename
-from   ostap.utils.basic        import numcpu, num_jobs, run_parallel 
-from   ostap.math.math_base     import weight_trivial 
-from   ostap.stats.gof_np       import GoFnp 
-from   sklearn.metrics          import roc_auc_score
+from   ostap.core.ostap_types import string_types
+from   ostap.utils.core       import typename
+from   ostap.utils.basic      import numcpu, num_jobs, run_parallel
+from   ostap.stats.utils      import ( weight_trivial , compatible_shapes ,
+                                       num_samples    , num_features      ) 
+from   ostap.stats.gof_np     import GoFnp 
+from   sklearn.metrics        import roc_auc_score
 import ROOT, numpy, abc, os   
 # =============================================================================
 # Logging setup 
@@ -72,6 +73,10 @@ else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Implement Adversarial Validation for Goodness-of-fit & Two-Samples test' )
 # =============================================================================
+DEFAULT_ESTIMATORS         = 500
+MAX_REGULARIZED_ESTIMATORS = 100
+
+# =============================================================================
 ## Calculate t-value from AUC metric
 #  t-value is defined as \f$ 100 \times \left( 1 - 2 \times AUC \right)^2 \f$ 
 def tvalue_from_AUC ( auc ) :
@@ -79,14 +84,6 @@ def tvalue_from_AUC ( auc ) :
     """
     return 100.0 * ( 1.0 - 2.0 * auc ) ** 2
 
-# ============================================================================
-## Number of features for training data 
-#  Safe extraction of n_features (supports DataFrame, 2D array, 1D vector)
-def num_features ( X ) : 
-    """ Number of features for training data
-    - Safe extraction of n_features (supports DataFrame, 2D array, 1D vector)
-    """
-    return X.shape[1] if hasattr ( X , 'shape' ) and 1 < len ( X.shape ) else 1 
 
 # =============================================================================
 ## Invert binary labels or probabilities (1 - x) where sample_weight < 0.
@@ -210,7 +207,8 @@ class ADVAL_base (GoFnp):
         
         self.__n_splits            = n_splits 
         self.__importance_features = {}
-
+        self.__regularized         = None  
+        
         GoFnp.__init__ ( self                  ,
                          nToys     = nToys     ,
                          parallel  = parallel  , 
@@ -231,9 +229,36 @@ class ADVAL_base (GoFnp):
         """`config`: Get all configuration parameters"""
         conf = {}
         conf.update ( super().config ) 
-        conf [ 'n_splits' ] = self.n_splits 
+        conf [ 'n_splits' ] = self.n_splits
+        for key, value in self.regularized.items() :  conf [ '[reg] %s' % key ] = value
         return conf
     
+    # ==========================================================================
+    @property 
+    def regularized ( self ) :
+        """`regularized`: regularized configuration
+        - attention: copy is returned!
+        """
+        if self.__regularized is None :
+            self.__regularized = self.regularization ()
+        ## ATTENTION HERE: COPY IS RETURNED 
+        return self.__regularized.copy() ## ATTENTION HERE: COPY IS RETURNED 
+
+    # =========================================================================
+    ##  Regularize 
+    #   @code
+    #   gof = ...
+    #   gof.regularization () 
+    #   @endcode
+    @abc.abstractmethod 
+    def regularization ( self ) :
+        """ Create the regularized configuration
+        >>> gof = ...
+        >>> gof.regularization () 
+        """
+        params = {} 
+        return params 
+        
     # =========================================================================
     ## Are weights supported by this estimator?
     @property 
@@ -241,6 +266,14 @@ class ADVAL_base (GoFnp):
         """`weights_supported`: Are weights supported by this estimator?"""
         return True 
 
+    # =========================================================================
+    ## Are negative weights supported by this GoF estimator?
+    @property 
+    def negative_weights_supported ( self ) :
+        """`negative_weghts_supported`: Are weights supported by this estimator?
+        """
+        return True 
+        
     # =========================================================================
     ## Good for two-samples comparison?
     #  Can this estimator be used for comparison of two samples?
@@ -291,8 +324,24 @@ class ADVAL_base (GoFnp):
         >>> gof  = ...
         >>> pred , imps = gof.work ( .... ) 
         """
-        return NotImplemented 
-        
+        return NotImplemented
+
+    # ========================================================================
+    ## Checks if dataset requires strong regularization for GoF / ADVAL
+    def use_strong_regularization ( self , X ) :
+        """ Checks if dataset size is small relative to feature count,
+        or if low dimensionality (1D-3D) requires strict tree depth
+        smoothing to prevent noise overfitting in Goodness-of-Fit tests.
+        """
+        ns = num_samples  ( X )
+        nf = num_features ( X )
+
+        # Always enforce strong regularization for low-dimensional spaces (1D-3D)
+        if nf <= 3 : return True
+
+        # Standard check for small sample sizes relative to feature space dimension
+        return ns < max ( 300 if nf <= 3 else 1000 , nf * 50 )
+    
     # ==========================================================================
     ## Calculate t-value for two non-structured (weighted) datasets 
     #   @param data1   the first dataset
@@ -411,24 +460,24 @@ class ADVAL_LGBM (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params ) :
             
-        config = {  'objective'        : 'binary',
-                    'metric'           : 'auc',              # Explicitly measure ROC-AUC score
+        config = {  'objective'         : 'binary',
+                    'metric'            : 'auc',               # Explicitly measure ROC-AUC score
                     # Speed and convergence
-                    'learning_rate'    : 0.03,               # Standard learning rate for stable training
-                    'n_estimators'     : 500,                # High upper limit (MUST be used with early stopping!)
+                    'learning_rate'     : 0.03,                # Standard learning rate for stable training
+                    'n_estimators'      : DEFAULT_ESTIMATORS , # High upper limit (MUST be used with early stopping!)
                     # Tree complexity (allows model to catch subtle feature shifts)
-                    'max_depth'        : 5,                  # Moderate tree depth
-                    'num_leaves'       : 24,                 # Sufficient leaf capacity
-                    'min_data_in_leaf' : 20,                 # Small threshold to detect fine-grained patterns
+                    'max_depth'         : 5,                   # Moderate tree depth
+                    'num_leaves'        : 24,                  # Sufficient leaf capacity
+                    'min_child_samples' : 20,                  # Small threshold to detect fine-grained patterns
                     # Mild regularization to prevent overfitting on random noise
-                    'subsample'        : 0.8,                # Row subsampling (80% per tree)
-                    'subsample_freq'   : 1,
-                    'colsample_bytree' : 0.8,                # Feature subsampling (80% per tree)
-                    'reg_alpha'        : 0.1,                # Slight L1 regularization
-                    'reg_lambda'       : 1.0,                # Slight L2 regularization
-                    ## 
-                    'n_jobs'           : -1,                 # Utilize all CPU cores
-                    'verbosity'        : -1                  # Suppress warning output
+                    'subsample'         : 0.8,                # Row subsampling (80% per tree)
+                    'subsample_freq'    : 1,
+                    'colsample_bytree'  : 0.8,                # Feature subsampling (80% per tree)
+                    'reg_alpha'         : 0.1,                # Slight L1 regularization
+                    'reg_lambda'        : 1.0,                # Slight L2 regularization
+                    ##  
+                    'n_jobs'            : -1,                 # Utilize all CPU cores
+                    'verbosity'         : -1                  # Suppress warning output
                 }
         
         # Check parallel processing setup
@@ -450,6 +499,33 @@ class ADVAL_LGBM (ADVAL_base) :
                               normalize = False    ,
                               method    = "Adversarial Validation/LightGBM" , **config   ) 
 
+    # =========================================================================
+    ### get regularized configuraton
+    #   @code
+    #   gof = ...
+    #   params = gof.regularization () 
+    #   @endcode
+    def regularization ( self ) : 
+        """ Get regularized configuration
+        >>> gof = ...
+        >>> params = gof.regularized_parameters() 
+        """
+        params = {}
+        
+        # Enforce max_depth = 2 for 1D-3D datasets to prevent step-like discretization noise
+        max_depth  = min ( 3 , self.params.get ( 'max_depth' , 5 ) )        
+        num_leaves = 2 ** max_depth - 1
+        
+        params [ 'max_depth'         ] = max_depth
+        params [ 'num_leaves'        ] = min ( num_leaves , self.params.get ( 'num_leaves'        , 31 ) )
+        params [ 'min_child_samples' ] = max ( 100        , self.params.get ( 'min_child_samples' , 50 ) )
+        params [ 'colsample_bytree'  ] = 1.0
+        params [ 'reg_alpha'         ] = max ( 1.0        , self.params.get ( 'reg_alpha'         , 0.1 ) )
+        params [ 'reg_lambda'        ] = max ( 5.0        , self.params.get ( 'reg_lambda'        , 1.0 ) )
+        params [ 'learning_rate'     ] = min ( 0.02       , self.params.get ( 'learning_rate'     , 0.03 ) )
+        
+        return params 
+            
     # ==================================================================================
     ## Train the LightGBM model and make predictions
     def work ( self    ,
@@ -457,15 +533,74 @@ class ADVAL_LGBM (ADVAL_base) :
                X_val   , Y_val   , W_val   , importance = False ) :
         """ Train LightGBM model on fold data and return validation predictions.
         """
-        num_boost_round       = 500
-        early_stopping_rounds = 20
+        
+        # =====================================================================
+        ## 0. Parameters Preparation & Regularization Enforcement
+        # =====================================================================
+        params = {}
+        params.update ( self.params )
 
+        num_boost_round = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
+        if isinstance ( num_boost_round , int ) and 10 < num_boost_round < 10000 : pass
+        else : num_boost_round = DEFAULT_ESTIMATORS 
+
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 10 )
+        if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < num_boost_round : pass
+        else : early_stopping_rounds = 10
+
+        # Enforce strong regularization for GoF (especially strict for 1D-3D features)
+        if self.use_strong_regularization ( X_train ) :
+
+            ## get the regularized parameters 
+            regpars = self.regularized
+            
+            # Enforce max_depth = 2 for 1D-3D datasets to prevent step-like discretization noise
+            nf         = num_features ( X_train )
+            max_depth  = min ( 2 if nf <= 3 else 3       , regpars.get ( 'max_depth' , 5 ) )
+            num_leaves = 2 ** max_depth - 1
+            
+            regpars [ 'max_depth'  ] = max_depth
+            regpars [ 'num_leaves' ] = min ( num_leaves , regpars.get ( 'num_leaves', 31 ) )
+            
+            params.update ( regpars )
+            
+            num_boost_round        = min ( MAX_REGULARIZED_ESTIMATORS , num_boost_round       )
+            early_stopping_rounds  = min (                         10 , early_stopping_rounds )
+            
+            
+        import lightgbm as LightGBM
+        
+        callbacks = []
+        if 0 < early_stopping_rounds :
+            callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
+
+        # =====================================================================
         # 1. Transform targets and weights for train & val sets
+        # =====================================================================
         Y_tr, W_tr = transform_weighted_target ( Y_train , W_train )
         Y_va, W_va = transform_weighted_target ( Y_val   , W_val   )
         
-        import lightgbm as LightGBM
+        # =====================================================================
+        ## 2. Create native LightGBM Datasets
+        # =====================================================================
+        train_data = LightGBM.Dataset ( X_train , label = Y_tr , weight = W_tr , free_raw_data = False )
+        val_data   = LightGBM.Dataset ( X_val   , label = Y_va , weight = W_va , free_raw_data = False , reference = train_data )
 
+        # =====================================================================
+        ## 3. Model Training
+        # =====================================================================
+        model = LightGBM.train ( params          = params          ,
+                                 train_set       = train_data      ,
+                                 num_boost_round = num_boost_round ,
+                                 valid_sets      = [ val_data ]    ,
+                                 callbacks       = callbacks       )
+
+        # =====================================================================
+        ## 4. Predict and restore predictions to original target probability space
+        # =====================================================================
+        raw_predictions = model.predict ( X_val , num_iteration = model.best_iteration )
+        predictions     = invert_if_negative_weight ( raw_predictions , W_val )
+        
         # 2. Create native LightGBM Datasets
         train_data = LightGBM.Dataset ( X_train , label=Y_tr , weight = W_tr , free_raw_data = False )
         val_data   = LightGBM.Dataset ( X_val   , label=Y_va , weight = W_va , free_raw_data = False , reference = train_data ) 
@@ -475,7 +610,7 @@ class ADVAL_LGBM (ADVAL_base) :
                                  train_data     ,
                                  num_boost_round = num_boost_round ,
                                  valid_sets      = [ val_data ]    ,
-                                 callbacks       = [ LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds, verbose=False ) ] )
+                                 callbacks       = [ LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds, verbose = False ) ] )
 
         # 4. Predict and restore predictions to original target probability space
         raw_predictions = model.predict ( X_val , num_iteration = model.best_iteration )
@@ -500,24 +635,24 @@ class ADVAL_XGB (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params ) :
 
-        config = {  'objective'        : 'binary:logistic',  # Standard binary classification
-                    'eval_metric'      : 'logloss',          # LogLoss objective and evaluation
-                    'tree_method'      : 'hist',             # Fast histogram-based tree building algorithm
+        config = {  'objective'        : 'binary:logistic',   # Standard binary classification
+                    'eval_metric'      : 'logloss',           # LogLoss objective and evaluation
+                    'tree_method'      : 'hist',              # Fast histogram-based tree building algorithm
                     # Speed and step size
-                    'learning_rate'    : 0.03,               # Standard step size
-                    'n_estimators'     : 500,                # High upper bound
+                    'learning_rate'    : 0.03,                # Standard step size
+                    'n_estimators'     : DEFAULT_ESTIMATORS , # High upper bound
                     # Tree complexity
-                    'max_depth'        : 5,                  # Equivalent to max_depth=5 in LightGBM
-                    'max_leaves'       : 24,                 # Limit total leaves per tree
-                    'min_child_weight' : 1.0,                # Minimum sum of instance weight needed in a child
+                    'max_depth'        : 5,                   # Equivalent to max_depth=5 in LightGBM
+                    'max_leaves'       : 24,                  # Limit total leaves per tree
+                    'min_child_weight' : 1.0,                 # Minimum sum of instance weight needed in a child
                     # Regularization
-                    'subsample'        : 0.8,                # Row subsampling (80% per tree)
-                    'colsample_bytree' : 0.8,                # Feature subsampling (80% per tree)
-                    'alpha'            : 0.1,                # L1 regularization
-                    'lambda'           : 1.0,                # L2 regularization
+                    'subsample'        : 0.8,                 # Row subsampling (80% per tree)
+                    'colsample_bytree' : 0.8,                 # Feature subsampling (80% per tree)
+                    'alpha'            : 0.1,                 # L1 regularization
+                    'lambda'           : 1.0,                 # L2 regularization
                     ##
-                    'n_jobs'           : -1,                 # Utilize all CPU threads
-                    'verbosity'        : 0                   # Suppress warning output
+                    'n_jobs'           : -1,                  # Utilize all CPU threads
+                    'verbosity'        : 0                    # Suppress warning output
                 }
 
         ## Configure CPU jobs allocation
@@ -534,6 +669,31 @@ class ADVAL_XGB (ADVAL_base) :
                               normalize = False    ,
                               method    = "Adversarial Validation/XGBoost" , **config ) 
 
+    # =========================================================================
+    ##  Regularize 
+    #   @code
+    #   gof = ...
+    #   gof.regularization () 
+    #   @endcode
+    def regularization ( self ) :
+        """ Create the regularized configuration
+        >>> gof = ...
+        >>> gof.regularization () 
+        """
+        params = {} 
+        
+        # Enforce max_depth = 2 for 1D-3D datasets to prevent step-like discretization noise
+        max_depth  = min ( 3 , self.params.get ( 'max_depth' , 5 ) )        
+   
+        params [ 'max_depth'         ] = max_depth 
+        params [ 'min_child_weight'  ] = max ( 20   , self.params.get ( 'min_child_weight' , 5 ) )
+        params [ 'colsample_bytree'  ] = 1.0
+        params [ 'alpha'             ] = max ( 0.5  , self.params.get ( 'alpha'  , 0.1 ) )
+        params [ 'lambda'            ] = max ( 2.0  , self.params.get ( 'lambda' , 1.0 ) )
+        params [ "learning_rate"     ] = min ( 0.02 , self.params.get ( "learning_rate" , 0.03 ) )
+
+        return params
+
     # ==================================================================================
     ## Train the XGBoost model and make predictions
     def work ( self ,
@@ -546,22 +706,51 @@ class ADVAL_XGB (ADVAL_base) :
         """
         import xgboost as XGBoost             
 
-        num_boost_round = 500
-
+        # ===============================================================================
         # 1. Transform targets and weights for train & val sets (handling w < 0)
+        # ===============================================================================
         Y_tr, W_tr = transform_weighted_target ( Y_train , W_train )
         Y_va, W_va = transform_weighted_target ( Y_val   , W_val   )
 
+        # ===============================================================================
         # 2. Create native XGBoost DMatrix objects
+        # ===============================================================================
         dtrain = XGBoost.DMatrix ( X_train , label = Y_tr , weight = W_tr )
         dval   = XGBoost.DMatrix ( X_val   , label = Y_va , weight = W_va )
 
-        # 3. Model Training
-        model = XGBoost.train ( self.params           ,
-                                dtrain                ,
-                                num_boost_round       = num_boost_round   ,
-                                evals                 = [ ( dval, 'val') ],
-                                verbose_eval          = False )
+        params = {}
+        params.update ( self.params )
+        
+        num_boost_round = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' ,  None  ) or DEFAULT_ESTIMATORS 
+        if isinstance ( num_boost_round , int ) and 10 < num_boost_round < 10000 : pass 
+        else : num_boost_round = DEFAULT_ESTIMATORS 
+                
+        early_stopping_rounds = params.pop  ( 'early_stopping_rounds' , 10 )
+        if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < num_boost_round : pass
+        else : early_stopping_rounds = 10 
+        
+        if self.use_strong_regularization ( X_train ) :
+            
+            ## get the regularized parameters 
+            regpars = self.regularized 
+            
+            nf         = num_features ( X_train )
+            max_depth  = min ( 2 if nf <= 3 else 3 , regpars.get ( 'max_depth' , 5 ) )
+            
+            regpars [ 'max_depth'  ] = max_depth
+
+            params.update ( regpars ) 
+
+            num_boost_round        = min ( MAX_REGULARIZED_ESTIMATORS , num_boost_round       )
+            early_stopping_rounds  = min (                         10 , early_stopping_rounds )
+            
+
+        model = XGBoost.train ( params                = params,
+                                dtrain                = dtrain,
+                                num_boost_round       = num_boost_round,
+                                evals                 = evals,
+                                early_stopping_rounds = early_stopping_rounds,
+                                verbose_eval          = False )    
 
         # 4. Predict and restore predictions to original target probability space
         raw_predictions = model.predict ( dval )
@@ -591,21 +780,21 @@ class ADVAL_CATB (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params ) :
         
-        config = {  'loss_function'         : 'Logloss',          # Standard binary classification loss
-                    'eval_metric'           : 'Logloss',          # Metric monitored for early stopping
+        config = {  'loss_function'         : 'Logloss',           # Standard binary classification loss
+                    'eval_metric'           : 'Logloss',           # Metric monitored for early stopping
                     # Speed and convergence
-                    'learning_rate'         : 0.03,               # Standard step size
-                    'iterations'            : 500,                # Maximum boosting rounds
+                    'learning_rate'         : 0.03,                # Standard step size
+                    'n_estimators'          : DEFAULT_ESTIMATORS , # Maximum boosting rounds
                     'early_stopping_rounds' : 20 ,
                     # Tree complexity
-                    'depth'                 : 5,                  # Moderate depth (CatBoost trees are symmetric)
-                    'min_data_in_leaf'      : 20,                 # Minimum samples per leaf
+                    'depth'                 : 5,                   # Moderate depth (CatBoost trees are symmetric)
+                    'min_data_in_leaf'      : 20,                  # Minimum samples per leaf
                     # Regularization & Subsampling
-                    'l2_leaf_reg'           : 3.0,                # L2 regularization for leaf values
-                    'subsample'             : 0.8,                # Row subsampling ratio
-                    'bootstrap_type'        : 'Bernoulli',        # Enables subsampling
+                    'l2_leaf_reg'           : 3.0,                 # L2 regularization for leaf values
+                    'subsample'             : 0.8,                 # Row subsampling ratio
+                    'bootstrap_type'        : 'Bernoulli',         # Enables subsampling
                     ##   
-                    'thread_count'          : -1,                 # Utilize all CPU cores
+                    'thread_count'          : -1,                  # Utilize all CPU cores
                     'verbose'               : False
             }
 
@@ -629,7 +818,32 @@ class ADVAL_CATB (ADVAL_base) :
                               progress  = progress ,
                               normalize = False    ,
                               method    = "Adversarial Validation/CatBoost" , **config   ) 
-    
+
+
+    # =========================================================================
+    ##  Regularize 
+    #   @code
+    #   gof = ...
+    #   gof.regularization () 
+    #   @endcode
+    def regularization ( self ) :
+        """ Create the regularized configuration
+        >>> gof = ...
+        >>> gof.regularization () 
+        """
+        params = {} 
+        
+        # Enforce max_depth = 2 for 1D-3D datasets to prevent step-like discretization noise
+        max_depth  = min ( 3 , params.pop ( 'depth' , 5 ) )
+                
+        params [ 'depth'             ] = max_depth  
+        params [ 'min_data_in_leaf'  ] = max ( 20   , params.pop ( 'min_data_in_leaf' , 5 ) )
+        params [ 'rsm'               ] = 1.0
+        params [ 'l2_leaf_reg'       ] = max ( 5.0  , params.pop ( 'l2_leaf_reg'       , 3.0 ) )
+        params [ "learning_rate"     ] = min ( 0.02 , params.get ( "learning_rate"     , 0.03 ) )
+
+        return params 
+        
     # ==================================================================================
     ## Train the CatBoost model and make predictions
     def work ( self ,
@@ -650,8 +864,37 @@ class ADVAL_CATB (ADVAL_base) :
         train_pool = CatBoost.Pool ( X_train , label = Y_tr , weight = W_tr )
         val_pool   = CatBoost.Pool ( X_val   , label = Y_va , weight = W_va )
 
+        params = {}
+        params.update ( self.params )
+        
+        iterations = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' ,  None  ) or DEFAULT_ESTIMATORS 
+        if isinstance ( iterations , int ) and 10 < iterations < 10000 : pass 
+        else   : iterations = DEFAULT_ESTIMATORS  
+                
+        early_stopping_rounds = params.pop  ( 'early_stopping_rounds' , 10 )
+        if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < iterations : pass
+        else  : early_stopping_rounds = 10
+        
+        if self.use_strong_regularization ( X_train ) :
+
+            regpars = self.regularized 
+            
+            nf = num_features ( X_train )            
+            # Enforce max_depth = 2 for 1D-3D datasets to prevent step-like discretization noise
+            max_depth  = min ( 2 if nf <= 3 else 3 , params.pop ( 'depth' , 5 ) )
+            regpars [ 'depth'             ] = max_depth
+
+            params.update ( regpars )
+            
+            iterations            = min ( MAX_REGULARIZED_ESTIMATORS , iterations            )
+            early_stopping_rounds = min (                         10 , early_stopping_rounds )
+        
+        params [ 'iterations'            ] = iterations
+        params [ 'early_stopping_rounds' ] = early_stopping_rounds  
+        params [ 'use_best_model'        ] = True
+                
         # 3. Model Training
-        model = CatBoost.CatBoostClassifier ( **self.params )
+        model = CatBoost.CatBoostClassifier ( **params ) 
         model.fit ( train_pool , eval_set = val_pool )
 
         # 4. Predict probabilities P(Class=1) and restore original probability space
@@ -677,19 +920,19 @@ class ADVAL_HGBC (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params ) :
         
-        config = {  'loss'              : 'log_loss',      # Binary cross-entropy
-                    'learning_rate'     : 0.03,            # Moderate step size
-                    'max_iter'          : 500,             # Upper bound for boosting iterations
+        config = {  'loss'              : 'log_loss',          # Binary cross-entropy
+                    'learning_rate'     : 0.03,                # Moderate step size
+                    'max_iter'          : DEFAULT_ESTIMATORS , # Upper bound for boosting iterations
                     # Tree complexity
-                    'max_depth'         : 5,               # Restrict max tree depth
-                    'max_leaf_nodes'    : 24,              # Controls tree capacity
-                    'min_samples_leaf'  : 20,              # Minimum samples required in a leaf
+                    'max_depth'         : 5,                   # Restrict max tree depth
+                    'max_leaf_nodes'    : 24,                  # Controls tree capacity
+                    'min_samples_leaf'  : 20,                  # Minimum samples required in a leaf
                     # Regularization
-                    'l2_regularization' : 0.1,             # Mild L2 regularization
+                    'l2_regularization' : 0.1,                 # Mild L2 regularization
                     # Early stopping (built-in)
-                    'early_stopping'    : True,            # Enables built-in early stopping
-                    'n_iter_no_change'  : 20,              # Number of iterations to wait for improvement
-                    'scoring'           : 'roc_auc',       # Optimize directly for ROC-AUC
+                    'early_stopping'    : True,                # Enables built-in early stopping
+                    'n_iter_no_change'  : 20,                  # Number of iterations to wait for improvement
+                    'scoring'           : 'roc_auc',           # Optimize directly for ROC-AUC
                 }
         
         if parallel and not run_parallel ( parallel ) :
@@ -707,6 +950,34 @@ class ADVAL_HGBC (ADVAL_base) :
                               normalize = False    ,
                               method    = "Adversarial Validation/HGBC" , **config   ) 
 
+    # =========================================================================
+    ##  Regularize 
+    #   @code
+    #   gof = ...
+    #   gof.regularization () 
+    #   @endcode
+    def regularization ( self ) :
+        """ Create the regularized configuration
+        >>> gof = ...
+        >>> gof.regularization () 
+        """
+        params = {} 
+        
+        # Depth & leaf count limits
+        max_depth = 3 
+        params [ 'max_depth'         ] = min ( max_depth , self.param.get ( 'max_depth' , 5 ) or 5 )
+        params [ 'max_leaf_nodes'    ] = 2 ** params [ 'max_depth' ] - 1  # 3 leaves for depth=2
+        
+        # Leaf size & L2 regularization
+        orig_min_leaf = params.pop ( 'min_samples_leaf' , self.params.get( 'min_child_samples' , 20 ) )
+        params [ 'min_samples_leaf'  ] = max ( 50  , orig_min_leaf )
+        params [ 'l2_regularization' ] = max ( 5.0 , self.params.get ( 'l2_regularization' , 0.0 ) )
+        
+        # Learning rate & iterations
+        params [ 'learning_rate'     ] = min ( 0.02 , self.params.get ( 'learning_rate' , 0.03 ) )
+
+        return params 
+            
     # ==================================================================================
     ## Train the HistGradientBoostingClassifier model and make predictions
     def work ( self ,
@@ -725,8 +996,32 @@ class ADVAL_HGBC (ADVAL_base) :
 
         w_tr_arr = W_tr.values if hasattr ( W_tr , 'values' ) else W_tr
 
+
+        params = {}
+        params.update ( self.params )
+        
+        max_iter = params.pop ( 'max_iter' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
+        if isinstance ( max_iter , int ) and 10 < max_iter < 10000 : pass
+        else  : max_iter = DEFAULT_ESTIMATORS 
+        
+        if self.use_strong_regularization ( X_train ) :
+
+            regpars = self.regularized 
+            
+            nf = num_features ( X_train )
+            # Depth & leaf count limits
+            max_depth = 2 if nf <= 3 else 3
+            regpars [ 'max_depth'         ] = min ( max_depth , regpars.get ( 'max_depth' , 5 ) or 5 )
+            regpars [ 'max_leaf_nodes'    ] = 2 ** regpars[ 'max_depth' ] - 1  # 3 leaves for depth=2
+            
+            params.update ( regpars )
+            
+            max_iter                       = min ( max_iter , MAX_REGULARIZED_ESTIMATORS )
+            
+        params [ 'max_iter' ] = max_iter
+
         # 2. Model Training
-        model = HistGradientBoostingClassifier ( **self.params )
+        model = HistGradientBoostingClassifier ( **params )
         model.fit ( X_train , Y_tr , sample_weight = w_tr_arr )
 
         # 3. Predict probabilities P(Class=1) and restore original probability space
@@ -749,9 +1044,9 @@ class ADVAL_GBC (ADVAL_base) :
                    silent   = False ,
                    progress = True  , **params   ) :
         
-        config = {  'loss'              : 'log_loss',      # Binary cross-entropy
-                    'learning_rate'     : 0.05,            # Slightly higher rate for faster convergence
-                    'n_estimators'      : 200,             # Sequential trees
+        config = {  'loss'              : 'log_loss',          # Binary cross-entropy
+                    'learning_rate'     : 0.05,                # Slightly higher rate for faster convergence
+                    'n_estimators'      : DEFAULT_ESTIMATORS , # Sequential trees
                     # Tree complexity
                     'max_depth'         : 4,               # Restrict tree depth
                     'min_samples_split' : 20,              # Minimum samples to split an internal node
@@ -775,6 +1070,41 @@ class ADVAL_GBC (ADVAL_base) :
                               progress  = progress ,
                               normalize = False    ,
                               method    = "Adversarial Validation/GBC" , **config   ) 
+        
+    # =========================================================================
+    ##  Regularize 
+    #   @code
+    #   gof = ...
+    #   gof.regularization () 
+    #   @endcode
+    def regularization ( self ) :
+        """ Create the regularized configuration
+        >>> gof = ...
+        >>> gof.regularization () 
+        """
+        params = {} 
+
+        # Enforce max_depth = 2 for 1D-3D datasets to prevent step-like discretization noise
+        max_depth  = min ( 3 , self.params.get ( 'max_depth' , 5 ) )        
+        
+        # 1. Depth & node constraints
+        params [ 'max_depth'         ] = min ( max_depth , self.params.get ( 'max_depth' , 3 ) )
+        
+        orig_min_leaf  = params.pop ( 'min_samples_leaf'  , self.params.get ( 'min_child_samples' , 1 ) )
+        orig_min_split = params.pop ( 'min_samples_split' , 2 )
+        
+        params [ 'min_samples_leaf'  ] = max ( 50  , orig_min_leaf  )
+        params [ 'min_samples_split' ] = max ( 100 , orig_min_split )
+        
+        # 2. Pruning & Subsampling
+        params [ 'ccp_alpha'         ] = max ( 0.01 , self.params.get ( 'ccp_alpha' , 0.0 ) )
+        params [ 'subsample'         ] = min ( 0.8  , self.params.get ( 'subsample' , 1.0 ) )
+        
+        # 3. Feature sampling & learning rate
+        params [ 'max_features'      ] = 1.0
+        params [ 'learning_rate'     ] = min ( 0.02 , self.params.get ( 'learning_rate' , 0.03 ) )
+        
+        return params 
 
     # ==================================================================================
     ## Train the GradientBoostingClassifier model and make predictions
@@ -794,8 +1124,31 @@ class ADVAL_GBC (ADVAL_base) :
 
         w_tr_arr = W_tr.values if hasattr(W_tr, 'values') else W_tr
 
+        params = {}
+        params.update ( self.params )
+        
+        n_estimators = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
+        if isinstance ( n_estimators , int ) and 10 < n_estimators < 10000 : pass
+        else : n_estimators = DEFAULT_ESTIMATORS 
+        
+        if self.use_strong_regularization ( X_train ) :
+
+            regpars = self.regularized 
+
+            nf = num_features ( X_train )
+            
+            # 1. Depth & node constraints
+            max_depth = 2 if nf <= 3 else 3
+            regpars [ 'max_depth'         ] = min ( max_depth , regpars.pop ( 'max_depth' , 3 ) )
+
+            params.update ( regpars )
+            
+            n_estimators                    = min ( MAX_REGULARIZED_ESTIMATORS  , n_estimators )
+            
+        params [ 'n_estimators' ] = n_estimators
+        
         # 2. Model Training
-        model = GradientBoostingClassifier ( **self.params )
+        model = GradientBoostingClassifier ( **params )
         model.fit ( X_train , Y_tr , sample_weight = w_tr_arr)
 
         # 3. Predict probabilities P(Class=1) and restore original probability space
@@ -816,20 +1169,20 @@ class ADVAL_RF (ADVAL_base) :
     @see RandomForestClassifier 
     """
     def __init__ ( self             ,
-                   nToys    = 400   ,
+                   nToys    = 500   ,
                    parallel = False ,
                    silent   = False ,
                    progress = True  , **params   ) :
   
-        config = {  'n_estimators'      : 500,         # High tree count reduces variance
-                    'n_jobs'            : -1,          # Utilize all CPU cores
-                    'criterion'         : 'log_loss',  # Optimizes cross-entropy
-                    'max_depth'         : 10,          # Restricted depth prevents overfitting
-                    'min_samples_split' : 10,          # Minimum samples required to split an internal node
-                    'min_samples_leaf'  : 5,           # Minimum samples required at a leaf node
-                    'max_features'      : 'sqrt',      # Feature subsampling ratio per split
-                    'bootstrap'         : True,        # Enables bootstrap sampling
-                    'max_samples'       : 0.8,         # Subsample 80% of rows per tree
+        config = {  'n_estimators'      : DEFAULT_ESTIMATORS , # High tree count reduces variance
+                    'n_jobs'            : -1,                  # Utilize all CPU cores
+                    'criterion'         : 'log_loss',          # Optimizes cross-entropy
+                    'max_depth'         : 10,                  # Restricted depth prevents overfitting
+                    'min_samples_split' : 10,                  # Minimum samples required to split an internal node
+                    'min_samples_leaf'  : 5,                   # Minimum samples required at a leaf node
+                    'max_features'      : 'sqrt',              # Feature subsampling ratio per split
+                    'bootstrap'         : True,                # Enables bootstrap sampling
+                    'max_samples'       : 0.8,                 # Subsample 80% of rows per tree
                 }  
 
         if parallel and not run_parallel ( parallel ) :
@@ -848,8 +1201,38 @@ class ADVAL_RF (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress ,
                               normalize = False    ,                              
-                              method    = "Adversarial Validation/RandomForest" , **config  ) 
+                              method    = "Adversarial Validation/RandomForest" , **config  )
+        
+    # =========================================================================
+    ##  Regularize 
+    #   @code
+    #   gof = ...
+    #   gof.regularization () 
+    #   @endcode
+    def regularization ( self ) :
+        """ Create the regularized configuration
+        >>> gof = ...
+        >>> gof.regularization () 
+        """
+        params = {} 
+        
+        params [ 'max_depth'         ] = min ( 3 , self.params.get ( 'max_depth' , 3 ) or 3 )
+        params [ 'max_leaf_nodes'    ] = 2 ** params [ 'max_depth' ]  # max 4 leaves for depth=2
+        
+        orig_min_leaf  = self.params.get ( 'min_samples_leaf'  , params.get ( 'min_child_samples' , 1 ) )
+        orig_min_split = self.params.get ( 'min_samples_split' , 2 )
+        
+        params [ 'min_samples_leaf'  ] = max ( 50  , orig_min_leaf  )
+        params [ 'min_samples_split' ] = max ( 100 , orig_min_split )
+        
+        # 2. Pruning, Sampling & Bootstrap
+        params [ 'ccp_alpha'         ] = max ( 0.01 , self.params.get ( 'ccp_alpha' , 0.0 ) )
+        params [ 'bootstrap'         ] = True
+        params [ 'max_samples'       ] = min ( 0.8  , self.params.get ( 'max_samples' , 0.8 ) )
+        params [ 'max_features'      ] = 1.0
 
+        return params 
+        
     # ==================================================================================
     ## Train the RandomForestClassifier model and make predictions
     def work ( self ,
@@ -868,8 +1251,33 @@ class ADVAL_RF (ADVAL_base) :
 
         w_tr_arr = W_tr.values if hasattr(W_tr, 'values') else W_tr
 
+
+        params = {}
+        params.update ( self.params )
+        
+        n_estimators = params.pop ( 'n_estimators' , None ) or params.pop ( 'num_boost_round' , None ) or DEFAULT_ESTIMATORS 
+        if isinstance ( n_estimators , int ) and 10 < n_estimators < 10000 : pass
+        else : n_estimators = DEFAULT_ESTIMATORS 
+        
+        if self.use_strong_regularization ( X_train ) :
+
+            regpars = self.regularized
+            
+            nf = num_features ( X_train )
+            
+            # 1. Depth & Leaf Constraints
+            max_depth = 2 if nf <= 3 else 3
+            regpars [ 'max_depth'         ] = min ( max_depth , regpars.get ( 'max_depth' , 3 ) or 3 )
+            regpras [ 'max_leaf_nodes'    ] = 2 ** regpars [ 'max_depth' ]  # max 4 leaves for depth=2
+
+            params.update ( regpars )
+            
+            n_estimators                   = min ( MAX_REGULARIZED_ESTIAMTORS , n_estimators )
+            
+        params [ 'n_estimators' ] = n_estimators
+        
         # 2. Model Training
-        model = RandomForestClassifier ( **self.params )
+        model = RandomForestClassifier ( **params )
         model.fit(X_train, Y_tr, sample_weight=w_tr_arr)
 
         # 3. Predict probabilities P(Class=1) and restore original probability space
@@ -916,9 +1324,37 @@ class ADVAL_TORCH (ADVAL_base) :
                               parallel  = parallel ,
                               silent    = silent   , 
                               progress  = progress ,
-                              normalize = True     , ## ATTENTION: Normalize MUST be True for PyTorch!                                                           
+                              normalize = True     , ## ATTENTION: Normalize MUST be True for PyTorch!
                               method    = "Adversarial Validation/PyTorch" , **config  ) 
 
+    # =========================================================================
+    ##  Regularize 
+    #   @code
+    #   gof = ...
+    #   gof.regularization () 
+    #   @endcode
+    def regularization ( self ) :
+        """ Create the regularized configuration
+        >>> gof = ...
+        >>> gof.regularization () 
+        """
+        params = {} 
+        
+        # 1. Network Architecture (1D-3D -> minimal representation)
+        ##  params [ 'hidden_dim'    ] = 8 if nf <= 3 else 16
+        params [ 'num_layers'    ] = 1   # Single hidden layer
+        params [ 'dropout'       ] = max ( 0.3  , self.params.get ( 'dropout' , 0.1 ) )
+        
+        # 2. Optimizer Regularization (L2 Penalty)
+        l2_reg = params.pop ( 'weight_decay'    , self.params.get ( 'reg_lambda' , 1e-4 ) )
+        params [ 'weight_decay'  ] = max ( 1e-2 , l2_reg )
+        
+        # 3. Learning dynamics
+        params [ 'learning_rate' ] = min ( 0.005 , self.params.get ( 'learning_rate' , 0.01 ) )
+        params [ 'batch_size'    ] = max ( 128   , self.params.get ( 'batch_size'    , 64   ) )
+
+        return params
+    
     # ==================================================================================
     ## Train the PyTorch MLP model and make predictions
     def work ( self ,
@@ -934,13 +1370,36 @@ class ADVAL_TORCH (ADVAL_base) :
         import torch.nn as NN 
         from   torch.utils.data import DataLoader, TensorDataset
 
+
+        params = {}
+        params.update ( self.params )
+        
+        epochs = params.pop ( 'epochs' , None ) or params.pop ( 'n_estimators' , None ) or 200
+        if isinstance ( epochs , int ) and 10 < epochs < 10000 : pass
+        else                                                   : epochs = 200
+
+        if self.use_strong_regularization ( X_train ) :
+
+            regpars = self.regularized 
+            
+            nf = num_features ( X_train )
+
+            # 1. Network Architecture (1D-3D -> minimal representation)
+            regpars [ 'hidden_dim'    ] = 8 if nf <= 3 else 16
+
+            params.update ( regpars ) 
+            epochs                     = min ( 50    , epochs )
+
+        params [ 'epochs' ] = epochs
+    
+        
         # Training hyperparameters
-        epochs       = self.params.get ( 'epochs'                , 100    )
-        batch_size   = self.params.get ( 'batch_size'            , 256    )
-        lr           = self.params.get ( 'lr'                    ,   1e-3 )
-        weight_decay = self.params.get ( 'weight_decay'          ,   1e-4 )
-        patience     = self.params.get ( 'early_stopping_rounds' ,  15    )        
-        dropout_rate = self.params.get ( 'dropout'               ,   0.1  )
+        epochs       = params.get ( 'epochs'                , 100    )
+        batch_size   = params.get ( 'batch_size'            , 256    )
+        lr           = params.get ( 'lr'                    ,   1e-3 )
+        weight_decay = params.get ( 'weight_decay'          ,   1e-4 )
+        patience     = params.get ( 'early_stopping_rounds' ,  15    )        
+        dropout_rate = params.get ( 'dropout'               ,   0.1  )
 
         n_features = num_features ( X_train )
 
@@ -953,7 +1412,7 @@ class ADVAL_TORCH (ADVAL_base) :
         elif n_features <=  64 : hidden_dim =  64
         elif n_features <= 128 : hidden_dim = 128
 
-        n_jobs = self.params.get ( 'n_jobs', -1 )
+        n_jobs = params.get ( 'n_jobs', -1 )
         if 0 < n_jobs : Torch.set_num_threads ( n_jobs )
         else          : Torch.set_num_threads ( 1      )
             
@@ -1096,9 +1555,38 @@ class ADVAL_KERAS (ADVAL_base) :
                               parallel  = parallel ,
                               silent    = silent   , 
                               progress  = progress , 
-                              normalize = True     , ## ATTENTION: Normalize MUST be True for Keras!                                                         
+                              normalize = True     , ## ATTENTION: Normalize MUST be True for Keras!
                               method    = "Adversarial Validation/Keras" , **config  ) 
 
+    # =========================================================================
+    ##  Regularize 
+    #   @code
+    #   gof = ...
+    #   gof.regularization () 
+    #   @endcode
+    @abc.abstractmethod 
+    def regularization ( self ) :
+        """ Create the regularized configuration
+        >>> gof = ...
+        >>> gof.regularization () 
+        """
+        params = {} 
+        
+        # 1. Network Architecture (minimal representation for 1D-3D)
+        ## params [ 'hidden_dim'    ] = 8 if nf <= 3 else 16
+        params [ 'num_layers'    ] = 1   # Single hidden layer
+        params [ 'dropout'       ] = max ( 0.3  , self.params.get( 'dropout' , 0.1 ) )
+        
+        # 2. L2 Regularization
+        l2_reg = params.pop ( 'l2_reg' , self.params.get ( 'reg_lambda' , 1e-4 ) )
+        params [ 'l2_reg'        ] = max ( 1e-2 , l2_reg )
+        
+        # 3. Training Dynamics
+        params [ 'learning_rate' ] = min ( 0.005 , self.params.get ( 'learning_rate' , 0.01 ) )
+        params [ 'batch_size'    ] = max ( 128   , self.params.get ( 'batch_size'    , 64   ) )
+
+        return params
+    
     # ==================================================================================
     ## Train the Keras model and make predictions
     def work ( self ,
@@ -1112,6 +1600,28 @@ class ADVAL_KERAS (ADVAL_base) :
         import keras as     Keras 
         from   keras import layers as Layers 
 
+
+        params = {}
+        params.update ( self.params )
+        
+        epochs = params.pop ( 'epochs' , None ) or params.pop ( 'n_estimators' , None ) or 200
+        if isinstance ( epochs , int ) and 10 < epochs < 10000 : pass
+        else                                                   : epochs = 200
+
+        if self.use_strong_regularization ( X_train ) :
+
+            regpars = self.regularized
+            
+            nf = num_features ( X_train )
+
+            # 1. Network Architecture (minimal representation for 1D-3D)
+            regpars [ 'hidden_dim'    ] = 8 if nf <= 3 else 16
+            
+            params.update ( regpars ) 
+            epochs                     = min ( 50    , epochs )
+
+        params [ 'epochs' ] = epochs
+                
         n_features = num_features ( X_train )
         
         hidden_dim = 256 
@@ -1124,11 +1634,11 @@ class ADVAL_KERAS (ADVAL_base) :
         elif n_features <= 128 : hidden_dim = 128
 
         # Extract hyperparameters
-        epochs       = self.params.get ( 'epochs'               , 100 )
-        batch_size   = self.params.get ( 'batch_size'           , 256 )
-        patience     = self.params.get ( 'early_stopping_rounds',  15 )
-        dropout_rate = self.params.get ( 'dropout'              , 0.1 if n_features > 5 else 0.0 )
-        lr           = self.params.get ( 'lr'                   , 1e-3 if n_features > 5 else 5e-3 )
+        epochs       = params.get ( 'epochs'               , 100 )
+        batch_size   = params.get ( 'batch_size'           , 256 )
+        patience     = params.get ( 'early_stopping_rounds',  15 )
+        dropout_rate = params.get ( 'dropout'              , 0.1 if n_features > 5 else 0.0 )
+        lr           = params.get ( 'lr'                   , 1e-3 if n_features > 5 else 5e-3 )
         
         # 1. Transform targets and weights for train & val sets (handling w < 0)
         Y_tr, W_tr = transform_weighted_target ( Y_train , W_train )

@@ -120,7 +120,6 @@ __all__     = (
     'epsilon'        , ## float/double-epsilon
     ##
     'np2raw'         , ## numpy array to raw C++ buffer
-    'weight_trivial' , ## Is weight(1D numpy array) "trivial" ?
     'product'        , ## Make a product over iterable `data`
     ) 
 # =============================================================================

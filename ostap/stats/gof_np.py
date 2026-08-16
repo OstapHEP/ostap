@@ -74,18 +74,12 @@ class GoFnp (AGoFnp,Config) :
                    parallel  = False  ,
                    method    = 'GoF'  ,
                    progress  = True   ,
-                   nGroups   = None   , 
                    normalize = True   , **params ) : 
         
         if not isinstance ( nToys   , int ) : raise TypeError  ( "Invalid type  for `nToys`  : %s" % typename ( nToys   ) )
         if not 0 <= nToys                   : raise ValueError ( "Invalid value for `nToys`  : %d" %            nToys     )
 
-        if  nGroups is None : nGroups = 1        
-        if not isinstance ( nGroups , int ) : raise TypeError  ( "Invalid type  for `nGroups`: %s" % typename ( nGroups ) )
-        if not 0 <= nGroups                 : raise ValueError ( "Invalid value for `nGroups`: %d" %            nGroups   )
-            
         self.__nToys    = nToys
-        self.__nGroups  = nGroups  
         ## 
         self.__parallel  = True if parallel  else False
         self.__progress  = True if progress  else False
@@ -119,13 +113,13 @@ class GoFnp (AGoFnp,Config) :
         """`config` : get all configuration parameters"""
         conf = {} 
         conf.update ( self.params )
-        conf [ 'nToys'            ] = self.nToys
-        conf [ 'progress'         ] = self.progress
-        conf [ 'parallel'         ] = self.parallel
-        conf [ 'normalize'        ] = self.normalize
-        conf [ 'method'           ] = self.method  
-        conf [ 'weight_supported' ] = self.weights_supported
-        conf [ 'nGroups'          ] = self.nGroups 
+        conf [ 'nToys'                      ] = self.nToys
+        conf [ 'progress'                   ] = self.progress
+        conf [ 'parallel'                   ] = self.parallel
+        conf [ 'normalize'                  ] = self.normalize
+        conf [ 'method'                     ] = self.method  
+        conf [ 'weights_supported'          ] = self.weights_supported
+        conf [ 'negative_weights_supported' ] = self.negative_weights_supported
         return conf 
     
     # =========================================================================
@@ -134,12 +128,6 @@ class GoFnp (AGoFnp,Config) :
         """`nToys` : number of permutations/toys used for permutation/toys test"""
         return self.__nToys
 
-    # =========================================================================
-    @property 
-    def nGroups ( self ) :
-        """`nGroups` : split 2nd datasets into #groups for permutations"""
-        return self.__nGroups 
-    
     # =========================================================================
     @property
     def parallel ( self ) :
@@ -214,7 +202,8 @@ class GoFnp (AGoFnp,Config) :
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
             
         ## normalize
-        if normalize and self.normalize : uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
+        if normalize and self.normalize :
+            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
         
         return self.tvalue ( uds1      ,
                              uds2      ,
@@ -252,23 +241,22 @@ class GoFnp (AGoFnp,Config) :
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
         
         ## normalize ? 
-        if self.normalize : uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
+        if self.normalize :
+            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
 
-        ### calculate t-value
+        ## calculate t-value if not specified 
         t_value    = tvalue if not tvalue is None else self.tvalue ( uds1      ,
                                                                      uds2      ,
                                                                      weight1   = weight1 ,
                                                                      weight2   = weight2 ,
-                                                                     normalize = False   )
-        
+                                                                     normalize = False   )        
         ## use permutations to get the p-value 
         permutator = PERMUTATOR ( self                   ,
                                   t_value                , 
                                   uds1                   ,
                                   uds2                   ,
                                   weight1 = weight1      ,
-                                  weight2 = weight2      ,
-                                  nGroups = self.nGroups )
+                                  weight2 = weight2      ) ;
         
         if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
         else                                : counter = permutator     ( self.nToys , progress = self.progress )
@@ -288,7 +276,8 @@ class GoFnp (AGoFnp,Config) :
 
         self.ecdf    = permutator.ecdf
         self.counter = counter
-        self.t_value = permutator.t_value 
+        
+        self.t_value = t_value 
         self.p_value = p_value 
         
         return self.t_value , self.p_value
@@ -514,6 +503,14 @@ class MIXnp(GoFnp) :
         """`weights_supported` : Are weights supported by this estimator?
         """
         return True
+
+    # =========================================================================
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def negative_weights_supported ( self ) :
+        """`negative_weghts_supported`: Are weights supported by this estimator?
+        """
+        return False 
     
     # =========================================================================
     ## Good for two-samples comparison?
@@ -593,10 +590,16 @@ class MIXnp(GoFnp) :
 
         w_i = weights [ : , numpy.newaxis ]  ## (N, 1)
         w_k = weights [ actual_neighbors  ]  ## (N, K)
-        
+
+
+        ## product of weights : correct only when all weights are non-negative 
         pair_weights = w_i * w_k            ## (N, K)
         
-        weighted_numerator = numpy.sum ( I_ik * pair_weights)
+        ## halfsum of weights : correct ???
+        pair_weights = 0.5 * ( w_i + w_k )
+
+        weighted_numerator = numpy.sum ( I_ik * pair_weights )
+        
         total_weight_sum   = numpy.sum ( pair_weights )
         
         result = weighted_numerator / total_weight_sum
@@ -700,7 +703,15 @@ class PPDnp(GoFnp) :
         """`weights_supported` : Are weights supported by this estimator?
         """
         return False
-    
+
+    # =========================================================================
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def negative_weights_supported ( self ) :
+        """`negative_weghts_supported`: Are weights supported by this estimator?
+        """
+        return False 
+        
     # =========================================================================
     ## Good for two-samples comparison?
     #  Can this estimator be used for comparison of two samples?
@@ -909,13 +920,21 @@ class DNNnp(GoFnp) :
         return conf 
             
     # =========================================================================
-    ## Are weights  are supported by this estimators?
-    @property 
+    ## Are weights supported by this estimator?
+    @property
     def weights_supported ( self ) :
-        """ Are weights are supported by this estimators?
+        """`weights_supported` : Are weights supported by this estimator?
         """
-        return True 
+        return False
 
+    # =========================================================================
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def negative_weights_supported ( self ) :
+        """`negative_weghts_supported`: Are weights supported by this estimator?
+        """
+        return False 
+    
     # =========================================================================
     ## Good for two-samples comparison?
     #  Can this estimator be used for comparison of two samples?
@@ -1096,6 +1115,14 @@ class Mahalanobis(GoFnp) :
         return True
     
     # =========================================================================
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def negative_weights_supported ( self ) :
+        """`negative_weghts_supported`: Are weights supported by this estimator?
+        """
+        return True 
+    
+    # =========================================================================
     ## Good for two-samples comparison?
     #  Can this estimator be used for comparison of two samples?
     @property 
@@ -1200,7 +1227,7 @@ class KullbackLeibler(Mahalanobis) :
 
 # ============================================================================
 ## @class Hotelling  
-#  Use Hotelling's tsquared statistics to discriminiate the datasets
+#  Use Hotelling's t-squared statistics to discriminiate the datasets
 #  @attention it is *VERY* crude "estimator"
 class Hotelling(Mahalanobis) :
     """ Use Hotelling's t-squared statistics to discriminiate the dataset

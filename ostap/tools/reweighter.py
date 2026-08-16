@@ -21,7 +21,7 @@ __all__     = (
 ) 
 # =============================================================================
 from   ostap.utils.core     import typename
-from   ostap.math.math_base import weight_trivial
+from   ostap.stats.utils    import weight_trivial, num_samples, num_features 
 from   ostap.utils.config   import Config
 import numpy, os, abc 
 # =============================================================================
@@ -30,36 +30,6 @@ import numpy, os, abc
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighter' )
 else                       : logger = getLogger( __name__ )
-# =============================================================================
-## Number of features for training data
-#  Safe extraction of n_features (supports DataFrame, 2D array, 1D vector)
-def num_features ( X ) :
-    """ Number of features for training data
-    - Safe extraction of n_features (supports DataFrame, 2D array, 1D vector)
-    """
-    return X.shape [ 1 ] if hasattr ( X , 'shape' ) and 1 < len ( X.shape ) else 1
-# ============================================================================
-## Returns the number of samples/events (rows) in the dataset.
-#  Supports NumPy arrays, Pandas DataFrames/Series, SciPy sparse matrices,
-#  PyTorch/TensorFlow tensors, and standard Python collections.
-def num_samples ( X ) :
-    """ Returns the number of samples/events (rows) in the dataset.
-
-    Supports NumPy arrays, Pandas DataFrames/Series, SciPy sparse matrices,
-    PyTorch/TensorFlow tensors, and standard Python collections.
-    """
-    if X is None : return 0
-
-    # Handle objects with a .shape attribute (NumPy, Pandas, SciPy, PyTorch, TensorFlow)
-    if hasattr ( X ,  "shape" ) :
-        shape = X.shape
-        if 0 == len ( shape ) :  return 1
-        return int ( shape [ 0 ] )
-
-    # Handle lists, tuples, and other standard Python sequences
-    if hasattr ( X , "__len__" ) : return len ( X )
-
-    raise TypeError ( "Unsupported data structure for determining sample count: %" % typename ( X )  )
 # =============================================================================
 ## @class Reweighter
 #  Abstract base class class for Advanced Reweighters

@@ -78,7 +78,9 @@ def ecdf_from_data  ( data ) :
 #  @param data2 the second dataset
 #  @param pooled (optional) the CDF for pooled data 
 #  @return triplet of empiricla CDFs for the 1st, 2nd and pooled datasets 
-def prepare_data1 ( data1 , data2 , pooled = None ) :
+def prepare_data1 ( data1  ,
+                    data2  ,
+                    pooled = None ) :
     """ Prepare data
     >>> data1 = ...
     >>> data2 = ...
