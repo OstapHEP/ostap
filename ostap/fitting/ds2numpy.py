@@ -403,45 +403,27 @@ else :
         assert all ( ( v in dataset ) for v in vnames ) , 'Not all variables are in dataset!'
 
         # =====================================================================
-        ## 3) reduce dataset if only a small subset of variables is requested 
+        ds_delete = None 
+        
+        ## 3) reduce dataset if there are reasons for that 
         nvars = len ( dataset.get() )
-        if 2 * len ( vnames )  <= nvars and not more_vars  :
-            ds_reduced = dataset.subset ( vnames    ,
-                                          cuts      = cuts      ,
-                                          cut_range = cut_range ,
-                                          prescale  = prescale  ,
-                                          first     = first     ,
-                                          last      = last      )
-            result     = ds2numpy ( ds_reduced                  ,
-                                    vnames                      ,
-                                    cuts         = cuts         ,
-                                    cut_range    = cut_range    ,
-                                    structured   = structured   ,
-                                    weight_name  = weight_name  ,
-                                    weight_split = weight_split )
-            ## 
-            del ds_reduced 
-            return result
-
-        # =========================================================================
-        ## 4) if cuts or cut-range is specified, assume cuts are hash and make a filtering 
-        if 1 != prescale or cuts or cut_range or  last - first < len ( dataset ) :
-            with useStorage ( ROOT.RooAbsData.Vector ) :
+        if 2 * len ( vnames )  <= nvars or cuts or cut_range or \
+            1 != prescale or ( last - first ) < len ( dataset ) : 
+                
                 ds_reduced = dataset.subset ( vnames if not more_vars else [] ,
-                                              cuts      = cuts      ,
-                                              cut_range = cut_range ,
-                                              prescale  = prescale  , 
-                                              first     = first     ,
-                                              last      = last      )
-                result     = ds2numpy ( ds_reduced   ,
-                                        vnames       ,
-                                        more_vars    = more_vars    ,
-                                        structured   = structured   ,
-                                        weight_name  = weight_name  ,
-                                        weight_split = weight_split )
-                ## 
-                del ds_reduced 
-                return result
+                                              cuts         = cuts         ,
+                                              cut_range    = cut_range    ,
+                                              prescale     = prescale     ,
+                                              first        = first        ,
+                                              last         = last         )
+                ds_delete    = ds_reduced
+                
+                dataset      = ds_reduced
+                cuts         = ''
+                cut_range    = ''
+                prescale     = 1 
+                first , last = 0 , len ( dataset )
+                
 
         ## from here:
         #  (1) no prescal
@@ -541,14 +523,10 @@ else :
             for vname , func , obsvars in funcs :
                 obsvars.assign ( evt )
                 data [ vname ] [ i ] = func.getVal()   
-
-        if not cuts and not cut_range :
-            assert len ( data ) == len ( dataset ) , "Mismatch in input/output lengths!"
-        else :
-            assert len ( data ) <= len ( dataset ) , "Mismatch in input/output lengths!"
-            
+    
         del funcs
         del formulas
+ 
 
        # =======================================================================
         ## The final actions:
@@ -572,6 +550,8 @@ else :
             data = s2u ( data , copy = False )
         
         ## 
+        del ds_delete 
+        
         return ( data , weights ) if weight_split else data          ## RETURN
 
 # =========================================================================
