@@ -2,24 +2,28 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file
-#  Small utilities for statistical calcualtios 
+#  Small utilities for statistical calculations 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2026-07-18
 # =============================================================================
-""" Small utilities for statistical calcualtios 
+""" Small utilities for statistical calculations 
 """
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
-    'weight_trivial'    , ## Is weight(1D numpy array) "trivial" ?
-    'num_features'      , ## Number of features for training data
-    'num_samples'       , ## Number of samples/events (rows) in the dataset.
-    'compatible_shapes' , ## Check if input datasets have compatible shapes 
+    'weight_trivial'      , ## Is weight(1D numpy array) "trivial" ?
+    'valid_weights_shape' , ## Valid weights shape ? 
+    'valid_data_shape'    , ## Valid data shape ?
+    'num_features'        , ## Number of features for training data
+    'num_samples'         , ## Number of samples/events (rows) in the dataset.
+    'compatible_shapes'   , ## Check if input datasets have compatible shapes 
+    'compatible_weights'  , ## Check for data and weights compatibility
 ) 
 # =============================================================================
-from   ostap.core.ostap_types import num_types, numpy_buffer_types 
+from   ostap.core.ostap_types import num_types, numpy_buffer_types
+from   ostap.utils.core       import typename 
 import numpy
 # =============================================================================
 # logging 
@@ -28,23 +32,7 @@ from ostap.logger.logger import getLogger, logAttention
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.utils' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-## Check if input dataset shapes have compatible feature dimensions
-def compatible_shapes ( ds1 , ds2 ) :
-    """ Check if ds1 and ds2 have compatible feature dimensions """
-    s1 = numpy.shape ( ds1 )
-    s2 = numpy.shape ( ds2 )
-
-    if not ( len ( s1 ) > 0 and len ( s2 ) > 0 and s1 [ 0 ] > 0 and s2 [ 0 ] > 0 ) :
-        return False
-
-    # Get feature dimension (1 for 1D arrays, shape[1:] for N-D arrays)
-    dim1 = s1 [ 1 : ] if len ( s1 ) > 1 else ( 1 , )
-    dim2 = s2 [ 1 : ] if len ( s2 ) > 1 else ( 1 , )
-
-    return dim1 == dim2
-
-# =============================================================================
-## Trvial weight ? 
+## Trivial weight ? 
 #  - None
 #  - one 
 #  - all ones
@@ -55,43 +43,144 @@ def weight_trivial ( weight ) :
     - all ones
     """
     ## 
-    if    weight is None                             : return True
-    elif  isinstance ( weight , num_types          ) : return 1 == weight 
-    elif  isinstance ( weight , numpy_buffer_types ) : return 1 == weight 
-    elif  isinstance ( weight , numpy.ndarray      ) : return numpy.all ( weight == 1 ) 
+    if   weight is None                             : return True
+    elif isinstance ( weight , num_types          ) : return 1 == weight 
+    elif isinstance ( weight , numpy_buffer_types ) : return 1 == weight 
+    elif isinstance ( weight , numpy.ndarray      ) : return numpy.all ( weight == 1 ) 
     return False
+
+# =============================================================================
+## Check if weights array has a valid 1D/column vector shape
+# - Supports NumPy arrays, lists, tuples, and custom containers.
+def valid_weights_shape ( weights ) :
+    """ Check if weights have a valid 1D array or (N, 1) column shape.
+    - Supports NumPy arrays, lists, tuples, and custom containers.
+    """
+    if weight_trivial ( weights ) : return True
+
+    # Extract shape attribute if present (NumPy arrays, Tensors, DataFrames)
+    shape = getattr ( weights , 'shape' , None )
+
+    if shape is not None:
+        ndim = len ( shape )
+        # Accept 1D vectors (N,) or 0D scalars
+        if ndim <= 1 : return True
+        # Accept (N, 1) column vectors, reject any multi-column (N, >1) or >2D arrays
+        if ndim == 2 and shape[1] == 1: return True
+        return False
+
+    # For standard Python sequences (lists, tuples): check nested dimensions
+    if hasattr ( weights , '__len__' ) and 0 < len  ( weights ) :
+        first_elem = weights [ 0 ]
+        # Reject lists of lists/tuples with length > 1
+        if isinstance ( first_elem, ( list , tuple , numpy.ndarray ) ) :
+            return 1 == len ( first_elem )
+
+    return True
+
+# =============================================================================
+## Check if dataset has a valid structure/shape
+# - Supports NumPy arrays, DataFrames, PyROOT C++ containers, and sequences.
+def valid_data_shape(data):
+    """ Check if data has a valid 1D, 2D, or Structured Array shape.
+    - Supports NumPy arrays, DataFrames, PyROOT C++ containers, and sequences.
+    """
+    if data is None: return False
+
+    # Check shape attribute if present (NumPy arrays, Pandas, Tensors)
+    shape = getattr ( data , 'shape' , None )
+    if shape is not None:
+        ndim = len ( shape )
+        # Allow 1D vectors (N,) and 2D tabular features (N, F)
+        return True if 1 <= ndim <= 2 else False 
+
+    # For standard Python sequences / PyROOT containers
+    return True if hasattr ( data , '__len__' ) else False 
+
 # =============================================================================
 ## Number of features for training data
-#  Safe extraction of n_features (supports DataFrame, 2D array, 1D vector)
+#  - Safe extraction of n_features (supports DataFrame, 2D array, 1D vector, Structured Array)
 def num_features ( X ) :
     """ Number of features for training data
-    - Safe extraction of n_features (supports DataFrame, 2D array, 1D vector)
+    - Safe extraction of n_features (supports DataFrame, 2D array, 1D vector, Structured Array)
     """
-    return X.shape [ 1 ] if hasattr ( X , 'shape' ) and 1 < len ( X.shape ) else 1
-# ============================================================================
+    # 1. Structured Arrays (check field names in dtype)
+    dtype = getattr ( X , 'dtype' , None )
+    if dtype is not None and dtype.names : return len ( dtype.names )
+
+    # 2. Standard NumPy arrays, DataFrames, etc.
+    shape = getattr ( X , 'shape' , None )
+    if shape is not None and 1 < len ( shape ) : return shape [ 1 ]
+
+    # 3. 1D vectors and fallback
+    return 1
+
+# =============================================================================
 ## Returns the number of samples/events (rows) in the dataset.
 #  Supports NumPy arrays, Pandas DataFrames/Series, SciPy sparse matrices,
-#  PyTorch/TensorFlow tensors, and standard Python collections.
-def num_samples ( X ) :
-    """ Returns the number of samples/events (rows) in the dataset.
+#  PyTorch/TensorFlow tensors, C++ containers (via PyROOT), and standard Python sequences.
+def num_samples(X):
+    """ Number of samples/events (rows) in the dataset.
 
     Supports NumPy arrays, Pandas DataFrames/Series, SciPy sparse matrices,
-    PyTorch/TensorFlow tensors, and standard Python collections.
+    PyTorch/TensorFlow tensors, C++ containers (via PyROOT), and standard Python sequences.
     """
     if X is None : return 0
 
-    # Handle objects with a .shape attribute (NumPy, Pandas, SciPy, PyTorch, TensorFlow)
-    if hasattr ( X ,  "shape" ) :
-        shape = X.shape
-        if 0 == len ( shape ) :  return 1
-        return int ( shape [ 0 ] )
+    # Handle standard Python sequences, DataFrames, ROOT objects, PyROOT C++ vectors
+    if hasattr ( X, "__len__" ) : return len ( X )
 
-    # Handle lists, tuples, and other standard Python sequences
-    if hasattr ( X , "__len__" ) : return len ( X )
+    # Handle objects with .shape attribute (NumPy, PyTorch, TensorFlow, SciPy )
+    shape = getattr ( X , "shape" , None )
+    if shape is not None:
+        if 0 == len ( shape ) : return 0 # 0D scalar has 0 samples 
+        return int( shape  [ 0 ] )
 
-    raise TypeError ( "Unsupported data structure for determining sample count: %" % typename ( X )  )
+    raise TypeError ( "Unsupported data structure for determining sample count: %s" % typename ( X ) )
+
 # =============================================================================
+## Check if input dataset shapes have compatible feature dimensions
+def compatible_shapes ( ds1 , ds2 ) :
+    """ Check if ds1 and ds2 have compatible feature dimensions"""
+    
+    # Extract dtype for structured arrays (if applicable)
+    dt1 = getattr ( ds1 , 'dtype' , None )
+    dt2 = getattr ( ds2 , 'dtype' , None )
 
+    # If both are structured arrays, compare their field names/types
+    if dt1 is not None and dt1.names and dt2 is not None and dt2.names:
+        return dt1.names == dt2.names
+
+    s1 = numpy.shape ( ds1 )
+    s2 = numpy.shape ( ds2 )
+
+    # Validate non-empty datasets
+    if not ( s1 and s2 and s1 [ 0 ] > 0 and s2 [ 0 ] > 0 ):
+        return False
+
+    # Get feature dimensions (ignoring event count at index 0)
+    dim1 = s1 [ 1 : ] if 1 < len ( s1 ) else ()
+    dim2 = s2 [ 1 : ] if 1 < len ( s2 ) else ()
+
+    return dim1 == dim2
+
+# =============================================================================
+## Check if dataset and weights are compatible
+#  - Ensures weights are 1D (or 2D column vector) matching the data length.
+def compatible_weights ( data , weights = None ) :
+    """Check for data and weights compatibility.
+    - Ensures weights are 1D (or 2D column vector) matching the data length.
+    """
+    if weight_trivial ( weights ) : return True
+
+    # 1. Reject data shapes first
+    if not valid_data_shape    ( data    ) : return False
+    
+    # 2. Reject invalid weight matrix shapes second 
+    if not valid_weights_shape ( weights ) : return False
+
+    # 3. Check event count compatibility using num_samples
+    return num_samples ( data ) == num_samples ( weights )
 
 # ============================================================================
 if '__main__' == __name__ :

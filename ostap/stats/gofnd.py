@@ -771,6 +771,13 @@ class NLL(AGoF,Config) :
         """`weghts_supported`: Are weights supported by this estimator?
         """
         return False 
+
+    ## Are negative weights supported by this GoF estimator?
+    @property 
+    def negative_weights_supported ( self ) :
+        """`negatove_weghts_supported`: Are negative weights supported by this estimator?
+        """
+        return False 
     
     # =======================================================================
     ## get all configration parameters
@@ -783,7 +790,9 @@ class NLL(AGoF,Config) :
         conf [ 'nToys'     ] = self.nToys      
         conf [ 'sample'    ] = self.sample   
         conf [ 'parallel'  ] = self.parallel 
-        conf [ 'progress'  ] = self.progress 
+        conf [ 'progress'  ] = self.progress
+        conf [ 'weights_supported'         ] = self.weights_supported
+        conf [ 'negatve_weights_supported' ] = self.negative_weights_supported
         return conf
     
     ## serialize the object 

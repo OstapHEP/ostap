@@ -694,7 +694,7 @@ class ADVAL_XGB (ADVAL_base) :
 
         return params
 
-    # ==================================================================================
+
     ## Train the XGBoost model and make predictions
     def work ( self ,
                X_train , Y_train , W_train ,
@@ -717,6 +717,9 @@ class ADVAL_XGB (ADVAL_base) :
         # ===============================================================================
         dtrain = XGBoost.DMatrix ( X_train , label = Y_tr , weight = W_tr )
         dval   = XGBoost.DMatrix ( X_val   , label = Y_va , weight = W_va )
+
+        # Define evals list for early stopping monitoring
+        evals  = [ ( dtrain , 'train' ) , ( dval , 'val' ) ]
 
         params = {}
         params.update ( self.params )
@@ -743,8 +746,10 @@ class ADVAL_XGB (ADVAL_base) :
 
             num_boost_round        = min ( MAX_REGULARIZED_ESTIMATORS , num_boost_round       )
             early_stopping_rounds  = min (                         10 , early_stopping_rounds )
-            
 
+        # ===============================================================================
+        # 3. Model Training
+        # ===============================================================================
         model = XGBoost.train ( params                = params,
                                 dtrain                = dtrain,
                                 num_boost_round       = num_boost_round,
@@ -752,20 +757,31 @@ class ADVAL_XGB (ADVAL_base) :
                                 early_stopping_rounds = early_stopping_rounds,
                                 verbose_eval          = False )    
 
+        # ===============================================================================
         # 4. Predict and restore predictions to original target probability space
+        # ===============================================================================
         raw_predictions = model.predict ( dval )
         predictions     = invert_if_negative_weight ( raw_predictions , W_val )
         
+        # ===============================================================================
         # 5. Extract Feature Importances (Gain)
+        # ===============================================================================
         if importance :
             score_dict    = model.get_score ( importance_type = 'gain' )
-            feature_names = X_train.columns.tolist() if hasattr ( X_train, 'columns') else [f'f{i}' for i in range ( X_train.shape [ 1 ] ) ]
-            imps          = numpy.array ( [score_dict.get ( col , 0.0 ) for col in feature_names ] , dtype = numpy.float32 )
-        else:
+            
+            # Map feature names correctly using num_features helper
+            if hasattr ( X_train , 'columns' ) :
+                feature_names = X_train.columns.tolist()
+            else :
+                n_feats       = num_features ( X_train )
+                feature_names = [ f'f{i}' for i in range ( n_feats ) ]
+
+            imps = numpy.array ( [ score_dict.get ( col , 0.0 ) for col in feature_names ] , dtype = numpy.float32 )
+        else :
             imps = None
 
         return predictions, imps
-        
+
 # ======================================================================================
 ## @class ADVAL_CATB
 #  CatBoost-based class for Adversarial Validation
@@ -965,7 +981,7 @@ class ADVAL_HGBC (ADVAL_base) :
         
         # Depth & leaf count limits
         max_depth = 3 
-        params [ 'max_depth'         ] = min ( max_depth , self.param.get ( 'max_depth' , 5 ) or 5 )
+        params [ 'max_depth'         ] = min ( max_depth , self.params.get ( 'max_depth' , 5 ) or 5 )
         params [ 'max_leaf_nodes'    ] = 2 ** params [ 'max_depth' ] - 1  # 3 leaves for depth=2
         
         # Leaf size & L2 regularization
@@ -1268,7 +1284,7 @@ class ADVAL_RF (ADVAL_base) :
             # 1. Depth & Leaf Constraints
             max_depth = 2 if nf <= 3 else 3
             regpars [ 'max_depth'         ] = min ( max_depth , regpars.get ( 'max_depth' , 3 ) or 3 )
-            regpras [ 'max_leaf_nodes'    ] = 2 ** regpars [ 'max_depth' ]  # max 4 leaves for depth=2
+            regpars [ 'max_leaf_nodes'    ] = 2 ** regpars [ 'max_depth' ]  # max 4 leaves for depth=2
 
             params.update ( regpars )
             
