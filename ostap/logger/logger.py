@@ -57,6 +57,10 @@ from   ostap.logger.colorized import ( isatty         ,
                                        infostr        ,
                                        decolorize     ,
                                        markup         )
+
+# =============================================================================
+# Force UTF-8 for stdout even when not attached to a TTY
+if not sys.stdout.isatty() : sys.stdout.reconfigure ( encoding = 'utf-8' )
 # =============================================================================
 ## Message levels   (a'la Gaudi) 
 # =============================================================================
@@ -187,18 +191,12 @@ logging_file_format = '# %(asctime)s %(name)-35s %(levelname)-7s %(message)s'
 logging_date_format = "%Y-%m-%d %H:%M:%S" 
 
 ## The basic configuration 
-if isatty () :
-    logging.basicConfig (
-        ## level    = logging.NOTSET      ,
-        level    = 1                   ,
-        format   = logging_format      ,
-        datefmt  = logging_date_format )
-else :
-    logging.basicConfig (
-        ## level    = logging.NOTSET      ,
-        level    = 1                   ,
-        format   = logging_file_format ,
-        datefmt  = logging_date_format )
+logging.basicConfig (
+    ## level    = logging.NOTSET   ,
+    level    = 1                   ,
+    format   = logging_format if isatty () else logging_file_format , 
+    datefmt  = logging_date_format ,
+    encoding = 'utf-8'             )
 
 # =============================================================================
 ## Get current global threshold

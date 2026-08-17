@@ -34,8 +34,9 @@ __all__     = (
     'ascii_styles'          , ## available ASCII table styles    
     'default_style'         , ## available ASCII table styles    
 )
-# =============================================================================
+# =============================================================================    
 from   ostap.core.ostap_types import string_types 
+from   ostap.utils.basic      import isatty
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size, zip_longest 
 import ostap.core.config      as     config
@@ -160,7 +161,7 @@ default_style = config.tables.get ( 'Style' , fallback = default_style )
 # =============================================================================
 default_style = default_style.lower().strip()
 if not default_style in table_styles :
-    _isatty = isatty() 
+    _isatty = True ## = isatty() 
     if   _isatty and terminaltables : default_style = 'double'
     elif _isatty and tabulate       : default_style = 'fancy_grid'
     elif             terminaltables : default_style = 'ascii' 
@@ -380,8 +381,6 @@ def table ( rows                          ,
     - `double`    : use `DoubleTable` 
     """
 
-    from ostap.utils.basic import isatty
-
     title_bw = decolorize  ( title    ).strip ()
     title    = allright    ( title_bw )    
     twidth   = visible_width ( title  ) ## visible length of the title 
@@ -403,8 +402,8 @@ def table ( rows                          ,
 
     if   not  fmt in table_styles : fmt = 'local' ## switch to local
 
-    if isatty()                   : pass
-    elif not fmt in ascii_styles  : fmt = 'local' ## swicth to local 
+    ## if isatty()                   : pass
+    if not fmt in ascii_styles  : fmt = 'local' ## switch to local 
 
     # =================================================================
     ## Basis structure 
@@ -431,7 +430,7 @@ def table ( rows                          ,
     cols_center = column_types ( alignment , columns_center  , num_cols ) 
     
     ## 
-    tty = isatty ()
+    tty = True ## isatty ()
     
     # =========================================================================
     ## Terminal tables

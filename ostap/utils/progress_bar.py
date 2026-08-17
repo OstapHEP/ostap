@@ -218,7 +218,8 @@ class ProgressBar(object):
                   output    = sys.stdout , **kwargs ) :
         
         ## tty ? 
-        tty = not _is_ci and ( _interactive or isatty ( output ) )
+        ## tty = not _is_ci and ( _interactive or isatty ( output ) )
+        tty = not _is_ci and isatty ( output ) 
         
         self.__silent = kwargs.get ( 'silent' , not tty )
         self.__r      = '\r' ## '\r' if tty else '\n'
@@ -469,7 +470,9 @@ class RunningBar(object):
 
 
         ## tty ? 
-        tty = not _is_ci and ( _interactive or isatty ( output ) )
+        ## tty = not _is_ci and ( _interactive or isatty ( output ) )
+        tty = not _is_ci and isatty ( output ) 
+
         self.__silent = kwargs.get ( 'silent' , not tty )
 
         self.amount   =  0 

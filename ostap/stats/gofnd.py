@@ -68,7 +68,8 @@ from   ostap.stats.gof_utils    import TOYS
 from   ostap.stats.ustat        import USTAT
 from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.stats.gof_utils    import format_row, draw_ecdf  
-from   ostap.stats.utils        import weight_trivial 
+from   ostap.stats.utils        import weight_trivial
+from   ostap.fitting.pdfbasic   import APDF1, PDF1 
 import ostap.stats.gof_np       as     GNP
 import ostap.logger.table       as     T 
 import ROOT, numpy, math  
@@ -324,7 +325,10 @@ class GoF(AGoF,Config) :
         >>> pdf  = ...
         >>> data = ... ## as ROOT.RooAbsData
         >>> ds1, ds2 = gof.transform ( pdf , data ) 
-        """        
+        """
+        if not isinstance ( pdf , APDF1 ) :
+        raise TypeError ( "Invalid type of `pdf`: %s" % typename ( pdf ) )
+        
         assert self.weights_supported or not data.isWeighted () , \
             "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
                                                                        typename ( self.gof ) )
@@ -367,9 +371,13 @@ class GoF(AGoF,Config) :
             ds1 , ds2 = self.transform ( pdf , data )
             return ds1 , ds2 , None , None 
         
+        if not isinstance ( pdf  , APDF1 ) :
+            raise TypeError ( "Invalid type of `pdf`: %s" % typename ( pdf ) )
+        
         if not data.weight_trivial and not self.weights_supported :
             raise RuntimeError ( "%s.wtransform: input dataset has non-trivial weights!" % typename ( self ) )
-        
+
+    
         data1 = data
         data2 = self.generate ( pdf , data )
 
@@ -1562,6 +1570,10 @@ class KolmogorovSmirnov(GoF) :
         >>> data   = ... 
         >>> tvalue = ppd.tvalue ( pdf , data ) 
         """
+        ## check that it is 1D PDF
+        if not isinstance ( pdf , PDF1 ) or 1 != len ( pdf.vars ) :
+            raise TypeError ( "PDF is not 1D-pdf %s" % typename ( pdf ) )
+        
         ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
         ## estimate the t-value 
         return self.gof ( ds1                 ,
@@ -1585,6 +1597,10 @@ class KolmogorovSmirnov(GoF) :
         >>> data = ... 
         >>> t , p = ppd.pvalue ( pdf , data ) 
         """
+        ## check that it is 1D PDF
+        if not isinstance ( pdf , PDF1 ) or 1 != len ( pdf.vars ) :
+            raise TypeError ( "PDF is not 1D-pdf %s" % typename ( pdf ) )
+        
         ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
         ## estimate t&p-values 
         return self.gof.pvalue ( ds1               ,

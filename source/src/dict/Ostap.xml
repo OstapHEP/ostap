@@ -118,6 +118,8 @@
     
     <class name="std::__wrap_iter<const double*>" />
     <class name="std::__wrap_iter<double const*>" />
+    
+    <class pattern="std::__wrap_iter<*double*>"   />
 
   </exclusion>
 

@@ -1580,7 +1580,6 @@ class ADVAL_KERAS (ADVAL_base) :
     #   gof = ...
     #   gof.regularization () 
     #   @endcode
-    @abc.abstractmethod 
     def regularization ( self ) :
         """ Create the regularized configuration
         >>> gof = ...

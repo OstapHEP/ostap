@@ -106,9 +106,8 @@ from   ostap.logger.logger    import getLogger, logColor, logNoColor
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.symbols' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-
 ## show unicode symbols? 
-show = has_unicode() and ( show_unicode or isatty () ) 
+show = has_unicode () and ( show_unicode or isatty () ) 
 
 checked_yes      = '\u2705'      if show else "+"
 checked_no       = '\u274c'      if show else "-"
@@ -341,14 +340,22 @@ def labels ( N , labs = () )  :
         else     : return
         
     for k in range ( q , N ) : yield '%d' % k
-    
+
+
+# ============================================================================
+# Mapping table including both plus and minus signs
+superscript_map = str.maketrans({
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+    '-': '⁻', '+': '⁺', '.': 'ˑ', 'e': 'ᵉ', 'E': 'ᵉ'
+})
+
 # =============================================================================
 if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-        
 # =============================================================================
 ##                                                                     The END 
 # =============================================================================

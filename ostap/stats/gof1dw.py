@@ -21,7 +21,6 @@ __all__     = (
     'ZK'                 , ## ZK               GoF estimator
     'ZA'                 , ## ZA               GoF estimator
     'ZC'                 , ## ZC               GoF estimator
-    ##
 )
 # =============================================================================
 from   ostap.stats.gof_np      import GoFnp

@@ -42,7 +42,7 @@ from   ostap.stats.statvars         import data_decorate, data_range
 from   ostap.utils.valerrors        import VAE
 from   ostap.utils.progress_conf    import progress_conf
 from   ostap.utils.progress_bar     import progress_bar
-from   ostap.logger.pretty          import pretty_float 
+from   ostap.logger.pretty          import pretty_float, pretty_row  
 from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis
 from   ostap.logger.colorized       import allright,  attention
 import ostap.logger.table           as     T
@@ -2648,20 +2648,22 @@ _new_methods_ += [
 
 # =============================================================================
 ## Print data set as table
-def _ds_table_0_ ( dataset                 ,
-                   variables = []          ,
-                   cuts      = ''          ,
-                   cut_range = ''          , 
-                   first     = FIRST_ENTRY ,
-                   last      = LAST_ENTRY  ,
-                   prefix    = ''          ,
-                   title     = ''          ,
-                   style     = ''          ) :
+def _ds_table_ ( dataset                 ,
+                 variables = []          ,
+                 cuts      = ''          , 
+                 cut_range = ''          , 
+                 first     = FIRST_ENTRY ,
+                 last      = LAST_ENTRY  ,
+                 width     = 6           ,
+                 precision = 4           ,
+                 prefix    = ''          ,
+                 title     = ''          ,
+                 style     = ''          ) :
     """ Print data set as table
     """
     varset = dataset.get()
     if not valid_pointer ( varset ) :
-        logger.error('Invalid dataset')
+        logger.error ( 'Invalid dataset' )
         return ''
 
     assert isinstance ( cuts    , expression_types  ) or not cuts, \
@@ -2679,28 +2681,29 @@ def _ds_table_0_ ( dataset                 ,
     first, last = evt_range ( dataset , first , last )
     
     vars  = [ i.GetName() for i in varset if i.GetName() in vars ]
-        
-    _vars = []
-
-    stat  = dataset.statVars ( vars , cuts = cuts , first = first , last = last , cut_range = cut_range )
-
+    vars.sort()
     
+    ## get statistics 
+    stat  = dataset.statVars ( vars , cuts = cuts , first = first , last = last , cut_range = cut_range )
+    
+    rows = []
     for v in  stat :
-        vv  = getattr ( varset , v )
-        s   = stat [ v ] 
-        mnmx = s.minmax ()
-        mean = s.mean   ()
-        rms  = s.rms    ()
-
-        r    = ( vv.GetName  () ,                      ## 0 
-                 vv.GetTitle () ,                      ## 1 
-                 ('%+.5g' % mean.value() ).strip() ,   ## 2
-                 ('%.5g'  % rms          ).strip() ,   ## 3 
-                 ('%+.5g' % mnmx[0]      ).strip() ,   ## 4
-                 ('%+.5g' % mnmx[1]      ).strip() )   ## 5            
-        _vars.append ( r )
-    _vars.sort() 
-
+        
+        vv   = getattr ( varset , v )
+        s    = stat     [ v ]
+        
+        vmin, vmax = s.minmax ()
+        mean       = s.mean   ()
+        rms        = s.rms    ()
+        
+        items = mean , rms , vmin , vmax
+        row , unit = pretty_row ( *items  , precision = precision , width = width )
+        
+        row = ( vv.GetName() , vv.GetTitle() ) + row + ( unit , )        
+        rows.append ( row )
+        
+    rows.sort()
+    
     tt = dataset.GetTitle()
     if not title :    
             
@@ -2711,10 +2714,6 @@ def _ds_table_0_ ( dataset                 ,
         title =  '%s %d#' %  ( title , len ( dataset ) )
         if cabinet : title = '%s %s' % ( cabinet , title )
         
-    if not _vars :
-        return title , 120 
-        ## return report , 120 
-
     weight = None
     if   isinstance ( dataset , ROOT.RooDataHist ) :
         
@@ -2726,268 +2725,44 @@ def _ds_table_0_ ( dataset                 ,
         if dataset.isNonPoissonWeighted() : title += ' Weighted' 
         else :                              title += ' Weighted/Poisson'
 
-        ## name of weight variabe
+        ## name of weight variable
         weight = dataset.wname ()
         wcnt   = dataset.statVar ( '1' , cuts = cuts , first = first , last = last , cut_range = cut_range )
-        wcnt   = wcnt.weights ()            
-        r    = (  weight                            ,   ## 0 
-                  'Weight variable'                 ,   ## 1 
-                  ('%+.5g' % wcnt.mean().value() ).strip() ,   ## 2
-                  ('%.5g'  % wcnt.rms ()         ).strip() ,   ## 3 
-                  ('%+.5g' % wcnt.min ()         ).strip() ,   ## 4
-                  ('%+.5g' % wcnt.max ()         ).strip() )   ## 5
-        _vars.append ( r ) 
-        with_weight = True
+        wcnt   = wcnt.weights ()
+        
+        vmin, vmax = wcnt.minmax ()
+        mean       = wcnt.mean   ()
+        rms        = wcnt.rms    ()
+        
+        items      = mean , rms , vmin , vmax
+        row , unit = pretty_row ( *items  , precision = precision , width = width )
+        
+        row        = ( allright ( weight ) , 'Weight variable' ) + row + ( unit , weight_lifter if weight_lifter else 'W' )
+        
+        rows.append ( row ) 
 
     # ==============================================================================================
     # build the actual table 
     # ==============================================================================================
     
-    name_l  = len ( 'Variable'    ) + 2 
-    desc_l  = len ( 'Description' ) + 2 
-    mean_l  = len ( 'mean' ) + 2 
-    rms_l   = len ( 'rms'  ) + 2
-    min_l   = len ( 'min'  ) + 2 
-    max_l   = len ( 'max'  ) + 2 
-    for v in _vars :
-        name_l = max ( name_l , len ( v[0] ) )
-        desc_l = max ( desc_l , len ( v[1] ) )
-        mean_l = max ( mean_l , len ( v[2] ) )
-        rms_l  = max ( rms_l  , len ( v[3] ) )
-        min_l  = max ( min_l  , len ( v[4] ) )
-        max_l  = max ( max_l  , len ( v[5] ) )
-        
-    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
-    
-    fmt_name = '%%%ds. %%-%ds' % ( index_l , name_l )
-    fmt_desc = '%%-%ds' % desc_l
-    fmt_mean = '%%%ds'  % mean_l
-    fmt_rms  = '%%-%ds' % rms_l
-    fmt_min  = '%%%ds'  % min_l
-    fmt_max  = '%%-%ds' % max_l
-
-    title_l = index_l + 2 + name_l  
-    header = [ ( '{:^%d}' % title_l ).format ( 'Variable'    ) ,
-               ( '{:^%d}' % desc_l  ).format ( 'Description' ) ,
-               ( '{:^%d}' % mean_l  ).format ( 'mean'        ) ,
-               ( '{:^%d}' % rms_l   ).format ( 'rms'         ) ,
-               ( '{:^%d}' % min_l   ).format ( 'min'         ) ,
-               ( '{:^%d}' % max_l   ).format ( 'max'         ) ]
-
+    header =  [ 'Variable' , 'Description' , 'mean' , 'rms' , 'min', 'max' , 'unit' ] 
     if weight : header.append ( weight_lifter+' ' if weight_lifter else 'W' )
-        
-    table_data = [ tuple  ( header ) ]
-
-    vlst = vars
-
-    for i , v in enumerate ( _vars ) :
-                
-        cols = [ fmt_name %  ( i + 1 , v [ 0 ] ) ,
-                 fmt_desc %            v [ 1 ] ,
-                 fmt_mean %            v [ 2 ] ,
-                 fmt_rms  %            v [ 3 ] ,
-                 fmt_min  %            v [ 4 ] ,
-                 fmt_max  %            v [ 5 ] ]
-        
-        if   weight and i + 1 == len ( _vars ) :
-            cols.append ( weight_lifter+' ' if weight_lifter else 'W' )
-            cols = [ allright ( c ) for c in cols ] 
-        elif weight      : cols.append ( ' ' )
-        
-        table_data.append ( tuple ( cols ) ) 
-
-    t  = T.table ( table_data , title = title , prefix =  prefix , style = style )
-    w  = T.table_width ( t ) 
-    return t , w 
-
-
-# =============================================================================
-## Print data set as table
-def _ds_table_1_ ( dataset                 ,
-                   variables = []          ,
-                   cuts      = ''          ,
-                   cut_range = ''          , 
-                   first     = FIRST_ENTRY ,
-                   last      = LAST_ENTRY  ,
-                   prefix    = ''          ,
-                   title     = ''          ,
-                   style     = ''          ) :
-    """ Print data set as table
-    """
     
-    first, last = evt_range ( dataset , first , last ) 
-    
-    assert isinstance ( cuts    , expression_types  ) or not cuts, \
-        "Invalid type of cuts: %s" % type ( cuts )
-    assert isinstance ( cut_range , expression_types ) or not cut_range, \
-        "Invalid type of cut_range: %s" % type ( cut_range )
-    
-    cuts      = str(cuts).strip()      if cuts      else ''
-    cut_range = str(cut_range).strip() if cut_range else ''
-
-    varset = dataset.get() 
-    if variables : vars , cuts , _ = vars_and_cuts ( variables  , cuts ) 
-    else         : vars , cuts     = [ v.name for v in varset ] , cuts 
-
-    _vars = []    
-    vvars = tuple ( sorted ( vars ) )
-    stat = dataset.statVars ( vvars  , cuts = cuts , first = first , last = last , cut_range = cut_range ) 
-    for v in  stat :
-        s   = stat [ v ] 
-        mnmx = s.minmax ()
-        mean = s.mean   ()
-        rms  = s.rms    ()
-
-        r    = ( v                                 ,   ## 0 
-                 ('%+.5g' % mean.value() ).strip() ,   ## 1
-                 ('%.5g'  % rms          ).strip() ,   ## 2 
-                 ('%+.5g' % mnmx[0]      ).strip() ,   ## 3
-                 ('%+.5g' % mnmx[1]      ).strip() )   ## 4            
-        _vars.append ( r )
-    _vars.sort() 
-        
-    tt = dataset.GetTitle()
-    if not title :        
-        title = '%s("%s"):'     % ( typename ( dataset ) , dataset.GetName () )
-        title = '%s %d entries' % ( title , len ( dataset ) )
-
-    if not _vars :
-        return title , 120 
-        ## return report , 120 
-
-    weight = None
-
-    # ==============================================================================================
-    # build the actual table 
-    # ==============================================================================================
-    
-    name_l  = len ( 'Variable'    ) + 2 
-    mean_l  = len ( 'mean' ) + 2 
-    rms_l   = len ( 'rms'  ) + 2
-    min_l   = len ( 'min'  ) + 2 
-    max_l   = len ( 'max'  ) + 2 
-    for v in _vars :
-        name_l = max ( name_l , len ( v[0] ) )
-        mean_l = max ( mean_l , len ( v[1] ) )
-        rms_l  = max ( rms_l  , len ( v[2] ) )
-        min_l  = max ( min_l  , len ( v[3] ) )
-        max_l  = max ( max_l  , len ( v[4] ) )
-        
-    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
-    
-    fmt_name = '%%%ds. %%-%ds' % ( index_l , name_l )
-    fmt_mean = '%%%ds'  % mean_l
-    fmt_rms  = '%%-%ds' % rms_l
-    fmt_min  = '%%%ds'  % min_l
-    fmt_max  = '%%-%ds' % max_l
-
-    title_l = index_l + 2 + name_l  
-    header = [ ( '{:^%d}' % title_l ).format ( 'Variable'    ) ,
-               ( '{:^%d}' % mean_l  ).format ( 'mean'        ) ,
-               ( '{:^%d}' % rms_l   ).format ( 'rms'         ) ,
-               ( '{:^%d}' % min_l   ).format ( 'min'         ) ,
-               ( '{:^%d}' % max_l   ).format ( 'max'         ) ]
-
-    table_data = [ tuple  ( header ) ]
-
-    vlst = vars
-
-    for i , v in enumerate ( _vars ) :
-                
-        cols = [ fmt_name %  ( i + 1 , v [ 0 ] ) ,
-                 fmt_mean %            v [ 1 ] ,
-                 fmt_rms  %            v [ 2 ] ,
-                 fmt_min  %            v [ 3 ] ,
-                 fmt_max  %            v [ 4 ] ]
-        
-        table_data.append ( tuple ( cols ) ) 
-
-    title = title    
-    t  = T.table ( table_data , title = title , prefix =  prefix , style = style )
-    w  = T.table_width ( t ) 
-    return t , w 
-
-# ==============================================================================
-## print dataset in a form of the table
-#  @code
-#  dataset = ...
-#  print dataset.table() 
-#  @endcode
-def _ds_table_ (  dataset                 ,
-                  variables = []          ,
-                  cuts      = ''          ,
-                  cut_range = ''          ,
-                  first     = FIRST_ENTRY ,
-                  last      = LAST_ENTRY  ,                 
-                  prefix    = ''          ,
-                  title     = ''          ,
-                  style     = ''          ) :
-    """ Print dataset in a form of the table
-    >>> dataset = ...
-    >>> print dataset.table()
-    """
-    return _ds_table_0_ ( dataset               ,
-                          variables             ,
-                          cuts      = cuts      ,
-                          cut_range = cut_range ,
-                          first     = first     ,
-                          last      = last      , 
-                          prefix    = prefix    ,
-                          title     = title     ,
-                          style     = style     ) [ 0 ]
-
-# ==============================================================================
-## print dataset in a form of the table
-#  @code
-#  dataset = ...
-#  print dataset.table2() 
-#  @endcode
-def _ds_table2_ (  dataset                 ,
-                   variables = []          ,
-                   cuts      = ''          ,
-                   cut_range = ''          ,
-                   first     = FIRST_ENTRY ,
-                   last      = LAST_ENTRY  ,                 
-                   prefix    = ''          ,
-                   title     = ''          ,
-                   style     = ''          ) :
-    """ Print dataset in a form of the table
-    >>> dataset = ...
-    >>> print dataset.table()
-    """
-    return _ds_table_1_ ( dataset               ,
-                          variables             ,
-                          cuts      = cuts      ,
-                          cut_range = cut_range ,
-                          first     = first     ,
-                          last      = last      ,
-                          prefix    = prefix    ,
-                          title     = title     ,
-                          style     = style     ) [ 0 ]
-
-# =============================================================================
-##  print DataSet
-def _ds_print2_ ( dataset ) :
-    """ Print dataset"""
-    ## if dataset.isWeighted() and not isinstance ( dataset , ROOT.RooDataHist ) :
-    ##    store = dataset.store()
-    ##    if valid_pointer ( store ) and isinstance ( store , ROOT.RooTreeDataStore ) : pass
-    ##    else : return _ds_print_ ( dataset )         
-    from ostap.utils.basic import terminal_size, isatty 
-    if not isatty() : return _ds_table_ ( dataset )
-    tw  , th  = terminal_size()
-    rep , wid = _ds_table_0_ ( dataset ) 
-    if wid < tw  : return rep
-    return _ds_print_ ( dataset )
+    rows = [ tuple  ( header ) ] + rows
+    rows = T.remove_empty_columns ( rows ) 
+    return T.table  ( rows                   ,
+                      title     = title      ,
+                      prefix    = prefix     ,
+                      alignment = 'llcccccc' , 
+                      style     = style      )
 
 
 for t in ( ROOT.RooDataSet , ROOT.RooDataHist ) :
-    t.__repr__    = _ds_print2_
-    t.__str__     = _ds_print2_
     t.table       = _ds_table_
-    t.table2      = _ds_table2_
-    t.pprint      = _ds_print_ 
-
+    t.pprint      = _ds_table_ 
+    t.__repr__    = _ds_table_
+    t.__str__     = _ds_table_
+    
 _new_methods_ += [
     ROOT.RooDataSet.table    , 
     ROOT.RooDataSet.pprint   , 

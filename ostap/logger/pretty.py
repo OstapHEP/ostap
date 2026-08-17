@@ -42,12 +42,14 @@ __all__     = (
     'add_expo'           , ## add an exponetaion factor for sting representaion of the object
     ## Force LaTeX format 
     'pretty_latex'       , ## dispatcher for pretty prints 
-    'nice_latex'         , ## ready-to-usepretty prints 
+    'nice_latex'         , ## ready-to-usepretty prints
+    ##
+    'format_pow10'       , ## nice print for decimal exponents
+    'pretty_row'         , ## ready to use row and unit 
 )
-
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types, sequence_types
-from   ostap.logger.symbols   import plus_minus, times
+from   ostap.logger.symbols   import plus_minus, times, superscript_map 
 from   ostap.utils.core       import typename 
 import math 
 # =============================================================================
@@ -59,6 +61,29 @@ else                       : logger = getLogger( __name__                )
 # =============================================================================
 logger.debug ( "Helper functions for pretty prints of some objects" )
 # =============================================================================
+## Format an value  into a Unicode "10^value" string representation.
+# 
+#  Examples:
+#  - format_pow10 (  4 ,show_sign)   -> '10⁴'
+#  - format_pow10 (  4, show_sign=)  -> '10⁺⁴'
+#  - format_pow10 (-15)              -> '10⁻¹⁵
+#  - format_pow10 (1e-15)            -> '10¹ᵉ⁻¹⁵'
+def format_pow10 ( value , show_sign = True ) : 
+    """ Format value into a Unicode 10^value string representation.
+    
+    Examples:
+    - format_pow10 (  4 , show_sign = False )  -> '10⁴'
+    - format_pow10 (  4 , show_sign = True  )  -> '10⁺⁴'
+    - format_pow10 (-15)                       -> '10⁻¹⁵'
+    - format_pow10(1e-15)                      -> '10¹ᵉ⁻¹⁵'
+    """
+    if not value : return '1'
+    ##
+    if isinstance ( value , int ) : val_str = "%+d" % value if show_sign else "%d" % value 
+    else                          : val_str = "%+g" % value if show_sign else "%g" % value
+    ## 
+    return "10%s" % val_str.translate ( superscript_map )
+
 
 # =============================================================================
 ## 1-formats 
@@ -241,7 +266,7 @@ def fmt_pretty_float ( value             , * ,
                                latex     = latex     ) 
 
 # ===============================================================================
-## Formats nice printout of the valuw with (sinle, symmetric)  error
+## Formats nice printout of the value with (single, symmetric)  error
 #  @code
 #  fmt, fmtv, fmte, expo = fmt_pretty_error ( value , error  ) 
 #  @endcode
@@ -694,6 +719,48 @@ def pretty_vme ( value               , * ,
                           latex       = latex       ,
                           PDG         = PDG         ) 
 
+
+# =============================================================================
+## Prepare the row of values
+#  @code
+#  values = ....
+#  row , unit = pretty_row ( *values ) 
+#  @endcode
+def pretty_row ( *values     ,
+                 width       = 6     ,
+                 precision   = 4     ,
+                 with_sign   = True  ,
+                 parentheses = False ) :
+    """ Prepare the row of values
+    >>> values = ....
+    >>> row , unit = pretty_row ( *values ) 
+    """
+    from ostap.math.ve import VE
+    
+    val = max ( abs ( float ( v )            ) for v in values )
+    err = max ( max ( 0 , VE ( v ) .error () ) for v in values )
+    
+    fmt , fmtv , _ , expo = fmt_pretty_error ( val                     ,
+                                               err                     ,
+                                               width       = width     ,
+                                               precision   = precision ,
+                                               parentheses = False     ,
+                                               with_sign   = True      )
+    
+    actor = lambda x : fmt % ( x.value() , x.error() ) if isinstance ( x , VE ) and 0 < x.cov2 () else fmtv % float ( x ) 
+    
+    if not expo : scaled = values
+    else        : 
+        scale  = 10 ** expo 
+        scaled = tuple ( i / scale for i in values )
+    
+    row  = tuple ( actor ( i ) for i in scaled )
+    unit = format_pow10 ( expo ) if expo else ''
+    ##
+    return row , unit
+    
+
+        
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -21,7 +21,8 @@ from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 from   ostap.utils.valerrors    import ValWithErrors, AsymErrors   
 from   ostap.logger.colorized   import allright, attention, attstr 
-from   ostap.logger.pretty      import pretty_float, pretty_error2, fmt_pretty_values
+from   ostap.logger.pretty      import ( pretty_float      , pretty_error2 ,
+                                         fmt_pretty_values , format_pow10  ) 
 from   ostap.math.ve            import fmt_pretty_ves
 from   ostap.math.math_base     import isequal 
 from   ostap.logger.symbols     import show, same, chisq   
@@ -653,46 +654,38 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     ##  1. fit status
     status = r.status() 
     if status :
-        row = attention ( 'Status' )  , '' , attention ( fit_status ( status ) ) , '' 
+        row = attention ( 'Status' )  , attention ( fit_status ( status ) ) , '' , '' 
         rows.append ( row )
     else :
-        row = 'Status'                , '' , allright  ( fit_status ( status ) ) , '' 
+        row = 'Status'                , allright  ( fit_status ( status ) ) , '' , '' 
         rows.append ( row )
 
     ## 2. minumum NLL
     s , n = pretty_float ( r.minNll() )
-    if n : n = '[10^%+d]' % n
-    else : n = '' 
+    n = '[%s]' % format_pow10 ( n ) if n else '' 
 
-    rows.append ( ( "Minimized FCN/NLL value"    , n , '  ' + s , '' ) )
+    rows.append ( ( "Minimized FCN/NLL value"    , '  ' + s , n , '' ) )
 
     s , n = pretty_float ( r.edm () )
-    if n : n = '[10^%+d]' % n
-    else : n = '' 
+    n = '[%s]' % format_pow10 ( n ) if n else '' 
 
-    rows.append ( ( 'Estimated distance to minimum' , n , '  ' + s , '' ) )
+    rows.append ( ( 'Estimated distance to minimum' , '  ' + s , n , '' ) )
 
     cq = r.covQual()
     cn = '' 
-    if  -1 == cq :
-        cn = cov_qual  ( cq ) 
-    elif 3 == cq :
-        cn = allright  ( cov_qual ( cq ) )
-    elif cq in (  0 , 1 , 2 ) :
-        cn = attention ( cov_qual ( cq ) )
-    else :
-        cn = cov_qual  ( cq ) 
+    if  -1 == cq              : cn = cov_qual  ( cq ) 
+    elif 3 == cq              : cn = allright  ( cov_qual ( cq ) )
+    elif cq in (  0 , 1 , 2 ) : cn = attention ( cov_qual ( cq ) )
+    else                      : cn = cov_qual  ( cq ) 
         
-    rows.append ( ( 'Covariance matrix quality'     , '' , '  ' + cn , '' ) )
+    rows.append ( ( 'Covariance matrix quality'   , '  ' + cn , '' , '' ) )
     
     for i in  range ( r.numStatusHistory() ) :
         label =  r.statusLabelHistory ( i )
         code  =  r.statusCodeHistory  ( i )
-        row   =  'Status: %s '% label   , '' ,             '%d' % code             
-        if not code in ( 0 , -1 ) :
-            row = attention  ( row [ 0 ] ) , row [ 1 ] , '   ' + attention ( row [ 2 ] ) , '' 
-        else    :
-            row =              row [ 0 ]   , row [ 1 ] , '   ' + allright  ( row [ 2 ] ) , ''
+        row   =  'Status: %s '% label   ,  '%d' % code , '' 
+        if not code in ( 0 , -1 ) : row = attention  ( row [ 0 ] ) , row [ 1 ] , '   ' + attention ( row [ 2 ] ) , '' 
+        else                      : row =              row [ 0 ]   , row [ 1 ] , '   ' + allright  ( row [ 2 ] ) , ''
         rows.append ( row )
 
     nbadnll = r.numInvalidNLL()
@@ -702,9 +695,8 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     ## Akaike's information criteria 
     #  https://ieeexplore.ieee.org/document/1100705
     s , n = pretty_float ( r.aic () )
-    if n : n = '[10^%+d]' % n
-    else : n = '' 
-    rows.append ( ( "Akaike's IC"    , n , '  ' + s , '' ) )
+    n = '[%s]' % format_pow10 ( n ) if n else '' 
+    rows.append ( ( "Akaike's IC"    , '  ' + s , n , '' ) )
         
     with_globcorr = True 
 
@@ -751,8 +743,8 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
             elif dmx         : limits [ a.name ] = dmax
 
 
-    if with_globcorr : header = ( '', 'Unit', 'Value' , 'Global/max correlation [%]') 
-    else             : header = ( '', 'Unit', 'Value' , 'Max correlation [%]') 
+    if with_globcorr : header = ( '', 'Value' , 'Unit' , 'Global/max correlation [%]') 
+    else             : header = ( '', 'Value' , 'Unit' , 'Max correlation [%]') 
     
     if limits : header   +=  ( '@limit?', ) 
 
@@ -767,9 +759,8 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 
         s , n = pretty_float  ( v.value()  ) 
 
-        if n : n = '[10^%+d]' % n
-        else : n = '' 
-        row = p , n , '  ' + s + ' (fix)' , ''  
+        n = '[%s]' % format_pow10 ( n ) if n else '' 
+        row = p , '  ' + s + ' (fix)' , n , ''  
         crows.append ( row ) 
 
     ## floating parameters
@@ -784,9 +775,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         else :
             s , n = pretty_error2  ( a.getVal() , a.getAsymErrorLo() , a.getAsymErrorHi() , parentheses = False )
 
-        if n : n = '[10^%+d]' % n
-        else : n = '' 
-
+        n = '[%s]' % format_pow10 ( n ) if n else ''
         if 0 <= cq and 1 < len ( pars_float ) :
 
             mxr , mxv = r.max_cor    ( p )
@@ -808,11 +797,11 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
 
                 max_corr = True
 
-            row = p , n , s , cc
+            row = p , s , n , cc
             
         else :
             
-            row = p , n , s
+            row = p , s , n 
 
         dist = limits.get ( a.name , None )
         if not dist is None :
@@ -833,11 +822,9 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
         
         s , n = v.pretty_print()  
         
-        if n : n = '[10^%+d]' % n
-        else : n = '' 
-
+        n = '[%s]' % format_pow10 ( n ) if n else '' 
         cc = 'derived'
-        row = p , n , s , cc
+        row = p , s , n , cc
         mrows.append ( row ) 
 
     crows.sort()
@@ -1179,7 +1166,7 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
                 v2   /= scale
                 v1    = fmt % ( v1.value () , v1.error() )
                 v2    = fmt % ( v2.value () , v2.error() )                
-                row = '- %s' % p , '' , '' , v1 , v2 , '10^%+d' % expo
+                row = '- %s' % p , '' , '' , v1 , v2 , format_pow10 ( expo ) 
             else :
                 v1    = fmt % ( v1.value () , v1.error() )
                 v2    = fmt % ( v2.value () , v2.error() )                
@@ -1216,7 +1203,7 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
             fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
             if expo :
                 scale = 10 ** expo 
-                row = 'Min eigen-value' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , '10^%+d' % expo
+                row = 'Min eigen-value' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , format_pow10 ( expo ) 
             else :
                 row = 'Min eigen-value' , '' , '' , fmt % v1 , fmt % v2 
             rows.append ( row )
@@ -1226,7 +1213,7 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
             fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
             if expo :
                 scale = 10 ** expo 
-                row = 'Max eigen-value' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , '10^%+d' % expo
+                row = 'Max eigen-value' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , format_pow10 ( expo ) 
             else :
                 row = 'Max eigen-value' , '' , '' , fmt % v1 , fmt % v2 
             rows.append ( row )
@@ -1236,7 +1223,7 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
             fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
             if expo :
                 scale = 10 ** expo 
-                row = 'Trace/Spur' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , '10^%+d' % expo
+                row = 'Trace/Spur' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , format_pow10 ( expo ) 
             else :
                 row = 'Trace/Spur' , '' , '' , fmt % v1 , fmt % v2 
             rows.append ( row )
@@ -1248,7 +1235,7 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
             fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
             if expo :
                 scale = 10 ** expo 
-                row = 'Determinant' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , '10^%+d' % expo
+                row = 'Determinant' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , format_pow10 ( expo )
             else :
                 row = 'Determinant' , '' , '' , fmt % v1 , fmt % v2 
             rows.append ( row )
@@ -1281,7 +1268,7 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
                 scale = 10**expo 
                 v1 = fmt % ( v1 / scale )
                 v2 = fmt % ( v2 / scale )
-                row = '- %s' % p , '' , '' , v1 , v2 , '10^%+d' % expo , ok 
+                row = '- %s' % p , '' , '' , v1 , v2 , format_pow10 ( expo ) , ok 
             else :
                 v1 = fmt %   v1
                 v2 = fmt %   v2 
@@ -1295,13 +1282,13 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
         for p in fixed1 :
             v = float ( r1 [ p ] )
             v , e = pretty_float ( v , precision = precision , width = width )
-            if e : row = '- %s' % p , '' , '' , v  , '' , '10^%+d' % e
+            if e : row = '- %s' % p , '' , '' , v  , '' , format_pow10 ( e ) 
             else : row = '- %s' % p , '' , '' , v
             rows.append ( row ) 
         for p in fixed2 :
             v = float ( r2 [ p ] )
             v , e = pretty_float ( v , precision = precision , width = width )
-            if e : row = '- %s' % p , '' , '' , ''  , v , '10^%+d' % e
+            if e : row = '- %s' % p , '' , '' , ''  , v , format_pow10 ( e ) 
             else : row = '- %s' % p , '' , '' , ''  , v 
             rows.append ( row ) 
                                                  

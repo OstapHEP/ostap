@@ -35,7 +35,7 @@ debug        = False   ## debug   processing ?
 verbose      = False   ## verbose processing ?
 level        = 3       ## print level (3 == INFO) 
 color        = True    ## use colors ? 
-show_unicode = False   ## show unicode in logfiles?
+show_unicode = True    ## show unicode in logfiles?
 #
 dump_config  = '.ostap_config.dump'  ## dump-file for configuraiton
 

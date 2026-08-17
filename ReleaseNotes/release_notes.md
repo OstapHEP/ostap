@@ -10,6 +10,9 @@
    1. add `prescale` argument to `data_slice`, `tree_slice`, `frame_slice`, `ds_silce` and ``ds2numpy` functions
    1. remove some suspicious blancks 
    1. release constraints for dataset' append/merge operators  
+   1. add 1D weighted two-samples and GoF estimators
+   1. improve printous for value with errors 
+   
 
 ## Bug fixes 
 

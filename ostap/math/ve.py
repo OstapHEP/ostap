@@ -611,8 +611,9 @@ def nice_ve ( value               , * ,
                                latex       = latex       ,
                                PDG         = PDG         )
     
-    if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-    elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
+    from ostap.logger.pretty import format_pow10 
+    if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo                  )
+    elif expo           : result = '%s %s %s'       % ( result , times     , format_pow10 ( expo ) )
     ##
     return result
 

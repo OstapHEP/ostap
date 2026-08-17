@@ -45,7 +45,7 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import ( times       , plus_minus  , greek_lower_sigma ,
                                          subscript_A , subscript_K , subscript_C , 
                                          likelihood  )                                         
-from   ostap.logger.pretty      import pretty_float
+from   ostap.logger.pretty      import pretty_float, pretty_row 
 from   ostap.plotting.color     import Orange, Green, Blue
 from   packaging.version        import Version 
 import ostap.logger.table       as     T 
@@ -1132,35 +1132,17 @@ def format_row ( tvalue    = None ,
         header = ( 't-value'    ,
                    't-mean'     ,
                    't-rms'      ,
-                   't-min/max'  ,                
-                   '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
+                   't-min'      ,                
+                   't-max'      ,                
+                   't-unit'     , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
         
         mean       = counter.mean   ()
         rms        = counter.rms    () 
         vmin, vmax = counter.minmax () 
-        
-        mxv        = max ( abs ( tvalue       ) ,
-                           abs ( mean.value() ) ,
-                           mean.error()         , rms ,
-                           abs ( vmin )  , abs ( vmax ) ) 
-        
-        fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  mean.cov2() ) ,
-                                                  precision   = precision   ,
-                                                  width       = width       , 
-                                                  parentheses = False       )
-        
-        if expo : scale = 10**expo
-        else    : scale = 1
-    
-        vs  = tvalue / scale
-        vm  = mean   / scale
-        vr  = rms    / scale
-        vmn = vmin   / scale
-        vmx = vmax   / scale
-        
-        fmt2 = '%s/%s' % ( fmtv , fmtv ) 
 
-        ##
+        items      = tvalue, mean, rms , vmin , vmax
+        row, unit  = pretty_row  ( *items , width = width , precision = precision )
+        unit       = '[%s]' % unit if unit else unit
         
         pv      = clip_pvalue  ( pvalue ) 
         nsigma  = significance ( pv     ) ## convert  it to significance
@@ -1171,44 +1153,43 @@ def format_row ( tvalue    = None ,
         pvalue  = pvalue * 100
 
         if isinstance ( pvalue , VE ) : pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
-        else                          : pvalue  = '%5.2f'         % float ( pvalue ) 
+        else                          : pvalue  = '%5.2f'         %   float ( pvalue ) 
         if isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
-        else                          : nsigma  = '%.2f'          % float ( nsigma ) 
-        
-        row = ( fmtv  % vs ,
-                fmt   % ( vm.value() , vm.error() ) ,
-                fmtv  % vr                          ,
-                fmt2  % ( vmn , vmx )               ,
-                ( '%s10^%+d' %  ( times , expo )  if expo else '' ) , pvalue , nsigma )
+        else                          : nsigma  = '%.2f'          %   float ( nsigma ) 
+
+        row = row + ( unit , pvalue , nsigma )
         
         return header , row
 
     elif has_tvalue and has_pvalue :
         
-        header = ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
+        header    = ( 't-value'  , 't-unit' , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
 
-        pv        = clip_pvalue  ( pvalue )
-        nsigma    = significance ( pv     )
+        items      = tvalue, 
+        row, unit  = pretty_row  ( *items , width = width , precision = precision )
+        unit       = '[%s]' % unit if unit else unit
+        
+        pv         = clip_pvalue  ( pvalue )
+        nsigma     = significance ( pv     )
         if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
         if 50 <= float ( nsigma ) : nsigma = pos_infinity 
         
-        tv , expo = pretty_float ( tvalue , precision = precision , width = width )
-
         pvalue  = pvalue * 100 
         if isinstance ( pvalue , VE ) : pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
         else                          : pvalue  = '%5.2f'         % float ( pvalue ) 
         if isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )        
         else                          : nsigma  = '%.2f'          % float ( nsigma ) 
         
-        row     = tv , '%s10^%+d' % ( times , expo ) if expo else '' , pvalue , nsigma
-
+        row     = row + ( unit , pvalue , nsigma )
         return header , row 
 
     elif has_tvalue :
         
-        header    = ( 't-value'  , '%s[..]' % times )          
-        tv , expo = pretty_float ( tvalue , precision = precision , width = width )
-        row       = tv , '%s10^%+d' % ( times , expo ) if expo else ''        
+        header    = ( 't-value'  , 't-unit' )  
+        items      = tvalue, 
+        row, unit  = pretty_row  ( *items , width = width , precision = precision )
+        unit       = '[%s]' % unit if unit else unit
+        row        = row + ( unit , ) 
         return header, row
 
     ## no data for table 
