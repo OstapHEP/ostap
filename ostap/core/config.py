@@ -66,6 +66,7 @@ from   ostap.utils.env           import ( get_env              ,
                                           OSTAP_DEBUG          ,
                                           OSTAP_VERBOSE        ,
                                           OSTAP_LEVEL          ,
+                                          OSTAP_LOG2STDOUT     , 
                                           OSTAP_COLOR          ,
                                           OSTAP_UNICODE        ,
                                           ## 
@@ -126,6 +127,7 @@ config [ 'General' ] = {
     'Debug'       : str ( default_config.debug         ) ,
     'Verbose'     : str ( default_config.verbose       ) ,
     'Level'       : str ( default_config.level         ) ,
+    'Log2stdout'  : str ( default_config.log2stdout    ) , 
     ##
     'Color'       : str ( default_config.color         ) , 
     'Unicode'     : str ( default_config.show_unicode  ) , 
@@ -283,6 +285,12 @@ if has_env ( OSTAP_UNICODE ) :
     if    boolean_false ( value ) :  general [ 'Unicode' ] = 'False'
     elif  boolean_true  ( value ) :  general [ 'Unicode' ] = 'True'
 
+if has_env ( OSTAP_LOG2STDOUT ) :
+    
+    value = get_env ( OSTAP_LOG2STDOUT , '' , silent = True )
+    if   boolean_false ( value ) : general [ 'Log2stdout' ] = 'False'
+    elif boolean_true  ( value ) : general [ 'Log2stdout' ] = 'True' 
+    
 # ============================================================================
 ## redefine ncpus from the environment variable 
 if has_env ( OSTAP_NCPUS ) : # ===============================================
@@ -370,6 +378,7 @@ silent       = general.getboolean ( 'Silent'      , fallback = default_config.si
 quiet        = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
 debug        = general.getboolean ( 'Debug'       , fallback = default_config.debug        )
 verbose      = general.getboolean ( 'Verbose'     , fallback = default_config.verbose      )
+log2stdout   = general.getboolean ( 'Log2stdout'  , fallback = default_config.log2stdout   )
 level        = general.getint     ( 'Level'       , fallback = default_config.level        )
 color        = general.getboolean ( 'Color'       , fallback = default_config.color        )
 show_unicode = general.getboolean ( 'Unicode'     , fallback = default_config.show_unicode )
@@ -581,7 +590,15 @@ def __parse_args ( args  = [] ) :
         choices = range ( -1 , 9 ) , 
         type    = int              , 
         help    =  "Printout level [default: %(default)s]" ,
-        default = level if 0 <= level <= 8 else -1 )    
+        default = level if 0 <= level <= 8 else -1 ) 
+    
+    egroup1.add_argument(
+        "--no-log2stdout"       , 
+        dest    = "Log2stdout"  , 
+        action  = "store_false" ,
+        help    = "Redirect logging to `sys.stdout`? [default: $(default)s]", 
+        default = log2stdout    )   
+    
     ##
     group2  = parser.add_argument_group ( 'Files' , '(ROOT) files, ROOT/C++ macros, (Python) scripts and commands for processing') 
     ###
@@ -722,7 +739,7 @@ def __parse_args ( args  = [] ) :
 
     ## 
     group7 = parser.add_argument_group ( 'Miscellaneous' ,
-                                         'Various miscelalneous options ROOT&Ostap') 
+                                         'Various miscellaneous options ROOT&Ostap') 
     ## 
     group7.add_argument ( 
         '--no-color'              ,
@@ -732,10 +749,10 @@ def __parse_args ( args  = [] ) :
         default = color           )    
     #
     group7.add_argument (
-        '--unicode'               ,
-        action  = "store_true"    ,
+        '--no-unicode'            ,
+        action  = "store_false"   ,
         dest    = 'Unicode'       ,
-        help    = 'Use unicode in log-files? [default: %(default)s]',
+        help    = 'Use unicode ? [default: %(default)s]',
         default = show_unicode    )
     #
     group7.add_argument ( 
@@ -810,6 +827,7 @@ quiet         = arguments.Quiet
 debug         = arguments.Debug
 verbose       = arguments.Verbose
 level         = arguments.Level
+log2stdout    = arguments.Log2stdout
 color         = arguments.Color
 show_unicode  = arguments.Unicode
 ##

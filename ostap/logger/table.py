@@ -36,7 +36,6 @@ __all__     = (
 )
 # =============================================================================    
 from   ostap.core.ostap_types import string_types 
-from   ostap.utils.basic      import isatty
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size, zip_longest 
 import ostap.core.config      as     config
@@ -48,6 +47,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.table' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
+
 terminaltables = None
 # =============================================================================
 if ( 3 , 9 ) <= sys.version_info : # ==========================================
@@ -141,7 +141,7 @@ try : # =======================================================================
         'outline'   , 'pipe'       , 'plain'          , 'html'            ,
         'presto'    , 'pretty'     , 'psql'           , 'rst'             ,
         'simple'    , 'texile'     , 'tsv'            , 'unsafehtml'      ,
-        'yourtrack' ,  'latex'     , 'latex_booktabs' , 'latex_longtable' ,
+        'yourtrack' , 'latex'      , 'latex_booktabs' , 'latex_longtable' ,
         'latex_raw' ) ) if s in tabulate_styles )
     # =========================================================================
 except ImportError : # ========================================================
@@ -160,12 +160,10 @@ default_style = config.tables.get ( 'Style' , fallback = default_style )
 
 # =============================================================================
 default_style = default_style.lower().strip()
-if not default_style in table_styles :
-    _isatty = True ## = isatty() 
-    if   _isatty and terminaltables : default_style = 'double'
-    elif _isatty and tabulate       : default_style = 'fancy_grid'
-    elif             terminaltables : default_style = 'ascii' 
-    else                            : default_style = 'local' 
+if not default_style in table_styles : 
+    if    terminaltables : default_style = 'double'
+    elif  tabulate       : default_style = 'fancy_grid' 
+    else                 : default_style = 'local' 
 # =============================================================================
 
 # =============================================================================
@@ -403,7 +401,7 @@ def table ( rows                          ,
     if   not  fmt in table_styles : fmt = 'local' ## switch to local
 
     ## if isatty()                   : pass
-    if not fmt in ascii_styles  : fmt = 'local' ## switch to local 
+    ## elif not fmt in ascii_styles  : fmt = 'local' ## switch to local 
 
     # =================================================================
     ## Basis structure 
@@ -876,7 +874,6 @@ if __name__ == '__main__' :
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
 
     all_styles  = terminal_styles + tabulate_styles
-    all_styles  = tabulate_styles
     
     for fmt in sorted ( all_styles ) : 
         result = table ( table_data , title = 'Title' , style  = fmt , prefix = '# ' )            

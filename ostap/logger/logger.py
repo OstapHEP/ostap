@@ -42,9 +42,9 @@ __all__ = (
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL' ,
     ##
     )
-# =============================================================================
+# =============================================================================    
 import ostap.core.config as config
-import logging, os, sys  
+import logging, sys
 # =============================================================================
 ## BASIC   colorization
 # =============================================================================
@@ -58,9 +58,6 @@ from   ostap.logger.colorized import ( isatty         ,
                                        decolorize     ,
                                        markup         )
 
-# =============================================================================
-# Force UTF-8 for stdout even when not attached to a TTY
-if not sys.stdout.isatty() : sys.stdout.reconfigure ( encoding = 'utf-8' )
 # =============================================================================
 ## Message levels   (a'la Gaudi) 
 # =============================================================================
@@ -196,6 +193,7 @@ logging.basicConfig (
     level    = 1                   ,
     format   = logging_format if isatty () else logging_file_format , 
     datefmt  = logging_date_format ,
+    stream   = sys.stdout if config.log2stdout else sys.stderr , 
     encoding = 'utf-8'             )
 
 # =============================================================================

@@ -327,7 +327,7 @@ class GoF(AGoF,Config) :
         >>> ds1, ds2 = gof.transform ( pdf , data ) 
         """
         if not isinstance ( pdf , APDF1 ) :
-        raise TypeError ( "Invalid type of `pdf`: %s" % typename ( pdf ) )
+            raise TypeError ( "Invalid type of `pdf`: %s" % typename ( pdf ) )
         
         assert self.weights_supported or not data.isWeighted () , \
             "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,

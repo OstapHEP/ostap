@@ -29,6 +29,7 @@ __all__     = (
     'OSTAP_DEBUG'        , ## debug   processing?
     'OSTAP_VERBOSE'      , ## verbose processing?
     'OSTAP_LEVEL'        , ## print   level
+    'OSTAP_LOG2STDOUT'   , ## redirect logging to sys.stdout ? 
     'OSTAP_COLOR'        , ## use colors?
     'OSTAP_UNICODE'      , ## show unicode in log-files? 
     #
@@ -65,6 +66,7 @@ OSTAP_QUIET         = 'OSTAP_QUIET'        ## quiet   processing ?
 OSTAP_DEBUG         = 'OSTAP_DEBUG'        ## debug   processing ? 
 OSTAP_VERBOSE       = 'OSTAP_VERBOSE'      ## verbose processing ? 
 OSTAP_LEVEL         = 'OSTAP_LEVEL'        ## print   level 
+OSTAP_LOG2STDOUT    = 'OSTAP_LOG2STDOUT'   ## redirect logging to sys.stdout? 
 OSTAP_COLOR         = 'OSTAP_COLOR'        ## use colors ? 
 OSTAP_UNICODE       = 'OSTAP_UNICODE'      ## show unicode in log-files?
 #

@@ -97,17 +97,17 @@ __all__     = (
     'labels'               
 )
 # ===========================================================================
-from   ostap.utils.basic import isatty, has_unicode
+from   ostap.utils.basic import has_unicode
 from   ostap.core.config import show_unicode
 # =============================================================================
 # logging 
 # =============================================================================
-from   ostap.logger.logger    import getLogger, logColor, logNoColor 
+from   ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.symbols' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 ## show unicode symbols? 
-show = has_unicode () and ( show_unicode or isatty () ) 
+show = show_unicode and has_unicode ()
 
 checked_yes      = '\u2705'      if show else "+"
 checked_no       = '\u274c'      if show else "-"

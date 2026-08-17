@@ -44,7 +44,7 @@ from   ostap.utils.progress_conf    import progress_conf
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.logger.pretty          import pretty_float, pretty_row  
 from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis
-from   ostap.logger.colorized       import allright,  attention
+from   ostap.logger.colorized       import allright
 import ostap.logger.table           as     T
 import ostap.fitting.variables  
 import ostap.fitting.roocollections
@@ -57,6 +57,8 @@ import ROOT, random, math, sys, ctypes, numpy
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.dataset' )
 else                       : logger = getLogger( __name__ )
+# =============================================================================
+fteweight_lir = weight_lifter+' ' if weight_lifter else 'W' 
 # =============================================================================
 logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================
@@ -2737,7 +2739,7 @@ def _ds_table_ ( dataset                 ,
         items      = mean , rms , vmin , vmax
         row , unit = pretty_row ( *items  , precision = precision , width = width )
         
-        row        = ( allright ( weight ) , 'Weight variable' ) + row + ( unit , weight_lifter if weight_lifter else 'W' )
+        row        = ( allright ( weight ) , 'Weight variable' ) + row + ( unit , weight_lifter )
         
         rows.append ( row ) 
 
@@ -2746,7 +2748,7 @@ def _ds_table_ ( dataset                 ,
     # ==============================================================================================
     
     header =  [ 'Variable' , 'Description' , 'mean' , 'rms' , 'min', 'max' , 'unit' ] 
-    if weight : header.append ( weight_lifter+' ' if weight_lifter else 'W' )
+    if weight : header.append ( weight_lifter  )
     
     rows = [ tuple  ( header ) ] + rows
     rows = T.remove_empty_columns ( rows ) 
@@ -3810,7 +3812,7 @@ def _rds_dump_table_ ( dataset   , *    ,
 
     header = '#' ,
     for v in vars : header += ( v , '%s[%s]' % ( times , ellipsis ) ) 
-    if weighted   : header += ( weight_lifter if weight_lifter else 'weight' , '' )
+    if weighted   : header += ( weight_lifter , '' )
     
     rows   = [ header ]
 

@@ -36,6 +36,7 @@ verbose      = False   ## verbose processing ?
 level        = 3       ## print level (3 == INFO) 
 color        = True    ## use colors ? 
 show_unicode = True    ## show unicode in logfiles?
+log2stdout   = True    ## redirect logger to sys.stdout
 #
 dump_config  = '.ostap_config.dump'  ## dump-file for configuraiton
 
