@@ -491,9 +491,9 @@ for iter in range ( 1 , maxIter + 1 ) :
     if not active and 3 < iter :
         logger.info ( allright ( 'No more iterations, converged after #%d%s' % ( iter , iteration ) ) ) 
         title = 'Reweighted dataset after #%d iterations' % iter 
-        logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' ] ,
+        logger.info ( '%s:\n%s' % ( title , mcds.table  ( variables = [ 'x' , 'y' ] ,
                                                           title     = title    ,
-                                                          prefix    = '# '     ) ) )
+                                                        prefix    = '# '     ) ) )
         converged = True 
         break
 
@@ -558,17 +558,17 @@ logger.info ( '%s\n%s' % ( title , table ) )
 
 # =============================================================================
 title = 'Data/target dataset'
-logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' ] ,
+logger.info ( '%s:\n%s' % ( title , datatree.table  ( variables = [ 'x' , 'y' ] ,
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )
 # =============================================================================
 title = 'MC dataset before reweighting' 
-logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , weight_name ] ,
+logger.info ( '%s:\n%s' % ( title , mctree.table    ( variables = [ 'x' , 'y' , weight_name ] ,
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )
 # =============================================================================
 title = 'MC dataset after reweighting' 
-logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' ] ,
+logger.info ( '%s:\n%s' % ( title , mctree.table    ( variables = [ 'x' , 'y' ] ,
                                                       title     = title         ,
                                                       cuts      = weight_name   , 
                                                       prefix    = '# '     ) ) )

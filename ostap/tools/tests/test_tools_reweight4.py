@@ -276,9 +276,9 @@ variables  = [
 # =============================================================================
 datatree   = ROOT.TChain ( tag_data , files = testdata )  
 title      = 'Data/target dataset %d' % len ( datatree ) 
-logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'r1' , 'r2' , 'r3' ] ,
-                                                      title     = title    ,
-                                                      prefix    = '# '     ) ) )
+logger.info ( '%s:\n%s' % ( title , datatree.table ( variables = [ 'r1' , 'r2' , 'r3' ] ,
+                                                     title     = title    ,
+                                                     prefix    = '# '     ) ) )
 
 vct_data  = datatree.statVct ( 'r1,r2,r3' )
 n_data    = len ( datatree )
@@ -324,10 +324,10 @@ for iter in range ( 1 , maxIter + 1 ) :
         ## 1b) add  "weight" variable to dataset 
         mcds  = mcds.add_reweighting ( weighter ,  name = 'weight' , progress = True , parallel = True )
         title = 'Reweighted dataset at iteration #%d' % iter 
-        logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'r1' , 'r2' , 'r3' ] ,
-                                                          title     = title    ,
-                                                          cuts      = 'weight' , 
-                                                          prefix    = '# '     ) ) )        
+        logger.info ( '%s:\n%s' % ( title , mcds.table ( variables = [ 'r1' , 'r2' , 'r3' ] ,
+                                                         title     = title    ,
+                                                         cuts      = 'weight' , 
+                                                         prefix    = '# '     ) ) )        
         ## get MC data in a form of vector 
         vct_mc = mcds.statVct ( 'r1,r2,r3', 'weight' )
         n_mc   = int ( mcds.nEff ( 'weight' ) )  
@@ -418,20 +418,20 @@ if converged : # ==============================================================
     mctree     = ROOT.TChain ( tag_mc   , files = testdata )  
     # ========================================================================
     title = 'Data/target dataset'
-    logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'r1' , 'r2' , 'r3' ] ,
-                                                          title     = title    ,
-                                                          prefix    = '# '     ) ) )
+    logger.info ( '%s:\n%s' % ( title , datatree.table ( variables = [ 'r1' , 'r2' , 'r3' ] ,
+                                                         title     = title    ,
+                                                         prefix    = '# '     ) ) )
     # =============================================================================
     title = 'MC-tree/chain before reweighting' 
-    logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'r1' , 'r2' , 'r3' ] ,
-                                                          title     = title    ,
-                                                          prefix    = '# '     ) ) )
+    logger.info ( '%s:\n%s' % ( title , mctree.table   ( variables = [ 'r1' , 'r2' , 'r3' ] ,
+                                                         title     = title    ,
+                                                         prefix    = '# '     ) ) )
     # =============================================================================
     title = 'MC-tree/chain after reweighting' 
-    logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'r1' , 'r2' , 'r3' ] ,
-                                                          title     = title    ,
-                                                          cuts      = 'weight' , 
-                                                          prefix    = '# '     ) ) )
+    logger.info ( '%s:\n%s' % ( title , mctree.table   ( variables = [ 'r1' , 'r2' , 'r3' ] ,
+                                                         title     = title    ,
+                                                        cuts      = 'weight' , 
+                                                         prefix    = '# '     ) ) )
     
     # =============================================================================
     vct_final = mctree.statVct ( 'r1,r2,r3' , 'weight' )

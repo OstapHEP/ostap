@@ -208,10 +208,10 @@ for iter in range ( 1 , maxIter + 1  ) :
         
         logger.info    ( allright ( 'No more iterations, converged after #%d%s' % ( iter , iteration ) ) )
         title = 'Reweighted dataset after #%d iterations' % iter 
-        logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' ]  ,
-                                                          title     = title    ,
-                                                          cuts      = 'weight' , 
-                                                          prefix    = '# '     ) ) )
+        logger.info ( '%s:\n%s' % ( title , mcds.table ( variables = [ 'x' ]  ,
+                                                         title     = title    ,
+                                                         cuts      = 'weight' , 
+                                                         prefix    = '# '     ) ) )
         ## dump data as CVS file 
         cvs_file = CleanUp.tempfile ( suffix = '.csv' , prefix ='ostap-test-tools-reweight-' )
         mcds.to_csv ( cvs_file , dialect = 'excel-tab' )

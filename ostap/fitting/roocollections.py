@@ -24,9 +24,11 @@ __all__     = (
 # =============================================================================
 from   collections.abc         import Container
 from   ostap.core.meta_info    import root_info 
-from   ostap.core.core         import std, Ostap, valid_pointer
+from   ostap.core.core         import std, Ostap, VE, valid_pointer
 from   ostap.utils.core        import typename 
 from   ostap.core.ostap_types  import string_types , integer_types
+from   ostap.logger.symbols    import labels as nice_labels
+from   ostap.logger.pretty     import pretty_row
 import ostap.fitting.variables
 import ROOT
 # =============================================================================
@@ -195,8 +197,7 @@ def _ras_getattr_ ( self , aname ) :
     >>> print aset.pt    
     """
     _v = self.find ( aname )
-    if not _v :
-        raise  AttributeError("%s: invalid attribute `%s'" % ( type ( self ) , aname ) )
+    if not _v : raise  AttributeError ( "%s: invalid `attribute`:%s" % ( typename ( self ) , aname ) )
     return _v 
 
 # =============================================================================
@@ -576,6 +577,60 @@ ROOT.RooArgSet . __sub__              = _ras_difference_
 ROOT.RooArgSet . __or__               = ROOT.RooArgSet.__add__
 ROOT.RooArgSet . __ior__              = ROOT.RooArgSet.__iadd__
 
+
+# =============================================================================
+## print collection as table
+#  @code
+#  collection ...
+#  print ( collectino.table() ) 
+#  @endcode 
+def _rac_table_ ( collection  ,
+                  title  = '' ,
+                  prefix = '' ,
+                  style  = '' ) :
+    """ Print collection as table
+    >>> collection ...
+    >>> print ( collection.table() )
+    """
+    header = ( '#' , 'Name' , 'Description' , 'Type' , 'Value' , 'Unit' )  
+    rows   = [ header ] 
+    for label , item in zip ( nice_labels ( len ( colllection ) ) , collection ) :
+        row = [ label , item.name , item.title , typename ( item ) ] 
+        if   isinstance ( item , ROOT.RooAbsReal    ) :
+            value = item.getVal()
+            if hasattr ( item , 'hasError' ) and item.hasError() :
+                if hasattr ( item , 'getError' ) :
+                    error = item.getError()
+                    if 0 < error : value = VE ( value , error * error )
+            ## 
+            row += pretty_row ( value ,
+                                width       = width     , 
+                                precicion   = precision ,
+                                with_sign   = True      , 
+                                parentheses = False     )
+                
+        elif isinstance ( item , ROOT.RooAbCategory ) :
+            label = item.getCurrentLabel ()
+            index = item.getCurrentIndex ()
+            row.append ( '%+d:%s' % ( index , label ) )
+        elif isinstance ( item , ROOT.RooStringVar  ) : row.append ( '%s' % item.getVal()  ) 
+        else                                          : row.append ( '<UNKNOWN>' )
+        
+        rows.append ( row ) 
+
+    if not title :
+        name = collection.GetName()
+        if name : title = '%s(%s)' % ( typename ( collection ) , name )
+        else    : title = '%s'     % ( typename ( collection ) )
+
+    import ostap.logger.table as T
+    rows   = T.remove_empty_columns ( rows )
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'rlwlcc' , style = style )
+
+# =============================================================================
+ROOT.RooAbsCollection.table = _rac_table_
+
+
 _new_methods_ += [
     ROOT.RooArgList    . clone        ,
     ROOT.RooArgSet     . clone        ,
@@ -601,6 +656,7 @@ _new_methods_ += [
     ROOT.RooArgSet     . __or__   , 
     ROOT.RooArgSet     . __ior__  ,
     ##
+    ROOT.RooAbsCollection . table     , 
     ROOT.RooAbsCollection . __iter__  ,
     ROOT.RooAbsCollection . __len__   ,
     ROOT.RooAbsCollection . names     ,

@@ -384,9 +384,9 @@ variables  = [
 # =============================================================================
 datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
 title      = 'Data/target dataset'
-logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                      title     = title    ,
-                                                      prefix    = '# '     ) ) )
+logger.info ( '%s:\n%s' % ( title , datatree.table ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                     title     = title    ,
+                                                     prefix    = '# '     ) ) )
 
 # =============================================================================
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
@@ -615,10 +615,10 @@ for weight in weights :
     
     mctree      = ROOT.TChain ( tag_mc   , files = testdata )
     title       = "MC-tree after %s reweighting" %  ( weight if weight else "NO" ) 
-    logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'x' , 'y' , 'z' ] ,
-                                                          title     = title    ,
-                                                          cuts      = weight   , 
-                                                          prefix    = '# '     ) ) )
+    logger.info ( '%s:\n%s' % ( title , mctree.table   ( variables = [ 'x' , 'y' , 'z' ] ,
+                                                         title     = title    ,
+                                                         cuts      = weight   , 
+                                                         prefix    = '# '     ) ) )
 
     datatree    = ROOT.TChain  ( tag_data    , files = testdata ) 
     mctree      = ROOT.TChain  ( tag_mc      , files = testdata )
