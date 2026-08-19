@@ -8571,8 +8571,8 @@ for t in  ( ROOT.TH1D             ,
 #  @param histogram ASCII/Unicode/pseudographics representation
 def dump_histo ( histo     , 
                  options   = ''   , * , 
-                 width     = 100  ,
-                 height    = 45   ,                 
+                 width     = 140  ,
+                 height    = 50   ,                 
                  use_color = True ,
                  numbers   = True ) :
     """ Dump 1D histo as ASCII/Unicode with pseudographics 
@@ -8608,7 +8608,7 @@ def dump_histo ( histo     ,
     from ostap.utils.basic import terminal_size 
     w , h  = terminal_size()
     width  = max ( 10 , min ( width  , w - 30 ) )
-    height = max ( 10 , min ( height , h - 10 ) )
+    height = max ( 10 , min ( height , h -  5 ) )
 
     ## need rebinning ?
     axis = histo.GetXaxis() 
@@ -8641,7 +8641,7 @@ def dump_histo ( histo     ,
     with_errors = 'e' in options or not 'hist' in options 
 
     ## use old c++ code 
-    for cpp in ( 'cpp' , 'c++' , 'hbook' , 'gauidi' , 'old' , 'ancient' , 'archaic' ) :
+    for cpp in ( 'cpp' , 'c++' , 'hbook' , 'gaudi' , 'old' , 'ancient' , 'archaic' ) :
         if cpp in options : return dumpHisto ( histo       ,
                                                width       ,
                                                height      ,
@@ -8654,7 +8654,7 @@ def dump_histo ( histo     ,
     overflow   = histo.overflow  ()
     underflow  = histo.underflow ()
     if errors : errors = [ underflow.error() ] + errors + [ overflow.error() ]
-    overflow   = overflow.value () 
+    overflow   = overflow .value () 
     underflow  = underflow.value () 
     edges      = axis.GetXmin () , axis.GetXmax () 
 

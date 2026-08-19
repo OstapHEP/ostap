@@ -409,7 +409,7 @@ def f1_draw ( self , option = '' , *options , **kwargs ) :
     for k in tf1_keys : kw.pop ( k , None )
     
     option = option.lower ()
-    for key in ( 'dump' , 'ascii' , 'unicode' ) :
+    for key in ( 'dump' , 'ascii' , 'unicode' , 'text' ) :
         if key in kw and kw.pop ( key ) : return self._tf1.dump ( **kw )
         if key in option                : return self._tf1.dump ( **kw )
         

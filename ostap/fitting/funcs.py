@@ -370,7 +370,7 @@ def dump_function ( func      ,
     from ostap.utils.basic import terminal_size 
     w , h  = terminal_size()
     width  = max ( 10 , min ( width  , w - 30 ) )
-    height = max ( 10 , min ( height , h - 10 ) )
+    height = max ( 10 , min ( height , h -  5 ) )
 
     xmin, xmax = func.GetXmin() , func.GetXmax() 
     values     = tuple ( func ( x )    for x in vrange ( xmin , xmax , width + 1 , edges = False ) )

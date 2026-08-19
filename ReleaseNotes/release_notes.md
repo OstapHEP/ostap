@@ -13,8 +13,8 @@
    1. add 1D weighted two-samples and GoF estimators
    1. improve printous for value with errors 
    1. Add ASCII/Unicode/pseudgraphics rendering to `ROOT.TH1` and `ROOT.TF1` objects
-   1. Keyword-arguments  `ascii`, `dump` & `unicode` added to `f1_draw` and all derivatives 
-   1. `ascii`, `dump` & `unicode` are now allowed to be in the 'option' argument of  `f1_draw` function
+   1. Keyword-arguments  `ascii`, `dump`, `text` & `unicode` added to `f1_draw` and all derivatives 
+   1. `ascii`, `dump`, `text` & `unicode` are now allowed to be in the 'option' argument of  `f1_draw` function
 
 ## Bug fixes 
 
