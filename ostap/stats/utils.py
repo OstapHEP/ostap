@@ -22,7 +22,7 @@ __all__     = (
     'compatible_weights'  , ## Check for data and weights compatibility
 ) 
 # =============================================================================
-from   ostap.core.ostap_types import num_types, numpy_buffer_types
+from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
 from   ostap.utils.core       import typename 
 import numpy
 # =============================================================================
@@ -47,6 +47,7 @@ def weight_trivial ( weight ) :
     elif isinstance ( weight , num_types          ) : return 1 == weight 
     elif isinstance ( weight , numpy_buffer_types ) : return 1 == weight 
     elif isinstance ( weight , numpy.ndarray      ) : return numpy.all ( weight == 1 ) 
+    elif isinstance ( weight , sized_types        ) : return all ( 1 == w for w in weight )
     return False
 
 # =============================================================================
@@ -71,10 +72,10 @@ def valid_weights_shape ( weights ) :
 
     # For standard Python sequences (lists, tuples): check nested dimensions
     if hasattr ( weights , '__len__' ) and 0 < len  ( weights ) :
-        first_elem = weights [ 0 ]
+        first_element = weights [ 0 ]
         # Reject lists of lists/tuples with length > 1
-        if isinstance ( first_elem, ( list , tuple , numpy.ndarray ) ) :
-            return 1 == len ( first_elem )
+        if isinstance ( first_element, sized_types ) :
+            return 1 == len ( first_element )
 
     return True
 
