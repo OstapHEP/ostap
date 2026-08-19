@@ -16,7 +16,8 @@ __all__     = () ## nothing to import
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.core        import cpp, Ostap, VE, funID, usedRootID
-from   ostap.core.ostap_types import num_types, integer_types, string_types 
+from   ostap.core.ostap_types import num_types, integer_types, string_types
+from   ostap.utils.ranges     import vrange 
 from   ostap.utils.core       import typename 
 import ROOT, ctypes 
 # =============================================================================
@@ -125,7 +126,7 @@ _new_methods_ += [
     ROOT.TF1 . fitHisto ,
     ROOT.TF1 . fit      ,
     ROOT.TH1 . fit      ,
-    ]
+]
 # =============================================================================
 ## check existence parameter for the function
 #  @code 
@@ -331,24 +332,95 @@ ROOT.TF2.xminmax = lambda s : ( s.GetXmin() , s.GetXmax() )
 ROOT.TF2.yminmax = lambda s : ( s.GetYmin() , s.GetYmax() )
 
 
+
+# =============================================================================
+## Dump 1D function with ASCII/Unicode/pseudographics rendering
+# 
+#  @code
+#  func = ..  
+#  print ( func.dump ( width  = 120 ) )
+#  print ( func.dump ( height =  35 ) )
+#  @endcode
+# 
+#  @param func      (INPUT) input 1D function
+#  @param height    (INPUT) maximal height 
+#  @param width     (INPUT) maximal width
+#  @param use_color (INPUT) use colors?
+def dump_function ( func      , 
+                    width     = 150  ,
+                    height    = 45   ,                 
+                    use_color = True ,
+                    silent    = True , **kwargs ) : 
+    """ Dump 1D function as ASCII/Unicode with pseudographics 
+
+    >>> func = ...
+    >>> print ( func .dump ( width  = 120 ) )
+    >>> print ( func .dump ( height =  35 ) )
+    
+    - func      : (INPUT) input 1D function 
+    - height    : (INPUT) maximal height 
+    - width     : (INPUT) maximal width
+    - use_color : (INPUT) use colors?
+    """
+    
+    if not isinstance ( func , ROOT.TF1 ) : raise TypeError  ( "Invalid `func` type: %s"        % typename ( func ) )
+    if not 1 == func.GetNdim  ()          : raise ValueError ( "Invalid function dimension: %d" % func.GetNdim ()   )
+    
+    ## adjust the width 
+    from ostap.utils.basic import terminal_size 
+    w , h  = terminal_size()
+    width  = max ( 10 , min ( width  , w - 30 ) )
+    height = max ( 10 , min ( height , h - 10 ) )
+
+    xmin, xmax = func.GetXmin() , func.GetXmax() 
+    values     = tuple ( func ( x )    for x in vrange ( xmin , xmax , width + 1 , edges = False ) )
+    vmax       = max   ( abs  ( v )    for v in values ) 
+    errors     = tuple ( [ 0 ] + [  1.e-9 * vmax  for i in range ( 0 , width  ) ] + [ 0 ] ) 
+    edges      = xmin , xmax 
+
+    ## use new function 
+    from ostap.histos.histo_dump import data2text
+    result = data2text ( values     ,
+                         errors     = errors    , 
+                         max_height = height    ,
+                         edges      = edges     , 
+                         use_color  = use_color )
+
+    if kwargs and not silent :
+        from ostap.logger.utils import print_args
+        title = 'dump_function unused/extra arguments'
+        logger.warning  ( '%s:\n%s' % ( title , print_args ( *args , prefix = '#' , **kwargs ) ) )
+        
+    where =  result.find ( '\n' )
+    if 0 <= where : result = result [ : where ] + ( '  ' + typename ( func ) ) + result [ where : ]
+    return result 
+
+
+ROOT.TF1.dump          = dump_function
+ROOT.TF1.dump_function = dump_function
+        
+
 _new_methods_ += [
-    ROOT.TF1.__contains__ ,
-    ROOT.TF1.__len__      ,
+    ROOT.TF1.__contains__   ,
+    ROOT.TF1.__len__        ,
     #
-    ROOT.TF1.par          ,
-    ROOT.TF1.param        ,
-    ROOT.TF1.parameter    ,
+    ROOT.TF1.par            ,
+    ROOT.TF1.param          ,
+    ROOT.TF1.parameter      ,
     #
-    ROOT.TF1.setPar       ,
-    ROOT.TF1.__setitem__  ,
+    ROOT.TF1.setPar         ,
+    ROOT.TF1.__setitem__    ,
     #
-    ROOT.TF1.fix          ,
-    ROOT.TF1.rel          ,
-    ROOT.TF1.release      ,
+    ROOT.TF1.fix            ,
+    ROOT.TF1.rel            ,
+    ROOT.TF1.release        ,
     #
-    ROOT.TF1.__iter__     ,
-    ROOT.TF1.__getitem__  ,
-    ROOT.TF1.__getattr__  ,
+    ROOT.TF1.__iter__       ,
+    ROOT.TF1.__getitem__    ,
+    ROOT.TF1.__getattr__    ,
+    ##
+    ROOT.TF1.dump           , 
+    ROOT.TF1.dump_function   
     ]
 # =============================================================================
 ## Integrate TF2 over range in Y

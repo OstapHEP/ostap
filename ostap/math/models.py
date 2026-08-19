@@ -405,8 +405,14 @@ def f1_draw ( self , option = '' , *options , **kwargs ) :
                not 'minval'   in kw and \
                not 'minvalue' in kw :
                 self._tf1.SetMinimum ( 0 )
+
+    for k in tf1_keys : kw.pop ( k , None )
     
-    for k in tf1_keys : kw.pop ( k , None ) 
+    option = option.lower ()
+    for key in ( 'dump' , 'ascii' , 'unicode' ) :
+        if key in kw and kw.pop ( key ) : return self._tf1.dump ( **kw )
+        if key in option                : return self._tf1.dump ( **kw )
+        
     self._plot = self._tf1.draw ( option , *options  , **kw  )
     return self
 
@@ -1206,6 +1212,7 @@ for model in ( Ostap.Math.Chebyshev               ,
                Ostap.Math.PseudoVoigt            ,
                Ostap.Math.Logistic               ,
                #
+               Ostap.Math.Gauss                  ,
                Ostap.Math.GenGaussV1             ,
                Ostap.Math.GenGaussV2             ,
                Ostap.Math.SkewGauss              ,

@@ -5682,8 +5682,9 @@ def _rebin_nums_1D_ ( h1 , template ) :
     >>> h = horig.rebinNumbers ( template ) 
     """
     ##
-    if   isinstance ( template , ROOT.TH1 ) : pass 
-    elif isinstance ( template  , integer_types  ) and 1 < template :
+    if   isinstance ( template , ROOT.TH1   ) : pass 
+    elif isinstance ( template , ROOT.TAxis ) : template = h1_axis ( template )
+    elif isinstance ( template , integer_types  ) and 1 < template :
         xaxis    = h1.GetXaxis()
         htype    = ROOT.TH1D if isinstance ( h1  , ROOT.TH1D ) else ROOT.TH1F
         template = htype  ( hID() , 'template' , template , xaxis.GetXmin() , xaxis.GetXmax() )
@@ -5698,10 +5699,8 @@ def _rebin_nums_1D_ ( h1 , template ) :
         
     # clone it!
     h2 = template.Clone( hID() )
+    h2.Reset() 
     if not h2.GetSumw2() : h2.Sumw2()
-    #
-    ## reset the histogram 
-    for i2 in h2 : h2[i2] = VE(0,0)
     #
     for i2 in h2.items() :
 
@@ -5712,11 +5711,11 @@ def _rebin_nums_1D_ ( h1 , template ) :
         bl = h1.findBin ( xbv - xbe ) - 1
         bh = h1.findBin ( xbv + xbe ) + 1
         
-        for i1 in h1.items( bl , bh + 1 ) :
+        for i1 in h1.items ( bl , bh + 1 ) :
             
-            o = _bin_overlap_1D_ ( i1[1] , i2[1] )
+            o = _bin_overlap_1D_ ( i1 [ 1 ] , i2 [ 1 ] )
             
-            h2 [ i2[0] ] +=  o * i1[2] 
+            h2 [ i2 [ 0 ] ] +=  o * i1 [ 2 ] 
 
     h2.ResetStats() 
     return h2
@@ -5730,7 +5729,8 @@ def _rebin_func_1D_ ( h1 , template ) :
     >>> h = horig.rebinFunction ( template ) 
     """
     
-    if   isinstance ( template , ROOT.TH1 ) : pass 
+    if   isinstance ( template , ROOT.TH1   ) : pass 
+    elif isinstance ( template , ROOT.TAxis ) : template = h1_axis ( template )
     elif isinstance ( template  , integer_types  ) and 1 < template :
         xaxis    = h1.GetXaxis()
         htype    = ROOT.TH1D if isinstance ( h1  , ROOT.TH1D ) else ROOT.TH1F
@@ -5745,25 +5745,24 @@ def _rebin_func_1D_ ( h1 , template ) :
         template = htype  ( hID() , 'template' , *template )
         
     # clone it!
-    h2 = template.Clone( hID() )
+    h2 = template.Clone ( hID() )
+    h2.Reset() 
     if not h2.GetSumw2() : h2.Sumw2()
-    ## reset the histogram 
-    for i2 in h2 : h2[i2] = VE(0,0)
     #
     for i2 in h2.items() :
         
-        xb  = i2[1]
+        xb  = i2 [ 1 ]
         xbv = xb.value ()
         xbe = xb.error ()
         
         bl = h1.findBin ( xbv - xbe ) - 1  
         bh = h1.findBin ( xbv + xbe ) + 1
         
-        for i1 in h1.items( bl , bh + 1 ) :
+        for i1 in h1.items ( bl , bh + 1 ) :
 
-            o = _bin_overlap_1D_ ( i2[1] , i1[1] ) ## NOTE THE ORDER!!! 
+            o = _bin_overlap_1D_ ( i2 [ 1 ] , i1 [ 1 ] ) ## NOTE THE ORDER!!! 
             
-            h2 [ i2[0] ] +=  o * i1[2]
+            h2 [ i2 [ 0 ] ] +=  o * i1 [ 2 ]
             
     h2.ResetStats() 
     return h2 
@@ -8536,13 +8535,149 @@ dumpHisto .__doc__ = '\n'  + Ostap.Utils.Histos.histoDump . __doc__
 for t in  ( ROOT.TH1D             ,
             ROOT.TH1F             ,
             ROOT.TProfile         ) :
-    for method in ( 'dump'       ,
-                    'dumpHisto'  ,
+    for method in ( 'dumpHisto'  ,
                     'dumpASCII'  ,
                     'dumpAsText' ) :
         if not hasattr ( t , method ) :
             setattr ( t , method , dumpHisto )
 
+# =============================================================================
+## Dump 1D histo with ASCII/Unicode/pseudographics rendering
+#
+#  If histogram has non-uniform binning or number of bins exceed the width
+#  histo will be rebinned using <code>rebinNumbers</code> or <code>rebinFunction</code>
+#  functinon depending on parameter <code>numbers</code>
+# 
+#  options (case-insensitive) :
+#  - 'C++', 'CPP', 'HBOOK' , 'GAUDI', 'OLD', 'ANCIENT' , 'ARCHAIC' in <code>options</code>: use <code>Ostap::Utils:Histo::histoDump</code>
+#  - 'E'    in <code>options> or  not 'HIST' in <code>options</code> : show error bars
+#  - 'HIST' in <code>options> and not 'E'    in <code>options</code> : do not show error bars
+# 
+#  @code
+#  histo = ...
+#  print ( histo.dump ( "hist" ) )
+#  print ( histo.dump ( "e"    ) )
+#  print ( histo.dump ( "e"    , width  = 120 ) )
+#  print ( histo.dump ( "e"    , height =  35 ) )
+#  print ( histo.dump ( "c++"  , height =  35 ) ) ## use old C++ function 
+#  @endcode
+# 
+#  @param histo     (INPUT) input 1D histogram
+#  @param options   (INPUT) drawing options
+#  @param height    (INPUT) maximal height 
+#  @param width     (INPUT) maximal width
+#  @param use_color (INPUT) use colors?
+#  @param numbers   (INPUT) use <code>rebinNumbers</code> or <code>rebinFunction</code> ? 
+#  @param histogram ASCII/Unicode/pseudographics representation
+def dump_histo ( histo     , 
+                 options   = ''   , * , 
+                 width     = 100  ,
+                 height    = 45   ,                 
+                 use_color = True ,
+                 numbers   = True ) :
+    """ Dump 1D histo as ASCII/Unicode with pseudographics 
+
+    If histogram has non-uniform binning or number of bins exceed the width
+    histo will be rebinned using `rebinNumbers` or `rebinFunction`
+    function depending on parameter <code>numbers</code>
+
+    options (case-insensitive) :
+    - 'C++', 'CPP', 'HBOOK' , 'GAUDI', 'OLD', 'ANCIENT' , 'ARCHAIC' in <code>options</code>: use `Ostap::Utils:Histo::histoDump`
+    - 'E'    in `options` or  not 'HIST' in `options` : show error bars
+    - 'HIST' in `options` and not 'E'    in `options` : do not show error bars
+
+    >>> histo = ...
+    >>> print ( histo.dump ( "hist" ) )
+    >>> print ( histo.dump ( "e"    ) )
+    >>> print ( histo.dump ( "e"    , width  = 120 ) )
+    >>> print ( histo.dump ( "e"    , height =  35 ) )
+    >>> print ( histo.dump ( "c++"  , height =  35 ) ) ## use old C++ function 
+    
+    - histo     : (INPUT) input 1D histogram
+    - options   : (INPUT) drawing options
+    - height    : (INPUT) maximal height 
+    - width     : (INPUT) maximal width
+    - use_color : (INPUT) use colors?
+    - numbers   : (INPUT) use `rebinNumbers` or `rebinFunction` for rebinning (if needed) ?
+    """
+    
+    if not isinstance ( histo , ROOT.TH1 ) : raise TypeError  ( "Invalid `histo` type: %s" % typename ( histo )      )
+    if not 1 == histo.GetDimension ()      : raise ValueError ( "Invalid histo dimension: %d" % histo.GetDimension() )
+    
+    ## adjust the width 
+    from ostap.utils.basic import terminal_size 
+    w , h  = terminal_size()
+    width  = max ( 10 , min ( width  , w - 30 ) )
+    height = max ( 10 , min ( height , h - 10 ) )
+
+    ## need rebinning ?
+    axis = histo.GetXaxis() 
+    if width < axis.GetNbins() or not axis.uniform () :
+        width     = min ( width , axis.GetNbins() )
+        new_axis  = ROOT.TAxis ( width , axis.GetXmin () , axis.GetXmax ()  )
+        new_histo = histo.rebinNumbers ( new_axis ) if numbers else histo.rebinFunction ( new_axis )
+        
+        o1 = axis    .GetNbins () + 1 
+        o2 = new_axis.GetNbins () + 1 
+
+        ## copy uderflow/overflow content 
+        new_histo.SetBinContent ( 0  , histo.GetBinContent ( 0  ) )
+        new_histo.SetBinError   ( 0  , histo.GetBinError   ( 0  ) )
+        new_histo.SetBinContent ( o2 , histo.GetBinContent ( o1 ) )
+        new_histo.SetBinError   ( o2 , histo.GetBinError   ( o1 ) )
+        
+        result    = dump_histo ( new_histo ,
+                                 options   = options   ,
+                                 height    = height    ,
+                                 width     = width     ,
+                                 use_color = use_color ,
+                                 numbers   = numbers   ) 
+        del new_axis
+        del new_histo
+        
+        return result
+    
+    options     = options.lower()
+    with_errors = 'e' in options or not 'hist' in options 
+
+    ## use old c++ code 
+    for cpp in ( 'cpp' , 'c++' , 'hbook' , 'gauidi' , 'old' , 'ancient' , 'archaic' ) :
+        if cpp in options : return dumpHisto ( histo       ,
+                                               width       ,
+                                               height      ,
+                                               with_errors )
+
+    values     = [ y for ( _ , _ , y ) in histo.items () ]
+    errors     = [ y.error () for y in values ] if with_errors else None 
+    values     = [ y.value () for y in values ]
+
+    overflow   = histo.overflow  ()
+    underflow  = histo.underflow ()
+    if errors : errors = [ underflow.error() ] + errors + [ overflow.error() ]
+    overflow   = overflow.value () 
+    underflow  = underflow.value () 
+    edges      = axis.GetXmin () , axis.GetXmax () 
+
+    ## use new function 
+    from ostap.histos.histo_dump import data2text
+    result = data2text ( values     ,
+                         underflow  = underflow , 
+                         overflow   = overflow  , 
+                         errors     = errors    ,
+                         max_height = height    ,
+                         edges      = edges     , 
+                         use_color  = use_color )
+    
+    where =  result.find ( '\n' )
+    if 0 <= where : result = result [ : where ] + ( '  ' + typename ( histo ) ) + result [ where : ]
+    return result 
+
+for t in  ( ROOT.TH1D     ,
+            ROOT.TH1F     ,
+            ROOT.TProfile ) :
+    for method in ( 'dump' , 'dump_histo' , 'histo_dump') : 
+        if not hasattr ( t , method ) : setattr ( t , method , dump_histo )
+        
 # =============================================================================
 ## Hashing function for the histograms
 #  @code
@@ -8561,6 +8696,42 @@ def _h_hash_ ( histo) :
 
 ROOT.TH1.__hash__ = _h_hash_ 
 # =============================================================================
+
+# =============================================================================
+## Get underflow content
+#  @code
+#  h1 = .,,
+#  print ( h1.underflow()  ) 
+#  @endcode 
+def _h1_underflow_ ( h1 ) :
+    """" Get underflow content
+    >>> h1 = .,,
+    >>> print ( h1.underflow()  )
+    """
+    bin   = 0 
+    value = h1.GetBinContent ( bin )
+    error = h1.GetBinError   ( bin )
+    return VE ( value , error * error ) 
+
+# =============================================================================
+## Get overflow content
+#  @code
+#  h1 = .,,
+#  print ( h1.overflow()  ) 
+#  @endcode 
+def _h1_overflow_ ( h1 ) :
+    """" Get overflow content
+    >>> h1 = .,,
+    >>> print ( h1.overflow()  )
+    """
+    bin   = h1.GetNbinsX() + 1 
+    value = h1.GetBinContent ( bin )
+    error = h1.GetBinError   ( bin )
+    return VE ( value , error * error ) 
+
+for t in ( ROOT.TH1F , ROOT.TH1D ) :
+    t.overflow  = _h1_overflow_
+    t.underflow = _h1_underflow_
 
 # =============================================================================
 ## Get "Riemann sum" of the histogram 
@@ -10460,6 +10631,8 @@ _new_methods_  += (
     ROOT.TH1.uniform         ,
     #
     ROOT.TH1F.dump           ,
+    ROOT.TH1F.dump_histo     ,
+    ROOT.TH1F.histo_dump     ,
     ROOT.TH1F.dumpHisto      ,
     ROOT.TH1F.dumpASCII      ,
     ROOT.TH1F.dumpAsText     ,
@@ -10541,9 +10714,14 @@ _new_methods_  += (
     ROOT.TH1F.overlay_left   , 
     ROOT.TH1F.overlay_right  ,  
     ROOT.TH1D.overlay_left   , 
-    ROOT.TH1D.overlay_right  ,  
+    ROOT.TH1D.overlay_right  ,
+    ##
+    ROOT.TH1F.overflow       ,
+    ROOT.TH1D.overflow       ,
+    ROOT.TH1F.underflow      ,
+    ROOT.TH1D.underflow      ,
+    ## 
 )
-
 # =============================================================================
 if '__main__' == __name__ :
             
