@@ -20,7 +20,7 @@ for i in  h1 :
     h1[i] = VE(i,i)
     
 ## 2) dump it! 
-print( 'Histogram: %s'  % h1.dump(50,20)  )
+print( 'Histogram: %s'  % h1.dump(width=50,height=20)  )
 
 ## 3) basic properties:
 

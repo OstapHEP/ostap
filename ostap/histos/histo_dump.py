@@ -179,14 +179,16 @@ def the_glyph ( val          ,
     val = float ( val )
 
     if has_errors :
+        
         y_err_min = val - e_low
         y_err_max = val + e_high
 
         in_center = r_low <= val < r_high or ( r_high == steps_up * delta_y and val == r_high )
         in_error  = y_err_min < r_high and y_err_max > r_low
 
-        if in_center  : return CIRCLE_COLORED if use_color else CIRCLE 
-        elif in_error : return BAR_COLORED    if use_color else BAR 
+        if   in_center : return CIRCLE_COLORED if use_color else CIRCLE 
+        elif in_error  : return BAR_COLORED    if use_color else BAR 
+        
     else :
         if   val > 0 and r_low >= 0  and val > r_low  : return RECTANGLE_POS_COLORED if use_color else RECTANGLE_POS 
         elif val < 0 and r_high <= 0 and val < r_high : return RECTANGLE_NEG_COLORED if use_color else RECTANGLE_NEG 

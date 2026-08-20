@@ -26,56 +26,56 @@ for i in  h2 :
     h2[i] = VE(i*i,i*i)
 
 ## 3) dump them 
-print ( 'Histogram H1: %s ' % h1.dump ( 50 , 20 ) )
-print ( 'Histogram H2: %s ' % h1.dump ( 50 , 20 ) )
+print ( 'Histogram H1: %s ' % h1.dump ( width=50 , height=25 ) )
+print ( 'Histogram H2: %s ' % h1.dump ( width=50 , height=25 ) )
 
 ## 4) binary operations with histograms 
-print ( 'H1+H2           %s ' % ( h1 + h2 ).dump(50,20) ) 
-print ( 'H1-H2           %s ' % ( h1 - h2 ).dump(50,20) ) 
-print ( 'H1*H2           %s ' % ( h1 * h2 ).dump(50,20) ) 
-print ( 'H1/H2           %s ' % ( h1 / h2 ).dump(50,20) ) 
-print ( 'H2/H1           %s ' % ( h2 / h1 ).dump(50,20) )
-print ( 'H1/(H1+H2)      %s ' % ( h1.frac ( h2 ) ).dump(50,20) )
-print ( '(H1-H2)/(H1+H2) %s ' % ( h1.asym ( h2 ) ).dump(50,20) )
+print ( 'H1+H2           %s ' % ( h1 + h2 ).dump(width=50,height=25) ) 
+print ( 'H1-H2           %s ' % ( h1 - h2 ).dump(width=50,height=25) ) 
+print ( 'H1*H2           %s ' % ( h1 * h2 ).dump(width=50,height=25) ) 
+print ( 'H1/H2           %s ' % ( h1 / h2 ).dump(width=50,height=25) ) 
+print ( 'H2/H1           %s ' % ( h2 / h1 ).dump(width=50,height=25) )
+print ( 'H1/(H1+H2)      %s ' % ( h1.frac ( h2 ) ).dump(width=50,height=25) )
+print ( '(H1-H2)/(H1+H2) %s ' % ( h1.asym ( h2 ) ).dump(width=50,height=25) )
  
 
 ## 5) binary operations with historgams (different binning)
 
-print ( 'H1+H3           %s' % (h1+h3).dump(50,20)   ) 
-print ( 'H1-H3           %s' % (h1-h3).dump(50,20)   ) 
-print ( 'H1*H3           %s' % (h1*h3).dump(50,20)   )
-print ( 'H1/H3           %s' % (h1/h3).dump(50,20)   )
-print ( 'H1/(H1+H3)      %s' % (h1.frac(h3)).dump(50,20) )
-print ( '(H1-H3)/(H1+H3) %s' % (h1.asym(h3)).dump(50,20) ) 
+print ( 'H1+H3           %s' % (h1+h3).dump(width=50,height=25)   ) 
+print ( 'H1-H3           %s' % (h1-h3).dump(width=50,height=25)   ) 
+print ( 'H1*H3           %s' % (h1*h3).dump(width=50,height=25)   )
+print ( 'H1/H3           %s' % (h1/h3).dump(width=50,height=25)   )
+print ( 'H1/(H1+H3)      %s' % (h1.frac(h3)).dump(width=50,height=25) )
+print ( '(H1-H3)/(H1+H3) %s' % (h1.asym(h3)).dump(width=50,height=25) ) 
 
 ## 6) binary operations with constants
 
 c = 0.5 
-print ( 'H1+1/2   %s' % (h1+c).dump (50,20) ) 
-print ( 'H1-1/2   %s' % (h1-c).dump (50,20) ) 
-print ( 'H1*1/2   %s' % (h1*c).dump (50,20) ) 
-print ( 'H1/0.5   %s' % (h1/c).dump (50,20) ) 
-print ( '1/2+H1   %s' % (c+h1).dump (50,20) ) 
-print ( '1/2-H1   %s' % (c-h1).dump (50,20) ) 
-print ( '1/2*H1   %s' % (c*h1).dump (50,20) ) 
-print ( '0.5/H1   %s' % (c/h1).dump (50,20) ) 
+print ( 'H1+1/2   %s' % (h1+c).dump (width=50,height=25) ) 
+print ( 'H1-1/2   %s' % (h1-c).dump (width=50,height=25) ) 
+print ( 'H1*1/2   %s' % (h1*c).dump (width=50,height=25) ) 
+print ( 'H1/0.5   %s' % (h1/c).dump (width=50,height=25) ) 
+print ( '1/2+H1   %s' % (c+h1).dump (width=50,height=25) ) 
+print ( '1/2-H1   %s' % (c-h1).dump (width=50,height=25) ) 
+print ( '1/2*H1   %s' % (c*h1).dump (width=50,height=25) ) 
+print ( '0.5/H1   %s' % (c/h1).dump (width=50,height=25) ) 
 
 ## 7) binary operations with functions
 fun = lambda x : x
-print ( 'H1+x     %s' % (h1+fun).dump(50,20) )
-print ( 'H1-x     %s' % (h1-fun).dump(50,20) )
-print ( 'H1*x     %s' % (h1*fun).dump(50,20) )
-print ( 'H1/x     %s' % (h1/fun).dump(50,20) )
-print ( 'x+H1     %s' % (fun+h1).dump(50,20) )
-print ( 'x-H1     %s' % (fun-h1).dump(50,20) )
-print ( 'x*H1     %s' % (fun*h1).dump(50,20) )
-print ( 'x/H1     %s' % (fun/h1).dump(50,20) )
+print ( 'H1+x     %s' % (h1+fun).dump(width=50,height=25) )
+print ( 'H1-x     %s' % (h1-fun).dump(width=50,height=25) )
+print ( 'H1*x     %s' % (h1*fun).dump(width=50,height=25) )
+print ( 'H1/x     %s' % (h1/fun).dump(width=50,height=25) )
+print ( 'x+H1     %s' % (fun+h1).dump(width=50,height=25) )
+print ( 'x-H1     %s' % (fun-h1).dump(width=50,height=25) )
+print ( 'x*H1     %s' % (fun*h1).dump(width=50,height=25) )
+print ( 'x/H1     %s' % (fun/h1).dump(width=50,height=25) )
 
 ## 8) math
 from ostap.math.math_ve import sqrt, log  
-print ( 'H1**2    %s ' % (h1**2).dump(50,20)   )
-print ( 'sqrt(H2) %s ' % sqrt(h2).dump(50,20)  )
-print ( 'log (H2) %s ' % log(h2).dump(50,20)   )
+print ( 'H1**2    %s ' % (h1**2)  .dump(width=50,height=25)   )
+print ( 'sqrt(H2) %s ' % sqrt(h2) .dump(width=50,height=25)  )
+print ( 'log (H2) %s ' % log(h2)  .dump(width=50,height=25)   )
 
 
 # =============================================================================
