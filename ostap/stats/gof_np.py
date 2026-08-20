@@ -33,8 +33,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import string_types, num_types 
 from   ostap.core.core          import SE, VE, Ostap, hID  
-from   ostap.stats.counters     import EffCounter
-from   ostap.utils.progress_bar import progress_bar
+from   ostap.stats.counters     import EffCounter, ECDF
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu
@@ -288,7 +287,7 @@ class GoFnp (AGoFnp,Config) :
         return self.__ecdf
     @ecdf.setter
     def ecdf ( self , value ) :
-        assert value is None or isinstance ( value , Ostap.Math.ECDF ) , \
+        assert value is None or isinstance ( value , ECDF ) , \
             "Invalid type for ECDF: %s" % typename ( value )
         self.__ecdf = value 
 
@@ -1086,10 +1085,12 @@ class Mahalanobis(GoFnp) :
     """ Use Mahalanobis distance to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self ,
+    def __init__ ( self        , *     , 
                    nToys       = 400   ,
                    parallel    = False , 
                    silent      = False ,
+                   method      = "Mahalanobis" , 
+                   normalize   = True  , 
                    progress    = True  , **params ) :         
         
         ## initialize the base 
@@ -1098,8 +1099,8 @@ class Mahalanobis(GoFnp) :
                          parallel     = parallel       , 
                          silent       = silent         ,
                          progress     = progress       ,                         
-                         method       = 'Mahalanobis'  ,
-                         normalize    = True           , **params )
+                         method       = method         ,
+                         normalize    = normalize      , **params )
 
     # =========================================================================
     ## Are weights supported by this estimator?
@@ -1172,7 +1173,7 @@ class KullbackLeibler(Mahalanobis) :
     """ Use Kullback-Leibler divergency to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self ,
+    def __init__ ( self        ,  *    , 
                    nToys       = 400   ,
                    parallel    = False , 
                    silent      = False ,
@@ -1227,7 +1228,7 @@ class Hotelling(Mahalanobis) :
     """ Use Hotelling's t-squared statistics to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self ,
+    def __init__ ( self        , *     ,
                    nToys       = 400   ,
                    parallel    = False , 
                    silent      = False ,

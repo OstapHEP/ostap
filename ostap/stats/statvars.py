@@ -95,13 +95,13 @@ from   ostap.core.ostap_types          import ( string_types   , integer_types  
                                                 num_types      , dictlike_types ,
                                                 sequence_types )
 from   ostap.trees.cuts                import expression_types, vars_and_cuts
+from   ostap.stats.counters            import SE, WSE, ECDF, WECDF  
 from   ostap.utils.core                import typename
 from   ostap.utils.basic               import numcpu
 from   ostap.utils.progress_conf       import progress_conf
 import ostap.frames.frames             as     F 
 import ostap.parallel.parallel_statvar as     P 
 import ostap.logger.table              as     T
-import ostap.stats.counters 
 import ostap.stats.moment 
 import ROOT 
 # =============================================================================
@@ -592,10 +592,8 @@ def data_ECDF ( data               ,
     ## (1) decode expressions & cuts
     _ , cuts , _  = vars_and_cuts ( expression , cuts )
     
-    if isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight ) : 
-        statobj = Ostap.Math.WECDF ()
-    else :
-        statobj = Ostap.Math. ECDF ()
+    weighted = isinstance ( data , ROOT.RooAbsData ) or ( cuts and as_weight )
+    statobj = WECDF () if weighted else ECDF  ()
         
     return data_get_stat ( data                  ,
                            statobj               ,

@@ -8570,9 +8570,9 @@ for t in  ( ROOT.TH1D             ,
 #  @param numbers   (INPUT) use <code>rebinNumbers</code> or <code>rebinFunction</code> ? 
 #  @param histogram ASCII/Unicode/pseudographics representation
 def dump_histo ( histo     , 
-                 options   = ''   , * , 
                  width     = 140  ,
-                 height    = 50   ,                 
+                 height    = 50   , * , 
+                 option    = ''   ,                
                  use_color = True ,
                  numbers   = True ) :
     """ Dump 1D histo as ASCII/Unicode with pseudographics 
@@ -8637,15 +8637,15 @@ def dump_histo ( histo     ,
         
         return result
     
-    options     = options.lower()
-    with_errors = 'e' in options or not 'hist' in options 
+    option      = option.lower()
+    with_errors = 'e' in option or not 'hist' in option 
 
     ## use old c++ code 
     for cpp in ( 'cpp' , 'c++' , 'hbook' , 'gaudi' , 'old' , 'ancient' , 'archaic' ) :
-        if cpp in options : return dumpHisto ( histo       ,
-                                               width       ,
-                                               height      ,
-                                               with_errors )
+        if cpp in option : return dumpHisto ( histo       ,
+                                              width       ,
+                                              height      ,
+                                              with_errors )
 
     values     = [ y for ( _ , _ , y ) in histo.items () ]
     errors     = [ y.error () for y in values ] if with_errors else None 

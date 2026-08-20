@@ -36,14 +36,13 @@ from   ostap.math.math_base     import axis_range, np2raw, isequal
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.core         import typename   
-from   ostap.stats.counters     import SE, EffCounter 
-from   ostap.logger.pretty      import pretty_float
-from   ostap.math.ve            import fmt_pretty_ve
+from   ostap.stats.counters     import SE, ECDF
 from   ostap.math.math_ve       import significance
 from   ostap.stats.gof_utils    import ( Labels      , Keys      ,
-                                         clip_pvalue , data2vct  ,
+                                         clip_pvalue , 
                                          format_row  , draw_ecdf ,
-                                         method_1D   )  
+                                         method_1D   ) 
+from   ostap.stats.pvallue      import data2vct 
 from   ostap.stats.gof          import AGoF
 from   ostap.plotting.color     import RoyalBlue, Gold   
 from   collections              import defaultdict, namedtuple
@@ -428,7 +427,7 @@ class GoF1D(object) :
         data    = numpy.sort  ( data )
 
         ## empirical CDF function 
-        self.__ecdf = Ostap.Math.ECDF ( data2vct ( data ) )
+        self.__ecdf = ECDF ( data2vct ( data ) )
 
         ## evaluate CDF for sorted data 
 

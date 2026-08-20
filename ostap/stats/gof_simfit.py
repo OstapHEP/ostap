@@ -25,7 +25,7 @@ from   ostap.core.core          import VE, Ostap
 from   ostap.math.math_base     import axis_range, product 
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.core         import typename   
-from   ostap.stats.counters     import SE, EffCounter 
+from   ostap.stats.counters     import SE, EffCounter, ECDF
 from   ostap.logger.pretty      import pretty_float
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
@@ -474,7 +474,6 @@ class GoFSimFit1DToys(GoFSimFit1D) :
         ## accumulate number of toys 
         self.__nToys += nToys 
 
-        ECDF = Ostap.Math.ECDF 
         for key, vv  in results.items()  :
             for e , data in vv.items() : 
                 if not data : continue
@@ -1095,7 +1094,7 @@ class GoFSimFit(GoFSimFitBase) :
                 gof = self.gofs [ sample ]                
                 tv  = gof.tvalue ( component , ds )
 
-                if not sample in self.__ecdfs : self.__ecdfs [ sample ] = Ostap.Math.ECDF ( tv , True )
+                if not sample in self.__ecdfs : self.__ecdfs [ sample ] = ECDF ( tv , True )
                 else                          : self.__ecdfs [ sample ].add ( tv ) 
               
                 self.__counters [ sample ] += tv 

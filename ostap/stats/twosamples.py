@@ -19,7 +19,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import listlike_types, sequence_types  
-from   ostap.core.core        import SE, VE, Ostap
+from   ostap.core.core        import VE, Ostap
 from   ostap.utils.core       import typename 
 from   ostap.math.math_base   import doubles, axis_range, numpy   
 from   ostap.math.models      import f1_draw
@@ -28,6 +28,7 @@ from   ostap.logger.pretty    import pretty_float
 from   ostap.stats.gof_utils  import Labels, Keys, clip_pvalue 
 from   ostap.math.math_ve     import significance
 from   ostap.math.ve          import fmt_pretty_ve
+from   ostap.stats.counters   import SE, ECDF
 from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma
 from   collections            import defaultdict, namedtuple 
 import ostap.logger.table     as     T
@@ -61,10 +62,10 @@ def ecdf_from_data  ( data ) :
     >>> cdf  = ecdf_from_data ( data )
     - see `Ostap.Math.ECDF`
     """
-    if   isinstance  ( data , Ostap.Math.ECDF        ) : return data 
-    elif numpy and isinstance ( data , numpy.ndarray ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data  , array.array           ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data1 , sequence_types        ) : return Ostap.Math.ECDF ( doubles  ( data ) ) 
+    if   isinstance  ( data , ECDF                   ) : return data 
+    elif numpy and isinstance ( data , numpy.ndarray ) : return ECDF ( data2vct ( data ) ) 
+    elif isinstance  ( data  , array.array           ) : return ECDF ( data2vct ( data ) ) 
+    elif isinstance  ( data1 , sequence_types        ) : return ECDF ( doubles  ( data ) ) 
     ## 
     raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % typename ( data1 ) )
 # ===============================================================================
@@ -96,7 +97,7 @@ def prepare_data1 ( data1  ,
     n1    = len ( ecdf1 )
     n2    = len ( ecdf2 )
     ##
-    ecdf  = pooled if ( isinstance ( pooled , Ostap.Math.ECDF ) and n1 + n2 == len ( pooled ) ) else ecdf1 + ecdf2
+    ecdf  = pooled if ( isinstance ( pooled , ECDF ) and n1 + n2 == len ( pooled ) ) else ecdf1 + ecdf2
     ## 
     return ecdf1 , ecdf2 , ecdf
 # =============================================================================

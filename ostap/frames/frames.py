@@ -65,7 +65,8 @@ __all__     = (
 from   ostap.core.meta_info      import root_info 
 from   ostap.core.ostap_types    import ( integer_types , dictlike_types , 
                                           num_types     , ordered_dict   )    
-from   ostap.core.core           import cpp, Ostap, SE , WSE 
+from   ostap.core.core           import cpp, Ostap
+from   ostap.stats.counters      import SE , WSE , ECDF , WECDF 
 from   ostap.math.math_base      import isequal, iszero, axis_range                             
 from   ostap.logger.utils        import multicolumn
 from   ostap.utils.cidict        import cidict, cidict_fun      

@@ -35,7 +35,7 @@ from   ostap.math.math_ve       import significance
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_base     import pos_infinity
 from   ostap.stats.utils        import weight_trivial
-from   ostap.stats.counters     import SE, WSE
+from   ostap.stats.counters     import SE, WSE, ECDF
 from   ostap.utils.basic        import ( numcpu   , num_jobs     , 
                                          typename , run_parallel ) 
 from   ostap.utils.progress_bar import progress_bar
@@ -612,10 +612,10 @@ def format_row ( tvalue    = None ,
     >>> header , row = format_row ( tvalue = tvalue , pvalue = pvalue  , ecdf = ecdf )
     """
     
-    has_tvalue  = not tvalue  is None and isinstance ( tvalue  , num_types       ) 
-    has_pvalue  = not pvalue  is None and isinstance ( pvalue  , pvalue_types    ) 
-    has_ecdf    = not ecdf    is None and isinstance ( ecdf    , Ostap.Math.ECDF ) 
-    has_counter = not counter is None and isinstance ( counter , ( SE , WSE )    )
+    has_tvalue  = not tvalue  is None and isinstance ( tvalue  , num_types     ) 
+    has_pvalue  = not pvalue  is None and isinstance ( pvalue  , pvalue_types  ) 
+    has_ecdf    = not ecdf    is None and isinstance ( ecdf    , ECDF          ) 
+    has_counter = not counter is None and isinstance ( counter , ( SE , WSE )  )
 
     if has_ecdf  and not has_counter  :
         counter     = ecdf.counter ()

@@ -31,6 +31,7 @@ from   ostap.utils.utils            import split_range
 from   ostap.math.math_base         import doubles
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
+from   ostap.stats.counters         import ECDF
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.trees.cuts             import vars_and_cuts, expression_types
 import ostap.fitting.roocollections
@@ -604,8 +605,8 @@ def ds2cdfs ( dataset           ,
                       silent    = silent    )
         
     result = {}
-    for vname in varlst    : result [ vname ] = Ostap.Math.ECDF ( data2vct ( data [ vname ] ) ) 
-    for vname in more_vars : result [ vname ] = Ostap.Math.ECDF ( data2cvt ( data [ vname ] ) ) 
+    for vname in varlst    : result [ vname ] = ECDF ( data2vct ( data [ vname ] ) ) 
+    for vname in more_vars : result [ vname ] = ECDF ( data2cvt ( data [ vname ] ) ) 
     
     del data
     return result 

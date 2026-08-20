@@ -24,11 +24,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
 from   ostap.utils.core         import typename
-from   ostap.stats.utils        import ( weight_trivial     ,
-                                         valid_data_shape   ,
-                                         valid_weights_shape ,
-                                         compatible_shapes  ,
-                                         compatible_weights )                                          
+from   ostap.stats.utils        import weight_trivial , check_all                                           
 from   ostap.stats.counters     import EffCounter, ECDF 
 from   ostap.utils.progress_bar import progress_bar
 import numpy, math, abc 
@@ -320,14 +316,8 @@ class PERMUTATOR (PVALUE) :
                    weight2     = None , 
                    description = 'Permutations:' ) :
         
-        if not valid_data_shape    ( ds1 )           : raise TypeError ( "%s: invalid ds1-shape"           %   typename ( self ) )
-        if not valid_data_shape    ( ds2 )           : raise TypeError ( "%s: invalid ds2-shape"           %   typename ( self ) )
-        if not valid_weights_shape ( ds1 )           : raise TypeError ( "%s: invalid weight1-shape"       %   typename ( self ) )
-        if not valid_weights_shape ( ds2 )           : raise TypeError ( "%s: invalid weight2-shape"       %   typename ( self ) )        
-        if not compatible_shapes   ( ds1 , ds2     ) : raise TypeError ( "%s: ds1&ds2 are incompatible"    %   typename ( self ) )
-        if not compatible_weights  ( ds1 , weight1 ) : raise TypeError ( "%s: ds1&weight are incompatible" %   typename ( self ) ) 
-        if not compatible_weights  ( ds2 , weight2 ) : raise TypeError ( "%s: ds2&weight are incompatible" %   typename ( self ) )
-
+        check_all ( ds1 , ds2, weight1 , weight2 , typename  ( self ) )
+        
         super().__init__ ( gof         = gof         ,
                            t_value     = t_value     ,
                            ds1         = ds1         ,
