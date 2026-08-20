@@ -58,7 +58,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.dataset' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-fteweight_lir = weight_lifter+' ' if weight_lifter else 'W' 
+weight_lifter = ( weight_lifter + ' ' ) if weight_lifter else 'W' 
 # =============================================================================
 logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================

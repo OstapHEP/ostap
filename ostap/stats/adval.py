@@ -230,7 +230,7 @@ class ADVAL_base (GoFnp):
         conf = {}
         conf.update ( super().config ) 
         conf [ 'n_splits' ] = self.n_splits
-        for key, value in self.regularized.items() :  conf [ '[reg] %s' % key ] = value
+        for key, value in self.regularized.items() :  conf [ '%s [reg]' % key ] = value
         return conf
     
     # ==========================================================================
@@ -406,6 +406,14 @@ class ADVAL_base (GoFnp):
             weights = True
             w1      = numpy.ones ( N1 , dtype = numpy.float32 ) if w1_trivial else numpy.asarray ( weight1 , dtype = numpy.float32 )
             w2      = numpy.ones ( N2 , dtype = numpy.float32 ) if w2_trivial else numpy.asarray ( weight2 , dtype = numpy.float32 )
+
+            # ==============================================================================
+            ## ATTENTION! 
+            # ==============================================================================
+            sumw1   = numpy.sum ( w1 , dtype = numpy.float64 )
+            sumw2   = numpy.sum ( w2 , dtype = numpy.float64 )            
+            w2      = w2 * numpy.float32 ( sumw1 / sumw2 ) 
+                        
             W       = numpy.concatenate ( [ w1 , w2 ] )
 
         ## Cross-validation loop
@@ -468,7 +476,7 @@ class ADVAL_LGBM (ADVAL_base) :
                     # Tree complexity (allows model to catch subtle feature shifts)
                     'max_depth'         : 5,                   # Moderate tree depth
                     'num_leaves'        : 24,                  # Sufficient leaf capacity
-                    'min_child_samples' : 20,                  # Small threshold to detect fine-grained patterns
+                    'min_child_samples' : 50,                  # Small threshold to detect fine-grained patterns
                     # Mild regularization to prevent overfitting on random noise
                     'subsample'         : 0.8,                # Row subsampling (80% per tree)
                     'subsample_freq'    : 1,
@@ -601,21 +609,6 @@ class ADVAL_LGBM (ADVAL_base) :
         raw_predictions = model.predict ( X_val , num_iteration = model.best_iteration )
         predictions     = invert_if_negative_weight ( raw_predictions , W_val )
         
-        # 2. Create native LightGBM Datasets
-        train_data = LightGBM.Dataset ( X_train , label=Y_tr , weight = W_tr , free_raw_data = False )
-        val_data   = LightGBM.Dataset ( X_val   , label=Y_va , weight = W_va , free_raw_data = False , reference = train_data ) 
-        
-        # 3. Model Training
-        model = LightGBM.train ( self.params    ,
-                                 train_data     ,
-                                 num_boost_round = num_boost_round ,
-                                 valid_sets      = [ val_data ]    ,
-                                 callbacks       = [ LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds, verbose = False ) ] )
-
-        # 4. Predict and restore predictions to original target probability space
-        raw_predictions = model.predict ( X_val , num_iteration = model.best_iteration )
-        predictions     = invert_if_negative_weight ( raw_predictions , W_val )
-
         # 5. Extract Feature Importances (Gain)
         imps = model.feature_importance ( importance_type = 'gain') if importance else None
         
@@ -1288,7 +1281,7 @@ class ADVAL_RF (ADVAL_base) :
 
             params.update ( regpars )
             
-            n_estimators                   = min ( MAX_REGULARIZED_ESTIAMTORS , n_estimators )
+            n_estimators                   = min ( MAX_REGULARIZED_ESTIMATORS , n_estimators )
             
         params [ 'n_estimators' ] = n_estimators
         

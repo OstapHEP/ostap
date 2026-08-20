@@ -25,7 +25,6 @@ __all__     = (
 # =============================================================================
 from   ostap.stats.gof_np      import GoFnp
 from   ostap.stats.gofnd       import GoF
-from   ostap.stats.gof_utils   import BOOTSTRAPPER 
 import ostap.stats.twosamples2 as     TS2 
 # =============================================================================
 # logging 
@@ -152,21 +151,23 @@ class BootstrapGoF ( GoFnp ) :
                                                                      weight1   = weight1 ,
                                                                      weight2   = weight2 ,
                                                                      normalize = False   )        
-        ## use bootstrapping to get the p-value 
-        bootstrapper = BOOTSTRAPPER ( self                   ,
-                                      t_value                , 
-                                      uds1                   ,
-                                      uds2                   ,
-                                      weight1 = weight1      ,
-                                      weight2 = weight2      ) ;
+        ## use bootstrapping to get the p-value
+        ## from ostap.stats.pvalue import BOOTSTRAPPER as RESAMPLER 
+        from ostap.stats.pvalue import PERMUTATOR as RESAMPLER 
+        resampler = RESAMPLER ( self                   ,
+                                t_value                , 
+                                uds1                   ,
+                                uds2                   ,
+                                weight1 = weight1      ,
+                                weight2 = weight2      ) ;
         
-        if self.parallel and bootstrapper.run : counter = bootstrapper.run ( self.nToys , progress = self.progress )            
-        else                                  : counter = bootstrapper     ( self.nToys , progress = self.progress )
+        if self.parallel and resampler.run : counter , _ = resampler.run ( self.nToys , progress = self.progress )            
+        else                               : counter , _ = resampler     ( self.nToys , progress = self.progress )
         
         ## get the efficiency/p-value from the counter
         p_value      = counter.eff
 
-        self.ecdf    = bootstrapper.ecdf
+        self.ecdf    = resampler.ecdf
         self.counter = counter
         
         self.t_value = t_value 
@@ -178,7 +179,7 @@ class BootstrapGoF ( GoFnp ) :
 ## @class KolmogorovSmirnov
 #  Two (weighted) sample test using Kolmogorov-Smirnov statistics
 class KolmogorovSmirnov(BootstrapGoF) :
-    """ Two (weighted) sample test using Kolmogorov-Smirnov statistics """
+    """ Two (weighted) sample test using Kolmogorov-Smirnov' statistics """
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Kolmogorov-Smirnov statistics
         """
@@ -190,7 +191,7 @@ class KolmogorovSmirnov(BootstrapGoF) :
 ## @class Kuiper
 #  Two (weighted) sample test using Kuiperstatistics
 class Kuiper(BootstrapGoF) :
-    """ Two (weighted) sample test using Kolmogorov-Smirnov statistics """
+    """ Two (weighted) sample test using Kuiper' statistics """
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Kuiper' statistics
         """

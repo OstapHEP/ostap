@@ -64,7 +64,6 @@ from   ostap.stats.counters     import EffCounter
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import random_name
 from   ostap.utils.config       import Config
-from   ostap.stats.gof_utils    import TOYS
 from   ostap.stats.ustat        import USTAT
 from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.stats.gof_utils    import format_row, draw_ecdf  
@@ -236,7 +235,7 @@ class GoF(AGoF,Config) :
         if not self.check_weights ( data ) :
             raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
                                                                     typename ( self.gof ) ) )    
-        ds1, ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        ds1, ds2 , weight1 , weight2 = self.transform ( pdf , data )         
         return self.gof ( ds1        ,
                           ds2       ,
                           weight1   = weight1 ,
@@ -244,7 +243,7 @@ class GoF(AGoF,Config) :
                           normalize = True    )
 
     # =========================================================================
-    ## Calculate the t & p-values
+    ## Calculate the t & p-valuesxfа
     #  @code
     #  ppd  = ...
     #  pdf  = ...
@@ -262,8 +261,7 @@ class GoF(AGoF,Config) :
             raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
                                                                     typename ( self.gof ) ) )        
         ## 
-        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )
-        
+        ds1 , ds2 , weight1 , weight2 = self.transform ( pdf , data )        
         tv , pv = self.gof.pvalue ( ds1     ,
                                     ds2     ,
                                     weight1 = weight1 ,
@@ -312,78 +310,33 @@ class GoF(AGoF,Config) :
         return dset 
     
     # ==========================================================================
-    ## Transform a (pdf,data) pair into (data_np, mc_np) pair 
+    ## Transform a (pdf,data) pair into (data_np, mc_np, w_data,w_mc) fourplet 
     #  @code
     #  gof  = ...
     #  pdf  = ...
     #  data = ... ## as ROOT.RooAbsData 
-    #  ds1 , ds2 = gof.transform ( pdf , data ) 
+    #  ds1 , ds2 , weight1 , weight1 = gof.transform ( pdf , data ) 
     #  @endcode
     def transform  ( self , pdf , data ) :
-        """ Transform a (pdf,data) pair into (data_np, mc_np) pair 
+        """ Transform a (pdf,data) pair into (data_np, mc_np,data_w, mc_c) fourplet 
         >>> gof  = ...
         >>> pdf  = ...
         >>> data = ... ## as ROOT.RooAbsData
-        >>> ds1, ds2 = gof.transform ( pdf , data ) 
+        >>> ds1, ds2 , weigth1 , weigh2 = gof.transform ( pdf , data ) 
         """
-        if not isinstance ( pdf , APDF1 ) :
-            raise TypeError ( "Invalid type of `pdf`: %s" % typename ( pdf ) )
-        
-        assert self.weights_supported or not data.isWeighted () , \
-            "Data is weighted but weights are not supported %s/%s" % ( typename ( self     ) ,
-                                                                       typename ( self.gof ) )
-        
-        data1 = data
-        data2 = self.generate ( pdf , data )
-        
-        vs1  = data1.get()
-        vs2  = data2.get()
-        vlst = set() 
-        for v in vs1 :
-            if v in vs2 : vlst.add ( v.name )
-        vlst = tuple ( vlst ) 
-        
-        ds1 = ds2numpy ( data1 , vlst )
-        ds2 = ds2numpy ( data2 , vlst )
-        
-        ## delete 
-        if isinstance ( data2  , ROOT.RooDataSet ) : data2.clear()            
-        del data2 
-        
-        return ds1 , ds2
+        if not isinstance ( pdf  , APDF1           ) : raise TypeError ( "Invalid type of `pdf`: %s"  % typename ( pdf  ) )
+        if not isinstance ( data , ROOT.RooAbsData ) : raise TypeError ( "Invalid type of `data`: %s" % typename ( data ) )
 
-    # =========================================================================
-    ## Transform a (pdf,wdata) pair into (data_np, mc_np, w_np) triplet 
-    #  @code
-    #  gof  = ...
-    #  pdf  = ...
-    #  data = ... ## as *WEIGHTED* ROOT.RooAbsData 
-    #  ds1 , ds2 , w1 , w2 = gof.wtransform ( pdf , data ) 
-    #  @endcode
-    def wtransform  ( self , pdf , data ) :
-        """ Transform a (pdf,data) pair into (data_np, mc_np) pair 
-        >>> gof  = ...
-        >>> pdf  = ...
-        >>> data = ... ## as ROOT.RooAbsData
-        >>> ds1, ds2 , w1 , w2 = gof.wtransform ( pdf , data ) 
-        """
-        if not data.isWeighted () :
-            ds1 , ds2 = self.transform ( pdf , data )
-            return ds1 , ds2 , None , None 
+        trivial_weight = data.weight_trivial 
+        if not trivial_weight and not self.weights_supported :
+            raise TypeError ( "data has weights but weights are not supported %s/%s" % ( typename ( self ) , typename ( self.gof ) ) )
         
-        if not isinstance ( pdf  , APDF1 ) :
-            raise TypeError ( "Invalid type of `pdf`: %s" % typename ( pdf ) )
-        
-        if not data.weight_trivial and not self.weights_supported :
-            raise RuntimeError ( "%s.wtransform: input dataset has non-trivial weights!" % typename ( self ) )
-
-    
         data1 = data
         data2 = self.generate ( pdf , data )
 
         vars1 = data1.get () 
         vars2 = data2.get ()
-        
+
         wname = data1.wname
         
         var_lst  = tuple ( sorted ( v.name for v in vars1 if v in vars2 and v.name != wname ) )  
@@ -391,22 +344,24 @@ class GoF(AGoF,Config) :
         ds1 , w1 = data1.slice ( var_lst , progress = False , structured = True )
         ds2 , _  = data2.slice ( var_lst , progress = False , structured = True )
 
-        ## scale the weights
-        if weight_trivial ( w1 ) :
-            w1 , w2  = None , None
-        elif w1.min()< 0 and not self.negative_weights_supported :
-            raise RuntimeError ( "%s.wtransform: input dataset has negative weights!" % typename ( self ) )
-        else :
-            N1 , N2  = len ( data1 ) , len ( data2 ) 
-            ## w1      *= N1 / numpy.sum ( w1 )            
-            w2       = numpy.ones ( N2 , dtype = numpy.float32 )
-            
-        ## delete 
-        if isinstance ( data2 , ROOT.RooDataSet ) : data2.clear()            
-        del data2 
-            
-        return ds1 , ds2 , w1 , None 
-    
+        if trivial_weight or weight_trivial ( w1 ) :
+            return ds1 , ds2 , None , None 
+        
+        if ( w1 < 0 ).any ()  and not self.negative_weights_supported :
+            raise TypeError ( "data has negative weights but they are not supported %s/%s" % ( typename ( self     ) ,
+                                                                                               typename ( self.gof ) ) )
+        
+        N2 = len ( data2 )
+        # =====================================================================
+        ## INITIAL WEIGHTS ARE NORMALIZED TO HAVE THE SAME SUM 
+        ##sumw1 = numpy.sum  ( w1 , dtype = numpy.float64 ) 
+        ## w2    = numpy.full ( N2 , fill_value = numpy.float32 ( sumw1 / N2 ) , dtype = numpy.float32 )
+        # =====================================================================
+        w2 = None
+        
+        ## print ( 'TRANSFORM' , numpy.sum ( w1 ) , numpy.sum(w2) ) 
+        return ds1 , ds2 , w1 , w2
+
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
     def draw  ( self , option = '' , * , tvalue = None , **kwargs ) :
@@ -715,14 +670,15 @@ class DNN(GoF) :
         ##    self.dnn.histo.Reset()
 
         ## prepare toys
+        from ostap.stats.pvalue import TOYS 
         toys = TOYS ( self                   ,
                       t_value = t_value      ,
                       pdf     = pdf          ,
                       Ndata   = len ( data ) ,
                       sample  = self.sample  )
 
-        if self.parallel : counter = toys.run ( self.nToys , progress = self.progress , silent = self.silent ) 
-        else             : counter = toys     ( self.nToys , progress = self.progress )
+        if self.parallel : counter, _ = toys.run ( self.nToys , progress = self.progress , silent = self.silent ) 
+        else             : counter, _ = toys     ( self.nToys , progress = self.progress )
         
         ## get ECDF from toys
         self.gof.ecdf    = toys.ecdf
@@ -1186,7 +1142,7 @@ class ADVAL_LightGBM(GoF) :
         >>> data   = ... 
         >>> tvalue = ppd.tvalue ( pdf , data ) 
         """
-        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 , weight2 = self.transform ( pdf , data )         
         ## estimate the t-value 
         return self.gof ( ds1                 ,
                           ds2                 ,
@@ -1209,7 +1165,7 @@ class ADVAL_LightGBM(GoF) :
         >>> data = ... 
         >>> t , p = ppd.pvalue ( pdf , data ) 
         """
-        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 , weight2 = self.transform ( pdf , data )         
         ## estimate t&p-values 
         return self.gof.pvalue ( ds1               ,
                                  ds2               ,
@@ -1574,7 +1530,7 @@ class KolmogorovSmirnov(GoF) :
         if not isinstance ( pdf , PDF1 ) or 1 != len ( pdf.vars ) :
             raise TypeError ( "PDF is not 1D-pdf %s" % typename ( pdf ) )
         
-        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 , weight2 = self.transform ( pdf , data )         
         ## estimate the t-value 
         return self.gof ( ds1                 ,
                           ds2                 ,
@@ -1601,7 +1557,7 @@ class KolmogorovSmirnov(GoF) :
         if not isinstance ( pdf , PDF1 ) or 1 != len ( pdf.vars ) :
             raise TypeError ( "PDF is not 1D-pdf %s" % typename ( pdf ) )
         
-        ds1 , ds2 , weight1 , weight2 = self.wtransform ( pdf , data )         
+        ds1 , ds2 , weight1 , weight2 = self.transform ( pdf , data )         
         ## estimate t&p-values 
         return self.gof.pvalue ( ds1               ,
                                  ds2               ,

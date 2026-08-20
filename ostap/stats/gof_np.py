@@ -26,13 +26,12 @@ __all__     = (
     'PPDnp'           , ## Point-to-Point Dissimilarity  Goodness-of-Fit method 
     'DNNnp'           , ## Distance-to-Nearest-Neighbour Goodness-of-Fit method
     ##
-    'Mahalanobis'     , ## Very crude estiamtor based on Mahalanobis' disatnce
+    'Mahalanobis'     , ## Very crude estimator based on Mahalanobis' distance
     'KullbackLeibler' , ## Very crude estimator based on Kullback-Leibler's divergency 
     'Hotelling'       , ## Very crude estimator based on Hotelling's distance 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types, num_types 
-from   ostap.stats.gof_utils    import PERMUTATOR
 from   ostap.core.core          import SE, VE, Ostap, hID  
 from   ostap.stats.counters     import EffCounter
 from   ostap.utils.progress_bar import progress_bar
@@ -51,7 +50,7 @@ from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          draw_ecdf          , s2u , np2vct ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf
-from   ostap.logger.symbols     import symmetry 
+from   ostap.logger.symbols     import symmetry as symmetry_symbol
 import ostap.math.math_base           
 import ROOT, os, abc, numpy, math 
 # =============================================================================
@@ -250,16 +249,17 @@ class GoFnp (AGoFnp,Config) :
                                                                      weight1   = weight1 ,
                                                                      weight2   = weight2 ,
                                                                      normalize = False   )        
-        ## use permutations to get the p-value 
-        permutator = PERMUTATOR ( self                   ,
-                                  t_value                , 
-                                  uds1                   ,
-                                  uds2                   ,
-                                  weight1 = weight1      ,
-                                  weight2 = weight2      ) ;
+        ## use permutations to get the p-value
+        from ostap.stats.pvalue import PERMUTATOR as RESAMPLER 
+        resampler = RESAMPLER ( self                   ,
+                                t_value                , 
+                                uds1                   ,
+                                uds2                   ,
+                                weight1 = weight1      ,
+                                weight2 = weight2      ) ;
         
-        if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
-        else                                : counter = permutator     ( self.nToys , progress = self.progress )
+        if self.parallel and resampler.run : counter , _ = resampler.run ( self.nToys , progress = self.progress )            
+        else                               : counter , _ = resampler     ( self.nToys , progress = self.progress )
 
         # ==================================================
         ## @see Phipson, Belinda; Smyth, Gordon K (2010).
@@ -274,7 +274,7 @@ class GoFnp (AGoFnp,Config) :
         ## get the efficiency/p-value from the counter
         p_value      = counter.eff
 
-        self.ecdf    = permutator.ecdf
+        self.ecdf    = resampler.ecdf
         self.counter = counter
         
         self.t_value = t_value 
@@ -591,13 +591,9 @@ class MIXnp(GoFnp) :
         w_i = weights [ : , numpy.newaxis ]  ## (N, 1)
         w_k = weights [ actual_neighbors  ]  ## (N, K)
 
-
         ## product of weights : correct only when all weights are non-negative 
         pair_weights = w_i * w_k            ## (N, K)
         
-        ## halfsum of weights : correct ???
-        pair_weights = 0.5 * ( w_i + w_k )
-
         weighted_numerator = numpy.sum ( I_ik * pair_weights )
         
         total_weight_sum   = numpy.sum ( pair_weights )
@@ -793,8 +789,8 @@ class PPDnp(GoFnp) :
 
         shape1 = uds1.shape 
         shape2 = uds2.shape 
-        if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
-        if 1 == len ( shape2 ) : uds2.reshape ( -1 , shape2 [ 0 ] ) 
+        if 1 == len ( shape1 ) : uds1 = uds1.reshape ( -1 , shape1 [ 0 ] ) 
+        if 1 == len ( shape2 ) : uds2 = uds2.reshape ( -1 , shape2 [ 0 ] ) 
         
         ## normalize
         if normalize and self.normalize :
@@ -838,15 +834,14 @@ class PPDnp(GoFnp) :
         >>> data2 = ... ## the second data set
         >>> t = ppd ( data1 , data1 , normalize = False ) 
         >>> t = ppd ( data1 , data1 , normalize = True  ) 
-        """
-        
+        """        
         ## unpack data is if needed 
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
         ## 
         shape1 = uds1.shape 
         shape2 = uds2.shape 
-        if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
-        if 1 == len ( shape2 ) : uds2.reshape ( -1 , shape2 [ 0 ] ) 
+        if 1 == len ( shape1 ) : uds1 = uds1.reshape ( -1 , shape1 [ 0 ] ) 
+        if 1 == len ( shape2 ) : uds2 = uds2.reshape ( -1 , shape2 [ 0 ] ) 
         ## 
         ## normalize if requested 
         if normalize and self.normalize :
@@ -976,7 +971,7 @@ class DNNnp(GoFnp) :
         
         ## reshape it if needed 
         shape1 = uds1.shape 
-        if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
+        if 1 == len ( shape1 ) : uds1 = uds1.reshape ( -1 , shape1 [ 0 ] ) 
         
         shape2 = uds2 .shape
         assert 2 == len ( shape1 ) and 1 == len ( shape2 ) and len ( uds1 ) == len ( uds2 ) , \
@@ -1058,7 +1053,7 @@ class DNNnp(GoFnp) :
         uds1 , uds2 = self.unpack ( data1 , vpdf ) 
         ## 
         shape1 = uds1.shape 
-        if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
+        if 1 == len ( shape1 ) : uds1 = uds1.reshape ( -1 , shape1 [ 0 ] ) 
         ##        
         return self.tvalue ( uds1               ,
                              uds2                ,
@@ -1187,15 +1182,14 @@ class KullbackLeibler(Mahalanobis) :
         self.__symmetric = True if symmetric else False
         
         ## initialize the base 
-        GoFnp.__init__ ( self                            , 
-                         nToys        = nToys            ,
-                         parallel     = parallel         , 
-                         silent       = silent           ,
-                         progress     = progress         ,                           
-                         method       = 'Kullback-Leibler/%s' % symmetry if self.__symmetric else 'Kullback-Leibler',
-                         symmetric    = self.__symmetric , 
-                         normalize    = True             , **params )
-                                        
+        super() .__init__ ( nToys        = nToys            ,
+                            parallel     = parallel         , 
+                            silent       = silent           ,
+                            progress     = progress         ,                           
+                            method       =  ( 'Kullback-Leibler/%s' % symmetry_symbol ) if self.__symmetric else 'Kullback-Leibler',
+                            symmetric    = self.__symmetric , 
+                            normalize    = True             , **params )
+        
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -1240,14 +1234,13 @@ class Hotelling(Mahalanobis) :
                    progress    = True  , **params ) :         
 
         ## initialize the base 
-        GoFnp.__init__ ( self                            , 
-                         nToys        = nToys            ,
-                         parallel     = parallel         , 
-                         silent       = silent           ,
-                         progress     = progress         ,                           
-                         method       = 'Hotelling'      , 
-                         normalize    = True             , **params )
-                                        
+        super().__init__ ( nToys        = nToys            ,
+                           parallel     = parallel         , 
+                           silent       = silent           ,
+                           progress     = progress         ,                           
+                           method       = 'Hotelling'      , 
+                           normalize    = True             , **params )
+        
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 

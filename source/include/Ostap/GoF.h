@@ -20,7 +20,7 @@ namespace Ostap
   /** @namespace GoF
    *  Collection of utilities for Goodness-of-Fit estimators 
    *  @see https://doi.org/10.1111/1467-9868.00337
-   *  @author Vanya BELYAEV Ivan.BEelyaev@cern.ch 
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch 
    */
   namespace GoF
   {
@@ -73,7 +73,7 @@ namespace Ostap
         return d1 + d2 ;
       } ;
     // ========================================================================
-    /** Anderson-Sarling estimator for input sorted array \f$ F( x_i) \f$ 
+    /** Anderson-Darling estimator for input sorted array \f$ F( x_i) \f$ 
      * - (sorted) input array of CDF ( x_i ) 
      *  @see https://doi.org/10.1111/1467-9868.00337
      *  @param begin begin-iterator for input sorted arrat of CDF( x(i) ) 
@@ -91,9 +91,9 @@ namespace Ostap
         for ( std::size_t i = 0 ; begin !=end ; ++i, ++begin )
         {
           const double f = *begin ;
-          result += ( i + 0.5 ) * std::log ( f ) + ( N - i + 0.5 ) * std::log ( 1.0 - f ) ;
+          result += ( 2 * i + 1.0 ) * std::log ( f ) + ( 2 * ( N - i ) - 1.0 ) * std::log ( 1.0 - f ) ;
         }
-        return  -2 * result / N - N ;
+        return  -N - result / N ;
       } ;
     // ========================================================================
     /** Cramer-von Mises estimator for input sorted array \f$ F( x_i) \f$ 
@@ -139,7 +139,7 @@ namespace Ostap
           const double f  = *begin ;
           const double i1 = i     + 0.5 ;
           const double i2 = N - i - 0.5 ;           
-          const double r1 = i2 * std::log ( i1 / ( N *        f   ) ) ;
+          const double r1 = i1 * std::log ( i1 / ( N *        f   ) ) ;
           const double r2 = i2 * std::log ( i2 / ( N *  ( 1 - f ) ) ) ;            
           result = std::max ( result , r1 + r2 ) ;
         }
@@ -316,7 +316,7 @@ namespace Ostap
      * - (sorted) input array of CDF ( x_i ) 
      *  @see https://doi.org/10.1111/1467-9868.00337
      *  @param buffer (sorted) input array of CDF ( x_i ) 
-     *  @return valeu of Zhang's Z_C estimator
+     *  @return value of Zhang's Z_C estimator
      */
     template <class DATA>
     inline double
@@ -325,9 +325,7 @@ namespace Ostap
     { return ZC ( buffer.begin() , buffer.end () ) ; }
     // ========================================================================
 
-
-
-    // =======================================================================
+    // ========================================================================
     /** Berk-Jones estimator
      *  @see https://en.wikipedia.org/wiki/Berk-Jones_test
      */
@@ -339,7 +337,7 @@ namespace Ostap
     // ========================================================================
   } //                                          The END of namespace Ostap::GoF 
   // ==========================================================================
-} //                                                  The END of namespaceOstap 
+} //                                                 The END of namespace Ostap 
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -16,10 +16,12 @@ __all__     = (
     'weight_trivial'      , ## Is weight(1D numpy array) "trivial" ?
     'valid_weights_shape' , ## Valid weights shape ? 
     'valid_data_shape'    , ## Valid data shape ?
+    'valid_weight'        , ## Valid weights (valid shape and positibe sum)
     'num_features'        , ## Number of features for training data
     'num_samples'         , ## Number of samples/events (rows) in the dataset.
     'compatible_shapes'   , ## Check if input datasets have compatible shapes 
     'compatible_weights'  , ## Check for data and weights compatibility
+    'check_all'           , ## check ALL
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
@@ -69,7 +71,7 @@ def valid_weights_shape ( weights ) :
         # Accept (N, 1) column vectors, reject any multi-column (N, >1) or >2D arrays
         if ndim == 2 and shape[1] == 1: return True
         return False
-
+    
     # For standard Python sequences (lists, tuples): check nested dimensions
     if hasattr ( weights , '__len__' ) and 0 < len  ( weights ) :
         first_element = weights [ 0 ]
@@ -183,6 +185,53 @@ def compatible_weights ( data , weights = None ) :
     # 3. Check event count compatibility using num_samples
     return num_samples ( data ) == num_samples ( weights )
 
+# ===========================================================================
+## Valid weight?
+#  - trivial or valid shape 
+#  - trivial or sum is positive
+def valid_weight ( weight ) :
+    """ Valid weight?
+    - trivial or valid shape 
+    - trivial or sum is positive
+    """
+    if     weight_trivial      ( weight ) : return True
+    if not valid_weights_shape ( weight ) : return False
+    
+    # =========================================================================
+    # Safely evaluate sum for NumPy arrays, lists, ROOT containers, etc.
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        return 0 < float ( numpy.sum ( weight ) )
+        # ===================================================================== 
+    except Exception : # ======================================================
+        # =====================================================================
+        return False
+
+# ============================================================================
+## check data and weights
+#  - <code>data1</code>   is valid 
+#  - <code>data2</code>   is valid 
+#  - <code>data1</code>   is "compatible" with <code>data2</code>
+#  - <code>weight1</code> is valid
+#  - <code>weight2</code> is valid
+#  - <code>data1</code>   and <code>weight1</code> are "compatible"
+#  - <code>data2</code>   and <code>weight2</code> are "compatible"
+def check_all ( data1   ,
+                data2   ,
+                weight1 = None        ,
+                weight2 = None        ,
+                where   = "check_all" ) :
+    
+    if not valid_weight       ( weight1         ) : raise TypeError ( "%s: invalid `weight1`" % where ) 
+    if not valid_weight       ( weight2         ) : raise TypeError ( "%s: invalid `weight2`" % where ) 
+    if not valid_data_shape   ( data1           ) : raise TypeError ( "%s: invalid `data1`"   % where ) 
+    if not valid_data_shape   ( data2           ) : raise TypeError ( "%s: invalid `data2`"   % where ) 
+    if not compatible_shapes  ( data1 , data2   ) : raise TypeError ( "%s: incompatible data shape`"  % where ) 
+    if not compatible_weights ( data1 , weight1 ) : raise TypeError ( "%s: incompatible `data1/weight1`"  % where ) 
+    if not compatible_weights ( data2 , weight2 ) : raise TypeError ( "%s: incompatible `data2/weight2`"  % where ) 
+    return True 
+    
 # ============================================================================
 if '__main__' == __name__ :
         

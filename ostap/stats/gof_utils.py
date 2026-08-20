@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/stats/gof_utils.py
-#  Set of utulities for goodness-of-fit studies 
+#  Set of utilities for goodness-of-fit studies 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2023-12-06
 # =============================================================================
-""" Simple utulities for goodness-of-fit studies 
+""" Simple utilities for Goodness-of-Fit studies 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -27,7 +27,6 @@ __all__     = (
     ##
 )
 # =============================================================================
-from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, SE 
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.core.ostap_types   import string_types, num_types, numpy_floats  
@@ -36,11 +35,9 @@ from   ostap.math.math_ve       import significance
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_base     import pos_infinity
 from   ostap.stats.utils        import weight_trivial
-from   ostap.stats.counters     import SE, WSE, EffCounter
+from   ostap.stats.counters     import SE, WSE
 from   ostap.utils.basic        import ( numcpu   , num_jobs     , 
                                          typename , run_parallel ) 
-from   ostap.utils.utils        import splitter
-from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import ( times       , plus_minus  , greek_lower_sigma ,
                                          subscript_A , subscript_K , subscript_C , 
@@ -49,7 +46,7 @@ from   ostap.logger.pretty      import pretty_float, pretty_row
 from   ostap.plotting.color     import Orange, Green, Blue
 from   packaging.version        import Version 
 import ostap.logger.table       as     T 
-import ROOT, os, sys, math, numpy, scipy   
+import ROOT, os, sys, math, numpy, scipy, abc    
 # =============================================================================
 # logging 
 # =============================================================================
@@ -59,9 +56,6 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies' )#
 # =============================================================================
-if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
-else                        : data2vct = lambda s : doubles ( s ) 
-# ============================================================================
 ## transform structured array to unstructured one
 s2u = None 
 # =============================================================================
@@ -107,10 +101,10 @@ try : # =======================================================================
                              data2  ,
                              metric = 'sqeuclidean' , **kwargs ) : 
         """ Calculate all pair-wise distances using scikit-learn
-        -  see sclearn.metrics.pairwise_distances 
+        -  see `sklearn.metrics.pairwise_distances` 
         """
         if data1 is data2 : data2 = None 
-        return _sk_pw_distances ( data1 , data2 , metric , **kwargs ).flatten()
+        return _sk_pw_distances ( data1 , Y = data2 , metric = metric , **kwargs ).flatten()
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
@@ -329,14 +323,10 @@ def normalize_pooled ( *datasets ) :
 
     if not datasets : return ()
 
-    ## print ( 'SKIP NORMALIZATION' ) 
-    ## return datasets 
-    
     total      = 0 
     total_mean = None
     total_std2 = None
     
-    sizes      = []
     sizes      = []
     means      = []
     
@@ -597,503 +587,7 @@ def clip_pvalue ( pvalue , clip = 0.5 ) :
     elif 0 >= pv.value() : pv = VE (     clip , pv.cov2() )
     ## 
     return pv 
-    
-# =============================================================================
-## Generator of permutations for datasets (and associated weights)
-#  1. Pooled dataset is created
-#  2. Indices are shuffled for fast and safe permutations
-#  3. If present, weights are renormalized to preserve original sample masses
-def make_permutations ( nToys    ,
-                        data1    ,
-                        data2    , *    ,
-                        weight1  = None ,
-                        weight2  = None ,
-                        silent   = True ,
-                        progress = True ) :
-    """ Generator of permutations """
-    if not isinstance ( nToys , int ) : raise TypeError  ( "Invalid type of `nToys`: %s" % typename ( nToys ) )
-    if                  nToys < 1     : raise ValueError ( "Invalid value of `nToys`: %d" %            nToys   )
 
-    n1      = len ( data1 )
-    n2      = len ( data2 )
-    n_total = n1 + n2
-
-    # Pool input datasets
-    pooled_data    = numpy.concatenate ( [ data1 , data2 ] , axis = 0 )
-    pooled_weights = None
-
-    # Check for missing or trivial weights
-    w1_trivial     = weight_trivial ( weight1 )
-    w2_trivial     = weight_trivial ( weight2 )
-    
-    if w1_trivial and w2_trivial : pass
-    else :
-        w1_arr = numpy.ones ( n1 , dtype = numpy.float32 ) if w1_trivial else numpy.asarray ( weight1 , dtype = numpy.float32 )
-        w2_arr = numpy.ones ( n2 , dtype = numpy.float32 ) if w2_trivial else numpy.asarray ( weight2 , dtype = numpy.float32 )
-
-        pooled_weights = numpy.concatenate ( [ w1_arr , w2_arr ] , axis = 0 )
-
-    # Run permutations 
-    for i in progress_bar ( nToys , silent = silent and not progress , description = 'Permutations:' ) :
-
-        # Shuffle indices to prevent array mutations in-place
-        perm_idx = numpy.random.permutation ( n_total )
-
-        idx1 = perm_idx [    : n1 ]
-        idx2 = perm_idx [ n1 :    ]
-
-        ds1 = pooled_data [ idx1 ]
-        ds2 = pooled_data [ idx2 ]
-
-        w1 , w2 = None , None
-        
-        if pooled_weights is not None : 
-            # Weights are extracted strictly corresponding to shuffled data points
-            w1 = pooled_weights [ idx1 ]
-            w2 = pooled_weights [ idx2 ]
-            
-        yield ds1 , ds2 , w1 , w2
-
-    del pooled_data
-    del pooled_weights
-
-# =============================================================================
-## Helper generator to produce N bootstrap resamples from pooled datasets
-def make_bootstrap ( N        ,
-                     ds1      ,
-                     ds2      ,
-                     weight1  = None  ,
-                     weight2  = None  ,
-                     progress = False ,
-                     silent   = True  ) :
-    """ Yields (data1, data2, weight1, weight2) pairs generated by pooled
-    resampling under H0 with replacement.
-    """
-    x1 = numpy.asarray ( ds1 , dtype = float ).ravel ()
-    x2 = numpy.asarray ( ds2 , dtype = float ).ravel ()
-
-    w1_trivial = weight_trivial ( weight1 )
-    w2_trivial = weight_trivial ( weight2 )
-
-    w1 = numpy.asarray ( weight1 , dtype = float ).ravel () if not w1_trivial else numpy.ones_like ( x1 )
-    w2 = numpy.asarray ( weight2 , dtype = float ).ravel () if not w2_trivial else numpy.ones_like ( x2 )
-
-    N1, N2   = len ( x1 ) , len ( x2 )
-    pooled_x = numpy.concatenate ( [ x1 , x2 ] )
-    pooled_w = numpy.concatenate ( [ w1 , w2 ] )
-    N_total  = len ( pooled_x )
-
-    rng = numpy.random.default_rng ()
-
-    iterator = range ( N )
-    if progress and not silent :
-        from ostap.utils.progress_bar import progress_bar
-        iterator = progress_bar ( iterator , description = 'Bootstrapping' )
-
-    for _ in iterator :
-        idx1 = rng.choice ( N_total , size = N1 , replace = True )
-        idx2 = rng.choice ( N_total , size = N2 , replace = True )
-
-        yield pooled_x [ idx1 ] , pooled_x [ idx2 ] , pooled_w [ idx1 ] , pooled_w [ idx2 ]
-
-        
-# =============================================================================
-## @class PERMUTATOR
-#  Helper class to run permutation test in parallel with optional dataset slicing.
-class PERMUTATOR ( object ) :
-    """ Helper class that allows running permutation tests in parallel,
-    with support for slicing large datasets (ds2) into sub-samples.
-    """
-    def __init__ ( self    ,
-                   gof     ,
-                   t_value ,
-                   ds1     ,
-                   ds2     ,
-                   weight1 = None ,
-                   weight2 = None ) :
-        
-        self.gof     = gof
-        self.t_value = t_value
-        self.ecdf    = None
-
-        w1_trivial = weight_trivial ( weight1 )
-        w2_trivial = weight_trivial ( weight2 )
-
-        if w1_trivial and w2_trivial :
-            weight1 , weight2 = None, None 
-
-        self.ds1     = ds1
-        self.ds2     = ds2
-        self.weight1 = weight1
-        self.weight2 = weight2
-
-    # =========================================================================
-    ## Serialize the object for multiprocessing
-    def __getstate__ ( self ) :
-        """ Serialize state dictionary without redundant original ds2
-        """
-        return { 'gof'     : self.gof     ,
-                 't_value' : self.t_value , 
-                 'ecdf'    : self.ecdf    ,
-                 'ds1'     : self.ds1     ,   
-                 'ds2'     : self.ds2     ,   
-                 'weight1' : self.weight1 ,
-                 'weight2' : self.weight2 }
-    
-    ## De-serialize the object
-    def __setstate__ ( self , state ) :
-        """ Restore object state from dictionary
-        """
-        self.gof     = state.pop ( 'gof'     )
-        self.t_value = state.pop ( 't_value' )
-        self.ecdf    = state.pop ( 'ecdf'    )
-        self.ds1     = state.pop ( 'ds1'     )
-        self.ds2     = state.pop ( 'ds2'     )
-        self.weight1 = state.pop ( 'weight1' )
-        self.weight2 = state.pop ( 'weight2' )
-        
-    # =========================================================================
-    ## Run N-permutations on callable execution
-    def __call__ ( self , N , silent = True , progress = False ) :
-        
-        counter, tvalues = self.run_toys ( N = N , silent = silent , progress = progress )
-        
-        if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
-        else             : self.ecdf.add ( data2vct ( tvalues )  )
-        
-        return counter 
-
-    # =========================================================================
-    ## Run N-toys over prepared slices
-    def run_toys ( self, N , silent = True , progress = False ) :
-        """ Run N pseudo-experiments (toys) across pre-calculated slices
-        """        
-        counter = EffCounter()
-        tvalues = []
-
-        for data1 , data2 , weight1 , weight2 in make_permutations ( N ,
-                                                                     self.ds1                ,
-                                                                     self.ds2                ,
-                                                                     weight1  = self.weight1 ,
-                                                                     weight2  = self.weight2 ,
-                                                                     progress = progress     ,   
-                                                                     silent   = silent       ) :
-            
-            ## Note: normalize = False is required for sliced evaluation
-            tv       = self.gof.tvalue ( data1     ,
-                                         data2     ,
-                                         weight1   = weight1 ,
-                                         weight2   = weight2 ,
-                                         normalize = False   )
-            tv       = float ( tv )
-            tvalues.append   ( tv  )
-            counter += bool  ( self.t_value < tv  )
-            
-        return counter, tuple ( tvalues )
-
-    # =========================================================================
-    ## Run NN-permutations in parallel using the default WorkManager
-    def run ( self , nToys , silent = False , progress  = True ) :
-        """ Execute permutations in parallel using Ostap WorkManager
-        """
-        me       = math.floor ( memory_enough() ) + 1 
-        njobs    = 4 * numcpu () + 1 
-        the_list = [ n for n in splitter ( nToys , njobs ) ] 
-        njobs    = len ( the_list ) 
-
-        if not silent :
-            logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with WorkManager' % njobs )
-
-        counter = EffCounter()
-        tvalues = () 
-        
-        from ostap.parallel.parallel import WorkManager
-        with WorkManager ( silent = silent ) as manager : 
-            for result in manager.iexecute ( self.run_toys ,
-                                             the_list      ,
-                                             block_size    = min ( me , 2 * numcpu() ) , 
-                                             progress      = progress        ,
-                                             njobs         = njobs           ,
-                                             description   = 'Permutations:' ) :
-                cnt , tvals = result 
-                counter += cnt
-                tvalues += tvals 
-        
-        if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
-        else             : self.ecdf.add    ( data2vct ( tvalues )     )
-        
-        return counter
-
-# =============================================================================
-## @class BOOTSTRAPPER
-#  Helper class to run bootstrap tests in parallel with optional dataset slicing.
-#  Supports sPlot weights and paired/unpaired resampling under H0.
-class BOOTSTRAPPER ( object ) :
-    """ Helper class that allows running bootstrap tests in parallel,
-    with support for slicing large datasets into sub-samples and sPlot weights.
-    """
-    def __init__ ( self           ,
-                   gof            ,
-                   t_value        ,
-                   ds1            ,
-                   ds2            ,
-                   weight1 = None ,
-                   weight2 = None ) :
-        
-        self.gof     = gof
-        self.t_value = t_value
-        self.ecdf    = None
-
-        w1_trivial = weight_trivial ( weight1 )
-        w2_trivial = weight_trivial ( weight2 )
-
-        if w1_trivial and w2_trivial :
-            weight1 , weight2 = None, None 
-
-        self.ds1     = ds1
-        self.ds2     = ds2
-        self.weight1 = weight1
-        self.weight2 = weight2
-
-    # =========================================================================
-    ## Serialize the object for multiprocessing
-    def __getstate__ ( self ) :
-        """ Serialize state dictionary without redundant original ds2
-        """
-        return { 'gof'     : self.gof     ,
-                 't_value' : self.t_value , 
-                 'ecdf'    : self.ecdf    ,
-                 'ds1'     : self.ds1     ,   
-                 'ds2'     : self.ds2     ,   
-                 'weight1' : self.weight1 ,
-                 'weight2' : self.weight2 }
-    
-    ## De-serialize the object
-    def __setstate__ ( self , state ) :
-        """ Restore object state from dictionary
-        """
-        self.gof     = state.pop ( 'gof'     )
-        self.t_value = state.pop ( 't_value' )
-        self.ecdf    = state.pop ( 'ecdf'    )
-        self.ds1     = state.pop ( 'ds1'     )
-        self.ds2     = state.pop ( 'ds2'     )
-        self.weight1 = state.pop ( 'weight1' )
-        self.weight2 = state.pop ( 'weight2' )
-        
-    # =========================================================================
-    ## Run N-bootstrap toys on callable execution
-    def __call__ ( self , N , silent = True , progress = False ) :
-        
-        counter, tvalues = self.run_toys ( N = N , silent = silent , progress = progress )
-        
-        if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
-        else             : self.ecdf.add ( data2vct ( tvalues )  )
-        
-        return counter 
-
-    # =========================================================================
-    ## Run N-toys over prepared bootstrap samples
-    def run_toys ( self , N , silent = True , progress = False ) :
-        """ Run N bootstrap pseudo-experiments (toys) across pre-calculated slices
-        """        
-        counter = EffCounter()
-        tvalues = []
-
-        for data1 , data2 , weight1 , weight2 in make_bootstrap ( N                       ,
-                                                                  self.ds1                ,
-                                                                  self.ds2                ,
-                                                                  weight1  = self.weight1 ,
-                                                                  weight2  = self.weight2 ,
-                                                                  progress = progress     ,   
-                                                                  silent   = silent       ) :
-            
-            ## Note: normalize = False is required for sliced evaluation
-            tv       = self.gof.tvalue ( data1     ,
-                                         data2     ,
-                                         weight1   = weight1 ,
-                                         weight2   = weight2 ,
-                                         normalize = False   )
-            tv       = float ( tv )
-            tvalues.append   ( tv  )
-            counter += bool  ( self.t_value <= tv )
-            
-        return counter, tuple ( tvalues )
-
-    # =========================================================================
-    ## Run N-bootstrap experiments in parallel using the default WorkManager
-    def run ( self , nToys , silent = False , progress = True ) :
-        """ Execute bootstrap toys in parallel using Ostap WorkManager
-        """
-        me       = math.floor ( memory_enough() ) + 1 
-        njobs    = 4 * numcpu () + 1 
-        the_list = [ n for n in splitter ( nToys , njobs ) ] 
-        njobs    = len ( the_list ) 
-
-        if not silent :
-            logger.info ( 'GoF-bootstrap: #%d parallel subjobs to be used with WorkManager' % njobs )
-
-        counter = EffCounter()
-        tvalues = () 
-        
-        from ostap.parallel.parallel import WorkManager
-        with WorkManager ( silent = silent ) as manager : 
-            for result in manager.iexecute ( self.run_toys ,
-                                             the_list      ,
-                                             block_size    = min ( me , 2 * numcpu() ) , 
-                                             progress      = progress        ,
-                                             njobs         = njobs           ,
-                                             description   = 'Bootstrap:'    ) :
-                cnt , tvals = result 
-                counter += cnt
-                tvalues += tvals 
-        
-        if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
-        else             : self.ecdf.add    ( data2vct ( tvalues )     )
-        
-        return counter
-
-# =============================================================================
-## @class TOYS
-#  Helper class to run toys for Goodness-of-Fit studies 
-class TOYS ( object ) :
-    """ Helper class that allow to run toys in parallel 
-    """
-    def __init__ ( self    , 
-                   gof     , *        , 
-                   t_value            ,
-                   pdf                ,
-                   Ndata              , 
-                   sample     = False ,
-                   parameters = {}    ) :
-        
-        self.gof        = gof
-        self.pdf        = pdf
-        self.Ndata      = Ndata 
-        self.t_value    = t_value
-        self.sample     = gof.sample 
-        self.silent     = gof.silent
-
-        if parameters : self.parameters = parameters
-        else          : self.parameters = pdf.params() 
-                    
-        self.__ecdf    = None 
-
-    ## serialize the object 
-    def __getstate__ ( self ) :
-        """ Serialize the object
-        """
-        self.pdf.load_params ( self.parameters , silent = True )        
-        return { 'gof'        : self.gof        ,
-                 'pdf'        : self.pdf        ,
-                 'Ndata'      : self.Ndata      ,
-                 't_value'    : self.t_value    , 
-                 'sample'     : self.sample     , 
-                 'silent'     : self.silent     ,                  
-                 'parameters' : self.parameters ,
-                 'ecdf'       : self.ecdf       } 
-
-    ## De-serialize the object 
-    def __setstate__ ( self , state ) :
-        """ De-serialize the object
-        """
-        self.gof         = state.pop ( 'gof'        )
-        self.pdf         = state.pop ( 'pdf'        )
-        self.Ndata       = state.pop ( 'Ndata'      )
-        self.t_value     = state.pop ( 't_value'    )
-        self.sample      = state.pop ( 'sample'     )
-        self.silent      = state.pop ( 'silent'     )
-        self.parameters  = state.pop ( 'parameters' )
-        self.__ecdf      = state.pop ( 'ecdf'       )
-
-        ## (1) re-load parameters 
-        self.pdf.load_params ( self.parameters , silent = True )
-
-
-    # =========================================================================
-    ## run N-toys 
-    def __call__ ( self , nToys , progress = True  ) :
-        """ Run N-toys
-        """
-        counter , ecdf = self.run_toys ( nToys = nToys , progress = progress )
-        return counter 
-    
-    # =========================================================================
-    ## run N-toys 
-    def run_toys ( self , nToys , progress = False ) :
-        """ Run N-toys
-        """
-        ROOT.gRandom                     .SetSeed () 
-        ROOT.RooRandom.randomGenerator() .SetSeed ()
-
-        counter = EffCounter ()
-        tvalues = [] 
-        for i in progress_bar ( nToys , description = "Toys:" , silent = not progress ) : 
-
-            ## for consistency
-            self.pdf.load_params ( self.parameters , silent = True )
-            
-            dset     = self.pdf.generate ( self.Ndata , sample = self.sample )
-            tv       = self.gof ( self.pdf , dset )
-            counter += bool ( self.t_value > tv   ) ## NOTE THE SIGN HERE!
-
-            tvalues.append ( tv ) 
-
-            if isinstance  ( dset , ROOT.RooDataSet ) :
-                dset.clear ()
-                ROOT.SetOwnership ( dset , True )
-                del dset
-
-        tvalues = tuple ( tvalues ) 
-        if not self.ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues  , True ) 
-        else             : self.ecdf.add ( data2vct ( tvalues )  )
-
-        return counter, self.ecdf 
-
-    # =========================================================================
-    ## Run N-toys in parallel using WorkManager
-    def run ( self , nToys , silent = False , progress = True ) :
-        """ Run toys in parallel using WorkManager
-        """
-        ##
-        assert isinstance ( nToys , int ) and 1 <= nToys , "Invalid nToys: %s" % nToys
-        ##
-        ## how many processes fits into available memory ?
-        me       = math.floor ( memory_enough() ) + 1 
-        njobs    = min ( 2 * numcpu () + 3 , me + 1 )
-        the_list = [ n for n in splitter ( nToys , njobs ) ] 
-        njobs    = len ( the_list )
-        
-        if not silent :
-            logger.info ( 'GoF-toys: #%d parallel subjobs to be used' % njobs )
-            ##
-
-        counter = EffCounter()
-        tvalues = ()
-        ##        
-        ## use *BARE* interface here 
-        from ostap.parallel.parallel import WorkManager
-        with WorkManager ( silent = silent ) as manager :            
-            for result in manager.iexecute ( self.run_toys ,
-                                             the_list      ,
-                                             block_size    = min ( me , 2 * numcpu() ) , 
-                                             progress      = progress   ,
-                                             njobs         = njobs      ,
-                                             description   = 'Toys:'    ) :
-
-                cnt , ecdf = result
-                
-                counter += cnt
-                
-                if not self.__ecdf    : self.__ecdf    =  ecdf 
-                else                  : self.__ecdf.add ( ecdf )
-                
-        return counter 
-
-    @property 
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-values from toys/pseudoexperiments 
-        """
-        return self.__ecdf
     
 # =============================================================================
 pvalue_types = num_types + ( VE , ) 
@@ -1377,8 +871,6 @@ def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
     
     pvs = ( min ( max ( tol , float ( p ) ) , 1 - tol ) for p in pvalues )            
     return _combine_pvalues ( pvs , method = method )
-
-
 
 # ==============================================================================
 if '__main__' == __name__ :

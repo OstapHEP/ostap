@@ -70,7 +70,7 @@ from    ostap.utils.cidict      import cidict_fun
 from   ostap.utils.config       import Config 
 from   ostap.stats.counters     import EffCounter
 from   ostap.stats.gof          import AGoF
-from   ostap.stats.gof_utils    import TOYS, draw_ecdf   
+from   ostap.stats.gof_utils    import  draw_ecdf   
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.core         import typename 
@@ -431,14 +431,15 @@ class USTAT(AGoF,Config) :
         t_value   = estimator ( pdf , data ) if tvalue is None else tvalue 
 
         ## prepare toys
+        from ostap.stats.pvalue import TOYS 
         toys = TOYS ( self                   ,
                       t_value = t_value      ,
                       pdf     = pdf          ,
                       Ndata   = len ( data ) ,
                       sample  = self.sample  )
                 
-        if self.parallel : counter = toys.run ( self.nToys , progress = self.progress )
-        else             : counter = toys     ( self.nToys , progress = self.progress )            
+        if self.parallel : counter, _ = toys.run ( self.nToys , progress = self.progress )
+        else             : counter, _ = toys     ( self.nToys , progress = self.progress )            
 
         self.silent = old_silent 
        

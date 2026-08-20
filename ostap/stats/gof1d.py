@@ -72,7 +72,7 @@ GoF_methods = ( "KS" ,  ## Kolmogorov-Smirnov
 # =============================================================================
 ## @var NL
 #  use C++ if length of data exceeds NL, otherwise Python is OK 
-NL  = 100 
+NL  = 1000
 
 # =============================================================================
 ## Get Kolmogorov-Smirnov statistics KS
@@ -119,23 +119,25 @@ def anderson_darling ( cdf_data ) :
     >>> cdf_data =...
     >>> ad2      = anderson_darling ( cdf_data )    
     """
-    n       = len ( cdf_data )
+    n = len ( cdf_data )
     
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
         if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
-            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            the_buffer     = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.anderson_darling ( the_buffer )
         
     ## Long arrays to be converted to numpy 
     if NL < n : return anderson_darling ( numpy.asarray ( cdf_data , dtype = float ) )
 
-    ## for short arrays plain vanilla python is OK 
-    flog    = math.log
-    result  = sum ( ( i + 0.5 ) * flog ( Fi ) + ( n - i -  0.5 ) * flog ( 1 - Fi ) for ( i , Fi )  in enumerate ( cdf_data ) ) 
-    ## 
-    return -2.0 * result / n - n 
+    ## Plain Python fix:
+    flog   = math.log
+    result = sum ( ( 2 * i + 1.0 ) * flog ( Fi ) + ( 2 * ( n - i ) - 1.0 ) * flog ( 1.0 - Fi ) for ( i , Fi ) in enumerate ( cdf_data ) ) 
+    
+    return -n - ( result / n )
+
+
 # =============================================================================
 ## Get Cramer-von Mises statistics CM^2
 #  @code
@@ -354,7 +356,6 @@ def berk_jones ( cdf_data ) :
     
     return result
 
-
 # =========================================================================
 ## Clip input CDF arrays 
 def vct_clip ( input , silent = True ) :
@@ -363,7 +364,6 @@ def vct_clip ( input , silent = True ) :
     if not silent and ( numpy.min ( input ) < vmin or vmax < numpy.max ( input ) ) :
         logger.warning ( 'Adjust CDF to be %s<cdf<%s' % ( vmin , vmax ) ) 
     return numpy.clip ( input , a_min = vmin , a_max = vmax )
-
 
 # ==============================================================================
 ## @class GoF1D
@@ -385,7 +385,7 @@ class GoF1D(object) :
         
         vars = pdf.vars
         assert 1 == len ( vars )   , 'GoF1D: Only 1D-PDFs are allowed!'
-        assert pdf.xvar in dataset , 'GoF1D: `xvar`:%s is not in dataset!' % ( self.xvar.name ) 
+        assert pdf.xvar in dataset , 'GoF1D: `xvar`:%s is not in dataset!' % ( pdf.xvar.name ) 
 
         self.__original_cdf = cdf if cdf and callable ( cdf ) else None 
         
@@ -417,7 +417,7 @@ class GoF1D(object) :
         
             ## weight is trivial: remove it
             dataset     = dataset.unWeight ()
-            ROOT.SetOwership ( dataset , True ) 
+            ROOT.SetOwnership ( dataset , True ) 
             transformed = True
         
         ## data in a form of numpy sructured array
@@ -1292,7 +1292,7 @@ class GoF_1D(AGoF) :
         ##
         gof = GoF1D ( pdf , data , cdf = self.__cdf , parameters = self.__parameters )
 
-        tval     = gof.etimators [ self.__what ] if tvalue is None else tvalue 
+        tval     = gof.estimators [ self.__what ] if tvalue is None else tvalue 
         gof_toys = GoF1DToys   ( gof )
         gof_toys.run           ( **self.kwargs )
             

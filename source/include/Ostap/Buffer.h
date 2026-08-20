@@ -32,8 +32,8 @@ namespace Ostap
 #if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) && defined ( __cpp_lib_span )
     // ========================================================================
     /** @class Buffer 
-     *  Helper class to add the content of buffer to TTrer
-     *  - actually it is span + defautl value 
+     *  Helper class to add the content of buffer to TTree
+     *  - actually it is span + default value 
      *  @date 2025-02-05
      */
     template <class DATA> 
@@ -46,7 +46,7 @@ namespace Ostap
       // ======================================================================
       Buffer
       ( const DATA*       data  = nullptr    ,
-        const std::size_t size  = 9          ,
+        const std::size_t size  = 0          ,
         const DATA        value = DATA ( 0 ) )
         : m_span  ( data  , size ) 
         , m_value ( value ) 
@@ -104,7 +104,7 @@ namespace Ostap
       // ======================================================================
       Buffer
       ( const DATA*       data  = nullptr    ,
-        const std::size_t size  = 9          ,
+        const std::size_t size  = 0          ,
         const DATA        value = DATA ( 0 ) )
         : m_data  ( data  )
         , m_size  ( size  )
