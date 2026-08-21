@@ -25,7 +25,7 @@ __all__     = (
 from   ostap.core.meta_info         import root_info
 from   ostap.core.ostap_types       import string_types, dictlike_types, sized_types
 from   ostap.core.core              import Ostap
-from   ostap.math.math_base         import evt_range, FIRST_ENTRY, LAST_ENTRY
+from   ostap.math.math_base         import evt_range, FIRST_ENTRY, LAST_ENTRY, data2vct
 from   ostap.utils.core             import typename  
 from   ostap.utils.utils            import split_range
 from   ostap.math.math_base         import doubles
@@ -564,9 +564,6 @@ _new_methods_ += [ ROOT.RooDataSet.tonumpy ,
                    ROOT.RooDataSet.to_np   ]
     
 # ==============================================================================
-if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
-else                        : data2vct = lambda s : doubles ( s ) 
-# ==========================================================================
 ## Get the dict of empirical cumulative distribution functions from dataset
 #  @code
 #  dataset = ...
@@ -593,7 +590,7 @@ def ds2cdfs ( dataset           ,
     extra  = [ v for v in varlst if not v in dataset ]
     assert varlst and not extra , 'Variables are not in dataset: %s' % str ( extra ) 
 
-    if dataset.isWeighted() :
+    if not dataset.weight_trivial  :
         logger.warning ( 'ds2cdfs: dataset is weighted! Weight will be ignored!')
         
     ## 1) get data as numpy-array 
@@ -610,7 +607,6 @@ def ds2cdfs ( dataset           ,
     
     del data
     return result 
-
 
 
 ROOT.RooDataSet.cdfs  = ds2cdfs

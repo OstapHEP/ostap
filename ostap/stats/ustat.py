@@ -23,7 +23,7 @@
 #
 #  @endcode
 #
-# It is a numpy-free version of `Distance-t0-Nearedt-Neighbour" method
+# It is a numpy-free version of `Distance-t0-Nearedt-Neighbor" method
 # described in M.Williams' paper
 # @see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
 # @see https://doi.org/10.1088/1748-0221/5/09/P09004
@@ -35,7 +35,7 @@
 """ `U-statistics' useful for `Goodness-Of-Fit' tests
 
 This is a simple translation of the original C++ lines written by Greig Cowan into Python
-It is a numpy-free version of `Distance-t0-Nearedt-Neighbour" method described in M/williamns' paper
+It is a numpy-free version of `Distance-t0-Nearedt-Neighbor" method described in M/williamns' paper
 - see M.Williams, `How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics'
 - see https://doi.org/10.1088/1748-0221/5/09/P09004
 - see http://arxiv.org/abs/arXiv:1003.1768
@@ -276,16 +276,16 @@ def uToys ( pdf       ,
 
 # ===========================================================================
 ## @class USTAT
-# Goodness-of-Fit estimator for Distance-to-Nearest-Neighbour GoF test
-# It is a numpy-free version of `Distance-t0-Nearedt-Neighbour" method
+# Goodness-of-Fit estimator for Distance-to-Nearest-Neighbor GoF test
+# It is a numpy-free version of `Distance-t0-Nearedt-Neighbor" method
 # described in M.Williams' paper
 # @see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
 # @see https://doi.org/10.1088/1748-0221/5/09/P09004
 # @see http://arxiv.org/abs/arXiv:1003.1768
 # @see Ostap::
 class USTAT(AGoF,Config) :
-    """ Goodness-of-Fit estimator for Distance-to-Nearest-Neighbour GoF test
-    It is a numpy-free version of `Distance-t0-Nearedt-Neighbour" method described in M.Williams' paper
+    """ Goodness-of-Fit estimator for Distance-to-Nearest-Neighbor GoF test
+    It is a numpy-free version of `Distance-t0-Nearedt-Neighbor" method described in M.Williams' paper
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004
     - see http://arxiv.org/abs/arXiv:1003.1768

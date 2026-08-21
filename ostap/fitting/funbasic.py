@@ -434,6 +434,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             
         return result 
 
+    dct_params = parameters 
     # ==========================================================================
     ## get the parameter by name 
     #  @code

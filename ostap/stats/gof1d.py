@@ -32,7 +32,7 @@ from   ostap.core.ostap_types   import string_types
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import VE, Ostap, hID 
-from   ostap.math.math_base     import axis_range, np2raw, isequal     
+from   ostap.math.math_base     import axis_range, np2raw, isequal, data2vct 
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.core         import typename   
@@ -42,7 +42,6 @@ from   ostap.stats.gof_utils    import ( Labels      , Keys      ,
                                          clip_pvalue , 
                                          format_row  , draw_ecdf ,
                                          method_1D   ) 
-from   ostap.stats.pvallue      import data2vct 
 from   ostap.stats.gof          import AGoF
 from   ostap.plotting.color     import RoyalBlue, Gold   
 from   collections              import defaultdict, namedtuple

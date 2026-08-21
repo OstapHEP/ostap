@@ -91,9 +91,15 @@ def _prepare_ecdfs ( data1   ,
     w1_pooled = numpy.bincount ( numpy.searchsorted ( all_x , x1 ) , weights = w1 , minlength = len ( all_x ) )
     w2_pooled = numpy.bincount ( numpy.searchsorted ( all_x , x2 ) , weights = w2 , minlength = len ( all_x ) )
     
-    dH = ( w1_pooled + w2_pooled ) / ( sum_w1 + sum_w2 )
+    W_tot = sum_w1 + sum_w2
+    dH = ( w1_pooled + w2_pooled ) / W_tot
 
-    return cdf1_eval , cdf2_eval , dH , all_x
+    # Compute pooled CDF H(x)
+    w1_ratio = sum_w1 / W_tot
+    w2_ratio = sum_w2 / W_tot
+    H_eval   = w1_ratio * cdf1_eval + w2_ratio * cdf2_eval
+
+    return cdf1_eval , cdf2_eval , H_eval , dH , all_x
 
 # =============================================================================
 ## Calculates the two-sample Kolmogorov-Smirnov D-statistic for 1D datasets
@@ -108,13 +114,12 @@ def kolmogorov_smirnov ( data1    ,
     prepared = _prepare_ecdfs ( data1 , data2 , weight1 , weight2 )
     if prepared is None : return 0.0
 
-    cdf1_eval , cdf2_eval , _ , _ = prepared
+    cdf1_eval , cdf2_eval , _ , _ , _ = prepared
 
     diff   = cdf1_eval - cdf2_eval
     d_stat = float ( numpy.max ( numpy.abs ( diff ) ) )
 
     return d_stat
-
 
 # =============================================================================
 ## Calculates the two-sample Kuiper statistic (V-statistic) for 1D datasets
@@ -128,7 +133,7 @@ def kuiper ( data1          ,
     prepared = _prepare_ecdfs ( data1 , data2 , weight1 , weight2 )
     if prepared is None : return 0.0
 
-    cdf1_eval , cdf2_eval , _ , _ = prepared
+    cdf1_eval , cdf2_eval , _ , _ , _ = prepared
 
     diff    = cdf1_eval - cdf2_eval
     d_plus  = float ( numpy.max ( diff ) )
@@ -137,7 +142,6 @@ def kuiper ( data1          ,
     v_stat  = max ( 0.0 , d_plus ) + max ( 0.0 , d_minus )
 
     return float ( v_stat )
-
 
 # =============================================================================
 ## Calculates the two-sample Cramér-von Mises statistic (T / W^2) for 1D datasets
@@ -152,13 +156,12 @@ def cramer_von_mises ( data1          ,
     prepared = _prepare_ecdfs ( data1 , data2 , weight1 , weight2 )
     if prepared is None : return 0.0
 
-    cdf1_eval , cdf2_eval , dH , _ = prepared
+    cdf1_eval , cdf2_eval , _ , dH , _ = prepared
 
     diff     = cdf1_eval - cdf2_eval
     cvm_stat = numpy.sum ( diff * diff * numpy.abs ( dH ) )
 
     return float ( cvm_stat )
-
 
 # =============================================================================
 ## Calculates the two-sample Anderson-Darling statistic (A^2) for 1D datasets
@@ -174,12 +177,7 @@ def anderson_darling ( data1           ,
     prepared = _prepare_ecdfs ( data1 , data2 , weight1 , weight2 )
     if prepared is None : return 0.0
 
-    cdf1_eval , cdf2_eval , dH , _ = prepared
-
-    # Monotonic accumulation for H(x) to prevent negative variance on sPlot weights
-    H = numpy.cumsum ( dH )
-    H = numpy.maximum.accumulate ( H )
-    if H [ -1 ] != 0 : H = H / H [ -1 ]
+    cdf1_eval , cdf2_eval , H , dH , _ = prepared
 
     H_clipped       = numpy.clip ( H , eps , 1.0 - eps )
     variance_weight = H_clipped * ( 1.0 - H_clipped )
@@ -189,6 +187,12 @@ def anderson_darling ( data1           ,
 
     return float ( ad_stat )
 
+# =============================================================================
+## Helper function for KL divergence: p * log(p / q) + (1-p) * log((1-p) / (1-q))
+def _kl_div ( p , q , eps = 1e-12 ) :
+    p = numpy.clip ( p , eps , 1.0 - eps )
+    q = numpy.clip ( q , eps , 1.0 - eps )
+    return p * numpy.log ( p / q ) + ( 1.0 - p ) * numpy.log ( ( 1.0 - p ) / ( 1.0 - q ) )
 
 # =============================================================================
 ## Calculates the two-sample Berk-Jones statistic (R_BJ) for 1D datasets
@@ -204,16 +208,14 @@ def berk_jones ( data1          ,
     prepared = _prepare_ecdfs ( data1 , data2 , weight1 , weight2 )
     if prepared is None : return 0.0
 
-    cdf1_eval , cdf2_eval , _ , _ = prepared
+    cdf1_eval , cdf2_eval , H , _ , _ = prepared
 
-    F1 = numpy.clip ( cdf1_eval , eps , 1.0 - eps )
-    F2 = numpy.clip ( cdf2_eval , eps , 1.0 - eps )
+    kl1 = _kl_div ( cdf1_eval , H , eps )
+    kl2 = _kl_div ( cdf2_eval , H , eps )
 
-    kl_div  = F1 * numpy.log ( F1 / F2 ) + ( 1.0 - F1 ) * numpy.log ( ( 1.0 - F1 ) / ( 1.0 - F2 ) )
-    bj_stat = float ( numpy.max ( kl_div ) )
+    bj_stat = float ( numpy.max ( numpy.maximum ( kl1 , kl2 ) ) )
 
     return bj_stat
-
 
 # =============================================================================
 ## Calculates the two-sample Zhang's Z_A statistic for 1D datasets with weights.
@@ -228,16 +230,14 @@ def ZA ( data1           ,
     prepared = _prepare_ecdfs ( data1 , data2 , weight1 , weight2 )
     if prepared is None : return 0.0
 
-    cdf1_eval , cdf2_eval , dH , _ = prepared
+    cdf1_eval , cdf2_eval , H , dH , _ = prepared
 
-    F1 = numpy.clip ( cdf1_eval , eps , 1.0 - eps )
-    F2 = numpy.clip ( cdf2_eval , eps , 1.0 - eps )
+    kl1 = _kl_div ( cdf1_eval , H , eps )
+    kl2 = _kl_div ( cdf2_eval , H , eps )
 
-    ll_terms = numpy.log ( F1 ) + numpy.log ( 1.0 - F1 ) + numpy.log ( F2 ) + numpy.log ( 1.0 - F2 )
-    za_stat  = - numpy.sum ( ll_terms * numpy.abs ( dH ) )
+    za_stat = numpy.sum ( ( kl1 + kl2 ) * numpy.abs ( dH ) )
 
     return float ( za_stat )
-
 
 # =============================================================================
 ## Calculates the two-sample Zhang's Z_C statistic for 1D datasets with weights.
@@ -252,16 +252,15 @@ def ZC ( data1           ,
     prepared = _prepare_ecdfs ( data1 , data2 , weight1 , weight2 )
     if prepared is None : return 0.0
 
-    cdf1_eval , cdf2_eval , dH , _ = prepared
+    cdf1_eval , cdf2_eval , H , dH , _ = prepared
 
-    F1 = numpy.clip ( cdf1_eval , eps , 1.0 - eps )
-    F2 = numpy.clip ( cdf2_eval , eps , 1.0 - eps )
+    H_clipped = numpy.clip ( H , eps , 1.0 - eps )
+    denom     = H_clipped * ( 1.0 - H_clipped )
 
-    ll_terms = ( F1 - F2 ) ** 2 / ( F1 * ( 1.0 - F1 ) + F2 * ( 1.0 - F2 ) )
-    zc_stat  = numpy.sum ( ll_terms * numpy.abs ( dH ) )
+    diff    = cdf1_eval - cdf2_eval
+    zc_stat = numpy.sum ( ( diff * diff / denom ) * numpy.abs ( dH ) )
 
     return float ( zc_stat )
-
 
 # =============================================================================
 ## Calculates the two-sample Zhang's Z_K statistic for 1D datasets with weights.
@@ -276,16 +275,14 @@ def ZK ( data1           ,
     prepared = _prepare_ecdfs ( data1 , data2 , weight1 , weight2 )
     if prepared is None : return 0.0
 
-    cdf1_eval , cdf2_eval , _ , _ = prepared
+    cdf1_eval , cdf2_eval , H , _ , _ = prepared
 
-    F1 = numpy.clip ( cdf1_eval , eps , 1.0 - eps )
-    F2 = numpy.clip ( cdf2_eval , eps , 1.0 - eps )
+    kl1 = _kl_div ( cdf1_eval , H , eps )
+    kl2 = _kl_div ( cdf2_eval , H , eps )
 
-    ll_terms = numpy.abs ( numpy.log ( F1 / F2 ) + numpy.log ( ( 1.0 - F1 ) / ( 1.0 - F2 ) ) )
-    zk_stat  = float ( numpy.max ( ll_terms ) )
+    zk_stat = float ( numpy.max ( kl1 + kl2 ) )
 
     return zk_stat
-
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -296,4 +293,3 @@ if '__main__' == __name__ :
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
-

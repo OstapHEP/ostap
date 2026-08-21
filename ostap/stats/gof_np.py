@@ -24,7 +24,7 @@ __all__     = (
     ##
     'MIXnp'           , ## Mixed samples                 Goodness-of-Fit method 
     'PPDnp'           , ## Point-to-Point Dissimilarity  Goodness-of-Fit method 
-    'DNNnp'           , ## Distance-to-Nearest-Neighbour Goodness-of-Fit method
+    'DNNnp'           , ## Distance-to-Nearest-Neighbor  Goodness-of-Fit method
     ##
     'Mahalanobis'     , ## Very crude estimator based on Mahalanobis' distance
     'KullbackLeibler' , ## Very crude estimator based on Kullback-Leibler's divergency 

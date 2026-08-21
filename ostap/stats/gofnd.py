@@ -25,8 +25,8 @@ __date__    = "2024-09-29"
 __all__     = (
     ## 
     'MIX'                , ## Mixed Sample Goodness-of-fit method 
-    'PPD'                , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
-    'DNN'                , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method
+    'PPD'                , ## Point-to-Point Dissimilarity Goodness-of-fit method 
+    'DNN'                , ## Distance-to-Nearest-Neighbor Goodness-Of-Fit method
     ##
     'USTAT'              , ## Alternative implementation of DNN method
     'NLL'                , ## Use -log L as GoF estimator 
@@ -587,7 +587,7 @@ class PPD(GoF) :
 #    tool (especially for very high dimensional analyses), but its quantitative
 #    usefulness as a g.o.f. test is limited.  
 class DNN(GoF) : 
-    """ Implementation of concrete method "Distance-to-Nearest Neighbour" for probing of Goodness-Of-Fit
+    """ Implementation of concrete method "Distance-to-Nearest Neighbor" for probing of Goodness-Of-Fit
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004
     - see http://arxiv.org/abs/arXiv:1003.1768 
@@ -618,11 +618,40 @@ class DNN(GoF) :
                        sample   = sample )
         
     # =========================================================================
+    ## Calculate t-value for Goodness-of-Fit 
+    #  @code
+    #  ppd    = ...
+    #  pdf    = ...  
+    #  data   = ... 
+    #  tvalue = ppd ( pdf , data ) 
+    #  @endcode
+    def tvalue ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> gof    = ...
+        >>> pdf    = ... 
+        >>> data   = ... 
+        >>> tvalue = gof.tvalue ( pdf , data ) 
+        """
+        if not self.check_weights ( data ) :
+            raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
+                                                                    typename ( self.gof ) ) )    
+        ds1 , ds2 = self.transform ( pdf , data )         
+        return self.gof ( ds1       ,
+                          ds2       ,
+                          normalize = True    )
+
+    # =========================================================================
     ## (internal method) Transform pdf&data
     def transform ( self , pdf , data ) :
         """ (internal method) Transform pdf&data
         """
-
+        if not isinstance ( pdf  , APDF1           ) : raise TypeError ( "Invalid type of `pdf`: %s"  % typename ( pdf  ) )
+        if not isinstance ( data , ROOT.RooAbsData ) : raise TypeError ( "Invalid type of `data`: %s" % typename ( data ) )
+        
+        trivial_weight = data.weight_trivial 
+        if not trivial_weight and not self.weights_supported :
+            raise TypeError ( "data has weights but weights are not supported %s/%s" % ( typename ( self ) , typename ( self.gof ) ) )
+  
         vs1  = pdf .vars
         vs2  = data.get()
         vlst = set() 
@@ -888,6 +917,7 @@ class NLL(AGoF,Config) :
         t_value   = self.the_tvalue ( self.fitresult ) if tvalue is None else tvalue 
 
         ## prepare toys
+        from ostap.stats.pvalue import TOYS 
         toys = TOYS ( self                        ,
                       t_value    = t_value        ,
                       pdf        = pdf            ,

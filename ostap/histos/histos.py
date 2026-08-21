@@ -8608,7 +8608,7 @@ def dump_histo ( histo     ,
     from ostap.utils.basic import terminal_size 
     w , h  = terminal_size()
     width  = max ( 10 , min ( width  , w - 30 ) )
-    height = max ( 10 , min ( height , h -  5 ) )
+    height = max ( 10 , min ( height , 2 * h  ) )
 
     ## need rebinning ?
     axis = histo.GetXaxis() 
@@ -8627,7 +8627,7 @@ def dump_histo ( histo     ,
         new_histo.SetBinError   ( o2 , histo.GetBinError   ( o1 ) )
         
         result    = dump_histo ( new_histo ,
-                                 options   = options   ,
+                                 option    = option    ,
                                  height    = height    ,
                                  width     = width     ,
                                  use_color = use_color ,
@@ -8671,6 +8671,7 @@ def dump_histo ( histo     ,
     where =  result.find ( '\n' )
     if 0 <= where : result = result [ : where ] + ( '  ' + typename ( histo ) ) + result [ where : ]
     return result 
+
 
 for t in  ( ROOT.TH1D     ,
             ROOT.TH1F     ,

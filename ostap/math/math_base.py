@@ -123,7 +123,7 @@ __all__     = (
     'product'        , ## Make a product over iterable `data`
     ) 
 # =============================================================================
-from   ostap.core.meta_info    import python_info
+from   ostap.core.meta_info    import python_info, root_info
 from   ostap.core.ostap_types  import ( sequence_types , sized_types ,
                                         integer_types  , num_types   ,
                                         numpy_buffer_types           ) 
@@ -390,7 +390,14 @@ def strings ( *args ) :
     """
     return make_vector ( 'std::string' , std.string , *args ) 
 
+
 # =============================================================================
+## convert array-like structure to std::vector<double>
+if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
+else                        : data2vct = lambda s : doubles ( s )
+# =============================================================================
+
+
 SPD = std.pair ( 'double' , 'double' )
 SPD.asTuple  = lambda s :       ( s.first , s.second )
 SPD.__str__  = lambda s : str(  ( s.first , s.second ) )

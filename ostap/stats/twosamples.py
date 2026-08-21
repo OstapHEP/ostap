@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/stats/twosamples.py
-#  Two-Sample Tests
+#  Two-Sample Tests for 1D unweighted datasets 
 #  @see https://www.jstor.org/stable/25471118
+#  For dataset with weights, see 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2024-10-16
 # =============================================================================
@@ -17,11 +18,10 @@ __date__    = "2024-09-16"
 __all__     = (
 )
 # =============================================================================
-from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import listlike_types, sequence_types  
 from   ostap.core.core        import VE, Ostap
 from   ostap.utils.core       import typename 
-from   ostap.math.math_base   import doubles, axis_range, numpy   
+from   ostap.math.math_base   import doubles, axis_range, data2vct 
 from   ostap.math.models      import f1_draw
 from   ostap.utils.cidict     import cidict_fun
 from   ostap.logger.pretty    import pretty_float
@@ -34,7 +34,7 @@ from   collections            import defaultdict, namedtuple
 import ostap.logger.table     as     T
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
-import ROOT, math, array   
+import ROOT, math, array, numpy    
 # =============================================================================
 # logging 
 # =============================================================================
@@ -43,9 +43,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.twosamples' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Two-sample test' )
-# =============================================================================
-if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
-else                        : data2vct = lambda s : doubles ( s )
 # =============================================================================
 ## transform data into empirical CDF
 #  @code
@@ -62,10 +59,10 @@ def ecdf_from_data  ( data ) :
     >>> cdf  = ecdf_from_data ( data )
     - see `Ostap.Math.ECDF`
     """
-    if   isinstance  ( data , ECDF                   ) : return data 
-    elif numpy and isinstance ( data , numpy.ndarray ) : return ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data  , array.array           ) : return ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data1 , sequence_types        ) : return ECDF ( doubles  ( data ) ) 
+    if   isinstance ( data , ECDF             ) : return data 
+    elif isinstance ( data , numpy.ndarray    ) : return ECDF ( data2vct ( data ) ) 
+    elif isinstance ( data , array.array      ) : return ECDF ( data2vct ( data ) ) 
+    elif isinstance ( data , sequence_types   ) : return ECDF ( doubles  ( data ) ) 
     ## 
     raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % typename ( data1 ) )
 # ===============================================================================
