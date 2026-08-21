@@ -23,7 +23,7 @@ from   ostap.utils.timing     import timing
 from   ostap.trees.data_utils import Data 
 from   ostap.logger.colorized import attention, allright  
 from   ostap.utils.cleanup    import CleanUp
-from   ostap.stats.tools      import useHepML 
+from   ostap.stats.tools      import hasHepML 
 import ostap.io.zipshelve     as     DBASE
 import ROOT, array, random, math, os, time 
 # =============================================================================
@@ -237,8 +237,8 @@ def test_gbreweight() :
 
     logger = getLogger("test_gbreweight")
 
-    use_hepml = useHepML()
-    if not use_hepml :
+    has_hepml = hasHepML()
+    if not has_hepml :
         logger.warning ( "HepMC is not available, skip the test!" )
         return 
     

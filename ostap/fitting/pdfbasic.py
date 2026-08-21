@@ -58,6 +58,7 @@ __all__     = (
 from   ostap.core.meta_info     import root_info, python_info 
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
+                                         sequence_types , 
                                          list_types     , all_numerics   ) 
 from   ostap.math.math_base     import ( iszero , isfinite , isequal , frexp10 ,  
                                          vct1_call_method ,
@@ -97,6 +98,7 @@ bkg_types = string_types + integer_types + ( None , )
 ## @var arg_types
 #  list of "good" argument  types 
 arg_types = num_types + ( VE , ROOT.RooAbsReal )
+var_types = ROOT.RooAbsReal, ROOT.RooAbsCategory 
 # =============================================================================
 ## are all args of "good" type?
 #  - ROOT.RooAbsReal
@@ -2215,16 +2217,20 @@ class APDF1 ( Components ) :
             args    = args + ( ROOT.RooFit.AllBinned () , ) 
             binning = {}
             
-        if   not varset :
-            varset = ROOT.RooArgSet ( self.vars )
-        elif isinstance  ( varset , ROOT.RooAbsData ) :
+        if   not varset                              : varset = ROOT.RooArgSet ( self.vars )
+        elif isinstance ( varset , ROOT.RooArgSet  ) : pass
+        elif isinstance ( varset , ROOT.RooAbsData ) :
             vs  = varset.get()
             vs2 = ROOT.RooArgSet ()
             for v in vs :
                 if v in self.vars : vs2.add ( v )
             varset = vs2 
-        elif isinstance ( varset , ROOT.RooAbsReal ) :
-            varset = ROOT.RooArgSet ( varset    )
+        elif isinstance ( varset , sequence_types  ) and all ( isinstance ( v , var_types ) for v in varset ) :            
+            vs2 = ROOT.RooArgSet()
+            for v in varset : vs2.add ( v )
+            varset = vs2         
+        elif isinstance ( varset , var_types ) :
+            varset = ROOT.RooArgSet ( varset )
             
         for v in self.vars :
             if not v in varset :

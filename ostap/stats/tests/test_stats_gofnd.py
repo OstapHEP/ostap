@@ -25,9 +25,9 @@ from   ostap.utils.core       import typename
 from   ostap.utils.basic      import numcpu
 from   ostap.logger.symbols   import plus_minus , greek_lower_sigma , likelihood 
 from   ostap.stats.gof_utils  import clip_pvalue 
-from   ostap.stats.tools      import ( useLightGBM , useXGBoost ,
-                                       useCatBoost , useSkLearn , 
-                                       usePyTorch  , useKeras   )
+from   ostap.stats.tools      import ( hasLightGBM , hasXGBoost ,
+                                       hasCatBoost , hasSkLearn , 
+                                       hasPyTorch  , hasKeras   )
 import ostap.fitting.models   as     M 
 import ostap.stats.gofnd      as     GnD
 import ostap.logger.table     as     T 
@@ -67,24 +67,24 @@ rgood , _ = pdf.fitTo  ( data_good , quiet = True , refit = 5 )
 rbad  , _ = pdf.fitTo  ( data_bad  , quiet = True , refit = 5 )
 
 # ==============================================================================
-use_lightgbm = useLightGBM  ()
-use_xgboost  = useXGBoost   ()
-use_catboost = useCatBoost  ()
-use_pytorch  = usePyTorch   ()
-use_sklearn  = useSkLearn   ()
-use_keras    = useKeras     ()
+has_lightgbm = hasLightGBM  ()
+has_xgboost  = hasXGBoost   ()
+has_catboost = hasCatBoost  ()
+has_pytorch  = hasPyTorch   ()
+has_sklearn  = hasSkLearn   ()
+has_keras    = hasKeras     ()
 
-if use_lightgbm : logger.attention ( 'USE LigthGBM!'               )
+if has_lightgbm : logger.attention ( 'USE LigthGBM!'               )
 else            : logger.warning   ( 'LightGBM is not available!'  )
-if use_xgboost  : logger.attention ( 'USE XGBoost!'                )
+if has_xgboost  : logger.attention ( 'USE XGBoost!'                )
 else            : logger.warning   ( 'XGBoost  is not available!'  )
-if use_catboost : logger.attention ( 'USE CatBoost!'               )
+if has_catboost : logger.attention ( 'USE CatBoost!'               )
 else            : logger.warning   ( 'CatBoost  is not available!' )
-if use_sklearn  : logger.attention ( 'USE SkLearn!'                )
+if has_sklearn  : logger.attention ( 'USE SkLearn!'                )
 else            : logger.warning   ( 'ScLearn   is not available!' )
-if use_pytorch  : logger.attention ( 'USE PyTorch!'                )
+if has_pytorch  : logger.attention ( 'USE PyTorch!'                )
 else            : logger.warning   ( 'PyTorch   is not available!' )
-if use_keras    : logger.attention ( 'USE Keras!'                  )
+if has_keras    : logger.attention ( 'USE Keras!'                  )
 else            : logger.warning   ( 'Keras     is not available!' )
 
 keep_it = [] 
@@ -209,7 +209,7 @@ def test_GOF () :
     config  = { 'nToys' : nToys , 'parallel' : True , 'progress' : True }
 
     # ===========================================================================
-    if use_lightgbm : # =====================================================
+    if has_lightgbm : # =====================================================
         # ===================================================================
         from   ostap.stats.gofnd import ADVAL_LightGBM as GOF 
         ## 
@@ -218,7 +218,7 @@ def test_GOF () :
         to_test.append ( test )
 
     # ===========================================================================
-    if use_xgboost : # ======================================================
+    if has_xgboost : # ======================================================
         # ===================================================================
         from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
         ## 
@@ -227,7 +227,7 @@ def test_GOF () :
         to_test.append ( test )             
 
     # ==========================================================================
-    if use_catboost : # ========================================================
+    if has_catboost : # ========================================================
         # ======================================================================
         from   ostap.stats.gofnd import ADVAL_CatBoost as GOF 
         ## 
@@ -236,7 +236,7 @@ def test_GOF () :
         to_test.append ( test ) 
     
     # ==========================================================================
-    if  use_sklearn : # ========================================================
+    if has_sklearn : # ========================================================
         # ======================================================================
         from   ostap.stats.gofnd import ADVAL_HistoGBoost as GOF 
         ##            
@@ -247,7 +247,7 @@ def test_GOF () :
         else         : logger.warning ( "skip HistGradientBoost" )            
 
     # ===========================================================================
-    if  use_sklearn : # =========================================================
+    if has_sklearn : # =========================================================
         # =======================================================================
         from   ostap.stats.gofnd import ADVAL_GBoost as GOF 
         ## 
@@ -258,7 +258,7 @@ def test_GOF () :
         else         : logger.warning ( "skip GradientBoost" )
         
     # ===========================================================================
-    if  use_sklearn : # =========================================================
+    if has_sklearn : # =========================================================
         # ======================================================================
         import sklearn
         from   ostap.stats.gofnd import ADVAL_RandomForest as GOF 
@@ -270,7 +270,7 @@ def test_GOF () :
         else         : logger.warning ( "skip RandomForest" )
     
     # ==========================================================================
-    if use_pytorch : # =========================================================
+    if has_pytorch : # =========================================================
         # ======================================================================
         from   ostap.stats.gofnd import ADVAL_PyTorch as GOF 
         ##
@@ -282,7 +282,7 @@ def test_GOF () :
         to_test.append ( test ) 
 
     # ==========================================================================
-    if use_keras : # ===========================================================
+    if has_keras : # ===========================================================
         # ======================================================================
         from   ostap.stats.gofnd import ADVAL_Keras as GOF 
         ## 

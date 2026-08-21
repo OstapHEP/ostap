@@ -14,13 +14,13 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2023-12-06"
 __all__     = (
     # =========================================================================
-    'useLightGBM'        , ## Are LigthGBM  library and classificator available?
-    'useXGBoost'         , ## Are XGBoost   library and claffificators available?
-    'useCatBoost'        , ## Are CatBoost  library and claffificators available?
-    'usePyTorch'         , ## Are (Py)Torch library and claffificators available?
-    'useKeras'           , ## Are Keras     library and claffificators available?
-    'useSkLearn'         , ## Are sckearn   library and claffificators available?
-    'useHepML'           , ## Are HepML tools available?
+    'hasLightGBM'        , ## Are LigthGBM  library and classificator available?
+    'hasXGBoost'         , ## Are XGBoost   library and claffificators available?
+    'hasCatBoost'        , ## Are CatBoost  library and claffificators available?
+    'hasPyTorch'         , ## Are (Py)Torch library and claffificators available?
+    'hasKeras'           , ## Are Keras     library and claffificators available?
+    'hasSkLearn'         , ## Are sckearn   library and claffificators available?
+    'hasHepML'           , ## Are HepML tools available?
     # =========================================================================
 )
 # =============================================================================
@@ -33,10 +33,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.tools' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-## use LightGBM ?
+##  Has  LightGBM ?
 # - Are LightGBM library & classificators available? 
 # - There is some mess with lightgbm&narwhals installation 
-def useLightGBM ( silent = True ) :
+def hasLightGBM ( silent = True ) :
     """ Use LightGBM ?
     - Are LightGBM library & classificators available? 
     - There is some mess with LightBM&Narwhals installation 
@@ -56,9 +56,9 @@ def useLightGBM ( silent = True ) :
         return False 
     
 # ==============================================================================
-## use XGBoost ?
+##  Has XGBoost ?
 # - Are XGBoost library & classificators available? 
-def useXGBoost ( silent = True ) : 
+def hasXGBoost ( silent = True ) : 
     """ Use XGBoost
      - Are XGBoost library & classificators available? 
     """
@@ -74,9 +74,9 @@ def useXGBoost ( silent = True ) :
         return False 
 
 # ===============================================================================
-## use CatBoost ?
+##  Has CatBoost ?
 # - Are CatBoost library & classificators available? 
-def useCatBoost ( silent = True ) : 
+def hasCatBoost ( silent = True ) : 
     """ Use CatBoost
     - Are CatBoost library & classificators available? 
     """
@@ -94,9 +94,9 @@ def useCatBoost ( silent = True ) :
         return False
 
 # ==============================================================================
-## use PyTorch ?
+## Has PyTorch ?
 #  Are (Py)Torch library and claffificators available?
-def usePyTorch ( silent = True ) :
+def hasPyTorch ( silent = True ) :
     """ Use PyTorch ?
     - Are (Py)Torch library and claffificators available?
     """
@@ -112,9 +112,9 @@ def usePyTorch ( silent = True ) :
         return False 
     
 # ==============================================================================
-## use Keras  ?
+##   Has Keras  ?
 #  - Are Keras    library and claffificators available?
-def useKeras ( silent = True ) : 
+def hasKeras ( silent = True ) : 
     """ Use Keras
     - Are Keras    library and claffificators available?
     """
@@ -140,9 +140,9 @@ def useKeras ( silent = True ) :
         return False
 
 # =============================================================================
-## Use sklearn?
-# - Are sklearn library & classificators available? 
-def useSkLearn ( silent = True ) :
+##  Has sklearn?
+# - Has sklearn library & classificators available? 
+def hasSkLearn ( silent = True ) :
     """ Use sklearn?
     - Are sklearn library & classificators available? 
     """
@@ -162,9 +162,9 @@ def useSkLearn ( silent = True ) :
         return False 
                 
 # ============================================================================
-## Use hep_ml
+##  Has hep_ml
 # - Are hep_ml tools available? 
-def useHepML ( silent = True ) :
+def hasHepML ( silent = True ) :
     """ Use sklearn?
     - Are hep_ml tools available? 
     """
@@ -188,12 +188,13 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
-    if not useLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
-    if not useXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
-    if not useCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
-    if not useSkLearn  ( False ) : logger.warning  ( "No scikit-learn available!" ) 
-    if not usePyTorch  ( False ) : logger.warning  ( "No PyTorch available!" ) 
-    if not useKeras    ( False ) : logger.warning  ( "No Keras   available!" ) 
+    if not hasLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
+    if not hasXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
+    if not hasCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
+    if not hasSkLearn  ( False ) : logger.warning  ( "No scikit-learn available!" ) 
+    if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch  available!" ) 
+    if not hasKeras    ( False ) : logger.warning  ( "No Keras    available!" ) 
+    if not hasHepML    ( False ) : logger.warning  ( "No HepML    available!" ) 
 
 # =============================================================================
 ##                                                                      The END 

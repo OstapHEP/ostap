@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -55,21 +56,22 @@ RECTANGLE_NEG_COLORED = C.colored_string ( RECTANGLE_NEG , foreground = C.BLUE  
 def _valid_value ( val ) :
     """ Check if a value is a valid finite float.
     """
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
+    try :
         return False if val is None else math.isfinite ( float ( val ) )
-        # =====================================================================
-    except ( TypeError , ValueError ) : # =====================================
-        # =====================================================================
+    except ( TypeError , ValueError ) :
         return False
 
 # =============================================================================
 ## Safely convert error input to a list of valid float errors, defaulting to 0.0
 def _normalize_errors ( err_list , expected_len ) :
     """ Safely convert error input to a list of valid float errors, defaulting to 0.0.
+        Returns None if errors vector is omitted.
     """
-    if not err_list : return tuple ( [ 0.0 ] * expected_len ) 
+    if err_list is None : return None
+
+    # If errors are passed for in-range bins only (len = N), pad UF/OV with zeros to reach N + 2
+    if len ( err_list ) == expected_len - 2 :
+        err_list = [ 0.0 ] + list ( err_list ) + [ 0.0 ]
 
     result = []
     for i in range ( expected_len ) :
@@ -138,7 +140,7 @@ def _build_grid_rows ( y_min , y_max , max_height ) :
                         "y_low"    : ( step - 1 ) * delta_y ,
                         "tick_val" : round ( step * delta_y , 6 ) if is_tick else None ,
                         "is_tick"  : is_tick ,
-                       "is_zero"  : False   } )
+                        "is_zero"  : False   } )
 
     rows.append ( { "y_high"   : 0.0  ,
                     "y_low"    : 0.0  ,
@@ -179,17 +181,27 @@ def the_glyph ( val          ,
     val = float ( val )
 
     if has_errors :
-        
-        y_err_min = val - e_low
+        # Check if central data point falls in current cell
+        is_val_cell = ( r_low <= val < r_high ) or ( r_high == steps_up * delta_y and val == r_high )
+
+        # If errors were explicitly passed but are 0.0 for this bin, plot points only
+        if e_low == 0.0 and e_high == 0.0 :
+            return CIRCLE_COLORED if ( use_color and is_val_cell ) else ( CIRCLE if is_val_cell else default_char )
+
+        # Clamp lower error bound to 0 for non-negative histogram counts
+        y_err_min = max ( 0.0 , val - e_low ) if val >= 0 else val - e_low
         y_err_max = val + e_high
 
-        in_center = r_low <= val < r_high or ( r_high == steps_up * delta_y and val == r_high )
-        in_error  = y_err_min < r_high and y_err_max > r_low
+        # Check if error interval traverses current cell
+        in_error_range = ( y_err_min < r_high ) and ( y_err_max > r_low )
 
-        if   in_center : return CIRCLE_COLORED if use_color else CIRCLE 
-        elif in_error  : return BAR_COLORED    if use_color else BAR 
+        if is_val_cell :
+            return CIRCLE_COLORED if use_color else CIRCLE 
+        elif in_error_range :
+            return BAR_COLORED if use_color else BAR 
         
     else :
+        # No errors provided at all -> Draw filled bar columns
         if   val > 0 and r_low >= 0  and val > r_low  : return RECTANGLE_POS_COLORED if use_color else RECTANGLE_POS 
         elif val < 0 and r_high <= 0 and val < r_high : return RECTANGLE_NEG_COLORED if use_color else RECTANGLE_NEG 
 
@@ -251,7 +263,13 @@ def data2text_ ( bins               ,
 
     e_low_list  = _normalize_errors ( errors_low  , num_cols )
     e_high_list = _normalize_errors ( errors_high , num_cols )
-    has_errors  = any ( e > 0 for e in e_low_list ) or any ( e > 0 for e in e_high_list )
+    
+    # Check if errors parameter was explicitly supplied
+    has_errors  = ( e_low_list is not None ) or ( e_high_list is not None )
+    
+    if not has_errors :
+        e_low_list  = [ 0.0 ] * num_cols
+        e_high_list = [ 0.0 ] * num_cols
 
     low_bounds , high_bounds = [] , []
     for i in range ( num_cols ) :
@@ -264,18 +282,21 @@ def data2text_ ( bins               ,
     if not low_bounds : return "Histogram data is empty or invalid."
 
     raw_y_min , raw_y_max = min ( 0.0 , min ( low_bounds ) ) , max ( 0.0 , max ( high_bounds ) )
+    
+    # Protect against flat / zero range
+    if raw_y_min == raw_y_max == 0.0 :
+        raw_y_max = 1.0
+
     rows , delta_y , steps_up = _build_grid_rows ( raw_y_min , raw_y_max , max_height )
 
     max_abs_y   = max ( abs ( raw_y_max ) , abs ( raw_y_min ) )
     y_exp       = int ( math.floor ( math.log10 ( max_abs_y ) ) ) if max_abs_y > 0 else 0
     y_scale     = 10 ** y_exp if ( y_exp >= 4 or y_exp <= -2 ) else 1.0
-    ## y_scale_str = f" [10^{y_exp}]" if y_scale != 1.0 else ""
     y_scale_str = '[%s]' % format_pow10 ( y_exp ) if y_exp else ""
 
     max_abs_x   = max ( abs ( edges [ 0 ] ) , abs ( edges [ -1 ] ) )
     x_exp       = int ( math.floor ( math.log10 ( max_abs_x ) ) ) if max_abs_x > 0 else 0
     x_scale     = 10 ** x_exp if ( x_exp >= 4 or x_exp <= -2 ) else 1.0
-    ## x_scale_str = f" [10^{x_exp}]" if x_scale != 1.0 else ""
     x_scale_str = '[%s]' % format_pow10 ( x_exp ) if x_exp else ""
 
     def fmt_x ( v ) :
@@ -430,8 +451,14 @@ if '__main__' == __name__ :
                                                                     overflow  = overflow  , 
                                                                     edges     = edges     ,
                                                                     use_color = True      ) )
+    logger.info ( 'Histogram with zero errors:\n%s'   % data2text ( values    ,
+                                                                    errors    = tuple ( 0 for i in errors ) ,
+                                                                    underflow = underflow , 
+                                                                    overflow  = overflow  , 
+                                                                    edges     = edges     ,
+                                                                    use_color = True      ) )
     
-
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
+

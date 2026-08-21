@@ -23,7 +23,12 @@ from   ostap.core.ostap_types import num_types
 from   ostap.utils.core       import typename
 from   ostap.utils.basic      import numcpu, num_jobs, NoContext 
 from   ostap.tools.reweighter import Reweighter
-from   ostap.stats.utils      import weight_trivial , num_features, num_samples  
+from   ostap.stats.utils      import ( weight_trivial     ,
+                                       num_features       ,
+                                       num_samples        ,
+                                       valid_data_shape   ,
+                                       valid_weight       ,
+                                       compatible_weights ) 
 import numpy, abc, warnings
 # =============================================================================
 # logging 
@@ -76,7 +81,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             raise TypeError ( "Invalid `clip_threshold' type %s" % typename( clip_threshold ) )
         if not 0 < clip_threshold :
             raise ValueError ( "Invalid `clip_threshold' value %s" % clip_threshold )
-
+        
         self.__clip_threshold = float ( clip_threshold )
         self.__n_splits       = n_splits
         self.__random_state   = random_state
@@ -194,8 +199,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ Checks if dataset size is small relative to feature count,
         indicating a need for stronger regularization.
         """
-        ns = num_samples( X )
-        nf = num_features( X )
+        ns = num_samples  ( X )
+        nf = num_features ( X )
         return ns < max ( 300 if nf <= 3 else 1000 , nf * 50 )
 
     # =========================================================================
@@ -439,7 +444,13 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             Calculated event weights (factors * original_weight).
         """
 
-        X_new_f32 = original.astype( numpy.float32, copy = False )
+        X_new_f32 = original.astype ( numpy.float32, copy = False )
+
+        if not valid_data_shape   ( X_new_f32                    ) : raise TypeError ( "Invalid `original` type/shape: %s" % typename ( original ) )
+        if not valid_weight       ( original_weight              ) : raise TypeError ( "Invalid `original_weight`!" )        
+        if not compatible_weights ( X_new_f32 , original_weights ) : raise TypeError ( "Incompatible `original` data/weight!" )
+        if self.n_features != num_features ( X_new_f32 )           : raise TypeError ( "Invalid #features!!")
+        
 
         # FAST PATH: Single-stream without input weights
         if original_weight is None and self.__mode == "1-stream" :
@@ -1037,6 +1048,14 @@ class GBReweighter(Reweighter) :
                   original_weight = None ) :
         """ Get/predict  new weights for (new) original
         """
+        ## 
+        if not valid_data_shape   ( original                    ) : raise TypeError ( "Invalid `original` type/shape: %s" % typename ( original ) )
+        if not valid_weight       ( original_weight             ) : raise TypeError ( "Invalid `original_weight`!" )        
+        if not compatible_weights ( original , original_weights ) : raise TypeError ( "Incompatible `original` data/weight!" )
+        if self.n_features != num_features ( original )           : raise TypeError ( "Invalid #features!!")
+        ##
+
+        
         factors = self.reweighter.predict_weights ( original        = original        ,
                                                     original_weight = original_weight )
         ## 
@@ -1048,7 +1067,18 @@ if '__main__' == __name__ :
         
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-        
+
+    from ostap.stats.tools import ( hasLightGBM ,
+                                    hasXGBoost  ,
+                                    hasCatBoost ,
+                                    hasHepML    )
+
+    if not hasLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
+    if not hasXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
+    if not hasCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
+    if not hasHepML    ( False ) : logger.warning  ( "No HepMC    available!" ) 
+
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

@@ -21,7 +21,7 @@ __all__     = (
 ) 
 # =============================================================================
 from   ostap.utils.core     import typename
-from   ostap.stats.utils    import weight_trivial, num_samples, num_features 
+from   ostap.stats.utils    import weight_trivial, num_samples, num_features, check_all  
 from   ostap.utils.config   import Config
 import numpy, os, abc 
 # =============================================================================
@@ -38,9 +38,9 @@ else                       : logger = getLogger( __name__ )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2021-09-22 
 class Reweighter(abc.ABC,Config) :
-    """ Abstract base class for Advanced Reweighters 
+    """ Abstract base class for Advanced Reweighters: 
     - GBReweighter from hep_ml
-    - custom family of DensityReweighters 
+    - Custom family of DensityReweighters 
     """
     def __init__ ( self                    , * , 
                    original                ,
@@ -48,44 +48,25 @@ class Reweighter(abc.ABC,Config) :
                    original_weight = None  ,
                    target_weight   = None  , 
                    silent          = False ,
-                   random_state    = 42    , **params  ) :
+                   random_state    = None  , **params  ) :
         """ Abstract base class for Advanced Reweigters
         """
 
-        if not isinstance ( random_state , int ) :
-            raise TypeError  ( "Invalid `random_state' type %s"    % typename ( random_state ) )
+        if not random_state is None and not isinstance ( random_state , int ) :
+            raise TypeError  ( "Invalid `random_state' type %s" % typename ( random_state ) )
         
         self.__random_state = random_state
 
         # ==========================================================================
         ## Check input data
         # ==========================================================================
-        
-        shape1  = original.shape
-        shape2  = target.shape 
+        check_all ( original        ,
+                    target          ,
+                    original_weight ,
+                    target_weight   , typename ( self ) )
 
-        nf_orig = num_features ( original )
-        nf_targ = num_features ( target   )
-        
-        if nf_orig != nf_targ : raise TypeError ( "Inconsistent original/targer shapes: %s vs %s " % ( original.shape , target.shape ) )
+        self.__n_features = num_features ( target ) 
 
-        ns_orig = num_samples  ( original )
-        ns_targ = num_features ( target   )
-        
-        if original_weight is None or len ( original_weight ) == ns_orig : pass
-        else : raise TypeError ( "Inconsistent original/weight : %s vs %s " % ( ns_orig , len ( original_weight ) ) )
-
-        if target_weight   is None or len ( target_weight   ) == ns_targ : pass
-        else : raise TypeError ( "Inconsistent target/weight   : %s vs %s " % ( ns_targ , len ( target_weight ) ) )
-
-        if not weight_trivial ( target_weight ) :
-            sw = numpy.sum ( target_weight )
-            if sw <= 0 : logger.error ( "Sum of target   weights is non-positive: %s" % float ( sw ) )
-            
-        if not weight_trivial ( original_weight ) :
-            sw = numpy.sum ( original_weight )
-            if sw <= 0 : logger.error ( "Sum of original weights is non-positive: %s" % float ( sw ) )
-            
         # ==========================================================================
         ## initialize the base 
         # ==========================================================================
@@ -102,6 +83,11 @@ class Reweighter(abc.ABC,Config) :
         """`random_state` : random number seed for shuffling/splitting/k-fold/..."""
         return self.__random_state
 
+    @property
+    def n_features ( self ) :
+        """`n_features` : number of features for this reweighter"""
+        return self.__n_features
+
     @property 
     def config ( self ) :
         """`config` : Reweighter configuraton"""
@@ -109,6 +95,7 @@ class Reweighter(abc.ABC,Config) :
         conf.update ( super().config  )
         conf [ 'method'       ] = self.method
         conf [ 'random_state' ] = self.random_state 
+        conf [ 'n_features'   ] = self.n_features 
         return conf 
                     
     # ==============================================================================

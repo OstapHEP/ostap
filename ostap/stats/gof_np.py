@@ -39,9 +39,13 @@ from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu
 from   ostap.utils.config       import Config
 from   ostap.stats.gof          import AGoFnp
+from   ostap.stats.utils        import ( weight_trivial     ,
+                                         check_all          , 
+                                         valid_data_shape   ,
+                                         num_features       ,
+                                         num_samples        ) 
 from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          num_jobs           , 
-                                         weight_trivial     ,
                                          normalize_pooled   ,
                                          pairwise_distances ,
                                          nearest_neighbors  , 
@@ -191,14 +195,17 @@ class GoFnp (AGoFnp,Config) :
         """        
         
         if not self.weights_supported :
-            assert weight_trivial ( weight1 ) , "weight1 must be *trivial*"
-            assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
+            if not weight_trivial ( weight1 ) : raise ValueError ( "weight1 must be *trivial*" ) 
+            if not weight_trivial ( weight2 ) : raise ValueError ( "weight2 must be *trivial*" ) 
             weight1 = None
             weight2 = None
 
         ## transform ?  
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
-            
+        
+        ## check vaildity and consitency of input parameters 
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) )
+
         ## normalize
         if normalize and self.normalize :
             uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
@@ -237,7 +244,10 @@ class GoFnp (AGoFnp,Config) :
 
         ## transform ?
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
-        
+    
+        ## check vaildity and consitency of input parameters 
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+
         ## normalize ? 
         if self.normalize :
             uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
@@ -549,7 +559,10 @@ class MIXnp(GoFnp) :
         uds1 , uds2 = self.unpack ( data1 , data2 )
         ## normalize
         if normalize and self.normalize : uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
-            
+
+        ## check vaildity and consitency of input parameters 
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) )
+        
         ## 
         n1 = len ( uds1 ) 
         n2 = len ( uds2 ) 
@@ -785,12 +798,15 @@ class PPDnp(GoFnp) :
 
         ## unpack data 
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
-
+        
         shape1 = uds1.shape 
         shape2 = uds2.shape 
         if 1 == len ( shape1 ) : uds1 = uds1.reshape ( -1 , shape1 [ 0 ] ) 
         if 1 == len ( shape2 ) : uds2 = uds2.reshape ( -1 , shape2 [ 0 ] ) 
         
+        ## check validity and consitency of input parameters 
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) )
+
         ## normalize
         if normalize and self.normalize :
             uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
@@ -841,7 +857,11 @@ class PPDnp(GoFnp) :
         shape2 = uds2.shape 
         if 1 == len ( shape1 ) : uds1 = uds1.reshape ( -1 , shape1 [ 0 ] ) 
         if 1 == len ( shape2 ) : uds2 = uds2.reshape ( -1 , shape2 [ 0 ] ) 
-        ## 
+        ##
+        
+        ## check validity and consitency of input parameters 
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) )
+        
         ## normalize if requested 
         if normalize and self.normalize :
             uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 )            
@@ -960,22 +980,26 @@ class DNNnp(GoFnp) :
         vpdf  : array of PDF values  
         """
         ## 
-        assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
-
-        ## 
-        w1_trivial = weight_trivial ( weight1 ) 
-
+        if not weight_trivial ( weight2 ) : raise TypeError ( "DNNnp: weight2 must be *trivial*" )        
+        if not weight_trivial ( weight1 ) and not self.weight_supported :
+            raise TypeError ( "DNNnp: weight1 is provides but not supported!" )
+        
         ## unpack if needed 
-        uds1 , uds2 = self.unpack ( data , vpdf ) 
+        uds1 , uds2 = self.unpack ( data , vpdf )
         
         ## reshape it if needed 
         shape1 = uds1.shape 
+        shape2 = uds2 .shape
         if 1 == len ( shape1 ) : uds1 = uds1.reshape ( -1 , shape1 [ 0 ] ) 
         
-        shape2 = uds2 .shape
-        assert 2 == len ( shape1 ) and 1 == len ( shape2 ) and len ( uds1 ) == len ( uds2 ) , \
-            "Invalid arrays: %s , %s" % ( shape1 , shape2 )
-
+        if not valid_data_shape  ( uds1 ) : raise TypeError ( "DNNnp: invalid uds1 shape!"     )
+        if not valid_data_shape  ( uds2 ) : raise TypeError ( "DNNnp: invalid uds2 shape!"     )
+        if not 1 == num_features ( uds2 ) : raise TypeError ( "DNNnp: invalid #features(uds2)" )
+        if num_samples ( uds1 ) != num_samples ( uds2 ) :
+            raise TypeError ( "DNNnp: invalid #samples!" )
+        
+        uds2 = uds2.revel() 
+        
         ## # of points & dimensionality of the problem
         N , D = shape1
                 
@@ -1047,13 +1071,10 @@ class DNNnp(GoFnp) :
         vpdf : array of PDF values  
         """
         ## 
-        assert weight_trivial ( weight2 ) , "weight2 must be trivial!"
+        if not weight_trivial ( weight2 ) : raise TypeError ( "DNNnp: weight2 must be *trivial*" )        
         ## 
         uds1 , uds2 = self.unpack ( data1 , vpdf ) 
         ## 
-        shape1 = uds1.shape 
-        if 1 == len ( shape1 ) : uds1 = uds1.reshape ( -1 , shape1 [ 0 ] ) 
-        ##        
         return self.tvalue ( uds1               ,
                              uds2                ,
                              weight1   = weight1 ,
@@ -1146,16 +1167,12 @@ class Mahalanobis(GoFnp) :
                  normalize = True ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
-        ##
-
-        shape1 = data1.shape
-        shape2 = data2.shape
-        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
-            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
-
         ## transform ?
         uds1 , uds2 = self.unpack ( data1 , data2 )
 
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+        
         ## normalize
         if normalize and self.normalize :
             uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
@@ -1201,15 +1218,11 @@ class KullbackLeibler(Mahalanobis) :
                  normalize = True ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
-        ##
-
-        shape1 = data1.shape
-        shape2 = data2.shape
-        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
-            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
-
         ## transform ?
         uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
 
         ## normalize
         if normalize and self.normalize :
@@ -1253,15 +1266,12 @@ class Hotelling(Mahalanobis) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
-
-        shape1 = data1.shape
-        shape2 = data2.shape
-        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
-            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
-
         ## transform ?
         uds1 , uds2 = self.unpack ( data1 , data2 )
 
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+        
         ## normalize
         if normalize and self.normalize :
             uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
@@ -1273,11 +1283,13 @@ class Hotelling(Mahalanobis) :
         nw2 = len ( uds2 )
         
         if not w1_trivial :
+            
             sumw  = numpy.sum ( weight1 )
             sumw2 = numpy.sum ( weight1 * weight1 )
             nw1   = math.floor ( float ( sumw * sumw / sumw2 ) )
             
         if not w2_trivial :
+            
             sumw  = numpy.sum ( weight2 )
             sumw2 = numpy.sum ( weight2 * weight2 )
             nw2   = math.floor ( float ( sumw * sumw / sumw2 ) )

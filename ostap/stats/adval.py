@@ -1720,15 +1720,15 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
-    from ostap.stats.tools import ( useLightGBM , useXGBoost , useCatBoost ,
-                                    useSkLearn  , usePyTorch , useKeras    )
+    from ostap.stats.tools import ( hasLightGBM , hasXGBoost , hasCatBoost ,
+                                    hasSkLearn  , hasPyTorch , hasKeras    )
 
-    if not useLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
-    if not useXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
-    if not useCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
-    if not useSkLearn  ( False ) : logger.warning  ( "No scikit-learn available!" ) 
-    if not usePyTorch  ( False ) : logger.warning  ( "No PyTorch available!" ) 
-    if not useKeras    ( False ) : logger.warning  ( "No Keras   available!" ) 
+    if not hasLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
+    if not hasXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
+    if not hasCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
+    if not hasSkLearn  ( False ) : logger.warning  ( "No scikit-learn available!" ) 
+    if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch available!" ) 
+    if not hasKeras    ( False ) : logger.warning  ( "No Keras   available!" ) 
             
 # =============================================================================
 ##                                                                      The END 

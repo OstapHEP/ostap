@@ -378,13 +378,14 @@ class GoF1D(object) :
                    fitresult  = None , 
                    parameters = {}   ) :
         
-        assert isinstance ( pdf     , PDF1            ) , 'Invalid type of `pdf`:%s'     % typename ( pdf     )
-        assert isinstance ( dataset , ROOT.RooDataSet ) , 'Invalid type of `dataset`:%s' % typename ( dataset )
+        if not isinstance ( pdf     , PDF1            ) : raise TypeError ( 'GoF1D: Invalid type of `pdf`:%s'     % typename ( pdf     ) ) 
+        if not isinstance ( dataset , ROOT.RooDataSet ) : raise TypeError ( 'GoF1D: Invalid type of `dataset`:%s' % typename ( dataset ) )
+        if not dataset.weight_trivial                   : raise TypeError ( "GoF1D: non-trivial weights are not supported!" )
         
         vars = pdf.vars
-        assert 1 == len ( vars )   , 'GoF1D: Only 1D-PDFs are allowed!'
-        assert pdf.xvar in dataset , 'GoF1D: `xvar`:%s is not in dataset!' % ( pdf.xvar.name ) 
-
+        if 1 != len ( vars )       : raise TypeError ( 'GoF1D: Only 1D-PDFs are allowed!' )
+        if not pdf.xvar in dataset : raise TypeError ( 'GoF1D: `xvar`:%s is not in dataset!' % ( pdf.xvar.name ) )
+    
         self.__original_cdf = cdf if cdf and callable ( cdf ) else None 
         
         ## store PDF 
@@ -773,7 +774,7 @@ class GoF1DToys(GoF1D) :
         >>> gof  = GoF1D     ( ... ) 
         >>> toys = GoF1DToys ( gof ) 
         """
-        assert isinstance ( gof , GoF1D ) , "Invalid `gof`-parameter"
+        if not isinstance ( gof , GoF1D ) : raise TypeError (  "GoF1DToys: Invalid `gof`-parameter" ) 
 
         ## mimic the copy-constructor for the base class 
         state = GoF1D.__getstate__ ( gof ) 
@@ -1190,7 +1191,7 @@ class GoF_1D(AGoF) :
     def __init__ ( self , what , **kwargs ) :
 
         mm = method_1D ( what ) 
-        assert mm in GoF_methods , "Invalid `what`: %s/%s"% ( what , typename ( what ) ) 
+        if not mm in GoF_methods : raise TypeError ( "GoF_1D: Invalid `what`: %s/%s"% ( what , typename ( what ) ) )
             
         self.__what       = what.upper()     
         self.__gof        = None 
@@ -1246,8 +1247,8 @@ class GoF_1D(AGoF) :
         >>> tvalue = gof.tvalue ( pdf , data )
         """
         ##
-        assert not data.isWeighted() or self.weights_supported , \
-            "Data is weighted but weights are not supported %s" % ( typename ( self ) )
+        if not data.weight_trivial and not self.weights_supported :  
+            raise TypeError ( "GoF_1D: Data is weighted but weights are not supported %s" % ( typename ( self ) ) )
         ##
         gof = GoF1D ( pdf , data , cdf = self.__cdf , parameters = self.__parameters )
         return gof.estimators [ self.__what ]
@@ -1285,11 +1286,11 @@ class GoF_1D(AGoF) :
         >>> t_value , p_value = gof.pvalue ( pdf , data ) 
         """    
         ##
-        assert not data.isWeighted() or self.weights_supported , \
-            "Data is weighted but weights are not supported %s" % ( typename ( self ) )
+        if not data.weight_trivial and not self.weights_supported :  
+            raise TypeError ( "GoF_1D: Data is weighted but weights are not supported %s" % ( typename ( self ) ) )
         ##
         gof = GoF1D ( pdf , data , cdf = self.__cdf , parameters = self.__parameters )
-
+        ## 
         tval     = gof.estimators [ self.__what ] if tvalue is None else tvalue 
         gof_toys = GoF1DToys   ( gof )
         gof_toys.run           ( **self.kwargs )

@@ -26,7 +26,7 @@ from   ostap.logger.symbols     import iteration, plus_minus
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
-from   ostap.stats.tools        import useLightGBM, useXGBoost, useCatBoost, useHepML 
+from   ostap.stats.tools        import hasLightGBM, hasXGBoost, hasCatBoost, hasHepML 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.logger.table       as     T 
@@ -255,20 +255,20 @@ if not os.path.exists ( testdata ) :
     with timing ( "Prepare input data" , logger = logger ) :
         prepare_data ()
 
-use_lightgbm = useLightGBM  ()
-if use_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
+has_lightgbm  = hasLightGBM  ()
+if has_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
 else            :  logger.warning   ( 'LightGBM is not available!' )
             
-use_xgboost  = useXGBoost  ()
-if use_xgboost  :  logger.attention ( 'USE XGBoost!'               )
+has_xgboost   = hasXGBoost  ()
+if has_xgboost  :  logger.attention ( 'USE XGBoost!'               )
 else            :  logger.warning   ( 'XGBoost is not available!'  )
 
-use_catboost  = useCatBoost  ()
-if use_catboost :  logger.attention ( 'USE CatBoost!'              )
+has_catboost  = hasCatBoost  ()
+if has_catboost :  logger.attention ( 'USE CatBoost!'              )
 else            :  logger.warning   ( 'CatBoost is not available!' )
 
-use_hepml     = useHepML  ()
-if use_hepml    :  logger.attention ( 'USE HepML!'                 )
+has_hepml     = hasHepML  ()
+if has_hepml    :  logger.attention ( 'USE HepML!'                 )
 else            :  logger.warning   ( 'HepML    is not available!' )
 
 # ==============================================================================
@@ -284,15 +284,15 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR3 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR4 ( parallel = True , nToys = 100 ) )
 
-if use_lightgbm :  
+if has_lightgbm :  
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
     comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) , ) 
 
-if False and use_xgboost:  
+if False and has_xgboost:  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) , ) 
 
-if False and use_catboost:  
+if False and has_catboost:  
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
     comparators += ( COMPARATOR7 ( parallel = True , nToys = 100 ) , ) 
     
@@ -547,7 +547,7 @@ weights = [ '' , weight_name ]
 # =============================================================================
 ## (1) GBReweighter by Alex Rogozhnikov from hep_ml 
 # =============================================================================
-if use_hepml : # ============================================================
+if has_hepml : # ============================================================
     # ========================================================================
     from ostap.tools.reweighters     import GBReweighter   as GBRW 
     rw1 = DataReweighter ( GBRW                        , ## reweighter type 
@@ -563,7 +563,7 @@ if use_hepml : # ============================================================
 # =============================================================================
 ## (2) home-made reweighter based on LightGBM
 # =============================================================================
-if  use_lightgbm : # ==========================================================
+if has_lightgbm : # ==========================================================
     # =========================================================================
     from ostap.tools.reweighters     import LightGBMDensityReweighter as  LGBM
     rw2 = DataReweighter ( LGBM                        , ## reweighter type 
@@ -579,7 +579,7 @@ if  use_lightgbm : # ==========================================================
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-if use_xgboost : # ============================================================
+if has_xgboost : # ============================================================
     # =========================================================================
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
     rw3 = DataReweighter ( XGB                         , ## reweighter type 
@@ -594,7 +594,7 @@ if use_xgboost : # ============================================================
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
 # =============================================================================
-if use_catboost : # ===========================================================
+if has_catboost : # ===========================================================
     # =========================================================================
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
     rw3 = DataReweighter ( CATB                        , ## reweighter type 

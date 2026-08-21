@@ -27,7 +27,7 @@ from   ostap.logger.symbols     import iteration, plus_minus
 from   ostap.logger.pretty      import pretty_float 
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.stats.tools        import useLightGBM 
+from   ostap.stats.tools        import hasLightGBM 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T
 import ostap.core.pyrouts    
@@ -326,12 +326,12 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 
 
 # ===============================================================================
-use_lightgbm = useLightGBM  ()
-if use_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
+has_lightgbm = hasLightGBM  ()
+if has_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
 else            :  logger.warning   ( 'LightGBM is not available!' )
 
 # ===============================================================================
-if use_lightgbm : # =============================================================
+if has_lightgbm : # =============================================================
     # ===========================================================================
     from ostap.stats.adval        import ADVAL_LGBM as COMPARATOR
     # ==========================================================================

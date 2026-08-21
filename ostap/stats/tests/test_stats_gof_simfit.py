@@ -30,7 +30,7 @@ from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          GoFSimFitType   , 
                                          GoFSimFit1D     , 
                                          GoFSimFit1DToys )
-from   ostap.stats.tools        import useLightGBM, useXGBoost, useCatBoost
+from   ostap.stats.tools        import hasLightGBM, hasXGBoost, hasCatBoost
 from   ostap.stats.gof1d        import GoF_1D
 import ostap.stats.gofnd        as     GnD 
 import ostap.logger.table       as     T 
@@ -243,21 +243,21 @@ def test_gof_simfit () :
     # =========================================================================
     ## LightGBM ?
     # =========================================================================
-    if useLightGBM() :
+    if hasLightGBM() :
         from   ostap.stats.gofnd import ADVAL_LightGBM as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
         
     # =========================================================================
     ## XGBoost?
     # =========================================================================
-    if useXGBoost () :
+    if hasXGBoost () :
         from   ostap.stats.gofnd import ADVAL_XGBoost as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
 
     # =========================================================================
     ## CatBoost?
     # =========================================================================
-    if useCatBoost () :
+    if hasCatBoost () :
         from   ostap.stats.gofnd import ADVAL_CatBoost as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
         

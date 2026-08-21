@@ -213,9 +213,10 @@ class GoF(AGoF,Config) :
     def check_weights ( self , data ) :
         """ Check the weight
         """
-        if not data.isWeighted ()   : return True
-        elif self.weights_supported : return True 
-        return False
+        if   not data.isWeighted ()   : return True
+        elif      data.trivial_weight : return True
+        ## 
+        return self.weights_supported 
     
     # =========================================================================
     ## Calculate t-value for Goodness-of-Fit 
@@ -232,10 +233,7 @@ class GoF(AGoF,Config) :
         >>> data   = ... 
         >>> tvalue = gof.tvalue ( pdf , data ) 
         """
-        if not self.check_weights ( data ) :
-            raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
-                                                                    typename ( self.gof ) ) )    
-        ds1, ds2 , weight1 , weight2 = self.transform ( pdf , data )         
+        ds1 , ds2 , weight1 , weight2 = self.transform ( pdf , data )         
         return self.gof ( ds1        ,
                           ds2       ,
                           weight1   = weight1 ,
@@ -257,16 +255,12 @@ class GoF(AGoF,Config) :
         >>> data  = ... 
         >>> t , p = gof.pvalue ( pdf , data ) 
         """
-        if not self.check_weights ( data ) :
-            raise TypeError ( "Weights are not supported %s/%s" % ( typename ( self     ) ,
-                                                                    typename ( self.gof ) ) )        
-        ## 
         ds1 , ds2 , weight1 , weight2 = self.transform ( pdf , data )        
-        tv , pv = self.gof.pvalue ( ds1     ,
-                                    ds2     ,
-                                    weight1 = weight1 ,
-                                    weight2 = weight2 ,
-                                    tvalue  = tvalue  )
+        tv  , pv = self.gof.pvalue ( ds1     ,
+                                     ds2     ,
+                                     weight1 = weight1 ,
+                                     weight2 = weight2 ,
+                                     tvalue  = tvalue  )
         ## 
         return tv , pv 
     
@@ -292,11 +286,11 @@ class GoF(AGoF,Config) :
     def generate ( self , pdf , data ) :
         """ Generate MC dataset from PDF according to data 
         """
+        if not isinstance ( pdf  , APDF1           ) : raise TypeError ( "Invalid type of `pdf`: %s"  % typename ( pdf  ) )
         
         ## nEvents = len ( data ) * self.mcFactor
         ## use the effective number of entries here! 
         nEvents = data.nEff () * self.mcFactor
-        
         if not self.sample : nEvents = math.ceil ( nEvents )
         
         dset    = pdf.generate ( nEvents = nEvents     ,
@@ -327,7 +321,7 @@ class GoF(AGoF,Config) :
         if not isinstance ( pdf  , APDF1           ) : raise TypeError ( "Invalid type of `pdf`: %s"  % typename ( pdf  ) )
         if not isinstance ( data , ROOT.RooAbsData ) : raise TypeError ( "Invalid type of `data`: %s" % typename ( data ) )
 
-        trivial_weight = data.weight_trivial 
+        trivial_weight = data.weight_trivial x
         if not trivial_weight and not self.weights_supported :
             raise TypeError ( "data has weights but weights are not supported %s/%s" % ( typename ( self ) , typename ( self.gof ) ) )
         
