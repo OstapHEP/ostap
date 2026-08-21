@@ -321,7 +321,7 @@ class GoF(AGoF,Config) :
         if not isinstance ( pdf  , APDF1           ) : raise TypeError ( "Invalid type of `pdf`: %s"  % typename ( pdf  ) )
         if not isinstance ( data , ROOT.RooAbsData ) : raise TypeError ( "Invalid type of `data`: %s" % typename ( data ) )
 
-        trivial_weight = data.weight_trivial x
+        trivial_weight = data.weight_trivial
         if not trivial_weight and not self.weights_supported :
             raise TypeError ( "data has weights but weights are not supported %s/%s" % ( typename ( self ) , typename ( self.gof ) ) )
         

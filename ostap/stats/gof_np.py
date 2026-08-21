@@ -260,6 +260,7 @@ class GoFnp (AGoFnp,Config) :
                                                                      normalize = False   )        
         ## use permutations to get the p-value
         from ostap.stats.pvalue import PERMUTATOR as RESAMPLER 
+        ## from ostap.stats.pvalue import BOOTSTRAPPER as RESAMPLER 
         resampler = RESAMPLER ( self                   ,
                                 t_value                , 
                                 uds1                   ,
