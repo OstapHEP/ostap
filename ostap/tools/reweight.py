@@ -1041,18 +1041,18 @@ ComparisonPlot. draw = _cmp_draw_
 #  If no more rewighting iteratios required, <code>active</code> is an empty tuple 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-05-10
-def makeWeights  ( dataset                      ,
-                   plots        = []            , 
-                   database     = "weights.db"  ,
-                   compare      = None          , ## comparison function 
-                   delta        = 0.01          , ## delta for `mean'  weight variation
-                   minmax       = 0.03          , ## delta for `minmax' weight variation
-                   maxchi2      = 1.00          , ## maximum chi2/ndf 
-                   power        = None          , ## auto-determination
-                   debug        = True          , ## save intermediate information in DB
-                   make_plots   = True          , ## make comparison plots (and draw them)
-                   wtruncate    = ( 0.1 , 2.0 ) , ## truncate too small or too large weights
-                   force_update = False         , ## force DB update even for "good" results 
+def makeWeights  ( dataset                       ,
+                   plots        = []             , 
+                   database     = "weights.db"   ,
+                   compare      = None           , ## comparison function 
+                   delta        = 0.01           , ## delta for `mean'  weight variation
+                   minmax       = 0.03           , ## delta for `minmax' weight variation
+                   maxchi2      = 1.00           , ## maximum chi2/ndf 
+                   power        = None           , ## auto-determination
+                   debug        = True           , ## save intermediate information in DB
+                   make_plots   = True           , ## make comparison plots (and draw them)
+                   wtruncate    = ( 0.02 , 2.0 ) , ## truncate too small or too large weights
+                   force_update = False          , ## force DB update even for "good" results 
                    tag          = "Reweighting" ) :
     """ The main  function: perform one re-weighting iteration 
     and reweight `MC'-data set to looks as `data'(reference) dataset
