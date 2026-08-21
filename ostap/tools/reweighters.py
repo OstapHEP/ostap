@@ -446,10 +446,10 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         X_new_f32 = original.astype ( numpy.float32, copy = False )
 
-        if not valid_data_shape   ( X_new_f32                    ) : raise TypeError ( "Invalid `original` type/shape: %s" % typename ( original ) )
-        if not valid_weight       ( original_weight              ) : raise TypeError ( "Invalid `original_weight`!" )        
-        if not compatible_weights ( X_new_f32 , original_weights ) : raise TypeError ( "Incompatible `original` data/weight!" )
-        if self.n_features != num_features ( X_new_f32 )           : raise TypeError ( "Invalid #features!!")
+        if not valid_data_shape   ( X_new_f32                   ) : raise TypeError ( "Invalid `original` type/shape: %s" % typename ( original ) )
+        if not valid_weight       ( original_weight             ) : raise TypeError ( "Invalid `original_weight`!" )        
+        if not compatible_weights ( X_new_f32 , original_weight ) : raise TypeError ( "Incompatible `original` data/weight!" )
+        if self.n_features != num_features ( X_new_f32 )          : raise TypeError ( "Invalid #features!!")
         
 
         # FAST PATH: Single-stream without input weights
@@ -1049,10 +1049,10 @@ class GBReweighter(Reweighter) :
         """ Get/predict  new weights for (new) original
         """
         ## 
-        if not valid_data_shape   ( original                    ) : raise TypeError ( "Invalid `original` type/shape: %s" % typename ( original ) )
-        if not valid_weight       ( original_weight             ) : raise TypeError ( "Invalid `original_weight`!" )        
-        if not compatible_weights ( original , original_weights ) : raise TypeError ( "Incompatible `original` data/weight!" )
-        if self.n_features != num_features ( original )           : raise TypeError ( "Invalid #features!!")
+        if not valid_data_shape   ( original                   ) : raise TypeError ( "Invalid `original` type/shape: %s" % typename ( original ) )
+        if not valid_weight       ( original_weight            ) : raise TypeError ( "Invalid `original_weight`!" )        
+        if not compatible_weights ( original , original_weight ) : raise TypeError ( "Incompatible `original` data/weight!" )
+        if self.n_features != num_features ( original )          : raise TypeError ( "Invalid #features!!")
         ##
 
         
