@@ -29,6 +29,7 @@ __all__     = (
     'add_prefix'            , ## add the prefix to each row of the table
     'empty_columns'         , ## find empty columns in the table 
     'remove_empty_columns'  , ## remove empty columns from the table
+    'visible_width'         , ## visible width of the symbols 
     ##
     'table_styles'          , ## available table styles
     'ascii_styles'          , ## available ASCII table styles    
@@ -39,7 +40,7 @@ from   ostap.core.ostap_types import string_types
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size, zip_longest 
 import ostap.core.config      as     config
-import textwrap, os, sys
+import textwrap, wcwidth, re, sys
 # =============================================================================
 # logging 
 # =============================================================================
@@ -47,7 +48,20 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.table' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
+CLEANUP_RE = re.compile(r'[\uFE00-\uFE0F\u200E\u200F\u202A-\u202E\u2066-\u2069]')
+# =============================================================================
+## visible width of the string 
+def  visible_width ( what ) :
+    """ Visible width of the string
+    """    
+    if not what: return 0
+    
+    text = decolorize ( what )
+    text = CLEANUP_RE.sub('', text)
+    if not text : return 0 
+    return max ( 0 , wcwidth.wcswidth ( text ) )
 
+# =============================================================================
 terminaltables = None
 # =============================================================================
 if ( 3 , 9 ) <= sys.version_info : # ==========================================
@@ -70,39 +84,13 @@ if not terminaltables : # =====================================================
     except ImportError : # ====================================================
         # =====================================================================
         terminaltables = None 
-
+        
 # =============================================================================
-visible_width = None
-# =============================================================================
-if terminaltables and not visible_width : # ===================================
+## Monkey-patch # =============================================================
+if terminaltables : #==========================================================
     # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        visible_width = terminaltables.width_and_alignment.visible_width
-        # =====================================================================
-    except ( AttributeError, NameError ) : # ==================================
-        # =====================================================================
-        visible_width = None 
-
+    terminaltables.width_and_alignment.visible_width = visible_width
 # =============================================================================
-if not visible_width : # ======================================================
-    # =========================================================================
-    import unicodedata 
-    ## visible length of the string/expression
-    def visible_width ( what ) :
-        """ Visible length of the string/expression (local, use unicodedata) 
-        """
-        if not what : return 0
-        item = decolorize ( what )
-        if not item : return 0
-        ##
-        if  sys.version_info < ( 3 , 0 ) : item = item.decode("u8")
-        ##
-        width = 0 
-        for char in item :
-            if unicodedata.east_asian_width ( char ) in ( 'F' , 'W' ) : width += 2
-            else                                                      : width += 1
-        return width 
 
 # ==============================================================================
 ## available table styles 

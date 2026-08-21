@@ -101,28 +101,12 @@ __all__     = (
     'greek_upper_zeta'    , ## Ζ
     'hammer_and_wrench'   , ## 🛠️  (wide)
     'hand_ok'             , ## 👌  (wide)
+    #
     'hebrew_aleph'        , ## א
-    'hebrew_ayin'         , ## ע
     'hebrew_bet'          , ## ב
     'hebrew_dalet'        , ## ד
     'hebrew_gimel'        , ## ג
-    'hebrew_he'           , ## ה
-    'hebrew_het'          , ## ח
-    'hebrew_kaf'          , ## כ
-    'hebrew_lamed'        , ## ל
-    'hebrew_mem'          , ## מ
-    'hebrew_nun'          , ## נ
-    'hebrew_pe'           , ## פ
-    'hebrew_qof'          , ## ק
-    'hebrew_resh'         , ## ר
-    'hebrew_samekh'       , ## ס
-    'hebrew_shin'         , ## ש
-    'hebrew_tav'          , ## ת
-    'hebrew_tet'          , ## ט
-    'hebrew_tsadi'        , ## צ
-    'hebrew_vav'          , ## ו
-    'hebrew_yod'          , ## י
-    'hebrew_zayin'        , ## ז
+    #
     'histogram'           , ## 📊  (wide)
     'indices'             , ## ⓿➊➋...
     'intersection'        , ## ⋂
@@ -184,6 +168,8 @@ __all__     = (
     'union'               , ## ⋃
     'variance_sym'        , ## σ²
     'weight_lifter'       , ## 🏋️  (wide)
+    'weight_scale'        , ## ⚖️  (wide)
+    'weierstrass_p'       , ##  ℘
     'wrench'              , ## 🔧  (wide)
     # -------------------------------------------------------------------------
     # functions & generators
@@ -241,37 +227,39 @@ minus_plus       = '∓'  if show else '-/+'
 ditto            = '〃' if show else '-//-'
 
 tree             = '🌴 ' if show else ''
-chain            = '⛓\ufe0f'  if show else '' 
+chain            = '⛓ '  if show else '' 
 branch           = '⸙'  if show else '' 
 leaves           = '🍃 ' if show else '' 
-cabinet          = '🗄\ufe0f ' if show else '' 
-frame            = '🖼\ufe0f ' if show else '' 
+cabinet          = '🗄 ' if show else '' 
+frame            = '🖼 ' if show else '' 
 histogram        = '📊 ' if show else ''
 graph            = '📈 ' if show else '' 
 palette          = '🎨 ' if show else '' 
-document         = '🗎\ufe0f'  if show else '' 
-tape             = '✂\ufe0f'  if show else '' 
-tape_cartridge   = '🖭\ufe0f' if show else '' 
+document         = '🗎'  if show else '' 
+tape             = '✂'  if show else '' 
+tape_cartridge   = '🖭' if show else '' 
 folder           = '📂 ' if show else '' 
 light_bulb       = '💡 ' if show else '' 
 
-less_or_equal    = '≤'  if show else '<='
-greater_or_equal = '≥'  if show else '=>'
-much_less        = '≪'  if show else '<<'
-much_greater     = '≫'  if show else '>>'
-equivalent       = '≡'  if show else '='
-similar          = '∼'  if show else '~'
-approximate      = '≈'  if show else '~='
-not_equal        = '≠'  if show else '!='
-weight_lifter    = '🏋\ufe0f ' if show else '' 
-scissors         = '✂\ufe0f'  if show else '' 
-oil_drum         = '🛢\ufe0f ' if show else '' 
+less_or_equal    = '≤'   if show else '<='
+greater_or_equal = '≥'   if show else '=>'
+much_less        = '≪'   if show else '<<'
+much_greater     = '≫'   if show else '>>'
+equivalent       = '≡'   if show else '='
+similar          = '∼'   if show else '~'
+approximate      = '≈'   if show else '~='
+not_equal        = '≠'   if show else '!='
+weight_lifter    = "🏋️"  if show else ''
+weight_scale     = "⚖️"  if show else '' 
+
+scissors         = '✂'  if show else '' 
+oil_drum         = '🛢 ' if show else '' 
 brain            = '🧠 ' if show else ''
 kitchen_knife    = '➖' if show else ''
 axe              = '🪓 ' if show else ''
-gear             = '⚙\ufe0f'  if show else ''
+gear             = '⚙ '  if show else ''
 wrench           = '🔧 ' if show else ''
-hammer_and_wrench= '🛠\ufe0f ' if show else ''
+hammer_and_wrench= '🛠 ' if show else ''
 
 union            = '⋃'  if show else ''
 intersection     = '⋂'  if show else ''
@@ -308,7 +296,7 @@ chi2ndf          = '%s/ndf' % chi2
 ## symmetric
 symmetry         = '⌯'   if show else 'sym'
 enough           = '∃'   if show else 'enough'
-mountain         = '⛰\ufe0f '  if show else 'peak'
+mountain         = '⛰ '  if show else 'peak'
 
 ## Lowercase Greek letters 
 greek_lower_alpha     = 'α' if show else 'alpha'
@@ -362,29 +350,13 @@ greek_upper_chi       = 'Χ' if show else 'X'
 greek_upper_psi       = 'Ψ' if show else 'Psi'
 greek_upper_omega     = 'Ω' if show else 'Omega'
 
-## Hebrew letters
-hebrew_aleph          = 'א' if show else 'aleph'
-hebrew_bet            = 'ב' if show else 'bet'
-hebrew_gimel          = 'ג' if show else 'gimel'
-hebrew_dalet          = 'ד' if show else 'dalet'
-hebrew_he             = 'ה' if show else 'he'
-hebrew_vav            = 'ו' if show else 'vav'
-hebrew_zayin          = 'ז' if show else 'zayin'
-hebrew_het            = 'ח' if show else 'het'
-hebrew_tet            = 'ט' if show else 'tet'
-hebrew_yod            = 'י' if show else 'yod'
-hebrew_kaf            = 'כ' if show else 'kaf'
-hebrew_lamed          = 'ל' if show else 'lamed'
-hebrew_mem            = 'מ' if show else 'mem'
-hebrew_nun            = 'נ' if show else 'nun'
-hebrew_samekh         = 'ס' if show else 'samekh'
-hebrew_ayin           = 'ע' if show else 'ayin'
-hebrew_pe             = 'פ' if show else 'pe'
-hebrew_tsadi          = 'צ' if show else 'tsadi'
-hebrew_qof            = 'ק' if show else 'qof'
-hebrew_resh           = 'ר' if show else 'resh'
-hebrew_shin           = 'ש' if show else 'shin'
-hebrew_tav            = 'ת' if show else 'tav'
+
+## Hebrew letters (Mathematical Alphanumeric LTR symbols - won't break Bidi layout)
+hebrew_aleph          = 'ℵ' if show else 'aleph'   # U+2135
+hebrew_bet            = 'ℶ' if show else 'bet'     # U+2136
+hebrew_gimel          = 'ℷ' if show else 'gimel'   # U+2137
+hebrew_dalet          = 'ℸ' if show else 'dalet'   # U+2138
+
 
 ## Script / Calligraphic symbols
 script_A              = '𝒜' if show else 'A'
@@ -415,7 +387,8 @@ efficiency       = greek_lower_epsilon if show else 'eff'
 toys                  = '🧸 ' if show else 'toys'
 
 ## star/convolution operator
-asterisk         = '✶\ufe0f' if show else '*'
+asterisk              = '✶\ufe0f' if show else '*'
+weierstrass_p         = '℘' if show else 'p'  # U+2118 WEIERSTRASS ELLIPTIC FUNCTION
 
 # ==================================================
 def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what ) 
@@ -479,12 +452,18 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
     globs  = globals ().copy() 
-    header = "Name" , "Value" 
-    rows   = [ ( name , globs [ name ] ) for name in __all__  if isinstance ( globs.get ( name ), str ) ]
+    header = "Name" , "Value" , 'Width'
     import ostap.logger.table as T
-    rows   =  [ header ] + rows
+
+    rows = [] 
+    for name in __all__  :
+        symb = globs.get ( name , None )
+        if symb is None or not isinstance ( symb , str ) : continue        
+        row = name , symb , '%d' % T.visible_width ( symb )
+        rows.append ( row ) 
+    
     title  = "Symbols"
-    table  = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) 
+    table  = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcc' ) 
     logger.info ( "%s:\n%s" % ( title , table ) )
 
 # =============================================================================

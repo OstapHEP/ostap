@@ -198,7 +198,20 @@ if ( NOT ${PY_zstandard_FOUND} )
   message ( "----> warning (optional)       zstandard   is NOT found!" )
 endif()    
 # ========================================================================================
-    
+
+# ========================================================================================
+## wcwidth 
+# ========================================================================================
+##  
+find_python_module ( wcwidth QUIET )
+if ( NOT ${PY_wcwidth_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install wcwidth ${PIP_ARGS})
+endif()
+find_python_module ( wcwidth QUIET )
+if ( NOT ${PY_wcwidth_FOUND} )
+  message ( "----> warning (optional)         wcwidth is NOT found!" )
+endif()
+
 # ========================================================================================
 ## terminaltables3 & terminaltables 
 # ========================================================================================
@@ -600,6 +613,13 @@ if ( ${PY_zstandard_FOUND} )
   find_python_module_version ( zstandard ) 
   message ( "----> zstandard        version    : " ${PY_zstandard_VERSION} " \t" ${PY_ZSTANDARD} )        
 endif()    
+##
+if ( ${PY_wcwidth_FOUND} )
+  find_python_module_version ( wcwidth ) 
+  message ( "----> terminaltables3  version    : " ${PY_terminaltables3_VERSION} " \t" ${PY_TERMINALTABLES3} )        
+  message ( "----> wcwidth          version    : " ${PY_wcwidth_VERSION} " \t" ${PY_WCWIDTH} )        
+endif ()                        
+##
 ##
 if ( ${PY_terminaltables3_FOUND} )
   find_python_module_version ( terminaltables3 ) 
