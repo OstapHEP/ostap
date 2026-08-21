@@ -16,7 +16,7 @@ __all__     = (
     'Config' , ## the abstract base clss for advanced reweighters 
 ) 
 # =============================================================================
-from   ostap.utils.core import typename 
+from   ostap.utils.core     import typename
 import numpy, os, abc 
 # =============================================================================
 # logging 
@@ -48,9 +48,10 @@ class Config ( object ) :
         self.__params = params 
         self.__silent = True if silent else False 
         
-        if not silent : 
-            title = '%s configuration' % typename ( self ) 
-            table = self.table ( title = title  , prefix = '# ' )
+        if not silent :
+            from ostap.logger.symbols import hammer_and_wrench as config_symbol 
+            title = "%s %s configuration" % ( config_symbol , typename ( self ) ) 
+            table = self.table ( title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' %  ( title , table ) )
             
     @property
@@ -80,7 +81,9 @@ class Config ( object ) :
     def table (  self , title = '' , prefix = '# ') : 
         """ print configuration """
         from ostap.logger.utils import map2table_ex
-        title = title if title else "%s configuration " % typename ( self ) 
+        if not title : 
+            from ostap.logger.symbols import hammer_and_wrench as config_symbol 
+            title = "%s %s configuration" % ( config_symbol , typename ( self ) ) 
         return map2table_ex ( self.config , 
                               header      = ( 'Parameter' , 'type' , 'value' ) ,
                               alignment   = 'rcw'  , 

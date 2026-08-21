@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -14,87 +15,184 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'show'                , ## 
-    'checked_yes'         ,   
-    'checked_no'          ,
-    'question_mark'       ,
-    'hand_ok'             ,
-    'squared_ok'          ,
-    'thumb_up'            ,
-    'thumb_down'          ,
-    'clock'               ,
-    'ram'                 ,
-    'runner'              ,
-    'finish'              ,
-    ## 
-    'clock_ticks'         ,
-    'arrow_left'          ,   
-    'arrow_right'         ,  
-    'arrow_rightleft'     ,
-    ##
-    'times'               , 
-    'ditto'               , 
-    ##
-    'plus_minus'          , 
-    'minus_plus'          ,
-    #3
-    'less_or_equal'       ,
-    'greater_or_equal'    , 
-    'much_less'           , 
-    'much_greater'        , 
-    'equivalent'          ,
-    'similar'             ,
-    'approximate'         ,
-    'not_equal'           ,
-    ##
-    'langle'              , 
-    'rangle'              , 
-    'ellipsis'            ,
-    ##
-    'union'               , 
-    'intersection'        ,
-    ##
-    'tree'                ,    
-    'chain'               ,    
-    'branch'              , 
-    'leaves'              , 
-    'cabinet'             , 
-    'frame'               ,       
-    'histogram'           ,  
-    'graph'               ,      
-    'palette'             ,    
-    'document'            ,   
-    'tape'                ,
-    'tape_cartridge'      ,
-    'folder'              ,
-    'light_bulb'          , 
-    'weight_lifter'       ,
-    'scissors'            ,
-    'oil_drum'            , ## old drum
-    'brain'               ,
-    'kitchen_knife'       ,
-    'axe'                 , 
-    ##
-    'delta_symbol'        ,
-    'number'              ,
-    'permille'            , 
-    'size'                , ## size/diameter symbol or 'size'
-    ##
-    'asterisk'            ,
-    'chi2'                , ## chi-squared 
-    'chi2ndf'             , ## chi-sqyared /ndf 
-    ## 
-    'union'               , 
-    'intersection'        , 
-    'exclusive_or'        ,  
-    'difference'          ,
-    ## 
-    'iteration'           ,
-    'efficiency'          ,
-    ##
-    'likelihood'          , ## Likelihood: script L
-    ##    
-    'labels'               
+    'approximate'         , ## ≈
+    'arrow_down'          , ## ↓
+    'arrow_left'          , ## ←
+    'arrow_right'         , ## →
+    'arrow_rightleft'     , ## ↔
+    'arrow_up'            , ## ↑
+    'arrows_all'          , ## ←↖↑↗→↘↓↙
+    'asterisk'            , ## ✶️
+    'axe'                 , ## 🪓  (wide)
+    'brain'               , ## 🧠  (wide)
+    'branch'              , ## ⸙
+    'cabinet'             , ## 🗄️  (wide)
+    'chain'               , ## ⛓️
+    'checked_no'          , ## ❌  (wide)
+    'checked_yes'         , ## ✅  (wide)
+    'chi2'                , ## 𝛘²
+    'chi2ndf'             , ## 𝛘²/ndf
+    'chisq'               , ## 𝛘²
+    'clock'               , ## 🕐  (wide)
+    'clock_ticks'         , ## 🕜 2-колон...
+    'delta_symbol'        , ## Δ
+    'difference'          , ## ⊻
+    'dispersion_sym'      , ## σ²
+    'ditto'               , ## 〃
+    'document'            , ## 🗎️
+    'efficiency'          , ## ε
+    'ellipsis'            , ## …
+    'enough'              , ## ∃
+    'equivalent'          , ## ≡
+    'exclusive_or'        , ## ⊻
+    'finish'              , ## 🏁  (wide)
+    'folder'              , ## 📂  (wide)
+    'frame'               , ## 🖼️  (wide)
+    'gear'                , ## ⚙️
+    'graph'               , ## 📈  (wide)
+    'greater_or_equal'    , ## ≥
+    'greek_lower_alpha'   , ## α
+    'greek_lower_beta'    , ## β
+    'greek_lower_chi'     , ## χ
+    'greek_lower_delta'   , ## δ
+    'greek_lower_epsilon' , ## ε
+    'greek_lower_eta'     , ## η
+    'greek_lower_gamma'   , ## γ
+    'greek_lower_iota'    , ## ι
+    'greek_lower_kappa'   , ## κ
+    'greek_lower_lambda'  , ## λ
+    'greek_lower_mu'      , ## μ
+    'greek_lower_nu'      , ## ν
+    'greek_lower_omega'   , ## ω
+    'greek_lower_omicron' , ## ο
+    'greek_lower_phi'     , ## φ
+    'greek_lower_pi'      , ## π
+    'greek_lower_psi'     , ## ψ
+    'greek_lower_rho'     , ## ρ
+    'greek_lower_sigma'   , ## σ
+    'greek_lower_tau'     , ## τ
+    'greek_lower_theta'   , ## θ
+    'greek_lower_xi'      , ## ξ
+    'greek_lower_ypsilon' , ## υ
+    'greek_lower_zeta'    , ## ζ
+    'greek_upper_alpha'   , ## Α
+    'greek_upper_beta'    , ## Β
+    'greek_upper_chi'     , ## Χ
+    'greek_upper_delta'   , ## Δ
+    'greek_upper_epsilon' , ## Ε
+    'greek_upper_eta'     , ## Η
+    'greek_upper_gamma'   , ## Γ
+    'greek_upper_iota'    , ## Ι
+    'greek_upper_kappa'   , ## Κ
+    'greek_upper_lambda'  , ## Λ
+    'greek_upper_mu'      , ## Μ
+    'greek_upper_nu'      , ## Ν
+    'greek_upper_omega'   , ## Ω
+    'greek_upper_omicron' , ## Ο
+    'greek_upper_phi'     , ## Φ
+    'greek_upper_pi'      , ## Π
+    'greek_upper_psi'     , ## Ψ
+    'greek_upper_rho'     , ## Ρ
+    'greek_upper_sigma'   , ## Σ
+    'greek_upper_tau'     , ## Τ
+    'greek_upper_theta'   , ## Θ
+    'greek_upper_xi'      , ## Ξ
+    'greek_upper_ypsilon' , ## Υ
+    'greek_upper_zeta'    , ## Ζ
+    'hammer_and_wrench'   , ## 🛠️  (wide)
+    'hand_ok'             , ## 👌  (wide)
+    'hebrew_aleph'        , ## א
+    'hebrew_ayin'         , ## ע
+    'hebrew_bet'          , ## ב
+    'hebrew_dalet'        , ## ד
+    'hebrew_gimel'        , ## ג
+    'hebrew_he'           , ## ה
+    'hebrew_het'          , ## ח
+    'hebrew_kaf'          , ## כ
+    'hebrew_lamed'        , ## ל
+    'hebrew_mem'          , ## מ
+    'hebrew_nun'          , ## נ
+    'hebrew_pe'           , ## פ
+    'hebrew_qof'          , ## ק
+    'hebrew_resh'         , ## ר
+    'hebrew_samekh'       , ## ס
+    'hebrew_shin'         , ## ש
+    'hebrew_tav'          , ## ת
+    'hebrew_tet'          , ## ט
+    'hebrew_tsadi'        , ## צ
+    'hebrew_vav'          , ## ו
+    'hebrew_yod'          , ## י
+    'hebrew_zayin'        , ## ז
+    'histogram'           , ## 📊  (wide)
+    'indices'             , ## ⓿➊➋...
+    'intersection'        , ## ⋂
+    'iteration'           , ## 々
+    'kitchen_knife'       , ## ➖
+    'langle'              , ## 〈
+    'leaves'              , ## 🍃  (wide)
+    'less_or_equal'       , ## ≤
+    'light_bulb'          , ## 💡  (wide)
+    'likelihood'          , ## ℒ  (wide)
+    'minus_plus'          , ## ∓
+    'mountain'            , ## ⛰️  (wide)
+    'much_greater'        , ## ≫
+    'much_less'           , ## ≪
+    'not_equal'           , ## ≠
+    'number'              , ## №
+    'oil_drum'            , ## 🛢️  (wide)
+    'palette'             , ## 🎨  (wide)
+    'permille'            , ## ‰
+    'plus_minus'          , ## ±
+    'question_mark'       , ## ❓  (wide)
+    'ram'                 , ## 🐏  (wide)
+    'rangle'              , ## 〉
+    'rms_symbol'          , ## σ
+    'runner'              , ## 🏃  (wide)
+    'same'                , ## ≡
+    'scissors'            , ## ✂️
+    'script_A'            , ## 𝒜
+    'script_B'            , ## ℬ
+    'script_E'            , ## ℰ
+    'script_F'            , ## ℱ
+    'script_H'            , ## ℋ
+    'script_L'            , ## ℒ  (wide)
+    'script_M'            , ## ℳ
+    'script_P'            , ## 𝒫
+    'script_R'            , ## ℛ
+    'script_l'            , ## 𝓁
+    'script_map'          , ## mapping dict
+    'show'                , ## bool
+    'similar'             , ## ∼
+    'size'                , ## ⌀
+    'squared_ok'          , ## 🆗  (wide)
+    'subscript_A'         , ## ᴀ
+    'subscript_C'         , ## ᴄ
+    'subscript_K'         , ## ᴋ
+    'subscript_a'         , ## ₐ
+    'subscript_c'         , ## ꜀
+    'subscript_k'         , ## ₖ
+    'sum_symbol'          , ## ∑
+    'superscript_map'     , ## mapping dict
+    'symmetry'            , ## ⌯
+    'tape'                , ## ✂️
+    'tape_cartridge'      , ## 🖭️
+    'thumb_down'          , ## 👎  (wide)
+    'thumb_up'            , ## 👍  (wide)
+    'times'               , ## ⨯
+    'toys'                , ## 🧸  (wide)
+    'tree'                , ## 🌴  (wide)
+    'union'               , ## ⋃
+    'variance_sym'        , ## σ²
+    'weight_lifter'       , ## 🏋️  (wide)
+    'wrench'              , ## 🔧  (wide)
+    # -------------------------------------------------------------------------
+    # functions & generators
+    # -------------------------------------------------------------------------
+    'labels'              , ## generator
+    'to_script'           , ## func
+    'the_mean'            , ## func
+    'the_rms'             , ## func
+    'the_sum'             , ## func
 )
 # ===========================================================================
 from   ostap.utils.basic import has_unicode
@@ -109,204 +207,216 @@ else                       : logger = getLogger( __name__ )
 ## show unicode symbols? 
 show = show_unicode and has_unicode ()
 
-checked_yes      = '\u2705'      if show else "+"
-checked_no       = '\u274c'      if show else "-"
-question_mark    = '\u2753'      if show else "?"
-hand_ok          = '\U0001f44c'  if show else 'ok'
-squared_ok       = '\U0001f197'  if show else 'ok'
-thumb_up         = '\U0001f44d'  if show else '+'
-thumb_down       = '\U0001f44e'  if show else '-'
-clock            = '\U0001f550'  if show else '' 
-ram              = '\U0001f40f'  if show else ''
-runner           = '\U0001f3c3'  if show else ''
-finish           = '\U0001f3c1'  if show else ''
+checked_yes      = '✅ ' if show else "+"
+checked_no       = '❌ ' if show else "-"
+question_mark    = '❓ ' if show else "?"
+hand_ok          = '👌 ' if show else 'ok'
+squared_ok       = '🆗 ' if show else 'ok'
+thumb_up         = '👍 ' if show else '+'
+thumb_down       = '👎 ' if show else '-'
+clock            = '🕐 ' if show else '' 
+ram              = '🐏 ' if show else ''
+runner           = '🏃 ' if show else ''
+finish           = '🏁 ' if show else ''
 
-arrow_left       = '\U00002190'  if show else '<-'
-arrow_right      = '\U00002192'  if show else '->'
-arrow_rightleft  = '\U00002194'  if show else '<->'
-arrow_up         = '\U00002191'  if show else '|'
-arrow_down       = '\U00002193'  if show else '|'
+arrow_left       = '←'  if show else '<-'
+arrow_right      = '→'  if show else '->'
+arrow_rightleft  = '↔'  if show else '<->'
+arrow_up         = '↑'  if show else '|'
+arrow_down       = '↓'  if show else '|'
 
-arrows_all       = ''.join ( ( '\U00002190' , '\U00002196' ,
-                               '\U00002191' , '\U00002197' ,
-                               '\U00002192' , '\U00002198' ,
-                               '\U00002193' , '\U00002199' ) ) \
-                               if show else ( '<-' , '\\' , '|' , '/' , '->' , '\\' , '|' , '/' )
+arrows_all       = '←↖↑↗→↘↓↙' if show else ( '<-' , '\\' , '|' , '/' , '->' , '\\' , '|' , '/' )
 
-langle           = '\U00003008' if show else '<'
-rangle           = '\U00003009' if show else '>'
-ellipsis         = '\U00002026' if show else '...'
-same             = '\U00002261' if show else 'same'
+langle           = '〈'  if show else '<'
+rangle           = '〉'  if show else '>'
+ellipsis         = '…'  if show else '...'
+same             = '≡'  if show else 'same'
 
-clock_ticks      = ''.join ( ( '\U0001f558' , '\U0001f567' ,
-                               '\U0001f550' , '\U0001f55C' , 
-                               '\U0001f551' , '\U0001f55D' , 
-                               '\U0001f552' , '\U0001f55E' , 
-                               '\U0001f553' , '\U0001f55F' , 
-                               '\U0001f554' , '\U0001f560' , 
-                               '\U0001f555' , '\U0001f561' , 
-                               '\U0001f556' , '\U0001f562' , 
-                               '\U0001f557' , '\U0001f563' , 
-                               '\U0001f558' , '\U0001f564' , 
-                               '\U0001f559' , '\U0001f565' , 
-                               '\U0001f55A' , '\U0001f566' ) ) \
-                               if show else '|/-\\'
+clock_ticks      = '🕐🕜🕑🕝🕒🕞🕓🕟🕔🕠🕕🕡🕖🕢🕗🕣🕘🕤🕙🕟🕚🕦🕛🕧' if show else '|/-\\'
+clock_ticks      = tuple ( clock_ticks )
 
-times            = '\U00002a2f' if show else 'x'
-plus_minus       = '\U000000B1' if show else '+/-'
-minus_plus       = '\U00002213' if show else '-/+'
-ditto            = '\U00003003' if show else '-//-'
+times            = '⨯'  if show else 'x'
+plus_minus       = '±'  if show else '+/-'
+minus_plus       = '∓'  if show else '-/+'
+ditto            = '〃' if show else '-//-'
 
-tree             = '\U0001f334' if show else ''
-chain            = '\U000026d3' if show else '' 
-branch           = '\U00002E19' if show else '' 
-leaves           = '\U0001F343' if show else '' 
-cabinet          = '\U0001F5c4' if show else '' 
-frame            = '\U0001F5BC' if show else '' 
-histogram        = '\U0001F4CA' if show else ''
-graph            = '\U0001F4C8' if show else '' 
-palette          = '\U0001f3A8' if show else '' 
-document         = '\U0001F5CE' if show else '' 
-tape             = '\U00002707' if show else '' 
-tape_cartridge   = '\U0001F5AD' if show else '' 
-folder           = '\U0001F4C2' if show else '' 
-light_bulb       = '\U0001F4A1' if show else '' 
+tree             = '🌴 ' if show else ''
+chain            = '⛓\ufe0f'  if show else '' 
+branch           = '⸙'  if show else '' 
+leaves           = '🍃 ' if show else '' 
+cabinet          = '🗄\ufe0f ' if show else '' 
+frame            = '🖼\ufe0f ' if show else '' 
+histogram        = '📊 ' if show else ''
+graph            = '📈 ' if show else '' 
+palette          = '🎨 ' if show else '' 
+document         = '🗎\ufe0f'  if show else '' 
+tape             = '✂\ufe0f'  if show else '' 
+tape_cartridge   = '🖭\ufe0f' if show else '' 
+folder           = '📂 ' if show else '' 
+light_bulb       = '💡 ' if show else '' 
 
-less_or_equal    = '\U00002264' if show else '<='
-greater_or_equal = '\U00002265' if show else '=>'
-much_less        = '\U0000226A' if show else '<<'
-much_greater     = '\U0000226B' if show else '>>'
-equivalent       = '\U00002261' if show else '='
-similar          = '\U0000223C' if show else '~'
-approximate      = '\U00002248' if show else '~='
-not_equal        = '\U00002260' if show else '!='
-weight_lifter    = '\U0001F3CB' if show else '' 
-scissors         = '\U00002704' if show else '' ## ...02 ? 
-oil_drum         = '\U0001F6E2' if show else '' 
-brain            = '\U0001F9E0' if show else ''
-kitchen_knife    = '\U00002796' if show else ''
-axe              = '\U0001FA93' if show else ''
+less_or_equal    = '≤'  if show else '<='
+greater_or_equal = '≥'  if show else '=>'
+much_less        = '≪'  if show else '<<'
+much_greater     = '≫'  if show else '>>'
+equivalent       = '≡'  if show else '='
+similar          = '∼'  if show else '~'
+approximate      = '≈'  if show else '~='
+not_equal        = '≠'  if show else '!='
+weight_lifter    = '🏋\ufe0f ' if show else '' 
+scissors         = '✂\ufe0f'  if show else '' 
+oil_drum         = '🛢\ufe0f ' if show else '' 
+brain            = '🧠 ' if show else ''
+kitchen_knife    = '➖' if show else ''
+axe              = '🪓 ' if show else ''
+gear             = '⚙\ufe0f'  if show else ''
+wrench           = '🔧 ' if show else ''
+hammer_and_wrench= '🛠\ufe0f ' if show else ''
 
-union            = '\U000022C3' if show else ''
-intersection     = '\U000022C2' if show else ''
-exclusive_or     = '\U000022BB' if show else '^'
-difference       = '\U000022BB' if show else '-'
+union            = '⋃'  if show else ''
+intersection     = '⋂'  if show else ''
+exclusive_or     = '⊻'  if show else '^'
+difference       = '⊻'  if show else '-'
 
-iteration        = '\U00003005' if show else ''
-permille         = '\U00002030' if show else '/1000'
-size             = '\U00002300' if show else 'size'
+iteration        = '々' if show else ''
+permille         = '‰'  if show else '/1000'
+size             = '⌀'  if show else 'size'
 
-## indices: circled numbes from 0 to 50 (inclusive) 
-indices2 = '\U000024FF' + \
-    '\U0000278A\U0000278B\U0000278C\U0000278D\U0000278E\U0000278F\U00002790\U00002791\U00002792\U00002793' + \
-    '\U000024EB\U000024EC\U000024ED\U000024EE\U000024EF\U000024F0\U000024F1\U000024F2\U000024F3\U000024F4' + \
-    '\U00003251\U00003252\U00003253\U00003254\U00003255\U00003256\U00003257\U00003258\U00003259\U0000325A' + \
-    '\U0000325B\U0000325C\U0000325D\U0000325E\U0000325F\U000032B1\U000032B2\U000032B3\U000032B4\U000032B5' + \
-    '\U000032B6\U000032B7\U000032B8\U000032B9\U000032BA\U000032BB\U000032BC\U000032BD\U000032BE\U000032BF' if show else tuple ( '%s' % i for i in range ( 51 ) ) 
-
-## indices = '\U000024EA' + \
-indices = '\U0001F10B' + \
-    '\U00002780\U00002781\U00002782\U00002783\U00002784\U00002785\U00002786\U00002787\U00002788\U00002789' + \
-    '\U0000246A\U0000246B\U0000246C\U0000246D\U0000246E\U0000246F\U00002470\U00002471\U00002472\U00002473' + \
-    '\U00003251\U00003252\U00003253\U00003254\U00003255\U00003256\U00003257\U00003258\U00003259\U0000325A' + \
-    '\U0000325B\U0000325C\U0000325D\U0000325E\U0000325F\U000032B1\U000032B2\U000032B3\U000032B4\U000032B5' + \
-    '\U000032B6\U000032B7\U000032B8\U000032B9\U000032BA\U000032BB\U000032BC\U000032BD\U000032BE\U000032BF' if show else tuple ( '%s' % i for i in range ( 51 ) ) 
-
+## indices: circled numbers from 0 to 50 (inclusive)
+indices = '⓿➊➋➌➍➎➏➐➑➒⓫⓬⓯⓰⓱⓲⓳⓴㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿' if show else tuple ( '%s' % i for i in range ( 51 ) ) 
+indices = tuple ( indices )
 
 ## capital Greek Sigma 
-sum_symbol       = '\U00002211'           if show else 'sum'
+sum_symbol       = '∑'   if show else 'sum'
 ## lowercase Greek sigma 
-rms_symbol       = '\U000003C3'           if show else 'rms'
+rms_symbol       = 'σ'   if show else 'rms'
 ## squared lower case Greek sigma 
-dispersion_sym   = '\U000003c3\U000000B2' if show else 'D'
+dispersion_sym   = 'σ²'  if show else 'D'
 ## squared lower case Greek sigma 
-variance_sym     = '\U000003c3\U000000B2' if show else 'var'
+variance_sym     = 'σ²'  if show else 'var'
 ## Delta symbol 
-delta_symbol     = '\U00000394'           if show else 'delta'
+delta_symbol     = 'Δ'   if show else 'delta'
 ## Number
-number           = '\U00002116'           if show else '#'
+number           = '№'   if show else '#'
 ## chi2
-chi2             = '\U0001D6D8\U000000B2' if show else 'chi2'
+chi2             = '𝛘²'  if show else 'chi2'
 ## chi2
 chisq            = chi2 
 ## chi2/ndf 
 chi2ndf          = '%s/ndf' % chi2 
 
 ## symmetric
-symmetry         = '\U0000232F'           if show else 'sym'
-enough           = '\U00002203'           if show else 'enough'
-mountain         = '\U000026F0'           if show else 'peak'
+symmetry         = '⌯'   if show else 'sym'
+enough           = '∃'   if show else 'enough'
+mountain         = '⛰\ufe0f '  if show else 'peak'
 
 ## Lowercase Greek letters 
-greek_lower_alpha     = '\U000003B1'  if show else 'alpha'
-greek_lower_beta      = '\U000003B2'  if show else 'beta'
-greek_lower_gamma     = '\U000003B3'  if show else 'gamma'
-greek_lower_delta     = '\U000003B4'  if show else 'delta'
-greek_lower_epsilon   = '\U000003B5'  if show else 'epsilon'
-greek_lower_zeta      = '\U000003B6'  if show else 'zeta'
-greek_lower_eta       = '\U000003B7'  if show else 'eta'
-greek_lower_theta     = '\U000003B8'  if show else 'theta'
-greek_lower_iota      = '\U000003B9'  if show else 'iota'
-greek_lower_kappa     = '\U000003BA'  if show else 'kappa'
-greek_lower_lambda    = '\U000003BB'  if show else 'lambda'
-greek_lower_mu        = '\U000003BC'  if show else 'mu'
-greek_lower_nu        = '\U000003BD'  if show else 'nu'
-greek_lower_xi        = '\U000003BE'  if show else 'xi'
-greek_lower_omicron   = '\U000003BF'  if show else 'omicron'
-greek_lower_pi        = '\U000003C0'  if show else 'pi'
-greek_lower_rho       = '\U000003C1'  if show else 'rho'
-greek_lower_sigma     = '\U000003C3'  if show else 'sigma'
-greek_lower_tau       = '\U000003C4'  if show else 'tau'
-greek_lower_ypsilon   = '\U000003C5'  if show else 'ypsilon'
-greek_lower_phi       = '\U000003C6'  if show else 'phi'
-greek_lower_chi       = '\U000003C7'  if show else 'chi'
-greek_lower_psi       = '\U000003C8'  if show else 'psi'
-greek_lower_omega     = '\U000003C9'  if show else 'omega'
+greek_lower_alpha     = 'α' if show else 'alpha'
+greek_lower_beta      = 'β' if show else 'beta'
+greek_lower_gamma     = 'γ' if show else 'gamma'
+greek_lower_delta     = 'δ' if show else 'delta'
+greek_lower_epsilon   = 'ε' if show else 'epsilon'
+greek_lower_zeta      = 'ζ' if show else 'zeta'
+greek_lower_eta       = 'η' if show else 'eta'
+greek_lower_theta     = 'θ' if show else 'theta'
+greek_lower_iota      = 'ι' if show else 'iota'
+greek_lower_kappa     = 'κ' if show else 'kappa'
+greek_lower_lambda    = 'λ' if show else 'lambda'
+greek_lower_mu        = 'μ' if show else 'mu'
+greek_lower_nu        = 'ν' if show else 'nu'
+greek_lower_xi        = 'ξ' if show else 'xi'
+greek_lower_omicron   = 'ο' if show else 'omicron'
+greek_lower_pi        = 'π' if show else 'pi'
+greek_lower_rho       = 'ρ' if show else 'rho'
+greek_lower_sigma     = 'σ' if show else 'sigma'
+greek_lower_tau       = 'τ' if show else 'tau'
+greek_lower_ypsilon   = 'υ' if show else 'ypsilon'
+greek_lower_phi       = 'φ' if show else 'phi'
+greek_lower_chi       = 'χ' if show else 'chi'
+greek_lower_psi       = 'ψ' if show else 'psi'
+greek_lower_omega     = 'ω' if show else 'omega'
 
 ## Uppercase Greek letters 
-greek_upper_alpha     = '\U00000391'  if show else 'A'
-greek_upper_beta      = '\U00000392'  if show else 'B'
-greek_upper_gamma     = '\U00000393'  if show else 'Gamma'
-greek_upper_delta     = '\U00000394'  if show else 'Delta'
-greek_upper_epsilon   = '\U00000395'  if show else 'E'
-greek_upper_zeta      = '\U00000396'  if show else 'Z'
-greek_upper_eta       = '\U00000397'  if show else 'H'
-greek_upper_theta     = '\U00000398'  if show else 'Theta'
-greek_upper_iota      = '\U00000399'  if show else 'I'
-greek_upper_kappa     = '\U0000039A'  if show else 'K'
-greek_upper_lambda    = '\U0000039B'  if show else 'Lambda'
-greek_upper_mu        = '\U0000039C'  if show else 'M'
-greek_upper_nu        = '\U0000039D'  if show else 'N'
-greek_upper_xi        = '\U0000039E'  if show else 'Xi'
-greek_upper_omicron   = '\U0000039F'  if show else 'O'
-greek_upper_pi        = '\U000003A0'  if show else 'Pi'
-greek_upper_rho       = '\U000003A1'  if show else 'P'  ## rho! 
-greek_upper_sigma     = '\U000003A3'  if show else 'Sigma'
-greek_upper_tau       = '\U000003A4'  if show else 'T'
-greek_upper_ypsilon   = '\U000003A5'  if show else 'Y'  ## upsilon! 
-greek_upper_phi       = '\U000003A6'  if show else 'Phi'
-greek_upper_chi       = '\U000003A7'  if show else 'X'  
-greek_upper_psi       = '\U000003A8'  if show else 'Psi'
-greek_upper_omega     = '\U000003A9'  if show else 'Omega'
+greek_upper_alpha     = 'Α' if show else 'A'
+greek_upper_beta      = 'Β' if show else 'B'
+greek_upper_gamma     = 'Γ' if show else 'Gamma'
+greek_upper_delta     = 'Δ' if show else 'Delta'
+greek_upper_epsilon   = 'Ε' if show else 'E'
+greek_upper_zeta      = 'Ζ' if show else 'Z'
+greek_upper_eta       = 'Η' if show else 'H'
+greek_upper_theta     = 'Θ' if show else 'Theta'
+greek_upper_iota      = 'Ι' if show else 'I'
+greek_upper_kappa     = 'К' if show else 'K'
+greek_upper_lambda    = 'Λ' if show else 'Lambda'
+greek_upper_mu        = 'Μ' if show else 'M'
+greek_upper_nu        = 'Ν' if show else 'N'
+greek_upper_xi        = 'Ξ' if show else 'Xi'
+greek_upper_omicron   = 'Ο' if show else 'O'
+greek_upper_pi        = 'Π' if show else 'Pi'
+greek_upper_rho       = 'Ρ' if show else 'P'
+greek_upper_sigma     = 'Σ' if show else 'Sigma'
+greek_upper_tau       = 'Τ' if show else 'T'
+greek_upper_ypsilon   = 'Υ' if show else 'Y'
+greek_upper_phi       = 'Φ' if show else 'Phi'
+greek_upper_chi       = 'Χ' if show else 'X'  
+greek_upper_psi       = 'Ψ' if show else 'Psi'
+greek_upper_omega     = 'Ω' if show else 'Omega'
 
+## Hebrew letters
+hebrew_aleph          = 'א' if show else 'aleph'
+hebrew_bet            = 'ב' if show else 'bet'
+hebrew_gimel          = 'ג' if show else 'gimel'
+hebrew_dalet          = 'ד' if show else 'dalet'
+hebrew_he             = 'ה' if show else 'he'
+hebrew_vav            = 'ו' if show else 'vav'
+hebrew_zayin          = 'ז' if show else 'zayin'
+hebrew_het            = 'ח' if show else 'het'
+hebrew_tet            = 'ט' if show else 'tet'
+hebrew_yod            = 'י' if show else 'yod'
+hebrew_kaf            = 'כ' if show else 'kaf'
+hebrew_lamed          = 'ל' if show else 'lamed'
+hebrew_mem            = 'מ' if show else 'mem'
+hebrew_nun            = 'נ' if show else 'nun'
+hebrew_samekh         = 'ס' if show else 'samekh'
+hebrew_ayin           = 'ע' if show else 'ayin'
+hebrew_pe             = 'פ' if show else 'pe'
+hebrew_tsadi          = 'צ' if show else 'tsadi'
+hebrew_qof            = 'ק' if show else 'qof'
+hebrew_resh           = 'ר' if show else 'resh'
+hebrew_shin           = 'ש' if show else 'shin'
+hebrew_tav            = 'ת' if show else 'tav'
+
+## Script / Calligraphic symbols
+script_A              = '𝒜' if show else 'A'
+script_B              = 'ℬ' if show else 'B'
+script_E              = 'ℰ' if show else 'E'
+script_F              = 'ℱ' if show else 'F'
+script_H              = 'ℋ' if show else 'H'
+script_L              = 'ℒ ' if show else 'L'
+script_M              = 'ℳ' if show else 'M'
+script_P              = '𝒫' if show else 'P'
+script_R              = 'ℛ' if show else 'R'
+script_l              = '𝓁' if show else 'l'
 
 ## likelihood: script L
-likelihood            = '\U00002112'  if show else 'L'
-subscript_a           = '\u2090'      if show else 'a'
-subscript_c           = '\uA700'      if show else 'c'
-subscript_k           = '\u2095'      if show else 'k'
-subscript_A           = '\u1D00'      if show else 'A'
-subscript_C           = '\u1D04'      if show else 'C'
-subscript_K           = '\u1D0B'      if show else 'K'
+likelihood            = script_L
+
+subscript_a           = 'ₐ' if show else 'a'
+subscript_c           = '꜀' if show else 'c'
+subscript_k           = 'ₖ' if show else 'k'
+subscript_A           = 'ᴀ' if show else 'A'
+subscript_C           = 'ᴄ' if show else 'C'
+subscript_K           = 'ᴋ' if show else 'K'
 
 ## use epsilon symbol for efficiency
 efficiency       = greek_lower_epsilon if show else 'eff'
 
 ## toys = teddy bear 
-toys                  = '\U0000F9F8'  if show else 'toys'
+toys                  = '🧸 ' if show else 'toys'
 
 ## star/convolution operator
-asterisk         = '\U00002731'           if show else '*'
+asterisk         = '✶\ufe0f' if show else '*'
+
 # ==================================================
 def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what ) 
 def the_mean ( what ) : return '%s%s%s' % ( langle , what , rangle ) 
@@ -341,21 +451,43 @@ def labels ( N , labs = () )  :
         
     for k in range ( q , N ) : yield '%d' % k
 
-
 # ============================================================================
-# Mapping table including both plus and minus signs
+# Mapping tables
 superscript_map = str.maketrans({
     '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
     '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
     '-': '⁻', '+': '⁺', '.': 'ˑ', 'e': 'ᵉ', 'E': 'ᵉ'
 })
 
+# Mapping table for Script / Calligraphic chars (Latin UPPER + lower)
+_latin_norm   = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+_latin_script = "𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏"
+script_map    = str.maketrans(_latin_norm, _latin_script) if show else str.maketrans("", "")
+
+def to_script(text):
+    """Convert standard ASCII string to Mathematical Script Unicode text
+    >>> to_script("LHCb")
+    'ℒℋ𝒞𝒷'
+    """
+    return text.translate(script_map) if show else text
+
+
 # =============================================================================
 if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+    
+    globs  = globals ().copy() 
+    header = "Name" , "Value" 
+    rows   = [ ( name , globs [ name ] ) for name in __all__  if isinstance ( globs.get ( name ), str ) ]
+    import ostap.logger.table as T
+    rows   =  [ header ] + rows
+    title  = "Symbols"
+    table  = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) 
+    logger.info ( "%s:\n%s" % ( title , table ) )
 
 # =============================================================================
 ##                                                                     The END 
 # =============================================================================
+
