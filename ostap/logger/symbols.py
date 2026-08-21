@@ -249,8 +249,8 @@ equivalent       = '≡'   if show else '='
 similar          = '∼'   if show else '~'
 approximate      = '≈'   if show else '~='
 not_equal        = '≠'   if show else '!='
-weight_lifter    = "🏋️"  if show else ''
-weight_scale     = "⚖️"  if show else '' 
+weight_lifter    = '🏋'  if show else ''
+weight_scale     = '⚖' if show else '' 
 
 scissors         = '✂'  if show else '' 
 oil_drum         = '🛢 ' if show else '' 
@@ -387,7 +387,7 @@ efficiency       = greek_lower_epsilon if show else 'eff'
 toys                  = '🧸 ' if show else 'toys'
 
 ## star/convolution operator
-asterisk              = '✶\ufe0f' if show else '*'
+asterisk              = '✶' if show else '*'
 weierstrass_p         = '℘' if show else 'p'  # U+2118 WEIERSTRASS ELLIPTIC FUNCTION
 
 # ==================================================
