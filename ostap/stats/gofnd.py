@@ -920,8 +920,8 @@ class NLL(AGoF,Config) :
                       parameters = self.fitresult )
         
 
-        if self.parallel : counter = toys.run ( self.nToys , progress = self.progress , silent = self.silent ) 
-        else             : counter = toys     ( self.nToys , progress = self.progress )
+        if self.parallel : counter , _ = toys.run ( self.nToys , progress = self.progress , silent = self.silent ) 
+        else             : counter , _ = toys     ( self.nToys , progress = self.progress )
                  
         ## get ECDF from toys
         self.__ecdf    = toys.ecdf

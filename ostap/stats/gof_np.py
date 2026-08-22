@@ -981,8 +981,10 @@ class DNNnp(GoFnp) :
         vpdf  : array of PDF values  
         """
         ## 
-        if not weight_trivial ( weight2 ) : raise TypeError ( "DNNnp: weight2 must be *trivial*" )        
-        if not weight_trivial ( weight1 ) and not self.weight_supported :
+        if not weight_trivial ( weight2 ) : raise TypeError ( "DNNnp: weight2 must be *trivial*" )
+
+        w1_trivial = weight_trivial ( weight1 ) 
+        if not w1_trivial and not self.weight_supported :
             raise TypeError ( "DNNnp: weight1 is provides but not supported!" )
         
         ## unpack if needed 
@@ -999,7 +1001,7 @@ class DNNnp(GoFnp) :
         if num_samples ( uds1 ) != num_samples ( uds2 ) :
             raise TypeError ( "DNNnp: invalid #samples!" )
         
-        uds2 = uds2.revel() 
+        uds2 = uds2.ravel() 
         
         ## # of points & dimensionality of the problem
         N , D = shape1
@@ -1021,7 +1023,6 @@ class DNNnp(GoFnp) :
         ## distances = nearest_neighbors ( uds1 , **self.params )
         
         distances = nearest_distances ( uds1 , **self.params ) 
-
         
         if  1 != D : distances = distances ** D
     

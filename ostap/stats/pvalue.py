@@ -17,7 +17,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2023-12-06"
 __all__     = (
-    'PERMUTATOR'   , ## get p-value usig permutations
+    'PERMUTATOR'   , ## get p-value using permutations
     'BOOTSTRAPPER' , ## get p-value using bootstrap
     'TOYS'         , ## get p-value using toys     
 )
@@ -468,7 +468,7 @@ class TOYS (PVALUE) :
     def __setstate__ ( self , state ) :
         """ De-serialize the object
         """
-        super().__setstate__ ( self , state )
+        super().__setstate__ ( state )
         
         self.pdf         = state.pop ( 'pdf'        )
         self.Ndata       = state.pop ( 'Ndata'      )
