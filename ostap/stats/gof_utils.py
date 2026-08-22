@@ -39,9 +39,9 @@ from   ostap.stats.counters     import SE, WSE, ECDF
 from   ostap.utils.basic        import ( numcpu   , num_jobs     , 
                                          typename , run_parallel ) 
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.logger.symbols     import ( times       , plus_minus  , greek_lower_sigma ,
+from   ostap.logger.symbols     import ( plus_minus  , greek_lower_sigma ,
                                          subscript_A , subscript_K , subscript_C , 
-                                         likelihood  )                                         
+                                         likelihood  , script_t    , script_p )                                         
 from   ostap.logger.pretty      import pretty_float, pretty_row 
 from   ostap.plotting.color     import Orange, Green, Blue
 from   packaging.version        import Version 
@@ -622,12 +622,13 @@ def format_row ( tvalue    = None ,
         
     if has_tvalue and has_pvalue and has_counter :
         
-        header = ( 't-value'    ,
-                   't-mean'     ,
-                   't-rms'      ,
-                   't-min'      ,                
-                   't-max'      ,                
-                   't-unit'     , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
+        header = ( '%s-value'      % script_t ,
+                   '%s-mean'       % script_t ,
+                   '%s-rms'        % script_t ,
+                   '%s-min'        % script_t ,                
+                   '%s-max'        % script_t ,                
+                   '%s-unit'       % script_t , 
+                   '%s-value [%%]' % script_p , '#%s' % greek_lower_sigma ) 
         
         mean       = counter.mean   ()
         rms        = counter.rms    () 
@@ -656,7 +657,9 @@ def format_row ( tvalue    = None ,
 
     elif has_tvalue and has_pvalue :
         
-        header    = ( 't-value'  , 't-unit' , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
+        header    = ( '%s-value'      % script_t , 
+                      '%s-unit'       % script_t , 
+                      '%s-value [%%]' % script_p , '#%s' % greek_lower_sigma ) 
 
         items      = tvalue, 
         row, unit  = pretty_row  ( *items , width = width , precision = precision )
@@ -678,7 +681,7 @@ def format_row ( tvalue    = None ,
 
     elif has_tvalue :
         
-        header    = ( 't-value'  , 't-unit' )  
+        header    = ( '%s-value' % script_t  , '%s-unit' % script_t  )  
         items      = tvalue, 
         row, unit  = pretty_row  ( *items , width = width , precision = precision )
         unit       = '[%s]' % unit if unit else unit

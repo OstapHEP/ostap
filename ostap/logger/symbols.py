@@ -108,6 +108,10 @@ __all__     = (
     'hebrew_gimel'        , ## ג
     #
     'histogram'           , ## 📊  (wide)
+    'infinity'            , ## ∞
+    'infinity_pos'        , ## +∞   
+    'infinity_neg'        , ## -∞   
+    #    
     'indices'             , ## ⓿➊➋...
     'intersection'        , ## ⋂
     'iteration'           , ## 々
@@ -144,6 +148,8 @@ __all__     = (
     'script_P'            , ## 𝒫
     'script_R'            , ## ℛ
     'script_l'            , ## 𝓁
+    'script_p'            , ## 𝓅
+    'script_t'            , ## 𝓉
     'script_map'          , ## mapping dict
     'show'                , ## bool
     'similar'             , ## ∼
@@ -390,6 +396,10 @@ toys                  = '🧸 ' if show else 'toys'
 asterisk              = '✶' if show else '*'
 weierstrass_p         = '℘' if show else 'p'  # U+2118 WEIERSTRASS ELLIPTIC FUNCTION
 
+infinity              =  "\N{INFINITY}"   if show else 'inf'
+infinity_pos          = "+%s" % infinity 
+infinity_neg          = "-%s" % infinity
+
 # ==================================================
 def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what ) 
 def the_mean ( what ) : return '%s%s%s' % ( langle , what , rangle ) 
@@ -444,6 +454,8 @@ def to_script(text):
     """
     return text.translate(script_map) if show else text
 
+script_t = to_script('t')
+script_p = to_script('p')
 
 # =============================================================================
 if '__main__' == __name__ :

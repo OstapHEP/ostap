@@ -24,11 +24,13 @@ __all__     = (
 from   collections              import namedtuple 
 from   ostap.utils.core         import typename
 from   ostap.math.math_base     import FIRST_ENTRY , LAST_ENTRY
-from   ostap.stats.utils        import weight_trivial, num_samples, num_features, check_all  
-from   ostap.utils.config       import Config
+from   ostap.stats.utils        import weight_trivial
 from   ostap.stats.counters     import ECDF, WECDF
 from   ostap.stats.gof          import AGoFnp
 from   ostap.math.math_ve       import chi2_prob, significance
+from   ostap.logger.symbols     import ( greek_lower_sigma , script_t , script_p ,   
+                                         chi2ndf      as chi2ndf_symbol      , 
+                                         infinity_pos as infinity_pos_symbol ) 
 import ostap.histos.axes        as     AXES
 import ostap.logger.table       as     T 
 import ostap.histos.histos 
@@ -43,10 +45,12 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 ## histogram comparison result  
 HistoComparisonResult = namedtuple ( 'HistoComparisonResult'  ,
-                                     ( 'histo1' ,
-                                       'histo2' ,
-                                       'pvalue' ,
-                                       'nsigma' ) )
+                                     ( 'histo1'  ,
+                                       'histo2'  ,
+                                       'chi2'    ,
+                                       'nDoF'    , 
+                                       'pvalue'  ,
+                                       'nsigma'  ) )
 
 # =============================================================================
 ecdf_types = ECDF , WECDF
@@ -122,8 +126,15 @@ def compare_ecdfs ( ecdf1   ,
 
     if draw :
 
-        h1.draw ()
-        h1.draw ( 'same' )
+        if h2.GetMaximum() < h1.GetMaximum() : 
+            
+            h1.draw () 
+            h2.draw ('same')
+            
+        else  :
+             
+            h2.draw ()
+            h1.draw ( 'same' )
         
         if fill :
             
@@ -148,27 +159,29 @@ def compare_ecdfs ( ecdf1   ,
         pvalue = chi2_prob    ( chi2 , nDoF )
         nsigma = significance ( pvalue )
     else :
-        pvalu , nsigma = float( 'NaN' ) , float( 'NaN')
+        pvalue , nsigma = float( 'NaN' ) , float( 'NaN')
     
-    return HistoComparisonResult ( histo1 = h1     ,
-                                   histo2 = h2     ,
-                                   pvalue = pvalue , 
-                                   nsigma = nsigma ) 
+    return HistoComparisonResult ( histo1  = h1      ,
+                                   histo2  = h2      ,
+                                   chi2    = chi2    ,
+                                   nDoF    = nDoF    ,   
+                                   pvalue  = pvalue  , 
+                                   nsigma  = nsigma  ) 
 
 # ============================================================================
 ## Compare two variables from (presumably two) sources
-#  @param var1        (INPUT) the first variable name/expression
-#  @param source1     (INPUT) the first source:  TTree, TChain, RooDataSet,...
-#  @param cuts1       (INPUT) selection criteria 
-#  @param cut_range1  (INPUT) cut-range (for RooDataSet)
-#  @param first1      (INPUT) the first event in source1 to process 
-#  @param last1       (INPUT) the last  event in source1 to process 
+#  @param var         (INPUT) the first variable name/expression
+#  @param data        (INPUT) the first source:  TTree, TChain, RooDataSet,...
+#  @param cuts        (INPUT) selection criteria 
+#  @param cut_range   (INPUT) cut-range (for RooDataSet)
+#  @param first       (INPUT) the first event in data to process 
+#  @param last        (INPUT) the last  event in data to process 
 #  @param var2        (INPUT) the second variable name/expression
-#  @param source2     (INPUT) the second source:  TTree, TChain, RooDataSet,...
+#  @param data2       (INPUT) the second source:  TTree, TChain, RooDataSet,...
 #  @param cuts2       (INPUT) selection criteria 
 #  @param cut_range2  (INPUT) cut-range (for RooDataSet)
-#  @param first2      (INPUT) the first event in source2 to process 
-#  @param last2       (INPUT) the last  event in source2 to process 
+#  @param first2      (INPUT) the first event in data2 to process 
+#  @param last2       (INPUT) the last  event in data2 to process 
 #  @param N           (INPUT) number of bins in the histogram
 #  @param draw        (INPUT) draw the comarion results ?
 #  @param fill        (INPUT) fill the histogram area ?
@@ -176,16 +189,16 @@ def compare_ecdfs ( ecdf1   ,
 #  @param comparators (INPUT) the list of Two-Sample/GoF estimators
 #  @param progress    (INPUT) show the progress bar(s) ?
 #  @param parallel    (INPUT) use parallelization if/when possible?
-def compare_variables ( var1        ,
-                        source1     , *           , 
-                        cuts1       = ''          , 
-                        cut_range1  = ''          ,
+def compare_variables ( var         ,
+                        data        , *           , 
+                        cuts        = ''          , 
+                        cut_range   = ''          ,
                         var2        = None        , 
-                        source2     = None        ,
+                        data2       = None        ,
                         cuts2       = None        ,
                         cut_range2  = None        , 
-                        first1      = FIRST_ENTRY ,
-                        last1       = LAST_ENTRY  ,
+                        first       = FIRST_ENTRY ,
+                        last        = LAST_ENTRY  ,
                         first2      = FIRST_ENTRY ,
                         last2       = LAST_ENTRY  ,
                         comparators = ()          , ## COMPARATORS                         
@@ -197,35 +210,39 @@ def compare_variables ( var1        ,
                         parallel    = False       ) :
     
     if var2       is None and \
-       source2    is None and \
+       data2      is None and \
        cuts2      is None and \
        cut_range2 is None and \
-       first1 == first2   and \
-       last1  == last2      :  logger.error ( "Nothing to compare!" )
+       first2 == first    and \
+       last2  == last        :  logger.error ( "Nothing to compare!" )
 
-    if var2       is None : var2       = var1
-    if source2    is None : source2    = source1 
-    if cuts2      is None : cuts2      = cuts1 
-    if cut_range2 is None : cut_range2 = cut_range1
+    if var2       is None : var2       = var
+    if data2      is None : data2      = data  
+    if cuts2      is None : cuts2      = cuts 
+    if cut_range2 is None : cut_range2 = cut_range
 
     from   ostap.stats.statvars import data_ECDF
     
-    ecdf1 = data_ECDF      ( data       = source1    ,
-                             expression = var1       ,
-                             cuts       = cuts1      ,
-                             cut_range  = cut_range1 , 
-                             first      = first1     ,
-                             last       = last1      ,
+    var , var2 = var.strip() , var2.strip() 
+          
+    ecdf1 = data_ECDF      ( data       = data       ,
+                             expression = var        ,
+                             cuts       = cuts       ,
+                             cut_range  = cut_range  , 
+                             first      = first      ,
+                             last       = last       ,
                              progress   = progress   ,
                              parallel   = parallel   ) 
     
-    ecdf2 = data_ECDF      ( data       = source2    ,
+    ecdf2 = data_ECDF      ( data       = data2      ,
                              expression = var2       ,
                              cuts       = cuts2      ,
                              cut_range  = cut_range2 , 
                              first      = first2     ,
-                             last       = last2      )
-    
+                             last       = last2      ,
+                             progress   = progress   ,
+                             parallel   = parallel   )
+     
     ## (1) vizual comparison of distributions 
     histos = compare_ecdfs ( ecdf1   = ecdf1   ,
                              ecdf2   = ecdf2   ,
@@ -234,8 +251,6 @@ def compare_variables ( var1        ,
                              fill    = fill    ,
                              draw    = draw    )
     
-    ## Two-Sample/GoF comparators ?
-    if not comparators : return histos 
     
     ## unpack (W)ECDFs 
     data1 , weight1 = ecdf1.raw_data()
@@ -249,31 +264,39 @@ def compare_variables ( var1        ,
     if with_weight : comparators =  tuple ( c for c in comparators if c.weights_supported )
 
     results = [] 
-    if comparators :
-        
-        from   ostap.stats.data_compare import numpy_compare
-        header = []
-        rows   = []        
-        for c in comparators :
+    header  = ( 'Method' , '%s-value' % script_t , '' , '' , '' , '' , '' , '%s-value [%%]' % script_p , '#%s' % greek_lower_sigma ) 
+    
+    chi2ndf = '%.2f/%s'  % ( histos.chi2 , histos.nDoF) 
+    pvalue  = '%6.2f'    % ( histos.pvalue * 100 )  
+    nsigma  = ( '%6.2f'  %   histos.nsigma ) if histos.nsigma < 100 else infinity_pos_symbol 
+    row     = chi2ndf_symbol , chi2ndf   ,  '' , '' , '' , '' , '' , pvalue , nsigma  
             
-            r = numpy_compare ( c       ,
-                                data1   = data1   ,
-                                data2   = data2   ,
-                                weight1 = weight1 ,
-                                weight2 = weight2 )
-            results.append ( r )
+    rows = [ row ] 
+    
+    from   ostap.stats.data_compare import numpy_compare        
+    for c in comparators :
             
-            header  , row = c.the_row ()
-            header = ( 'Method' , ) + header 
-            row    = ( c.method , ) + tuple ( row )
+        r = numpy_compare ( c       ,
+                            data1   = data1   ,
+                            data2   = data2   ,
+                            weight1 = weight1 ,
+                            weight2 = weight2 )
+        results.append ( r )
+            
+        header  , row = c.the_row ()
+        header = ( 'Method' , ) + header 
+        row    = ( c.method , ) + tuple ( row )
 
-            rows.append ( row ) 
+        rows.append ( row ) 
 
-        rows  =  [ header ] + rows
-        title = 'Two-Sample test'
-        rows  = T.remove_empty_columns ( rows ) 
-        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccccccccccc' )
-        logger.info ( "%s:\n%s" % ( title , table ) )
+    rows  =  [ header ] + rows
+     
+    if   var2 == var : title = "Two-Sample test: %s"           %   var 
+    else             : title = "Two-Sample test: (%s) vs (%s)" % ( var , var2 ) 
+    
+    rows  = T.remove_empty_columns ( rows ) 
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccccccccccc' )
+    logger.info ( "%s:\n%s" % ( title , table ) )
         
             
     return histos , tuple ( results ) 

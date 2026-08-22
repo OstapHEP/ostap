@@ -85,9 +85,9 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.math_ve' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 from   ostap.math.ve          import VE
-from   ostap.math.math_base   import Ostap, iszero, isequal, complex_types 
+from   ostap.math.math_base   import Ostap, isequal, complex_types 
 from   ostap.core.ostap_types import num_types, is_integer, integer_types  
-import ROOT, math, cmath 
+import math, cmath 
 # =============================================================================
 _ln2_i = 1/math.log(2.0)                 ## useful constant 
 # =============================================================================
@@ -1507,6 +1507,7 @@ def significance ( pvalue ) :
 
 # ============================================================================
 nsigma  = significance
+nsigmas = significance
 # ============================================================================
 
 _chi2_prob_ = Ostap.Math.chi2_prob
