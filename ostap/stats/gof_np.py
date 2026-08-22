@@ -71,7 +71,7 @@ class GoFnp (AGoFnp,Config) :
     """ A base class for numpy-related family of methods to probe goodness-of-fit
     """
     def __init__ ( self               , * , 
-                   nToys     = 0      ,
+                   nToys     = 100    ,
                    silent    = False  , 
                    parallel  = False  ,
                    method    = 'GoF'  ,
@@ -122,6 +122,7 @@ class GoFnp (AGoFnp,Config) :
         conf [ 'method'                     ] = self.method  
         conf [ 'weights_supported'          ] = self.weights_supported
         conf [ 'negative_weights_supported' ] = self.negative_weights_supported
+        conf [ 'two_samples'                ] = self.two_samples 
         return conf 
     
     # =========================================================================

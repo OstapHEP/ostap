@@ -7691,7 +7691,6 @@ ROOT.TH1D . solve       = _solve_
 ROOT.TH1F . equal_edges = _equal_edges_                              
 ROOT.TH1D . equal_edges = _equal_edges_                         
 
-
 # =============================================================================
 ## Get the estimate for quantile for the hitogram
 #  @code
@@ -9317,7 +9316,10 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         
         row = 'density?'   , '%s' % h1.isDensity() , '' 
         rows.append ( row )
-
+        
+        row = 'true density?'   , '%s' % ( h1.isDensity() and h1.all_nonnegative () )  , '' 
+        rows.append ( row )
+        
         value = VE ( h1.mean() )
         mean  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
         row   = 'x-mean' , mean, '10^%+d' % expo if expo else '' 
@@ -9471,6 +9473,9 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     if h2.nEff() and not h2.all_zero () : 
         
         row = 'density?'   , '%s' % h2.isDensity() , '' 
+        rows.append ( row )
+
+        row = 'true density?' , '%s' % ( h2.isDensity() and h2.all_nonnegative () ) , '' 
         rows.append ( row )
         
         xmean, ymean = h2.mean () 
@@ -9644,7 +9649,10 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         
         row = 'density?'   , '%s' % h3.isDensity() , '' 
         rows.append ( row )
-        
+
+        row = 'true density?'   , '%s' % ( h3.isDensity() and h3.all_nonnegative () ) , '' 
+        rows.append ( row )
+                
         xmean, ymean, zmean = h3.mean () 
         xrms , yrms , zrms  = h3.rms  () 
 

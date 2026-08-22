@@ -75,7 +75,7 @@ __all__     = (
     ##
     'moebius'        ,                               ## Moebius transform
     ##     
-    'significance'  , 'nsigmas'    , 'nsigma'
+    'significance'  , 'nsigmas'    , 'nsigma' , 'chi2_prob'
     )
 # =============================================================================
 # logging 
@@ -1508,9 +1508,27 @@ def significance ( pvalue ) :
 # ============================================================================
 nsigma  = significance
 # ============================================================================
-nsigmas = significance
 
-
+_chi2_prob_ = Ostap.Math.chi2_prob
+# ============================================================================
+## Chi2-probability for given number of degrees of freedom
+#  @code
+#  chi2 = ...
+#  ndf  = ...
+#  prob = chi2_prob ( chi2 , ndf ) 
+#  @endcode
+#  @see Ostap::Math::chi2_prob
+def chi2_prob ( chi2 , ndf ) :
+    """ Chi2-probability for given number of degrees of freedom
+    >>> chi2 = ...
+    >>> ndf  = ...
+    >>> prob = chi2_prob ( chi2 , ndf ) 
+    - see `Ostap.Math.chi2_prob`
+    """
+    if chi2 < 0                     : raise ValueError ( "chi2 valeu is negative!" )
+    if not isinstance ( ndf , int ) : raise TypeError  ( "`ndf` is not integer!"   )
+    if ndf < 1                      : raise ValueError ( "`ndf` is not positive!"  )
+    return _chi2_prob_ ( chi2 , ndf )
 
 # =============================================================================
 ## FIX

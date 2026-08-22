@@ -136,6 +136,7 @@ add_library(ostap SHARED src/format.cpp
                          src/ToStream.cpp                                                 
                          src/TreeGetter.cpp
                          src/Types.cpp
+                         src/TwoSamples.cpp
                          src/qMath.cpp
                          src/Uniformity.cpp
                          src/UStat.cpp

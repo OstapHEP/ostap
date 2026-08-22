@@ -578,7 +578,7 @@ def data_ECDF ( data               ,
                 last       =  LAST_ENTRY ,                 
                 cut_range  = ''    ,
                 progress   = False , 
-                as_weight  = True  , ## interpret cuts as weiggt 
+                as_weight  = True  , ## interpret cuts as weight
                 use_frame  = False ,
                 parallel   = False ) :     
     """ Get the empirical cumulative distribution function 

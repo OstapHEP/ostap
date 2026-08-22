@@ -240,10 +240,10 @@ namespace  Ostap
       Moment_ () = default ;
       /// constructor from mu and previous 
       Moment_
-      ( const Moment_<0>& prev ,	
-	      const double      mu   ,
-	      const double      xmin ,
-	      const double      xmax ) ;
+      ( const Moment_<0>& prev ,        
+        const double      mu   ,
+        const double      xmin ,
+        const double      xmax ) ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -306,8 +306,8 @@ namespace  Ostap
         const size_type n = m_prev.size() ;
         m_mu = ( n * m_mu + x ) /  ( n + 1 );  // calculate new mean value 
         m_prev += x ;                          // updated previous
-	      m_min   = std::min ( m_min , x ) ;
-	      m_max   = std::max ( m_max , x ) ;
+              m_min   = std::min ( m_min , x ) ;
+              m_max   = std::max ( m_max , x ) ;
         return *this ;
       }
       /// add the moment 
@@ -321,9 +321,9 @@ namespace  Ostap
         //
         m_mu = ( n1 * m_mu + n2 * x.m_mu ) / ( n1 + n2 ) ; // update mean 
         m_prev += x.m_prev ;                               // update previous
-	      //
-	      m_min = std::min ( m_min , x.m_min ) ;
-	      m_max = std::max ( m_max , x.m_max ) ;	
+              //
+              m_min = std::min ( m_min , x.m_min ) ;
+              m_max = std::max ( m_max , x.m_max ) ;    
         //
         return *this ;
       }
@@ -356,19 +356,20 @@ namespace  Ostap
       /// Reset the content
       void reset  () override
       {
-      	m_mu  = 0 ;
-	      m_min =   std::numeric_limits<double>::max () ;
-	      m_max = - std::numeric_limits<double>::max () ;
-	      m_prev.reset() ;
+        m_mu  = 0 ;
+              m_min =   std::numeric_limits<double>::max () ;
+              m_max = - std::numeric_limits<double>::max () ;
+              m_prev.reset() ;
       }
+      // ======================================================================
     public :
       // ======================================================================      
       /// is finite ?
       inline bool isfinite () const
       { return
-	      std::isfinite ( m_mu  ) &&
-	      std::isfinite ( m_min ) && 
-	      std::isfinite ( m_max ) && m_prev.isfinite () ;
+              std::isfinite ( m_mu  ) &&
+              std::isfinite ( m_min ) && 
+              std::isfinite ( m_max ) && m_prev.isfinite () ;
       }
       // ======================================================================
     public:      
@@ -492,8 +493,8 @@ namespace  Ostap
       Moment_ () = default ;
       /// constructor from the value and previous moment 
       Moment_
-      ( const Moment_<N-1>& prev ,	
-	      const double        mom  ) 
+      ( const Moment_<N-1>& prev ,      
+              const double        mom  ) 
         : m_prev ( prev              )
         , m_M    ( mom * prev.size() )
       {} 
@@ -930,10 +931,10 @@ namespace  Ostap
       m_M += ( nA * std::pow ( b_n , N ) + std::pow ( a_n , N ) ) * std::pow ( delta , N ) ;
       data_type d = 1 ;
       for ( unsigned int k = 1 ; k + 2 <= N ; ++k )
-	    {
-	      d   *= d_n ;
-	      m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
-	    }
+            {
+              d   *= d_n ;
+              m_M += s_Ck [ k ] * this-> M ( N - k ) * d   ;
+            }
       /// update previous 
       this->m_prev += x ; // update previous
       //
@@ -965,10 +966,10 @@ namespace  Ostap
       //
       for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
       {
-	a   *= a_n   ;
-	b   *= b_n   ;
-	d   *= delta ;        
-	m_M += s_Ck [ k ] * d * ( this-> M ( N -k ) * b + x. M ( N - k ) * a ) ;
+        a   *= a_n   ;
+        b   *= b_n   ;
+        d   *= delta ;        
+        m_M += s_Ck [ k ] * d * ( this-> M ( N -k ) * b + x. M ( N - k ) * a ) ;
       }
       /// update previous 
       this->m_prev += x.m_prev ; // update previous
@@ -1000,7 +1001,7 @@ namespace  Ostap
     // ========================================================================
     // Weighted moments 
     // ========================================================================
-    	
+        
     // ========================================================================
     /** @class WMoment
      *  Helper (empty) base class for weighted moment-counters 
@@ -1062,10 +1063,10 @@ namespace  Ostap
        */
       WMoment_
       ( const size_type size  ,
-	      const double    sumw  ,
-	      const double    sumw2 , 
-	      const double    wmin  , 
-	      const double    wmax  ) ;
+              const double    sumw  ,
+              const double    sumw2 , 
+              const double    wmin  , 
+              const double    wmax  ) ;
       // ======================================================================
     public : 
       // ======================================================================
@@ -1176,15 +1177,15 @@ namespace  Ostap
       /// update the counter 
       void update
       ( const double x     ,
-	      const double w = 1 ) override { add ( x , w ) ; }
+              const double w = 1 ) override { add ( x , w ) ; }
       /// Reset the content
       void reset  () override
       {
-	      m_size = 0 ;
-	      m_w    = 0 ;
-	      m_w2   = 0 ;
-	      m_wmin =   std::numeric_limits<double>::max () ;
-	      m_wmax = - std::numeric_limits<double>::max () ;
+              m_size = 0 ;
+              m_w    = 0 ;
+              m_w2   = 0 ;
+              m_wmin =   std::numeric_limits<double>::max () ;
+              m_wmax = - std::numeric_limits<double>::max () ;
       }
       // ======================================================================      
     public :
@@ -1192,10 +1193,10 @@ namespace  Ostap
       /// is finite ?
       inline bool isfinite () const
       { return
-	        std::isfinite ( m_w    ) &&
-	        std::isfinite ( m_w2   ) &&
-	        std::isfinite ( m_wmin ) &&
-	        std::isfinite ( m_wmax ) ; 
+                std::isfinite ( m_w    ) &&
+                std::isfinite ( m_w2   ) &&
+                std::isfinite ( m_wmin ) &&
+                std::isfinite ( m_wmax ) ; 
       }
       // ======================================================================
     public:
@@ -1287,9 +1288,9 @@ namespace  Ostap
       /// constructor from mu and previous moment 
       WMoment_
       ( const WMoment_<0>& prev ,
-	      const double       mu   ,
-	      const double       xmin ,
-	      const double       xmax ) ;
+              const double       mu   ,
+              const double       xmin ,
+              const double       xmax ) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -1557,9 +1558,9 @@ namespace  Ostap
       /// constructor from the value and previous moment 
       WMoment_
       ( const WMoment_<N-1>& prev , 
-      	const double         mom  ) 
-	      : m_prev ( prev            )
-	      , m_M    ( mom * prev.w () )
+        const double         mom  ) 
+              : m_prev ( prev            )
+              , m_M    ( mom * prev.w () )
       {} 
       // ======================================================================
     public:
@@ -1584,7 +1585,7 @@ namespace  Ostap
           N >  k       ? this->m_prev.moment ( k ) :
           N <  k       ? this->invalid_moment   () :
           !this->ok () ? this->invalid_moment   () :
-	      this->M ( k ) / this-> w () ; }
+              this->M ( k ) / this-> w () ; }
       // ======================================================================
       /** get value of the kth standartized moment for \f$  k \le N \f$
        *  \f[ \mu_k \equiv  \frac{1}{N} \sum \left( x_i - \bar{x} \right)^k \f]
@@ -1765,7 +1766,7 @@ namespace  Ostap
         //
         if ( !this->ok() ) { return this->invalid_moment() ; }
         //
-		    const long double n = this->w() ; // ATENTION!
+                    const long double n = this->w() ; // ATENTION!
         //
         const data_type muo  = this->template M_ <K>  () / n ;
         const data_type mu2o = this->template M_<2*K> () / n ;
@@ -1833,9 +1834,9 @@ namespace  Ostap
         data_type deltai = 1 ; //  == delta**i 
         for ( unsigned short i = 0 ; i <= N ; ++i )
         {
-	  result += s_Ck [ i ] * deltai *  this->moment ( N - i ) ;
-	  deltai *= delta ; 
-	}
+          result += s_Ck [ i ] * deltai *  this->moment ( N - i ) ;
+          deltai *= delta ; 
+        }
         return result ;  
       } 
        // ======================================================================
@@ -3351,7 +3352,7 @@ namespace  Ostap
         if ( !m.ok() || m.size() < 2  ) { return invalid_moment() ; } // RETURN
         //
         const double m2 = m.template M_<2> () / m.w()  ;
-	    // 
+            // 
         if ( 0 >  m2 ) { return invalid_moment() ; } // RETURN
         //
         if ( m.size() < 4  ) { return m2 ; }  // RETURN 

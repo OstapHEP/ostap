@@ -8593,7 +8593,29 @@ double Ostap::Math::harmonic
   const unsigned short m ) 
 { return _harmonic_ ( n , m ) ; }
 
-
+// ===========================================================================
+/* chi2-probability for the given  number of degrees of freedom
+ *  \f[ P = \frac{ \gamma ( \frac{n}{2}, \frac{\chi^2}{2} ) }{ \Gamma ( \frac{n}{2} ) } \f]
+ *  @code
+ *  const double       chi2 = ... ;
+ *  cnost unsigned int nDoF = ... ; 
+ *  const double       prob = chi2_prob ( chi2 , nDoF ) ;
+ *  @endcode     
+ */
+// ===========================================================================
+double Ostap::Math::chi2_prob
+( const double       chi2 ,
+  const unsigned int nDoF )
+{
+  //
+  if      ( chi2 < 0 || !nDoF ) { return s_QUIETNAN ; }
+  else if ( s_zero ( chi2 )   ) { return 1          ; }
+  //
+  return gamma_inc_P ( 0.5 * chi2 , 0.5 * nDoF ) ;
+}
+// ===========================================================================
+  
+// ============================================================================
 #include "TRandom.h"
 // ========================================================================
 /* @fn rndm

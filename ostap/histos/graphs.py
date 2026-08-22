@@ -189,7 +189,6 @@ def makeGraph2 ( text ) :
     ## make a graph 
     return makeGraph ( vals )
 
-
 # =============================================================================
 ## create TGraphAsymmErrors from the plain text multicolumn-column format with optional comments.
 #  E.g. the files provided by FONLL on-line calculator can be parsed
@@ -1644,7 +1643,10 @@ def _color_ ( self ,
     if hasattr ( self , 'GetMarkerStyle'    ) : marker = self.GetMarkerStyle() 
 
     if hasattr ( self , 'SetFillStyle'      ) :
-        if   fill is True  : self.SetFillStyle ( 1001 )        
+        if   fill is True  :
+            self.SetFillStyle ( 1001 )
+            if hasattr ( self , 'GetLineWidth' ) and hasattr ( self , 'SetLineWidth' ) :
+                self.SetLineWidth ( 1 + self.GetLineWidth() ) 
         elif fill is False : self.SetFillStyle (    0 )        
         elif isinstance ( fill , integer_types ) and 1000 < fill :
             self.SetFillStyle ( fill )

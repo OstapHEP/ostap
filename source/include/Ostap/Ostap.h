@@ -178,6 +178,7 @@
 #include "Ostap/TreeGetter.h"
 #include "Ostap/TypeWrapper.h"
 #include "Ostap/Types.h"
+#include "Ostap/TwoSamples.h"
 #include "Ostap/Uniformity.h"
 #include "Ostap/UStat.h"
 #include "Ostap/Utils.h"

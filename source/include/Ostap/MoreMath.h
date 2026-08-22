@@ -1720,7 +1720,21 @@ namespace Ostap
       const std::complex<double>& c = std::complex<double> ( 0 , 0 ) , 
       const std::complex<double>& d = std::complex<double> ( 1 , 0 ) ) ;
     // ========================================================================
-
+    
+    // ========================================================================
+    /** chi2-probability for the given  number of degrees of freedom
+     *  \f[ P = \frac{ \gamma ( \frac{n}{2}, \frac{\chi^2}{2} ) }{ \Gamma ( \frac{n}{2} ) } \f]
+     *  @code
+     *  const double       chi2 = ... ;
+     *  cnost unsigned int nDoF = ... ; 
+     *  const double       prob = chi2_prob ( chi2 , nDoF ) ;
+     *  @endcode     
+     */
+    double chi2_prob
+    ( const double       chi2 ,
+      const unsigned int nDoF ) ;
+    // ========================================================================
+    
     // ========================================================================
     /** @fn kolmogorov_cdf
      *

@@ -113,7 +113,6 @@ namespace
 }
 // ============================================================================
 
-
 // ============================================================================
 // Standard constructor from  data
 // ============================================================================
@@ -182,9 +181,17 @@ Ostap::Math::ECDF::cleanup ()
   return *this ;
 }
 // ============================================================================
+// merge two objects 
+// ============================================================================
+Ostap::Math::ECDF
+Ostap::Math::ECDF::merge
+( const Ostap::Math::ECDF& right ) const 
+{ ECDF result { *this } ; result.add ( right ) ; return result  ; }
+// ============================================================================
 // swap two objects 
 // ============================================================================
-void Ostap::Math::ECDF::swap ( Ostap::Math::ECDF& right )
+void Ostap::Math::ECDF::swap
+( Ostap::Math::ECDF& right )
 {
   std::swap ( m_data          , right.m_data          ) ;
   std::swap ( m_complementary , right.m_complementary ) ;
@@ -324,8 +331,8 @@ double Ostap::Math::ECDF::quantile
   const Ostap::QuantileTypes::HyndmanFanType t ) const 
 {
   //
-  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return xmin () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return xmax () ; }
+  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return low_edge  () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return high_edge () ; }
   //
   Ostap::Assert ( 0 < p && p < 1     , 
                   "Invalid probability"                      , 
@@ -351,8 +358,8 @@ double Ostap::Math::ECDF::quantile
   const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const
 {
   //
-  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return xmin () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return xmax () ; }
+  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return low_edge  () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return high_edge () ; }
   //
   Ostap::Assert ( 0 < p && p < 1     , 
                   "Invalid probability"                      , 
@@ -394,8 +401,8 @@ double Ostap::Math::ECDF::quantile
   const Ostap::QuantileTypes::ABQuantileType& ab ) const
 {
   //
-  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return xmin () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return xmax () ; }
+  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return low_edge  () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return high_edge () ; }
   //
   Ostap::Assert ( 0 < p && p < 1     , 
                   "Invalid probability"                      , 
@@ -435,7 +442,14 @@ void Ostap::Math::ECDF::project
   histo.FillN ( m_data.size () , m_data.data () , nullptr ) ;
 }
 // ============================================================================
-  
+// low_edge <= xmin 
+// ============================================================================
+double Ostap::Math::ECDF::low_edge  () const { return xmin () ; } 
+// ============================================================================
+///  xmax < high_edge 
+// ============================================================================
+double Ostap::Math::ECDF::high_edge () const
+{ return std::nextafter ( xmax () , s_POSINF ) ; }
 
 // ============================================================================
 // For weighted data 
@@ -554,11 +568,25 @@ Ostap::Math::WECDF::WECDF
 {
   m_data.reserve ( right.size() ) ;
   for ( auto d : right.data() )
-    {
-      m_data.emplace_back ( d , 1.0 ) ;
-      m_counter.add       ( d , 1.0 ) ; 
-    }
+  {
+    m_data.emplace_back ( d , 1.0 ) ;
+    m_counter.add       ( d , 1.0 ) ; 
+  }
 }
+// ============================================================================
+// merge two objects 
+// ============================================================================
+Ostap::Math::WECDF
+Ostap::Math::WECDF::merge
+( const Ostap::Math::WECDF& right ) const 
+{ WECDF result { *this } ; result.add ( right ) ; return result  ; }
+// ============================================================================
+// merge two objects 
+// ============================================================================
+Ostap::Math::WECDF
+Ostap::Math::WECDF::merge
+( const Ostap::Math::ECDF&  right ) const 
+{ WECDF result { *this } ; result.add ( right ) ; return result  ; }
 // ============================================================================
 // swap two objects 
 // ============================================================================
@@ -835,11 +863,12 @@ Ostap::Math::WECDF::statistics
  */
 // ============================================================================
 double Ostap::Math::WECDF::quantile
-( const double                                    p     ,
+( const double                                     p    ,
   const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const 
 {
-  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return xmin () ; }
-  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return xmax () ; }
+  //
+  if      ( !p     || s_zero  ( p     ) || p < 0 ) { return low_edge  () ; }
+  else if ( 1 == p || s_equal ( p , 1 ) || p > 1 ) { return high_edge () ; }
   //
   Ostap::Assert ( 0 < p && p < 1     , 
                   "Invalid probability"                      , 
@@ -884,7 +913,7 @@ double Ostap::Math::WECDF::quantile
   return quantile ( p , t ) ;
 }
 // ============================================================================
-// project data content into 1D histogram
+// project data content into 1D histogram[
 // ============================================================================
 void Ostap::Math::WECDF::project 
 ( TH1& histo ) const 
@@ -899,6 +928,14 @@ void Ostap::Math::WECDF::project
   { histo.Fill ( item.first , item.second ) ; }
 }
 // ============================================================================
+// low_edge <= xmin 
+// ============================================================================
+double Ostap::Math::WECDF::low_edge  () const { return xmin () ; } 
+// ============================================================================
+///  xmax < high_edge 
+// ============================================================================
+double Ostap::Math::WECDF::high_edge () const
+{ return std::nextafter ( xmax () , s_POSINF ) ; } 
   
 
 // ============================================================================

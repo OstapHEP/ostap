@@ -1713,6 +1713,8 @@ namespace Ostap
       const double c ,
       const Ostap::Math::ValueWithError&  x ) ;
     // ============================================================================
+
+    // ============================================================================
     /** Moebius transformation
      * \f[ f(x) = \frac{ax+b}{cx+d}\f]
      *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation

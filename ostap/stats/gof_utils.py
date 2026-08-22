@@ -587,7 +587,6 @@ def clip_pvalue ( pvalue , clip = 0.5 ) :
     elif 0 >= pv.value() : pv = VE (     clip , pv.cov2() )
     ## 
     return pv 
-
     
 # =============================================================================
 pvalue_types = num_types + ( VE , ) 

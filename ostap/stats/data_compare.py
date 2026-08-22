@@ -20,6 +20,8 @@ from   ostap.core.ostap_types import sequence_types
 from   ostap.utils.core       import typename 
 from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
 from   ostap.stats.utils      import weight_trivial
+from   ostap.stats.gof_utils  import clip_pvalue
+from   ostap.math.math_ve     import significance
 from   ostap.stats.gof        import AGoFnp 
 import ROOT 
 # =============================================================================
@@ -34,7 +36,9 @@ ComparisonResult = namedtuple ( 'ComparisonResult'  ,
                                 ( 'method'     ,
                                   'tvalue'     ,
                                   'pvalue'     ,
+                                  'nsigma'     , 
                                   'importance' ) , defaults = ( 'UNKNOWN' , -1e+9 , -1 , None ) )  
+
 # ===============================================================================
 ## Compare two numpy arrays
 #  @code
@@ -81,10 +85,13 @@ def numpy_compare ( comparator ,
                                            tvalue  = tvalue  ,
                                            weight1 = weight1 ,
                                            weight2 = weight2 )
-    
+    pv      = clip_pvalue  ( pvalue ) 
+    nsigma  = significance ( pv     ) ## convert  it to significance
+
     return ComparisonResult ( method     = comparator.method   ,
                               tvalue     = tvalue              ,
                               pvalue     = pvalue              ,
+                              nsigma     = nsigma              , 
                               importance = importance_features ) 
 
 # =============================================================================

@@ -778,8 +778,30 @@ def _ecdf_project_ ( ecdf , histo ) :
         return ecdf 
     return NotImplemented 
 
+# =================================================================================
+## Get raw-data as numpy arrays from (W)ECDF
+#  @code
+#  ecdf = ...
+#  data , weight = ecdf.raw_data () 
+#  @encode 
+def _ecdf_raw_data_ ( ecdf ) :
+    """ Get raw-data as numpy arrays from (W)ECDF
+    >>> ecdf = ...
+    >>> data , weight = ecdf.raw_data () 
+    """
+    import numpy 
+    if isinstance ( ecdf , WECDF ) :
+        data   = numpy.array ( [ v for v,_ in ecdf ] , dtype = float )
+        weight = numpy.array ( [ w for _,w in ecdf ] , dtype = float )
+    else : 
+        data   = numpy.array ( ecdf.data () , dtype = float )
+        weight = None 
+    ## 
+    return data , weight 
+
 for t in ( ECDF , WECDF ) :
     t.__rshift__ = _ecdf_project_  
+    t.raw_data   = _ecdf_raw_data_ 
     
 _new_methods_ += [
     ECDF  .__rshift__ , 

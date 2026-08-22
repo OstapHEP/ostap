@@ -510,13 +510,13 @@ def _axis_split_ ( axis , n ) :
     return axis_from_edges ( new_bins , check = False )
 
 # =============================================================================
-## Split bins while  all bins are smaller than pecified value 
+## Split bins while  all bins are smaller than the specified value 
 #  @code
 #  axis = ...
 #  new_axis = axis.split_while ( maxwidth )
 #  @endcode
 def _axis_split_while_   ( axis , maxwidth ) :
-    """ Split bins while  all bins are smaller than pecified value 
+    """ Split bins while  all bins are smaller than the specified value 
     >>> axis = ...  
     >>> new_axis = axis.split_while ( width )
     """

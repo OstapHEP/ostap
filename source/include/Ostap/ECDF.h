@@ -30,6 +30,9 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
+    class  ECDF ;
+    class WECDF ;    
+    // ========================================================================
     /** @class ECDF Ostap/ECDF.h
      *  Empirical cumulative distribution function 
      *  @author Vanya Belyaev
@@ -130,9 +133,8 @@ namespace Ostap
       ( ITERATOR begin ,
         ITERATOR end   )
       {
-        if ( std::is_sorted ( begin , end ) ) { return this -> add_sorted ( begin , end ) ; }
-        /// copy input data (only valid/finite entries)  
-        Data tmp ( begin, end ) ;	
+        /// copy input data 
+        Data tmp ( begin, end ) ;       
         /// sort input data 
         std::sort ( tmp.begin () , tmp.end () ) ;
         /// add sorted input 
@@ -236,6 +238,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// low_edge <= xmin 
+      double low_edge       () const ; 
+      ///  xmax < high_edge 
+      double high_edge      () const ; 
+      // ======================================================================      
+    public:
+      // ======================================================================
       /** assuming that x comes from the same distribution 
        *  return transformed value  \f$ g = f(x) \f$, such that 
        *  \f$ g \f$  has Gaussian distribution 
@@ -323,11 +332,11 @@ namespace Ostap
       ( const Ostap::QuantileTypes::ABQuantileType& ab ) const 
       {
         std::array<double,N+2> result {} ;
-        result.front() = this->xmin () ;
-        result.back () = this->xmax () ;
+        result.front() = this -> low_edge  () ;
+        result.back () = this -> high_edge () ; 
         //
         for ( std::size_t i = 1 ; i <= N ; ++ i )
-          { result[i] = this->quantile ( i * 1.0 / ( N + 1 ) , ab ) ; }
+        { result [ i ] = this->quantile ( i * 1.0 / ( N + 1 ) , ab ) ; }
         //
         return result ;        
       }        
@@ -345,11 +354,11 @@ namespace Ostap
       ( const Ostap::QuantileTypes::HarrellDavisType&  t ) const 
       {
         std::array<double,N+2> result {} ;
-        result.front() = this->xmin () ;
-        result.back () = this->xmax () ;
+        result.front() = this -> low_edge  () ;
+        result.back () = this -> high_edge () ; 
         //
         for ( std::size_t i = 1 ; i <= N ; ++ i )
-          { result[i] = this->quantile ( i * 1.0 / ( N + 1 ) , t ) ; }
+        { result [ i ] = this->quantile ( i * 1.0 / ( N + 1 ) , t ) ; }
         //
         return result ;        
       }        
@@ -366,11 +375,11 @@ namespace Ostap
         Ostap::QuantileTypes::HyndmanFanType::Eight ) const 
       {
         std::array<double,N+2> result {} ;
-        result.front() = this->xmin () ;
-        result.back () = this->xmax () ;
+        result.front() = this -> low_edge  () ;
+        result.back () = this -> high_edge () ; 
         //
         for ( std::size_t i = 1 ; i <= N ; ++ i )
-          { result[i] = this->quantile ( i * 1.0 / ( N + 1 ) , t ) ; }
+        { result [ i ] = this->quantile ( i * 1.0 / ( N + 1 ) , t ) ; }
         //
         return result ;        
       }        
@@ -415,8 +424,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// merge two ECDF into single one
+      ECDF merge ( const ECDF& right ) const ;
+      // ======================================================================
       /// swap two objects 
-      void swap ( ECDF& right ) ;
+      void swap  ( ECDF& right ) ;
       // ======================================================================
     private :
       // ======================================================================
@@ -443,8 +455,7 @@ namespace Ostap
     inline ECDF
     operator+
     ( const ECDF& a ,
-      const ECDF& b )
-    { ECDF c { a } ; c += b ; return c ; }
+      const ECDF& b ) { return a.merge ( b ) ; }
     // ========================================================================
     /** @class WECDF Ostap/ECDF.h
      *  Empirical cumulative distribution function for weighted data 
@@ -467,15 +478,15 @@ namespace Ostap
       /// ordering criteria - order by the first component/abscissas  
       struct COMPARE
       {
-	/// comparison criteria: compare abscissas 
-	inline bool operator () ( const Entry& a , const Entry& b ) const
-	{ return a.first < b.first ; }
-	/// comparison criteria: compare abscissas 
-	inline bool operator () ( const Entry& a , const double b ) const
-	{ return a.first < b ; }
-	/// comparison criteria: compare abscissas
-	inline bool operator () ( const double a , const Entry& b ) const
-	{ return a < b.first ; }
+        /// comparison criteria: compare abscissas 
+        inline bool operator () ( const Entry& a , const Entry& b ) const
+        { return a.first < b.first ; }
+        /// comparison criteria: compare abscissas 
+        inline bool operator () ( const Entry& a , const double b ) const
+        { return a.first < b ; }
+        /// comparison criteria: compare abscissas
+        inline bool operator () ( const double a , const Entry& b ) const
+        { return a < b.first ; }
       } ;
       // ======================================================================
     public: 
@@ -634,6 +645,13 @@ namespace Ostap
       /// expose the data: end-iterator 
       inline iterator end   () const { return m_data.end   () ; }      
       // ======================================================================
+    public:
+      // ======================================================================
+      /// low_edge <= xmin 
+      double low_edge       () const ; 
+      ///  xmax < high_edge 
+      double high_edge      () const ; 
+      // ======================================================================      
    public:
       //=======================================================================
       /// statistics (as Counter)
@@ -680,11 +698,48 @@ namespace Ostap
       ( const double                                     p    ) const ; 
       // ======================================================================
     public:
+      // ======================================================================
+      /** get the equidistant (Harrel-Davis) quantiles     
+       *  @see Ostap::WECDF::quantile 
+       *  @attention It could be rather CPU expensive 
+       */
+      template <unsigned short N>
+      inline std::array<double,N+2>
+      quantiles_
+      ( const Ostap::QuantileTypes::HarrellDavisType&  t ) const 
+      {
+        std::array<double,N+2> result {} ;
+        result.front() = this -> low_edge  () ;
+        result.back () = this -> high_edge () ; 
+        //
+        for ( std::size_t i = 1 ; i <= N ; ++ i )
+        { result [ i ] = this->quantile ( i * 1.0 / ( N + 1 ) , t ) ; }
+        //
+        return result ;        
+      }
+      // =====================================================================
+      /** get the equidistant (Harrel-Davis) quantiles     
+       *  @see Ostap::WECDF::quantile 
+       *  @attention It could be rather CPU expensive 
+       */
+      template <unsigned short N>
+      inline std::array<double,N+2>
+      quantiles_ () const 
+      {
+        const Ostap::QuantileTypes::HarrellDavisType t {} ;
+        return this->template quantiles_<N>  ( t ) ;
+      }
+      // ======================================================================
+    public:
       //=======================================================================
       /// project data content into 1D histogram
       void project ( TH1& histo ) const ;
       // ======================================================================
     public: 
+      // ======================================================================
+      /// merge two ECDF into single one 
+      WECDF merge ( const WECDF& right ) const ;
+      WECDF merge ( const  ECDF& right ) const ;
       // ======================================================================
       /// swap two objects 
       void swap ( WECDF& right ) ;
@@ -697,7 +752,7 @@ namespace Ostap
                                  m_data.begin () + std::min ( n , m_data.size() ) , 
                                  0.0             ,
                                  [] ( const double s , const Entry& entry ) -> double
-                                 { return s + entry.second ; } ) ;	}
+                                 { return s + entry.second ; } ) ;      }
       /// calculate \f$ \sum_i^{n} w_i \f$
       inline double sumw2 ( const unsigned long n ) const
       { return std::accumulate ( m_data.begin () ,
@@ -740,24 +795,31 @@ namespace Ostap
     // ========================================================================
     /// swap two objects 
     inline void swap ( WECDF& left , WECDF& right ) { left.swap ( right ) ; }
+    // ========================================================================
+    /// explicit merge functions
+    inline  ECDF merge ( const  ECDF& a , const  ECDF& b ) { return a.merge ( b ) ; } 
+    /// explicit merge functions
+    inline WECDF merge ( const WECDF& a , const WECDF& b ) { return a.merge ( b ) ; } 
+    /// explicit merge functions
+    inline WECDF merge ( const WECDF& a , const  ECDF& b ) { return a.merge ( b ) ; } 
+    /// explicit merge functions
+    inline WECDF merge ( const  ECDF& a , const WECDF& b ) { return b.merge ( a ) ; } 
+    // =========================================================================
     /// add two WECDFs
     inline WECDF
     operator+
     ( const WECDF& a ,
-      const WECDF& b )
-    { WECDF c { a } ; c += b ; return c ; }
+      const WECDF& b ) { return a.merge ( b ) ; } 
     /// add WECDF and ECDF 
     inline WECDF
     operator+
     ( const WECDF& a ,
-      const  ECDF& b )
-    { WECDF c { a } ; c += b ; return c ; }
+      const  ECDF& b ) { return a.merge ( b ) ; }
     /// add WECDF and ECDF 
     inline WECDF
     operator+
     ( const  ECDF& a ,
-      const WECDF& b )
-    { WECDF c { b } ; c += a ; return c ; }
+      const WECDF& b ) { return b.merge ( a ) ; } 
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

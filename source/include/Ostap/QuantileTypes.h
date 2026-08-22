@@ -13,7 +13,7 @@ namespace Ostap
      * @see https://en.wikipedia.org/wiki/Quantile
      * @see https://doi.org/10.2307%2F2684934
      */
-    enum HyndmanFanType
+    enum class HyndmanFanType
       {
         One = 1 ,
         Two     ,
