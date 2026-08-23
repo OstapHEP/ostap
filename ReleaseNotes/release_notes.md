@@ -17,9 +17,9 @@
    1. `ascii`, `dump`, `text` & `unicode` are now allowed to be in the 'option' argument of  `f1_draw` function
    1. add `ostap.tools.data_compare` module with powerful comparison of 1D-data distributions
    1. add C++ versions of Two-Sample 1D (weighted) Test based on exising `Ostap::Math::(W)ECDF` structured
-   1. add equidistant quantiles for `Ostap::Math::WECDF` class
+   1. add equidistant Harrel-Davis' (weighted) quantiles for `Ostap::Math::WECDF` class
+   1. more tweaks & improvement for histo_dump, from now it has three regimes `HIST`, `ERR` and `FUN`
    
-
 ## Bug fixes 
 
 ## Backward incompatible

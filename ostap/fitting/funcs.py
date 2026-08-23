@@ -375,16 +375,15 @@ def dump_function ( func      ,
     xmin, xmax = func.GetXmin() , func.GetXmax() 
     values     = tuple ( func ( x )    for x in vrange ( xmin , xmax , width + 1 , edges = False ) )
     vmax       = max   ( abs  ( v )    for v in values ) 
-    errors     = tuple ( 0 for i in range ( 2 + len ( values ) ) ) 
     edges      = xmin , xmax 
 
     ## use new function 
     from ostap.histos.histo_dump import data2text
     result = data2text ( values     ,
-                         errors     = errors    ,
                          max_height = height    ,
                          edges      = edges     , 
-                         use_color  = use_color )
+                         use_color  = use_color ,
+                         mode       = 'FUN'     )
 
     if kwargs and not silent :
         from ostap.logger.utils import print_args

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -6,7 +5,8 @@
 #  ASCII/Unicode histogram renderer for Ostap framework.
 #  Features out-of-frame Underflow (UF) / Overflow (OV) bins, automatic 
 #  computation of tick marks and scaling factors (10^N), flexible bin edges,
-#  and safe handling of invalid/missing numeric values and errors.
+#  symmetric zero-level alignment, clean zero axis, dense tick grid for precise
+#  height control, and symmetric error bars.
 # 
 #  The code was co-developed and optimized with Gemini (Google AI). 
 # 
@@ -19,6 +19,10 @@
  - Automatic computation of clean tick marks and 10^N scale factors for X and Y axes.
  - Flexible edge input: full edge lists or simple (xmin, xmax) tuples.
  - Safe handling of None, NaN, Inf values and missing error parameters.
+ - Support for rendering modes:
+     * 'HIST' : standard filled-bar histogram (clean zero axis, zero values suppressed)
+     * 'ERR'  : data points with error bars (suppresses trivial unphysical zero points)
+     * 'FUN'  : function curves (draws points on grid, UF/OV remain empty)
 
  - The code was co-developed and optimized with Gemini (Google AI). 
 """
@@ -98,9 +102,10 @@ def _resolve_edges ( edges , n_bins ) :
     return tuple ( float ( e ) if _valid_value ( e ) else float ( i ) for i , e in enumerate ( edges ) )
 
 # =============================================================================
-## Calculate human-friendly tick step and nice values in range
+## Calculate human-friendly tick step and nice values in range with fine step granularity
 def _calculate_nice_ticks ( val_min , val_max , target_ticks = 6 ) :
     """ Calculate human-friendly tick step and nice values in range.
+        Uses a dense grid of nice steps to accurately maintain target row height.
     """
     val_range = abs ( val_max - val_min )
     if val_range == 0 : val_range = 1.0
@@ -109,7 +114,8 @@ def _calculate_nice_ticks ( val_min , val_max , target_ticks = 6 ) :
     exponent  = math.floor ( math.log10 ( raw_delta ) ) if raw_delta > 0 else 0
     fraction  = raw_delta / ( 10 ** exponent ) if raw_delta > 0 else 1.0
 
-    nice_steps = [ 1.0 , 2.0 , 2.5 , 5.0 , 10.0 ]
+    # Fine-grained step multiplier grid to prevent large vertical quantization gaps
+    nice_steps = [ 1.0 , 1.2 , 1.25 , 1.5 , 2.0 , 2.5 , 3.0 , 4.0 , 5.0 , 6.0 , 7.5 , 8.0 , 10.0 ]
     delta      = 10.0 * ( 10 ** exponent )
     for step in nice_steps :
         if step >= fraction :
@@ -123,27 +129,29 @@ def _calculate_nice_ticks ( val_min , val_max , target_ticks = 6 ) :
     return delta , nice_vals
 
 # =============================================================================
-## Generate Y-axis row specifications with steps and tick positions
+## Generate Y-axis row specifications with symmetric zero row [-0.5*dy, +0.5*dy]
 def _build_grid_rows ( y_min , y_max , max_height ) :
     """ Generate Y-axis row specifications with steps and tick positions.
+        The zero row is symmetric: [-0.5*delta_y, +0.5*delta_y].
     """
     delta_y , _ = _calculate_nice_ticks ( y_min , y_max , target_ticks = max_height )
 
-    steps_up       = int ( math.ceil ( y_max / delta_y ) ) if y_max > 0 else 0
-    steps_down     = int ( math.ceil ( abs ( y_min ) / delta_y ) ) if y_min < 0 else 0
+    steps_up       = int ( math.ceil ( ( y_max - 0.5 * delta_y ) / delta_y ) ) if y_max > 0.5 * delta_y else 0
+    steps_down     = int ( math.ceil ( ( abs ( y_min ) - 0.5 * delta_y ) / delta_y ) ) if y_min < -0.5 * delta_y else 0
     lines_per_tick = 4
 
     rows = []
     for step in range ( steps_up , 0 , -1 ) :
         is_tick = ( step % lines_per_tick == 0 )
-        rows.append ( { "y_high"   : step * delta_y ,
-                        "y_low"    : ( step - 1 ) * delta_y ,
+        rows.append ( { "y_high"   : ( step + 0.5 ) * delta_y ,
+                        "y_low"    : ( step - 0.5 ) * delta_y ,
                         "tick_val" : round ( step * delta_y , 6 ) if is_tick else None ,
                         "is_tick"  : is_tick ,
                         "is_zero"  : False   } )
 
-    rows.append ( { "y_high"   : 0.0  ,
-                    "y_low"    : 0.0  ,
+    # Symmetric zero row centered at 0.0
+    rows.append ( { "y_high"   : 0.5 * delta_y  ,
+                    "y_low"    : -0.5 * delta_y ,
                     "tick_val" : 0.0  ,
                     "is_tick"  : True ,
                     "is_zero"  : True } )
@@ -152,8 +160,8 @@ def _build_grid_rows ( y_min , y_max , max_height ) :
         is_tick = ( step % lines_per_tick == 0 )
         rows.append (
             {
-                "y_high"   : -( step - 1 ) * delta_y ,
-                "y_low"    : -step * delta_y ,
+                "y_high"   : -( step - 0.5 ) * delta_y ,
+                "y_low"    : -( step + 0.5 ) * delta_y ,
                 "tick_val" : round ( -step * delta_y , 6 ) if is_tick else None ,
                 "is_tick"  : is_tick ,
                 "is_zero"  : False ,
@@ -163,47 +171,87 @@ def _build_grid_rows ( y_min , y_max , max_height ) :
     return rows , delta_y , steps_up
 
 # =============================================================================
+## Find the row index corresponding to a value
+def _find_val_row_idx ( val , rows ) :
+    """ Find row index corresponding to value for cell-relative error bar rendering.
+    """
+    if not _valid_value ( val ) : return None
+    v = float ( val )
+    top_y_high   = rows [ 0 ] [ "y_high" ]
+    bottom_y_low = rows [ -1 ] [ "y_low" ]
+
+    if v >= top_y_high :
+        return 0
+    if v < bottom_y_low :
+        return len ( rows ) - 1
+
+    for idx , r in enumerate ( rows ) :
+        is_top = ( idx == 0 )
+        if ( r [ "y_low" ] <= v < r [ "y_high" ] ) or ( is_top and v == r [ "y_high" ] ) :
+            return idx
+    return len ( rows ) - 1
+
+# =============================================================================
 ## Determine the ASCII character representation for a single cell
 def the_glyph ( val          , 
                 e_low        , 
                 e_high       , 
                 r_low        , 
                 r_high       , 
+                current_idx  ,
+                val_idx      ,
                 default_char , 
-                has_errors   , 
-                steps_up     , 
                 delta_y      ,
-                use_color = True ) :
+                use_color = True ,
+                mode      = 'HIST' ) :
     """ Determine the ASCII character representation for a single cell.
+        - mode : 'HIST' (filled bars), 'ERR' (error bars), 'FUN' (points without errors)
     """
     if not _valid_value ( val ) : return default_char
 
-    val = float ( val )
+    val         = float ( val )
+    is_zero_val = ( val == 0.0 ) or math.isclose ( val , 0.0 , abs_tol = 1e-12 )
 
-    if has_errors :
-        # Check if central data point falls in current cell
-        is_val_cell = ( r_low <= val < r_high ) or ( r_high == steps_up * delta_y and val == r_high )
+    # --- Mode: HIST ---
+    if mode in ( 'HIST' , 'H' ) :
+        # Keep the zero axis row clean (do not render filled blocks directly on the axis line)
+        if is_zero_val or ( r_low < 0.0 < r_high ) :
+            return default_char
 
-        # If errors were explicitly passed but are 0.0 for this bin, plot points only
-        if e_low == 0.0 and e_high == 0.0 :
-            return CIRCLE_COLORED if ( use_color and is_val_cell ) else ( CIRCLE if is_val_cell else default_char )
+        if val > 0.0 and r_low >= 0.0 and val > r_low :
+            return RECTANGLE_POS_COLORED if use_color else RECTANGLE_POS
+        elif val < 0.0 and r_high <= 0.0 and val < r_high :
+            return RECTANGLE_NEG_COLORED if use_color else RECTANGLE_NEG
 
-        # Clamp lower error bound to 0 for non-negative histogram counts
-        y_err_min = max ( 0.0 , val - e_low ) if val >= 0 else val - e_low
-        y_err_max = val + e_high
+        return default_char
 
-        # Check if error interval traverses current cell
-        in_error_range = ( y_err_min < r_high ) and ( y_err_max > r_low )
+    # --- Mode: FUN ---
+    if mode in ( 'FUN' , 'FUNCTION' , 'F' ) :
+        if current_idx == val_idx :
+            return CIRCLE_COLORED if use_color else CIRCLE
+        return default_char
 
-        if is_val_cell :
-            return CIRCLE_COLORED if use_color else CIRCLE 
-        elif in_error_range :
-            return BAR_COLORED if use_color else BAR 
-        
-    else :
-        # No errors provided at all -> Draw filled bar columns
-        if   val > 0 and r_low >= 0  and val > r_low  : return RECTANGLE_POS_COLORED if use_color else RECTANGLE_POS 
-        elif val < 0 and r_high <= 0 and val < r_high : return RECTANGLE_NEG_COLORED if use_color else RECTANGLE_NEG 
+    # --- Mode: ERR ---
+    # Suppress point drawing for zero values if error is trivial (0.0 or 1.0)
+    if is_zero_val :
+        e_low_triv  = ( e_low in ( 0.0 , 1.0 )  or math.isclose ( e_low  , 0.0 , abs_tol = 1e-12 ) or math.isclose ( e_low  , 1.0 , abs_tol = 1e-12 ) )
+        e_high_triv = ( e_high in ( 0.0 , 1.0 ) or math.isclose ( e_high , 0.0 , abs_tol = 1e-12 ) or math.isclose ( e_high , 1.0 , abs_tol = 1e-12 ) )
+        if e_low_triv and e_high_triv :
+            return default_char
+
+    if current_idx == val_idx :
+        return CIRCLE_COLORED if use_color else CIRCLE
+
+    # Calculate error bars relative to the target value cell to guarantee perfect symmetry
+    if val_idx is not None :
+        if current_idx < val_idx : # Row is above the value point
+            d = val_idx - current_idx
+            if e_high >= ( d - 0.5 ) * delta_y :
+                return BAR_COLORED if use_color else BAR
+        elif current_idx > val_idx : # Row is below the value point
+            d = current_idx - val_idx
+            if e_low >= ( d - 0.5 ) * delta_y :
+                return BAR_COLORED if use_color else BAR
 
     return default_char
 
@@ -252,24 +300,39 @@ def data2text_ ( bins               ,
                  errors_low  = None ,
                  errors_high = None ,
                  max_height  = 30   ,
-                 use_color   = True ) :
+                 use_color   = True ,
+                 mode        = None ) :
     """ Main function to render ASCII histogram with UF/OV placed outside the plot frame.
+        - mode : 'HIST' (filled bars), 'ERR' (error bars), 'FUN' (points without errors, UF/OV empty)
     """
+    # Auto-resolve mode if omitted
+    has_input_errors = ( errors_low is not None or errors_high is not None )
+    if mode is None : mode = 'ERR' if has_input_errors else 'HIST'
+    else            : mode = str ( mode ) .strip () .upper ()
+
+    num_cols = len ( bins ) + 2
+
+    if mode in   ( 'F' , 'FUN' , 'FUNC' , 'FUNCTION' ) :
+        underflow   = None
+        overflow    = None
+        has_errors  = False
+        e_low_list  = [ 0.0 ] * num_cols
+        e_high_list = [ 0.0 ] * num_cols
+    elif mode in ( 'H' , 'HIST' , 'HISTO' , 'HISTOGRAM' ) :
+        has_errors  = False
+        e_low_list  = [ 0.0 ] * num_cols
+        e_high_list = [ 0.0 ] * num_cols
+    else :  # 'ERR'
+        has_errors  = True
+        e_low_list  = _normalize_errors ( errors_low  , num_cols )
+        e_high_list = _normalize_errors ( errors_high , num_cols )
+        if e_low_list  is None : e_low_list  = [ 0.0 ] * num_cols
+        if e_high_list is None : e_high_list = [ 0.0 ] * num_cols
+
     full_data = [ underflow ] + list ( bins ) + [ overflow ]
-    num_cols  = len ( full_data )
     n_bins    = len ( bins )
 
     edges     = _resolve_edges ( edges , n_bins )
-
-    e_low_list  = _normalize_errors ( errors_low  , num_cols )
-    e_high_list = _normalize_errors ( errors_high , num_cols )
-    
-    # Check if errors parameter was explicitly supplied
-    has_errors  = ( e_low_list is not None ) or ( e_high_list is not None )
-    
-    if not has_errors :
-        e_low_list  = [ 0.0 ] * num_cols
-        e_high_list = [ 0.0 ] * num_cols
 
     low_bounds , high_bounds = [] , []
     for i in range ( num_cols ) :
@@ -288,6 +351,8 @@ def data2text_ ( bins               ,
         raw_y_max = 1.0
 
     rows , delta_y , steps_up = _build_grid_rows ( raw_y_min , raw_y_max , max_height )
+
+    val_row_indices = [ _find_val_row_idx ( v , rows ) for v in full_data ]
 
     max_abs_y   = max ( abs ( raw_y_max ) , abs ( raw_y_min ) )
     y_exp       = int ( math.floor ( math.log10 ( max_abs_y ) ) ) if max_abs_y > 0 else 0
@@ -318,8 +383,8 @@ def data2text_ ( bins               ,
     header_prefix = " " * prefix_len + "   "
     output.append ( f"{header_prefix}▲ Y{y_scale_str}".rstrip () )
 
-    for idx , row in enumerate ( rows ) :
-        is_top , is_bottom = ( idx == 0 ) , ( idx == len ( rows ) - 1 )
+    for current_idx , row in enumerate ( rows ) :
+        is_top , is_bottom = ( current_idx == 0 ) , ( current_idx == len ( rows ) - 1 )
 
         if is_top :
             top_cols = [ "┬" if b in marked_cols_set else "─" for b in range ( n_bins ) ]
@@ -338,25 +403,27 @@ def data2text_ ( bins               ,
         right_b = "┼" if row [ "is_zero" ] or row [ "is_tick" ] else "│"
 
         uf_char = the_glyph ( full_data   [ 0 ] ,
-                               e_low_list  [ 0 ] ,
-                               e_high_list [ 0 ] ,
-                               row         [ "y_low"  ] ,
-                               row         [ "y_high" ] ,
-                               " "         ,
-                               has_errors  ,
-                               steps_up    ,
-                               delta_y     ,
-                               use_color = use_color )
+                              e_low_list  [ 0 ] ,
+                              e_high_list [ 0 ] ,
+                              row         [ "y_low"  ] ,
+                              row         [ "y_high" ] ,
+                              current_idx ,
+                              val_row_indices [ 0 ] ,
+                              " "         ,
+                              delta_y     ,
+                              use_color = use_color ,
+                              mode      = mode )
         ov_char = the_glyph ( full_data   [ -1 ] ,
                               e_low_list  [ -1 ] ,
                               e_high_list [ -1 ] ,
                               row         [ "y_low"  ] ,
                               row         [ "y_high" ] ,
+                              current_idx ,
+                              val_row_indices [ -1 ] ,
                               " "         ,
-                              has_errors  ,
-                              steps_up    ,
                               delta_y     , 
-                              use_color = use_color )
+                              use_color = use_color ,
+                              mode      = mode )
         
         bin_chars = []
         for i in range ( 1 , n_bins + 1 ) :
@@ -378,11 +445,12 @@ def data2text_ ( bins               ,
                             e_high_list  [ i ] ,
                             row          [ "y_low"  ] ,
                             row          [ "y_high" ] ,
+                            current_idx  ,
+                            val_row_indices [ i ] ,
                             def_c        ,
-                            has_errors   ,
-                            steps_up     ,
                             delta_y      , 
-                            use_color = use_color )
+                            use_color = use_color ,
+                            mode      = mode )
             
             bin_chars.append ( c )
 
@@ -405,19 +473,20 @@ def data2text ( bins               , * ,
                 edges       = None ,
                 errors      = None ,
                 max_height  = 26   ,
-                use_color   = True ) :
+                use_color   = True ,
+                mode        = None ) :
     """ Wrapper function to handle symmetric and asymmetric error formats.
+        - mode : 'HIST', 'ERR', 'FUN' (or None for auto)
     """
-    return data2text_ (
-        bins        = bins        ,
-        underflow   = underflow   ,
-        overflow    = overflow    ,
-        edges       = edges       ,
-        errors_low  = errors      ,
-        errors_high = errors      ,
-        max_height  = max_height  ,
-        use_color   = use_color   
-    )
+    return data2text_ ( bins        = bins        ,
+                        underflow   = underflow   ,
+                        overflow    = overflow    ,
+                        edges       = edges       ,
+                        errors_low  = errors      ,
+                        errors_high = errors      ,
+                        max_height  = max_height  ,
+                        use_color   = use_color   ,
+                        mode        = mode        )
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -426,12 +495,12 @@ if '__main__' == __name__ :
     docme ( __name__ )
     
     import ROOT, random
-    logger.info ( "=== Test 1: Standard Histogram with (xmin, xmax) tuple ===" )
+    logger.info ( "=== Test 1: Standard Histogram (HIST mode) ===" )
 
-    th1 = ROOT.TH1F ( "h1" , "Test Histogram" , 70 , 0  , 100  )
-    for i in range ( 500 ) :
-        v = random.gauss ( 0 , 100  )
-        th1.Fill ( v , -1 if v >= 50  else 2 )
+    th1 = ROOT.TH1F ( "h1" , "Test Histogram" , 50 , -50 , 50 )
+    for i in range ( 300 ) :
+        v = random.gauss ( 0 , 15 )
+        th1.Fill ( v , 1 if v < 0 else -1 )
 
     nbins      = th1.GetNbinsX ()
     values     = tuple ( th1.GetBinContent ( i ) for i in range ( 1 , nbins + 1 ) )
@@ -440,23 +509,26 @@ if '__main__' == __name__ :
     overflow   = th1.GetBinContent ( nbins + 1 )
     axis       = th1.GetXaxis() 
     edges      = axis.GetXmin() , axis.GetXmax()
-    logger.info ( 'Histogram with error bars:\n%s'    % data2text ( values    ,
-                                                                    errors    = errors    ,
-                                                                    underflow = underflow , 
-                                                                    overflow  = overflow  , 
-                                                                    edges     = edges     ,
-                                                                    use_color = True      ) )
-    logger.info ( 'Histogram without error bars:\n%s' % data2text ( values    ,
-                                                                    underflow = underflow , 
-                                                                    overflow  = overflow  , 
-                                                                    edges     = edges     ,
-                                                                    use_color = True      ) )
-    logger.info ( 'Histogram with zero errors:\n%s'   % data2text ( values    ,
-                                                                    errors    = tuple ( 0 for i in errors ) ,
-                                                                    underflow = underflow , 
-                                                                    overflow  = overflow  , 
-                                                                    edges     = edges     ,
-                                                                    use_color = True      ) )
+
+    logger.info ( 'HIST mode:\n%s' % data2text ( values    ,
+                                                 underflow = underflow , 
+                                                 overflow  = overflow  , 
+                                                 edges     = edges     ,
+                                                 mode      = 'HIST'    ) )
+
+    logger.info ( 'ERR mode (with zero-error suppression):\n%s' % data2text ( values    ,
+                                                                              errors    = errors    ,
+                                                                              underflow = underflow , 
+                                                                              overflow  = overflow  , 
+                                                                              edges     = edges     ,
+                                                                              mode      = 'ERR'     ) )
+    
+    # Test FUN mode on smooth function
+    from ostap.utils.ranges import vrange 
+    func_vals = [ math.sin ( x * math.pi ) + 0.5  for x in vrange ( -1 , +2 , 80 , edges = False ) ]
+    logger.info ( 'FUN mode:\n%s' % data2text ( func_vals ,
+                                                edges = ( -1 , +2 ) ,
+                                                mode  = 'FUN'    ) )
     
 # =============================================================================
 ##                                                                      The END 

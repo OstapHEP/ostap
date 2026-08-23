@@ -8660,6 +8660,7 @@ def dump_histo ( histo     ,
     ## use new function 
     from ostap.histos.histo_dump import data2text
     result = data2text ( values     ,
+                         mode       = 'ERR' if with_errors else 'HIST' , 
                          underflow  = underflow , 
                          overflow   = overflow  , 
                          errors     = errors    ,
