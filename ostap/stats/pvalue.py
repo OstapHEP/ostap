@@ -22,12 +22,12 @@ __all__     = (
     'TOYS'         , ## get p-value using toys     
 )
 # =============================================================================
-from   ostap.core.meta_info     import root_info 
 from   ostap.utils.core         import typename
 from   ostap.math.math_base     import data2vct 
 from   ostap.stats.utils        import weight_trivial , check_all                                           
 from   ostap.stats.counters     import EffCounter, ECDF 
 from   ostap.utils.progress_bar import progress_bar
+from   ostap.logger.symbols     import script_p 
 import numpy, math, abc 
 # =============================================================================
 # logging 
@@ -274,7 +274,7 @@ class PVALUE (abc.ABC) :
         the_list = [ n for n in splitter ( N , njobs ) ] 
         njobs    = len ( the_list ) 
 
-        if not silent : logger.info ( 'GoF p-value: #%d parallel subjobs to be used with WorkManager' %  njobs )
+        if not silent : logger.info ( 'GoF %s-value: #%d parallel subjobs to be used with WorkManager' % ( script_p , njobs ) )
         
         counter = EffCounter()
         tvalues = () 

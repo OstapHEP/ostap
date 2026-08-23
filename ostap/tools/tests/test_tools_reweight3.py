@@ -14,15 +14,14 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-01-20"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   packaging.version        import Version
 from   ostap.core.pyrouts       import Ostap, VE  
 from   ostap.histos.histos      import h1_axis, h2_axes, h3_axes 
 from   ostap.utils.timing       import timing
-from   ostap.logger.colorized   import attention, allright
+from   ostap.logger.colorized   import allright
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
-from   ostap.logger.symbols     import iteration, plus_minus 
+from   ostap.logger.symbols     import iteration, plus_minus, script_p
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
@@ -72,17 +71,17 @@ small = numcpu () <= 8
 
 if small : 
     
-    NDATA1      = 3000 ## 00
-    NDATA2      = 3000 ## 00
-    NDATA3      = 3000 ## 00
-    NMC         = 5000 ## 00
-    
-else :
-     
     NDATA1      =  5000 ## 00
     NDATA2      =  5000 ## 00
     NDATA3      =  5000 ## 00
-    NMC         = 20000 ## 00
+    NMC         = 10000 ## 00
+    
+else :
+     
+    NDATA1      = 25000 ## 00
+    NDATA2      = 25000 ## 00
+    NDATA3      = 25000 ## 00
+    NMC         = 50000 ## 00
     
 xmax        = 15.0
 ymax        = 12.0 
@@ -256,7 +255,7 @@ if not os.path.exists ( testdata ) :
         prepare_data ()
 
 has_lightgbm  = hasLightGBM  ()
-if has_lightgbm :  logger.attention ( 'USE LigthGBM!'              )
+if has_lightgbm :  logger.attention ( 'USE LightGBM!'              )
 else            :  logger.warning   ( 'LightGBM is not available!' )
             
 has_xgboost   = hasXGBoost  ()
@@ -278,6 +277,7 @@ from ostap.stats.gof_np       import  ( MIXnp           as COMPARATOR4 ,
                                         KullbackLeibler as COMPARATOR3 , 
                                         Mahalanobis     as COMPARATOR2 , 
                                         Hotelling       as COMPARATOR1 )
+
 from ostap.stats.data_compare import data_compare     
 comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR2 ( parallel = True , nToys = 100 ) ,
@@ -288,7 +288,7 @@ if has_lightgbm :
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
     comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) , ) 
 
-if False and has_xgboost:  
+if has_xgboost:  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) , ) 
 
@@ -411,7 +411,8 @@ plots  = [
 memory_init = memory_usage() 
 converged   = False
 
-maxIter     = 5 if small else 12
+maxIter = 5 if small else 12
+## maxIter = 15 
 
 # =============================================================================
 ## start reweighting iterations:
@@ -454,7 +455,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     ## the_plots = plots
     
     ## weight truncation: avoid very large change of weights for  single iteration 
-    wtruncate = ( 0.05 , 3 ) if iter < 4 else ( 0.5 , 1.3 )  
+    wtruncate = ( 0.02 , 3 ) if iter < 4 else ( 0.2 , 1.3 )  
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
@@ -490,7 +491,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             row     += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
             glob_stat.append ( row )
             
-            title = 'Global DATA/MC similarity p-values [%]'
+            title = 'Global DATA/MC similarity %s-values [%%]' % script_p
             table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
             logger.info ( '%s\n%s' % ( title , table ) )
                    
@@ -627,6 +628,9 @@ for weight in weights :
                                  mctree      ,
                                  expressions = ( 'x' , 'y' , 'z' ) ,
                                  cuts2       = weight ) 
+    
+    datatree    = ROOT.TChain  ( tag_data    , files = testdata ) 
+    mctree      = ROOT.TChain  ( tag_mc      , files = testdata )
     ## effective MC statistics at this step 
     n_eff   = mctree.nEff ( weight ) 
     row     = ( weight , '%.1f'  % n_eff )
@@ -634,7 +638,7 @@ for weight in weights :
     row    += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
     glob_stat.append ( row )
     
-    title = 'Global DATA/MC similarity: p-values [%]'
+    title = 'Global DATA/MC similarity: %s-values [%%]' % script_p
     table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
     logger.info ( '%s\n%s' % ( title , table ) )
     
