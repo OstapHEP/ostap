@@ -43,7 +43,7 @@ __all__     = (
     'ADVAL_Keras'        , ## Use Adversarial Validation as GoF estimator
     ##
     ## 1D-(weighted) case
-    'KolmogorovSmirnov'  , ## Kolmogorov-Sminov GoF estimator 
+    'KolmogorovSmirnov'  , ## Kolmogorov-Sminov GoF estimator
     'Kuiper'             , ## Kuiper            GoF estimator 
     'AndersonDarling'    , ## Anderson-Darling  GoF estimator 
     'CramerVonMises'     , ## Cramer-von Mises  GoF estimator 
@@ -51,6 +51,11 @@ __all__     = (
     'ZK'                 , ## ZK               GoF estimator
     'ZA'                 , ## ZA               GoF estimator
     'ZC'                 , ## ZC               GoF estimator
+    ## some crude estimators
+    'Mahalanobis'        , ## Use Mahalanobis'      distance as GoF estimator
+    'Hotelling'          , ## Use Hoellling'        distance as GoF estimator
+    'KullBackLeibler'    , ## Use Kullback-Leibler' distance as GoF estimator
+    ## 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
@@ -1751,6 +1756,131 @@ class ZK ( KolmogorovSmirnov ) :
                            mcFactor       = mcFactor , **params )
         
 
+# =============================================================================
+## @class Mahalanobis
+#  Use "Mahalanobis" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class Mahalanobis(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Mahalanobis' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Mahalanobis' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import Mahalanobis as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys    = nToys    ,
+                                         parallel = parallel ,
+                                         silent   = silent   ,
+                                         progress = progress , **params ) )
+        
+# =============================================================================
+## @class Hotelling
+#  Use "Hotelling" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class Hotelling(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Hotelling' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Mahalanobis' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import Hotelling as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys    = nToys    ,
+                                         parallel = parallel ,
+                                         silent   = silent   ,
+                                         progress = progress , **params ) ) 
+        
+# =============================================================================
+## @class Kullback-Leibler 
+#  Use "Kullback-Leibler" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class KullbackLeibler(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Kullback-Leibler' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   symmetric  = True  , 
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Mahalanobis' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import KullbackLeibler as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys     = nToys     ,
+                                         symmetric = symmetric ,
+                                         parallel  = parallel  ,
+                                         silent    = silent    ,
+                                         progress  = progress  , **params ) ) 
+                              
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -61,7 +61,7 @@ namespace Ostap
       /// full constructor from vector and covariance matrix 
       SVectorWithError 
       ( const Covariance& cov2  , 
-	      const Value&      value )
+              const Value&      value )
         : m_value ( value ) 
         , m_cov2  ( cov2  ) 
       {}
@@ -144,10 +144,10 @@ namespace Ostap
       ( unsigned int i )       { return m_value [ i ] ; }
       inline const  SCALAR& operator()
       ( unsigned int i ,
-	      unsigned int j ) const { return m_cov2 ( i , j ) ; }
+              unsigned int j ) const { return m_cov2 ( i , j ) ; }
       inline        SCALAR& operator()
       ( unsigned int i ,
-	      unsigned int j )       { return m_cov2 ( i , j ) ; }      
+              unsigned int j )       { return m_cov2 ( i , j ) ; }      
       // ======================================================================
     public: // 
       // ======================================================================
@@ -178,7 +178,7 @@ namespace Ostap
        */
       inline SCALAR  corr
       ( const unsigned int i  ,
-	const unsigned int j  ) const ;
+        const unsigned int j  ) const ;
       // ======================================================================
       /** get the full correlation matrix 
        *  @return false for invalid setup 
@@ -247,7 +247,7 @@ namespace Ostap
         * - all values are finite 
         * - all elements of covariance matrix are finite 
         * - diagonal elements of covariance matrix are positive
-	* - off-diagonal elements are not too large 	
+        * - off-diagonal elements are not too large     
         * - covariance matrix is positive-definite
         */
       inline bool valid   () const ;
@@ -651,7 +651,7 @@ namespace Ostap
     }
     // ========================================================================
     /** "transform" vector with uncertainties using matrix 
-     *   @param M (INPUT)
+     *   @param  M (INPUT) transformation  matrix 
      *   @return transformed vector
      */
     template <unsigned int K, unsigned int N, typename SCALAR> 
@@ -662,7 +662,7 @@ namespace Ostap
     { return SVectorWithError<K,SCALAR> ( M * v.value() , v.cov2().Similarity ( M ) ) ; }
     // ========================================================================
     /** "transform" vector with uncertainties using matrix 
-     *   @param M (INPUT)
+     *   @param M (INPUT) transformations matrix 
      *   @return transformed vector
      */
     template <unsigned int N, typename SCALAR> 
@@ -889,8 +889,8 @@ namespace Ostap
     ( const SVectorWithError<N,SCALAR>& vct )
     {
       return
-	Ostap::Math::isfinite ( vct.value () ) &&
-	Ostap::Math::isfinite ( vct.cov2  () ) ;	
+        Ostap::Math::isfinite ( vct.value () ) &&
+        Ostap::Math::isfinite ( vct.cov2  () ) ;        
     }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math

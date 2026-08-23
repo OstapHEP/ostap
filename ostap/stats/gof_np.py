@@ -53,7 +53,8 @@ from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          draw_ecdf          , s2u , np2vct ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf
-from   ostap.logger.symbols     import symmetry as symmetry_symbol
+from   ostap.logger.symbols     import ( symmetry  as symmetry_symbol  ,
+                                         asymmetry as asymmetry_symbol )
 import ostap.math.math_base           
 import ROOT, os, abc, numpy, math 
 # =============================================================================
@@ -1194,22 +1195,30 @@ class KullbackLeibler(Mahalanobis) :
     - attention it is *VERY* crude "estimator"
     """    
     def __init__ ( self        ,  *    , 
-                   nToys       = 400   ,
+                   nToys       = 400  ,
                    parallel    = False , 
                    silent      = False ,
                    progress    = True  ,
                    symmetric   = True  , **params ) :         
         
         self.__symmetric = True if symmetric else False
+
+        method = 'Kullback-Leibler/%s' % ( symmetry_symbol if self.symmetric else asymmetry_symbol )
         
         ## initialize the base 
-        super() .__init__ ( nToys        = nToys            ,
-                            parallel     = parallel         , 
-                            silent       = silent           ,
-                            progress     = progress         ,                           
-                            method       =  ( 'Kullback-Leibler/%s' % symmetry_symbol ) if self.__symmetric else 'Kullback-Leibler',
-                            symmetric    = self.__symmetric , 
-                            normalize    = True             , **params )
+        super() .__init__ ( nToys        = nToys     ,
+                            parallel     = parallel  , 
+                            silent       = silent    ,
+                            progress     = progress  ,                           
+                            method       = method    , 
+                            symmetric    = symmetric , 
+                            normalize    = True      , **params )
+
+    # =========================================================================
+    @property
+    def symmetric ( self ) :
+        """`symmetric` : Symemtric Kullback-Leibler distance?"""
+        return self.__symmetric 
         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -1234,7 +1243,7 @@ class KullbackLeibler(Mahalanobis) :
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
         
-        return v1.kullback_leibler ( v2 ) if self.__symmetric else v1.asymmetric_kullback_leibler ( v2 )
+        return v1.kullback_leibler ( v2 ) if self.symmetric else v1.asymmetric_kullback_leibler ( v2 )
 
 # ============================================================================
 ## @class Hotelling  

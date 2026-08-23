@@ -22,6 +22,7 @@ __all__     = (
     'compatible_shapes'   , ## Check if input datasets have compatible shapes 
     'compatible_weights'  , ## Check for data and weights compatibility
     'check_all'           , ## check ALL
+    'nEff'                , ## Compute effective sample size (Kish's design effect formula)
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
@@ -51,6 +52,22 @@ def weight_trivial ( weight ) :
     elif isinstance ( weight , numpy.ndarray      ) : return numpy.all ( weight == 1 ) 
     elif isinstance ( weight , sized_types        ) : return all ( 1 == w for w in weight )
     return False
+
+# ==============================================================================
+## Compute effective sample size (Kish's design effect formula)
+#  taking into account sample weights (including negative sPlot weights).
+def nEff ( X , W = None ) :
+    """ Compute effective sample size (Kish's design effect formula)
+        taking into account sample weights (including negative sPlot weights).
+    """
+    ns = num_samples  ( X )
+    if weight_trivial ( W  ) : return float ( ns )
+    
+    w_arr  = numpy.asarray ( W     , dtype = numpy.float32 )
+    sum_w  = numpy.sum     ( w_arr , dtype = numpy.float64 )
+    sum_w2 = numpy.dot     ( w_arr.astype (  numpy.float64 ) , w_arr ) 
+    
+    return ( sum_w** 2 ) / sum_w2 if 0 < sum_w2 else float ( ns )
 
 # =============================================================================
 ## Check if weights array has a valid 1D/column vector shape

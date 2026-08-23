@@ -41,8 +41,9 @@ __all__     = (
 from   ostap.core.ostap_types import string_types
 from   ostap.utils.core       import typename
 from   ostap.utils.basic      import numcpu, num_jobs, run_parallel
-from   ostap.stats.utils      import ( weight_trivial , check_all    , 
-                                       num_samples    , num_features ) 
+from   ostap.stats.utils      import ( weight_trivial , nEff         , 
+                                       num_samples    , num_features , 
+                                       check_all      )
 from   ostap.stats.gof_np     import GoFnp 
 from   sklearn.metrics        import mean_squared_error
 import ROOT, numpy, abc, os   
@@ -58,22 +59,65 @@ logger.debug ( 'Implement Adversarial Validation (Regression mode)' )
 DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
 # =============================================================================
-## Calculate t-value from MSE / RMSE metric
-def tvalue_from_MSE ( mse ) :
-    """ Calculate t-value based on weighted MSE for regression adversarial validation
+## Need strong regualrization: BDT-type  
+def BDT_needs_regularization ( X , W = None ) :
+    """ Use strong regularization: BDT-type
     """
-    return 100.0 * max ( 0.0 , float ( mse ) )
+    nf        = num_features ( X )
+    low_dim   = ( nf <= 3 )
+    if low_dim : return True 
+    
+    neff      = nEff ( X , W )    
+    low_stats = ( neff < 500.0 * nf )
+    
+    return low_stats
 
-# Стало (исправляем точку отсчета):
-def tvalue_from_MSE ( mse ) :
-    """ MSE = 0.25 означает отсутствие различий (t = 0).
-        Чем меньше MSE, тем сильнее различаются выборки (t растет).
+# =============================================================================
+## Determine whether strong regularization is required specifically for Neural Networks 
+#  (PyTorch / Keras) when handling weighted or sPlot datasets.
+def NN_needs_regularization ( X , W = None ):
+    """ Determines whether strong regularization is required specifically for Neural Networks 
+    (PyTorch / Keras) when handling weighted or sPlot datasets.
+    
+    Evaluates effective sample size (Kish's formula), weight variance/outliers, 
+    and event density per feature.
+    
+    Parameters
+    ----------
+    X : array-like, shape (n_samples, n_features)
+        Input feature matrix.
+    W : array-like or None
+        Sample weights (supports negative sPlot weights).
+        
+    Returns
+    -------
+    bool 
+    Flag indicating if strong regularization should be applied.
     """
-    return 100.0 * max ( 0.0 , 0.25 - float ( mse ) )
+    nf   = num_features ( X )
+    neff = nEff ( X , W )
 
+    low_neff         = ( neff < 1000.0        )
+    if low_neff      : return True
+
+    low_density      = ( neff < 200.0 * nf    )
+    if low_density   : return True 
+    
+    if weight_trivial ( W ) : return False
+    
+    w_arr        = numpy.asarray ( W     , dtype = numpy.float32 )
+    mean_w       = numpy.mean    ( w_arr , dtype = numpy.float64 )
+    w_dispersion = ( numpy.std   ( w_arr , dtype = numpy.float64 ) / mean_w ) if 0.0 < mean_w else 0.0
+    
+    high_dispersion  = ( 2.0  < w_dispersion  )
+    
+    return high_dispersion
+
+# =============================================================================
+## convert MSE to t-value 
 def tvalue_from_MSE ( mse ) :
-    """ MSE = 0.25 означает отсутствие различий (t = 0).
-        Чем меньше MSE, тем сильнее различаются выборки (t растет).
+    """ Convert MST to tvalue"
+    - MSE = 0.25  means no difference 
     """
     return 1 - 4 * float ( mse ) 
 
@@ -119,7 +163,6 @@ class ADVAL_base (GoFnp):
 
         self.__n_splits            = n_splits 
         self.__importance_features = {}
-        self.__regularized         = None  
         
         GoFnp.__init__ ( self                  ,
                          nToys     = nToys     ,
@@ -129,35 +172,21 @@ class ADVAL_base (GoFnp):
                          normalize = normalize , 
                          method    = method    , **params )
                 
-    # ============================================================================
+    # =========================================================================
     @property
     def n_splits ( self ) :
         """`n_splits`: Number of splits for cross-validation"""
         return self.__n_splits 
 
-    # ==================================================================================
+    # =========================================================================
     @property
     def config ( self ) :
         """`config`: Get all configuration parameters"""
         conf = {}
         conf.update ( super().config ) 
         conf [ 'n_splits' ] = self.n_splits
-        for key, value in self.regularized.items() :  conf [ '%s [reg]' % key ] = value
         return conf
     
-    # ==========================================================================
-    @property 
-    def regularized ( self ) :
-        """`regularized`: regularized configuration"""
-        if self.__regularized is None :
-            self.__regularized = self.regularization ()
-        return self.__regularized.copy() 
-
-    @abc.abstractmethod 
-    def regularization ( self ) :
-        params = {} 
-        return params 
-        
     @property 
     def weights_supported ( self ) :
         return True 
@@ -195,18 +224,21 @@ class ADVAL_base (GoFnp):
                X_val   , Y_val   , W_val   , importance = False ) :
         return NotImplemented
 
-    ##def use_strong_regularization ( self , X ) :
-    ##    ns = num_samples  ( X )
-    ##    nf = num_features ( X )
-    ##    if nf <= 3 : return True
-    ##    return ns < max ( 300 if nf <= 3 else 1000 , nf * 50 )
-    
+
+    # =========================================================================
+    ## use strong regualrization: BDT-type  
     def use_strong_regularization ( self , X ) :
+        """ Use strong regualrization: BDT-type
+        """
         ns = num_samples  ( X )
         nf = num_features ( X )
-        if 1000 < ns or 3 < nf :  return False
-        return ns < ( nf * 100 ) 
-    
+        
+        low_dim   = nf <= 3 
+        low_stats = ns <  500 * nf 
+        
+        return low_dim or low_stats
+
+
     def tvalue ( self               ,
                  data1              ,
                  data2              ,  * , 
@@ -284,22 +316,24 @@ class ADVAL_base (GoFnp):
             sorted_pairs = sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True)
             self.__importance_features = {feat: val for feat, val in sorted_pairs}
 
-        eval_weights = numpy.abs ( W ) if weights else None
+
+        Y_eval, eval_weights = transform_weights_and_targets ( Y , W )
         mse_score = mean_squared_error ( Y , oof_preds , sample_weight = eval_weights )
 
         return tvalue_from_MSE ( mse_score )
 
     # ===================================================================================
     ## print regularized paramters in "no-silent" regime
-    def report_regpars ( self , params = {} , **kwargs ) :
+    def report_regularization ( self , params = {} , **kwargs ) :
         """ print regularized paramters in "no-silent" regime
         """
+        return
+    
         if self.silent               : return
         if not params and not kwargs : return
         
         rpars = {}
         rpars.update ( params , **kwargs )
-        
         title = "%s regularized" % typename ( self )
         from ostap.logger.utils import map2table_ex
         logger.info ( '%s:\n%s' % ( title , map2table_ex ( rpars       , 
@@ -320,17 +354,17 @@ class ADVAL_LGBM (ADVAL_base) :
         config = {
             'objective'         : 'regression',
             'metric'            : 'rmse',
-            'learning_rate'     : 0.03,
+            'learning_rate'     :  0.03,
             'n_estimators'      : DEFAULT_ESTIMATORS ,
-            'max_depth'         : 4,
-            'num_leaves'        : 15,
-            'min_child_samples' : 50,
-            'subsample'         : 0.8,
-            'subsample_freq'    : 1,
-            'colsample_bytree'  : 0.8,
-            'reg_alpha'         : 0.1,
-            'reg_lambda'        : 1.0,
-            'n_jobs'            : -1,
+            'max_depth'         :  5   ,
+            'num_leaves'        : 24   ,
+            'min_child_samples' : 50   ,
+            'subsample'         :  0.8 ,
+            'subsample_freq'    :  1   ,
+            'colsample_bytree'  :  0.8 ,
+            'reg_alpha'         :  0.1 ,
+            'reg_lambda'        :  1.0 ,
+            'n_jobs'            : -1   ,
             'verbosity'         : -1
         }
         
@@ -344,19 +378,6 @@ class ADVAL_LGBM (ADVAL_base) :
                               normalize = False    ,
                               method    = "Adversarial Validation/LightGBM" , **config   ) 
 
-    def regularization ( self ) : 
-        params = {}
-        max_depth  = min ( 3 , self.params.get ( 'max_depth' , 4 ) )        
-        num_leaves = 2 ** max_depth - 1
-        params [ 'max_depth'         ] = max_depth
-        params [ 'num_leaves'        ] = min ( num_leaves , self.params.get ( 'num_leaves'        , 15 ) )
-        params [ 'min_child_samples' ] = max ( 100        , self.params.get ( 'min_child_samples' , 50 ) )
-        params [ 'colsample_bytree'  ] = 1.0
-        params [ 'reg_alpha'         ] = max ( 1.0        , self.params.get ( 'reg_alpha'         , 0.1 ) )
-        params [ 'reg_lambda'        ] = max ( 5.0        , self.params.get ( 'reg_lambda'        , 1.0 ) )
-        params [ 'learning_rate'     ] = min ( 0.02       , self.params.get ( 'learning_rate'     , 0.03 ) )
-        return params 
-            
     def work ( self    ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -368,32 +389,42 @@ class ADVAL_LGBM (ADVAL_base) :
         params.update ( self.params )
 
         nf =  num_features ( X_train )
+        ns =  num_samples  ( X_train )
 
         num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
-        early_stopping_rounds = params.pop ( 'early_stopping_rounds' ,  0 if 1 == nf else 10 )
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' ,  10 )
 
-        if 1 == nf : 
-            params [ 'colsample_bytree' ] = 1.0
-            params [ 'subsample'        ] = 1.0
-    
-        if self.use_strong_regularization ( X_train ) :
-            regpars    = self.regularized
-            nf         = num_features ( X_train )
-            max_depth  = min ( 2 if nf <= 3 else 3, regpars.get ( 'max_depth' , 4 ) )
-            if 1 == nf : max_depth = 5 
+        if BDT_needs_regularization ( X_train , W_train ) :
             
-            num_leaves = 2 ** max_depth - 1
-            regpars [ 'max_depth'  ] = max_depth
-            regpars [ 'num_leaves' ] = min ( num_leaves , regpars.get ( 'num_leaves', 15 ) )
-            params.update ( regpars )
-            num_boost_round        = min ( MAX_REGULARIZED_ESTIMATORS , num_boost_round )
-            early_stopping_rounds  = min ( 10 , early_stopping_rounds )
-            ## print regularized paramters in "no-silent" regime
-            self.report_regpars ( self   ,
-                                  params ,
-                                  num_boost_round       = num_boost_round       ,
-                                  early_stopping_rounds = early_stopping_rounds )
-
+            # --- Depth = 2 allows clean non-zero leaves under sPlot weights ---
+            max_depth  = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
+            num_leaves = 2 if max_depth == 1 else 3
+            
+            params [ 'max_depth'         ] = max_depth
+            params [ 'num_leaves'        ] = num_leaves
+            
+            # --- Minimal child sample threshold to capture sPlot gradients ---
+            params [ 'min_child_samples' ] = 5
+            params [ 'min_child_weight'  ] = 1e-3
+            
+            params [ 'colsample_bytree'  ] = 1.0
+            params [ 'subsample'         ] = 1.0
+            
+            params [ 'reg_alpha'         ] = 0.0
+            params [ 'reg_lambda'        ] = 0.0
+            
+            params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+            
+            num_boost_round        = min ( 20 if 1 == nf else 50 , num_boost_round )
+            early_stopping_rounds  = 0
+            
+            ## print regularized parameters in "no-silent" regime
+            self.report_regularization ( params                ,
+                                         num_features          = nf                    , 
+                                         num_samples           = ns                    , 
+                                         num_boost_round       = num_boost_round       ,
+                                         early_stopping_rounds = early_stopping_rounds )
+            
         import lightgbm as LightGBM
         callbacks = []
         if 0 < early_stopping_rounds :
@@ -425,17 +456,17 @@ class ADVAL_XGB (ADVAL_base) :
         config = {  'objective'        : 'reg:squarederror',
                     'eval_metric'      : 'rmse',
                     'tree_method'      : 'hist',
-                    'learning_rate'    : 0.03,
+                    'learning_rate'    : 0.03  ,
                     'n_estimators'     : DEFAULT_ESTIMATORS ,
-                    'max_depth'        : 4,
-                    'max_leaves'       : 15,
-                    'min_child_weight' : 1.0,
-                    'subsample'        : 0.8,
-                    'colsample_bytree' : 0.8,
-                    'alpha'            : 0.1,
-                    'lambda'           : 1.0,
-                    'n_jobs'           : -1,
-                    'verbosity'        : 0
+                    'max_depth'        :  5    ,
+                    'max_leaves'       : 15    ,
+                    'min_child_weight' :  1.0  ,
+                    'subsample'        :  0.8  ,
+                    'colsample_bytree' :  0.8  ,
+                    'alpha'            :  0.1  ,
+                    'lambda'           :  1.0  ,
+                    'n_jobs'           : -1    ,
+                    'verbosity'        :  0
                 }
         config.update ( params ) 
         
@@ -447,20 +478,10 @@ class ADVAL_XGB (ADVAL_base) :
                               normalize = False    ,
                               method    = "Adversarial Validation/XGBoost" , **config ) 
 
-    def regularization ( self ) :
-        params = {} 
-        max_depth = min ( 3 , self.params.get ( 'max_depth' , 4 ) )        
-        params [ 'max_depth'         ] = max_depth 
-        params [ 'min_child_weight'  ] = max ( 20   , self.params.get ( 'min_child_weight' , 1.0 ) )
-        params [ 'colsample_bytree'  ] = 1.0
-        params [ 'alpha'             ] = max ( 0.5  , self.params.get ( 'alpha'  , 0.1 ) )
-        params [ 'lambda'            ] = max ( 2.0  , self.params.get ( 'lambda' , 1.0 ) )
-        params [ "learning_rate"     ] = min ( 0.02 , self.params.get ( "learning_rate" , 0.03 ) )
-        return params
-
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
+        
         import xgboost as XGBoost             
 
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
@@ -473,18 +494,40 @@ class ADVAL_XGB (ADVAL_base) :
         params = {}
         params.update ( self.params )
         
-        num_boost_round = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
+        num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 10 )
         
-        if self.use_strong_regularization ( X_train ) :
-            regpars = self.regularized 
-            nf      = num_features ( X_train )
-            max_depth = min ( 2 if nf <= 3 else 3 , regpars.get ( 'max_depth' , 4 ) )
-            regpars [ 'max_depth' ] = max_depth
-            params.update ( regpars ) 
-            num_boost_round = min ( MAX_REGULARIZED_ESTIMATORS , num_boost_round )
-            early_stopping_rounds = min ( 10 , early_stopping_rounds )
+        nf = num_features ( X_train )
+        ns = num_samples  ( X_train )
+        
+        if BDT_needs_regularization ( X_train , W_train ) :
 
+            max_depth = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
+            
+            params [ 'max_depth'         ] = max_depth
+            
+            # --- Low min_child_weight to prevent gradient truncation ---
+            params [ 'min_child_weight'  ] = 1e-3
+            
+            params [ 'colsample_bytree'  ] = 1.0
+            params [ 'subsample'         ] = 1.0
+            
+            params [ 'alpha'             ] = 0.0
+            params [ 'lambda'            ] = 0.0
+            
+            params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+            
+            num_boost_round        = min ( 20 if 1 == nf else 50 , num_boost_round )
+            early_stopping_rounds  = 0
+
+            ## print regularized parameters in "no-silent" regime
+            self.report_regularization ( params                ,
+                                         num_features          = nf                    , 
+                                         num_samples           = ns                    , 
+                                         num_boost_round       = num_boost_round       ,
+                                         early_stopping_rounds = early_stopping_rounds )
+            
+            
         model = XGBoost.train ( params                = params,
                                 dtrain                = dtrain,
                                 num_boost_round       = num_boost_round,
@@ -519,13 +562,12 @@ class ADVAL_CATB (ADVAL_base) :
                     'eval_metric'           : 'RMSE',
                     'learning_rate'         : 0.03,
                     'n_estimators'          : DEFAULT_ESTIMATORS ,
-                    'early_stopping_rounds' : 20 ,
-                    'depth'                 : 4,
-                    'min_data_in_leaf'      : 20,
-                    'l2_leaf_reg'           : 3.0,
-                    'subsample'             : 0.8,
+                    'early_stopping_rounds' :  20   ,
+                    'depth'                 :   5   ,
+                    'min_data_in_leaf'      :  20   ,
+                    'l2_leaf_reg'           :   3.0 ,
+                    'subsample'             :   0.8 ,
                     'bootstrap_type'        : 'Bernoulli',
-                    ## 'thread_count'          : -1,
                     'verbose'               : False
             }
 
@@ -547,16 +589,6 @@ class ADVAL_CATB (ADVAL_base) :
         if 'n_jobs' in self.params :
             self.params [ 'thread_count' ] = self.params.pop ( 'n_jobs' , 1 )
 
-    def regularization ( self ) :
-        params = {} 
-        max_depth = min ( 3 , self.params.get ( 'depth' , 4 ) )
-        params [ 'depth'             ] = max_depth  
-        params [ 'min_data_in_leaf'  ] = max ( 20   , self.params.get ( 'min_data_in_leaf' , 20 ) )
-        params [ 'rsm'               ] = 1.0
-        params [ 'l2_leaf_reg'       ] = max ( 5.0  , self.params.get ( 'l2_leaf_reg'       , 3.0 ) )
-        params [ "learning_rate"     ] = min ( 0.02 , self.params.get ( "learning_rate"     , 0.03 ) )
-        return params 
-        
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -571,18 +603,39 @@ class ADVAL_CATB (ADVAL_base) :
         params = {}
         params.update ( self.params )
         
-        iterations = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
+        iterations            = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 10 )
         
-        if self.use_strong_regularization ( X_train ) :
-            regpars = self.regularized 
-            nf = num_features ( X_train )
-            max_depth = min ( 2 if nf <= 3 else 3 , regpars.get ( 'depth' , 4 ) )
-            regpars [ 'depth' ] = max_depth
-            params.update ( regpars )
-            iterations = min ( MAX_REGULARIZED_ESTIMATORS , iterations )
-            early_stopping_rounds = min ( 10 , early_stopping_rounds )
-        
+        nf =  num_features ( X_train )
+        ns =  num_samples  ( X_train )
+
+        if BDT_needs_regularization ( X_train , W_train ) :
+
+            depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'depth' , 5 ) )
+            
+            params [ 'depth'             ] = depth
+            
+            # --- Minimum data in leaf bounds ---
+            params [ 'min_data_in_leaf'  ] = max ( 50 , params.get ( 'min_data_in_leaf' , 20 ) )
+            
+            params [ 'rsm'               ] = 1.0
+            params [ 'subsample'         ] = 1.0
+            
+            # --- Relaxed L2 leaf regularization ---
+            params [ 'l2_leaf_reg'       ] = 0.01
+            
+            params [ 'learning_rate'     ] = min ( 0.01 , params.get ( 'learning_rate' , 0.03 ) )
+            
+            iterations             = min ( 20 if 1 == nf else 50 , iterations )
+            early_stopping_rounds  = 0
+            
+            ## print regularized parameters in "no-silent" regime
+            self.report_regularization ( params                ,
+                                         num_features          = nf                    , 
+                                         num_samples           = ns                    , 
+                                         iterations            = iterations            ,
+                                         early_stopping_rounds = early_stopping_rounds )
+
         params [ 'iterations'            ] = iterations
         params [ 'early_stopping_rounds' ] = early_stopping_rounds  
         params [ 'use_best_model'        ] = True
@@ -605,14 +658,14 @@ class ADVAL_HGBC (ADVAL_base) :
                    progress = True  , **params ) :
         
         config = {  'loss'              : 'squared_error',
-                    'learning_rate'     : 0.03,
+                    'learning_rate'     : 0.03   ,
                     'max_iter'          : DEFAULT_ESTIMATORS ,
-                    'max_depth'         : 4,
-                    'max_leaf_nodes'    : 15,
-                    'min_samples_leaf'  : 20,
-                    'l2_regularization' : 0.1,
-                    'early_stopping'    : True,
-                    'n_iter_no_change'  : 20,
+                    'max_depth'         :  5    ,
+                    'max_leaf_nodes'    : 31    ,
+                    'min_samples_leaf'  : 20    ,
+                    'l2_regularization' :  0.1  ,
+                    'early_stopping'    :  True ,
+                    'n_iter_no_change'  : 20    ,
                     'scoring'           : 'neg_root_mean_squared_error',
                 }
         
@@ -629,37 +682,45 @@ class ADVAL_HGBC (ADVAL_base) :
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
-        
-    def regularization ( self ) :
-        params = {} 
-        max_depth = 3 
-        params [ 'max_depth'         ] = min ( max_depth , self.params.get ( 'max_depth' , 4 ) )
-        params [ 'max_leaf_nodes'    ] = 2 ** params [ 'max_depth' ] - 1 
-        params [ 'min_samples_leaf'  ] = max ( 50  , self.params.get ( 'min_samples_leaf' , 20 ) )
-        params [ 'l2_regularization' ] = max ( 5.0 , self.params.get ( 'l2_regularization' , 0.1 ) )
-        params [ 'learning_rate'     ] = min ( 0.02 , self.params.get ( 'learning_rate' , 0.03 ) )
-        return params 
-            
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
+        
         from sklearn.ensemble import HistGradientBoostingRegressor
 
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
         w_tr_arr = W_train_mod.values if hasattr ( W_train_mod , 'values' ) else W_train_mod
 
+        nf =  num_features ( X_train )
+        ns =  num_samples  ( X_train )
+        
         params = {}
         params.update ( self.params )
         max_iter = params.pop ( 'max_iter' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         
-        if self.use_strong_regularization ( X_train ) :
-            regpars = self.regularized 
-            nf = num_features ( X_train )
-            max_depth = 2 if nf <= 3 else 3
-            regpars [ 'max_depth' ] = min ( max_depth , regpars.get ( 'max_depth' , 4 ) )
-            regpars [ 'max_leaf_nodes' ] = 2 ** regpars[ 'max_depth' ] - 1
-            params.update ( regpars )
-            max_iter = min ( max_iter , MAX_REGULARIZED_ESTIMATORS )
+        if BDT_needs_regularization ( X_train , W_train ) :
+
+
+            max_depth      = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
+            max_leaf_nodes = 2 if max_depth == 1 else min ( 2 ** max_depth , params.get ( 'max_leaf_nodes' , 31 ) )
+            
+            params [ 'max_depth'            ] = max_depth
+            params [ 'max_leaf_nodes'       ] = max_leaf_nodes
+            
+            params [ 'min_samples_leaf'     ] = max ( 50 , params.get ( 'min_samples_leaf' , 20 ) )
+            
+            # --- Fully disable L2 regularization ---
+            params [ 'l2_regularization'    ] = 0.0
+            
+            params [ 'learning_rate'        ] = min ( 0.01 , params.get ( 'learning_rate' , 0.03 ) )
+                        
+            max_iter = min ( 20 if 1 == nf else 50 , max_iter )
+            
+            ## print regularized parameters in "no-silent" regime
+            self.report_regularization ( params                  ,
+                                         num_features  = nf      , 
+                                         num_samples  = ns       , 
+                                         max_iter     = max_iter )
             
         params [ 'max_iter' ] = max_iter
 
@@ -679,13 +740,13 @@ class ADVAL_GBC (ADVAL_base) :
                    progress = True  , **params   ) :
         
         config = {  'loss'              : 'squared_error',
-                    'learning_rate'     : 0.05,
+                    'learning_rate'     : 0.05  ,
                     'n_estimators'      : DEFAULT_ESTIMATORS ,
-                    'max_depth'         : 3,
-                    'min_samples_split' : 20,
-                    'min_samples_leaf'  : 10,
-                    'subsample'         : 0.8,
-                    'max_features'      : 1.0,
+                    'max_depth'         :   5   ,
+                    'min_samples_split' :  10   ,
+                    'min_samples_leaf'  :   5   ,
+                    'subsample'         :   1.0 ,
+                    'max_features'      :   1.0 ,
                 }
         
         config.update ( params ) 
@@ -696,22 +757,10 @@ class ADVAL_GBC (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress ,
                               normalize = False    ,
-                              method    = "Adversarial Validation/GBC (Reg)" , **config   ) 
+                              method    = "Adversarial Validation/GBC" , **config   ) 
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
-
-    def regularization ( self ) :
-        params = {} 
-        max_depth = min ( 3 , self.params.get ( 'max_depth' , 3 ) )        
-        params [ 'max_depth'         ] = max_depth
-        params [ 'min_samples_leaf'  ] = max ( 50  , self.params.get ( 'min_samples_leaf'  , 10 ) )
-        params [ 'min_samples_split' ] = max ( 100 , self.params.get ( 'min_samples_split' , 20 ) )
-        params [ 'ccp_alpha'         ] = max ( 0.01 , self.params.get ( 'ccp_alpha' , 0.0 ) )
-        params [ 'subsample'         ] = min ( 0.8  , self.params.get ( 'subsample' , 0.8 ) )
-        params [ 'max_features'      ] = 1.0
-        params [ 'learning_rate'     ] = min ( 0.02 , self.params.get ( 'learning_rate' , 0.03 ) )
-        return params 
 
     def work ( self ,
                X_train , Y_train , W_train ,
@@ -721,18 +770,35 @@ class ADVAL_GBC (ADVAL_base) :
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
         w_tr_arr = W_train_mod.values if hasattr(W_train_mod, 'values') else W_train_mod
 
+        nf =  num_features ( X_train )
+        ns =  num_samples  ( X_train )
+        
         params = {}
         params.update ( self.params )
         n_estimators = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         
-        if self.use_strong_regularization ( X_train ) :
-            regpars = self.regularized 
-            nf = num_features ( X_train )
-            max_depth = 2 if nf <= 3 else 3
-            regpars [ 'max_depth' ] = min ( max_depth , regpars.get ( 'max_depth' , 3 ) )
-            params.update ( regpars )
-            n_estimators = min ( MAX_REGULARIZED_ESTIMATORS , n_estimators )
+        if BDT_needs_regularization ( X_train , W_train ) :
+
+            max_depth = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
             
+            params [ 'max_depth'                ] = max_depth
+            
+            params [ 'min_samples_leaf'         ] = 5
+            params [ 'min_samples_split'        ] = 10
+            
+            params [ 'subsample'                ] = 1.0
+            params [ 'ccp_alpha'                ] = 0.0
+            
+            params [ 'learning_rate'            ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+
+            n_estimators = min ( 20 if 1 == nf else 50 , n_estimators , DEFAULT_ESTIMATORS )
+            
+            ## print regularized parameters in "no-silent" regime
+            self.report_regularization ( params            ,
+                                         num_features = nf , 
+                                         num_samples  = ns ,
+                                         n_estimators = n_estimators )
+                                                     
         params [ 'n_estimators' ] = n_estimators
         
         model = GradientBoostingRegressor ( **params )
@@ -747,20 +813,20 @@ class ADVAL_GBC (ADVAL_base) :
 ## @class ADVAL_RF (Regression)
 class ADVAL_RF (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 500   ,
+                   nToys    = 400   ,
                    parallel = False ,
                    silent   = False ,
                    progress = True  , **params   ) :
   
         config = {  'n_estimators'      : DEFAULT_ESTIMATORS ,
-                    'n_jobs'            : -1,
+                    'n_jobs'            : -1    ,
                     'criterion'         : 'squared_error',
-                    'max_depth'         : 8,
-                    'min_samples_split' : 10,
-                    'min_samples_leaf'  : 5,
-                    'max_features'      : 1.0,
-                    'bootstrap'         : True,
-                    'max_samples'       : 0.8,
+                    'max_depth'         :  5    ,
+                    'min_samples_split' : 10    ,
+                    'min_samples_leaf'  :  5    ,
+                    'max_features'      :  1.0  ,
+                    'bootstrap'         :  True ,
+                    'max_samples'       :  0.8  ,
                 }  
         config.update ( params ) 
         
@@ -772,17 +838,6 @@ class ADVAL_RF (ADVAL_base) :
                               normalize = False    ,                              
                               method    = "Adversarial Validation/RandomForest" , **config  )
         
-    def regularization ( self ) :
-        params = {} 
-        params [ 'max_depth'         ] = min ( 3 , self.params.get ( 'max_depth' , 3 ) or 3 )
-        params [ 'max_leaf_nodes'    ] = 2 ** params [ 'max_depth' ] 
-        params [ 'min_samples_leaf'  ] = max ( 50  , self.params.get ( 'min_samples_leaf'  , 5 ) )
-        params [ 'min_samples_split' ] = max ( 100 , self.params.get ( 'min_samples_split' , 10 ) )
-        params [ 'ccp_alpha'         ] = max ( 0.01 , self.params.get ( 'ccp_alpha' , 0.0 ) )
-        params [ 'bootstrap'         ] = True
-        params [ 'max_samples'       ] = min ( 0.8  , self.params.get ( 'max_samples' , 0.8 ) )
-        params [ 'max_features'      ] = 1.0
-        return params 
         
     def work ( self ,
                X_train , Y_train , W_train ,
@@ -795,15 +850,37 @@ class ADVAL_RF (ADVAL_base) :
         params = {}
         params.update ( self.params )
         n_estimators = params.pop ( 'n_estimators' , None ) or params.pop ( 'num_boost_round' , None ) or DEFAULT_ESTIMATORS 
+
+        nf =  num_features ( X_train )
+        ns =  num_samples  ( X_train )
         
-        if self.use_strong_regularization ( X_train ) :
-            regpars = self.regularized
-            nf = num_features ( X_train )
-            max_depth = 2 if nf <= 3 else 3
-            regpars [ 'max_depth' ] = min ( max_depth , regpars.get ( 'max_depth' , 3 ) or 3 )
-            regpars [ 'max_leaf_nodes' ] = 2 ** regpars [ 'max_depth' ]
-            params.update ( regpars )
-            n_estimators = min ( MAX_REGULARIZED_ESTIMATORS , n_estimators )
+        if BDT_needs_regularization ( X_train , W_train ) :
+
+
+            
+            max_depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
+            
+            params [ 'max_depth'          ] = max_depth
+            
+            # --- Dynamic minimum samples leaf scaling with increased Asimov dataset size ---
+            params [ 'min_samples_leaf'   ] = max ( int ( 0.01 * ns ) , 100 )
+            params [ 'min_samples_split'  ] = max ( int ( 0.02 * ns ) , 200 )
+            
+            # --- Use full bootstrap samples to eliminate mean prediction bias on large Asimov datasets ---
+            params [ 'max_samples'        ] = None
+            params [ 'bootstrap'          ] = True
+            
+            # --- Disable CCP pruning; sPlot negative weights distort complexity-cost pruning ---
+            params [ 'ccp_alpha'          ] = 0.0
+            
+            n_estimators = min ( 20 if 1 == nf else 50 , n_estimators , MAX_REGULARIZED_ESTIMATORS ) 
+                                 
+            ## print regularized parameters in "no-silent" regime
+            self.report_regularization ( params            ,
+                                         num_features = nf , 
+                                         num_samples  = ns ,
+                                         n_estimators = n_estimators )
+
             
         params [ 'n_estimators' ] = n_estimators
         
@@ -819,7 +896,7 @@ class ADVAL_RF (ADVAL_base) :
 ## @class ADVAL_TORCH (Regression)
 class ADVAL_TORCH (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 400   ,
+                   nToys    = 100   ,
                    parallel = False ,
                    silent   = False ,
                    progress = True  , **params   ) :
@@ -841,15 +918,6 @@ class ADVAL_TORCH (ADVAL_base) :
                               normalize = True     , 
                               method    = "Adversarial Validation/PyTorch" , **config  ) 
 
-    def regularization ( self ) :
-        params = {} 
-        params [ 'num_layers'    ] = 1   
-        params [ 'dropout'       ] = max ( 0.3  , self.params.get ( 'dropout' , 0.1 ) )
-        l2_reg = self.params.get ( 'weight_decay' , 1e-4 )
-        params [ 'weight_decay'  ] = max ( 1e-2 , l2_reg )
-        params [ 'learning_rate' ] = min ( 0.005 , self.params.get ( 'learning_rate' , 0.01 ) )
-        params [ 'batch_size'    ] = max ( 128   , self.params.get ( 'batch_size'    , 128  ) )
-        return params
     
     def work ( self ,
                X_train , Y_train , W_train ,
@@ -866,28 +934,46 @@ class ADVAL_TORCH (ADVAL_base) :
         params.update ( self.params )
         epochs = params.pop ( 'epochs' , None ) or 200
 
-        if self.use_strong_regularization ( X_train ) :
-            regpars = self.regularized 
-            nf = num_features ( X_train )
-            regpars [ 'hidden_dim' ] = 8 if nf <= 3 else 16
-            params.update ( regpars ) 
-            epochs = min ( 50 , epochs )
+        nf = num_features ( X_train )
+        ns = num_samples  ( X_train )
+        
+        if NN_needs_regularization ( X_train , W_train ) :
 
-        epochs       = params.get ( 'epochs'                , 100    )
+            # --- Dynamic batch size scaling with increased Asimov dataset size ---
+            params [ 'batch_size'     ] = max ( int ( 0.02 * len ( X_train ) ) , 256 )
+            
+            # --- Moderate Weight Decay (L2) to prevent [10⁻⁶] response collapse ---
+            params [ 'weight_decay'   ] = 1e-3
+            
+            # --- Shallow architecture capacity: prevent overfitting to sPlot weight fluctuations ---
+            params [ 'hidden_units'   ] = 8 if 1 == nf else 16
+            params [ 'num_layers'     ] = 1
+            
+            params [ 'learning_rate'  ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) )
+            params [ 'early_stopping' ] = False
+
+            epochs = min ( 30 if 1 == nf else 50 , params.get ( 'epochs' , 100 ) ) 
+            ## print regularized parameters in "no-silent" regime
+            self.report_regularization ( params                ,
+                                         num_features = nf     , 
+                                         num_samples  = ns     ,
+                                         epochs       = epochs )
+            
+        epochs       = params.get ( 'epochs'                , epochs )
         batch_size   = params.get ( 'batch_size'            , 256    )
-        lr           = params.get ( 'lr'                    , 1e-3   )
-        weight_decay = params.get ( 'weight_decay'          , 1e-4   )
-        patience     = params.get ( 'early_stopping_rounds' , 15     )        
-        dropout_rate = params.get ( 'dropout'               , 0.1    )
+        lr           = params.get ( 'lr'                    ,   1e-3 )
+        weight_decay = params.get ( 'weight_decay'          ,   1e-4 )
+        patience     = params.get ( 'early_stopping_rounds' ,  15    )        
+        dropout_rate = params.get ( 'dropout'               ,   0.1  )
 
-        n_features = num_features ( X_train )
-        hidden_dim = 64 if n_features > 16 else 16
+        n_features   = nf 
+        hidden_dim   = params.get ( 'hidden_dim' , 64 if 16 < n_features else 16 )
 
         n_jobs = params.get ( 'n_jobs', -1 )
         if 0 < n_jobs : Torch.set_num_threads ( n_jobs )
         else          : Torch.set_num_threads ( 1      )
             
-        device = Torch.device ('cuda' if Torch.cuda.is_available() else 'cpu' )
+        device = Torch.device ( 'cuda' if Torch.cuda.is_available() else 'cpu' )
 
         X_tr_arr = numpy.nan_to_num ( numpy.asarray ( X_train , dtype = numpy.float32 ), nan = 0.0 )
         Y_tr_arr = numpy.asarray ( Y_train_mod , dtype = numpy.float32 ) . reshape ( -1 , 1 )        
@@ -960,16 +1046,17 @@ class ADVAL_TORCH (ADVAL_base) :
 ## @class ADVAL_KERAS (Regression)
 class ADVAL_KERAS (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 400   ,
+                   nToys    = 100   ,
                    parallel = False ,
                    silent   = False ,
                    progress = True  , **params   ) :
 
-        config =  { 'epochs'                : 100   ,
-                    'batch_size'            : 256   ,
-                    'lr'                    : 2.e-3 ,
-                    'early_stopping_rounds' :  15   , 
-                    'dropout'               : 0.1   }
+        config =  { 'epochs'                : 100    ,
+                    'batch_size'            : 256    ,
+                    'lr'                    :   0.01 ,
+                    'weight_decay'          :   1e-4 , 
+                    'early_stopping_rounds' :  15    , 
+                    'dropout'               :   0.1  }
 
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
@@ -979,16 +1066,6 @@ class ADVAL_KERAS (ADVAL_base) :
                               normalize = True     , 
                               method    = "Adversarial Validation/Keras" , **config  ) 
 
-    def regularization ( self ) :
-        params = {} 
-        params [ 'num_layers'    ] = 1   
-        params [ 'dropout'       ] = max ( 0.3  , self.params.get( 'dropout' , 0.1 ) )
-        l2_reg = self.params.get ( 'reg_lambda' , 1e-4 )
-        params [ 'l2_reg'        ] = max ( 1e-2 , l2_reg )
-        params [ 'learning_rate' ] = min ( 0.005 , self.params.get ( 'learning_rate' , 0.01 ) )
-        params [ 'batch_size'    ] = max ( 128   , self.params.get ( 'batch_size'    , 128  ) )
-        return params
-    
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -1003,21 +1080,38 @@ class ADVAL_KERAS (ADVAL_base) :
         params.update ( self.params )
         epochs = params.pop ( 'epochs' , None ) or 200
 
-        if self.use_strong_regularization ( X_train ) :
-            regpars = self.regularized
-            nf = num_features ( X_train )
-            regpars [ 'hidden_dim' ] = 8 if nf <= 3 else 16
-            params.update ( regpars ) 
-            epochs = min ( 50 , epochs )
+        nf = num_features ( X_train )
+        ns = num_samples  ( X_train )
+        
+        if NN_needs_regularization ( X_train , W_train ) :
 
-        n_features = num_features ( X_train )
-        hidden_dim = 64 if n_features > 16 else 16
+            # --- Dynamic batch size scaling with increased Asimov dataset size ---
+            params [ 'batch_size'     ] = max ( int ( 0.02 * ns ) , 256 )
+            
+            # --- L2 kernel regularization matching PyTorch weight_decay to maintain [10⁻³] response magnitude ---
+            params [ 'l2_reg'         ] = 1e-3
+            
+            # --- Shallow architecture capacity: prevent overfitting to sPlot weight fluctuations ---
+            params [ 'hidden_units'   ] = 8 if 1 == nf else 16
+            params [ 'num_layers'     ] = 1
+            
+            params [ 'learning_rate'  ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) )
+            
+            # --- Disable early stopping callback to allow complete gradient convergence ---
+            params [ 'callbacks'      ] = [ ]
+            
+            epochs = min ( 30 if 1 == nf else 50 , epochs  )
+            self.report_regularization ( params , num_features = nf , num_samples = ns , epochs = epochs )
 
-        epochs       = params.get ( 'epochs'               , 100 )
-        batch_size   = params.get ( 'batch_size'           , 256 )
-        patience     = params.get ( 'early_stopping_rounds',  15 )
-        dropout_rate = params.get ( 'dropout'              , 0.1 )
-        lr           = params.get ( 'lr'                   , 2e-3 )
+
+        n_features   = nf 
+        hidden_dim   = params.get ( 'hidden_dim' , 64 if 15 < n_features else 16 )
+        
+        epochs       = params.get ( 'epochs'               , epochs )
+        batch_size   = params.get ( 'batch_size'           , 256    )
+        patience     = params.get ( 'early_stopping_rounds',  15    )
+        dropout_rate = params.get ( 'dropout'              ,   0.1  )
+        lr           = params.get ( 'lr'                   ,   2e-3 )
         
         X_tr_arr = numpy.nan_to_num ( numpy.asarray ( X_train , dtype=numpy.float32 ).reshape(-1, n_features ), nan = 0.0 )
         Y_tr_arr = numpy.asarray ( Y_train_mod, dtype = numpy.float32 ) . reshape ( -1 , 1 )

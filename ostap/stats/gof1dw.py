@@ -41,11 +41,11 @@ logger.debug ( 'Two-sample & GoF 1D-weighted tests' )
 class BootstrapGoF ( GoFnp ) :
     """ 1D GoFnp base class to get p-value via BootStrap
     """
-    def __init__ ( self            ,
-                   method          ,
-                   estimator       ,
-                   nToys     = 400 , 
-                   **kwargs        ) :
+    def __init__ ( self             ,
+                   method           ,
+                   estimator        ,
+                   nToys     = 1000 , 
+                   **kwargs         ) :
         
         self.__estimator = estimator        
         kwargs [ 'normalize' ] = False

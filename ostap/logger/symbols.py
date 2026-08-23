@@ -22,7 +22,8 @@ __all__     = (
     'arrow_rightleft'     , ## ↔
     'arrow_up'            , ## ↑
     'arrows_all'          , ## ←↖↑↗→↘↓↙
-    'asterisk'            , ## ✶️
+    'asterisk'            , ## ✶
+    'asymmetry'           , ## ⌿ 
     'axe'                 , ## 🪓  (wide)
     'brain'               , ## 🧠  (wide)
     'branch'              , ## ⸙
@@ -300,7 +301,10 @@ chisq            = chi2
 chi2ndf          = '%s/ndf' % chi2 
 
 ## symmetric
+
 symmetry         = '⌯'   if show else 'sym'
+asymmetry        = '⌿'   if show else 'asym'
+
 enough           = '∃'   if show else 'enough'
 mountain         = '⛰ '  if show else 'peak'
 
@@ -452,10 +456,10 @@ def to_script(text):
     >>> to_script("LHCb")
     'ℒℋ𝒞𝒷'
     """
-    return text.translate(script_map) if show else text
+    return text.translate ( script_map ) if show else text
 
-script_t = to_script('t')
-script_p = to_script('p')
+script_t = to_script ( 't' )
+script_p = to_script ( 'p' )
 
 # =============================================================================
 if '__main__' == __name__ :
