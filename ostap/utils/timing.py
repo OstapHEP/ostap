@@ -30,7 +30,7 @@ del getLogger
 clock_symbol = clock_symbol + ' ' if clock_symbol else '' 
 # =============================================================================
 ## format for timing prints 
-TIMING_FORMAT = 'Timing %-20s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' 
+TIMING_FORMAT = 'Timing %-20s  WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' 
 # =============================================================================
 ## @class Timer
 #  Simple context manager to measure the time 
@@ -228,7 +228,7 @@ class Timer(object):
 #  @endcode
 def timing ( name   = ''   , 
              logger = None , * , 
-             format = 'Timing %-18s | WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' , 
+             format = TIMING_FORMAT ,
              **kwargs  ) :
     """ Simple context manager to measure the clock counts 
     
@@ -269,11 +269,11 @@ class Wait(object):
         if 0 < self.__after  : time.sleep  ( self.__after  ) 
     @property
     def before ( self ) :
-        """``before'': wait some time before the action"""
+        """`before': wait some time before the action"""
         return self.__before    
     @property
     def after  ( self ) :
-        """``after'': wait some time after the action"""
+        """`after': wait some time after the action"""
         return self.__after
 
 # =============================================================================
