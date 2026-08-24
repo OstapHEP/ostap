@@ -664,7 +664,7 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     s , n = pretty_float ( r.minNll() )
     n = '[%s]' % format_pow10 ( n ) if n else '' 
 
-    rows.append ( ( "Minimized FCN/NLL value"    , '  ' + s , n , '' ) )
+    rows.append ( ( "Minimized FCN/NLL value" , '  ' + s , n , '' ) )
 
     s , n = pretty_float ( r.edm () )
     n = '[%s]' % format_pow10 ( n ) if n else '' 

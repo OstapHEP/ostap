@@ -33,7 +33,6 @@ from   ostap.core.ostap_types   import string_types, num_types, numpy_floats
 from   ostap.math.math_base     import doubles, axis_range
 from   ostap.math.math_ve       import significance
 from   ostap.math.ve            import fmt_pretty_ve
-from   ostap.math.math_base     import pos_infinity
 from   ostap.stats.utils        import weight_trivial
 from   ostap.stats.counters     import SE, WSE, ECDF
 from   ostap.utils.basic        import ( numcpu   , num_jobs     , 
@@ -41,7 +40,8 @@ from   ostap.utils.basic        import ( numcpu   , num_jobs     ,
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import ( plus_minus  , greek_lower_sigma ,
                                          subscript_A , subscript_K , subscript_C , 
-                                         likelihood  , script_t    , script_p )                                         
+                                         likelihood  , script_t    , script_p    ,
+                                         infinity_pos as pos_infinity_symbol     )                                         
 from   ostap.logger.pretty      import pretty_float, pretty_row 
 from   ostap.plotting.color     import Orange, Green, Blue
 from   packaging.version        import Version 
@@ -642,14 +642,15 @@ def format_row ( tvalue    = None ,
         nsigma  = significance ( pv     ) ## convert  it to significance
         ## 
         if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
-        if 50 <= float ( nsigma ) : nsigma = pos_infinity 
 
         pvalue  = pvalue * 100
 
         if isinstance ( pvalue , VE ) : pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
-        else                          : pvalue  = '%5.2f'         %   float ( pvalue ) 
-        if isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
-        else                          : nsigma  = '%.2f'          %   float ( nsigma ) 
+        else                          : pvalue  = '%5.2f'         %   float ( pvalue )
+        
+        if   99 < float ( nsigma      ) : nsigma = pos_infinity_symbol 
+        elif isinstance ( nsigma , VE ) : nsigma = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
+        else                            : nsigma = '%.2f'          %   float ( nsigma ) 
 
         row = row + ( unit , pvalue , nsigma )
         
@@ -668,13 +669,14 @@ def format_row ( tvalue    = None ,
         pv         = clip_pvalue  ( pvalue )
         nsigma     = significance ( pv     )
         if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
-        if 50 <= float ( nsigma ) : nsigma = pos_infinity 
         
         pvalue  = pvalue * 100 
         if isinstance ( pvalue , VE ) : pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
-        else                          : pvalue  = '%5.2f'         % float ( pvalue ) 
-        if isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )        
-        else                          : nsigma  = '%.2f'          % float ( nsigma ) 
+        else                          : pvalue  = '%5.2f'         % float ( pvalue )
+
+        if   99 < float ( nsigma      ) : nsigma = pos_infinity_symbol 
+        elif isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )        
+        else                            : nsigma  = '%.2f'          % float ( nsigma ) 
         
         row     = row + ( unit , pvalue , nsigma )
         return header , row 

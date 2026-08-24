@@ -7,9 +7,9 @@
    1. update timing utilities, in particular, the output print format
    1. add `PeakMemory` context manager to estimate the peak memory usage
    1, add wall-time to `Memory` context manager  
-   1. add `prescale` argument to `data_slice`, `tree_slice`, `frame_slice`, `ds_silce` and ``ds2numpy` functions
-   1. remove some suspicious blancks 
-   1. release constraints for dataset' append/merge operators  
+   1. add `prescale` argument to `data_slice`, `tree_slice`, `frame_slice`, `ds_silce` and `ds2numpy` functions
+   1. remove some suspicious blancs 
+   1. release constraints for dataset `append&merge` operators  
    1. add 1D weighted two-samples and GoF estimators
    1. improve printous for value with errors 
    1. Add ASCII/Unicode/pseudgraphics rendering to `ROOT.TH1` and `ROOT.TF1` objects
@@ -18,7 +18,8 @@
    1. add `ostap.tools.data_compare` module with powerful comparison of 1D-data distributions
    1. add C++ versions of Two-Sample 1D (weighted) Test based on exising `Ostap::Math::(W)ECDF` structured
    1. add equidistant Harrel-Davis' (weighted) quantiles for `Ostap::Math::WECDF` class
-   1. more tweaks & improvement for histo_dump, from now it has three regimes `HIST`, `ERR` and `FUN`
+   1. more tweaks & improvement for `histo_dump` function, from now it has three distinct regimes: `HIST`, `ERR` and `FUN`
+   1. merge `ostap.stats.data_compare.py` and `ostap.tools.daat_compare.py` modules into single module
    
 ## Bug fixes 
 

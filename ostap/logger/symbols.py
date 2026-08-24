@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -37,6 +36,7 @@ __all__     = (
     'clock'               , ## 🕐  (wide)
     'clock_ticks'         , ## 🕜 2-колон...
     'delta_symbol'        , ## Δ
+    'descartes_product'   , ## ⨂
     'difference'          , ## ⊻
     'dispersion_sym'      , ## σ²
     'ditto'               , ## 〃
@@ -51,6 +51,7 @@ __all__     = (
     'frame'               , ## 🖼️  (wide)
     'gear'                , ## ⚙️
     'graph'               , ## 📈  (wide)
+    ##
     'greater_or_equal'    , ## ≥
     'greek_lower_alpha'   , ## α
     'greek_lower_beta'    , ## β
@@ -76,6 +77,7 @@ __all__     = (
     'greek_lower_xi'      , ## ξ
     'greek_lower_ypsilon' , ## υ
     'greek_lower_zeta'    , ## ζ
+    ##
     'greek_upper_alpha'   , ## Α
     'greek_upper_beta'    , ## Β
     'greek_upper_chi'     , ## Χ
@@ -132,6 +134,7 @@ __all__     = (
     'palette'             , ## 🎨  (wide)
     'permille'            , ## ‰
     'plus_minus'          , ## ±
+    'quadratic_sum'       , ## ⨁ 
     'question_mark'       , ## ❓  (wide)
     'ram'                 , ## 🐏  (wide)
     'rangle'              , ## 〉
@@ -139,6 +142,7 @@ __all__     = (
     'runner'              , ## 🏃  (wide)
     'same'                , ## ≡
     'scissors'            , ## ✂️
+    ##
     'script_A'            , ## 𝒜
     'script_B'            , ## ℬ
     'script_E'            , ## ℰ
@@ -165,8 +169,9 @@ __all__     = (
     'sum_symbol'          , ## ∑
     'superscript_map'     , ## mapping dict
     'symmetry'            , ## ⌯
-    'tape'                , ## ✂️
+    'tape'                , ## ➿
     'tape_cartridge'      , ## 🖭️
+    'tensor_product'      , ## ⨂
     'thumb_down'          , ## 👎  (wide)
     'thumb_up'            , ## 👍  (wide)
     'times'               , ## ⨯
@@ -243,7 +248,7 @@ histogram        = '📊 ' if show else ''
 graph            = '📈 ' if show else '' 
 palette          = '🎨 ' if show else '' 
 document         = '🗎'  if show else '' 
-tape             = '✂'  if show else '' 
+tape             = '➿'  if show else '' 
 tape_cartridge   = '🖭' if show else '' 
 folder           = '📂 ' if show else '' 
 light_bulb       = '💡 ' if show else '' 
@@ -283,6 +288,11 @@ indices = tuple ( indices )
 
 ## capital Greek Sigma 
 sum_symbol       = '∑'   if show else 'sum'
+
+tensor_product    = '⨂'  if show else 'x'
+descartes_product =  tensor_product 
+quadratic_sum     = '⨁'  if show else '(+)'
+
 ## lowercase Greek sigma 
 rms_symbol       = 'σ'   if show else 'rms'
 ## squared lower case Greek sigma 
@@ -471,7 +481,7 @@ if '__main__' == __name__ :
     header = "Name" , "Value" , 'Width'
     import ostap.logger.table as T
 
-    rows = [] 
+    rows = [ header ] 
     for name in __all__  :
         symb = globs.get ( name , None )
         if symb is None or not isinstance ( symb , str ) : continue        

@@ -611,24 +611,27 @@ class ADVAL_CATB (ADVAL_base) :
 
         if BDT_needs_regularization ( X_train , W_train ) :
 
+
             depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'depth' , 5 ) )
             
             params [ 'depth'             ] = depth
             
             # --- Minimum data in leaf bounds ---
-            params [ 'min_data_in_leaf'  ] = max ( 50 , params.get ( 'min_data_in_leaf' , 20 ) )
+            params [ 'min_data_in_leaf'  ] = max ( 5 , params.get ( 'min_data_in_leaf' , 5 ) )
             
             params [ 'rsm'               ] = 1.0
             params [ 'subsample'         ] = 1.0
             
-            # --- Relaxed L2 leaf regularization ---
-            params [ 'l2_leaf_reg'       ] = 0.01
+            # --- Standard L2 leaf regularization ---
+            params [ 'l2_leaf_reg'       ] = 1.0
             
-            params [ 'learning_rate'     ] = min ( 0.01 , params.get ( 'learning_rate' , 0.03 ) )
+            params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
             
             iterations             = min ( 20 if 1 == nf else 50 , iterations )
-            early_stopping_rounds  = 0
             
+            # --- CRITICAL FIX FOR CATBOOST: MUST BE NONE (OR > 0), NEVER 0 ---
+            early_stopping_rounds  = None
+
             ## print regularized parameters in "no-silent" regime
             self.report_regularization ( params                ,
                                          num_features          = nf                    , 
@@ -699,8 +702,7 @@ class ADVAL_HGBC (ADVAL_base) :
         max_iter = params.pop ( 'max_iter' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         
         if BDT_needs_regularization ( X_train , W_train ) :
-
-
+            
             max_depth      = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
             max_leaf_nodes = 2 if max_depth == 1 else min ( 2 ** max_depth , params.get ( 'max_leaf_nodes' , 31 ) )
             
@@ -709,10 +711,10 @@ class ADVAL_HGBC (ADVAL_base) :
             
             params [ 'min_samples_leaf'     ] = max ( 50 , params.get ( 'min_samples_leaf' , 20 ) )
             
-            # --- Fully disable L2 regularization ---
-            params [ 'l2_regularization'    ] = 0.0
+            # --- Moderate L2 regularization to suppress sPlot noise in binning ---
+            params [ 'l2_regularization'    ] = 1.0
             
-            params [ 'learning_rate'        ] = min ( 0.01 , params.get ( 'learning_rate' , 0.03 ) )
+            params [ 'learning_rate'        ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
                         
             max_iter = min ( 20 if 1 == nf else 50 , max_iter )
             

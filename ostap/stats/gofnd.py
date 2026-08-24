@@ -48,13 +48,13 @@ __all__     = (
     'AndersonDarling'    , ## Anderson-Darling  GoF estimator 
     'CramerVonMises'     , ## Cramer-von Mises  GoF estimator 
     'BerkJones'          , ## Berk-Jones        GoF estimator     
-    'ZK'                 , ## ZK               GoF estimator
-    'ZA'                 , ## ZA               GoF estimator
-    'ZC'                 , ## ZC               GoF estimator
+    'ZK'                 , ## ZK                GoF estimator
+    'ZA'                 , ## ZA                GoF estimator
+    'ZC'                 , ## ZC                GoF estimator
     ## some crude estimators
     'Mahalanobis'        , ## Use Mahalanobis'      distance as GoF estimator
     'Hotelling'          , ## Use Hoellling'        distance as GoF estimator
-    'KullBackLeibler'    , ## Use Kullback-Leibler' distance as GoF estimator
+    'KullbackLeibler'    , ## Use Kullback-Leibler' distance as GoF estimator
     ## 
 )
 # =============================================================================
