@@ -24,11 +24,13 @@ from   ostap.utils.core       import typename
 from   ostap.utils.basic      import numcpu, num_jobs, NoContext 
 from   ostap.tools.reweighter import Reweighter
 from   ostap.stats.utils      import ( weight_trivial     ,
+                                       valid_weight       ,
+                                       valid_data_shape   ,
+                                       compatible_weights , 
                                        num_features       ,
                                        num_samples        ,
-                                       valid_data_shape   ,
-                                       valid_weight       ,
-                                       compatible_weights ) 
+                                       check_all          ,
+                                       nEff               ) 
 import numpy, abc, warnings
 # =============================================================================
 # logging 
@@ -37,13 +39,36 @@ from ostap.logger.logger import getLogger, logAttention
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighters' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-## @class DensityReweighter
-#  Abstract base class for immutable, adaptive density-ratio reweighting.
-#  Implements 1-, 2-, and 4-stream signed-measure density estimations.
-# 
-#  The instance executes training immediately upon instantiation (__init__)
-#  and seals the resulting weights for the original sample as read-only attributes
-#  (if store_original_weights=True).
+## Check if strong regularization is needed considering BOTH original and target samples.
+def RW_needs_regularization ( original                       ,
+                              target                         ,
+                              original_weight        = None  , 
+                              target_weight          = None  ) :
+    """ Check if strong regularization is needed for BDT-based reweighting tests.
+        Evaluates the limiting effective statistics between original and target samples.
+    """
+    check_all ( data1   = original            ,
+                data2   = target              ,
+                weight1 = original_weight     ,
+                weight2 = target_weight       ,
+                where   = "RW_regularization" ) 
+
+    nf = num_features ( original )
+    
+    # 1. Low dimensionality ALWAYS needs strong regularization
+    if nf <= 3: return True 
+    
+    # 2. Calculate effective statistics for original sample
+    neff_orig = nEff ( original  , original_weight )
+    neff_targ = nEff ( target    , target_weight   )
+    neff      = min  ( neff_orig , neff_targ       )
+    
+    # 4. Non-linear density threshold (phase space growth)
+    required_stats = 500.0 * ( nf ** 1.6 )
+    
+    low_stats = ( neff < required_stats )
+    
+    return low_stats
 
 # =============================================================================
 ## @class DensityReweighter
@@ -73,10 +98,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                  random_state           = 42    ,
                  store_original_weights = True  , **params ) :
 
-        if not isinstance ( n_splits, int ) :
-            raise TypeError ( "Invalid `n_splits' type %s" % typename( n_splits ) )
-        if not 0 <= n_splits <= 1000 :
-            raise ValueError ( "Invalid `n_splits' value %s" % n_splits )
+        if not isinstance ( n_splits, int ) : raise TypeError ( "Invalid `n_splits' type %s" % typename( n_splits ) )
+        if not 0 <= n_splits <= 1000        : raise ValueError ( "Invalid `n_splits' value %s" % n_splits )
         if not isinstance( clip_threshold, num_types ) :
             raise TypeError ( "Invalid `clip_threshold' type %s" % typename( clip_threshold ) )
         if not 0 < clip_threshold :
@@ -93,6 +116,26 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__norm_factor         = numpy.float32( 1.0 )
         self.__mode                = None
 
+        ## perform regularization!! 
+        if RW_needs_regularization ( original        = original        ,
+                                     target          = target          ,
+                                     original_weight = original_weight ,
+                                     target_weight   = target_weight   ) :
+            
+            n_features = num_features ( original )
+            neff_orig  = nEff ( original  , original_weight )
+            neff_targ  = nEff ( target    , target_weight   ) 
+            neff       = min  ( neff_orig , neff_targ )
+            
+            params.update ( self.regularization ( params , n_features , neff ) )
+            
+            params [ 'n_estimators'          ] = min ( 100 , params.get ( 'n_estimators'          , 100 ) )
+            params [ 'early_stopping_rounds' ] = min (  15 , params.get ( 'early_stopping_rounds' ,  15 ) ) 
+            logger.warning ( "%s: strong regularization is applied" % typename ( self ) ) 
+
+        self.__original_ratios             = None
+        self.__original_reweighted_weights = None
+            
         # =====================================================================
         ## Initialize the base: check input data & print config
         # =====================================================================
@@ -121,9 +164,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                 ),
             )
         )
-
-        self.__original_ratios             = None
-        self.__original_reweighted_weights = None
 
         # =====================================================================
         ## Optionally store original sample reweighting results
@@ -405,10 +445,12 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         prior                       = numpy.float32( sum_orig / ( sum_targ + 1e-12 ) )
         self.__priors[ stream_key ] = prior
 
+        
         p_orig         = oof_preds[ : len( X_orig_sub ) ]
         p_orig_clipped = numpy.clip ( p_orig, numpy.float32( 1e-7 ), numpy.float32( 1.0 - 1e-7 ) )
         return ( p_orig_clipped / ( numpy.float32( 1.0 ) - p_orig_clipped ) ) * prior
 
+    
     def __normalize_and_clip( self   ,
                               ratios ,
                               w_orig ) :
@@ -515,7 +557,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                 r_neg_neg                = self.__predict_stream_ratios( "neg_neg", X_n )
                 ratios_valid[ mask_neg ] = (
                     r_neg_pos * w_pos - r_neg_neg * w_neg
-                ) / denom
+                ) / w_total
 
         clipped                = numpy.clip ( ratios_valid,
                                               numpy.float32( 0.0 ),
@@ -530,120 +572,97 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 #   Density-ratio reweighter implementation using LightGBM as the underlying classifier.
 #   Inherits from BaseDensityReweighter. Automatically handles 1-, 2-, and 4-stream
 #   decompositions for positive and negative sample weights.
-class LightGBMDensityReweighter ( DensityReweighter ): 
-    """ Density-ratio reweighter implementation using LightGBM as the underlying classifier.
-    Inherits from BaseDensityReweighter. Automatically handles 1-, 2-, and 4-stream
-    decompositions for positive and negative sample weights.
-    """    
-    def __init__(  self , * , 
-                   original               ,
-                   target                 ,
-                   original_weight        = None  ,
-                   target_weight          = None  ,
-                   store_original_weights = True  , **params ) :        
-        """
-        Parameters
-        ----------
-        original : numpy.ndarray
-            Features of the original (source) dataset.
-        target : numpy.ndarray
-            Features of the target dataset.
-        original_weight : numpy.ndarray or None, optional
-            Event weights for the original dataset. If None, unweighted (all 1.0).
-        target_weight : numpy.ndarray or None, optional
-            Event weights for the target dataset. If None, unweighted (all 1.0).
-        num_boost_round : int, default=100
-            Number of boosting iterations.  
-    
-        """    
-        ## Recommended LightGBM parameters for density ratio reweighting (covariate shift)
-        config = { 
-            # Core objective and evaluation metric
-            "objective"             : "binary" ,
-            "metric"                : "binary_logloss" ,
-            "n_estimators"          : 500 ,
-            "early_stopping_rounds" :  20 ,
-            # 1. Tree structure regularization (prevents overconfident density ratios)
-            "max_depth"             : 5  , # Shallow trees to avoid overfitting local sample variations
-            "num_leaves"            : 31 , # Upper bound on leaf nodes (<= 2^max_depth)
-            "min_child_samples"     : 50 , # Minimum samples per leaf (smooths probability estimates)
-            # 2. Learning rate control
-            "learning_rate"         : 0.03 , # Small step size for smoother probability boundaries
-            # 3. Regularization on leaf weights
-            "reg_alpha"             : 0.1 , # L1 regularization to prune noisy feature splits
-            "reg_lambda"            : 1.0 , # L2 regularization to stabilize raw ratios p / (1 - p)
-            # 4. Stochastic subsampling
-            "subsample"             : 0.8 , # Row subsampling fraction (bagging)
-            "subsample_freq"        : 1   , # Perform bagging at every iteration
-            "colsample_bytree"      : 0.8 , # Feature subsampling fraction per tree
-            # 6. Runtime parameters
-            "verbosity"             : -1 ,
-            "n_jobs"                : -1 }
+
+class LightGBMDensityReweighter ( DensityReweighter ) :
+    """
+    LightGBM-based density ratio reweighter for Ostap
+    """
+    def __init__ ( self            , 
+                   original        , 
+                   target          , 
+                   original_weight = None , 
+                   target_weight   = None , 
+                   **kwargs        ) :
+        config = {
+            'objective'             : 'binary'           ,
+            'metric'                : 'binary_logloss'   ,
+            'n_estimators'          : 350                ,
+            'learning_rate'         : 0.03               ,
+            'max_depth'             : 4                  , ## Relaxed depth to allow initial splits[cite: 4]
+            'num_leaves'            : 15                 , ## Increased leaf capacity[cite: 4]
+            'min_child_samples'     : 20                 , ## Lower sample threshold per leaf[cite: 4]
+            'min_child_weight'      : 1e-3               ,
+            'reg_alpha'             : 0.1                , ## Moderate L1 regularization[cite: 4]
+            'reg_lambda'            : 0.5                , ## Moderate L2 regularization[cite: 4]
+            'subsample'             : 0.8                ,
+            'subsample_freq'        : 1                  ,
+            'colsample_bytree'      : 0.8                ,
+            'boost_from_average'    : True               ,
+            'verbosity'             : -1                 ,
+            'n_jobs'                : -1                 ,
+        }
+
+        config.update ( kwargs )
         
-        config.update ( params )
-        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' )
-        
-        # Delegate execution to BaseDensityReweighter __init__
-        super().__init__ ( original               = original               ,
-                           target                 = target                 ,
-                           original_weight        = original_weight        ,
-                           target_weight          = target_weight          ,
-                           store_original_weights = store_original_weights , **config )
-        
+        super ( LightGBMDensityReweighter , self ).__init__ (
+            original        = original        ,
+            target          = target          ,
+            original_weight = original_weight ,
+            target_weight   = target_weight   ,
+            **config
+        )
+
     @property
     def method ( self ) :
-        """`method` : underlying method/engine"""
-        return "LightGBM density Reweighter"
+        """
+        Return the reweighter method name
+        """
+        return 'LightGBM'
 
-    # =============================================================
-    # Abstract Method Implementations
-    # =============================================================
-    def _train_single_model ( self,
+    def regularization ( self       ,
+                         params     , 
+                         n_features ,
+                         n_samples  ) : 
+        """
+        Dynamic regularization tuned specifically for LightGBM.
+        Prevents premature early stopping while preserving model stability.
+        """
+        N = n_samples 
+        
+        # Fix: relax constraints to enable active splitting on smaller subsets
+        params [ 'max_depth'         ] = 4
+        params [ 'num_leaves'        ] = 12
+        params [ 'min_child_samples' ] = max ( 20 , int ( N * 0.002 ) )
+        params [ 'min_child_weight'  ] = 1e-3
+        params [ 'learning_rate'     ] = 0.03
+        params [ 'reg_alpha'         ] = 0.1
+        params [ 'reg_lambda'        ] = 1.0
+        
+        return params
+    
+    
+    def _train_single_model ( self    ,
                               X_train , y_train , w_train ,
                               X_val   , y_val   , w_val   ) : 
-        """ Trains a single LightGBM booster on train fold and evaluates on validation fold.
-
-        Returns
-        -------
-        model : lgb.Booster
-            Fitted LightGBM Booster instance.
-        val_preds : numpy.ndarray
-            Predicted probabilities p(y=1|x) on the validation fold (float32).
         """
-            
+        Train single LightGBM estimator and return validation density ratio weights
+        """
         import lightgbm as LightGBM 
-        
-        # Construct LightGBM Datasets (pass weight only if not None)
-        trn_data = LightGBM . Dataset ( X_train , label = y_train , weight = w_train , free_raw_data = False )
-        val_data = LightGBM . Dataset ( X_val   , label = y_val   , weight = w_val   , free_raw_data = False , reference = trn_data)
 
-        params = {}
-        params.update ( self.params ) 
+        w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else None
+        w_va = numpy.ascontiguousarray ( w_val   , dtype = numpy.float32 ) if w_val   is not None else None
+
+        trn_data = LightGBM.Dataset ( X_train , label = y_train , weight = w_tr , free_raw_data = False )
+        val_data = LightGBM.Dataset ( X_val   , label = y_val   , weight = w_va , reference = trn_data , free_raw_data = False )
+
+        params = self.params.copy ()
         
-        num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' ,  None  ) or 500 
-        if isinstance ( num_boost_round , int ) and 10 < num_boost_round < 10000 : pass 
-        else                                                                     : num_boost_round = 500 
+        num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , 400 )
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 20 )
         
-        early_stopping_rounds = params.pop  ( 'early_stopping_rounds' , 10 )
-        if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < num_boost_round : pass
-        else                                                                      :  early_stopping_rounds = 10  
-        
-        if self.use_strong_regularization ( X_train ) :  
-            max_depth  = min ( 3 , params.pop ( 'max_depth' ,  5 ) ) 
-            num_leaves = 2 ** max_depth - 1
-            params [ 'max_depth'         ] = max_depth 
-            params [ 'num_leaves'        ] = min ( num_leaves , params.pop ( 'num_leaves'  , 31 ) )
-            params [ 'min_child_samples' ] = max ( 75   , params.pop ( 'min_child_samples' , 50 ) )
-            params [ 'colsample_bytree'  ] = 1.0 
-            params [ 'reg_alpha'         ] = max ( 0.5  , params.pop ( 'reg_alpha'     , 0.1  ) )
-            params [ 'reg_lambda'        ] = max ( 2.0  , params.pop ( 'reg_lambda'    , 1.0  ) )
-            params [ "learning_rate"     ] = min ( 0.02 , params.get ( "learning_rate" , 0.03 ) )
-            num_boost_round       = min ( 150 , num_boost_round       )
-            early_stopping_rounds = min (  10 , early_stopping_rounds )
-            
         callbacks = []
         if 0 < early_stopping_rounds : 
-            callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds, verbose = False ) )
+            callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
 
         model = LightGBM.train ( params          = params          ,
                                  train_set       = trn_data        ,
@@ -651,21 +670,22 @@ class LightGBMDensityReweighter ( DensityReweighter ):
                                  valid_sets      = [ val_data ]    ,
                                  callbacks       = callbacks       )
         
-        # Predict raw probabilities p(y=1|x) for validation fold
-        # Best iteration is used automatically if early stopping triggered
-        best_iteration = model.best_iteration if 0 < getattr ( model , 'best_iteration' , 0 ) else None
-        val_preds = model.predict ( X_val , num_iteration = best_iteration )
-        ## 
-        return model, val_preds.astype ( numpy.float32 , copy = False )
+        val_preds = self._predict_single_model ( model , X_val )
+        
+        return model , val_preds
 
-    ## Generates probability predictions p(y=1|x) for input features X.
-    def _predict_single_model ( self  , model , X ) : 
-        """ Generates probability predictions p(y=1|x) for input features X.
+
+    def _predict_single_model ( self , model , X ) :
         """
-        best_iteration = model.best_iteration if 0 < getattr ( model, 'best_iteration', 0 ) else None
-        preds          = model.predict ( X , num_iteration = best_iteration )
-        return preds.astype ( numpy.float32 , copy = False )
-
+        Predict probability p(y=1|x) for a single trained model.
+        Base class DensityReweighter calculates ratio p / (1 - p).
+        """
+        best_iter = model.best_iteration if getattr ( model , 'best_iteration' , 0 ) > 0 else -1
+        p         = model.predict ( X , num_iteration = best_iter )
+        
+        # ИСПРАВЛЕНИЕ: Возвращаем только вероятность, без p / (1 - p)
+        return p.astype ( numpy.float32 , copy = False )
+    
 # =================================================================
 ## @class XGBoostDensityReweighter
 #   Density-ratio reweighter implementation using XGBoost as the underlying classifier.
@@ -683,29 +703,30 @@ class XGBoostDensityReweighter ( DensityReweighter ):
                    target_weight          = None ,
                    store_original_weights = True , **params ) :
         
-        # Recommended XGBoost parameters for density ratio reweighting (covariate shift)
-        config = { # Core objective and metric
-            "objective"             : "binary:logistic" ,
-            "eval_metric"           : "logloss" ,
-            "n_estimators"          : 500 ,
-            "early_stopping_rounds" :  20 ,
-            # 1. Tree structure regularization (prevents overconfident density ratios)
-            "max_depth"             : 5   , # Shallow trees prevent overfitting to local sample noise
-            "min_child_weight"      : 5.0 , # Minimum sum of instance weight in a child (smooths density estimation)    
-            # 2. Learning rate control
-            "learning_rate"         : 0.03 , # Small step size yields smoother probability boundaries
-            # 3. Regularization on leaf weights (L1 / L2)
-            "alpha"                 : 0.1 , # L1 regularization (reg_alpha equivalent)
-            "lambda"                : 1.0 , # L2 regularization (reg_lambda equivalent) to stabilize raw ratios
-            # 4. Stochastic subsampling
-            "subsample"             : 0.8 , # Row subsampling fraction
-            "colsample_bytree"      : 0.8 , # Feature subsampling fraction per tree
-            # 5. Runtime parameters
-            "verbosity"             :  0  ,
-            "n_jobs"                : -1  }
+        ## High-capacity (complex) base config for XGBoost density reweighting
+        config = {
+            "objective"             : "binary:logistic",
+            "eval_metric"           : "logloss",
+            "n_estimators"          : 350,
+            "early_stopping_rounds" : 25,
+            
+            # Tree structure capacity
+            "max_depth"             : 5,
+            "min_child_weight"      : 15.0,
+            
+            # Regularization & Subsampling
+            "learning_rate"         : 0.03,
+            "alpha"                 : 0.5,
+            "lambda"                : 2.0,
+            "subsample"             : 0.8,
+            "colsample_bytree"      : 0.65,
+            
+            # Runtime parameters
+            "verbosity"             : 0,
+            "n_jobs"                : -1
+        }
         
         config.update ( params )
-
         if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' )
 
         # Delegate execution to BaseDensityReweighter __init__
@@ -718,7 +739,22 @@ class XGBoostDensityReweighter ( DensityReweighter ):
     @property
     def method ( self ) :
         """`method` : underlying method/engine"""
-        return "XGBoost density Reweighter"
+        return "XGBoost Density Reweighter"
+    
+    def regularization ( self       ,
+                         params     , 
+                         n_features ,
+                         n_samples  ) : 
+        
+        N = n_samples 
+        params [ 'max_depth'          ] = 3
+        params [ "num_leaves"         ] = 7
+        params [ "min_child_samples"  ] = max ( 100, int ( N * 0.005 ) ) 
+        params [ 'reg_alpha'          ] = 1.0 
+        params [ 'reg_lambda'         ] = 5.0
+        params [ 'colsample_bytree'   ] = 0.8
+
+        return params
     
     # =============================================================
     # Abstract Method Implementations
@@ -754,16 +790,6 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         early_stopping_rounds = params.pop  ( 'early_stopping_rounds' , 10 )
         if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < num_boost_round : pass
         else : early_stopping_rounds = 10 
-        
-        if self.use_strong_regularization ( X_train ) :  
-            params [ 'max_depth'         ] = min (  3   , params.pop ( 'max_depth'   ,  5 ) ) 
-            params [ 'min_child_weight'  ] = max ( 20   , params.pop ( 'min_child_weight' , 5 ) )
-            params [ 'colsample_bytree'  ] = 1.0 
-            params [ 'alpha'             ] = max ( 0.5  , params.pop ( 'alpha'  , 0.1 ) )
-            params [ 'lambda'            ] = max ( 2.0  , params.pop ( 'lambda' , 1.0 ) )
-            params [ "learning_rate"     ] = min ( 0.02 , params.get ( "learning_rate" , 0.03 ) )
-            num_boost_round       = min ( 150 , num_boost_round       )
-            early_stopping_rounds = min (  10 , early_stopping_rounds )
 
         model = XGBoost.train ( params                = params,
                                 dtrain                = dtrain,
@@ -807,32 +833,38 @@ class CatBoostDensityReweighter ( DensityReweighter ):
                    original_weight        = None ,
                    target_weight          = None ,
                    store_original_weights = True  , **params ) :        
-        
-        # Recommended CatBoost parameters for density ratio reweighting (covariate shift)
-        config = { # Core objective and metric
-            "loss_function"         : "Logloss" ,
-            "eval_metric"           : "Logloss" ,
-            "n_estimators"          : 500 ,
-            "early_stopping_rounds" :  20 , 
-            "min_child_samples"     :   5 , 
-            # 1. Tree structure regularization (prevents overconfident density ratios)
-            "max_depth"             : 6    , # Standard depth for oblivious trees
-            "l2_leaf_reg"           : 3.0  , # L2 regularization on leaf values (smooths probability estimates)
-            "random_strength"       : 1.0 , # Randomness scoring split candidates to combat overfitting
-            # 2. Learning rate control
-            "learning_rate"         : 0.03 , # Small step size for smoother probability boundaries
-            # 3. Stochastic subsampling
-            "subsample"             : 0.8  , # Row subsampling fraction
-            # 5. Runtime settings
-            "verbose"               : False ,
-            "thread_count"          : -1    }
 
+
+        # Recommended CatBoost parameters for density ratio reweighting (covariate shift)
+        config = { 
+            # Core objective and evaluation metric
+            "loss_function"         : "Logloss",
+            "eval_metric"           : "Logloss",
+            "n_estimators"          : 350,
+            "early_stopping_rounds" : 25,
+            
+            # Tree structure capacity (Symmetric/Oblivious trees)
+            "max_depth"             : 5,
+            "min_child_samples"     : 30,
+            
+            # Regularization & Subsampling
+            "learning_rate"         : 0.03,
+            "l2_leaf_reg"           : 2.0,
+            "random_strength"       : 1.0,
+            "subsample"             : 0.8,
+            "rsm"                   : 0.65,  # Feature subsampling equivalent in CatBoost
+            
+            # Runtime parameters
+            "verbose"               : False,
+            "thread_count"          : -1
+        }
+        
         config.update ( params )
         
          # CatBoost uses 'thread_count' instead of 'n_jobs'
         if 'n_jobs'     in config : config [ 'thread_count' ] = config.pop ( 'n_jobs' )  
         if 'iterations' in config : config [ 'n_estimators' ] = config.pop ( 'iterations' ) 
-                   
+        
         # Delegate execution to BaseDensityReweighter __init__
         super().__init__ ( original               = original               ,
                            target                 = target                 ,
@@ -845,6 +877,26 @@ class CatBoostDensityReweighter ( DensityReweighter ):
         """`method` : underlying method/engine"""
         return "CatBoost density Reweighter"
 
+    
+    def regularization ( self       ,
+                         params     , 
+                         n_features ,
+                         n_samples  ) : 
+        
+        N = n_samples 
+        params [ 'max_depth'          ] = 3
+        params [ "num_leaves"         ] = 7
+        params [ "min_child_samples"  ] = max ( 100, int ( N * 0.005 ) ) 
+
+        
+        params [ 'learning_rate'      ] = 0.05
+        params [ 'l2_leaf_reg'        ] = 5.0
+        
+        params [ 'random_strength'    ] = 2.0
+        params [ 'rsm'                ] = 0.8
+
+        return params
+    
     # =============================================================
     # Abstract Method Implementations
     # =============================================================
@@ -876,16 +928,7 @@ class CatBoostDensityReweighter ( DensityReweighter ):
         early_stopping_rounds = params.pop  ( 'early_stopping_rounds' , 10 )
         if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < iterations : pass
         else  : early_stopping_rounds = 10
-        
-        if self.use_strong_regularization ( X_train ) : 
-            params [ 'max_depth'         ] = min (  3   , params.pop ( 'max_depth'         , 6 ) ) 
-            params [ 'min_child_samples' ] = max ( 20   , params.pop ( 'min_child_samples' , 5 ) )
-            params [ 'rsm'               ] = 1.0
-            params [ 'l2_leaf_reg'       ] = max ( 2.0  , params.pop ( 'l2_leaf_reg'       , 3.0 ) )
-            params [ "learning_rate"     ] = min ( 0.02 , params.get ( "learning_rate"     , 0.03 ) )
-            iterations            = min ( 150 , iterations       )
-            early_stopping_rounds = min (  10 , early_stopping_rounds )
-        
+
         params [ 'iterations'            ] = iterations
         params [ 'early_stopping_rounds' ] = early_stopping_rounds  
         params [ 'use_best_model'        ] = True
@@ -935,13 +978,33 @@ class GBReweighter(Reweighter) :
 
         self.__n_splits = n_splits
         
-        conf = { 'n_estimators'    : 75  , 
-                 'learning_rate'    : 0.1 , 
-                 'max_depth'        : 3   , 
-                 'min_samples_leaf' : 100 ,
-                 'gb_args'          : {'subsample': 0.8 } }        
-        conf.update ( params ) 
+        # Baseline GBReweighter configuration (already achieving good p-value)
+        config = {            
+            "n_estimators"      : 100 ,
+            "learning_rate"     : 0.03,
+            "max_depth"         : 5,
+            "min_samples_leaf"  : 30,            
+            # Advanced Scikit-Learn GradientBoosting/GBReweighter arguments
+            "gb_args"           : {
+                "subsample"     : 0.8  ,
+                "max_features"  : 0.65 }
+        }
+        
+        config.update ( params ) 
 
+        if RW_needs_regularization ( original        = original        ,
+                                     target          = target          ,
+                                     original_weight = original_weight ,
+                                     target_weight   = target_weight   ) :
+            
+            n_features = num_features ( original )
+            neff_orig  = nEff ( original  , original_weight )
+            neff_targ  = nEff ( target    , target_weight   ) 
+            neff       = min  ( neff_orig , neff_targ       )
+            
+            config.update ( self.regularization ( config , n_features , neff ) )
+            logger.warning ( "%s: strong regularization is applied" % typename ( self ) ) 
+            
         # =====================================================================
         ## Initialize the base: check input data & print config 
         # =====================================================================
@@ -949,8 +1012,8 @@ class GBReweighter(Reweighter) :
                               original        = original        ,
                               target          = target          , 
                               original_weight = original_weight ,
-                              target_weight   = target_weight   , **conf )
-        
+                              target_weight   = target_weight   , **config )
+
         # =====================================================================
         ## some patch: needed? 
         try : # ===============================================================
@@ -967,7 +1030,7 @@ class GBReweighter(Reweighter) :
             pass
 
         if not hasattr ( numpy , 'float' ) :
-            logger.warning ( 'No `numpy.float`... add it!')
+            logger.warning ( 'No `numpy.float` ... add it!')
             numpy.float = numpy.float64
             
         # =====================================================================
@@ -998,7 +1061,22 @@ class GBReweighter(Reweighter) :
                 original_weight = original_weight )
             self.__original_ratios             = factors 
             self.__original_reweighted_weights = factors if weight_trivial ( original_weight ) else factors * original_weight
-                
+
+    def regularization ( self       ,
+                         params     , 
+                         n_features ,
+                         n_samples  ) : 
+        N = n_samples
+        params [ 'n_estimators'     ] = 100
+        params [ 'learning_rate'    ] = 0.05
+        params [ 'max_depth'        ] = 3
+        params [ 'min_samples_leaf' ] = max ( 100, int ( N * 0.005 ) )
+        
+        gb_args = params.get ( 'gb_args', {} ).copy ()
+        gb_args.update ( { 'subsample': 0.8, 'max_features': 0.8 } )
+        params [ 'gb_args'          ] = gb_args
+        return params
+    
     @property
     def method ( self ) :
         """`method` : underlying method/engine"""

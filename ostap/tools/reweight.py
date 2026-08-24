@@ -1095,15 +1095,18 @@ def makeWeights  ( dataset                       ,
     
     nplots  = len ( plots )
 
-    ## #itemd that have been updated at this iterations and *not-good*
+    ## items that have been updated at this iteration and *not-good (yet)*
     for_update   = 0 
     ## list of plots to compare 
     cmp_plots    = []
     ## reweighting summary table
     header       = ( 'Reweighting' , 'wmin/wmax' , 'OK?' , 'wrms[%]' , 'OK?' , chi2ndf , 'OK?' , 'ww' , 'exp' )
     rows         = {}
-    save_to_db   = [] 
-    ## number of active plots for reweighting
+    save_to_db   = []
+
+    summary      = {}
+    
+    ## number of active plots for reweighting    
     for wplot in plots  :
         
         what      = wplot.what       ## variable/function to plot/compare 
@@ -1156,6 +1159,7 @@ def makeWeights  ( dataset                       ,
         # =====================================================================
         ## Here we need to get the statistics of weights
         # =====================================================================
+        
         ## scale & get the statistics of weights
         wstat  = w.stat      () 
         wmean  = wstat.mean  () 
@@ -1183,7 +1187,9 @@ def makeWeights  ( dataset                       ,
         good2 = float ( wrms        ) <= delta
         good3 = c2ndf                 <= maxchi2 
         good  = good1 and good2 and good3 ## small variance?         
-        #
+
+        ## some summary
+        summary [ address ] = float( wmax - wmin ) , float ( wrms ) 
         
         # =====================================================================
         ## document the decision 
@@ -1250,6 +1256,18 @@ def makeWeights  ( dataset                       ,
         # =====================================================================
         if compare : compare ( hdata0 , hmc0 , address )
 
+
+    # ==========================================================================
+    ## Stochastic treatment (?) 
+    # ==========================================================================
+    if save_to_db :
+        
+        stochastic = None 
+        if isinstance ( stochastic , num_types ) and 0 <  stochastic < 1              : n_ok = 1 
+        if isinstance ( stochastic , int       ) and 1 <= stochastic <= len ( plots ) : n_ok = 1 
+        
+
+        
     active  = tuple ( [ p [ 0 ] for p in save_to_db ] )  
     nactive = len ( active )  
 
@@ -1272,7 +1290,7 @@ def makeWeights  ( dataset                       ,
     else                                                       : eff_exp = 1.05 / max ( nactive - 1 , 1 ) 
 
     # =============================================================================
-    ## save the results into data base +  abit of black magid with effective exponent 
+    ## save the results into data base + a bit of black magic with effective exponent 
     # =============================================================================
     while database and save_to_db :
 
@@ -1341,7 +1359,7 @@ def makeWeights  ( dataset                       ,
                     isinstance ( item.weight , ROOT.TH1 ) and 1 == item.weight.dim ()                
                 with use_canvas ( '%s/%s' % ( tag , item.what ) , colz = colz ) : item.draw()
 
-        ## save comparison plots to database 
+        ## save *ALL* comparison plots to database 
         if debug and True :
             tag = tag_comparisons
             with DBASE.open ( database ) as db :

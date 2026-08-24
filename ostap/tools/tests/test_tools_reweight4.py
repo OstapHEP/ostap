@@ -238,7 +238,7 @@ mc_r3  = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
 mc_r   = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
 
 ## prepare re-weighting machinery 
-maxIter = 15
+maxIter = 10
 
 ## check database 
 if not os.path.exists( dbname ) :

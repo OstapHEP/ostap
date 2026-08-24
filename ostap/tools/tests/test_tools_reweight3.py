@@ -61,27 +61,26 @@ tag_data_z  = 'DATA_Z_histogram'
 tag_data    = 'DATA_tree'
 tag_mc      = 'MC_tree'
 
-
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
 dbname      = 'reweight3.db'
 
 small = numcpu () <= 8
 
-## small = True
+small = True
 
 if small : 
     
     NDATA1      =  5000 ## 00
     NDATA2      =  5000 ## 00
     NDATA3      =  5000 ## 00
-    NMC         = 10000 ## 00
+    NMC         =  5000 ## 00
     
 else :
      
-    NDATA1      = 25000 ## 00
-    NDATA2      = 25000 ## 00
-    NDATA3      = 25000 ## 00
-    NMC         = 50000 ## 00
+    NDATA1      =  5000 ## 00
+    NDATA2      =  5000 ## 00
+    NDATA3      =  5000 ## 00
+    NMC         = 25000 ## 00
     
 xmax        = 15.0
 ymax        = 12.0 
@@ -411,8 +410,7 @@ plots  = [
 memory_init = memory_usage() 
 converged   = False
 
-maxIter = 5 if small else 12
-## maxIter = 15 
+maxIter = 6 if small else 11
 
 # =============================================================================
 ## start reweighting iterations:
@@ -448,30 +446,27 @@ for iter in range ( 1 , maxIter + 1 ) :
     pmax  = 1.0 if iter <= 4 else 0.66 + 0.34 * math.exp ( - ( iter - 4.0 ) / 4.0 )
     power = lambda n : pmax if n <= 1 else pmax * ( 0.66666 / n + 0.33333 )
 
-    if   iter < 3 : the_plots = plots [ : 1 ]
-    elif iter < 4 : the_plots = plots [ : 4 ]
-    else          : the_plots = plots
+    if   iter < 2 : the_plots = plots [   : 1 ]
+    elif iter < 3 : the_plots = plots [ 1 : 4 ]
+    elif iter < 4 : the_plots = plots [   : 4 ]
+    else          : the_plots = plots [ 1 :   ] 
 
     ## the_plots = plots
-    
-    ## weight truncation: avoid very large change of weights for  single iteration 
-    wtruncate = ( 0.02 , 3 ) if iter < 4 else ( 0.2 , 1.3 )  
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
         # =========================================================================
         ## 2a) the most important line: perform single iteration step  
         active , _ = makeWeights (
-            mcds                   , ## what to be reweighted
-            the_plots              , ## reweighting plots/setup
-            dbname                 , ## DBASE with reweighting constant 
-            delta      = 0.05      , ## stopping criteria
-            minmax     = 0.10      , ## stopping criteria
-            maxchi2    = 0.50      , ## stopping criteria             
-            power      = power     , ## tune: effective power
-            wtruncate  = wtruncate , ## truncate weights 
-            make_plots = True      , ## make control plots 
-            tag        = tag       ) ## tag for printout
+            mcds               , ## what to be reweighted
+            the_plots          , ## reweighting plots/setup
+            dbname             , ## DBASE with reweighting constant 
+            delta      = 0.06  , ## stopping criteria
+            minmax     = 0.12  , ## stopping criteria
+            maxchi2    = 0.50  , ## stopping criteria             
+            power      = power , ## tune: effective power
+            make_plots = True  , ## make control plots 
+            tag        = tag   ) ## tag for printout
 
     # =============================================================================
     if 1 == iter % 3  or True : 
@@ -584,9 +579,9 @@ if has_xgboost : # ============================================================
     # =========================================================================
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
     rw3 = DataReweighter ( XGB                         , ## reweighter type 
-                       original         = mctree   ,
-                       target           = datatree ,
-                       target_variables = 'x,y,z'  ) 
+                           original         = mctree   ,
+                           target           = datatree ,
+                           target_variables = 'x,y,z'  ) 
     weight_XGB = 'weight_XGB'
     with timing ( "XGBoost reweight" , logger = logger ) :    
         rw3.reweight ( mctree , name = weight_XGB  ) 
@@ -611,6 +606,7 @@ if has_catboost : # ===========================================================
 # ============================================================================
 ## Compare the quality of all reweighters 
 # ============================================================================
+header    = ( 'Weight' , '#eff' ) + tuple ( c.method for c in comparators ) 
 glob_stat = [ header ]
 for weight in weights :
     

@@ -238,7 +238,23 @@ class ADVAL_base (GoFnp):
         
         return low_dim or low_stats
 
-
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params gof.regularization ( params , n_features , n_samples ) 
+    #  @endcode
+    @abc.abstractmethod 
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ) :
+        
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples ) 
+        """
+        return NotImplemented
+    
+    
     def tvalue ( self               ,
                  data1              ,
                  data2              ,  * , 
@@ -378,6 +394,42 @@ class ADVAL_LGBM (ADVAL_base) :
                               normalize = False    ,
                               method    = "Adversarial Validation/LightGBM" , **config   ) 
 
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params = gof.regularization ( params , n_features , n_samples ) 
+    #  @endcode
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ) :
+        
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples ) 
+        """
+        # --- Depth = 2 allows clean non-zero leaves under sPlot weights ---
+        
+        max_depth  = 1 if 1 == n_features else min ( 2 , params.get ( 'max_depth' , 5 ) )
+        num_leaves = 2 if max_depth == 1 else 3
+        
+        params [ 'max_depth'         ] = max_depth
+        params [ 'num_leaves'        ] = num_leaves
+        
+        # --- Minimal child sample threshold to capture sPlot gradients ---
+        params [ 'min_child_samples' ] = 5
+        params [ 'min_child_weight'  ] = 1e-3
+        
+        params [ 'colsample_bytree'  ] = 1.0
+        params [ 'subsample'         ] = 1.0
+        
+        params [ 'reg_alpha'         ] = 0.0
+        params [ 'reg_lambda'        ] = 0.0
+        
+        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+        
+        return params
+        
+        
     def work ( self    ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -396,24 +448,8 @@ class ADVAL_LGBM (ADVAL_base) :
 
         if BDT_needs_regularization ( X_train , W_train ) :
             
-            # --- Depth = 2 allows clean non-zero leaves under sPlot weights ---
-            max_depth  = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
-            num_leaves = 2 if max_depth == 1 else 3
-            
-            params [ 'max_depth'         ] = max_depth
-            params [ 'num_leaves'        ] = num_leaves
-            
-            # --- Minimal child sample threshold to capture sPlot gradients ---
-            params [ 'min_child_samples' ] = 5
-            params [ 'min_child_weight'  ] = 1e-3
-            
-            params [ 'colsample_bytree'  ] = 1.0
-            params [ 'subsample'         ] = 1.0
-            
-            params [ 'reg_alpha'         ] = 0.0
-            params [ 'reg_lambda'        ] = 0.0
-            
-            params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+            ## update parameters 
+            params.update ( self.regularization ( params , nf , ns ) )
             
             num_boost_round        = min ( 20 if 1 == nf else 50 , num_boost_round )
             early_stopping_rounds  = 0
@@ -478,6 +514,39 @@ class ADVAL_XGB (ADVAL_base) :
                               normalize = False    ,
                               method    = "Adversarial Validation/XGBoost" , **config ) 
 
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params = gof.regularization ( params , n_features , n_samples ) 
+    #  @endcode
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ) :
+        
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples ) 
+        """
+        nf = n_features
+        
+        max_depth = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
+        
+        params [ 'max_depth'         ] = max_depth
+        
+        # --- Low min_child_weight to prevent gradient truncation ---
+        params [ 'min_child_weight'  ] = 1e-3
+        
+        params [ 'colsample_bytree'  ] = 1.0
+        params [ 'subsample'         ] = 1.0
+        
+        params [ 'alpha'             ] = 0.0
+        params [ 'lambda'            ] = 0.0
+        
+        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+        
+        return params
+    
+    
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -501,22 +570,10 @@ class ADVAL_XGB (ADVAL_base) :
         ns = num_samples  ( X_train )
         
         if BDT_needs_regularization ( X_train , W_train ) :
+            
+            ## update parameters 
+            params.update ( self.regularization ( params , nf , ns ) ) 
 
-            max_depth = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
-            
-            params [ 'max_depth'         ] = max_depth
-            
-            # --- Low min_child_weight to prevent gradient truncation ---
-            params [ 'min_child_weight'  ] = 1e-3
-            
-            params [ 'colsample_bytree'  ] = 1.0
-            params [ 'subsample'         ] = 1.0
-            
-            params [ 'alpha'             ] = 0.0
-            params [ 'lambda'            ] = 0.0
-            
-            params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
-            
             num_boost_round        = min ( 20 if 1 == nf else 50 , num_boost_round )
             early_stopping_rounds  = 0
 
@@ -589,6 +646,38 @@ class ADVAL_CATB (ADVAL_base) :
         if 'n_jobs' in self.params :
             self.params [ 'thread_count' ] = self.params.pop ( 'n_jobs' , 1 )
 
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params = gof.regularization ( params , n_features , n_samples ) 
+    #  @endcode
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ) :
+        
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples ) 
+        """
+        
+        depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'depth' , 5 ) )
+        
+        params [ 'depth'             ] = depth
+        
+        # --- Minimum data in leaf bounds ---
+        params [ 'min_data_in_leaf'  ] = max ( 5 , params.get ( 'min_data_in_leaf' , 5 ) )
+        
+        params [ 'rsm'               ] = 1.0
+        params [ 'subsample'         ] = 1.0
+        
+        # --- Standard L2 leaf regularization ---
+        params [ 'l2_leaf_reg'       ] = 1.0
+        
+        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+
+        return params
+
+    
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -610,22 +699,9 @@ class ADVAL_CATB (ADVAL_base) :
         ns =  num_samples  ( X_train )
 
         if BDT_needs_regularization ( X_train , W_train ) :
-
-
-            depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'depth' , 5 ) )
             
-            params [ 'depth'             ] = depth
-            
-            # --- Minimum data in leaf bounds ---
-            params [ 'min_data_in_leaf'  ] = max ( 5 , params.get ( 'min_data_in_leaf' , 5 ) )
-            
-            params [ 'rsm'               ] = 1.0
-            params [ 'subsample'         ] = 1.0
-            
-            # --- Standard L2 leaf regularization ---
-            params [ 'l2_leaf_reg'       ] = 1.0
-            
-            params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+            ## update parameters 
+            params.update ( self.regularization ( params , nf , ns ) )
             
             iterations             = min ( 20 if 1 == nf else 50 , iterations )
             
@@ -685,6 +761,38 @@ class ADVAL_HGBC (ADVAL_base) :
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
+
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params = gof.regularization ( params , n_features , n_samples ) 
+    #  @endcode
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ) :
+        
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples ) 
+        """
+        nf = n_features
+        
+        max_depth      = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
+        max_leaf_nodes = 2 if max_depth == 1 else min ( 2 ** max_depth , params.get ( 'max_leaf_nodes' , 31 ) )
+        
+        params [ 'max_depth'            ] = max_depth
+        params [ 'max_leaf_nodes'       ] = max_leaf_nodes
+        
+        params [ 'min_samples_leaf'     ] = max ( 50 , params.get ( 'min_samples_leaf' , 20 ) )
+        
+        # --- Moderate L2 regularization to suppress sPlot noise in binning ---
+        params [ 'l2_regularization'    ] = 1.0
+        
+        params [ 'learning_rate'        ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+
+        return params
+
+
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -703,19 +811,9 @@ class ADVAL_HGBC (ADVAL_base) :
         
         if BDT_needs_regularization ( X_train , W_train ) :
             
-            max_depth      = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
-            max_leaf_nodes = 2 if max_depth == 1 else min ( 2 ** max_depth , params.get ( 'max_leaf_nodes' , 31 ) )
-            
-            params [ 'max_depth'            ] = max_depth
-            params [ 'max_leaf_nodes'       ] = max_leaf_nodes
-            
-            params [ 'min_samples_leaf'     ] = max ( 50 , params.get ( 'min_samples_leaf' , 20 ) )
-            
-            # --- Moderate L2 regularization to suppress sPlot noise in binning ---
-            params [ 'l2_regularization'    ] = 1.0
-            
-            params [ 'learning_rate'        ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
-                        
+            ## update parameters 
+            params.update ( self.regularization ( params , nf , ns ) )
+
             max_iter = min ( 20 if 1 == nf else 50 , max_iter )
             
             ## print regularized parameters in "no-silent" regime
@@ -763,6 +861,34 @@ class ADVAL_GBC (ADVAL_base) :
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params = gof.regularization ( params , n_features , n_samples ) 
+    #  @endcode
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ) :
+        
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples ) 
+        """
+        nf = n_features
+        
+        max_depth = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
+        
+        params [ 'max_depth'                ] = max_depth
+        
+        params [ 'min_samples_leaf'         ] = 5
+        params [ 'min_samples_split'        ] = 10
+        
+        params [ 'subsample'                ] = 1.0
+        params [ 'ccp_alpha'                ] = 0.0
+        
+        params [ 'learning_rate'            ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+
+        return params 
 
     def work ( self ,
                X_train , Y_train , W_train ,
@@ -781,17 +907,8 @@ class ADVAL_GBC (ADVAL_base) :
         
         if BDT_needs_regularization ( X_train , W_train ) :
 
-            max_depth = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
-            
-            params [ 'max_depth'                ] = max_depth
-            
-            params [ 'min_samples_leaf'         ] = 5
-            params [ 'min_samples_split'        ] = 10
-            
-            params [ 'subsample'                ] = 1.0
-            params [ 'ccp_alpha'                ] = 0.0
-            
-            params [ 'learning_rate'            ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+            ## update parameters 
+            params.update ( self.regularization ( params , nf , ns ) )
 
             n_estimators = min ( 20 if 1 == nf else 50 , n_estimators , DEFAULT_ESTIMATORS )
             
@@ -840,7 +957,39 @@ class ADVAL_RF (ADVAL_base) :
                               normalize = False    ,                              
                               method    = "Adversarial Validation/RandomForest" , **config  )
         
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params = gof.regularization ( params , n_features , n_samples ) 
+    #  @endcode
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ) :
         
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples ) 
+        """
+        nf = n_features 
+        ns = n_samples 
+        
+        max_depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
+        
+        params [ 'max_depth'          ] = max_depth
+        
+        # --- Dynamic minimum samples leaf scaling with increased Asimov dataset size ---
+        params [ 'min_samples_leaf'   ] = max ( int ( 0.01 * ns ) , 100 )
+        params [ 'min_samples_split'  ] = max ( int ( 0.02 * ns ) , 200 )
+        
+        # --- Use full bootstrap samples to eliminate mean prediction bias on large Asimov datasets ---
+        params [ 'max_samples'        ] = None
+        params [ 'bootstrap'          ] = True
+        
+        # --- Disable CCP pruning; sPlot negative weights distort complexity-cost pruning ---
+        params [ 'ccp_alpha'          ] = 0.0
+
+        return params 
+         
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -857,23 +1006,9 @@ class ADVAL_RF (ADVAL_base) :
         ns =  num_samples  ( X_train )
         
         if BDT_needs_regularization ( X_train , W_train ) :
-
-
             
-            max_depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
-            
-            params [ 'max_depth'          ] = max_depth
-            
-            # --- Dynamic minimum samples leaf scaling with increased Asimov dataset size ---
-            params [ 'min_samples_leaf'   ] = max ( int ( 0.01 * ns ) , 100 )
-            params [ 'min_samples_split'  ] = max ( int ( 0.02 * ns ) , 200 )
-            
-            # --- Use full bootstrap samples to eliminate mean prediction bias on large Asimov datasets ---
-            params [ 'max_samples'        ] = None
-            params [ 'bootstrap'          ] = True
-            
-            # --- Disable CCP pruning; sPlot negative weights distort complexity-cost pruning ---
-            params [ 'ccp_alpha'          ] = 0.0
+            ## update parameters 
+            params.update ( self.regularization ( params , nf , ns ) )
             
             n_estimators = min ( 20 if 1 == nf else 50 , n_estimators , MAX_REGULARIZED_ESTIMATORS ) 
                                  
@@ -920,6 +1055,37 @@ class ADVAL_TORCH (ADVAL_base) :
                               normalize = True     , 
                               method    = "Adversarial Validation/PyTorch" , **config  ) 
 
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params = gof.regularization ( params , n_features , n_samples ) 
+    #  @endcode
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ) :
+        
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples ) 
+        """
+
+        nf = n_features
+        ns = n_samples
+        
+        # --- Dynamic batch size scaling with increased Asimov dataset size ---
+        params [ 'batch_size'     ] = max ( int ( 0.02 * ns ) , 256 )
+        
+        # --- Moderate Weight Decay (L2) to prevent [10⁻⁶] response collapse ---
+        params [ 'weight_decay'   ] = 1e-3
+        
+        # --- Shallow architecture capacity: prevent overfitting to sPlot weight fluctuations ---
+        params [ 'hidden_units'   ] = 8 if 1 == nf else 16
+        params [ 'num_layers'     ] = 1
+        
+        params [ 'learning_rate'  ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) )
+        params [ 'early_stopping' ] = False
+        
+        return params 
     
     def work ( self ,
                X_train , Y_train , W_train ,
@@ -940,19 +1106,9 @@ class ADVAL_TORCH (ADVAL_base) :
         ns = num_samples  ( X_train )
         
         if NN_needs_regularization ( X_train , W_train ) :
-
-            # --- Dynamic batch size scaling with increased Asimov dataset size ---
-            params [ 'batch_size'     ] = max ( int ( 0.02 * len ( X_train ) ) , 256 )
             
-            # --- Moderate Weight Decay (L2) to prevent [10⁻⁶] response collapse ---
-            params [ 'weight_decay'   ] = 1e-3
-            
-            # --- Shallow architecture capacity: prevent overfitting to sPlot weight fluctuations ---
-            params [ 'hidden_units'   ] = 8 if 1 == nf else 16
-            params [ 'num_layers'     ] = 1
-            
-            params [ 'learning_rate'  ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) )
-            params [ 'early_stopping' ] = False
+            ## update parameters 
+            params.update ( self.regularization ( params , nf , ns ) )
 
             epochs = min ( 30 if 1 == nf else 50 , params.get ( 'epochs' , 100 ) ) 
             ## print regularized parameters in "no-silent" regime
@@ -1066,8 +1222,43 @@ class ADVAL_KERAS (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress , 
                               normalize = True     , 
-                              method    = "Adversarial Validation/Keras" , **config  ) 
+                              method    = "Adversarial Validation/Keras" , **config  )
+        
+    # =========================================================================
+    ## Parameters for strong regularization
+    #  @code
+    #  params = gof.regularization ( params , n_features , n_samples , n_eff ) 
+    #  @endcode
+    def regularization ( self       ,
+                         params     ,
+                         n_features , 
+                         n_samples  ,
+                         n_eff      ) :
+        
+        """ Parameters for strong regularization
+        >>> params = gof.regularization ( params , n_features , n_samples , n_eff ) 
+        """
+        
+        nf = n_features
+        ns = n_samples
+        
+        # --- Dynamic batch size scaling with increased Asimov dataset size ---
+        params [ 'batch_size'     ] = max ( int ( 0.02 * ns ) , 256 )
+        
+        # --- L2 kernel regularization matching PyTorch weight_decay to maintain [10⁻³] response magnitude ---
+        params [ 'l2_reg'         ] = 1e-3
+        
+        # --- Shallow architecture capacity: prevent overfitting to sPlot weight fluctuations ---
+        params [ 'hidden_units'   ] = 8 if 1 == nf else 16
+        params [ 'num_layers'     ] = 1
+        
+        params [ 'learning_rate'  ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) )
+        
+        # --- Disable early stopping callback to allow complete gradient convergence ---
+        params [ 'callbacks'      ] = [ ]
 
+        return params 
+        
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -1086,7 +1277,10 @@ class ADVAL_KERAS (ADVAL_base) :
         ns = num_samples  ( X_train )
         
         if NN_needs_regularization ( X_train , W_train ) :
-
+            
+            ## update parameters 
+            params.update ( self.regularization ( params , nf , ns ) )
+         
             # --- Dynamic batch size scaling with increased Asimov dataset size ---
             params [ 'batch_size'     ] = max ( int ( 0.02 * ns ) , 256 )
             
