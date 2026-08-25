@@ -4,6 +4,10 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <string>
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Power.h"
@@ -60,34 +64,37 @@ namespace Ostap
       //====================================================================
     public: 
       //====================================================================
-      enum Kernel
-	{
-	  Uniform      , 
-	  Rectangular  = Uniform      , 
-	  Boxcar       = Uniform      , 
-	  Triangular   ,
-	  Epanechnikov , 
-	  Parabolic    = Epanechnikov , 
-	  Quartic      , 
-	  Biweight     = Quartic      , 
-	  Triweight    , 
-	  Tricube      ,
-	  Gaussian     , 
-	  Cosine       , 
-	  Logistic     , 
-	  Sigmoid      , 
-	  Last         = Sigmoid    
-	};
+      enum class Kernel
+        {
+          Uniform      , 
+          Rectangular  = Uniform      , 
+          Boxcar       = Uniform      , 
+          Triangular   ,
+          Epanechnikov , 
+          Parabolic    = Epanechnikov , 
+          Quartic      , 
+          Biweight     = Quartic      , 
+          Triweight    , 
+          Tricube      ,
+          Gaussian     , 
+          Cosine       , 
+          Logistic     , 
+          Sigmoid      ,
+          First        = Uniform     , 
+          Last         = Sigmoid + 1 , 
+        };
       // ======================================================================
     public:
       // ======================================================================
       /// get the kernel estimate
-      static double kernel ( const double u , const Kernel k ) ;
+      static double             kernel ( const double u , const Kernel k ) ;
       // ======================================================================
       /// get the "optimal" value for smoothing parameter 
-      static double hopt   ( const  ECDF& data ) ;
+      static double             hopt   ( const  ECDF& data ) ;
       /// get the "optimal" value for smoothing parameter 
-      static double hopt   ( const WECDF& data ) ;
+      static double             hopt   ( const WECDF& data ) ;
+      /// get the name for the given Kernel 
+      static const std::string& name   ( const Kernel k    ) ;  
       // ======================================================================
     };
     // ========================================================================
@@ -96,6 +103,7 @@ namespace Ostap
     /** @class EPDF
      *  Helper utility to eatimate the PDF for emprical data using 
      *  Kernel estimators
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      */
     class EPDF 
     {
@@ -104,8 +112,8 @@ namespace Ostap
       /// create the emppirical PDF from empirical CDF 
       EPDF
       ( const ECDF&                                 ecdf  ,
-	const Ostap::Math::DensityEstimator::Kernel k     ,
-	const double                                h = 0 ) ;
+        const Ostap::Math::DensityEstimator::Kernel k     ,
+        const double                                h = 0 ) ;
       // =====================================================================
     public:
       // =====================================================================
@@ -121,7 +129,7 @@ namespace Ostap
     public:
       // =====================================================================
       /// get ECDF 
-      const  ECDF&   cdf () const { return m_cdf  ; }
+      const  ECDF&  cdf () const { return m_cdf  ; }
       // =====================================================================
       /// get the kernel 
       inline Ostap::Math::DensityEstimator::Kernel kernel () const { return m_k ; }
@@ -139,24 +147,25 @@ namespace Ostap
     private:
       // =====================================================================
       ECDF                                  m_cdf ;
-      Ostap::Math::DensityEstimator::Kernel m_k    { Ostap::Math::DensityEstimator::Epanechnikov } ;
+      Ostap::Math::DensityEstimator::Kernel m_k    { Ostap::Math::DensityEstimator::Kernel::Epanechnikov } ;
       double                                m_h    { 0       } ; 
       // =====================================================================
     } ;
     // ========================================================================
-    /** @class EPDF
-     *  Helper utility to eatimate the PDF for emprical data using 
+    /** @class WEPDF
+     *  Helper utility to estimate the PDF for emprical data using 
      *  Kernel estimators
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      */
     class WEPDF 
     {
     public:
       // =====================================================================
-      /// create the emppirical PDF from empirical CDF 
+      /// create the empirical PDF from empirical CDF 
       WEPDF
       ( const WECDF&                                ecdf  ,
-	const Ostap::Math::DensityEstimator::Kernel k     ,
-	const double                                h = 0 ) ;
+        const Ostap::Math::DensityEstimator::Kernel k     ,
+        const double                                h = 0 ) ;
       // =====================================================================
     public:
       // =====================================================================
@@ -190,7 +199,7 @@ namespace Ostap
     private: 
       // =====================================================================
       WECDF                                 m_cdf ;
-      Ostap::Math::DensityEstimator::Kernel m_k    { Ostap::Math::DensityEstimator::Epanechnikov } ;
+      Ostap::Math::DensityEstimator::Kernel m_k    { Ostap::Math::DensityEstimator::Kernel::Epanechnikov } ;
       double                                m_h    { 0       } ; 
       // =====================================================================
     } ;    

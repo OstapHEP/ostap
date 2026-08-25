@@ -45,42 +45,68 @@ namespace
     double, 
     double> RECORD ;
   //
-  typedef std::array<RECORD,Ostap::Math::DensityEstimator::Last+1> TABLE ;  
+  typedef std::array<RECORD,int(Ostap::Math::DensityEstimator::Kernel::Last)> TABLE ;  
   const TABLE s_TABLE { 
-    RECORD ( Ostap::Math::DensityEstimator::Uniform,     &Ostap::Math::k_uniform     ,1,1./3   ,1./2                   ,0.929) ,
-    RECORD ( Ostap::Math::DensityEstimator::Triangular,  &Ostap::Math::k_triangular  ,1,1./6   ,2./3                   ,0.986) ,
-    RECORD ( Ostap::Math::DensityEstimator::Epanechnikov,&Ostap::Math::k_epanechnikov,1,1./5   ,3./5                   ,1.000) ,
-    RECORD ( Ostap::Math::DensityEstimator::Quartic,     &Ostap::Math::k_quartic     ,1,1./7   ,5./7                   ,0.994) ,
-    RECORD ( Ostap::Math::DensityEstimator::Triweight,   &Ostap::Math::k_triweight   ,1,1./9   ,350./429               ,0.987) ,
-    RECORD ( Ostap::Math::DensityEstimator::Tricube,     &Ostap::Math::k_tricube     ,1,35./243,175./447               ,0.998) ,
-    RECORD ( Ostap::Math::DensityEstimator::Gaussian,    &Ostap::Math::k_gaussian    ,0,1      ,0.5/std::sqrt(s_pi)    ,0.951) ,
-    RECORD ( Ostap::Math::DensityEstimator::Cosine,      &Ostap::Math::k_cosine      ,1,1-8/(s_pi*s_pi) , s_pi*s_pi/16 ,0.999) ,
-    RECORD ( Ostap::Math::DensityEstimator::Logistic,    &Ostap::Math::k_logistic    ,0,s_pi*s_pi/3 , 1.6              ,0.887) ,
-    RECORD ( Ostap::Math::DensityEstimator::Sigmoid,     &Ostap::Math::k_sigmoid     ,0,s_pi*s_pi/4 , 2/(s_pi*s_pi)    ,0.843) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Uniform,     &Ostap::Math::k_uniform     ,1,1./3   ,1./2                   ,0.929) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Triangular,  &Ostap::Math::k_triangular  ,1,1./6   ,2./3                   ,0.986) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Epanechnikov,&Ostap::Math::k_epanechnikov,1,1./5   ,3./5                   ,1.000) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Quartic,     &Ostap::Math::k_quartic     ,1,1./7   ,5./7                   ,0.994) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Triweight,   &Ostap::Math::k_triweight   ,1,1./9   ,350./429               ,0.987) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Tricube,     &Ostap::Math::k_tricube     ,1,35./243,175./447               ,0.998) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Gaussian,    &Ostap::Math::k_gaussian    ,0,1      ,0.5/std::sqrt(s_pi)    ,0.951) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Cosine,      &Ostap::Math::k_cosine      ,1,1-8/(s_pi*s_pi) , s_pi*s_pi/16 ,0.999) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Logistic,    &Ostap::Math::k_logistic    ,0,s_pi*s_pi/3 , 1.6              ,0.887) ,
+    RECORD ( Ostap::Math::DensityEstimator::Kernel::Sigmoid,     &Ostap::Math::k_sigmoid     ,0,s_pi*s_pi/4 , 2/(s_pi*s_pi)    ,0.843) ,
   } ;
   // ==========================================================================
-}
+  typedef std::map<Ostap::Math::DensityEstimator::Kernel,std::string> KMAP ;
+  const KMAP s_KMAP = {
+    { Ostap::Math::DensityEstimator::Kernel::Uniform      , "Uniform"      } , 
+    { Ostap::Math::DensityEstimator::Kernel::Rectangular  , "Rectangualar" } , 
+    { Ostap::Math::DensityEstimator::Kernel::Boxcar       , "Boxcar"       } ,
+    { Ostap::Math::DensityEstimator::Kernel::Triangular   , "Triangular"   } ,
+    { Ostap::Math::DensityEstimator::Kernel::Epanechnikov , "Epanechnikov" } , 
+    { Ostap::Math::DensityEstimator::Kernel::Parabolic    , "Parabolic"    } , 
+    { Ostap::Math::DensityEstimator::Kernel::Quartic      , "Quartic"      } , 
+    { Ostap::Math::DensityEstimator::Kernel::Biweight     , "Biweight"     } , 
+    { Ostap::Math::DensityEstimator::Kernel::Triweight    , "Triweight"    } , 
+    { Ostap::Math::DensityEstimator::Kernel::Tricube      , "Tricube"      } , 
+    { Ostap::Math::DensityEstimator::Kernel::Gaussian     , "Gaussian"     } , 
+    { Ostap::Math::DensityEstimator::Kernel::Cosine       , "Cosine"       } , 
+    { Ostap::Math::DensityEstimator::Kernel::Logistic     , "Logistic"     } ,
+    { Ostap::Math::DensityEstimator::Kernel::Sigmoid      , "Sigmoid"      } } ;
+  // ==========================================================================
+} //                                             The end of anonymous namespace 
 // ============================================================================
 double Ostap::Math::DensityEstimator::kernel 
 ( const double                                u , 
   const Ostap::Math::DensityEstimator::Kernel k )
 {
   //
-  Ostap::Assert ( Uniform <= k && k <=  Last , 
-		  "Invalid Kernel!" , 
-		  "Ostap::Math::DensityEstimator::kernel"  ,
-		  INVALID_KERNEL , __FILE__, __LINE__ ) ;
+  Ostap::Assert ( Kernel::First <= k && k <  Kernel::Last , 
+                  "Invalid Kernel!"       , 
+                  "Ostap::Math::DensityEstimator::kernel"  ,
+                  INVALID_KERNEL , __FILE__, __LINE__ ) ;
   //
-  return 
-    Gaussian     == k ? Ostap::Math::k_gaussian     ( u ) :
-    Epanechnikov == k ? Ostap::Math::k_epanechnikov ( u ) :
-    Triangular   == k ? Ostap::Math::k_triangular   ( u ) :
-    Quartic      == k ? Ostap::Math::k_quartic      ( u ) : 
-    Triweight    == k ? Ostap::Math::k_triweight    ( u ) :
-    Tricube      == k ? Ostap::Math::k_tricube      ( u ) : 
-    Cosine       == k ? Ostap::Math::k_cosine       ( u ) : 
-    Logistic     == k ? Ostap::Math::k_logistic     ( u ) : 
-    Sigmoid      == k ? Ostap::Math::k_sigmoid      ( u ) : Ostap::Math::k_uniform ( u ) ;  
+  switch ( k )
+  {
+  case Kernel::Uniform      : return Ostap::Math::k_uniform      ( u ) ;
+    // case Kernel::Rectangular  : return Ostap::Math::k_uniform      ( u ) ;
+    // case Kernel::Boxcar       : return Ostap::Math::k_uniform      ( u ) ;
+  case Kernel::Triangular   : return Ostap::Math::k_triangular   ( u ) ;
+  case Kernel::Epanechnikov : return Ostap::Math::k_epanechnikov ( u ) ;
+    // case Kernel::Parabolic    : return Ostap::Math::k_epanechnikov ( u ) ;
+  case Kernel::Quartic      : return Ostap::Math::k_quartic      ( u ) ;
+    // case Kernel::Biweight     : return Ostap::Math::k_quartic      ( u ) ;
+  case Kernel::Triweight    : return Ostap::Math::k_triweight    ( u ) ;
+  case Kernel::Tricube      : return Ostap::Math::k_tricube      ( u ) ;
+  case Kernel::Gaussian     : return Ostap::Math::k_gaussian     ( u ) ;
+  case Kernel::Cosine       : return Ostap::Math::k_cosine       ( u ) ;
+  case Kernel::Logistic     : return Ostap::Math::k_logistic     ( u ) ;
+  case Kernel::Sigmoid      : return Ostap::Math::k_sigmoid      ( u ) ;
+  default                   : return Ostap::Math::k_epanechnikov ( u ) ; // DEFAULT!   
+  } 
+  return Ostap::Math::k_epanechnikov ( u ) ; // DEFAULT!   
 }
 // ============================================================================
 
@@ -154,11 +180,16 @@ double Ostap::Math::DensityEstimator::hopt
   return 0.9 * value * std::pow ( data.nEff () , -0.2 );
 }
 // ============================================================================
-
-
-
-
-
+// get the name for the given Kernel 
+// ============================================================================
+const std::string& Ostap::Math::DensityEstimator::name
+( const Ostap::Math::DensityEstimator::Kernel k )
+{
+  KMAP::const_iterator found = s_KMAP.find ( k ) ;
+  /// unknown kernel 
+  static const std::string s_UNKNOWN { "<Unknown>" } ;
+  return s_KMAP.end() == found ? found->second : s_UNKNOWN ; 
+}  
 // ============================================================================
 /* create the empirical PDF from empirical CDF 
  *  @attention data are not copied!
@@ -172,25 +203,26 @@ Ostap::Math::EPDF::EPDF
   , m_k     ( k   )
   , m_h     ( h   )
 {
-  Ostap::Assert ( Ostap::Math::DensityEstimator::Uniform <= k &&
-		  Ostap::Math::DensityEstimator::Last    >= k && k < s_TABLE.size () , 
-		  "Invalid Kernel!"   , 
-		  "Ostap::Math::EPDF" ,
-		  INVALID_KERNEL , __FILE__, __LINE__ ) ;
+  Ostap::Assert ( Ostap::Math::DensityEstimator::Kernel::First <= k &&
+                  Ostap::Math::DensityEstimator::Kernel::Last  >  k &&
+                  static_cast<std::size_t> ( k ) < s_TABLE.size () , 
+                  "Invalid Kernel!"   , 
+                  "Ostap::Math::EPDF" ,
+                  INVALID_KERNEL , __FILE__, __LINE__ ) ;
   // check the smoothing parameter 
   if ( m_h <= 0 ) { m_h = Ostap::Math::DensityEstimator::hopt ( m_cdf ) ; }
   Ostap::Assert ( 0 < m_h             ,
-		  "Invalid smoothing parameter" ,
-		  "Ostap::Math::EPDF" ,
-		  INVALID_SMOOTH , __FILE__ , __LINE__ ) ;  
+                  "Invalid smoothing parameter" ,
+                  "Ostap::Math::EPDF" ,
+                  INVALID_SMOOTH , __FILE__ , __LINE__ ) ;  
 }
 // =============================================================================
 // get the PDF
 // =============================================================================
 double Ostap::Math::EPDF::evaluate ( const double x ) const
 {
-  FUNPTR k = std::get<1> ( s_TABLE[m_k] ) ;
-  double s = std::get<2> ( s_TABLE[m_k] ) ;
+  FUNPTR k = std::get<1> ( s_TABLE [ static_cast<std::size_t> ( m_k ) ] ) ;
+  double s = std::get<2> ( s_TABLE [ static_cast<std::size_t> ( m_k ) ] ) ;
   if  ( s <= 0 ) { s = 5 ; } ;
   //
   const double xmn = x - s * m_h ;  
@@ -222,25 +254,26 @@ Ostap::Math::WEPDF::WEPDF
   , m_k   ( k   )
   , m_h   ( h   )
 {
-  Ostap::Assert ( Ostap::Math::DensityEstimator::Uniform <= k &&
-		  Ostap::Math::DensityEstimator::Last    >= k && k < s_TABLE.size () , 
-		  "Invalid Kernel!"    , 
-		  "Ostap::Math::WEPDF" ,
-		  INVALID_KERNEL , __FILE__, __LINE__ ) ;
+  Ostap::Assert ( Ostap::Math::DensityEstimator::Kernel::First <= k &&
+                  Ostap::Math::DensityEstimator::Kernel::Last  >  k &&
+                  static_cast<std::size_t> ( k ) < s_TABLE.size () , 
+                  "Invalid Kernel!"    , 
+                  "Ostap::Math::WEPDF" ,
+                  INVALID_KERNEL , __FILE__, __LINE__ ) ;
   // check the smoothing parameter 
   if ( m_h <= 0 ) { m_h = Ostap::Math::DensityEstimator::hopt ( m_cdf ) ; }
   Ostap::Assert ( 0 < m_h             ,
-		  "Invalid smoothing parameter" ,
-		  "Ostap::Math::WEPDF" ,
-		  INVALID_SMOOTH , __FILE__ , __LINE__ ) ;  
+                  "Invalid smoothing parameter" ,
+                  "Ostap::Math::WEPDF" ,
+                  INVALID_SMOOTH , __FILE__ , __LINE__ ) ;  
 }
 // =============================================================================
 // get the PDF
 // =============================================================================
 double Ostap::Math::WEPDF::evaluate ( const double x ) const
 {
-  FUNPTR k = std::get<1> ( s_TABLE[m_k] ) ;
-  double s = std::get<2> ( s_TABLE[m_k] ) ;
+  FUNPTR k = std::get<1> ( s_TABLE [ static_cast<std::size_t> ( m_k ) ] ) ;
+  double s = std::get<2> ( s_TABLE [ static_cast<std::size_t> ( m_k ) ] ) ;
   if  ( s <= 0 ) { s = 5 ; } ;
   //
   const double xmn = x - s * m_h ;  
@@ -281,11 +314,12 @@ bool Ostap::Math::EPDF::setH      ( const double h )
 bool Ostap::Math::EPDF::setKernel
 ( const Ostap::Math::DensityEstimator::Kernel k )
 {
-  Ostap::Assert ( Ostap::Math::DensityEstimator::Uniform <= k &&
-		  Ostap::Math::DensityEstimator::Last    >= k && k < s_TABLE.size () , 
-		  "Invalid Kernel!"    , 
-		  "Ostap::Math::EPDF::setKernel" ,
-		  INVALID_KERNEL , __FILE__, __LINE__ ) ;
+  Ostap::Assert ( Ostap::Math::DensityEstimator::Kernel::First <= k &&
+                  Ostap::Math::DensityEstimator::Kernel::Last  >  k &&
+                  static_cast<std::size_t> ( k ) < s_TABLE.size () , 
+                  "Invalid Kernel!"    , 
+                  "Ostap::Math::EPDF::setKernel" ,
+                  INVALID_KERNEL , __FILE__, __LINE__ ) ;
   if ( k == m_k ) { return false ; }
   m_k = k ;
   return true ;
@@ -307,11 +341,12 @@ bool Ostap::Math::WEPDF::setH      ( const double h )
 bool Ostap::Math::WEPDF::setKernel
 ( const Ostap::Math::DensityEstimator::Kernel k )
 {
-  Ostap::Assert ( Ostap::Math::DensityEstimator::Uniform <= k &&
-		  Ostap::Math::DensityEstimator::Last    >= k && k < s_TABLE.size () , 
-		  "Invalid Kernel!"    , 
-		  "Ostap::Math::WEPDF::setKernel" ,
-		  INVALID_KERNEL , __FILE__, __LINE__ ) ;
+  Ostap::Assert ( Ostap::Math::DensityEstimator::Kernel::First <= k &&
+                  Ostap::Math::DensityEstimator::Kernel::Last  >  k &&
+                  static_cast<std::size_t> ( k ) < s_TABLE.size () , 
+                  "Invalid Kernel!"    , 
+                  "Ostap::Math::WEPDF::setKernel" ,
+                  INVALID_KERNEL , __FILE__, __LINE__ ) ;
   if ( k == m_k ) { return false ; }
   m_k = k ;
   return true ;

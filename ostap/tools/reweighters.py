@@ -39,6 +39,9 @@ from ostap.logger.logger import getLogger, logAttention
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighters' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
+DEFAULT_ESTIMATORS         = 400
+MAX_REGULARIZED_ESTIMATORS = 100
+# =============================================================================
 ## Check if strong regularization is needed considering BOTH original and target samples.
 def RW_needs_regularization ( original                       ,
                               target                         ,
@@ -128,10 +131,14 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             neff       = min  ( neff_orig , neff_targ )
             
             params.update ( self.regularization ( params , n_features , neff ) )
+
+            ## params [ 'n_estimators'          ] = min ( MAX_REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , MAX_REGULARIZED_ESTIMATORS ) )
+
+            ESR = params.get ( 'early_stopping_rounds' ,  15 )
+            if  ESR is None : params [ 'early_stopping_rounds' ] = None 
+            else            : params [ 'early_stopping_rounds' ] = min ( 15 , ESR )
             
-            params [ 'n_estimators'          ] = min ( 100 , params.get ( 'n_estimators'          , 100 ) )
-            params [ 'early_stopping_rounds' ] = min (  15 , params.get ( 'early_stopping_rounds' ,  15 ) ) 
-            logger.warning ( "%s: strong regularization is applied" % typename ( self ) ) 
+            logger.attention ( "%s: strong regularization is applied" % typename ( self ) ) 
 
         self.__original_ratios             = None
         self.__original_reweighted_weights = None
@@ -572,7 +579,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 #   Density-ratio reweighter implementation using LightGBM as the underlying classifier.
 #   Inherits from BaseDensityReweighter. Automatically handles 1-, 2-, and 4-stream
 #   decompositions for positive and negative sample weights.
-
 class LightGBMDensityReweighter ( DensityReweighter ) :
     """
     LightGBM-based density ratio reweighter for Ostap
@@ -583,25 +589,28 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
+        
+        ## High-capacity configuratino
         config = {
-            'objective'             : 'binary'           ,
-            'metric'                : 'binary_logloss'   ,
-            'n_estimators'          : 350                ,
-            'learning_rate'         : 0.03               ,
-            'max_depth'             : 4                  , ## Relaxed depth to allow initial splits[cite: 4]
-            'num_leaves'            : 15                 , ## Increased leaf capacity[cite: 4]
-            'min_child_samples'     : 20                 , ## Lower sample threshold per leaf[cite: 4]
-            'min_child_weight'      : 1e-3               ,
-            'reg_alpha'             : 0.1                , ## Moderate L1 regularization[cite: 4]
-            'reg_lambda'            : 0.5                , ## Moderate L2 regularization[cite: 4]
-            'subsample'             : 0.8                ,
-            'subsample_freq'        : 1                  ,
-            'colsample_bytree'      : 0.8                ,
-            'boost_from_average'    : True               ,
-            'verbosity'             : -1                 ,
-            'n_jobs'                : -1                 ,
+            'objective'             : 'binary'            ,
+            'metric'                : 'binary_logloss'    ,
+            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 300-500 trees budget
+            'learning_rate'         : 0.025               , ## Small step size for KDE-like smooth density
+            'max_depth'             : 3                   , ## Low depth limits higher-order noise
+            'num_leaves'            : 7                   ,
+            'min_child_samples'     : 25                  ,
+            'min_child_weight'      : 1e-3                ,
+            'reg_alpha'             : 0.0                 ,
+            'reg_lambda'            : 2.0                 , ## L2 penalty to stabilize log-ratios
+            'subsample'             : 0.75                , ## Subsampling smooths leaf split cuts
+            'subsample_freq'        : 1                   ,
+            'colsample_bytree'      : 0.8                 ,
+            'path_smooth'           : 1.0                 , ## Linear node smoothing suppresses ADVAL/KL artifacts
+            'boost_from_average'    : True                ,
+            'early_stopping_rounds' : None                ,
+            'verbosity'             : -1                  ,
+            'n_jobs'                : -1                  ,
         }
-
         config.update ( kwargs )
         
         super ( LightGBMDensityReweighter , self ).__init__ (
@@ -625,22 +634,22 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
                          n_samples  ) : 
         """
         Dynamic regularization tuned specifically for LightGBM.
-        Prevents premature early stopping while preserving model stability.
         """
-        N = n_samples 
-        
-        # Fix: relax constraints to enable active splitting on smaller subsets
-        params [ 'max_depth'         ] = 4
-        params [ 'num_leaves'        ] = 12
-        params [ 'min_child_samples' ] = max ( 20 , int ( N * 0.002 ) )
-        params [ 'min_child_weight'  ] = 1e-3
-        params [ 'learning_rate'     ] = 0.03
-        params [ 'reg_alpha'         ] = 0.1
-        params [ 'reg_lambda'        ] = 1.0
-        
+
+        params [ 'learning_rate'         ] = 0.025  ## Keep small for kernel-like smoothing
+        params [ 'max_depth'             ] = 3      ## Depth 3 prevents sharp high-dimensional cuts
+        params [ 'num_leaves'            ] = 7
+        params [ 'min_child_samples'     ] = max ( 25 , int ( n_samples * 0.005 ) )
+        params [ 'reg_alpha'             ] = 0.0
+        params [ 'reg_lambda'            ] = 3.0 if n_samples < 3000 else 1.5 ## Higher L2 penalty on small N
+        params [ 'subsample'             ] = 0.75   ## Random subsampling smooths boundaries
+        params [ 'subsample_freq'        ] = 1
+        params [ 'colsample_bytree'      ] = 0.8
+        params [ 'path_smooth'           ] = 1.0    ## Node smoothing suppresses leaf-boundary artifacts
+        params [ 'early_stopping_rounds' ] = None
+
         return params
-    
-    
+
     def _train_single_model ( self    ,
                               X_train , y_train , w_train ,
                               X_val   , y_val   , w_val   ) : 
@@ -661,7 +670,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 20 )
         
         callbacks = []
-        if 0 < early_stopping_rounds : 
+        if early_stopping_rounds : 
             callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
 
         model = LightGBM.train ( params          = params          ,
@@ -705,25 +714,21 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         
         ## High-capacity (complex) base config for XGBoost density reweighting
         config = {
-            "objective"             : "binary:logistic",
-            "eval_metric"           : "logloss",
-            "n_estimators"          : 350,
-            "early_stopping_rounds" : 25,
-            
-            # Tree structure capacity
-            "max_depth"             : 5,
-            "min_child_weight"      : 15.0,
-            
-            # Regularization & Subsampling
-            "learning_rate"         : 0.03,
-            "alpha"                 : 0.5,
-            "lambda"                : 2.0,
-            "subsample"             : 0.8,
-            "colsample_bytree"      : 0.65,
-            
-            # Runtime parameters
-            "verbosity"             : 0,
-            "n_jobs"                : -1
+            'objective'             : 'binary:logistic'   ,
+            'eval_metric'           : 'logloss'           ,
+            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 300-500 trees budget
+            'learning_rate'         : 0.025               , ## Small step size for KDE-like smooth density
+            'max_depth'             : 3                   , ## Low depth limits higher-order noise
+            'min_child_weight'      : 5.0                 , ## Minimum sum of hessians (statistics per leaf)
+            'gamma'                 : 0.05                , ## Minimum loss reduction to force split
+            'reg_alpha'             : 0.0                 ,
+            'reg_lambda'            : 2.0                 , ## L2 penalty to stabilize log-ratios
+            'subsample'             : 0.75                , ## Subsampling smooths leaf split cuts
+            'colsample_bytree'      : 0.8                 ,
+            'tree_method'           : 'hist'              , ## Fast histogram-based binning
+            'early_stopping_rounds' : None                ,
+            'verbosity'             : 0                   ,
+            'n_jobs'                : -1                  ,
         }
         
         config.update ( params )
@@ -746,16 +751,18 @@ class XGBoostDensityReweighter ( DensityReweighter ):
                          n_features ,
                          n_samples  ) : 
         
-        N = n_samples 
-        params [ 'max_depth'          ] = 3
-        params [ "num_leaves"         ] = 7
-        params [ "min_child_samples"  ] = max ( 100, int ( N * 0.005 ) ) 
-        params [ 'reg_alpha'          ] = 1.0 
-        params [ 'reg_lambda'         ] = 5.0
-        params [ 'colsample_bytree'   ] = 0.8
-
+        params [ 'learning_rate'         ] = 0.025  ## Keep small for kernel-like smoothing
+        params [ 'max_depth'             ] = 3      ## Depth 3 prevents sharp high-dimensional cuts
+        params [ 'min_child_weight'      ] = max ( 5.0 , n_samples * 0.003 ) ## Prevents spiky sub-splits
+        params [ 'gamma'                 ] = 0.05   ## Regularizes tree structure against noise
+        params [ 'reg_alpha'             ] = 0.0
+        params [ 'reg_lambda'            ] = 3.0 if n_samples < 3000 else 1.5 ## Higher L2 penalty on small N
+        params [ 'subsample'             ] = 0.75   ## Random subsampling smooths boundaries
+        params [ 'colsample_bytree'      ] = 0.8
+        params [ 'early_stopping_rounds' ] = None
+        
         return params
-    
+
     # =============================================================
     # Abstract Method Implementations
     # =============================================================
@@ -834,31 +841,21 @@ class CatBoostDensityReweighter ( DensityReweighter ):
                    target_weight          = None ,
                    store_original_weights = True  , **params ) :        
 
-
-        # Recommended CatBoost parameters for density ratio reweighting (covariate shift)
-        config = { 
-            # Core objective and evaluation metric
-            "loss_function"         : "Logloss",
-            "eval_metric"           : "Logloss",
-            "n_estimators"          : 350,
-            "early_stopping_rounds" : 25,
-            
-            # Tree structure capacity (Symmetric/Oblivious trees)
-            "max_depth"             : 5,
-            "min_child_samples"     : 30,
-            
-            # Regularization & Subsampling
-            "learning_rate"         : 0.03,
-            "l2_leaf_reg"           : 2.0,
-            "random_strength"       : 1.0,
-            "subsample"             : 0.8,
-            "rsm"                   : 0.65,  # Feature subsampling equivalent in CatBoost
-            
-            # Runtime parameters
-            "verbose"               : False,
-            "thread_count"          : -1
+        config = {
+            'loss_function'         : 'Logloss'           ,
+            'eval_metric'           : 'Logloss'           ,
+            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 300-500 trees budget
+            'learning_rate'         : 0.025               , ## Small step size for KDE-like smooth density
+            'max_depth'             : 3                   , ## Low depth limits higher-order noise
+            'l2_leaf_reg'           : 2.0                 , ## L2 penalty to stabilize log-ratios
+            'min_child_samples'     : 25                  ,
+            'subsample'             : 0.75                , ## Subsampling smooths leaf split cuts
+            'random_strength'       : 1.0                 , ## Adds randomness to tree structure
+            'early_stopping_rounds' : None                ,
+            'verbose'               : False               ,
+            'thread_count'          : -1                  ,
         }
-        
+
         config.update ( params )
         
          # CatBoost uses 'thread_count' instead of 'n_jobs'
@@ -881,20 +878,21 @@ class CatBoostDensityReweighter ( DensityReweighter ):
     def regularization ( self       ,
                          params     , 
                          n_features ,
-                         n_samples  ) : 
-        
-        N = n_samples 
-        params [ 'max_depth'          ] = 3
-        params [ "num_leaves"         ] = 7
-        params [ "min_child_samples"  ] = max ( 100, int ( N * 0.005 ) ) 
+                         n_samples  ) :
 
+        params [ 'learning_rate'     ] = 0.025  ## Keep small for kernel-like smoothing
+        params [ 'max_depth'         ] = 3      ## Depth 3 prevents sharp high-dimensional cuts
+        params [ 'l2_leaf_reg'       ] = 3.0 if n_samples < 3000 else 1.5 ## Higher L2 penalty on small N
+        params [ 'min_child_samples' ] = max ( 25 , int ( n_samples * 0.005 ) )
+        params [ 'subsample'         ] = 0.75   ## Random subsampling smooths boundaries
         
-        params [ 'learning_rate'      ] = 0.05
-        params [ 'l2_leaf_reg'        ] = 5.0
+        ## Clean up incompatible parameters if passed from base config
+        params.pop ( 'num_leaves'            , None )
+        params.pop ( 'max_leaves'            , None )
+        params.pop ( 'reg_alpha'             , None )
+        params.pop ( 'reg_lambda'            , None )
+        params.pop ( 'early_stopping_rounds' , None )
         
-        params [ 'random_strength'    ] = 2.0
-        params [ 'rsm'                ] = 0.8
-
         return params
     
     # =============================================================
@@ -980,14 +978,14 @@ class GBReweighter(Reweighter) :
         
         # Baseline GBReweighter configuration (already achieving good p-value)
         config = {            
-            "n_estimators"      : 100 ,
-            "learning_rate"     : 0.03,
-            "max_depth"         : 5,
-            "min_samples_leaf"  : 30,            
+            "n_estimators"      : 150    , 
+            "learning_rate"     :   0.03 ,
+            "max_depth"         :   5    ,
+            "min_samples_leaf"  :  30    ,            
             # Advanced Scikit-Learn GradientBoosting/GBReweighter arguments
             "gb_args"           : {
-                "subsample"     : 0.8  ,
-                "max_features"  : 0.65 }
+                "subsample"     : 0.8    ,
+                "max_features"  : 0.65   }
         }
         
         config.update ( params ) 
@@ -998,12 +996,13 @@ class GBReweighter(Reweighter) :
                                      target_weight   = target_weight   ) :
             
             n_features = num_features ( original )
+            
             neff_orig  = nEff ( original  , original_weight )
             neff_targ  = nEff ( target    , target_weight   ) 
             neff       = min  ( neff_orig , neff_targ       )
             
             config.update ( self.regularization ( config , n_features , neff ) )
-            logger.warning ( "%s: strong regularization is applied" % typename ( self ) ) 
+            logger.attention ( "%s: strong regularization is applied" % typename ( self ) ) 
             
         # =====================================================================
         ## Initialize the base: check input data & print config 

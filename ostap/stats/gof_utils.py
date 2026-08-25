@@ -44,7 +44,8 @@ from   ostap.logger.symbols     import ( plus_minus  , greek_lower_sigma ,
                                          infinity_pos as pos_infinity_symbol     )                                         
 from   ostap.logger.pretty      import pretty_float, pretty_row 
 from   ostap.plotting.color     import Orange, Green, Blue
-from   packaging.version        import Version 
+from   packaging.version        import Version
+import ostap.math.linalg 
 import ostap.logger.table       as     T 
 import ROOT, os, sys, math, numpy, scipy, abc    
 # =============================================================================

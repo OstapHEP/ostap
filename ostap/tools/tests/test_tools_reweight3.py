@@ -25,7 +25,9 @@ from   ostap.logger.symbols     import iteration, plus_minus, script_p
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
-from   ostap.stats.tools        import hasLightGBM, hasXGBoost, hasCatBoost, hasHepML 
+from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
+                                         hasCatBoost , hasSkLearn ,
+                                         hasHepML    ) 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.logger.table       as     T 
@@ -86,6 +88,32 @@ xmax        = 15.0
 ymax        = 12.0 
 zmax        = 10.0 
 
+def generate_3d_correlated ( N ,
+                             xmax   = 10.0 ,
+                             ymax   = 10.0 ,
+                             zmax   = 10.0 , 
+                             rho_xy = 0.85 ,
+                             rho_xz = 0.70 ,
+                             rho_yz = 0.50 , seed = None ) :
+
+    if seed is not None: numpy.random.seed ( seed )
+    
+    cov_matrix = numpy.array ( [ [ 1.0    , rho_xy , rho_xz ] ,
+                                 [ rho_xy , 1.0    , rho_yz ] ,
+                                 [ rho_xz , rho_yz , 1.0    ] ] )
+    
+    raw = numpy.random.multivariate_normal ( [ 0.0 , 0.0 , 0.0 ] , cov_matrix , size = N )
+    
+    scaled = 1.0 / (1.0 + np.exp(-raw))
+    
+
+    scaled [ : , 0 ] *= xmax
+    scaled [ : , 1 ] *= ymax
+    scaled [ : , 2 ] *= zmax
+
+    for x, y, z in scaled :
+        yield float ( x ), float ( y ), float ( z )
+
 def prepare_data ( ) : 
     #
         
@@ -132,6 +160,7 @@ def prepare_data ( ) :
         xvar = array    ( 'f',  [ 0 ] )
         yvar = array    ( 'f',  [ 0 ] )
         zvar = array    ( 'f',  [ 0 ] )
+        
         datatree.Branch ( 'x' , xvar , 'x/F' )
         datatree.Branch ( 'y' , yvar , 'y/F' )
         datatree.Branch ( 'z' , zvar , 'z/F' )
@@ -139,7 +168,7 @@ def prepare_data ( ) :
         ## Gaussian 3D-component with correlations 
         
         g3d = Ostap.Math.Gauss3D ( 0.1 * xmax  , 0.5 * ymax  , 0.8 * zmax  ,
-                                   8           , 5           , 4           ,
+                                   8           , 6           , 4           ,
                                    math.pi / 5 , math.pi / 5 , math.pi / 5 )
         
         for x, y , z in g3d.random ( NDATA1 , 0 , xmax , 0 , ymax , 0 , zmax ) : 
@@ -162,7 +191,7 @@ def prepare_data ( ) :
 
         for i in progress_bar ( range ( NDATA2 ) ) :
             
-            x , y, z  = -1, -1, -1 
+            x , y, z  = -1 , -1 , -1  
 
             while not 0 <= x < xmax : x = xmax - random.expovariate ( 1.0 / xmax ) 
             while not 0 <= y < ymax : y =        random.expovariate ( 1.0 / ymax ) 
@@ -265,6 +294,10 @@ has_catboost  = hasCatBoost  ()
 if has_catboost :  logger.attention ( 'USE CatBoost!'              )
 else            :  logger.warning   ( 'CatBoost is not available!' )
 
+has_sklearn   = hasSkLearn  ()
+if has_sklearn  :  logger.attention ( 'USE SkLearn!'              )
+else            :  logger.warning   ( 'SkLearn  is not available!' )
+
 has_hepml     = hasHepML  ()
 if has_hepml    :  logger.attention ( 'USE HepML!'                 )
 else            :  logger.warning   ( 'HepML    is not available!' )
@@ -274,8 +307,8 @@ else            :  logger.warning   ( 'HepML    is not available!' )
 # ==============================================================================
 from ostap.stats.gof_np       import  ( MIXnp           as COMPARATOR4 , 
                                         KullbackLeibler as COMPARATOR3 , 
-                                        Mahalanobis     as COMPARATOR2 , 
-                                        Hotelling       as COMPARATOR1 )
+                                        Hotelling       as COMPARATOR2 , 
+                                        Mahalanobis     as COMPARATOR1 ) 
 
 from ostap.stats.data_compare import data_compare     
 comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
@@ -291,13 +324,20 @@ if has_xgboost:
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) , ) 
 
-if False and has_catboost:  
+if has_catboost:  
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
     comparators += ( COMPARATOR7 ( parallel = True , nToys = 100 ) , ) 
+
+if False and has_sklearn:    
+    from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
+    comparators += ( COMPARATOR8 ( parallel = True , nToys = 100 ) , )
+    
+    from ostap.stats.adval        import ADVAL_GBC   as COMPARATOR9
+    comparators += ( COMPARATOR9 ( parallel = True , nToys = 100 ) , ) 
     
 # ============================================================================
 ## The table of global comparison statistics 
-header    = ( '#' , '#eff' ) + tuple ( c.method for c in comparators ) 
+header    = ( '#%s' % iteration , '#eff' ) + tuple ( c.method for c in comparators ) 
 glob_stat = [ header ]
 alignment = 'lc' + 'c' * len ( comparators )           
 
@@ -410,7 +450,10 @@ plots  = [
 memory_init = memory_usage() 
 converged   = False
 
-maxIter = 6 if small else 11
+maxIter     = 6 if small else 11
+
+maxIter     = 0
+weighter    = None
 
 # =============================================================================
 ## start reweighting iterations:
@@ -509,26 +552,30 @@ else :
 # =============================================================================
 logger.attention ( 'Memory:%+.2f[MB]' % ( memory_usage () - memory_init ) )                            
 # =============================================================================
-title = 'Weighter object'
-logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
-# =============================================================================
-## draw the convergency graphs 
-graphs = weighter.graphs ()
-for key in graphs : 
-    with use_canvas ( "Convergency graph for '%s'" % key ) :
-        graph = graphs [ key ]
-        graph.draw ( 'a' )
+if weighter : # ===============================================================
+    # =========================================================================
+    title = 'Weighter object'
+    logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
+    # =========================================================================
+    ## draw the convergency graphs 
+    graphs = weighter.graphs ()
+    for key in graphs : 
+        with use_canvas ( "Convergency graph for '%s'" % key ) :
+            graph = graphs [ key ]
+            graph.draw ( 'a' )
 # =============================================================================
 
 # =============================================================================
 ## Add obtained weights into MC-tree
 # =============================================================================
-with timing ( "Add `%s' column to initial MC-tree" % weight_name , logger = logger ) : 
-    mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
-    weighter = Weight ( dbname , weightings )
-    mctree   = mctree.add_reweighting ( weighter ,  name = weight_name )
-    mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
-    
+if weighter : # ===============================================================
+    # =========================================================================
+    with timing ( "Add `%s' column to initial MC-tree" % weight_name , logger = logger ) : 
+        mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
+        weighter = Weight ( dbname , weightings )
+        mctree   = mctree.add_reweighting ( weighter ,  name = weight_name )
+        mctree   = ROOT.TChain ( tag_mc  , files = testdata )  
+        
 # =============================================================================
 ## For comparison try to use "other" reweighters 
 # =============================================================================
@@ -538,7 +585,10 @@ mctree     = ROOT.TChain ( tag_mc   , files = testdata )
 
 from ostap.tools.data_reweighter import DataReweighter
 
-weights = [ '' , weight_name ]
+
+weights = [ '' ]
+
+if weighter : weights.append ( weight_name ) 
 
 # =============================================================================
 ## (1) GBReweighter by Alex Rogozhnikov from hep_ml 
@@ -611,6 +661,11 @@ glob_stat = [ header ]
 for weight in weights :
     
     mctree      = ROOT.TChain ( tag_mc   , files = testdata )
+
+    if weight and not weight in mctree :
+        logger.info ( 'Weight `%s` is not in MC-tree!' % weight )
+        continue 
+    
     title       = "MC-tree after %s reweighting" %  ( weight if weight else "NO" ) 
     logger.info ( '%s:\n%s' % ( title , mctree.table   ( variables = [ 'x' , 'y' , 'z' ] ,
                                                          title     = title    ,

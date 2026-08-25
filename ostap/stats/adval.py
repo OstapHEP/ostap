@@ -392,7 +392,7 @@ class ADVAL_LGBM (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress ,
                               normalize = False    ,
-                              method    = "Adversarial Validation/LightGBM" , **config   ) 
+                              method    = "ADVAL/LightGBM" , **config   ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -512,7 +512,7 @@ class ADVAL_XGB (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress ,
                               normalize = False    ,
-                              method    = "Adversarial Validation/XGBoost" , **config ) 
+                              method    = "ADVAL/XGBoost" , **config ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -640,7 +640,7 @@ class ADVAL_CATB (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress ,
                               normalize = False    ,
-                              method    = "Adversarial Validation/CatBoost" , **config   )
+                              method    = "ADVAL/CatBoost" , **config   )
 
         ## 
         if 'n_jobs' in self.params :
@@ -659,6 +659,9 @@ class ADVAL_CATB (ADVAL_base) :
         """ Parameters for strong regularization
         >>> params = gof.regularization ( params , n_features , n_samples ) 
         """
+        
+        nf = n_features
+        ns = n_samples
         
         depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'depth' , 5 ) )
         
@@ -757,7 +760,7 @@ class ADVAL_HGBC (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress , 
                               normalize = False    ,
-                              method    = "Adversarial Validation/HGBC" , **config   )
+                              method    = "ADVAL/HGBC" , **config   )
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
@@ -857,7 +860,7 @@ class ADVAL_GBC (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress ,
                               normalize = False    ,
-                              method    = "Adversarial Validation/GBC" , **config   ) 
+                              method    = "ADVAL/GBC" , **config   ) 
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
@@ -955,7 +958,7 @@ class ADVAL_RF (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress ,
                               normalize = False    ,                              
-                              method    = "Adversarial Validation/RandomForest" , **config  )
+                              method    = "ADVAL/RandomForest" , **config  )
         
     # =========================================================================
     ## Parameters for strong regularization
@@ -1053,7 +1056,7 @@ class ADVAL_TORCH (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress ,
                               normalize = True     , 
-                              method    = "Adversarial Validation/PyTorch" , **config  ) 
+                              method    = "ADVAL/PyTorch" , **config  ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -1222,7 +1225,7 @@ class ADVAL_KERAS (ADVAL_base) :
                               silent    = silent   , 
                               progress  = progress , 
                               normalize = True     , 
-                              method    = "Adversarial Validation/Keras" , **config  )
+                              method    = "ADVAL/Keras" , **config  )
         
     # =========================================================================
     ## Parameters for strong regularization

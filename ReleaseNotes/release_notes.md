@@ -20,6 +20,7 @@
    1. add equidistant Harrel-Davis' (weighted) quantiles for `Ostap::Math::WECDF` class
    1. more tweaks & improvement for `histo_dump` function, from now it has three distinct regimes: `HIST`, `ERR` and `FUN`
    1. merge `ostap.stats.data_compare.py` and `ostap.tools.daat_compare.py` modules into single module
+   1. some improvement for `Ostap::Math::(W)EPDF`
    
 ## Bug fixes 
 
