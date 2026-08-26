@@ -322,13 +322,14 @@ def data_get_stat ( data               ,
                                    silent      = not progress  ) ;
     
     assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 
-    
+
+    print ( 'get_stat' , cuts , var_lst ) 
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
         the_args = var_lst + ( cuts , ) + args         
         sc       = sv.get_stat  ( data , statobj , *the_args  )
-        assert sc.isSuccess() , 'Error %s from StatVar::the_moment' % sc 
+        assert sc.isSuccess() , 'Error %s from StatVar::get_stat' % sc 
         return statobj
     
 # =============================================================================
@@ -671,12 +672,9 @@ def data_statistic ( data               ,
 
     if input_string :
         varname  = var_lst [ 0 ] 
-        if   isinstance ( data , ROOT.RooAbsData ) :
-            return sv.statVar     ( data , varname , cuts , cut_range , first , last )
-        elif cuts and as_weight                    :
-            return sv.statVar     ( data , varname , cuts ,             first , last )
-        else : 
-            return sv.statVar_cut ( data , varname , cuts ,             first , last )
+        if   isinstance ( data , ROOT.RooAbsData ) : return sv.statVar     ( data , varname , cuts , cut_range , first , last )
+        elif cuts and as_weight                    : return sv.statVar     ( data , varname , cuts ,             first , last )
+        else                                       : return sv.statVar_cut ( data , varname , cuts ,             first , last )
            
     ##     
     if   isinstance ( data , ROOT.RooAbsData ) :
@@ -707,6 +705,8 @@ def data_statistic ( data               ,
             return { name : TCNT ( cnt ) for ( name , cnt ) in zip ( var_lst , vcnt ) } 
             
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
+
+    print ( 'DATA_SATISTICS' , vnames , cuts , var_lst )
     
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data  , cuts , *var_lst ) :

@@ -18,7 +18,7 @@ from   ostap.utils.core         import typename
 from   ostap.utils.timing       import timing
 from   ostap.logger.colorized   import allright
 from   ostap.utils.root_utils   import batch_env 
-from   ostap.logger.symbols     import script_p
+from   ostap.logger.symbols     import script_p, script_w 
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
@@ -43,68 +43,96 @@ logger.info ( 'Test for nD-Reweighting machinery')
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-## Generate two N-dimensional numpy datasets for density reweighting tests.
-def make_datasets ( n_samples = 10000 ,
-                    n_dim     =     3 ,
-                    seed      = None  ) :
-    """ Generate two N-dimensional numpy datasets for density reweighting tests.
-    
-    Parameters:
-    -----------
-    n_samples : int
-        Number of events in each dataset.
-    n_dim : int
-        Feature space dimension (N).
-    seed : int
-        Random seed for reproducibility.
-        
-    Returns:
-    --------
-    X_nontrivial : numpy.ndarray, shape (n_samples, n_dim)
-        Dataset with non-linear 2D/3D+ correlations.
-    X_uniform : numpy.ndarray, shape (n_samples, n_dim)
-        Uniformly distributed dataset covering the bounding box.
+def make_datasets ( n_samples = 5000 ,
+                    n_dim     =    3 ,
+                    seed      = None ) :
+    """ Temporarily simplified datasets for baseline validation:
+        smooth distributions with moderate shifts and no sharp boundaries.
     """
     numpy.random.seed ( seed )
     
-    ## 1. Nontrivial dataset with strong non-linear correlations
-    X_nontrivial = numpy.zeros ( ( n_samples , n_dim ) )
+    # 1. Original dataset: standard normal distribution
+    original = numpy.random.normal ( loc = 0.0 , scale = 1.0 , size = ( n_samples , n_dim ) )
     
-    ## Primary base Gaussian variable x_0
-    z0 = numpy.random.normal ( loc = 0.0 , scale = 1.0 , size = n_samples )
-    X_nontrivial [ : , 0 ] = z0
+    # 2. Target dataset: shifted and mildly correlated normal distribution
+    target = numpy.random.normal ( loc = 0.3 , scale = 1.1 , size = ( n_samples , n_dim ) )
     
     if n_dim > 1 :
-        ## x_1: Quadratic ("banana") correlation with x_0
-        X_nontrivial [ : , 1 ] = z0**2 - 1.0 + numpy.random.normal ( loc = 0.0 , scale = 0.3 , size = n_samples )
+        # Mild smooth correlation instead of complex trigonometric/recursive functions
+        target [ : , 1 ] = target [ : , 1 ] + 0.3 * ( target [ : , 0 ] ** 2 )
         
     if n_dim > 2 :
-        ## x_2: Oscillating joint dependence on x_0 and x_1
-        X_nontrivial [ : , 2 ] = (
-            numpy.sin ( 1.8 * z0 ) 
-            + 0.4 * X_nontrivial [ : , 1 ] 
-            + numpy.random.normal ( loc = 0.0 , scale = 0.2 , size = n_samples )
-        )
+        target [ : , 2 ] = target [ : , 2 ] - 0.2 * target [ : , 0 ]
         
-    ## Recursive construction for higher dimensions (d >= 3)
+    return target , original
+
+
+
+def make_datasets2 ( n_samples = 5000 ,
+                    n_dim     =    3 ,
+                    seed      = None ) :
+    """ Generate datasets by oversampling, filtering strict boundaries, 
+        adding a narrow Gaussian peak in the first dimension, 
+        and mixing a small uniform background to avoid zero-density gaps.
+    """
+    numpy.random.seed ( seed )
+    
+    low_bound, high_bound = -3.0, 3.0
+    
+    # --- ORIGINAL: Uniform distribution within strict bounds ---
+    original = numpy.zeros ( ( n_samples , n_dim ) )
+    for d in range ( n_dim ) :
+        original [ : , d ] = numpy.random.uniform ( low = low_bound , high = high_bound , size = n_samples )
+        
+    # --- TARGET: Oversample to filter out-of-bounds points naturally ---
+    oversample_factor = 4
+    n_large = n_samples * oversample_factor
+    
+    # Decide which events belong to the main structure vs the narrow peak (10%)
+    n_peak = int ( 0.10 * n_large )
+    n_main = n_large - n_peak
+    
+    # 1. Main structure generation
+    x0_main = numpy.random.uniform ( low = low_bound , high = high_bound , size = n_main )
+    
+    # 2. Narrow Gaussian peak generation in the first dimension (width = 0.5)
+    x0_peak = numpy.random.normal ( loc = 1.0 , scale = 0.5 , size = n_peak )
+    
+    # Combine x_0 components
+    x0_large = numpy.concatenate ( [ x0_main , x0_peak ] )
+    numpy.random.shuffle ( x0_large )
+    
+    target_raw = numpy.zeros ( ( n_large , n_dim ) )
+    target_raw [ : , 0 ] = x0_large
+    
+    if n_dim > 1 :
+        target_raw [ : , 1 ] = 0.5 * ( x0_large ** 2 ) - 2.0 + numpy.random.normal ( loc = 0.0 , scale = 0.2 , size = n_large )
+        
+    if n_dim > 2 :
+        target_raw [ : , 2 ] = numpy.sin ( numpy.pi * x0_large / 3.0 ) + 0.3 * target_raw [ : , 1 ] + numpy.random.normal ( loc = 0.0 , scale = 0.15 , size = n_large )
+        
     for d in range ( 3 , n_dim ) :
-        X_nontrivial [ : , d ] = (
-            0.5 * X_nontrivial [ : , d - 1 ] 
-            + numpy.cos ( z0 ) 
-            + numpy.random.normal ( loc = 0.0 , scale = 0.3 , size = n_samples )
-        )
+        target_raw [ : , d ] = 0.4 * target_raw [ : , d - 1 ] + 0.5 * numpy.cos ( x0_large ) + numpy.random.normal ( loc = 0.0 , scale = 0.2 , size = n_large )
+
+    # Filter points strictly within [low_bound, high_bound] for all dimensions
+    mask = numpy.all ( ( target_raw >= low_bound ) & ( target_raw <= high_bound ) , axis = 1 )
+    target_filtered = target_raw [ mask ]
+    
+    # Trim or fallback to n_samples
+    if len ( target_filtered ) >= n_samples :
+        target = target_filtered [ : n_samples ]
+    else :
+        target = target_filtered
         
-    ## 2. Uniform dataset spanning the bounding box of nontrivial distribution
-    mins = numpy.min ( X_nontrivial , axis = 0 )
-    maxs = numpy.max ( X_nontrivial , axis = 0 )
-    
-    X_uniform = numpy.random.uniform (
-        low  = mins , 
-        high = maxs , 
-        size = ( n_samples , n_dim )
-    )
-    
-    return X_nontrivial , X_uniform
+    # Add a small uniform background component (3%) to eliminate exact zero-density pockets
+    n_bg = int ( 0.03 * len ( target ) )
+    if n_bg > 0 and len ( target ) > n_bg :
+        bg_data = numpy.random.uniform ( low = low_bound , high = high_bound , size = ( n_bg , n_dim ) )
+        target [ : n_bg ] = bg_data
+        
+    return target , original
+
+
 
 # =========================================================================
 has_lightgbm  = hasLightGBM  ()
@@ -197,6 +225,13 @@ def run_reweight (  n_dim     = 3     ,
         if rw is None : original_weight = None 
         else          : original_weight = rw.weights ( original )
 
+        wmin, wmax = '' , '' 
+        if not original_weight is None :
+            wmin = float ( numpy.min ( original_weight ) ) 
+            wmax = float ( numpy.max ( original_weight ) )
+            wmin , wmax = '%.4g' % wmin , '%.4g' % wmax 
+            
+                   
         for c in comparators :
             
             tv , pv = c.pvalue ( data1 = target            ,
@@ -205,11 +240,12 @@ def run_reweight (  n_dim     = 3     ,
             
             header , row = c.the_row ()
 
-            rw_type = '' if rw is None else typename ( rw ) 
-            row     = ( rw_type , c.method ) + tuple ( row )
-            rows.append ( row ) 
-
-    header =  ( 'Reweighter' , 'Comparator' ) + header
+            rw_type = '' if rw is None else typename ( rw  ) 
+            row     = ( rw_type , c.method ) + tuple ( row ) + ( wmin , wmax )             
+            rows.append ( row )
+            
+            
+    header =  ( 'Reweighter' , 'Comparator' ) + header + ( 'w-min' , 'w-max' ) 
     rows   = [ header ] + rows 
     title = 'Test results : %s-values [%%]' % script_p
     table = T.table ( rows , title = title , prefix = '# ' )
@@ -218,7 +254,7 @@ def run_reweight (  n_dim     = 3     ,
 # =============================================================================
 if '__main__' == __name__ :
 
-    run_reweight ( 3 , 1000 ) 
+    run_reweight ( 3 , 5000 ) 
     
 # =============================================================================
 

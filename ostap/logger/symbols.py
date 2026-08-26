@@ -155,6 +155,9 @@ __all__     = (
     'script_l'            , ## 𝓁
     'script_p'            , ## 𝓅
     'script_t'            , ## 𝓉
+    'script_u'            , ## 𝓉
+    'script_v'            , ## 𝓉
+    'script_w'            , ## 𝓉
     'script_map'          , ## mapping dict
     'show'                , ## bool
     'similar'             , ## ∼
@@ -165,7 +168,9 @@ __all__     = (
     'subscript_K'         , ## ᴋ
     'subscript_a'         , ## ₐ
     'subscript_c'         , ## ꜀
-    'subscript_k'         , ## ₖ
+    'subscript_k'         , ## ₖ    
+    'sub_min'             , ## ₘᵢₙ
+    'sub_max'             , ## ₘₐₓ
     'sum_symbol'          , ## ∑
     'superscript_map'     , ## mapping dict
     'symmetry'            , ## ⌯
@@ -470,6 +475,12 @@ def to_script(text):
 
 script_t = to_script ( 't' )
 script_p = to_script ( 'p' )
+script_u = to_script ( 'u' )
+script_v = to_script ( 'v' )
+script_w = to_script ( 'w' )
+
+sub_min  = 'ₘᵢₙ' if show else 'min'
+sub_max  = 'ₘₐₓ' if show else 'max'
 
 # =============================================================================
 if '__main__' == __name__ :

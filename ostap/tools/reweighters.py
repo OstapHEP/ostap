@@ -39,39 +39,55 @@ from ostap.logger.logger import getLogger, logAttention
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighters' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-DEFAULT_ESTIMATORS         = 400
-MAX_REGULARIZED_ESTIMATORS = 100
+DEFAULT_ESTIMATORS     = 500
+REGULARIZED_ESTIMATORS = 400
+EPS1                   = 1.e-3
+EPS2                   = 1.e-3
 # =============================================================================
 ## Check if strong regularization is needed considering BOTH original and target samples.
+#  Evaluates sample dimensionality, Kish's effective sample size (nEff),
+#  and the fraction of negative sPlot weights.
 def RW_needs_regularization ( original                       ,
                               target                         ,
                               original_weight        = None  , 
                               target_weight          = None  ) :
     """ Check if strong regularization is needed for BDT-based reweighting tests.
-        Evaluates the limiting effective statistics between original and target samples.
+        Evaluates the limiting effective statistics between original and target samples,
+        phase space dimensionality, and background subtraction weight fluctuations.
     """
-    check_all ( data1   = original            ,
-                data2   = target              ,
-                weight1 = original_weight     ,
-                weight2 = target_weight       ,
-                where   = "RW_regularization" ) 
+    check_all ( data1   = original                  ,
+                data2   = target                    ,
+                weight1 = original_weight           ,
+                weight2 = target_weight             ,
+                where   = "RW_needs_regularization" )   
+
 
     nf = num_features ( original )
     
-    # 1. Low dimensionality ALWAYS needs strong regularization
-    if nf <= 3: return True 
+    # 1. Low dimensionality (<= 4 features) ALWAYS needs strong regularization
+    if nf <= 4 : return True 
     
-    # 2. Calculate effective statistics for original sample
-    neff_orig = nEff ( original  , original_weight )
-    neff_targ = nEff ( target    , target_weight   )
+    # 2. Raw sample sizes (nRaw)
+    nraw_orig = num_samples ( original )
+    nraw_targ = num_samples ( target   )
+    
+    # 3. Calculate effective statistics (nEff)
+    neff_orig = nEff ( original , original_weight )
+    neff_targ = nEff ( target   , target_weight   )
     neff      = min  ( neff_orig , neff_targ       )
     
     # 4. Non-linear density threshold (phase space growth)
-    required_stats = 500.0 * ( nf ** 1.6 )
+    required_stats = 1500.0 * ( nf ** 1.8 )
+    if neff < required_stats : return True
     
-    low_stats = ( neff < required_stats )
+    # 5. Check weight efficiency ratios (nEff / nRaw)
+    #    An efficiency below 65% corresponds to >10% negative sPlot weight noise or high weight variance
+    eff_orig = neff_orig / float ( nraw_orig ) if 0 < nraw_orig else 0.0
+    eff_targ = neff_targ / float ( nraw_targ ) if 0 < nraw_targ else 0.0
     
-    return low_stats
+    if eff_orig < 0.65 or eff_targ < 0.65 : return True
+
+    return False
 
 # =============================================================================
 ## @class DensityReweighter
@@ -96,7 +112,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                  target                         ,
                  original_weight        = None  , 
                  target_weight          = None  ,
-                 clip_threshold         = 10.0  ,
+                 clip_threshold         = 1.e+4 ,
                  n_splits               = 5     , ## n-fold!
                  random_state           = 42    ,
                  store_original_weights = True  , **params ) :
@@ -118,12 +134,13 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__target_weights_info = {}
         self.__norm_factor         = numpy.float32( 1.0 )
         self.__mode                = None
+        self.__scale_factors       = {}
 
         ## perform regularization!! 
-        if RW_needs_regularization ( original        = original        ,
-                                     target          = target          ,
-                                     original_weight = original_weight ,
-                                     target_weight   = target_weight   ) :
+        if self.needs_regularization ( original        = original        ,
+                                       target          = target          ,
+                                       original_weight = original_weight ,
+                                       target_weight   = target_weight   ) :
             
             n_features = num_features ( original )
             neff_orig  = nEff ( original  , original_weight )
@@ -131,8 +148,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             neff       = min  ( neff_orig , neff_targ )
             
             params.update ( self.regularization ( params , n_features , neff ) )
-
-            ## params [ 'n_estimators'          ] = min ( MAX_REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , MAX_REGULARIZED_ESTIMATORS ) )
 
             ESR = params.get ( 'early_stopping_rounds' ,  15 )
             if  ESR is None : params [ 'early_stopping_rounds' ] = None 
@@ -183,6 +198,29 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     def n_splits ( self ) :
         """`n_splits` : number of splits/folds, same as `n_folds`"""
         return self.__n_splits
+
+    # =============================================================================
+    ## Check if strong regularization is needed considering BOTH original and target samples.
+    #  Evaluates sample dimensionality, Kish's effective sample size (nEff),
+    #  and the fraction of negative sPlot weights.
+    def needs_regularization ( self ,
+                               original                       ,
+                               target                         ,
+                               original_weight        = None  , 
+                               target_weight          = None  ) :
+        """ Check if strong regularization is needed for BDT-based reweighting tests.
+        Evaluates the limiting effective statistics between original and target samples,
+        phase space dimensionality, and background subtraction weight fluctuations.
+        """
+        check_all ( data1   = original            ,
+                    data2   = target              ,
+                    weight1 = original_weight     ,
+                    weight2 = target_weight       ,
+                    where   = "%s:needs_regularizatino" % typename ( self ) ) 
+        return RW_needs_regularization ( original        = original        ,
+                                         target          = target          ,
+                                         original_weight = original_weight ,
+                                         target_weight   = target_weight   )
     
     # =========================================================================
     # Public Read-Only Properties
@@ -239,7 +277,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                X     ) :
         """ Predict probability p(y=1|x) using a single trained model."""
         raise NotImplementedError
-
+    
     # ========================================================================
     ## Checks if dataset size is small relative to feature count indicating a need for stronger regularization.
     def use_strong_regularization ( self , X ) :
@@ -268,11 +306,15 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         ## FAST PATH: Standard positive unit weights for both samples
         # =====================================================================
         if original_weight is None and target_weight is None :
+            original_weight = numpy.ones ( len ( original ), dtype = numpy.float32 )
+            target_weight   = numpy.ones ( len ( target   ), dtype = numpy.float32 )
+            
+        if original_weight is None and target_weight is None :
             self.__mode  = "1-stream"
             ratios_valid = self.__fit_eval_stream ( "base", original, None, target, None )
 
             clipped            = numpy.clip    ( ratios_valid,
-                                                 numpy.float32 ( 0.0 ),
+                                                 numpy.float32 ( 0.0 ) ,
                                                  numpy.float32 ( self.__clip_threshold ) , )
             self.__norm_factor = numpy.float32 ( len( original )
                                                  / ( numpy.sum ( clipped, dtype = numpy.float64 ) + 1e-12 ) )
@@ -405,6 +447,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         return original_ratios, original_reweighted_weights
 
+
+
+
     def __fit_eval_stream( self       ,
                            stream_key ,
                            X_orig_sub ,
@@ -418,18 +463,23 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         if w_orig_sub is None and w_targ_sub is None :
             w_comb   = None
-            sum_orig = len( X_orig_sub )
-            sum_targ = len( X_targ_sub )
+            scale_factor = numpy.float32 ( len ( X_targ_sub ) / len ( X_orig_sub ) )
         else :
             w_orig_abs = numpy.abs ( w_orig_sub ) if w_orig_sub is not None else numpy.ones ( len ( X_orig_sub ), dtype = numpy.float32 )
             w_targ_abs = numpy.abs ( w_targ_sub ) if w_targ_sub is not None else numpy.ones ( len ( X_targ_sub ), dtype = numpy.float32 )
-            w_comb     = numpy.hstack( [ w_orig_abs, w_targ_abs ] )
-            sum_orig   = numpy.sum ( w_orig_abs , dtype = numpy.float64 )
-            sum_targ   = numpy.sum ( w_targ_abs , dtype = numpy.float64 )
+            
+            sum_w_orig = numpy.sum ( w_orig_abs )
+            sum_w_targ = numpy.sum ( w_targ_abs )
+            
+            scale_factor = ( sum_w_targ / sum_w_orig ) if sum_w_orig > 0 else numpy.float32 ( 1.0 )
+            
+            w_orig_scaled = w_orig_abs * scale_factor
+            w_comb        = numpy.hstack ( [ w_orig_scaled , w_targ_abs ] )
 
-        oof_preds = numpy.zeros( len( X_comb ), dtype = numpy.float32 )
+        oof_raw = numpy.zeros( len( X_comb ), dtype = numpy.float32 )
 
         from sklearn.model_selection import StratifiedKFold
+        from sklearn.linear_model import LogisticRegression
 
         skf = StratifiedKFold ( n_splits     = self.n_splits     ,
                                 shuffle      = True              ,
@@ -443,41 +493,74 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             w_tr = w_comb[ train_idx ] if w_comb is not None else None
             w_va = w_comb[ val_idx ] if w_comb is not None else None
 
-            model, val_preds = self._train_single_model ( X_tr, y_tr, w_tr, X_va, y_va, w_va )
-            oof_preds[ val_idx ] = val_preds.astype ( numpy.float32, copy = False )
+            # 1. Train base booster model
+            model, _ = self._train_single_model ( X_tr, y_tr, w_tr, X_va, y_va, w_va )
             stream_models.append( model )
+            
+            # 2. Get raw probabilities via subclass polymorphism
+            raw_val_p = self._predict_single_model ( model, X_va )
+            if raw_val_p.ndim > 1 :
+                raw_val_p = raw_val_p[:, 1]
+                
+            oof_raw[ val_idx ] = raw_val_p.astype ( numpy.float32, copy = False )
 
-        self.__fitted_models[ stream_key ] = stream_models
+        # 3. Fit global Platt scaling on OOF predictions
+        eps = 1e-6
+        oof_raw_clipped = numpy.clip ( oof_raw, eps, 1.0 - eps )
+        oof_logits = numpy.log ( oof_raw_clipped / ( 1.0 - oof_raw_clipped ) )
 
-        prior                       = numpy.float32( sum_orig / ( sum_targ + 1e-12 ) )
-        self.__priors[ stream_key ] = prior
+        platt = LogisticRegression()
+        platt.fit ( oof_logits.reshape(-1, 1), y_comb, sample_weight = w_comb )
 
+        # Store models and calibrator tuple
+        self.__fitted_models[ stream_key ] = ( stream_models, platt )
         
-        p_orig         = oof_preds[ : len( X_orig_sub ) ]
-        p_orig_clipped = numpy.clip ( p_orig, numpy.float32( 1e-7 ), numpy.float32( 1.0 - 1e-7 ) )
-        return ( p_orig_clipped / ( numpy.float32( 1.0 ) - p_orig_clipped ) ) * prior
+        self.__scale_factors[ stream_key ] = scale_factor
 
-    
+        self.__priors[ stream_key ] = numpy.float32( 1.0 )
+
+        # Compute OOF calibrated predictions for original sample
+        oof_calib = platt.predict_proba ( oof_logits.reshape(-1, 1) )[:, 1]
+        p_orig = oof_calib[ : len ( X_orig_sub ) ]
+        p_orig_clipped = numpy.clip ( p_orig, numpy.float32 ( 1e-4 ) , numpy.float32( 1.0 - 1e-4 ) )
+        
+        ratios = p_orig_clipped / ( numpy.float32( 1.0 ) - p_orig_clipped )
+        return ratios / scale_factor
+
     def __normalize_and_clip( self   ,
                               ratios ,
                               w_orig ) :
-
-        clipped_ratios = numpy.clip ( ratios, numpy.float32( 0.0 ), numpy.float32( self.__clip_threshold ) )
-        orig_sum       = numpy.sum ( w_orig, dtype = numpy.float64 )
-        reweighted_sum = numpy.sum ( w_orig * clipped_ratios, dtype = numpy.float64 )
+        
+        clipped_ratios = numpy.clip ( ratios, numpy.float32 ( 0.0 ) , numpy.float32 ( self.__clip_threshold ) )
+        orig_sum       = numpy.sum  ( w_orig, dtype = numpy.float64 )
+        reweighted_sum = numpy.sum  ( w_orig * clipped_ratios, dtype = numpy.float64 )
         self.__norm_factor = numpy.float32 ( orig_sum / ( reweighted_sum + 1e-12 ) )
         return clipped_ratios * self.__norm_factor
+    
 
-    def __predict_stream_ratios( self , stream_key, X ) : 
+    def __predict_stream_ratios( self, stream_key, X ):
+        models, platt = self.__fitted_models[ stream_key ]
+        scale_factor  = self.__scale_factors[ stream_key ]
 
-        models = self.__fitted_models[ stream_key ]
-        prior  = self.__priors[ stream_key ]
+        ratios_list = []
+        for model in models :
+            p = self._predict_single_model ( model, X )
+            if p.ndim > 1 :
+                p = p[:, 1]
+                
+            eps = 1e-4
+            p_clipped = numpy.clip ( p, eps, 1.0 - eps )
+            logits = numpy.log ( p_clipped / ( 1.0 - p_clipped ) )
+            
+            p_calib = platt.predict_proba ( logits.reshape(-1, 1) )[:, 1]
+            p_calib_clipped = numpy.clip ( p_calib, numpy.float32 ( eps ) , numpy.float32 ( 1.0 - eps ) )
+            
+            stream_ratios = ( p_calib_clipped / ( numpy.float32( 1.0 ) - p_calib_clipped ) ) / scale_factor
+            ratios_list.append( stream_ratios )
+            
+        return numpy.mean ( ratios_list, axis = 0, dtype = numpy.float32 )
 
-        preds_list = [ self._predict_single_model( m, X ) for m in models ]
-        p_avg      = numpy.mean ( preds_list, axis = 0, dtype = numpy.float32 )
-        p_avg      = numpy.clip ( p_avg, numpy.float32( 1e-7 ), numpy.float32( 1.0 - 1e-7 ) )
-        return ( p_avg / ( numpy.float32( 1.0 ) - p_avg ) ) * prior
-
+    
     # =========================================================================
     # Public Inference Method
     # =========================================================================
@@ -505,7 +588,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         if original_weight is None and self.__mode == "1-stream" :
             ratios  = self.__predict_stream_ratios( "base", X_new_f32 )
             clipped = numpy.clip ( ratios,
-                                   numpy.float32 ( 0.0 ),
+                                   numpy.float32 ( 0.0 ) ,
                                    numpy.float32 ( self.__clip_threshold ) )
             return clipped * self.__norm_factor
 
@@ -567,8 +650,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                 ) / w_total
 
         clipped                = numpy.clip ( ratios_valid,
-                                              numpy.float32( 0.0 ),
-                                              numpy.float32( self.__clip_threshold ) )
+                                              numpy.float32 ( 0.0 ),
+                                              numpy.float32 ( self.__clip_threshold ) )
         final_ratios           = numpy.zeros( len( w_new_f32 ), dtype = numpy.float32 )
         final_ratios[ nz_mask ] = clipped * self.__norm_factor
 
@@ -590,22 +673,22 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
                    target_weight   = None , 
                    **kwargs        ) :
         
-        ## High-capacity configuratino
+        # --- Default High-Capacity configuration for large statistics
         config = {
             'objective'             : 'binary'            ,
             'metric'                : 'binary_logloss'    ,
-            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 300-500 trees budget
-            'learning_rate'         : 0.025               , ## Small step size for KDE-like smooth density
-            'max_depth'             : 3                   , ## Low depth limits higher-order noise
-            'num_leaves'            : 7                   ,
-            'min_child_samples'     : 25                  ,
+            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
+            'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
+            'max_depth'             : 4                   , ## Default depth for rich phase space
+            'num_leaves'            : 15                  ,
+            'min_child_samples'     : 30                  ,
             'min_child_weight'      : 1e-3                ,
-            'reg_alpha'             : 0.0                 ,
-            'reg_lambda'            : 2.0                 , ## L2 penalty to stabilize log-ratios
-            'subsample'             : 0.75                , ## Subsampling smooths leaf split cuts
+            'reg_alpha'             : 0.1                 ,
+            'reg_lambda'            : 2.0                 , ## Moderate L2 penalty on leaf values
+            'subsample'             : 0.8                 ,
             'subsample_freq'        : 1                   ,
             'colsample_bytree'      : 0.8                 ,
-            'path_smooth'           : 1.0                 , ## Linear node smoothing suppresses ADVAL/KL artifacts
+            'path_smooth'           : 1.0                 , ## Node smoothing suppresses leaf-boundary spikiness
             'boost_from_average'    : True                ,
             'early_stopping_rounds' : None                ,
             'verbosity'             : -1                  ,
@@ -623,33 +706,40 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
 
     @property
     def method ( self ) :
+        """ Return the reweighter method name
         """
-        Return the reweighter method name
-        """
-        return 'LightGBM'
+        return 'Density Reweighter/LightGBM'
 
-    def regularization ( self       ,
+    def regularization ( self                ,
                          params     , 
                          n_features ,
-                         n_samples  ) : 
-        """
-        Dynamic regularization tuned specifically for LightGBM.
+                         n_samples  ) :
+        """ Match hep_ml.GBReweighter's flexibility by avoiding aggressive leaf constraints 
+        and allowing the model to reach extreme probabilities (high weights).
         """
 
-        params [ 'learning_rate'         ] = 0.025  ## Keep small for kernel-like smoothing
-        params [ 'max_depth'             ] = 3      ## Depth 3 prevents sharp high-dimensional cuts
-        params [ 'num_leaves'            ] = 7
-        params [ 'min_child_samples'     ] = max ( 25 , int ( n_samples * 0.005 ) )
-        params [ 'reg_alpha'             ] = 0.0
-        params [ 'reg_lambda'            ] = 3.0 if n_samples < 3000 else 1.5 ## Higher L2 penalty on small N
-        params [ 'subsample'             ] = 0.75   ## Random subsampling smooths boundaries
-        params [ 'subsample_freq'        ] = 1
-        params [ 'colsample_bytree'      ] = 0.8
-        params [ 'path_smooth'           ] = 1.0    ## Node smoothing suppresses leaf-boundary artifacts
+
+        params [ 'n_estimators'      ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
+        params [ 'learning_rate'     ] = 0.1     
+        params [ 'max_depth'         ] = 5       
+        params [ 'num_leaves'        ] = 31      
+        
+        # Soft dynamic limits for leaves to allow deep splits in rare tails
+        leaf_samples = max ( 2, min ( 30, int ( n_samples  * 0.0001 ) ) )
+        params [ 'min_child_samples' ] = leaf_samples      
+        params [ 'min_child_weight'  ] = max ( 1e-4, float ( n_samples * 0.00005 ) )  
+        
+        params [ 'reg_alpha'         ] = 0.0    
+        params [ 'reg_lambda'        ] = 0.0 
+        params [ 'subsample'         ] = 1.0    
+        params [ 'colsample_bytree'  ] = 1.0  
         params [ 'early_stopping_rounds' ] = None
+        
+        if 'path_smooth' in params : 
+            params.pop ( 'path_smooth' )
 
         return params
-
+    
     def _train_single_model ( self    ,
                               X_train , y_train , w_train ,
                               X_val   , y_val   , w_val   ) : 
@@ -667,11 +757,13 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         params = self.params.copy ()
         
         num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , 400 )
-        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 20 )
         
+        # --- Extract early_stopping_rounds, defaulting to None for unbiased OOF estimation
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , None )
+
         callbacks = []
-        if early_stopping_rounds : 
-            callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
+        if early_stopping_rounds is not None and eval_set is not None :
+            callbacks.append ( lightgbm.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
 
         model = LightGBM.train ( params          = params          ,
                                  train_set       = trn_data        ,
@@ -684,16 +776,13 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         return model , val_preds
 
 
-    def _predict_single_model ( self , model , X ) :
-        """
-        Predict probability p(y=1|x) for a single trained model.
-        Base class DensityReweighter calculates ratio p / (1 - p).
-        """
-        best_iter = model.best_iteration if getattr ( model , 'best_iteration' , 0 ) > 0 else -1
-        p         = model.predict ( X , num_iteration = best_iter )
-        
-        # ИСПРАВЛЕНИЕ: Возвращаем только вероятность, без p / (1 - p)
-        return p.astype ( numpy.float32 , copy = False )
+    def _predict_single_model( self, model, X ):
+        best_iter = getattr( model, 'best_iteration', 0 )
+        kwargs = {}
+        if best_iter is not None and best_iter > 0 :
+            kwargs[ 'num_iteration' ] = best_iter            
+        p = model.predict( X, **kwargs )
+        return p.astype( numpy.float32, copy = False )
     
 # =================================================================
 ## @class XGBoostDensityReweighter
@@ -712,18 +801,18 @@ class XGBoostDensityReweighter ( DensityReweighter ):
                    target_weight          = None ,
                    store_original_weights = True , **params ) :
         
-        ## High-capacity (complex) base config for XGBoost density reweighting
+        # --- Default High-Capacity configuration for large statistics
         config = {
             'objective'             : 'binary:logistic'   ,
             'eval_metric'           : 'logloss'           ,
-            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 300-500 trees budget
-            'learning_rate'         : 0.025               , ## Small step size for KDE-like smooth density
-            'max_depth'             : 3                   , ## Low depth limits higher-order noise
-            'min_child_weight'      : 5.0                 , ## Minimum sum of hessians (statistics per leaf)
+            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
+            'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
+            'max_depth'             : 4                   , ## Default depth for rich phase space
+            'min_child_weight'      : 5.0                 , ## Minimum sum of hessians per leaf
             'gamma'                 : 0.05                , ## Minimum loss reduction to force split
-            'reg_alpha'             : 0.0                 ,
-            'reg_lambda'            : 2.0                 , ## L2 penalty to stabilize log-ratios
-            'subsample'             : 0.75                , ## Subsampling smooths leaf split cuts
+            'reg_alpha'             : 0.1                 ,
+            'reg_lambda'            : 2.0                 , ## Moderate L2 penalty on leaf values
+            'subsample'             : 0.8                 ,
             'colsample_bytree'      : 0.8                 ,
             'tree_method'           : 'hist'              , ## Fast histogram-based binning
             'early_stopping_rounds' : None                ,
@@ -744,25 +833,30 @@ class XGBoostDensityReweighter ( DensityReweighter ):
     @property
     def method ( self ) :
         """`method` : underlying method/engine"""
-        return "XGBoost Density Reweighter"
+        return "Density Reweighter/XGBoost"
     
-    def regularization ( self       ,
-                         params     , 
-                         n_features ,
-                         n_samples  ) : 
+    def regularization ( self , params , n_features , n_samples ) :
+        """ Dynamic regularization tuned for XGBoost to match LightGBM performance."""
         
-        params [ 'learning_rate'         ] = 0.025  ## Keep small for kernel-like smoothing
-        params [ 'max_depth'             ] = 3      ## Depth 3 prevents sharp high-dimensional cuts
-        params [ 'min_child_weight'      ] = max ( 5.0 , n_samples * 0.003 ) ## Prevents spiky sub-splits
-        params [ 'gamma'                 ] = 0.05   ## Regularizes tree structure against noise
-        params [ 'reg_alpha'             ] = 0.0
-        params [ 'reg_lambda'            ] = 3.0 if n_samples < 3000 else 1.5 ## Higher L2 penalty on small N
-        params [ 'subsample'             ] = 0.75   ## Random subsampling smooths boundaries
-        params [ 'colsample_bytree'      ] = 0.8
+        params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
+        params [ 'learning_rate'         ] = 0.1
+        params [ 'max_depth'             ] = 5
+        
+        # Soft dynamic min_child_weight scaling with neff, keeping a low lower bound
+        params [ 'min_child_weight'      ] = max ( 1e-4, float ( n_samples * 0.0001 ) )
+        
+        params [ 'alpha'                 ] = 0.0
+        params [ 'lambda'                ] = 0.0
+        params [ 'subsample'             ] = 1.0
+        params [ 'colsample_bytree'      ] = 1.0
         params [ 'early_stopping_rounds' ] = None
-        
+    
         return params
 
+    def _predict_single_model( self, model, X ):
+        import xgboost as XGBoost
+        return model.predict( XGBoost.DMatrix ( X ) )
+    
     # =============================================================
     # Abstract Method Implementations
     # =============================================================
@@ -778,51 +872,58 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         val_preds : numpy.ndarray
             Predicted probabilities p(y=1|x) on the validation fold (float32).
         """
-            
         import xgboost as XGBoost
-        
-        # Construct XGBoost DMatrix instances
+
+        # --- Construct XGBoost DMatrix instances
         dtrain = XGBoost.DMatrix ( X_train , label = y_train , weight = w_train )
         dval   = XGBoost.DMatrix ( X_val   , label = y_val   , weight = w_val   )
 
-        evals = [ ( dval , "val" ) ]
-
         params = {}
         params.update ( self.params )
-        
-        num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' ,  None  ) or 500 
-        if isinstance ( num_boost_round , int ) and 10 < num_boost_round < 10000 : pass 
-        else                                                                     : num_boost_round = 500 
-                
-        early_stopping_rounds = params.pop  ( 'early_stopping_rounds' , 10 )
+
+        # --- Determine number of boosting rounds
+        num_boost_round = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or 500
+        if isinstance ( num_boost_round , int ) and 10 < num_boost_round < 10000 : pass
+        else                                                                    : num_boost_round = 500
+
+        # --- Extract early_stopping_rounds, defaulting to None for unbiased OOF estimation
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , None )
         if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < num_boost_round : pass
-        else : early_stopping_rounds = 10 
+        else                                                                                          : early_stopping_rounds = None
 
-        model = XGBoost.train ( params                = params,
-                                dtrain                = dtrain,
-                                num_boost_round       = num_boost_round,
-                                evals                 = evals,
-                                early_stopping_rounds = early_stopping_rounds,
-                                verbose_eval          = False )    
+        train_kwargs = {}
+        if early_stopping_rounds is not None :
+            train_kwargs [ 'evals' ]                 = [ ( dval , "val" ) ]
+            train_kwargs [ 'early_stopping_rounds' ] = early_stopping_rounds
+
+        # --- Train XGBoost booster
+        model = XGBoost.train ( params          = params,
+                                dtrain          = dtrain,
+                                num_boost_round = num_boost_round,
+                                verbose_eval    = False,
+                                **train_kwargs )
+
+        # --- Predict probabilities on validation fold
+        predict_kwargs = {}
+        best_iter = getattr ( model , "best_iteration" , None )
+        if early_stopping_rounds is not None and best_iter is not None and 0 < best_iter :
+            predict_kwargs [ 'iteration_range' ] = ( 0 , best_iter + 1 )
+
+        val_preds = model.predict ( dval , **predict_kwargs )
+        return model , val_preds.astype ( numpy.float32 , copy = False )
+
+
+    def _predict_single_model( self, model, X ):
         
-        best_iter  = getattr ( model , "best_iteration" , None)
-        iter_range = ( 0 , best_iter + 1 ) if best_iter is not None and 0 < best_iter  else (0, 0)
-        val_preds  = model.predict ( dval, iteration_range = iter_range )
-        return model, val_preds.astype ( numpy.float32 , copy = False )
-    
-    def _predict_single_model ( self  ,
-                                model ,
-                                X     ):
-        """ Generates probability predictions p(y=1|x) for input features X.
-        """
-        
+        best_iter = getattr ( model, 'best_iteration', 0 )
+        kwargs = {}
+        if best_iter is not None and 0 < best_iter :
+            kwargs [ 'ntree_limit' ] = best_iter # or num_iteration
+            
         import xgboost as XGBoost
-
-        dmatrix    = XGBoost.DMatrix(X)
-        best_iter  = getattr ( model , "best_iteration" , None )
-        iter_range = ( 0 , best_iter + 1 ) if best_iter is not None and 0 < best_iter  else (0, 0)
-        preds      = model.predict(dmatrix, iteration_range=iter_range)
-        return preds.astype(numpy.float32, copy=False)
+        dmat = XGBoost.DMatrix ( X    )
+        p    = model.predict   ( dmat , **kwargs )
+        return p.astype ( numpy.float32, copy = False )
         
 # =================================================================
 ## @class CatBoostDensityReweighter
@@ -841,21 +942,22 @@ class CatBoostDensityReweighter ( DensityReweighter ):
                    target_weight          = None ,
                    store_original_weights = True  , **params ) :        
 
+
+        # --- Default High-Capacity configuration for large statistics
         config = {
             'loss_function'         : 'Logloss'           ,
             'eval_metric'           : 'Logloss'           ,
-            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 300-500 trees budget
-            'learning_rate'         : 0.025               , ## Small step size for KDE-like smooth density
-            'max_depth'             : 3                   , ## Low depth limits higher-order noise
-            'l2_leaf_reg'           : 2.0                 , ## L2 penalty to stabilize log-ratios
-            'min_child_samples'     : 25                  ,
-            'subsample'             : 0.75                , ## Subsampling smooths leaf split cuts
-            'random_strength'       : 1.0                 , ## Adds randomness to tree structure
+            'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
+            'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
+            'depth'                 : 4                   , ## Default depth for rich phase space
+            'l2_leaf_reg'           : 2.0                 , ## Moderate L2 penalty on leaf values
+            'min_child_samples'     : 30                  ,
+            'subsample'             : 0.8                 ,
+            'random_strength'       : 1.0                 , ## Adds randomness to split scoring
             'early_stopping_rounds' : None                ,
             'verbose'               : False               ,
             'thread_count'          : -1                  ,
         }
-
         config.update ( params )
         
          # CatBoost uses 'thread_count' instead of 'n_jobs'
@@ -872,35 +974,33 @@ class CatBoostDensityReweighter ( DensityReweighter ):
     @property
     def method ( self ) :
         """`method` : underlying method/engine"""
-        return "CatBoost density Reweighter"
+        return "Density Reweighter/CatBoost"
 
-    
-    def regularization ( self       ,
-                         params     , 
-                         n_features ,
-                         n_samples  ) :
 
-        params [ 'learning_rate'     ] = 0.025  ## Keep small for kernel-like smoothing
-        params [ 'max_depth'         ] = 3      ## Depth 3 prevents sharp high-dimensional cuts
-        params [ 'l2_leaf_reg'       ] = 3.0 if n_samples < 3000 else 1.5 ## Higher L2 penalty on small N
-        params [ 'min_child_samples' ] = max ( 25 , int ( n_samples * 0.005 ) )
-        params [ 'subsample'         ] = 0.75   ## Random subsampling smooths boundaries
+    def regularization ( self , params , n_features , n_samples ) :
+        """ Dynamic regularization tuned for CatBoost to allow high density ratios."""
         
-        ## Clean up incompatible parameters if passed from base config
-        params.pop ( 'num_leaves'            , None )
-        params.pop ( 'max_leaves'            , None )
-        params.pop ( 'reg_alpha'             , None )
-        params.pop ( 'reg_lambda'            , None )
-        params.pop ( 'early_stopping_rounds' , None )
+        params [ 'n_estimators'         ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
+        params [ 'learning_rate'        ] = 0.1
+        params [ 'depth'                ] = 6
+        
+        if 'min_data_in_leaf' in params :  params.pop ( 'min_data_in_leaf' , None )
+        
+        # Soft dynamic min_child_samples scaling with neff
+        params [ 'min_child_samples'    ] = max ( 2, min ( 30, int ( n_samples * 0.0001 ) ) )
+        
+        params [ 'l2_leaf_reg'           ] = 1.0
+        params [ 'subsample'             ] = 1.0
+        params [ 'early_stopping_rounds' ] = None
         
         return params
-    
+
     # =============================================================
     # Abstract Method Implementations
     # =============================================================
     def _train_single_model ( self    ,
                               X_train , y_train , w_train ,
-                              X_val  , y_val    ,  w_val  ) :
+                              X_val   , y_val   , w_val   ) :
         """ Trains a single CatBoostClassifier on train fold and evaluates on validation fold.
 
         Returns
@@ -910,45 +1010,51 @@ class CatBoostDensityReweighter ( DensityReweighter ):
         val_preds : numpy.ndarray
             Predicted probabilities p(y=1|x) on the validation fold (float32).
         """
-            
+
         import catboost as CatBoost
-        
+
         trn_pool = CatBoost.Pool ( X_train , label = y_train , weight = w_train )
         val_pool = CatBoost.Pool ( X_val   , label = y_val   , weight = w_val   )
 
         params = {}
         params.update ( self.params )
-        
-        iterations       = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' ,  None  ) or 500 
-        if isinstance ( iterations , int ) and 10 < iterations < 10000 : pass 
-        else   : iterations = 500 
-                
-        early_stopping_rounds = params.pop  ( 'early_stopping_rounds' , 10 )
-        if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < iterations : pass
-        else  : early_stopping_rounds = 10
 
-        params [ 'iterations'            ] = iterations
-        params [ 'early_stopping_rounds' ] = early_stopping_rounds  
-        params [ 'use_best_model'        ] = True
-                
-        model = CatBoost.CatBoostClassifier ( **params ) 
+        # --- Determine number of iterations
+        iterations = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' , None ) or 500
+        if isinstance ( iterations , int ) and 10 < iterations < 10000 : pass
+        else                                                           : iterations = 500
+
+        # --- Extract early_stopping_rounds, defaulting to None for unbiased OOF estimation
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , None )
+        if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < iterations : pass
+        else                                                                                      : early_stopping_rounds = None
+
+        params [ 'iterations' ] = iterations
+
+        fit_kwargs = {}
+        if early_stopping_rounds is not None :
+            params [ 'early_stopping_rounds' ] = early_stopping_rounds
+            params [ 'use_best_model'        ] = True
+            fit_kwargs [ 'eval_set'          ] = val_pool
+
+        model = CatBoost.CatBoostClassifier ( **params )
 
         model.fit ( trn_pool ,
-                    eval_set = val_pool ,
-                    verbose  = False    )
+                    verbose = False ,
+                    **fit_kwargs )
 
-        # Predict probability for positive class p(y=1|x)
+        # --- Predict probability for positive class p(y=1|x)
         val_preds = model.predict_proba ( val_pool ) [ : , 1 ]
-        return model, val_preds.astype ( numpy.float32 , copy = False )
+        return model , val_preds.astype ( numpy.float32 , copy = False )
 
-    def _predict_single_model ( self  ,
-                                model ,
-                                X     ):
-        """ Generates probability predictions p(y=1|x) for input features X.
-        """
-        preds = model.predict_proba ( X ) [ : , 1 ]
-        return preds.astype ( numpy.float32 , copy = False )
-    
+
+    def _predict_single_model( self, model, X ):
+        best_iter = getattr( model, 'best_iteration', 0 )
+        kwargs = {}
+        if best_iter is not None and best_iter > 0 :
+            kwargs[ 'num_iteration' ] = best_iter            
+        p = model.predict( X, **kwargs )
+        return p.astype( numpy.float32, copy = False )
 
 # ==============================================================================
 ## @class GBReweighter
@@ -989,11 +1095,11 @@ class GBReweighter(Reweighter) :
         }
         
         config.update ( params ) 
-
-        if RW_needs_regularization ( original        = original        ,
-                                     target          = target          ,
-                                     original_weight = original_weight ,
-                                     target_weight   = target_weight   ) :
+        
+        if self.needs_regularization ( original        = original        ,
+                                       target          = target          ,
+                                       original_weight = original_weight ,
+                                       target_weight   = target_weight   ) :
             
             n_features = num_features ( original )
             
@@ -1061,6 +1167,29 @@ class GBReweighter(Reweighter) :
             self.__original_ratios             = factors 
             self.__original_reweighted_weights = factors if weight_trivial ( original_weight ) else factors * original_weight
 
+    # =============================================================================
+    ## Check if strong regularization is needed considering BOTH original and target samples.
+    #  Evaluates sample dimensionality, Kish's effective sample size (nEff),
+    #  and the fraction of negative sPlot weights.
+    def needs_regularization ( self ,
+                               original                       ,
+                               target                         ,
+                               original_weight        = None  , 
+                               target_weight          = None  ) :
+        """ Check if strong regularization is needed for BDT-based reweighting tests.
+        Evaluates the limiting effective statistics between original and target samples,
+        phase space dimensionality, and background subtraction weight fluctuations.
+        """
+        check_all ( data1   = original            ,
+                    data2   = target              ,
+                    weight1 = original_weight     ,
+                    weight2 = target_weight       ,
+                    where   = "%s:needs_regularizatino" % typename ( self ) ) 
+        return RW_needs_regularization ( original        = original        ,
+                                         target          = target          ,
+                                         original_weight = original_weight ,
+                                         target_weight   = target_weight   )
+    
     def regularization ( self       ,
                          params     , 
                          n_features ,
@@ -1079,7 +1208,7 @@ class GBReweighter(Reweighter) :
     @property
     def method ( self ) :
         """`method` : underlying method/engine"""
-        return "GBReweighter"
+        return "HepML/GBReweighter"
                         
     @property
     def n_splits ( self ) :

@@ -777,11 +777,7 @@ def _rt_table_0_ ( tree ,
     """ Print tree as table 
     """
     ## get list of branches/leaves  
-    brs = tree.leaves ( pattern )
-    if 'TObject' in brs :
-        brs = list  ( brs )
-        brs.remove  ( 'TObject' ) 
-        brs = tuple ( brs )
+    brs = tree.branches ( pattern )
 
     ## collect information
     _vars = []
@@ -790,8 +786,7 @@ def _rt_table_0_ ( tree ,
     from ostap.stats.statvars import data_size
     n0 = data_size ( tree , cuts , *args , use_frame = False , parallel = True )
     
-    if not n0 :
-        return '', 0  
+    if not n0 : return '', 0  
     
     ## no entries passed the cuts 
     brs   = () if 0 == n0 else brs
@@ -956,8 +951,7 @@ def _rt_table_1_ ( tree ,
     """ Print tree as table 
     """
 
-    if not variables :
-        variables = sorted ( set ( tree.branches() ) | set ( tree.leaves () ) )
+    if not variables : variables = sorted ( set ( tree.branches() ) )  ## | set ( tree.leaves () ) )
         
     variables , cuts , _ = vars_and_cuts ( variables , cuts )
 
