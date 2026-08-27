@@ -48,7 +48,8 @@ __all__     = (
     'pretty_row'         , ## ready to use row and unit 
 )
 # =============================================================================
-from   ostap.core.ostap_types import integer_types, num_types, sequence_types
+from   ostap.core.ostap_types import integer_types, num_types
+from   ostap.math.math_base   import frexp10, ldexp10 
 from   ostap.logger.symbols   import plus_minus, times, superscript_map 
 from   ostap.utils.core       import typename 
 import math 
@@ -156,12 +157,18 @@ def the_expo ( value , *values ) :
     if   0.1 <= av < 1000        : return 0 
     elif not av or iszero ( av ) : return 0 
     ##
+    
     v_a , v_e = frexp10 ( av )
     v_ee      = v_e - 1
     n , r     = divmod  ( v_ee , 3 )    
     ## 
-    scale     = 10** ( r - v_ee  )    
-    av       *= scale
+    
+    a , b = frexp10 ( av )
+    av    = ldexp10 ( a , b + r - v_ee )
+    
+    ## scale     = 10 ** ( r - v_ee  )   
+    ## av       *= scale
+    
     ##
     return 3 * n + the_expo ( av ) 
 

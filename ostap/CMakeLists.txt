@@ -615,8 +615,7 @@ if ( ${PY_zstandard_FOUND} )
 endif()    
 ##
 if ( ${PY_wcwidth_FOUND} )
-  find_python_module_version ( wcwidth ) 
-  message ( "----> terminaltables3  version    : " ${PY_terminaltables3_VERSION} " \t" ${PY_TERMINALTABLES3} )        
+  find_python_module_version ( wcwidth )         
   message ( "----> wcwidth          version    : " ${PY_wcwidth_VERSION} " \t" ${PY_WCWIDTH} )        
 endif ()                        
 ##

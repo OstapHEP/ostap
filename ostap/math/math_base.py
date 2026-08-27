@@ -95,6 +95,7 @@ __all__     = (
     'vLongs'         , ## std::vector<long>
     ##
     'frexp10'        , ## similar to math.frexp but with radix=10,
+    'ldexp10'        , ## siimlar to ldexp but wih radix=10
     ## 
     'cpp'            , ## C++ global  namespace 
     'Ostap'          , ## C++ namespace Ostap 
@@ -764,6 +765,7 @@ def pretty_array ( values             ,
 # =============================================================================
 ## C++ version of frexp with radix 10 
 cpp_frexp10 = Ostap.Math.frexp10 
+cpp_ldexp10 = Ostap.Math.ldexp10
 # =============================================================================
 ## get mantissa (0.1<=m<1) and exponent for radix10
 #  similar for frexp, but use radix=10
@@ -797,6 +799,25 @@ def frexp10 ( value ) :
         q  += 1
         
     return ( xv , q ) if ( 0 <= value ) else ( -xv , q ) 
+
+# =============================================================================
+## get mantissa (0.1<=m<1) and exponent for radix10
+#  similar for frexp, but use radix=10
+#  @code
+#  value = ldexp10 ( a , b  ) 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-07-20
+def ldexp10 ( a , b ) :
+    """ Get the mantissa (0.1<=m<1) and exponent for radix10
+    (similar for frexp, but use radix=10)
+    
+    >>> value = ldexp10 ( a , b  ) 
+    """
+
+    ## a bit better treatment of near-zero numbers 
+    return cpp_ldexp10 ( a , b  )
+
 
 # =============================================================================
 ## Define some "range" for the given value:
