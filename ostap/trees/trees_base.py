@@ -18,6 +18,7 @@ __all__     = (
     'tree_path'     , ## full path of TTree in the TFile 
     'tree_branches' , ## list of branches 
     'tree_leaves'   , ## list of leaves 
+    'tree_aliaces'  , ## dict of aliaces 
     'chain_files'   , ## list of files for the TChain 
     'chain_nfiles'  , ## number of files for the TChain 
     'chain_nFiles'  , ## number of files for the TChain
@@ -27,6 +28,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import string_types, sequence_types  
 from   ostap.core.core_base   import valid_pointer
+import ostap.io.root_file      
 import ROOT 
 # =============================================================================
 # logging 
@@ -64,7 +66,7 @@ def _tree_len_ ( tree ) :
     >>> tree = ... 
     >>> len ( tree ) 
     """
-    return tree.GetEntries() if tree_valid ( tree ) else 0 
+    return tree.GetEntries() if valid_pointer ( tree ) else 0 
 
 ROOT.TTree .__len__ = _tree_len_
 ROOT.TChain.__len__ = _tree_len_ 
@@ -82,8 +84,9 @@ def tree_path ( tree ) :
     >>> path = tree.full_path 
     >>> path = tree.fullpath 
     """
-    assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
-        "tree_path: Invalid `tree' argument!"
+    if not vaild_pointer ( tree )              : raise ValueError ( "Invalid (nullptr) `tree` argument" )
+    if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invaild type of `tree` argument"   )
+    
     ## 
     rdir = tree.GetDirectory()
     if valid_pointer ( rdir ) :
@@ -268,6 +271,27 @@ def tree_branch( tree , branch ) :
     return None
 
 ROOT.TTree.branch = tree_branch
+
+
+# =============================================================================
+## Get the dictionary of aliaces:
+#  @code
+#  tree = ...
+#  aliaces = tree.aliaces () 
+#  @endcode
+def tree_aliaces ( tree ) :
+    """ Get the dictionary of aliaces:
+    >>> tree = ...
+    >>> aliaces = tree.aliaces ()
+    """
+    result = {}
+    alist  = tree.GetListOfAliaces()
+    if not valid_pointer ( ailst ) : return result    
+    for a in alist :
+        result [ str ( a.GetName() ) ] = str ( a.GetTitle () )
+    return result 
+
+ROOT.TTree.aliaces = tree_aliaces
 
 ## valid types 
 add_chain_types = ( ROOT.TChain , ) + string_types
@@ -469,6 +493,7 @@ _new_methods_ = (
     ROOT.TTree.leaves       ,
     ROOT.TTree.branch       ,
     ROOT.TTree.leaf         ,
+    ROOT.TTree.aliaces      ,
     ## 
     ROOT.TChain.__iadd__     , 
     ROOT.TChain.__add__      , 
