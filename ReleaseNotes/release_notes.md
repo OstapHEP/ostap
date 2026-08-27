@@ -23,11 +23,13 @@
    1. some improvement for `Ostap::Math::(W)EPDF`
    1. add helper `soft_copy` method for data-sources 
    1. remove weight-support from `ostap.stats.gof_np.MIXnp`
+   1. fix `ActiveBranches`, add `active_branches`, remove possbible duplication from `branches` and `leaves`
+   1. smplify `TTree.table` printut and make it uniform with `RooDataSet.table`
    
+
 ## Bug fixes 
 
 ## Backward incompatible
-   1.
    
 # v3.8.1.0
 

@@ -140,7 +140,7 @@ def data_compare ( comparator   ,
                    expressions  ,                   ## variables in data1 
                    cuts         = ''          , * , ## cuts for data1
                    expressions2 = None        ,
-                   cuts2        = None        ,                            
+                   cuts2        = ''          ,                            
                    first        = FIRST_ENTRY ,
                    last         =  LAST_ENTRY ,                                                                      
                    first2       = FIRST_ENTRY ,
@@ -198,7 +198,7 @@ def data_compare ( comparator   ,
                                  progress   = progress  ,
                                  use_frame  = use_frame , 
                                  parallel   = parallel  )
-    
+
     nd2 , weight2 = data_slice ( data2                   ,
                                  varlst2                 , 
                                  cuts       = cuts2      ,
@@ -211,7 +211,8 @@ def data_compare ( comparator   ,
                                  use_frame  = use_frame2 , 
                                  parallel   = parallel2  )
 
-    ## if several comparators  are provded, make a loop 
+    
+    ## in case  several comparators provded, make an explicit loop 
     if isinstance ( comparator , sequence_types ) :
         return tuple ( numpy_compare ( cmp        ,
                                        nd1        ,
@@ -373,8 +374,8 @@ def compare_variable ( var         ,
                        ## 
                        var2        = None        , 
                        data2       = None        ,
-                       cuts2       = None        ,
-                       cut_range2  = None        ,
+                       cuts2       = ''          ,
+                       cut_range2  = ''          ,
                        first2      = FIRST_ENTRY ,
                        last2       = LAST_ENTRY  ,
                        ## 
@@ -421,19 +422,22 @@ def compare_variable ( var         ,
                              last       = last2      ,
                              progress   = progress   ,
                              parallel   = parallel   )
-     
+
+    if hasattr ( data  , 'soft_copy' ) : data  = data .soft_copy() 
+    if hasattr ( data2 , 'soft_copy' ) : data2 = data2.soft_copy() 
+
     ## (1) vizual comparison of distributions 
-    histos = compare_ecdfs ( ecdf1   = ecdf1   ,
-                             ecdf2   = ecdf2   ,
-                             N       = N       , 
-                             density = density ,
-                             fill    = fill    ,
-                             draw    = draw    )
-    
+    histos = ecdf_compare ( ecdf1   = ecdf1   ,
+                            ecdf2   = ecdf2   ,
+                            N       = N       , 
+                            density = density ,
+                            fill    = fill    ,
+                            draw    = draw    )
+
     
     ## unpack (W)ECDFs 
-    data1 , weight1 = ecdf1.raw_data()
-    data2 , weight2 = ecdf2.raw_data()
+    data1 , weight1 = ecdf1.raw_data ()
+    data2 , weight2 = ecdf2.raw_data ()
     
     ## run comparators
     with_weight  = not weight_trivial ( weight1 ) or not weight_trivial ( weight2 )
@@ -458,8 +462,11 @@ def compare_variable ( var         ,
     
     for c in comparators :
         
+        if hasattr ( data  , 'soft_copy' ) : data  = data .soft_copy() 
+        if hasattr ( data2 , 'soft_copy' ) : data2 = data2.soft_copy() 
+
         r = numpy_compare ( c       ,
-                            data1   = data1   ,
+                            data1   = data    ,
                             data2   = data2   ,
                             weight1 = weight1 ,
                             weight2 = weight2 )
@@ -470,6 +477,7 @@ def compare_variable ( var         ,
         row    = ( c.method , ) + tuple ( row )
 
         rows.append ( row ) 
+        
 
     rows  =  [ header ] + rows
      

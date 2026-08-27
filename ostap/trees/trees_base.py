@@ -182,7 +182,7 @@ def tree_branches ( tree , pattern = '' , *args ) :
     if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invalid type of `tree` argument" )
     if not valid_pointer ( tree )              : raise ValueError ( "TTree* points to null"           ) 
     ##
-    vlst = tuple ( sorted ( b.GetName() for b in tree.GetListOfBranches() ) )
+    vlst = tuple ( sorted ( set ( b.GetName() for b in tree.GetListOfBranches() ) ) ) 
     if not vlst or not pattern : return vlst 
 
     # =========================================================================
@@ -229,7 +229,7 @@ def tree_leaves ( tree , pattern = '' , *args ) :
     if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invalid type of `tree` argument" )
     if not valid_pointer ( tree )              : raise ValueError ( "TTree* points to null"           ) 
     
-    vlst =  tuple ( sorted ( v.GetName()  for v in tree.GetListOfLeaves() ) ) 
+    vlst =  tuple ( sorted ( set ( v.GetName()  for v in tree.GetListOfLeaves() ) ) ) 
     if not vlst or not pattern : return vlst 
 
     if isinstance ( pattern , string_types ) : pattern  = [ pattern ]

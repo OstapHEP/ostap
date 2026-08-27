@@ -1302,15 +1302,21 @@ def tree_slice ( tree                       ,
         
         ## run internal ROOT machinery 
         num = tree.Draw ( vars , the_cuts , "goff" , last - first , first )
-        num = tree.GetSelectedRows ()    
+        if 0 > num : raise ValueError ( "Negative from TTree.Draw('goff')    : %d" % num ) 
+        num = tree.GetSelectedRows ()
+        if 0 > num : raise ValueError ( "Negative from TTree.GetSelectedRows : %d" % num ) 
+        
         if tree.GetEstimate() < num :
             tree.SetEstimate ( num )
             logger.debug ( 'Re-run Draw(goff) machinery' ) 
             num = tree.Draw ( vars , the_cuts , "goff" , last - first , first )
+            if 0 > num : raise ValueError ( "Negative from TTree.Draw('goff')    : %d" % num ) 
             num = tree.GetSelectedRows ()
-            
-        assert num <= tree.GetEstimate  () , "Something wrong with SetEstimate/GetEstimate/GetSelectedRows"
-            
+            if 0 > num : raise ValueError ( "Negative from TTree.GetSelectedRows : %d" % num ) 
+
+        if tree.GetEstimate() > num :
+            raise ValurError ( "Something wrong with SetEstimate/GetEstimate/GetSelectedRows" )
+
         for k, v  in enumerate ( varlst ) :
             result.append ( numpy.array ( numpy.frombuffer ( tree.GetVal ( k ) , count = num , dtype = float ) , copy = True ) )
         if cuts   :
@@ -1319,17 +1325,18 @@ def tree_slice ( tree                       ,
         ## reset estimate to the previous value
         tree.SetEstimate ( ge ) 
 
-    if not result :
-        return () , None 
+    if not result : return () , None 
 
     if   not cuts         : weights = None
     elif not weight_total : weights = None 
-    else : 
-        weights = result [ -1]
-        result  = result [:-1]
+    else :
+        
+        weights = result [   -1 ]
+        result  = result [  :-1 ]
+        
         ## remove totally trivial weights 
         if numpy.all ( weights == 1 ) : weights = None 
-    
+
     if structured :
         
         dt   = numpy.dtype ( [ ( v , float ) for v in varlst ] )

@@ -204,9 +204,11 @@ def _h_new_clone_ ( self , name = '' , title = '' , prefix = '' , suffix = '' ) 
     """
     ## 
     name = name.strip()
-    ## 
+    ##
     if not name : name = hID ( prefix = prefix        , suffix = suffix )
-    else        : name = hID ( prefix = prefix + name , suffix = suffix )
+    else        :
+        if prefix and not prefix.endswith    ('_') : prefix = prefix + '_'
+        name = hID ( prefix = prefix + name , suffix = suffix )
     #
     ## replace blanks
     name = name.replace ( ' ' , '_' ) 
@@ -5395,7 +5397,7 @@ def _h1_rescale_ ( h1 , factor = 1 ) :
     >>> h1 = ...
     >>> h2 = h1.rescale_bins ( h1 , 1 )    
     """
-    return _h1_transform_ ( h1 , lambda x , y : ( 0.5 * factor / x.error() ) * y , prefix = 'rescale' )
+    return _h1_transform_ ( h1 , lambda x , y : ( 0.5 * factor / x.error() ) * y , prefix = 'rescale_' )
 
 ROOT.TH1F. rescale_bins = _h1_rescale_ 
 ROOT.TH1D. rescale_bins = _h1_rescale_ 
@@ -5416,7 +5418,7 @@ def _h2_rescale_ ( h2 , factor = 1 ) :
     >>> h2 = h1.rescale_bins ( h1 , 1 )
     
     """
-    return _h2_transform_ ( h2 , lambda x , y , z : ( 0.25 * factor / x.error() / y.error() ) * z , prefix = 'rescale')
+    return _h2_transform_ ( h2 , lambda x , y , z : ( 0.25 * factor / x.error() / y.error() ) * z , prefix = 'rescale_')
 
 ROOT.TH2F. rescale_bins = _h2_rescale_ 
 ROOT.TH2D. rescale_bins = _h2_rescale_
@@ -5438,7 +5440,7 @@ def _h3_rescale_ ( h3 , factor = 1 ) :
     """
     return _h3_transform_ ( h3 ,
                             lambda x , y , z, v : ( 0.125 * factor / ( x.error() * y.error() * z.error () ) * v ) ,
-                            prefix = 'rescale' )
+                            prefix = '_rescale' )
 
 ROOT.TH3F. rescale_bins = _h3_rescale_ 
 ROOT.TH3D. rescale_bins = _h3_rescale_ 
@@ -8458,7 +8460,7 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
 #  @endcode
 #  Histogram is transformed as raw histigram (no Jacobian correction is applied)
 def _h1_transform_x_numbers_ ( h1 , fun ) :
-    """ Make a histogram transfromation:
+    """ Make a histogram transformation:
     H(x)  ->  H'(y(x))
     where transformation is defined  y=fun(x)
     >>> h  = ...
