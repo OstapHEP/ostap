@@ -25,7 +25,7 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
-    /// creates several formulae at ne go 
+    /// creates several formulae at one go 
     Formulae
     ( const TTree*                    tree        ,
       const std::vector<std::string>& expressions ) ;
@@ -62,7 +62,7 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
-    /// create several formulae at once     
+    /// create several formulae at one go      
     FormulaVars
     ( const RooArgList&               vars        ,
       const std::vector<std::string>& expressions ) ;

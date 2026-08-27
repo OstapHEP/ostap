@@ -23,21 +23,21 @@ Ostap::Formulae::Formulae
   : m_formulae () 
 {
   Ostap::Assert ( nullptr != tree                    ,
-		  "Invalid TTree!"                   ,
-		  "Ostap::Formulae"                  ,
-		  INVALID_TREE , __FILE__ , __LINE__ ) ;
+                  "Invalid TTree!"                   ,
+                  "Ostap::Formulae"                  ,
+                  INVALID_TREE , __FILE__ , __LINE__ ) ;
   //
   m_formulae.reserve ( expressions.size() ) ;
   for ( const auto& expr : expressions )
-    {
-      auto f = std::make_unique<Ostap::Formula> ( expr , tree ) ;
-      Ostap::Assert ( f && f->ok ()                         ,
-		      "Invalid expression:" + expr          ,
-		      "Ostap::Formulae"                     ,
-		      INVALID_FORMULA , __FILE__ , __LINE__ ) ;
-      //
-      m_formulae.push_back ( std::move ( f ) ) ;
-    }
+  {
+    auto f = std::make_unique<Ostap::Formula> ( expr , tree ) ;
+    Ostap::Assert ( f && f->ok ()                         ,
+                    "Invalid expression:" + expr          ,
+                    "Ostap::Formulae"                     ,
+                    INVALID_FORMULA , __FILE__ , __LINE__ ) ;
+    //
+    m_formulae.push_back ( std::move ( f ) ) ;
+  }
 }
 // ============================================================================
 // create several formulae in one go     
@@ -96,15 +96,15 @@ void Ostap::FormulaVars::make_vars
   m_formulae.clear() ;
   m_formulae.reserve ( expressions.size() ) ;
   for ( const auto& expr : expressions )
-    {
-      auto f = makeFormula ( expr , vars ) ;
-      Ostap::Assert ( f && f->ok ()                         ,
-                      "Invalid expression:" + expr          ,
-                      "Ostap::FormulaVars"                  ,
-                      INVALID_FORMULA , __FILE__ , __LINE__ ) ;
-      //
-      m_formulae.push_back ( std::move ( f ) ) ;
-    }
+  {
+    auto f = makeFormula ( expr , vars ) ;
+    Ostap::Assert ( f && f->ok ()                         ,
+                    "Invalid expression:" + expr          ,
+                    "Ostap::FormulaVars"                  ,
+                    INVALID_FORMULA , __FILE__ , __LINE__ ) ;
+    //
+    m_formulae.push_back ( std::move ( f ) ) ;
+  }
 }
 // ============================================================================
 //                                                                     The END 

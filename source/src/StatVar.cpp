@@ -1403,7 +1403,7 @@ Ostap::StatusCode Ostap::StatVar::statVars
   const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
-  /// formulae for exressons
+  /// formulae for expressions 
   const Ostap::Formulae                 formulae { data , expressions } ;  
   const std::unique_ptr<Ostap::Formula> cuts     { Ostap::makeFormula ( selection , data , true ) } ;
   const bool                with_cuts = cuts && cuts->ok() ;
@@ -1466,7 +1466,7 @@ Ostap::StatusCode Ostap::StatVar::statVars
   const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
-  /// formulae for exressons
+  /// formulae for expressions
   const Ostap::Formulae                 formulae { data , expressions } ;  
   const std::unique_ptr<Ostap::Formula> cuts     { Ostap::makeFormula ( selection , data , true ) } ;  
   // 
@@ -1529,7 +1529,7 @@ Ostap::StatVar::statVars
   const Ostap::EventIndex the_last    = std::min ( last , num_entries ) ;
   if ( the_last <= first   ) { return Ostap::StatusCode::SUCCESS ; }
   //
-  /// formulae for exressons
+  /// formulae for expressions
   const Ostap::FormulaVars                 formulae { data , expressions } ;    
   const std::unique_ptr<Ostap::FormulaVar> cuts     { Ostap::makeFormula ( selection , data , true ) } ;
   //
