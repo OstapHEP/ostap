@@ -21,6 +21,7 @@
    1. more tweaks & improvement for `histo_dump` function, from now it has three distinct regimes: `HIST`, `ERR` and `FUN`
    1. merge `ostap.stats.data_compare.py` and `ostap.tools.daat_compare.py` modules into single module
    1. some improvement for `Ostap::Math::(W)EPDF`
+   1. add helper `soft_copy` method for data-sources 
    
 ## Bug fixes 
 
@@ -32,7 +33,7 @@
 ## New features
 
   1. set of tiny tweaks for databases
-  1. Add tow new GoF Adversarial Validaiton methods, based on PyTorch and Keras.
+  1. Add two new GoF Adversarial Validaiton methods, based on PyTorch and Keras.
      They are not expected to have better CPU performance, but they can be useful
      for cross-checks
   1. Add treatment of negative weigths for all other Adversarial Vaildation GoF estimators 

@@ -3912,7 +3912,7 @@ _new_methods_ += [
 #  copy    =  dataset.copy () 
 #  @endcode 
 def _ds_copy_ ( dataset , name = None ) :
-    """" Copy dataset/call for copy-constuctor
+    """ Copy dataset/call for copy-constructor
     >>> dataset = ...
     >>> copied  =  dataset.copy ()
     """
@@ -3924,6 +3924,32 @@ def _ds_copy_ ( dataset , name = None ) :
 ROOT.RooAbsData.copy         = _ds_copy_
 ROOT.RooAbsData.__copy__     = _ds_copy_
 ROOT.RooAbsData.__deepcopy__ = _ds_copy_
+
+_new_methods_ += [
+    ROOT.RooAbsData.copy         , 
+    ROOT.RooAbsData.__copy__     , 
+    ROOT.RooAbsData.__deepcopy__ ,
+]
+
+# ===============================================================================
+## "copy" RooAbsData
+#  Fake copy of RooAbsData object
+#   @code
+#   data = ...
+#   copy = data.soft_copy() 
+#   @endcode 
+def _rad_soft_copy_ ( data ) :
+    """ `Fake-copy' of RooAbsData object
+    >>> data = ...
+    >>> copy = data.soft_copy() 
+    """
+    return data
+
+ROOT.RooAbsData . soft_copy = _rad_soft_copy_
+
+_new_methods_ += [
+    ROOT.RooAbsData.soft_copy , 
+]
 
 ## add sweetviz-based methods 
 import ostap.stats.sweet_viz

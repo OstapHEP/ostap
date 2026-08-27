@@ -269,8 +269,7 @@ def tree_branch( tree , branch ) :
 
 ROOT.TTree.branch = tree_branch
 
-
-## vaild types 
+## valid types 
 add_chain_types = ( ROOT.TChain , ) + string_types
 # =============================================================================
 ## extending the existing chain 
@@ -279,8 +278,7 @@ def _tc_iadd_ ( self ,  other ) :
     >>>  chain  = ...
     >>>  chain += 'myfile.root'
     >>>  chain += ( 'myfile1.root' , 'myfile2.root' )    
-    """
-    
+    """    
     if isinstance ( other , ROOT.TChain ) :
 
         ## no self-duplication 
@@ -322,8 +320,6 @@ def _tc_add_ ( self ,  other ) :
 ROOT.TChain.__iadd__ = _tc_iadd_
 ROOT.TChain.__add__  = _tc_add_
 ROOT.TChain.__radd__ = _tc_add_
-
-
 
 # =============================================================================
 ## get the chain of reduced size (in terms of number of input files)
@@ -386,6 +382,40 @@ def _rc_getitem_ ( self , index ) :
 
 ROOT.TChain.__getitem__ = _rc_getitem_
 
+
+# ===============================================================================
+## "copy" TTree
+#  Fake copy of TTree object
+#   @code
+#   tree = ...
+#   copy  = tree.soft_copy() 
+#   @endcode 
+def _rt_soft_copy_ ( tree ) :
+    """ `Fake-copy' of TTree object
+    >>> tree = ...
+    >>> copy  = tree.soft_copy() 
+    """
+    return tree
+
+# ===============================================================================
+## "copy" TChain
+#  "Fake-copy" of TChain object
+#   @code
+#   chain = ...
+#   copy  = chain.copy() 
+#   @endcode 
+def _rc_soft_copy_ ( chain ) :
+    """ `Fake-copy' of TChain object
+    >>> chain = ...
+    >>> copy  = chain.soft_copy()
+    """
+    nc  = ROOT.TChain ( chain.GetName() )
+    nc += chain.files
+    return nc
+
+ROOT.TTree  .soft_copy = _rt_soft_copy_
+ROOT.TChain .soft_copy = _rc_soft_copy_
+
 # ===============================================================================
 ## Updated constructor for ROOT.TChain with (optional) list of input files
 #  @code
@@ -446,7 +476,10 @@ _new_methods_ = (
     ROOT.TChain.__getitem__  , 
     ROOT.TChain.__getslice__ ,     
     ## 
-    ROOT.TChain.__init__     , 
+    ROOT.TChain.__init__     ,
+    ## 
+    ROOT.TTree .soft_copy    , ## fake/soft copy
+    ROOT.TChain.soft_copy    , ## fake/soft copy 
 )
 # =============================================================================
 if '__main__' == __name__ :
