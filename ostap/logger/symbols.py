@@ -120,6 +120,8 @@ __all__     = (
     'iteration'           , ## 々
     'kitchen_knife'       , ## ➖
     'langle'              , ## 〈
+    'label'               , ## 🏷️
+    'leaf'                , ## 🍁
     'leaves'              , ## 🍃  (wide)
     'less_or_equal'       , ## ≤
     'light_bulb'          , ## 💡  (wide)
@@ -171,7 +173,10 @@ __all__     = (
     'subscript_k'         , ## ₖ    
     'sub_min'             , ## ₘᵢₙ
     'sub_max'             , ## ₘₐₓ
-    'sum_symbol'          , ## ∑
+    'sub_mean'            , ## ₘₑₐₙ
+    'sub_rms'             , ## ᵣₘₛ
+    'sup_eff'             , ## ᵉᶠᶠ
+    'sum_symbol'          , ## ∑    
     'superscript_map'     , ## mapping dict
     'symmetry'            , ## ⌯
     'tape'                , ## ➿
@@ -244,8 +249,9 @@ minus_plus       = '∓'  if show else '-/+'
 ditto            = '〃' if show else '-//-'
 
 tree             = '🌴 ' if show else ''
-chain            = '⛓ '  if show else '' 
-branch           = '⸙'  if show else '' 
+chain            = '⛓ ' if show else '' 
+branch           = '⸙'  if show else ''
+leaf             = '🍁' if show else '' 
 leaves           = '🍃 ' if show else '' 
 cabinet          = '🗄 ' if show else '' 
 frame            = '🖼 ' if show else '' 
@@ -453,6 +459,9 @@ def labels ( N , labs = () )  :
         
     for k in range ( q , N ) : yield '%d' % k
 
+    
+label = '🏷️' if show else 'label'
+    
 # ============================================================================
 # Mapping tables
 superscript_map = str.maketrans({
@@ -479,8 +488,11 @@ script_u = to_script ( 'u' )
 script_v = to_script ( 'v' )
 script_w = to_script ( 'w' )
 
-sub_min  = 'ₘᵢₙ' if show else 'min'
-sub_max  = 'ₘₐₓ' if show else 'max'
+sub_min  = 'ₘᵢₙ'  if show else '-min'
+sub_max  = 'ₘₐₓ'  if show else '-max'
+sub_rms  = 'ᵣₘₛ'  if show else '-rms'
+sub_mean = 'ₘₑₐₙ' if show else '-mean'
+sup_eff  = 'ᵉᶠᶠ'  if show else '-eff'
 
 # =============================================================================
 if '__main__' == __name__ :

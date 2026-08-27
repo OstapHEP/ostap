@@ -514,7 +514,7 @@ class MIXnp(GoFnp) :
     def weights_supported ( self ) :
         """`weights_supported` : Are weights supported by this estimator?
         """
-        return True
+        return False 
 
     # =========================================================================
     ## Are weights supported by this GoF estimator?
@@ -540,7 +540,7 @@ class MIXnp(GoFnp) :
         """`k_max` : number of nearest neighbors to test
         """
         return self._k_max 
-    
+
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -552,6 +552,13 @@ class MIXnp(GoFnp) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
+        ## weights 
+        w1_trivial = weight_trivial ( weight1 )
+        w2_trivial = weight_trivial ( weight2 )
+
+        if not self.weights_supported :
+            if not w1_trivial : raise ValueError (  "weight1 must be *trivial*" )
+            if not w2_trivial : raise ValueError (  "weight2 must be *trivial*" )
 
         shape1 = data1.shape
         shape2 = data2.shape
@@ -563,58 +570,26 @@ class MIXnp(GoFnp) :
         ## normalize
         if normalize and self.normalize : uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
 
-        ## check vaildity and consitency of input parameters 
+        ## check validity and consitency of input parameters 
         check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) )
         
         ## 
         n1 = len ( uds1 ) 
         n2 = len ( uds2 ) 
-                
-        data       = numpy.vstack       ( [ uds1  , uds2 ]    )
-        labels     = numpy.array        ( [ 1 ] * n1 + [ 0 ] * n2  )
-
-        ## weights 
-        w1_trivial = weight_trivial ( weight1 )
-        w2_trivial = weight_trivial ( weight2 )
         
-        ## combine weights, if needed 
-        if   w1_trivial and w2_trivial : weights = None
-        else : 
-            if weight1 is None : weight1 = numpy.ones ( n1 )
-            if weight2 is None : weight2 = numpy.ones ( n2 )            
-            weights = numpy.concatenate ( [ weight1 , weight2 ] )
+        data   = numpy.vstack ( [ uds1  , uds2 ]         )
+        labels = numpy.array  ( [ 1 ] * n1 + [ 0 ] * n2  )
         
-        ## from sklearn.neighbors import NearestNeighbors
-        ## nn = NearestNeighbors ( **self.params )
-        ## nn.fit ( data )
-        ## _  , indices      = nn.kneighbors ( data )        
-        ## actual_neighbors = indices[ : , 1: ]
-        
+        ## get the nearest neighbors indices 
         actual_neighbors = nearest_neighbors ( data , **self.params )
         
         source_labels    = labels [ : , numpy.newaxis ] # (N, 1)
         neighbor_labels  = labels [ actual_neighbors  ] # (N, K)
 
-        # I(i, k) = 1 
-        
+        ## I(i, k) = 1 if neighbor has the same label/source 
         I_ik = ( source_labels == neighbor_labels ) . astype ( int )
         
-        if weights is None :
-            result = numpy.sum ( I_ik ) / ( 1.0 * self.k_max * ( n1 + n2 ) )
-            return float ( result ) 
-
-        w_i = weights [ : , numpy.newaxis ]  ## (N, 1)
-        w_k = weights [ actual_neighbors  ]  ## (N, K)
-
-        ## product of weights : correct only when all weights are non-negative 
-        pair_weights = w_i * w_k            ## (N, K)
-        
-        weighted_numerator = numpy.sum ( I_ik * pair_weights )
-        
-        total_weight_sum   = numpy.sum ( pair_weights )
-        
-        result = weighted_numerator / total_weight_sum
-
+        result = numpy.sum ( I_ik ) / ( 1.0 * self.k_max * ( n1 + n2 ) )
         return float ( result ) 
     
 # =============================================================================
@@ -794,8 +769,8 @@ class PPDnp(GoFnp) :
         """
         ##
         if not self.weights_supported :
-            assert weight_trivial ( weight1 ) , "weight1 must be *trivial*"
-            assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
+            if not weight_trivial ( weight1 ) : raise ValueError  ( "weight1 must be *trivial*" ) 
+            if not weight_trivial ( weight2 ) : raise ValueError  ( "weight2 must be *trivial*" )
             weight1 = None
             weight2 = None
 

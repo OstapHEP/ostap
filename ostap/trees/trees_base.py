@@ -13,17 +13,18 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'tree_nonzero'  , ## TTree is valid and non-empty 
-    'tree_valid'    , ## Ttree is valid and non-empty
-    'tree_path'     , ## full path of TTree in the TFile 
-    'tree_branches' , ## list of branches 
-    'tree_leaves'   , ## list of leaves 
-    'tree_aliaces'  , ## dict of aliaces 
-    'chain_files'   , ## list of files for the TChain 
-    'chain_nfiles'  , ## number of files for the TChain 
-    'chain_nFiles'  , ## number of files for the TChain
-    'tree_branch'   , ## get the branch by name 
-    'tree_leaf'     , ## get the leaf by name 
+    'tree_nonzero'    , ## TTree is valid and non-empty 
+    'tree_valid'      , ## Ttree is valid and non-empty
+    'tree_path'       , ## full path of TTree in the TFile 
+    'tree_branches'   , ## list of branches 
+    'tree_leaves'     , ## list of leaves 
+    'tree_aliases'    , ## dict of aliaces 
+    'chain_files'     , ## list of files for the TChain 
+    'chain_nfiles'    , ## number of files for the TChain 
+    'chain_nFiles'    , ## number of files for the TChain
+    'tree_branch'     , ## get the branch by name 
+    'tree_leaf'       , ## get the leaf by name 
+    'active_branches' , ## get active branches 
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import string_types, sequence_types  
@@ -84,9 +85,8 @@ def tree_path ( tree ) :
     >>> path = tree.full_path 
     >>> path = tree.fullpath 
     """
-    if not vaild_pointer ( tree )              : raise ValueError ( "Invalid (nullptr) `tree` argument" )
-    if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invaild type of `tree` argument"   )
-    
+    if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invalid type of `tree` argument" )
+    if not valid_pointer ( tree )              : raise ValueError ( "TTree* points to null"           ) 
     ## 
     rdir = tree.GetDirectory()
     if valid_pointer ( rdir ) :
@@ -179,24 +179,28 @@ def tree_branches ( tree , pattern = '' , *args ) :
     >>> for b in lst : print b
     
     """
-    assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
-        "tree_branches: Invalid `tree' argument!"
+    if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invalid type of `tree` argument" )
+    if not valid_pointer ( tree )              : raise ValueError ( "TTree* points to null"           ) 
     ##
     vlst = tuple ( sorted ( b.GetName() for b in tree.GetListOfBranches() ) )
     if not vlst or not pattern : return vlst 
-    
-    import re
-    
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        c    = re.compile ( pattern , *args )
-        lst  = sorted ( v for v in vlst if c.match ( v ) ) 
-        return lst 
-    except : # ================================================================
-        # =====================================================================
-        logger.error ('branches: exception is caught, skip it' , exc_info = True ) 
 
+    # =========================================================================
+    if pattern and isinstance ( pattern , string_types ) : # ==================
+        # =====================================================================
+        import re        
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            c    = re.compile ( pattern , *args )
+            lst  = sorted ( v for v in vlst if c.match ( v ) ) 
+            return tuple ( lst )
+            # =================================================================
+        except : # ============================================================
+            # =================================================================
+            logger.error ( 'branches: exception is caught, skip it' , exc_info = True ) 
+            # =================================================================
+            
     return vlst 
 
 ROOT.TTree.branches = tree_branches
@@ -222,8 +226,8 @@ def tree_leaves ( tree , pattern = '' , *args ) :
     >>> lst = tree.leaves( '.*(muon).*', re.I )
     >>> for l in lst : print l
     """
-    assert valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree ) , \
-        "tree_leaves: Invalid `tree' argument!"
+    if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invalid type of `tree` argument" )
+    if not valid_pointer ( tree )              : raise ValueError ( "TTree* points to null"           ) 
     
     vlst =  tuple ( sorted ( v.GetName()  for v in tree.GetListOfLeaves() ) ) 
     if not vlst or not pattern : return vlst 
@@ -245,6 +249,27 @@ def tree_leaves ( tree , pattern = '' , *args ) :
     return tuple ( sorted ( lst ) ) 
 
 ROOT.TTree.leaves   = tree_leaves
+
+# ==============================================================================
+## get active branches
+#  @code
+#  tree = ...
+#  active = tree.active_branches() 
+#  @endcode
+def active_branches ( tree ) :
+    """ Get the active branches
+    >>> tree = ...
+    >>> active = tree.active_branches() 
+    """
+    if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invalid type of `tree` argument" )
+    if not valid_pointer ( tree )              : raise ValueError ( "TTree* points to null"           ) 
+
+    branches = tree_branches ( tree ) 
+    active   = [ b for b in branches if tree.GetBranchStatus ( b ) ]
+    return tuple ( active ) 
+    
+# ==============================================================================
+ROOT.TTree.active_branches = active_branches 
 
 # ==============================================================================
 ## Get the leaf with the certain name 
@@ -277,12 +302,12 @@ ROOT.TTree.branch = tree_branch
 ## Get the dictionary of aliaces:
 #  @code
 #  tree = ...
-#  aliaces = tree.aliaces () 
+#  aliases = tree.aliases () 
 #  @endcode
-def tree_aliaces ( tree ) :
-    """ Get the dictionary of aliaces:
+def tree_aliases ( tree ) :
+    """ Get the dictionary of aliases:
     >>> tree = ...
-    >>> aliaces = tree.aliaces ()
+    >>> aliases = tree.aliases ()
     """
     result = {}
     alist  = tree.GetListOfAliaces()
@@ -291,7 +316,7 @@ def tree_aliaces ( tree ) :
         result [ str ( a.GetName() ) ] = str ( a.GetTitle () )
     return result 
 
-ROOT.TTree.aliaces = tree_aliaces
+ROOT.TTree.aliases = tree_aliases
 
 ## valid types 
 add_chain_types = ( ROOT.TChain , ) + string_types
@@ -476,25 +501,28 @@ _new_methods_ = (
     tree_leaves             , ## list of leaves for the TTree
     tree_branch             , ## get the branch by name 
     tree_leaf               , ## get the leaf by name 
+    active_branches         , ## get active branches 
     ##
-    ROOT.TTree .__nonzero__ , 
-    ROOT.TChain.__nonzero__ , 
-    ROOT.TTree .__bool__    , 
-    ROOT.TChain.__bool__    ,
-    ROOT.TTree .__len__     , 
-    ROOT.TChain.__len__     ,
+    ROOT.TTree .__nonzero__    , 
+    ROOT.TChain.__nonzero__    , 
+    ROOT.TTree .__bool__       , 
+    ROOT.TChain.__bool__       ,
+    ROOT.TTree .__len__        , 
+    ROOT.TChain.__len__        ,
     ##
-    ROOT.TTree. files       ,
-    ROOT.TTree. nFiles      ,    
-    ROOT.TChain. files      ,
-    ROOT.TChain.nFiles      ,    
+
+    ROOT.TTree. files          ,
+    ROOT.TTree. nFiles         ,    
+    ROOT.TChain. files         ,
+    ROOT.TChain.nFiles         ,    
     ## 
-    ROOT.TTree.branches     ,
-    ROOT.TTree.leaves       ,
-    ROOT.TTree.branch       ,
-    ROOT.TTree.leaf         ,
-    ROOT.TTree.aliaces      ,
-    ## 
+    ROOT.TTree.branches        ,
+    ROOT.TTree.leaves          ,
+    ROOT.TTree.branch          ,
+    ROOT.TTree.leaf            ,
+    ROOT.TTree.active_branches , 
+    ROOT.TTree.aliases         ,
+    ##    ## 
     ROOT.TChain.__iadd__     , 
     ROOT.TChain.__add__      , 
     ROOT.TChain.__radd__     , 

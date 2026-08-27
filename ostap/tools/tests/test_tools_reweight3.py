@@ -21,7 +21,7 @@ from   ostap.logger.colorized   import allright
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
-from   ostap.logger.symbols     import iteration, plus_minus, script_p
+from   ostap.logger.symbols     import iteration, plus_minus, script_p, sup_eff 
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
@@ -305,16 +305,14 @@ else            :  logger.warning   ( 'HepML    is not available!' )
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
-from ostap.stats.gof_np       import  ( MIXnp           as COMPARATOR4 , 
-                                        KullbackLeibler as COMPARATOR3 , 
+from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATOR3 , 
                                         Hotelling       as COMPARATOR2 , 
                                         Mahalanobis     as COMPARATOR1 ) 
 
 from ostap.stats.data_compare import data_compare     
 comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR2 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR3 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR4 ( parallel = True , nToys = 100 ) )
+                COMPARATOR3 ( parallel = True , nToys = 100 ) ) 
 
 if has_lightgbm :  
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
@@ -337,7 +335,7 @@ if False and has_sklearn:
     
 # ============================================================================
 ## The table of global comparison statistics 
-header    = ( '#%s' % iteration , '#eff' ) + tuple ( c.method for c in comparators ) 
+header    = ( '#%s' % iteration , '#%s' % sup_eff ) + tuple ( c.method for c in comparators ) 
 glob_stat = [ header ]
 alignment = 'lc' + 'c' * len ( comparators )           
 
@@ -656,7 +654,7 @@ if has_catboost : # ===========================================================
 # ============================================================================
 ## Compare the quality of all reweighters 
 # ============================================================================
-header    = ( 'Weight' , '#eff' ) + tuple ( c.method for c in comparators ) 
+header    = ( 'Weight' , '#%s' % sup_eff ) + tuple ( c.method for c in comparators ) 
 glob_stat = [ header ]
 for weight in weights :
     

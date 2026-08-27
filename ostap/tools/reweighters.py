@@ -448,8 +448,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return original_ratios, original_reweighted_weights
 
 
-
-
     def __fit_eval_stream( self       ,
                            stream_key ,
                            X_orig_sub ,
@@ -462,8 +460,10 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                  numpy.ones  ( len( X_targ_sub ) , dtype = numpy.float32 ) ] )
 
         if w_orig_sub is None and w_targ_sub is None :
-            w_comb   = None
+            w_comb       = None
             scale_factor = numpy.float32 ( len ( X_targ_sub ) / len ( X_orig_sub ) )
+            w_orig_scaled_for_tr = numpy.full(len(X_orig_sub), scale_factor, dtype=numpy.float32)
+            w_comb = numpy.hstack([w_orig_scaled_for_tr, numpy.ones(len(X_targ_sub), dtype=numpy.float32)])
         else :
             w_orig_abs = numpy.abs ( w_orig_sub ) if w_orig_sub is not None else numpy.ones ( len ( X_orig_sub ), dtype = numpy.float32 )
             w_targ_abs = numpy.abs ( w_targ_sub ) if w_targ_sub is not None else numpy.ones ( len ( X_targ_sub ), dtype = numpy.float32 )
@@ -479,8 +479,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         oof_raw = numpy.zeros( len( X_comb ), dtype = numpy.float32 )
 
         from sklearn.model_selection import StratifiedKFold
-        from sklearn.linear_model import LogisticRegression
-
         skf = StratifiedKFold ( n_splits     = self.n_splits     ,
                                 shuffle      = True              ,
                                 random_state = self.random_state )
@@ -493,39 +491,55 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             w_tr = w_comb[ train_idx ] if w_comb is not None else None
             w_va = w_comb[ val_idx ] if w_comb is not None else None
 
-            # 1. Train base booster model
             model, _ = self._train_single_model ( X_tr, y_tr, w_tr, X_va, y_va, w_va )
             stream_models.append( model )
             
-            # 2. Get raw probabilities via subclass polymorphism
             raw_val_p = self._predict_single_model ( model, X_va )
             if raw_val_p.ndim > 1 :
                 raw_val_p = raw_val_p[:, 1]
                 
             oof_raw[ val_idx ] = raw_val_p.astype ( numpy.float32, copy = False )
 
-        # 3. Fit global Platt scaling on OOF predictions
-        eps = 1e-6
-        oof_raw_clipped = numpy.clip ( oof_raw, eps, 1.0 - eps )
-        oof_logits = numpy.log ( oof_raw_clipped / ( 1.0 - oof_raw_clipped ) )
-
-        platt = LogisticRegression()
-        platt.fit ( oof_logits.reshape(-1, 1), y_comb, sample_weight = w_comb )
-
-        # Store models and calibrator tuple
-        self.__fitted_models[ stream_key ] = ( stream_models, platt )
-        
+        # --- FIX: Removed Platt calibration, using raw predictions ---
+        self.__fitted_models[ stream_key ] = stream_models 
         self.__scale_factors[ stream_key ] = scale_factor
+        self.__priors[ stream_key ]        = numpy.float32( 1.0 )
 
-        self.__priors[ stream_key ] = numpy.float32( 1.0 )
-
-        # Compute OOF calibrated predictions for original sample
-        oof_calib = platt.predict_proba ( oof_logits.reshape(-1, 1) )[:, 1]
-        p_orig = oof_calib[ : len ( X_orig_sub ) ]
+        p_orig = oof_raw[ : len ( X_orig_sub ) ]
+        
+        # Keep clipping to avoid division by zero
         p_orig_clipped = numpy.clip ( p_orig, numpy.float32 ( 1e-4 ) , numpy.float32( 1.0 - 1e-4 ) )
         
         ratios = p_orig_clipped / ( numpy.float32( 1.0 ) - p_orig_clipped )
-        return ratios / scale_factor
+        return ratios
+    
+    def __predict_stream_ratios( self, stream_key, X ):
+        
+        models = self.__fitted_models[ stream_key ]
+
+        ratios_list = []
+        for model in models :
+            p = self._predict_single_model ( model, X )
+            if p.ndim > 1 :
+                p = p[:, 1]
+                
+            eps = 1e-4
+            # --- FIX: Using raw model predictions without LogisticRegression calibration ---
+            p_clipped = numpy.clip ( p, numpy.float32 ( eps ), numpy.float32 ( 1.0 - eps ) )
+            
+            stream_ratios = p_clipped / ( numpy.float32( 1.0 ) - p_clipped )
+            ratios_list.append( stream_ratios )
+            
+        return numpy.mean ( ratios_list, axis = 0, dtype = numpy.float32 )
+
+    def _predict_single_model( self, model, X ):
+        best_iter = getattr( model, 'best_iteration_', None ) or getattr( model, 'best_iteration', None )
+        kwargs = {}
+        if best_iter is not None and best_iter > 0 :
+            kwargs[ 'ntree_end' ] = best_iter            
+        p = model.predict_proba( X, **kwargs )[:, 1]
+        return p.astype( numpy.float32, copy = False )
+
 
     def __normalize_and_clip( self   ,
                               ratios ,
@@ -538,29 +552,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return clipped_ratios * self.__norm_factor
     
 
-    def __predict_stream_ratios( self, stream_key, X ):
-        models, platt = self.__fitted_models[ stream_key ]
-        scale_factor  = self.__scale_factors[ stream_key ]
-
-        ratios_list = []
-        for model in models :
-            p = self._predict_single_model ( model, X )
-            if p.ndim > 1 :
-                p = p[:, 1]
-                
-            eps = 1e-4
-            p_clipped = numpy.clip ( p, eps, 1.0 - eps )
-            logits = numpy.log ( p_clipped / ( 1.0 - p_clipped ) )
-            
-            p_calib = platt.predict_proba ( logits.reshape(-1, 1) )[:, 1]
-            p_calib_clipped = numpy.clip ( p_calib, numpy.float32 ( eps ) , numpy.float32 ( 1.0 - eps ) )
-            
-            stream_ratios = ( p_calib_clipped / ( numpy.float32( 1.0 ) - p_calib_clipped ) ) / scale_factor
-            ratios_list.append( stream_ratios )
-            
-        return numpy.mean ( ratios_list, axis = 0, dtype = numpy.float32 )
-
-    
     # =========================================================================
     # Public Inference Method
     # =========================================================================
@@ -762,9 +753,9 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , None )
 
         callbacks = []
-        if early_stopping_rounds is not None and eval_set is not None :
-            callbacks.append ( lightgbm.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
-
+        if early_stopping_rounds is not None : 
+            callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
+            
         model = LightGBM.train ( params          = params          ,
                                  train_set       = trn_data        ,
                                  num_boost_round = num_boost_round ,
@@ -853,10 +844,6 @@ class XGBoostDensityReweighter ( DensityReweighter ):
     
         return params
 
-    def _predict_single_model( self, model, X ):
-        import xgboost as XGBoost
-        return model.predict( XGBoost.DMatrix ( X ) )
-    
     # =============================================================
     # Abstract Method Implementations
     # =============================================================
@@ -908,21 +895,18 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         best_iter = getattr ( model , "best_iteration" , None )
         if early_stopping_rounds is not None and best_iter is not None and 0 < best_iter :
             predict_kwargs [ 'iteration_range' ] = ( 0 , best_iter + 1 )
-
+            
         val_preds = model.predict ( dval , **predict_kwargs )
         return model , val_preds.astype ( numpy.float32 , copy = False )
-
-
+    
     def _predict_single_model( self, model, X ):
-        
-        best_iter = getattr ( model, 'best_iteration', 0 )
+        import xgboost as XGBoost
+        dmat = XGBoost.DMatrix ( X )
+        best_iter = getattr ( model, 'best_iteration', None )
         kwargs = {}
         if best_iter is not None and 0 < best_iter :
-            kwargs [ 'ntree_limit' ] = best_iter # or num_iteration
-            
-        import xgboost as XGBoost
-        dmat = XGBoost.DMatrix ( X    )
-        p    = model.predict   ( dmat , **kwargs )
+            kwargs [ 'iteration_range' ] = ( 0, best_iter + 1 )
+        p = model.predict ( dmat , **kwargs )
         return p.astype ( numpy.float32, copy = False )
         
 # =================================================================
@@ -1047,14 +1031,14 @@ class CatBoostDensityReweighter ( DensityReweighter ):
         val_preds = model.predict_proba ( val_pool ) [ : , 1 ]
         return model , val_preds.astype ( numpy.float32 , copy = False )
 
-
     def _predict_single_model( self, model, X ):
-        best_iter = getattr( model, 'best_iteration', 0 )
-        kwargs = {}
+        best_iter = getattr( model, 'best_iteration_', None ) or getattr( model, 'best_iteration', None )
+        kwargs    = {}
         if best_iter is not None and best_iter > 0 :
-            kwargs[ 'num_iteration' ] = best_iter            
-        p = model.predict( X, **kwargs )
+            kwargs[ 'ntree_end' ] = best_iter            
+        p = model.predict_proba( X, **kwargs )[:, 1]
         return p.astype( numpy.float32, copy = False )
+
 
 # ==============================================================================
 ## @class GBReweighter

@@ -2652,7 +2652,7 @@ _new_methods_ += [
 ## Print data set as table
 def _ds_table_ ( dataset                 ,
                  variables = []          ,
-                 cuts      = ''          , 
+                 cuts      = ''          , * ,  
                  cut_range = ''          , 
                  first     = FIRST_ENTRY ,
                  last      = LAST_ENTRY  ,

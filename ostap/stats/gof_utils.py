@@ -41,6 +41,8 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import ( plus_minus  , greek_lower_sigma ,
                                          subscript_A , subscript_K , subscript_C , 
                                          likelihood  , script_t    , script_p    ,
+                                         sub_min     , sub_max     ,
+                                         sub_mean    , sub_rms     , 
                                          infinity_pos as pos_infinity_symbol     )                                         
 from   ostap.logger.pretty      import pretty_float, pretty_row 
 from   ostap.plotting.color     import Orange, Green, Blue
@@ -592,6 +594,16 @@ def clip_pvalue ( pvalue , clip = 0.5 ) :
 # =============================================================================
 pvalue_types = num_types + ( VE , ) 
 # =============================================================================
+col_t_value = '%s-value'      %   script_t
+col_p_value = '%s-value [%%]' %   script_p
+col_n_sigma = '#%s'           %   greek_lower_sigma
+col_t_mean  = '%s%s'          % ( script_t , sub_mean ) 
+col_t_rms   = '%s%s'          % ( script_t , sub_rms  ) 
+col_t_min   = '%s%s'          % ( script_t , sub_min  )
+col_t_max   = '%s%s'          % ( script_t , sub_max  )
+col_t_unit  = '%s-unit'       %   script_t 
+
+# =============================================================================
 ## Format the row for GoF tables
 #  @code
 #  tvalue = ...
@@ -623,13 +635,14 @@ def format_row ( tvalue    = None ,
         
     if has_tvalue and has_pvalue and has_counter :
         
-        header = ( '%s-value'      % script_t ,
-                   '%s-mean'       % script_t ,
-                   '%s-rms'        % script_t ,
-                   '%s-min'        % script_t ,                
-                   '%s-max'        % script_t ,                
-                   '%s-unit'       % script_t , 
-                   '%s-value [%%]' % script_p , '#%s' % greek_lower_sigma ) 
+        header = ( col_t_value ,
+                   col_t_mean  , 
+                   col_t_rms   ,
+                   col_t_min   ,                
+                   col_t_max   ,                
+                   col_t_unit  ,  
+                   col_p_value ,
+                   col_n_sigma ) 
         
         mean       = counter.mean   ()
         rms        = counter.rms    () 
@@ -639,19 +652,19 @@ def format_row ( tvalue    = None ,
         row, unit  = pretty_row  ( *items , width = width , precision = precision )
         unit       = '[%s]' % unit if unit else unit
         
-        pv      = clip_pvalue  ( pvalue ) 
-        nsigma  = significance ( pv     ) ## convert  it to significance
+        pv         = clip_pvalue  ( pvalue ) 
+        nsigma     = significance ( pv     ) ## convert  it to significance
         ## 
         if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
 
         pvalue  = pvalue * 100
 
-        if isinstance ( pvalue , VE ) : pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
-        else                          : pvalue  = '%5.2f'         %   float ( pvalue )
+        if isinstance ( pvalue , VE )   : pvalue  = '%6.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
+        else                            : pvalue  = '%6.2f'         %   float ( pvalue )
         
         if   99 < float ( nsigma      ) : nsigma = pos_infinity_symbol 
-        elif isinstance ( nsigma , VE ) : nsigma = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
-        else                            : nsigma = '%.2f'          %   float ( nsigma ) 
+        elif isinstance ( nsigma , VE ) : nsigma = '%.2f %s %.2f'   % ( nsigma.value() , plus_minus , nsigma.error () )
+        else                            : nsigma = '%.2f'           %   float ( nsigma ) 
 
         row = row + ( unit , pvalue , nsigma )
         
@@ -659,9 +672,10 @@ def format_row ( tvalue    = None ,
 
     elif has_tvalue and has_pvalue :
         
-        header    = ( '%s-value'      % script_t , 
-                      '%s-unit'       % script_t , 
-                      '%s-value [%%]' % script_p , '#%s' % greek_lower_sigma ) 
+        header    = ( col_t_value , 
+                      col_t_unit  ,
+                      col_p_value ,
+                      col_n_sigma ) 
 
         items      = tvalue, 
         row, unit  = pretty_row  ( *items , width = width , precision = precision )
@@ -672,8 +686,8 @@ def format_row ( tvalue    = None ,
         if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
         
         pvalue  = pvalue * 100 
-        if isinstance ( pvalue , VE ) : pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
-        else                          : pvalue  = '%5.2f'         % float ( pvalue )
+        if isinstance ( pvalue , VE )   : pvalue  = '%6.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
+        else                            : pvalue  = '%6.2f'         % float ( pvalue )
 
         if   99 < float ( nsigma      ) : nsigma = pos_infinity_symbol 
         elif isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )        
@@ -684,7 +698,7 @@ def format_row ( tvalue    = None ,
 
     elif has_tvalue :
         
-        header    = ( '%s-value' % script_t  , '%s-unit' % script_t  )  
+        header     = col_t_value , col_t_unit 
         items      = tvalue, 
         row, unit  = pretty_row  ( *items , width = width , precision = precision )
         unit       = '[%s]' % unit if unit else unit

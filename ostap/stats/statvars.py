@@ -706,8 +706,6 @@ def data_statistic ( data               ,
             
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
 
-    print ( 'DATA_SATISTICS' , vnames , cuts , var_lst )
-    
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data  , cuts , *var_lst ) :
         sc   = sv.statVars ( data , vcnt , vnames , cuts , first , last ) 

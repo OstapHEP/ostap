@@ -67,7 +67,6 @@ def make_datasets ( n_samples = 5000 ,
     return target , original
 
 
-
 def make_datasets2 ( n_samples = 5000 ,
                     n_dim     =    3 ,
                     seed      = None ) :
@@ -158,16 +157,14 @@ else            :  logger.warning   ( 'HepML    is not available!' )
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
-from ostap.stats.gof_np       import  ( MIXnp           as COMPARATOR4 , 
-                                        KullbackLeibler as COMPARATOR3 , 
+from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATOR3 , 
                                         Hotelling       as COMPARATOR2 , 
                                         Mahalanobis     as COMPARATOR1 ) 
 
 from ostap.stats.data_compare import data_compare     
 comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR2 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR3 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR4 ( parallel = True , nToys = 100 ) )
+                COMPARATOR3 ( parallel = True , nToys = 100 ) ) 
 
 if has_lightgbm :  
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5

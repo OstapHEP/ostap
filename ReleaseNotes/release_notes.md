@@ -22,6 +22,7 @@
    1. merge `ostap.stats.data_compare.py` and `ostap.tools.daat_compare.py` modules into single module
    1. some improvement for `Ostap::Math::(W)EPDF`
    1. add helper `soft_copy` method for data-sources 
+   1. remove weight-support from `ostap.stats.gof_np.MIXnp`
    
 ## Bug fixes 
 
