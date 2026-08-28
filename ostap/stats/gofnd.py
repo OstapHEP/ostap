@@ -706,7 +706,7 @@ class DNN(GoF) :
                       sample  = self.sample  )
 
         if self.parallel : counter, _ = toys.run ( self.nToys , progress = self.progress , silent = self.silent ) 
-        else             : counter, _ = toys     ( self.nToys , progress = self.progress )
+        else             : counter, _ = toys     ( self.nToys , progress = self.progress , silent = self.silent )
         
         ## get ECDF from toys
         self.gof.ecdf    = toys.ecdf
@@ -926,7 +926,7 @@ class NLL(AGoF,Config) :
         
 
         if self.parallel : counter , _ = toys.run ( self.nToys , progress = self.progress , silent = self.silent ) 
-        else             : counter , _ = toys     ( self.nToys , progress = self.progress )
+        else             : counter , _ = toys     ( self.nToys , progress = self.progress , silent = self.silent )
                  
         ## get ECDF from toys
         self.__ecdf    = toys.ecdf

@@ -1314,8 +1314,9 @@ def tree_slice ( tree                       ,
             num = tree.GetSelectedRows ()
             if 0 > num : raise ValueError ( "Negative from TTree.GetSelectedRows : %d" % num ) 
 
-        if tree.GetEstimate() > num :
-            raise ValurError ( "Something wrong with SetEstimate/GetEstimate/GetSelectedRows" )
+        if tree.GetEstimate() < num :
+            e = tree.GetEstimate () 
+            raise ValueError ( "Something wrong with SetEstimate/GetEstimate/GetSelectedRows %d/%d" % ( num , e ) ) 
 
         for k, v  in enumerate ( varlst ) :
             result.append ( numpy.array ( numpy.frombuffer ( tree.GetVal ( k ) , count = num , dtype = float ) , copy = True ) )

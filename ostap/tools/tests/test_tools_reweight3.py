@@ -14,6 +14,12 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-01-20"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
+## ATTENTION! 
+import os 
+os.environ [ "OMP_NUM_THREADS"      ]  = "1"
+os.environ [ "MKL_NUM_THREADS"      ]  = "1"
+os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
+# =============================================================================
 from   ostap.core.pyrouts       import Ostap, VE  
 from   ostap.histos.histos      import h1_axis, h2_axes, h3_axes 
 from   ostap.utils.timing       import timing
@@ -64,7 +70,6 @@ tag_data    = 'DATA_tree'
 tag_mc      = 'MC_tree'
 
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
-dbname      = 'reweight3.db'
 
 small = numcpu () <= 8
 
@@ -88,34 +93,10 @@ xmax        = 15.0
 ymax        = 12.0 
 zmax        = 10.0 
 
-def generate_3d_correlated ( N ,
-                             xmax   = 10.0 ,
-                             ymax   = 10.0 ,
-                             zmax   = 10.0 , 
-                             rho_xy = 0.85 ,
-                             rho_xz = 0.70 ,
-                             rho_yz = 0.50 , seed = None ) :
-
-    if seed is not None: numpy.random.seed ( seed )
-    
-    cov_matrix = numpy.array ( [ [ 1.0    , rho_xy , rho_xz ] ,
-                                 [ rho_xy , 1.0    , rho_yz ] ,
-                                 [ rho_xz , rho_yz , 1.0    ] ] )
-    
-    raw = numpy.random.multivariate_normal ( [ 0.0 , 0.0 , 0.0 ] , cov_matrix , size = N )
-    
-    scaled = 1.0 / (1.0 + np.exp(-raw))
-    
-
-    scaled [ : , 0 ] *= xmax
-    scaled [ : , 1 ] *= ymax
-    scaled [ : , 2 ] *= zmax
-
-    for x, y, z in scaled :
-        yield float ( x ), float ( y ), float ( z )
-
+## prepare data for test 
 def prepare_data ( ) : 
-    #
+    """ Prepare data for test
+    """
         
     seed =  1234567890 
     random.seed ( seed ) 
@@ -309,29 +290,30 @@ from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATOR3 ,
                                         Hotelling       as COMPARATOR2 , 
                                         Mahalanobis     as COMPARATOR1 ) 
 
+cconf = { 'parallel' : True , 'nToys' : 100 , 'silent' : True , 'progress' : True } 
 from ostap.stats.data_compare import data_compare     
-comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR2 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR3 ( parallel = True , nToys = 100 ) ) 
+comparators = ( COMPARATOR1 ( **cconf ) ,
+                COMPARATOR2 ( **cconf ) ,
+                COMPARATOR3 ( **cconf ) ) 
 
 if has_lightgbm :  
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
-    comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) , ) 
+    comparators += ( COMPARATOR5 ( **cconf ) , ) 
 
 if has_xgboost:  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
-    comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) , ) 
+    comparators += ( COMPARATOR6 ( **cconf ) , ) 
 
 if has_catboost:  
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
-    comparators += ( COMPARATOR7 ( parallel = True , nToys = 100 ) , ) 
+    comparators += ( COMPARATOR7 ( **cconf ) , ) 
 
-if False and has_sklearn:    
+if has_sklearn:    
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
-    comparators += ( COMPARATOR8 ( parallel = True , nToys = 100 ) , )
+    comparators += ( COMPARATOR8 ( **cconf ) , )
     
     from ostap.stats.adval        import ADVAL_GBC   as COMPARATOR9
-    comparators += ( COMPARATOR9 ( parallel = True , nToys = 100 ) , ) 
+    comparators += ( COMPARATOR9 ( **cconf ) , ) 
     
 # ============================================================================
 ## The table of global comparison statistics 
@@ -450,7 +432,8 @@ converged   = False
 
 maxIter     = 6 if small else 11
 
-maxIter     = 0
+maxIter     = 4
+
 weighter    = None
 
 # =============================================================================
@@ -502,8 +485,8 @@ for iter in range ( 1 , maxIter + 1 ) :
             mcds               , ## what to be reweighted
             the_plots          , ## reweighting plots/setup
             dbname             , ## DBASE with reweighting constant 
-            delta      = 0.06  , ## stopping criteria
-            minmax     = 0.12  , ## stopping criteria
+            delta      = 0.10  , ## stopping criteria
+            minmax     = 0.20  , ## stopping criteria
             maxchi2    = 0.50  , ## stopping criteria             
             power      = power , ## tune: effective power
             make_plots = True  , ## make control plots 
@@ -515,17 +498,20 @@ for iter in range ( 1 , maxIter + 1 ) :
         with timing ( tag + ': compare DATA & weighted MC-dataset:' , logger = logger ) :
 
             ## 3) compare control and signal samples        
-            datatree    = ROOT.TChain ( tag_data , files = testdata ) 
-            comparisons = data_compare ( comparators  ,
-                                         datatree     ,
-                                         mcds         ,
-                                         expressions  =  ( 'x' , 'y' , 'z' ) ) 
-            ## effective MC statistics at this step 
-            n_eff   = mcds.nEff () 
-            row     = ( '%d'  % iter , '%.1f' % n_eff )
-            pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
-            row     += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
-            glob_stat.append ( row )
+            datatree = ROOT.TChain  ( tag_data , files = testdata )            
+            results  = data_compare ( comparators ,
+                                      datatree    ,
+                                      mcds        ,
+                                      expressions =  ( 'x' , 'y' ) ,
+                                      importance  = True , 
+                                      silent      = True )
+            
+            n_eff = mcds.nEff () 
+            trow  = [ '%d' % iter , '%.1f' % n_eff ] 
+            for r in results :
+                pv100 = VE ( r.pvalue ) * 100            
+                trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
+            glob_stat.append ( tuple ( trow ) )
             
             title = 'Global DATA/MC similarity %s-values [%%]' % script_p
             table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
@@ -670,22 +656,21 @@ for weight in weights :
                                                          cuts      = weight   , 
                                                          prefix    = '# '     ) ) )
 
-    datatree    = ROOT.TChain  ( tag_data    , files = testdata ) 
-    mctree      = ROOT.TChain  ( tag_mc      , files = testdata )
-    comparisons = data_compare ( comparators ,
-                                 datatree    ,
-                                 mctree      ,
-                                 expressions = ( 'x' , 'y' , 'z' ) ,
-                                 cuts2       = weight ) 
+    datatree = ROOT.TChain  ( tag_data    , files = testdata ) 
+    mctree   = ROOT.TChain  ( tag_mc      , files = testdata )
+    results  = data_compare ( comparators ,
+                              datatree    ,
+                              mctree      ,
+                              expressions = ( 'x' , 'y' , 'z' ) ,
+                              cuts2       = weight ,
+                              silent      = True   )
     
-    datatree    = ROOT.TChain  ( tag_data    , files = testdata ) 
-    mctree      = ROOT.TChain  ( tag_mc      , files = testdata )
-    ## effective MC statistics at this step 
-    n_eff   = mctree.nEff ( weight ) 
-    row     = ( weight , '%.1f'  % n_eff )
-    pvalues = tuple ( VE ( r.pvalue ) * 100 for r in comparisons  )
-    row    += tuple ( '%.2f%s%.2f' % ( pv.value () , plus_minus , pv.error () ) for pv in pvalues)
-    glob_stat.append ( row )
+    n_eff = mctree.nEff ( weight ) 
+    trow  = [ weight , '%.1f' % n_eff ] 
+    for r in results :
+        pv100 = VE ( r.pvalue ) * 100            
+        trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
+    glob_stat.append ( tuple ( trow ) )
     
     title = 'Global DATA/MC similarity: %s-values [%%]' % script_p
     table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )

@@ -14,6 +14,12 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-01-20"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
+## ATTENTION! 
+import os 
+os.environ [ "OMP_NUM_THREADS"      ]  = "1"
+os.environ [ "MKL_NUM_THREADS"      ]  = "1"
+os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
+# =============================================================================
 from   ostap.utils.core         import typename 
 from   ostap.utils.timing       import timing
 from   ostap.logger.colorized   import allright

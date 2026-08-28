@@ -24,7 +24,7 @@ from   ostap.utils.config       import Config
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.tools.reweighter   import Reweighter 
 import ostap.trees.trees 
-import ROOT 
+import ROOT, numpy  
 # =============================================================================
 # logging 
 # =============================================================================

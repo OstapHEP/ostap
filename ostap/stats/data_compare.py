@@ -21,19 +21,16 @@ __all__     = (
 )
 # =============================================================================
 from   collections            import namedtuple 
-from   ostap.core.ostap_types import sequence_types
+from   ostap.core.ostap_types import sequence_types, sized_types 
 from   ostap.utils.core       import typename 
 from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
 from   ostap.stats.utils      import weight_trivial, check_all 
-from   ostap.stats.gof_utils  import clip_pvalue
+from   ostap.stats.gof_utils  import clip_pvalue, the_header 
 from   ostap.math.math_ve     import significance
 from   ostap.stats.gof        import AGoFnp
 from   ostap.stats.counters   import ECDF, WECDF
 from   ostap.math.math_ve     import chi2_prob, significance
-from   ostap.logger.symbols   import ( greek_lower_sigma ,
-                                       script_t          ,
-                                       script_p          ,   
-                                       chi2ndf      as chi2ndf_symbol      , 
+from   ostap.logger.symbols   import ( chi2ndf      as chi2ndf_symbol      , 
                                        infinity_pos as infinity_pos_symbol )
 import ostap.logger.table     as     T 
 import ostap.histos.histos 
@@ -50,18 +47,19 @@ ComparisonResult     = namedtuple ( 'ComparisonResult'  ,
                                     ( 'method'     ,
                                       'tvalue'     ,
                                       'pvalue'     ,
-                                      'nsigma'     , 
-                                      'importance' ) ,
-                                    defaults = ( '<UNKNOWN>' , -1e+9 , -1 , -1 , None ) )
+                                      'nsigma'     ,
+                                      'importance' ,
+                                      'table_row'  ) ,
+                                    defaults = ( '<UNKNOWN>' , -1e+9 , -1 , -1 , None , '' ) )
 # =============================================================================
 ## 1D-histogram comparison result  
 HistoComparisonResult = namedtuple ( 'HistoComparisonResult'  ,
-                                     ( 'histo1'  ,
-                                       'histo2'  ,
-                                       'chi2'    ,
-                                       'nDoF'    , 
-                                       'pvalue'  ,
-                                       'nsigma'  ) )
+                                     ( 'histo1'    ,
+                                       'histo2'    ,
+                                       'chi2'      ,
+                                       'nDoF'      , 
+                                       'pvalue'    ,
+                                       'nsigma'    ) )
 # =============================================================================
 ## ECDF types 
 ecdf_types = ECDF , WECDF
@@ -71,8 +69,7 @@ ecdf_types = ECDF , WECDF
 #  nd1 = ...
 #  nd2 = ...
 #  comparator = ...
-#  ## get t-value and p-value:
-#  t_value , p_value , importance = numpy_compare ( comparator , nd1 , nd2 , importance = True ) 
+#  result     = numpy_compare ( comparator , nd1 , nd2 , importance = True ) 
 #  @endcode 
 def numpy_compare ( comparator ,
                     data1      ,
@@ -81,13 +78,24 @@ def numpy_compare ( comparator ,
                     weight2    = None  ,
                     importance = False ) :
     """ Compare two numpy arrays
-    >>> nd1 = ...
-    >>> nd2 = ...
-    >>> t_value , p_value , importance = numpy_compare ( nd1 , nd2 )
+    >>> data1      = ...
+    >>> data2      = ...
+    >>> comparator = ...
+    >>> result     = numpy_compare ( comparator , data1 , data2 )
     """
+    ## check input data 
+    check_all ( data1 , data2 , weight1 , weight2 , "numpy_compare" ) 
 
-    check_all  ( data1 , data2 , weight1 , weight2 , "numpy_compare" ) 
+    ## the sequence of comparators is provided 
+    if isinstance ( comparator , sequence_types ) and all ( isinstance ( c , AGoFnp ) and c.two_samples for c in comparator ) :
+        return tuple ( numpy_compare ( cmp        ,
+                                       data1      = data1      ,
+                                       data2      = data2      ,
+                                       weight1    = weight1    ,
+                                       weight2    = weight2    ,
+                                       importance = importance ) for cmp in comparator )
     
+    ## single comparator
     if not ( isinstance ( comparator , AGoFnp ) and comparator.two_samples ) :
         raise TypeError ( "Invalid comparator type: %s" % typename ( comparator )  ) 
     
@@ -115,14 +123,16 @@ def numpy_compare ( comparator ,
                                            tvalue  = tvalue  ,
                                            weight1 = weight1 ,
                                            weight2 = weight2 )
+    
     pv      = clip_pvalue  ( pvalue ) 
     nsigma  = significance ( pv     ) ## convert  it to significance
 
-    return ComparisonResult ( method     = comparator.method   ,
-                              tvalue     = tvalue              ,
-                              pvalue     = pvalue              ,
-                              nsigma     = nsigma              , 
-                              importance = importance_features ) 
+    return ComparisonResult ( method     = comparator.method           ,
+                              tvalue     = tvalue                      ,
+                              pvalue     = pvalue                      ,
+                              nsigma     = nsigma                      ,
+                              importance = importance_features         , 
+                              table_row  = comparator.the_row () [ 1 ] ) 
 
 # =============================================================================
 ## Compare two datasets:
@@ -132,7 +142,7 @@ def numpy_compare ( comparator ,
 #  data1      = ...
 #  data2      = ...
 #  comparator = ... 
-#  t_value , p_value , importance = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' , importance = True )
+#  results , table = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' , importance = True )
 #  @endcode 
 def data_compare ( comparator   ,  
                    data         ,
@@ -153,14 +163,17 @@ def data_compare ( comparator   ,
                    parallel2    = None        , 
                    progress     = False       ,
                    progress2    = None        ,
-                   importance   = False       , **config ) :
+                   importance   = False       ,
+                   ## 
+                   title        = ''          , 
+                   silent       = False       , **config  ) :
     """ Compare two datasets:
     Each dataset is converted to numpy and then `numpy_compare` is invoked 
     - see numpy_compare 
     >>> data1      = ...
     >>> data2      = ...
     >>> comparator = ... 
-    >>> t_value , p_value, importance  = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' )
+    >>> results , table = data_compare ( comparator , data1 , data2 , 'X,y,z' , 'pt>1' )
     """
     
     if expressions2 is None : expressions2 = expressions
@@ -211,22 +224,48 @@ def data_compare ( comparator   ,
                                  use_frame  = use_frame2 , 
                                  parallel   = parallel2  )
 
+    ## use comparator(s)  
+    results = numpy_compare ( comparator , 
+                              nd1        ,
+                              nd2        ,
+                              weight1    = weight1 ,
+                              weight2    = weight2 ,
+                              importance = importance )
+
+    ##
     
-    ## in case  several comparators provded, make an explicit loop 
-    if isinstance ( comparator , sequence_types ) :
-        return tuple ( numpy_compare ( cmp        ,
-                                       nd1        ,
-                                       nd2        ,
-                                       weight1    = weight1 ,
-                                       weight2    = weight2 ,
-                                       importance = importance ) for cmp in comparator )
+    if isinstance ( comparator , sequence_types ) and isinstance ( results , sequence_types ) and \
+       isinstance ( comparator , sized_types    ) and isinstance ( results , sized_types    ) and \
+       all ( isinstance ( r , ComparisonResult  ) for r in results ) :
+
+        rr = results
+        cc = comparator
+        
+    elif isinstance ( comparator , AGoFnp ) and isinstance ( results  , ComparisonResult ) :
+        
+        rr = results    , 
+        cc = comparator ,
+        
+    else : raise TypeError ( "Inconsistent type for `results` and `comparator`"  )
     
-    return numpy_compare ( comparator ,
-                           nd1        ,
-                           nd2        ,
-                           weight1    = weight1    ,
-                           weight2    = weight2    ,
-                           importance = importance ) 
+    ## summary  table 
+    if not silent :
+        
+        rows = [] 
+        for r , c in zip ( rr , cc ) :
+            
+            _   , row = c.the_row ()
+            row       = ( c.method , ) + row
+            rows.append ( row )
+            
+        header = ( 'Method' , ) + the_header
+        rows   = [ header ] + rows            
+        title  = title if title else "Two-Sample comparison"
+        rows   = T.remove_empty_columns ( rows )
+        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'lccccccccccc' )
+        logger.info ( "%s:\n%s" % ( title , table ) )
+        
+    return results 
 
 # =============================================================================
 ## Visual&chi2 comparison of (W)ECDFs
@@ -237,7 +276,7 @@ def data_compare ( comparator   ,
 #  - normalize them as "density" (optional)
 #  - draw them superimposed (optional)
 #  - decorate & return the histograms
-#  - calculate chi2-probability an dfocnvert it to #sigmas 
+#  - calculate chi2-probability and convert it to #sigmas 
 #  @code
 #  ecdf1  = ...
 #  ecdf2  = ...
@@ -257,7 +296,7 @@ def ecdf_compare ( ecdf1   ,
     - normalize them as "density" (optional)
     - draw them superimposed      (optional)
     - decorate & return the histograms
-    - calculate chi2-probability an dfocnvert it to #sigmas 
+    - calculate chi2-probability and convert it to #sigmas 
 
     >>> ecdf1  = ...
     >>> ecdf2  = ...
@@ -291,8 +330,8 @@ def ecdf_compare ( ecdf1   ,
 
     if density :
         
-        h1 = h1.density()
-        h2 = h2.density()
+        h1 = h1.density ( silent = True )
+        h2 = h2.density ( silent = True )
         
     if fill :
         
@@ -334,7 +373,7 @@ def ecdf_compare ( ecdf1   ,
         pvalue = chi2_prob    ( chi2 , nDoF )
         nsigma = significance ( pvalue )
     else :
-        pvalue , nsigma = float( 'NaN' ) , float( 'NaN')
+        pvalue , nsigma = float ( 'NaN' ) , float ( 'NaN' )
     
     return HistoComparisonResult ( histo1  = h1      ,
                                    histo2  = h2      ,
@@ -346,7 +385,7 @@ def ecdf_compare ( ecdf1   ,
 
 # ============================================================================
 ## Compare two variables from (presumably two) sources
-#  @param var         (INPUT) the first variable name/expression
+#  @param what        (INPUT) the first variable name/expression
 #  @param data        (INPUT) the first source:  TTree, TChain, RooDataSet,...
 #  @param cuts        (INPUT) selection criteria 
 #  @param cut_range   (INPUT) cut-range (for RooDataSet)
@@ -365,14 +404,14 @@ def ecdf_compare ( ecdf1   ,
 #  @param comparators (INPUT) the list of Two-Sample/GoF estimators
 #  @param progress    (INPUT) show the progress bar(s) ?
 #  @param parallel    (INPUT) use parallelization if/when possible?
-def compare_variable ( var         ,
+def compare_variable ( what        ,
                        data        , *           , 
                        cuts        = ''          , 
                        cut_range   = ''          ,
                        first       = FIRST_ENTRY ,
                        last        = LAST_ENTRY  ,
                        ## 
-                       var2        = None        , 
+                       what2       = None        , 
                        data2       = None        ,
                        cuts2       = ''          ,
                        cut_range2  = ''          ,
@@ -385,28 +424,30 @@ def compare_variable ( var         ,
                        draw        = True        , ## visualze results ?
                        fill        = True        ,
                        density     = True        ,
-                       ## 
+                       ##
+                       silent      = False       ,
+                       title       = ''          ,
                        progress    = False       ,
                        parallel    = False       ) :
     
-    if var2       is None and \
+    if what2      is None and \
        data2      is None and \
        cuts2      is None and \
        cut_range2 is None and \
        first2 == first    and \
        last2  == last        :  logger.error ( "Nothing to compare!" )
 
-    if var2       is None : var2       = var
+    if what2      is None : what2      = what 
     if data2      is None : data2      = data  
     if cuts2      is None : cuts2      = cuts 
     if cut_range2 is None : cut_range2 = cut_range
 
     from   ostap.stats.statvars import data_ECDF
     
-    var , var2 = var.strip() , var2.strip() 
+    what , what2 = what.strip() , what2.strip () 
           
     ecdf1 = data_ECDF      ( data       = data       ,
-                             expression = var        ,
+                             expression = what       ,
                              cuts       = cuts       ,
                              cut_range  = cut_range  , 
                              first      = first      ,
@@ -415,7 +456,7 @@ def compare_variable ( var         ,
                              parallel   = parallel   ) 
     
     ecdf2 = data_ECDF      ( data       = data2      ,
-                             expression = var2       ,
+                             expression = what2      ,
                              cuts       = cuts2      ,
                              cut_range  = cut_range2 , 
                              first      = first2     ,
@@ -436,60 +477,62 @@ def compare_variable ( var         ,
 
     
     ## unpack (W)ECDFs 
-    data1 , weight1 = ecdf1.raw_data ()
-    data2 , weight2 = ecdf2.raw_data ()
+    raw_data1 , weight1 = ecdf1.raw_data ()
+    raw_data2 , weight2 = ecdf2.raw_data ()
     
     ## run comparators
     with_weight  = not weight_trivial ( weight1 ) or not weight_trivial ( weight2 )
     
-    if isinstance ( comparators , AGoFnp ) : comparatros = ( comparators , )
+    if isinstance ( comparators , AGoFnp ) : comparators = ( comparators , )
     comparators  = tuple (  c for c in comparators if isinstance ( c , AGoFnp ) and c.two_samples )
-    if with_weight : comparators =  tuple ( c for c in comparators if c.weights_supported )
+    if with_weight :
+        comparators =  tuple ( c for c in comparators if c.weights_supported )
 
-    results = [] 
-    header  = ( 'Method' , '%s-value' % script_t , '' , '' , '' , '' , '' , '%s-value [%%]' % script_p , '#%s' % greek_lower_sigma ) 
+    results = []     
+    rows    = []
     
-    chi2ndf = '%.2f/%s'  % ( histos.chi2 , histos.nDoF) 
-    pvalue  = '%6.2f'    % ( histos.pvalue * 100 )
-
-    nsigma  = histos.nsigma 
-    if  99 < float ( nsigma ) : nsigma = infinity_pos_symbol
-    else                      : nsigma = '%5.2f' % nsigma
-    
-    row  = chi2ndf_symbol , chi2ndf   ,  '' , '' , '' , '' , '' , pvalue , nsigma  
-            
-    rows = [ row ] 
-    
-    for c in comparators :
+    ## explicit loop over all comparators 
+    for cmp in comparators :
         
-        if hasattr ( data  , 'soft_copy' ) : data  = data .soft_copy() 
-        if hasattr ( data2 , 'soft_copy' ) : data2 = data2.soft_copy() 
-
-        r = numpy_compare ( c       ,
-                            data1   = data    ,
-                            data2   = data2   ,
-                            weight1 = weight1 ,
-                            weight2 = weight2 )
+        r = numpy_compare ( comparator = cmp       ,  
+                            data1      = raw_data1 ,
+                            data2      = raw_data2 ,
+                            weight1    = weight1   ,
+                            weight2    = weight2   )
+        
         results.append ( r )
-            
-        header  , row = c.the_row ()
-        header = ( 'Method' , ) + header 
-        row    = ( c.method , ) + tuple ( row )
 
-        rows.append ( row ) 
+        if not silent : 
+            _ , row = cmp.the_row ()
+            row    = ( cmp.method , ) + tuple ( row )
+            rows.append ( row ) 
+
+    results = tuple ( results ) 
+
+    ## summary table 
+    if not silent :
         
-
-    rows  =  [ header ] + rows
-     
-    if   var2 == var : title = "Two-Sample test: %s"           %   var 
-    else             : title = "Two-Sample test: (%s) vs (%s)" % ( var , var2 ) 
+        ## chi2-row 
+        chi2ndf = '%.2f/%s'  % ( histos.chi2 , histos.nDoF) 
+        pvalue  = '%6.2f'    % ( histos.pvalue * 100 )
+        
+        nsigma  = histos.nsigma 
+        if  99 < float ( nsigma ) : nsigma = infinity_pos_symbol
+        else                      : nsigma = '%5.2f' % nsigma
     
-    rows  = T.remove_empty_columns ( rows ) 
-    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccccccccccc' )
-    logger.info ( "%s:\n%s" % ( title , table ) )
-                    
-    return histos , tuple ( results )
+        row   = chi2ndf_symbol , chi2ndf   ,  '' , '' , '' , '' , '' , pvalue , nsigma
+        
+        header = ( 'Method' , ) + the_header 
+        rows   = [ header ] + [ row ] + rows
+        
+        if   what2 == what : title = title if title else "Two-Sample test: %s"           %   what 
+        else               : title = title if title else "Two-Sample test: (%s) vs (%s)" % ( what , what2 ) 
+        
+        rows   = T.remove_empty_columns ( rows )
+        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'lccccccccccc' )
+        logger.info ( "%s:\n%s" % ( title , table ) )
 
+    return histos , results 
 
 # =============================================================================
 if '__main__' == __name__ :

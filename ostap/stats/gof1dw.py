@@ -164,8 +164,8 @@ class BootstrapGoF ( GoFnp ) :
                                 weight1 = weight1      ,
                                 weight2 = weight2      ) ;
         
-        if self.parallel and resampler.run : counter , _ = resampler.run ( self.nToys , progress = self.progress )            
-        else                               : counter , _ = resampler     ( self.nToys , progress = self.progress )
+        if self.parallel and resampler.run : counter , _ = resampler.run ( self.nToys , progress = self.progress , silent = self.silent )            
+        else                               : counter , _ = resampler     ( self.nToys , progress = self.progress , silent = self.silent )
         
         ## get the efficiency/p-value from the counter
         p_value      = counter.eff

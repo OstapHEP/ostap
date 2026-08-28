@@ -60,7 +60,7 @@ from   ostap.utils.utils              import accumulate
 from   ostap.logger.utils             import print_args 
 from   ostap.utils.cidict             import cidict, cidict_fun  
 from   ostap.utils.core               import typename 
-from   ostap.logger.pretty            import pretty_float
+from   ostap.logger.pretty            import pretty_float, format_pow10 
 from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_axes
 from   ostap.stats.moments            import Quantile, Quantiles
 from   ostap.math.integral            import Integral, Integral2, Integral3 
@@ -8775,7 +8775,7 @@ def _h_isDensity_ ( h1 , silent = False ) :
         for i in range ( 1 , nb + 1 ) :
             c = float ( h1.GetBinContent ( i ) ) 
             if 0 <= c : continue 
-            logger.warning ( 'is_density: Negative bins %s/%s' % ( h1.GetName() , h1.GetTitle() ) ) 
+            if not silent : logger.warning ( "is_density: Negative bins `%s/%s'" % ( h1.GetName() , h1.GetTitle() ) ) 
             break
     
     return isequalf ( h1.riemann_sum () , 1.0 ) 
@@ -9234,7 +9234,7 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     >>> print ( histo.table() )   
     """
     from ostap.logger.pretty import pretty_float
-    rows = [ ( '' , 'value' , 'scale' ) ]
+    rows = [ ( '' , 'value' , 'unit' ) ]
 
     row = 'Name' , h1.GetName() , '' 
     rows.append ( row )
@@ -9256,11 +9256,11 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     rows.append ( row )
 
     xmin , expo = pretty_float ( h1.xmin () , width = width , precision = precision )    
-    row = 'x-min' , xmin , '10^%+d' % expo if expo else '' 
+    row = 'x-min' , xmin , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
     
     xmax , expo = pretty_float ( h1.xmax () , width = width , precision = precision )
-    row = 'x-max' , xmax , '10^%+d' % expo if expo else '' 
+    row = 'x-max' , xmax , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
 
     nbins = h1.GetXaxis().GetNbins() 
@@ -9273,13 +9273,13 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     unfl = h1.GetBinContent ( 0 )
     if unfl :
         unfl , expo = pretty_float ( unfl , width = width , precision = precision )
-        row = 'underflow', '%s' % unfl  ,  '10^%+d' % expo if expo else '' 
+        row = 'underflow', '%s' % unfl  ,  format_pow10 ( expo )  if expo else '' 
         rows.append ( row )
 
     ovfl = h1.GetBinContent ( nbins + 1 )
     if ovfl :
         ovfl , expo = pretty_float ( ovfl , width = width , precision = precision )        
-        row = 'overflow' , ovfl , '10^%+d' % expo if expo else '' 
+        row = 'overflow' , ovfl , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
             
     integral  = h1.Integral()
@@ -9287,12 +9287,12 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     
     if integral != h1.GetEntries () or integral != nEff : 
         integral , expo  = pretty_float ( integral , width = width , precision = precision ) 
-        row = 'in-range' , integral ,  '10^%+d' % expo if expo else '' 
+        row = 'in-range' , integral , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
     if nEff != h1.GetEntries() or nEff != h1.Integral() :
         nEff , expo  = pretty_float ( nEff , width = width , precision = precision ) 
-        row = '#eff' , nEff ,  '10^%+d' % expo if expo else '' 
+        row = '#eff' , nEff ,  format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
     row = 'natural?'   , '%s' % h1.natural () , '' 
@@ -9312,54 +9312,54 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
 
     riemann = '\U000003a3y\U00000394x' if show else "Riemann sum"
     rsum , expo  = pretty_float ( h1.riemann_sum ()   , width = width , precision = precision ) 
-    row =  riemann , rsum  ,  '10^%+d' % expo if expo else '' 
+    row =  riemann , rsum  ,  format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
 
     if h1.nEff() and not h1.all_zero () :
         
-        row = 'density?'   , '%s' % h1.isDensity() , '' 
+        row = 'density?'   , '%s' % h1.isDensity ( silent = True ) , '' 
         rows.append ( row )
         
-        row = 'true density?'   , '%s' % ( h1.isDensity() and h1.all_nonnegative () )  , '' 
+        row = 'true density?'   , '%s' % ( h1.isDensity ( silent = True ) and h1.all_nonnegative () )  , '' 
         rows.append ( row )
         
         value = VE ( h1.mean() )
         mean  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'x-mean' , mean, '10^%+d' % expo if expo else '' 
+        row   = 'x-mean' , mean, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         value = VE ( h1.rms () )
         rms   , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'x-rms' , rms, '10^%+d' % expo if expo else '' 
+        row   = 'x-rms' , rms, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         value = VE ( h1.skewness () )
         skew  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'skewness' , skew, '10^%+d' % expo if expo else '' 
+        row   = 'skewness' , skew, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( h1.kurtosis () )
         kurt  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'kurtosis' , kurt, '10^%+d' % expo if expo else '' 
+        row   = 'kurtosis' , kurt, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         stat = h1.stat()
 
         ymin , expo = pretty_float ( stat.min () , width = width , precision = precision )    
-        row = 'y-min' , ymin , '10^%+d' % expo if expo else '' 
+        row = 'y-min' , ymin , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         ymax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
-        row = 'y-max' , ymax , '10^%+d' % expo if expo else '' 
+        row = 'y-max' , ymax , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( stat.mean() )
         ymean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row = 'y-mean' , ymean , '10^%+d' % expo if expo else '' 
+        row = 'y-mean' , ymean , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         yrms , expo = pretty_float ( stat.rms () , width = width , precision = precision )    
-        row = 'y-rms' , yrms , '10^%+d' % expo if expo else '' 
+        row = 'y-rms' , yrms , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
                 
     has3 = False
@@ -9393,7 +9393,7 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     >>> print ( histo.table() )   
     """
     from ostap.logger.pretty import pretty_float 
-    rows = [ ( '' , 'value' , 'scale' ) ]
+    rows = [ ( '' , 'value' , 'unit' ) ]
 
     row = 'Name' , h2.GetName() , '' 
     rows.append ( row )
@@ -9415,19 +9415,19 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     rows.append ( row )
 
     xmin , expo = pretty_float ( h2.xmin () , width = width , precision = precision )    
-    row = 'x-min' , xmin , '10^%+d' % expo if expo else '' 
+    row = 'x-min' , xmin , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
     
     xmax , expo = pretty_float ( h2.xmax () , width = width , precision = precision )
-    row = 'x-max' , xmax , '10^%+d' % expo if expo else '' 
+    row = 'x-max' , xmax , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
 
     ymin , expo = pretty_float ( h2.ymin () , width = width , precision = precision )    
-    row = 'y-min' , ymin , '10^%+d' % expo if expo else '' 
+    row = 'y-min' , ymin , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
     
     ymax , expo = pretty_float ( h2.ymax () , width = width , precision = precision )
-    row = 'y-max' , ymax , '10^%+d' % expo if expo else '' 
+    row = 'y-max' , ymax , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
 
     xaxis = h2.GetXaxis() 
@@ -9445,12 +9445,12 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     
     if integral != h2.GetEntries () or integral != nEff : 
         integral , expo  = pretty_float ( integral , width = width , precision = precision ) 
-        row = 'in-range' , integral ,  '10^%+d' % expo if expo else '' 
+        row = 'in-range' , integral ,  format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
     if nEff != h2.GetEntries() or nEff != h2.Integral() :
         nEff , expo  = pretty_float ( nEff , width = width , precision = precision ) 
-        row = '#eff' , nEff ,  '10^%+d' % expo if expo else '' 
+        row = '#eff' , nEff ,  format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
     row = 'natural?'   , '%s' % h2.natural () , '' 
@@ -9470,15 +9470,15 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
 
     riemann = '\U000003a3z\U00000394x\U00000394y' if show else "Riemann sum"
     rsum , expo  = pretty_float ( h2.riemann_sum ()   , width = width , precision = precision ) 
-    row = riemann , rsum  ,  '10^%+d' % expo if expo else '' 
+    row = riemann , rsum  ,  format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
 
     if h2.nEff() and not h2.all_zero () : 
         
-        row = 'density?'   , '%s' % h2.isDensity() , '' 
+        row = 'density?'   , '%s' % h2.isDensity ( silent = True ) , '' 
         rows.append ( row )
 
-        row = 'true density?' , '%s' % ( h2.isDensity() and h2.all_nonnegative () ) , '' 
+        row = 'true density?' , '%s' % ( h2.isDensity ( silent = True ) and h2.all_nonnegative () ) , '' 
         rows.append ( row )
         
         xmean, ymean = h2.mean () 
@@ -9486,45 +9486,45 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
 
         value = VE ( xmean ) 
         xmean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'x-mean' , xmean, '10^%+d' % expo if expo else '' 
+        row   = 'x-mean' , xmean, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         value = VE ( xrms ) 
         xrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'x-rms' , xrms, '10^%+d' % expo if expo else '' 
+        row   = 'x-rms' , xrms, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         value = VE ( ymean ) 
         ymean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'y-mean' , ymean, '10^%+d' % expo if expo else '' 
+        row   = 'y-mean' , ymean, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         value = VE ( yrms ) 
         yrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'y-rms' , yrms, '10^%+d' % expo if expo else '' 
+        row   = 'y-rms' , yrms, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         xyc , expo = pretty_float ( h2.xycorr() , width = width , precision = precision )
-        row = 'xy-corr' , xyc , '10^%+d' % expo if expo else '' 
+        row = 'xy-corr' , xyc , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         stat = h2.stat()
         
         zmin , expo = pretty_float ( stat.min () , width = width , precision = precision )    
-        row = 'z-min' , zmin , '10^%+d' % expo if expo else '' 
+        row = 'z-min' , zmin , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         zmax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
-        row = 'z-max' , zmax , '10^%+d' % expo if expo else '' 
+        row = 'z-max' , zmax , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( stat.mean() ) 
         zmean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row = 'z-mean' , zmean , '10^%+d' % expo if expo else '' 
+        row = 'z-mean' , zmean , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         zrms , expo = pretty_float ( stat.rms () , width = width , precision = precision )    
-        row = 'z-rms' , zrms , '10^%+d' % expo if expo else '' 
+        row = 'z-rms' , zrms , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
     has3 = False
@@ -9557,7 +9557,7 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     >>> histo = ...
     >>> print ( histo.table() )   
     """
-    rows = [ ( '' , 'value' , 'scale' ) ]
+    rows = [ ( '' , 'value' , 'unit' ) ]
 
     row = 'Name' , h3.GetName() , '' 
     rows.append ( row )
@@ -9579,27 +9579,27 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     rows.append ( row )
 
     xmin , expo = pretty_float ( h3.xmin () , width = width , precision = precision )    
-    row = 'x-min' , xmin , '10^%+d' % expo if expo else '' 
+    row = 'x-min' , xmin , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
     
     xmax , expo = pretty_float ( h3.xmax () , width = width , precision = precision )
-    row = 'x-max' , xmax , '10^%+d' % expo if expo else '' 
+    row = 'x-max' , xmax , format_pow10 ( expo )  if expo else '' 
     rows.append ( row )
 
     ymin , expo = pretty_float ( h3.ymin () , width = width , precision = precision )    
-    row = 'y-min' , ymin , '10^%+d' % expo if expo else '' 
+    row = 'y-min' , ymin , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
     
     ymax , expo = pretty_float ( h3.ymax () , width = width , precision = precision )
-    row = 'y-max' , ymax , '10^%+d' % expo if expo else '' 
+    row = 'y-max' , ymax , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
 
     zmin , expo = pretty_float ( h3.zmin () , width = width , precision = precision )    
-    row = 'z-min' , zmin , '10^%+d' % expo if expo else '' 
+    row = 'z-min' , zmin , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
     
     zmax , expo = pretty_float ( h3.zmax () , width = width , precision = precision )
-    row = 'z-max' , zmax , '10^%+d' % expo if expo else '' 
+    row = 'z-max' , zmax , format_pow10 ( expo ) if expo else '' 
     rows.append ( row )
 
     xaxis = h3.GetXaxis() 
@@ -9620,12 +9620,12 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     
     if integral != h3.GetEntries () or integral != nEff : 
         integral , expo  = pretty_float ( integral , width = width , precision = precision ) 
-        row = 'in-range' , integral ,  '10^%+d' % expo if expo else '' 
+        row = 'in-range' , integral ,  format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
     if nEff != h3.GetEntries() or nEff != h3.Integral() :
         nEff , expo  = pretty_float ( nEff , width = width , precision = precision ) 
-        row = '#eff' , nEff ,  '10^%+d' % expo if expo else '' 
+        row = '#eff' , nEff ,  format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
     row = 'natural?'   , '%s' % h3.natural () , '' 
@@ -9645,15 +9645,15 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
 
     riemann = '\U000003a3v\U00000394x\U00000394y\U00000394z' if show else "Riemann sum"
     rsum , expo = pretty_float ( h3.riemann_sum ()   , width = width , precision = precision ) 
-    row = riemann , rsum , '10^%+d' % expo if expo else '' 
+    row = riemann , rsum , format_pow10 (  expo ) if expo else '' 
     rows.append ( row )
 
     if h3.nEff() and not h3.all_zero () : 
         
-        row = 'density?'   , '%s' % h3.isDensity() , '' 
+        row = 'density?'   , '%s' % h3.isDensity ( silent = True ) , '' 
         rows.append ( row )
 
-        row = 'true density?'   , '%s' % ( h3.isDensity() and h3.all_nonnegative () ) , '' 
+        row = 'true density?'   , '%s' % ( h3.isDensity ( silent = True ) and h3.all_nonnegative () ) , '' 
         rows.append ( row )
                 
         xmean, ymean, zmean = h3.mean () 
@@ -9661,63 +9661,63 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
 
         value = VE ( xmean ) 
         xmean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'x-mean' , xmean, '10^%+d' % expo if expo else '' 
+        row   = 'x-mean' , xmean, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( xrms ) 
         xrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )        
-        row   = 'x-rms' , xrms, '10^%+d' % expo if expo else '' 
+        row   = 'x-rms' , xrms, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( ymean ) 
         ymean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row   = 'y-mean' , ymean, '10^%+d' % expo if expo else '' 
+        row   = 'y-mean' , ymean, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( yrms ) 
         yrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )        
-        row   = 'y-rms' , yrms, '10^%+d' % expo if expo else '' 
+        row   = 'y-rms' , yrms, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( zmean ) 
         zmean , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )
-        row = 'z-mean' , zmean, '10^%+d' % expo if expo else '' 
+        row = 'z-mean' , zmean, format_pow10 (  expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( zrms ) 
         zrms  , expo = value.pretty_print ( width = width , precision = precision , parentheses = False )        
-        row   = 'z-rms' , zrms, '10^%+d' % expo if expo else '' 
+        row   = 'z-rms' , zrms, format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         xyc , expo = pretty_float ( h3.xycorr() , width = width , precision = precision )
-        row = 'xy-corr' , xyc , '10^%+d' % expo if expo else '' 
+        row = 'xy-corr' , xyc , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         xzc , expo = pretty_float ( h3.xzcorr() , width = width , precision = precision )
-        row = 'xz-corr' , xzc , '10^%+d' % expo if expo else '' 
+        row = 'xz-corr' , xzc , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         yzc , expo = pretty_float ( h3.yzcorr() , width = width , precision = precision )
-        row = 'yz-corr' , yzc , '10^%+d' % expo if expo else '' 
+        row = 'yz-corr' , yzc , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         stat = h3.stat()
         
         vmin , expo = pretty_float ( stat.min () , width = width , precision = precision )    
-        row = 'v-min' , vmin , '10^%+d' % expo if expo else '' 
+        row = 'v-min' , vmin , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         vmax , expo = pretty_float ( stat.max () , width = width , precision = precision )    
-        row = 'v-max' , vmax , '10^%+d' % expo if expo else '' 
+        row = 'v-max' , vmax , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
 
         value = VE ( stat.mean() )        
         vmean , expo = value.pretty_print (  width = width , precision = precision , parentheses = False )
-        row = 'v-mean' , vmean , '10^%+d' % expo if expo else '' 
+        row = 'v-mean' , vmean , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
         vrms , expo = pretty_float ( stat.rms () , width = width , precision = precision )    
-        row = 'v-rms' , vrms , '10^%+d' % expo if expo else '' 
+        row = 'v-rms' , vrms , format_pow10 ( expo ) if expo else '' 
         rows.append ( row )
         
     has3 = False

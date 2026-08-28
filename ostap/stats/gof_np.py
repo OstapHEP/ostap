@@ -270,8 +270,8 @@ class GoFnp (AGoFnp,Config) :
                                 weight1 = weight1      ,
                                 weight2 = weight2      ) ;
         
-        if self.parallel and resampler.run : counter , _ = resampler.run ( self.nToys , progress = self.progress )            
-        else                               : counter , _ = resampler     ( self.nToys , progress = self.progress )
+        if self.parallel and resampler.run : counter , _ = resampler.run ( self.nToys , progress = self.progress , silent = self.silent )            
+        else                               : counter , _ = resampler     ( self.nToys , progress = self.progress , silent = self.silent )
 
         # ==================================================
         ## @see Phipson, Belinda; Smyth, Gordon K (2010).

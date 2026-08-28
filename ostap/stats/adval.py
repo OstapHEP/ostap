@@ -158,7 +158,10 @@ class ADVAL_base (GoFnp):
         if n_splits < 2                      : raise TypeError ( "Invalid `n_splits` value : %d" %            n_splits   )
 
         ## switch off parallel processing 
-        if parallel and not run_parallel ( parallel ) : parallel = False 
+        if parallel and not run_parallel ( parallel ) :
+            logger.info ( '%s: parallel processing is OFF' % typename ( self ) )
+            parallel = False
+            
         params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu() - 1 )
 
         self.__n_splits            = n_splits 

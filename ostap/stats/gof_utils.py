@@ -595,16 +595,23 @@ def clip_pvalue ( pvalue , clip = 0.5 ) :
 pvalue_types = num_types + ( VE , ) 
 # =============================================================================
 col_t_value = '%s-value'      %   script_t
-col_p_value = '%s-value [%%]' %   script_p
-col_n_sigma = '#%s'           %   greek_lower_sigma
 col_t_mean  = '%s%s'          % ( script_t , sub_mean ) 
 col_t_rms   = '%s%s'          % ( script_t , sub_rms  ) 
 col_t_min   = '%s%s'          % ( script_t , sub_min  )
 col_t_max   = '%s%s'          % ( script_t , sub_max  )
 col_t_unit  = '%s-unit'       %   script_t 
-
+col_p_value = '%s-value [%%]' %   script_p
+col_n_sigma = '#%s'           %   greek_lower_sigma
+the_header  = ( col_t_value ,
+                col_t_mean  ,
+                col_t_rms   ,
+                col_t_min   ,
+                col_t_max   ,
+                col_t_unit  ,
+                col_p_value ,
+                col_n_sigma )
 # =============================================================================
-## Format the row for GoF tables
+## Format the row for 2S/GoF tables
 #  @code
 #  tvalue = ...
 #  pvalue = ...
@@ -617,7 +624,7 @@ def format_row ( tvalue    = None ,
                  counter   = None , 
                  precision = 4    ,
                  width     = 6    ) :
-    """ Format the row for the GoF tables
+    """ Format the row for the 2S/GoF tables
     >>> tvalue = ...
     >>> pvalue = ...
     >>> ecdf   = ...
@@ -635,15 +642,8 @@ def format_row ( tvalue    = None ,
         
     if has_tvalue and has_pvalue and has_counter :
         
-        header = ( col_t_value ,
-                   col_t_mean  , 
-                   col_t_rms   ,
-                   col_t_min   ,                
-                   col_t_max   ,                
-                   col_t_unit  ,  
-                   col_p_value ,
-                   col_n_sigma ) 
-        
+        header = the_header
+
         mean       = counter.mean   ()
         rms        = counter.rms    () 
         vmin, vmax = counter.minmax () 

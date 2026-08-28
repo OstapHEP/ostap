@@ -323,7 +323,6 @@ def data_get_stat ( data               ,
     
     assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 
 
-    print ( 'get_stat' , cuts , var_lst ) 
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :

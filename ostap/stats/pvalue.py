@@ -274,8 +274,10 @@ class PVALUE (abc.ABC) :
         the_list = [ n for n in splitter ( N , njobs ) ] 
         njobs    = len ( the_list ) 
 
-        if not silent : logger.info ( 'GoF %s-value: #%d parallel subjobs to be used with WorkManager' % ( script_p , njobs ) )
-        
+        if not silent :
+            goftype = typename ( self.gof ) 
+            logger.info ( 'GoF %s-value [%s]: #%d parallel subjobs to run' % ( script_p , goftype , njobs ) )
+            
         counter = EffCounter()
         tvalues = () 
         

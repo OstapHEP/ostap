@@ -1,3 +1,16 @@
+# v3.8.3.0
+
+## New features
+
+    1. Few minor tweaks & tiny fixes
+    
+## Bug fixes
+
+    1. tiny fix for `SelectorWithVars` progress bar in parallel processing
+    
+## Backward incompatible
+
+
 
 # v3.8.2.0
 
