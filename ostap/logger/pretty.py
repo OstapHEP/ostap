@@ -38,7 +38,7 @@ __all__     = (
     'pretty_errors'      , ## pretty representation for asymmetric errors
     ## 
     'pretty_print'       , ## dispatcher for pretty prints 
-    'nice_print'         , ## ready-to-usepretty prints 
+    'nice_print'         , ## ready-to-use pretty prints 
     'add_expo'           , ## add an exponetaion factor for sting representaion of the object
     ## Force LaTeX format 
     'pretty_latex'       , ## dispatcher for pretty prints 
@@ -623,7 +623,8 @@ def pretty_print ( what              , * ,
                                    precision = precision ,
                                    lates     = latex     , **kwargs )
     elif isinstance ( what , num_types ) :
-        return pretty_float ( width     = width     ,
+        return pretty_float ( float ( what )        ,
+                              width     = width     ,
                               precision = precision ,
                               latex     = latex     , **kwargs )
     
@@ -655,7 +656,8 @@ def nice_print ( what              , * ,
                                    latex     = latex     , **kwargs )
     
     if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-    elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
+    ## elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo ) 
+    elif expo           : result = '%s%s%s'         % ( result , times , format_pow10 ( expo ) ) 
     ##
     return result
 

@@ -120,7 +120,7 @@ def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta
 
 
 # =============================================================================
-def test_fitting_fill_1 () :
+def test_fitting_fill () :
 
     logger = getLogger ('test_fitting_fill_1' ) 
 
@@ -136,7 +136,7 @@ def test_fitting_fill_1 () :
     mJPsi = ROOT.RooRealVar ( 'mJPsi' , 'mass(J/Psi) [GeV]' , 3.0 * GeV , 3.2 * GeV )
 
     # =========================================================================
-    logger.info ( attention( 'All trivial variables' ) ) 
+    logger.info ( attention ( 'All trivial variables' ) ) 
     # =========================================================================
  
     variables = [
@@ -157,18 +157,18 @@ def test_fitting_fill_1 () :
         chain.fill_dataset ( selector , shortcut = False , use_frame = False )
         ds1_1 = selector.data
 
-    ## return 
-
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = True  , use_frame = False )        
         ds1_2 = selector.data
+        
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )        
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = True  )
-        ds1_3 = selector.data 
+        ds1_3 = selector.data
+        
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )        
         selector = SelectorWithVars ( **config ) 
@@ -179,56 +179,43 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t5.name ) )        
         ds1_5 , _ = chain.make_dataset ( silent = False , **config )
 
+
     table = [ ('Configuration' , 'CPU' ) ] 
 
     table.append ( ( t1.name , '%.3fs' % t1.delta ) )
     table.append ( ( t2.name , '%.3fs' % t2.delta ) )
     table.append ( ( t3.name , '%.3fs' % t3.delta ) )
     table.append ( ( t4.name , '%.3fs' % t4.delta ) )
-
     table.append ( ( t5.name , '%.3fs' % t5.delta ) )
 
     title1 = "All trivial variables"
     table1 = T.table ( table , title = title1 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title1 , table1 ) ) 
 
-    ## return 
-
-    ## if ds1_1 != ds1_2   : logger.error ('Datasets ds1_1  and ds1_2   are different!' )
-    ## if ds1_1 != ds1_3   : logger.error ('Datasets ds1_1  and ds1_3   are different!' )
-    ## if ds1_1 != ds1_4   : logger.error ('Datasets ds1_1  and ds1_4   are different!' )
-
-    ## return 
-
-    ## 
-    ##  if ds1_1 != ds1_5 : logger.error ('Datasets ds1_1  and ds1_5   are different!' )
-
-    ## return 
 
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = False , use_frame = False , max_files = 1 )
-        ds1p_1 = selector.data 
+        ds1p_1 = selector.data
+        
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = True  , use_frame = False , max_files = 1 )        
         ds1p_2 = selector.data 
     
-    ## return 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )        
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = False , use_frame = True  , max_files = 1 )
-        ds1p_3 = selector.data 
+        ds1p_3 = selector.data
+        
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )        
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
         ds1p_4 = selector.data 
-
-    ##  return 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -241,10 +228,6 @@ def test_fitting_fill_1 () :
     table1p = T.table ( table , title = title1p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title1p , table1p ) ) 
 
-    ## if ds1_1 != ds1p_1  : logger.error ('Datasets ds1_1  and ds1p_1  are different!' )
-    ##  if ds1_2 != ds1p_2  : logger.error ('Datasets ds1_2  and ds1p_2  are different!' )
-    ##  if ds1_3 != ds1p_3  : logger.error ('Datasets ds1_3  and ds1p_3  are different!' )
-    ## if ds1_4 != ds1p_4  : logger.error ('Datasets ds1_4  and ds1p_4  are different!' )
 
     # =========================================================================
     logger.info ( attention( 'Trivial variables + CUT' ) ) 
@@ -260,36 +243,28 @@ def test_fitting_fill_1 () :
         ( 'x'   , 'some variable'  , 0 , 5000 , '(mass+pt+eta)/eta' ) 
         ] 
 
-    ## return 
-
-    ## if not DILL_PY3_issue :
-        
     config = { 'variables' : variables          ,
                 'selection' : "pt>7 && eta<3"    ,
                 'cuts'      : lambda s : s.pt > 3 } ## ATTENTION: no trivial cuts!
         
-    ## else :
-    ##    
-    ##    logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
-    ##    config = { 'variables' : variables          ,
-    ##               'selection' : "pt>7 && eta<3"    ,
-    ##               'cuts'      : ptcut              } ## ATTENTION: no trivial cuts!
-    
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = False )
-        ds2_1 = selector.data 
+        ds2_1 = selector.data
+        
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = True  , use_frame = False )
-        ds2_2 = selector.data 
+        ds2_2 = selector.data
+        
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = True  )
-        ds2_3 = selector.data 
+        ds2_3 = selector.data
+        
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -303,31 +278,28 @@ def test_fitting_fill_1 () :
     table.append ( ( t3.name , '%.3fs' % t3.delta ) )
     table.append ( ( t4.name , '%.3fs' % t4.delta ) )
 
-    ## return 
-
     title2 = "Trivial variables + CUT"
     table2 = T.table ( table , title = title2 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title2 , table2 ) ) 
-
-    ## if ds2_1 != ds2_2   : logger.error ('Datasets ds2_1  and ds2_2   are different!' )
-    ## if ds2_1 != ds2_3   : logger.error ('Datasets ds2_1  and ds2_3   are different!' )
-    ## if ds2_1 != ds2_4   : logger.error ('Datasets ds2_1  and ds2_4   are different!' )
 
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = False , use_frame = False , maX_files = 1 )
-        ds2p_1 = selector.data 
+        ds2p_1 = selector.data
+        
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = True  , use_frame = False , maX_files = 1 )
-        ds2p_2 = selector.data 
+        ds2p_2 = selector.data
+        
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = False , use_frame = True  , max_files = 1 )
-        ds2p_3 = selector.data 
+        ds2p_3 = selector.data
+        
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -345,20 +317,10 @@ def test_fitting_fill_1 () :
     table2p = T.table ( table , title = title2p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title2p , table2p ) ) 
 
-
-    ## if ds1_1 != ds2_1   : logger.error ('Datasets ds1_1  and ds2_1   are different!' )
-
-    ##  if ds2_1 != ds2p_1  : logger.error ('Datasets ds2_1  and ds2p_1  are different!' )
-    ## if ds2_2 != ds2p_2  : logger.error ('Datasets ds2_2  and ds2p_2  are different!' )
-    ## if ds2_3 != ds2p_3  : logger.error ('Datasets ds2_3  and ds2p_3  are different!' )
-    ##  if ds2_4 != ds2p_4  : logger.error ('Datasets ds2_4  and ds2p_4  are different!' )
-
     # =========================================================================
     logger.info ( attention ( 'Non-trivial variables' ) ) 
     # =========================================================================
      
-    ## if not DILL_PY3_issue : 
-      
     variables = [
         Variable ( mJPsi     , accessor = 'mass' ) ,
         Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
@@ -368,20 +330,7 @@ def test_fitting_fill_1 () :
         ( 'eta' , ) ,
         ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
         ]
-        
-    ## else :
-    ##    
-    ##    logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
-    ##    variables = [
-    ##        Variable ( mJPsi     , accessor = 'mass' ) ,
-    ##        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
-    ##        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
-    ##        Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
-    ##        ( 'pt'  , ) ,
-    ##        ( 'eta' , ) ,
-    ##        ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
-    ##        ]
-
+    
     config = { 'variables' : variables          ,
                'selection' : "pt>7 && eta<3"    }
 
@@ -389,17 +338,20 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = False )
-        ds3_1 = selector.data 
+        ds3_1 = selector.data
+        
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = True  , use_frame = False )
-        ds3_2 = selector.data 
+        ds3_2 = selector.data
+        
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = True  )
-        ds3_3 = selector.data 
+        ds3_3 = selector.data
+        
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -417,27 +369,24 @@ def test_fitting_fill_1 () :
     table3 = T.table ( table , title = title3 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title3 , table3 ) ) 
 
-    ## if ds1_1 != ds3_1   : logger.error ('Datasets ds1_1  and ds3_1   are different!' )
-
-    ## if ds3_1 != ds3_2   : logger.error ('Datasets ds3_1  and ds2_2   are different!' )
-    ## if ds3_1 != ds3_3   : logger.error ('Datasets ds3_1  and ds2_3   are different!' )
-    ## if ds3_1 != ds3_4   : logger.error ('Datasets ds3_1  and ds2_4   are different!' )
-
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = False , use_frame = False , max_files = 1 )
-        ds3p_1 = selector.data 
+        ds3p_1 = selector.data
+        
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = True  , use_frame = False , max_files = 1 )
-        ds3p_2 = selector.data 
+        ds3p_2 = selector.data
+        
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = False , use_frame = True  , max_files = 1 )
-        ds3p_3 = selector.data 
+        ds3p_3 = selector.data
+        
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -455,17 +404,10 @@ def test_fitting_fill_1 () :
     table3p = T.table ( table , title = title3p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title3p , table3p ) ) 
 
-    ## if ds3_1 != ds3p_1  : logger.error ('Datasets ds3_1  and ds3p_1  are different!' )
-    ## if ds3_2 != ds3p_2  : logger.error ('Datasets ds3_2  and ds3p_2  are different!' )
-    ## if ds3_3 != ds3p_3  : logger.error ('Datasets ds3_3  and ds3p_3  are different!' )
-    ##  if ds3_4 != ds3p_4  : logger.error ('Datasets ds3_4  and ds3p_4  are different!' )
-
     # =========================================================================
     logger.info ( attention ( 'Non-trivial variables + CUT' ) ) 
     # =========================================================================
  
-    ## if not DILL_PY3_issue : 
-        
     variables = [
         Variable ( mJPsi     , accessor = 'mass' ) ,
         Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
@@ -476,47 +418,29 @@ def test_fitting_fill_1 () :
         ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
         ]
         
-    ## else :
-    ##
-    ##    logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
-    ##    variables = [
-    ##        Variable ( mJPsi     , accessor = 'mass' ) ,
-    ##        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
-    ##        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
-    ##        Variable ( 'fevt'    , accessor = '1.0*evt' ) , 
-    ##        ( 'pt'  , ) ,
-    ##        ( 'eta' , ) ,
-    ##        ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
-    ##        ]
-            
-    
-    ## if not DILL_PY3_issue :
         
     config = { 'variables' : variables          ,
                 'selection' : "pt>7 && eta<3"    ,
                 'cuts'      :lambda s : s.pt > 3 } ## ATTENTION: no trivial cuts! 
-    ## else :
-    ##    
-    ##    logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
-    ##    config = { 'variables' : variables          ,
-    ##               'selection' : "pt>7 && eta<3"    ,
-    ##               'cuts'      : ptcut              } ## ATTENTION: no trivial cuts! 
         
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = False )
-        ds4_1 = selector.data 
+        ds4_1 = selector.data
+        
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = True  , use_frame = False )
-        ds4_2 = selector.data 
+        ds4_2 = selector.data
+        
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = False , use_frame = True  )
-        ds4_3 = selector.data 
+        ds4_3 = selector.data
+        
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -534,27 +458,24 @@ def test_fitting_fill_1 () :
     table4 = T.table ( table , title = title4 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title4 , table4 ) ) 
 
-    ## if ds1_1 != ds4_1   : logger.error ('Datasets ds1_1  and ds4_1   are different!' )
-    
-    ## if ds4_1 != ds4_2   : logger.error ('Datasets ds4_1  and ds4_2   are different!' )
-    ## if ds4_1 != ds4_3   : logger.error ('Datasets ds4_1  and ds4_3   are different!' )
-    ## if ds4_1 != ds4_4   : logger.error ('Datasets ds4_1  and ds4_4   are different!' )
-
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = False , use_frame = False , max_files = 1 )
-        ds4p_1 = selector.data 
+        ds4p_1 = selector.data
+        
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = True  , use_frame = False , max_files = 1 )
-        ds4p_2 = selector.data 
+        ds4p_2 = selector.data
+        
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.parallel_fill ( selector , shortcut = False , use_frame = True  , max_files = 1 )
-        ds4p_3 = selector.data 
+        ds4p_3 = selector.data
+        
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -572,11 +493,6 @@ def test_fitting_fill_1 () :
     table4p = T.table ( table , title = title4p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
-    ## if ds4_1 != ds4p_1  : logger.error ('Datasets ds4_1  and ds4p_1  are different!' )
-    ## if ds4_2 != ds4p_2  : logger.error ('Datasets ds4_2  and ds4p_2  are different!' )
-    ## if ds4_3 != ds4p_3  : logger.error ('Datasets ds4_3  and ds4p_3  are different!' )
-    ## if ds4_4 != ds4p_4  : logger.error ('Datasets ds4_4  and ds4p_4  are different!' )
-
     logger.info ( '%s\n%s' % ( title1  , table1  ) )
     logger.info ( '%s\n%s' % ( title1p , table1p ) )
     
@@ -592,12 +508,8 @@ def test_fitting_fill_1 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-
-    test_fitting_fill_1 ()
+    test_fitting_fill ()
     
-
-
-
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

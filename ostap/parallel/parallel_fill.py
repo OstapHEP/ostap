@@ -72,7 +72,8 @@ class  MakeDSTask(Task) :
                                     selection = self.selection ,
                                     roo_cuts  = self.roo_cuts  ,
                                     name      = self.name      ,
-                                    title     = self.title     ,                                             
+                                    title     = self.title     ,
+                                    progress  = False          , 
                                     silent    = True           ) 
     
     ## merge results/datasets 
@@ -157,7 +158,8 @@ class  FillDSTask(MakeDSTask) :
                                       cuts      = self.cuts      ,
                                       roo_cuts  = self.roo_cuts  ,
                                       name      = self.name      ,
-                                      fuillname = self.title     , 
+                                      fuillname = self.title     ,
+                                      progress  = False          , 
                                       silence   = True           )
         
         return chain.fill_dataset2 ( selector  ,
@@ -220,7 +222,10 @@ class  FillTask(MakeDSTask) :
         
         if self.trivial and all and not self.cuts : 
             import ostap.fitting.pyselectors
-            return chain.make_dataset ( self.variables , self.selection , silent = True ) 
+            return chain.make_dataset ( self.variables   ,
+                                        self.selection   ,
+                                        progress = False ,
+                                        silent   = True  ) 
         
         from   ostap.fitting.pyselectors import SelectorWithVars
         
@@ -228,7 +233,8 @@ class  FillTask(MakeDSTask) :
         selector = SelectorWithVars ( variables = self.variables ,
                                       selection = self.selection ,
                                       roo_cuts  = self.roo_cuts  ,
-                                      cuts      = self.cuts      , 
+                                      cuts      = self.cuts      ,
+                                      progress  = False          , 
                                       silence   = True           )
         
         args = ()  
@@ -239,7 +245,6 @@ class  FillTask(MakeDSTask) :
                                      silent    = True                 , 
                                      shortcut  = all and self.trivial ,
                                      use_frame = self.use_frame       )
-
 
 
 # ===================================================================================

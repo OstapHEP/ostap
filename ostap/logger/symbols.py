@@ -26,6 +26,7 @@ __all__     = (
     'axe'                 , ## 🪓  (wide)
     'brain'               , ## 🧠  (wide)
     'branch'              , ## ⸙
+    'bulls_eye'           , ## 🎯
     'cabinet'             , ## 🗄️  (wide)
     'chain'               , ## ⛓️
     'checked_no'          , ## ❌  (wide)
@@ -165,6 +166,7 @@ __all__     = (
     'similar'             , ## ∼
     'size'                , ## ⌀
     'squared_ok'          , ## 🆗  (wide)
+    'sparkles'            , ## ✨
     'subscript_A'         , ## ᴀ
     'subscript_C'         , ## ᴄ
     'subscript_K'         , ## ᴋ
@@ -185,8 +187,11 @@ __all__     = (
     'thumb_down'          , ## 👎  (wide)
     'thumb_up'            , ## 👍  (wide)
     'times'               , ## ⨯
+    'triangular_flag'     , ## 🚩
     'toys'                , ## 🧸  (wide)
     'tree'                , ## 🌴  (wide)
+    'trophy'              , ## 🏆 
+    ## 
     'union'               , ## ⋃
     'variance_sym'        , ## σ²
     'weight_lifter'       , ## 🏋️  (wide)
@@ -494,6 +499,10 @@ sub_rms  = 'ᵣₘₛ'  if show else '-rms'
 sub_mean = 'ₘₑₐₙ' if show else '-mean'
 sup_eff  = 'ᵉᶠᶠ'  if show else '-eff'
 
+trophy          = '🏆'  if show else ''
+sparkles        = '✨'  if show else ''
+bulls_eye       = '🎯'  if show else '' 
+triangular_flag = '🚩'  if show else ''
 # =============================================================================
 if '__main__' == __name__ :
 
