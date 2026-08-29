@@ -347,7 +347,6 @@ class USTAT(AGoF,Config) :
         conf [ 'progress'  ] = self.__progress 
         conf [ 'algorithm' ] = self.__algorithm
         conf [ 'weights_supported'         ] = self.weights_supported
-        conf [ 'negatve_weights_supported' ] = self.negative_weights_supported
         return conf
 
     # =========================================================================

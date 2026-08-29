@@ -1334,9 +1334,19 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& what   , 
       ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >&       result ) 
     {
-      int ifail = 0 ;     result = what.InverseChol ( ifail ) ;
-      if ( 0 != ifail ) { result = what.Inverse     ( ifail ) ; }
-      return ifail ;  
+      int ifail = 0 ;    
+      if constexpr ( 1 == D )
+      {
+        const T w = what ( 0 , 0 ) ; 
+        if ( !w ) { return 1 ; } 
+        result ( 0 , 0 ) = static_cast<T>( 1 ) / w ; 
+      }
+      else 
+      {
+        result = what.InverseChol ( ifail ) ;
+        if ( 0 != ifail ) { result = what.Inverse     ( ifail ) ; }
+      }
+      return ifail; 
     }
     // ========================================================================
     /*  get Cholesky decomposition for the covarance matrix 
@@ -1351,8 +1361,18 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& M , 
       ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepStd<SCALAR,N,N> >    & L )
     {
-      const ROOT::Math::CholeskyDecomp<SCALAR,N> decomp ( M ) ;
-      return decomp.getL ( L ) ;
+      if constexpr ( 1 == N )
+      {
+        const SCALAR w { M ( 0 , 0 ) } ;
+        if ( w <= static_cast<SCALAR> ( 0 ) ) { return false ; }
+        L ( 0 , 0 ) = std::sqrt ( w ) ;
+        return true ; 
+      }
+      else 
+      {
+        const ROOT::Math::CholeskyDecomp<SCALAR,N> decomp ( M ) ;
+        return decomp.getL ( L ) ;
+      }
     }
     // ========================================================================
     /** make (unnormalized) weighted sum
@@ -1718,6 +1738,12 @@ namespace Ostap
       const Ostap::Math::Zero<T>     zero  ;
       const Ostap::Math::Equal_To<T> equal ;
       //
+      if constexpr ( 1 == D )
+      {
+        const T w { mtrx ( 0 , 0 ) } ; 
+        return static_cast<T> ( 0 ) < w && !zero ( w ) ; 
+      }
+      //
       for ( unsigned int i = 0 ; i < D ; ++i )
       {
         /// diagonal elements must be positive! 
@@ -1753,6 +1779,13 @@ namespace Ostap
     {
       //
       const Ostap::Math::Zero<T>     zero;
+      //
+      if constexpr ( 1 == D )
+      {
+        const T w { mtrx ( 0 , 0 ) } ; 
+        return static_cast<T> ( 0 ) < w && !zero ( w ) ; 
+      }
+      //
       for ( unsigned int i = 0 ; i < D ; ++i )
       {
         /// diagonal elements must be positive! 
@@ -1797,6 +1830,12 @@ namespace Ostap
       //
       const Ostap::Math::Zero<T>     zero  ;
       const Ostap::Math::Equal_To<T> equal ;
+      //  
+      if constexpr ( 1 == D )
+      {
+        const T w { mtrx ( 0 , 0 ) } ; 
+        return static_cast<T> ( 0 ) < w && !zero ( w ) ; 
+      }
       //
       for ( unsigned int i = 0 ; i < D ; ++i )
       {
@@ -1842,6 +1881,13 @@ namespace Ostap
     {
       //
       const Ostap::Math::Zero<T>     zero;
+      //
+      if constexpr ( 1 == D )
+      {
+        const T w { mtrx ( 0 , 0 ) } ; 
+        return static_cast<T> ( 0 ) < w && !zero ( w ) ; 
+      }
+      //
       for ( unsigned int i = 0 ; i < D ; ++i )
       {
         /// diagonal elements must be positive! 

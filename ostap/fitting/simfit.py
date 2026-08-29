@@ -809,22 +809,22 @@ class SimFit (VarMaker,ConfigReducer) :
     #  pdf.fitTo ( data , ... )
     #  sigmas = pdf.wilks ( 'S' , data )
     #  @endcode
-    def wilks ( self                     ,
-                var                      ,
-                dataset                  ,
-                range    = ( 0 , None )  ,
-                silent   = True          ,
-                args     = () , **kwargs ) :
+    def wilks_NLL ( self                     ,
+                    var                      ,
+                    dataset                  ,
+                    range    = ( 0 , None )  ,
+                    silent   = True          ,
+                    args     = () , **kwargs ) :
         """ Evaluate 'significance' using Wilks' theorem via NLL
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )
         >>> sigmas = pdf.wilks ( 'S' , data )
         """
-        return self.pdf.wilks ( var , dataset   ,
-                                range  = range  ,
-                                silent = silent ,
-                                args   = args   , **kwargs )
+        return self.pdf.wilks_NLL ( var , dataset   ,
+                                    range  = range  ,
+                                    silent = silent ,
+                                    args   = args   , **kwargs )
 
 
     # ========================================================================
@@ -835,7 +835,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #  pdf.fitTo ( data , ... )
     #  sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma' ] )
     #  @endcode
-    def wilks2 ( self                           ,
+    def wilks  ( self                           ,
                  var                            ,
                  dataset                        ,
                  fix                            , ## variables to fix 
@@ -852,7 +852,7 @@ class SimFit (VarMaker,ConfigReducer) :
         >>> pdf.fitTo ( data , ... )
         >>> sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma'] )
         """
-        return self.pdf.wilks2 ( var                              ,
+        return self.pdf.wilks  ( var                              ,
                                  dataset        = dataset         ,
                                  fix            = fix             ,
                                  range          = range           , 

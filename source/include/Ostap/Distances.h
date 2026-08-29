@@ -226,12 +226,12 @@ namespace Ostap
      *  @date 2023-03-07
      */
     template <unsigned int N, typename SCALAR>
-      inline double mahalanobis
+    inline double mahalanobis
     ( const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 , 
       const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 )
-    { return mahalanobis ( v1 , v1 , 2.0 , v2 , v2 , 2.0 ) ; }
+    { return mahalanobis ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }
     // ========================================================================    
     /** get Hotelling's t-squared statistics 
      *  @see https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution#Two-sample_statistic

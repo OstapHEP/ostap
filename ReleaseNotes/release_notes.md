@@ -1,7 +1,11 @@
 ## New features
 
+  1. add partial specializations for `N/D==1` for matrix method related to Cholesky decomposition oinversion and eigenvalues.
+ 
 ## Bug fixes
-    
+  
+  1. fix some remnants and typos 
+ 
 ## Backward incompatible
 
 # v3.8.3.0

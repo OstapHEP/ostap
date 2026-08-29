@@ -65,6 +65,11 @@ Ostap::Math::GSL::EigenSystem::eigenValues
   const bool sorted ) const 
 {
   ROOT::Math::SVector<T,D> result ;
+  if constexpr ( 1 == D )
+  {
+    result [ 0 ] = mtrx ( 0 , 0 ) ;
+    return result ;
+  }
   Ostap::StatusCode sc = eigenValues ( mtrx , result , sorted ) ;
   if ( sc.isFailure() ) { Exception ( sc , __FILE__ , __LINE__ ) ; }
   return result ;
@@ -79,6 +84,11 @@ Ostap::Math::GSL::EigenSystem::eigenValues
   ROOT::Math::SVector<T,D>&                                     vals , 
   const bool sorted ) const 
 {
+  if constexpr ( 1 == D )
+  {
+    vals [ 0 ] == mtrx ( 0 , 0 ) ;
+    return Ostap::StatusCode::SUCCESS ;
+  }
   Ostap::StatusCode sc = _fill ( mtrx ) ;
   if ( sc.isFailure() ) { return sc ; }
   // find eigenvalues (&sort them if needed)
@@ -100,6 +110,13 @@ Ostap::Math::GSL::EigenSystem::eigenVectors
   const bool sorted    ,
   const bool ascending ) const
 {
+  if constexpr ( 1 == D )
+  {
+    vals [ 0 ]     = mtrx ( 0 , 0 ) ;
+    vecs ( 0 , 0 ) = static_cast<T> ( 1 ) ;
+    return Ostap::StatusCode::SUCCESS ;  
+  }
+  //
   Ostap::StatusCode sc = _fill ( mtrx ) ;
   if ( sc.isFailure() ) { return sc ; }
   // find the eigenvalues and eigenvectors (&sort them if needed) 
@@ -123,6 +140,14 @@ Ostap::Math::GSL::EigenSystem::eigenVectors
   const bool sorted    ,
   const bool ascending ) const
 {
+  if constexpr ( 1 == D )
+  {
+    vals [ 0 ]       = mtrx ( 0 , 0 ) ;
+    vecs.resize ( 1 ) ;
+    vecs [ 0 ] [ 0 ] = static_cast<T> ( 1 ) ;
+    return Ostap::StatusCode::SUCCESS ;
+  }
+
   Ostap::StatusCode sc = _fill ( mtrx ) ;
   if ( sc.isFailure() ) { return sc ; }
   // find the eigenvalues and eigenvectors (&sort them if needed) 

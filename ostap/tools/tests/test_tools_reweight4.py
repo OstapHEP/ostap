@@ -329,17 +329,6 @@ for iter in range ( 1 , maxIter + 1 ) :
                                                          cuts      = 'weight' , 
                                                          prefix    = '# '     ) ) )        
         ## get MC data in a form of vector 
-        vct_mc = mcds.statVct ( 'r1,r2,r3', 'weight' )
-        n_mc   = int ( mcds.nEff ( 'weight' ) )  
-        trow   = ( '%d'    % iter ,
-                   '%+.4g' % vct_mc  .mahalanobis                 ( vct_data ) ,
-                   '%+.4g' % Ostap.Math.hotelling ( vct_mc , n_mc , vct_data , n_data ) ,                 
-                   '%+.4g' % vct_mc  .asymmetric_kullback_leibler ( vct_data ) , 
-                   '%+.4g' % vct_data.asymmetric_kullback_leibler ( vct_mc   ) , 
-                   '%+.4g' % vct_data.           kullback_leibler ( vct_mc   ) )
-        glob_stat.append ( trow )
-        ## title = 'MC-data as vector at #%s' % iter
-        ## logger.info ( '%s\n%s' % ( title , vct_mc.table ( title = title , prefix = '# ' , correlations =True ) ) ) 
         
     # =========================================================================
     ## 2) update weights
@@ -353,9 +342,6 @@ for iter in range ( 1 , maxIter + 1 ) :
     ## if   iter < 3 : the_plots = plots [ : 1 ]
     ## elif iter < 4 : the_plots = plots [ : 4 ]
     ## else          : the_plots = plots
-
-    ## weight truncation: avoid very large change of weights for  single iteration 
-    wtruncate = ( 0.1 , 10 ) if iter < 4 else ( 0.5 , 2.0 )  
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
@@ -369,7 +355,6 @@ for iter in range ( 1 , maxIter + 1 ) :
             minmax     = 0.10      , ## stopping criteria  
             maxchi2    = 1.50      , ## stopping criteria 
             power      = power     , ## tune: effective power
-            wtruncate  = wtruncate , ## truncate weights 
             make_plots = True      , ## make control plots 
             tag        = tag       ) ## tag for printout
 
@@ -433,20 +418,6 @@ if converged : # ==============================================================
                                                         cuts      = 'weight' , 
                                                          prefix    = '# '     ) ) )
     
-    # =============================================================================
-    vct_final = mctree.statVct ( 'r1,r2,r3' , 'weight' )
-    n_mc = int ( mctree.nEff('weight')  )
-    trow = ( '*' ,
-             '%+.4g' % vct_final .mahalanobis                 ( vct_data  ) , 
-             '%+.4g' % Ostap.Math.hotelling ( vct_final , n_mc ,  vct_data  , n_data ) ,         
-             '%+.4g' % vct_final .asymmetric_kullback_leibler ( vct_data  ) , 
-             '%+.4g' % vct_data  .asymmetric_kullback_leibler ( vct_final ) , 
-             '%+.4g' % vct_data  .           kullback_leibler ( vct_final ) )
-    glob_stat.append ( trow )
-
-    title = 'Global DATA/MC similarity'
-    table = T.table ( glob_stat , title = title , prefix = '# ' ) 
-    logger.info ( '%s\n%s' % ( title , table ) ) 
 
 # ===========================================================================
 ## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT

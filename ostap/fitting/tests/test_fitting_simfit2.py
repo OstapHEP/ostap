@@ -160,9 +160,9 @@ def test_simfit2 ( ) :
         graphs.append ( grs )
         
     ## significance 
-    wilks  = model_sim.wilks    ( 'S_M2' , dataset  )
-    wilks2 = model_sim.wilks2   ( 'S_M2' , dataset  , fix = ( 'mean_G1' , 'sigma_G1' ) ) 
-    logger.info ( 'Significane: %.1f and %.1f ' % ( wilks , wilks2 ) ) 
+    ## wilks  = model_sim.wilks    ( 'S_M2' , dataset  )
+    wilks = model_sim.wilks   ( 'S_M2' , dataset  , fix = ( 'mean_G1' , 'sigma_G1' ) ) 
+    logger.info ( 'Significane: %.1f and %.1f ' % ( wilks , wilks ) ) 
 
 
     # =========================================================================
