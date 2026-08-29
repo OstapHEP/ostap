@@ -78,19 +78,11 @@ class BootstrapGoF ( GoFnp ) :
         return True 
 
     # =========================================================================
-    ## Are weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are negative weights supported by this estimator?
-        """
-        return True
-    
-    # =========================================================================
     ## Good for two-samples comparison?
-    #  Can this estimator be used for comparison of two samples?
+    #  Can this estimator be used for Two Samples comparison ?
     @property 
     def two_samples ( self ) :
-        """`two_samples`: Can this estimator be used for comparison of two samples?
+        """`two_samples`: Can this estimator be used for Two Samples comparison ?
         """
         return True 
        

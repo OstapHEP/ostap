@@ -326,13 +326,6 @@ class USTAT(AGoF,Config) :
         """
         return False 
     
-    ## Are negative weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negative weights_supported`: Are negative weights supported by this estimator?
-        """
-        return False 
-    
     ## show progress-bar?
     @property 
     def progress ( self ) :

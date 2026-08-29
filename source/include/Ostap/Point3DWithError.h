@@ -250,15 +250,15 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      *  @see Ostap::Math::kullback_leibler 
      */
-    double kullback_leibler 
+    double  jeffrey  
     ( const Point3DWithError& a , 
       const Point3DWithError& b ) ;
     // ========================================================================
-    /** Get asymmetric Kullback-Leibler divergency for two objects 
+    /** Get (asymmetric) Kullback-Leibler divergency for two objects 
      *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      *  @see Ostap::Math::asymmetric_kullback_leibler 
      */
-    double asymmetric_kullback_leibler 
+    double  kullback_leibler 
     ( const Point3DWithError& a , 
       const Point3DWithError& b ) ;
     // ========================================================================

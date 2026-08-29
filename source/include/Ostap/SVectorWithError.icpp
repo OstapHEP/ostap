@@ -18,6 +18,7 @@
 // ============================================================================
 #include "Ostap/SVectorWithError.h"
 #include "Ostap/MatrixUtils.h"
+#include "Ostap/Distances.h"
 // ============================================================================
 /** @file Ostap/SVectorWithError.icpp
  *  The implementation file for class Ostap::Math::SVectorWithError
@@ -34,7 +35,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::chi2
   s_cov2 += right.cov2() ;
   /// use Manuel's inverter:
   const bool ok = s_cov2.InvertChol() ;
-  if  ( !ok ) { return -1 ; }                                        // RETURN  
+  if  ( !ok ) { return -999 ; }                                 // RETURN  
   /// calculate chi2 
   return ROOT::Math::Similarity ( this->value() - right.value() , s_cov2 ) ;
 }
@@ -47,7 +48,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::chi2
   Covariance s_cov2 ( this->cov2() ) ;
   /// use Manuel's inverter:
   const bool ok = s_cov2.InvertChol() ;
-  if  ( !ok ) { return -1 ; }                                        // RETURN  
+  if  ( !ok ) { return -999 ; }                                  // RETURN  
   /// calculate chi2 
   return ROOT::Math::Similarity ( this->value() - right , s_cov2 ) ;
 }
@@ -61,7 +62,7 @@ Ostap::Math::SVectorWithError<N,SCALAR>::chi2
   Covariance s_cov2 ( this->cov2() ) ;
   /// use Manuel's inverter:
   const bool ok = s_cov2.InvertChol() ;
-  if  ( !ok ) { return -1 ; }                                        // RETURN  
+  if  ( !ok ) { return -999 ; }                                  // RETURN  
   /// calculate chi2 
   return ROOT::Math::Similarity ( this->value() - right , s_cov2 ) ;
 }
@@ -245,10 +246,10 @@ Ostap::Math::SVectorWithError<N,SCALAR>::mean
 template <unsigned int N, class SCALAR>
 inline
 double 
-Ostap::Math::SVectorWithError<N,SCALAR>::asymmetric_kullback_leibler 
+Ostap::Math::SVectorWithError<N,SCALAR>::kullback_leibler 
 ( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
 {
-  return Ostap::Math::asymmetric_kullback_leibler
+  return Ostap::Math::kullback_leibler
     ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
 }
 // ============================================================================
@@ -261,26 +262,47 @@ Ostap::Math::SVectorWithError<N,SCALAR>::asymmetric_kullback_leibler
 template <unsigned int N, class SCALAR>
 inline
 double 
-Ostap::Math::SVectorWithError<N,SCALAR>::kullback_leibler 
+Ostap::Math::SVectorWithError<N,SCALAR>::jeffrey
 ( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
 {
-  return Ostap::Math::kullback_leibler 
+  return Ostap::Math::jeffrey 
     ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
 }
 // ============================================================================
-/*  get Mahalanobis distance 
- *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
- *  @return Mahalanobis distance (-1 in case of error)
+/*  Get symmetrized Kullback-Leibler divergency, aka Jensen-Shannon 
+ *  aka Jeffrey's divergency, for two objects 
+ *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *  @see Ostap::Math::jensen_shannon
+ *  @return symmetrised KL-divergency (-1 in case of error)
  */
 // ============================================================================
 template <unsigned int N, class SCALAR>
 inline
 double 
-Ostap::Math::SVectorWithError<N,SCALAR>::mahalanobis  
+Ostap::Math::SVectorWithError<N,SCALAR>::jensen_shannon
 ( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
 {
-  const double c2 = this->chi2 ( right ) ;
-  return 0 <= c2 ? std::sqrt ( c2 ) : c2 ;
+  return Ostap::Math::jensen_shannon
+    ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
+}
+// ============================================================================
+/*  Get symmetrized Kullback-Leibler divergency, aka Jensen-Shannon 
+ *  aka Jeffrey's divergency, for two objects 
+ *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+ *  @see Ostap::Math::jensen_shannon
+ *  @return symmetrised KL-divergency (-1 in case of error)
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::jensen_shannon
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ,
+  const double                                   n1    ,
+  const double                                   n2    ) const
+{
+  return Ostap::Math::jensen_shannon
+    ( this->value () , this->cov2 () , n1 , right.value () , right.cov2 () , n2 ) ; 
 }
 // ============================================================================
 /*  get Mahalanobis distance 
@@ -292,10 +314,105 @@ template <unsigned int N, class SCALAR>
 inline
 double 
 Ostap::Math::SVectorWithError<N,SCALAR>::mahalanobis  
-( const ROOT::Math::SVector<SCALAR,N>& right ) const
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ,
+  const double                                   n1    ,
+  const double                                   n2    ) const
 {
-  const double c2 = this->chi2 ( right ) ;
-  return 0 <= c2 ? std::sqrt ( c2 ) : c2 ;
+  return Ostap::Math::mahalanobis
+    ( this->value () , this->cov2 () , n1 , right.value () , right.cov2 () , n2 ) ; 
+}
+// ============================================================================
+/*  get Mahalanobis distance 
+ *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+ *  @return Mahalanobis distance (-1 in case of error)
+ */
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::mahalanobis  
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
+{
+  return Ostap::Math::mahalanobis
+    ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::hotelling
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ,
+  const double                                   n1    ,
+  const double                                   n2    ) const
+{
+  return Ostap::Math::hotelling
+    ( this->value () , this->cov2 () , n1 , right.value () , right.cov2 () , n2 ) ; 
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::bhattacharyya 
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const
+{
+  return Ostap::Math::bhattacharyya 
+    ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::bhattacharyya 
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ,
+  const double                                   n1    ,
+  const double                                   n2    ) const
+{
+  return Ostap::Math::bhattacharyya 
+    ( this->value () , this->cov2 () , n1 , right.value () , right.cov2 () , n2 ) ; 
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::hellinger
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ,
+  const double                                   n1    ,
+  const double                                   n2    ) const
+{
+  return Ostap::Math::hellinger
+    ( this->value () , this->cov2 () , n1 , right.value () , right.cov2 () , n2 ) ; 
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::hellinger
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const 
+{
+  return Ostap::Math::hellinger
+    ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::wasserstein
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ,
+  const double                                   n1    ,
+  const double                                   n2    ) const
+{
+  return Ostap::Math::wasserstein
+    ( this->value () , this->cov2 () , n1 , right.value () , right.cov2 () , n2 ) ; 
+}
+// ============================================================================
+template <unsigned int N, class SCALAR>
+inline
+double 
+Ostap::Math::SVectorWithError<N,SCALAR>::wasserstein
+( const Ostap::Math::SVectorWithError<N,SCALAR>& right ) const 
+{
+  return Ostap::Math::wasserstein
+    ( this->value () , this->cov2 () , right.value () , right.cov2 () ) ; 
 }
 // ============================================================================
 /*  make unnormalized weighted sum, accounting the uncertainties  

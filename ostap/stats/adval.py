@@ -40,10 +40,10 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import string_types
 from   ostap.utils.core       import typename
-from   ostap.utils.basic      import numcpu, num_jobs, run_parallel
 from   ostap.stats.utils      import ( weight_trivial , nEff         , 
                                        num_samples    , num_features , 
                                        check_all      )
+from   ostap.utils.basic      import numcpu, num_jobs, run_parallel 
 from   ostap.stats.gof_np     import GoFnp 
 from   sklearn.metrics        import mean_squared_error
 import ROOT, numpy, abc, os   
@@ -146,9 +146,7 @@ class ADVAL_base (GoFnp):
     """
     def __init__ ( self               ,
                    nToys      = 400   ,
-                   parallel   = False ,
-                   silent     = False ,
-                   progress   = True  ,
+                   parallel   = True  ,
                    normalize  = True  ,
                    n_splits   = 5     , 
                    method     = "Adversarial Validation (Regression)" , **params ) :
@@ -159,19 +157,19 @@ class ADVAL_base (GoFnp):
 
         ## switch off parallel processing 
         if parallel and not run_parallel ( parallel ) :
-            logger.info ( '%s: parallel processing is OFF' % typename ( self ) )
+            logger.info ( '%s: (internal) parallel processing is OFF' % typename ( self ) )
             parallel = False
             
-        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu() - 1 )
+        ## (re)define n_jobs     
+        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )
 
+        
         self.__n_splits            = n_splits 
         self.__importance_features = {}
         
         GoFnp.__init__ ( self                  ,
                          nToys     = nToys     ,
                          parallel  = parallel  , 
-                         silent    = silent    ,
-                         progress  = progress  ,
                          normalize = normalize , 
                          method    = method    , **params )
                 
@@ -194,11 +192,6 @@ class ADVAL_base (GoFnp):
     def weights_supported ( self ) :
         return True 
 
-    @property 
-    def negative_weights_supported ( self ) :
-        """Negative weights (sPlot) are natively supported via target inversion and absolute weights"""
-        return True 
-        
     @property 
     def two_samples ( self ) :
         return True 
@@ -365,10 +358,7 @@ class ADVAL_base (GoFnp):
 ## @class ADVAL_LGBM (Regression)
 class ADVAL_LGBM (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 400   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  , **params ) :
+                   nToys    = 400   , **params ) :
             
         config = {
             'objective'         : 'regression',
@@ -391,9 +381,6 @@ class ADVAL_LGBM (ADVAL_base) :
         
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
-                              parallel  = parallel ,
-                              silent    = silent   , 
-                              progress  = progress ,
                               normalize = False    ,
                               method    = "ADVAL/LightGBM" , **config   ) 
 
@@ -487,10 +474,7 @@ class ADVAL_LGBM (ADVAL_base) :
 ## @class ADVAL_XGB (Regression)
 class ADVAL_XGB (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 400   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  , **params ) :
+                   nToys    = 400   , **params ) :
 
         config = {  'objective'        : 'reg:squarederror',
                     'eval_metric'      : 'rmse',
@@ -511,9 +495,6 @@ class ADVAL_XGB (ADVAL_base) :
         
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
-                              parallel  = parallel ,
-                              silent    = silent   , 
-                              progress  = progress ,
                               normalize = False    ,
                               method    = "ADVAL/XGBoost" , **config ) 
 
@@ -613,10 +594,7 @@ class ADVAL_XGB (ADVAL_base) :
 ## @class ADVAL_CATB (Regression)
 class ADVAL_CATB (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 400   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  , **params ) :
+                   nToys    = 400   , **params ) :
         
         config = {  'loss_function'         : 'RMSE',
                     'eval_metric'           : 'RMSE',
@@ -639,9 +617,6 @@ class ADVAL_CATB (ADVAL_base) :
         import catboost as CatBoost 
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
-                              parallel  = parallel ,
-                              silent    = silent   , 
-                              progress  = progress ,
                               normalize = False    ,
                               method    = "ADVAL/CatBoost" , **config   )
 
@@ -737,10 +712,7 @@ class ADVAL_CATB (ADVAL_base) :
 ## @class ADVAL_HGBC (Regression)
 class ADVAL_HGBC (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 400   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  , **params ) :
+                   nToys    = 400   , **params ) :
         
         config = {  'loss'              : 'squared_error',
                     'learning_rate'     : 0.03   ,
@@ -754,14 +726,9 @@ class ADVAL_HGBC (ADVAL_base) :
                     'scoring'           : 'neg_root_mean_squared_error',
                 }
         
-        if parallel and not run_parallel ( parallel ) : parallel = False 
-                
         config.update ( params )
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
-                              parallel  = parallel ,
-                              silent    = silent   , 
-                              progress  = progress , 
                               normalize = False    ,
                               method    = "ADVAL/HGBC" , **config   )
         
@@ -840,10 +807,7 @@ class ADVAL_HGBC (ADVAL_base) :
 ## @class ADVAL_GBC (Regression)
 class ADVAL_GBC (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 400   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  , **params   ) :
+                   nToys    = 400   , **params   ) :
         
         config = {  'loss'              : 'squared_error',
                     'learning_rate'     : 0.05  ,
@@ -859,9 +823,6 @@ class ADVAL_GBC (ADVAL_base) :
         
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
-                              parallel  = parallel ,
-                              silent    = silent   , 
-                              progress  = progress ,
                               normalize = False    ,
                               method    = "ADVAL/GBC" , **config   ) 
         
@@ -937,11 +898,8 @@ class ADVAL_GBC (ADVAL_base) :
 # =============================================================================
 ## @class ADVAL_RF (Regression)
 class ADVAL_RF (ADVAL_base) : 
-    def __init__ ( self             ,
-                   nToys    = 400   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  , **params   ) :
+    def __init__ ( self           ,
+                   nToys    = 400 , **params   ) :
   
         config = {  'n_estimators'      : DEFAULT_ESTIMATORS ,
                     'n_jobs'            : -1    ,
@@ -957,9 +915,6 @@ class ADVAL_RF (ADVAL_base) :
         
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
-                              parallel  = parallel ,
-                              silent    = silent   , 
-                              progress  = progress ,
                               normalize = False    ,                              
                               method    = "ADVAL/RandomForest" , **config  )
         
@@ -1039,10 +994,7 @@ class ADVAL_RF (ADVAL_base) :
 ## @class ADVAL_TORCH (Regression)
 class ADVAL_TORCH (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 100   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  , **params   ) :
+                   nToys    = 100   , **params   ) :
 
         config =  { 'epochs'                : 100   ,
                     'batch_size'            : 256   ,
@@ -1055,9 +1007,6 @@ class ADVAL_TORCH (ADVAL_base) :
 
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
-                              parallel  = parallel ,
-                              silent    = silent   , 
-                              progress  = progress ,
                               normalize = True     , 
                               method    = "ADVAL/PyTorch" , **config  ) 
 
@@ -1210,10 +1159,7 @@ class ADVAL_TORCH (ADVAL_base) :
 ## @class ADVAL_KERAS (Regression)
 class ADVAL_KERAS (ADVAL_base) : 
     def __init__ ( self             ,
-                   nToys    = 100   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  , **params   ) :
+                   nToys    = 100   , **params   ) :
 
         config =  { 'epochs'                : 100    ,
                     'batch_size'            : 256    ,
@@ -1224,9 +1170,6 @@ class ADVAL_KERAS (ADVAL_base) :
 
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
-                              parallel  = parallel ,
-                              silent    = silent   , 
-                              progress  = progress , 
                               normalize = True     , 
                               method    = "ADVAL/Keras" , **config  )
         

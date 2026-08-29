@@ -394,11 +394,11 @@ Ostap::Math::Point3DWithError::mean
  *  @see Ostap::Math::kullback_leibler 
  */
 // ============================================================================
-double Ostap::Math::kullback_leibler 
+double Ostap::Math::jeffrey
 ( const Ostap::Math::Point3DWithError& a , 
   const Ostap::Math::Point3DWithError& b ) 
 {
-  return Ostap::Math::kullback_leibler 
+  return Ostap::Math::jeffrey
     ( a.asVector3() , a.covariance () , 
       b.asVector3() , b.covariance () ) ;
 }
@@ -408,11 +408,11 @@ double Ostap::Math::kullback_leibler
  *  @see Ostap::Math::asymmetric_kullback_leibler 
  */
 // ============================================================================
-double Ostap::Math::asymmetric_kullback_leibler 
+double Ostap::Math::kullback_leibler 
 ( const Ostap::Math::Point3DWithError& a , 
   const Ostap::Math::Point3DWithError& b ) 
 {
-  return Ostap::Math::asymmetric_kullback_leibler 
+  return Ostap::Math::kullback_leibler 
     ( a.asVector3() , a.covariance () , 
       b.asVector3() , b.covariance () ) ;
 }

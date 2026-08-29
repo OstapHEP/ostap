@@ -26,9 +26,15 @@ __all__     = (
     'PPDnp'           , ## Point-to-Point Dissimilarity  Goodness-of-Fit method 
     'DNNnp'           , ## Distance-to-Nearest-Neighbor  Goodness-of-Fit method
     ##
-    'Mahalanobis'     , ## Very crude estimator based on Mahalanobis' distance
+    'Chi2'            , ## Very crude estimator based on chi2 distance
     'KullbackLeibler' , ## Very crude estimator based on Kullback-Leibler's divergency 
-    'Hotelling'       , ## Very crude estimator based on Hotelling's distance 
+    'Jeffrey'         , ## Very crude estimator based on Jeffrey's divergency 
+    'JensenShannon'   , ## Very crude estimator based on Jensen-Shannon divergency 
+    'Mahalanobis'     , ## Very crude estimator based on Mahalanobis' distance
+    'Hotelling'       , ## Very crude estimator based on Hotelling's distance
+    'Bhattacharyya'   , ## Very crude estimator based on Bhattacharyya's divergency 
+    'Wasserstein'     , ## Very crude estimator based on Wasserstein's divergency 
+    'Hellinger'       , ## Very crude estimator based on Hellinger's divergency 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types, num_types 
@@ -36,7 +42,7 @@ from   ostap.core.core          import SE, VE, Ostap, hID
 from   ostap.stats.counters     import EffCounter, ECDF
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.core         import typename
-from   ostap.utils.basic        import numcpu
+from   ostap.utils.basic        import numcpu, num_jobs, run_parallel 
 from   ostap.utils.config       import Config
 from   ostap.stats.gof          import AGoFnp
 from   ostap.stats.utils        import ( weight_trivial     ,
@@ -73,15 +79,15 @@ class GoFnp (AGoFnp,Config) :
     """
     def __init__ ( self               , * , 
                    nToys     = 100    ,
-                   silent    = False  , 
-                   parallel  = False  ,
+                   silent    = True   , 
+                   parallel  = True   ,
                    method    = 'GoF'  ,
                    progress  = True   ,
                    normalize = True   , **params ) : 
         
         if not isinstance ( nToys   , int ) : raise TypeError  ( "Invalid type  for `nToys`  : %s" % typename ( nToys   ) )
         if not 0 <= nToys                   : raise ValueError ( "Invalid value for `nToys`  : %d" %            nToys     )
-
+        
         self.__nToys    = nToys
         ## 
         self.__parallel  = True if parallel  else False
@@ -122,7 +128,6 @@ class GoFnp (AGoFnp,Config) :
         conf [ 'normalize'                  ] = self.normalize
         conf [ 'method'                     ] = self.method  
         conf [ 'weights_supported'          ] = self.weights_supported
-        conf [ 'negative_weights_supported' ] = self.negative_weights_supported
         conf [ 'two_samples'                ] = self.two_samples 
         return conf 
     
@@ -477,9 +482,7 @@ class MIXnp(GoFnp) :
     
     def __init__ ( self ,
                    nToys       = 1000  ,
-                   parallel    = False , 
-                   silent      = False ,
-                   progress    = True  ,
+                   parallel    = True  , 
                    n_neighbors = 10    , **params ) : 
         
         ## Attention!
@@ -490,37 +493,27 @@ class MIXnp(GoFnp) :
         self._k_max = n_neighbors 
         ##
         
-        # =================================================================================
+        ## switch off parallel processing 
         if parallel and not run_parallel ( parallel ) :
-            logger.warning ( "%s: Parallel processing is switched OFF!" % typename ( self ) ) 
-            parallel = False 
-                    
-        n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
+            logger.info ( '%s: (internal) parallel processing is OFF' % typename ( self ) )
+            parallel = False
+            
+        ## (re)define n_jobs     
+        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )
 
         ## initialize the base 
         GoFnp.__init__ ( self                          , 
                          nToys        = nToys          ,
                          parallel     = parallel       , 
-                         silent       = silent         ,
-                         progress     = progress       ,                         
                          method       = 'Mixed Sample' ,
                          normalize    = True           , 
-                         n_neighbors  = self.k_max     ,
-                         n_jobs       = n_jobs         , **params )
+                         n_neighbors  = self.k_max     , **params )
 
     # =========================================================================
     ## Are weights supported by this estimator?
     @property
     def weights_supported ( self ) :
         """`weights_supported` : Are weights supported by this estimator?
-        """
-        return False 
-
-    # =========================================================================
-    ## Are weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are weights supported by this estimator?
         """
         return False 
     
@@ -637,19 +630,16 @@ class PPDnp(GoFnp) :
                    nToys     = 1000       ,
                    psi       = 'gaussian' ,
                    sigma     = 0.10       ,
-                   parallel  = False      , 
-                   silent    = False      ,
-                   progress  = True       , 
+                   parallel  = True       , 
                    maxsize   = 10000000   , **params ) :
-
         
-        # =================================================================================
+        ## switch off parallel processing 
         if parallel and not run_parallel ( parallel ) :
-            logger.warning ( "%s: Parallel processing is switched OFF!" % typename ( self ) ) 
-            parallel = False 
-                    
-        n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
-        
+            logger.info ( '%s: (internal) parallel processing is OFF' % typename ( self ) )
+            parallel = False            
+        params [ 'n_jobs' ]  = 1 if parallel else num_jobs ( params , numcpu() - 1 )
+
+
         self.__mc2mc     = True if mc2mc else False
         self.__transform = None
         self.__sigma     = sigma
@@ -665,10 +655,7 @@ class PPDnp(GoFnp) :
         GoFnp.__init__ ( self                 ,
                          nToys     = nToys    ,
                          parallel  = parallel , 
-                         silent    = silent   ,
-                         progress  = progress , ## ATTENTION!                          
                          normalize = True     ,
-                         n_jobs    = n_jobs   , 
                          method    = 'Point-to-Point Dissimilarity' , **params )
                 
     # ==================================================================================
@@ -690,14 +677,6 @@ class PPDnp(GoFnp) :
         """
         return False
 
-    # =========================================================================
-    ## Are weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are weights supported by this estimator?
-        """
-        return False 
-        
     # =========================================================================
     ## Good for two-samples comparison?
     #  Can this estimator be used for comparison of two samples?
@@ -876,15 +855,19 @@ class DNNnp(GoFnp) :
     ... tool (especially for very high dimensional analyses), but its quantitative
     ... usefulness as a g.o.f. test is limited.  
     """
-    def __init__ ( self              ,
-                   histo    = None   ,
-                   nToys    = 1000   ,
-                   parallel = False  , 
-                   silent   = True   ,
-                   progress = True   , **params ) :
-        
-        n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
+    def __init__ ( self            ,
+                   histo    = None ,
+                   nToys    = 1000 ,
+                   parallel = True , **params ) :
 
+        ## switch off parallel processing 
+        if parallel and not run_parallel ( parallel ) :
+            logger.info ( '%s: (internal) parallel processing is OFF' % typename ( self ) )
+            parallel = False
+            
+        params [ 'n_jobs'    ] = 1 if parallel else num_jobs ( params , numcpu() - 1 )
+        params [ 'normalize' ] = True 
+        
         if 'metric' in params : params.pop ( 'metric' )
         if 'p'      in params : params.pop ( 'p'      )
         
@@ -897,11 +880,7 @@ class DNNnp(GoFnp) :
         GoFnp.__init__ ( self                      ,
                          nToys       = nToys       ,
                          parallel    = parallel    , 
-                         silent      = silent      ,
-                         progress    = progress    ,
-                         normalize   = True        ,                          
-                         method      = 'Distance-to-Nearest-Neighbor' ,
-                         n_jobs      = n_jobs      , **params )
+                         method      = 'Distance-to-Nearest-Neighbor' , **params )
         
     # ==================================================================================
     @property
@@ -919,14 +898,6 @@ class DNNnp(GoFnp) :
         """
         return False
 
-    # =========================================================================
-    ## Are weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are weights supported by this estimator?
-        """
-        return False 
-    
     # =========================================================================
     ## Good for two-samples comparison?
     #  Can this estimator be used for comparison of two samples?
@@ -1078,30 +1049,39 @@ class DNNnp(GoFnp) :
         raise NotImplementedError( "p-value is not defined for DNNnp!" )
 
 # =============================================================================
-## @class Mahalanobis
-#  Use Mahalanobis distance to discriminiate the dataset
-#  @attention it is *VERY* crude "estimator"
-class Mahalanobis(GoFnp) :
-    """ Use Mahalanobis distance to discriminiate the dataset
-    - attention it is *VERY* crude "estimator"
+## @class DistanceTest
+#  Base class for Two-Samples/GoF tests based on
+#  the gloabal shape parameters ("distances")
+#  @attention All of them are  *VERY* crude "estimators"
+class DistanceTest(GoFnp) :
+    """Base class for Two-Sampels/GoF tests based on
+    global shape parameters ("distances")
+    - attention All of them are  *VERY* crude "estimators"
     """    
     def __init__ ( self        , *     , 
-                   nToys       = 400   ,
-                   parallel    = False , 
-                   silent      = False ,
-                   method      = "Mahalanobis" , 
-                   normalize   = True  , 
-                   progress    = True  , **params ) :         
+                   nToys       = 1000  ,
+                   parallel    = True  , 
+                   method      = "<UNSPECIFIED>" , 
+                   check_vct   = False ,
+                   normalize   = True  , **params ) :         
+        
+        ## check data-vectors ?
+        self.__check_vct = True if check_vct else False
         
         ## initialize the base 
-        GoFnp.__init__ ( self                          , 
-                         nToys        = nToys          ,
-                         parallel     = parallel       , 
-                         silent       = silent         ,
-                         progress     = progress       ,                         
-                         method       = method         ,
-                         normalize    = normalize      , **params )
-
+        GoFnp.__init__ ( self                            , 
+                         nToys        = nToys            ,
+                         parallel     = parallel         , ## parallel is true 
+                         method       = method           ,
+                         normalize    = True             , ## normailzation is FORCED
+                         check_vct    = self.__check_vct , **params )
+        
+    # =========================================================================
+    @property
+    def check_vct ( self ) :
+        """`check_vct` : check data vectors ? """
+        return self.__check_vct
+        
     # =========================================================================
     ## Are weights supported by this estimator?
     @property
@@ -1109,14 +1089,6 @@ class Mahalanobis(GoFnp) :
         """`weights_supported` : Are weights supported by this estimator?
         """
         return True
-    
-    # =========================================================================
-    ## Are weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are weights supported by this estimator?
-        """
-        return True 
     
     # =========================================================================
     ## Good for two-samples comparison?
@@ -1136,64 +1108,56 @@ class Mahalanobis(GoFnp) :
         """
         return np2vct ( data , weight = weight )
                         
-    # =========================================================================
-    # calculate t-value for (non-structured) 2D arrays
-    def tvalue ( self      , 
-                 data1     , 
-                 data2     , *    , 
-                 weight1   = None , 
-                 weight2   = None ,
-                 normalize = True ) :
-        """ Calculate t-value for (non-structured) 2D arrays
-        """
-        ## transform ?
-        uds1 , uds2 = self.unpack ( data1 , data2 )
-
-        ## check everything
-        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
-        
-        ## normalize
-        if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
-            
-        v1 = self.np2vstat ( uds1 , weight1 )
-        v2 = self.np2vstat ( uds2 , weight2 )
-        
-        return v1.mahalanobis ( v2 )
-    
-# ============================================================================
-## @class KullbackLeibler 
-#  Use KullbackLeibler divergency to discriminiate the dataset
+# =============================================================================
+## @class Chi2
+#  Use Chi2 distance to discriminiate the dataset
 #  @attention it is *VERY* crude "estimator"
-class KullbackLeibler(Mahalanobis) :
-    """ Use Kullback-Leibler divergency to discriminiate the dataset
+class Chi2(DistanceTest) :
+    """ Use Chi2 distance to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self        ,  *    , 
-                   nToys       = 400  ,
-                   parallel    = False , 
-                   silent      = False ,
-                   progress    = True  ,
-                   symmetric   = True  , **params ) :         
-        
-        self.__symmetric = True if symmetric else False
-
-        method = 'Kullback-Leibler/%s' % ( symmetry_symbol if self.symmetric else asymmetry_symbol )
+    def __init__ ( self  , **params ) :         
         
         ## initialize the base 
-        super() .__init__ ( nToys        = nToys     ,
-                            parallel     = parallel  , 
-                            silent       = silent    ,
-                            progress     = progress  ,                           
-                            method       = method    , 
-                            symmetric    = symmetric , 
-                            normalize    = True      , **params )
+        super().__init__ (  method = 'Chi2' , **params )
 
     # =========================================================================
-    @property
-    def symmetric ( self ) :
-        """`symmetric` : Symemtric Kullback-Leibler distance?"""
-        return self.__symmetric 
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+        
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+        
+        return v1.chi2 ( v2 )
+        
+# ============================================================================
+## @class KullbackLeibler 
+#  Use (asymmetric) KullbackLeibler divergency to discriminiate the dataset
+#  @attention it is *VERY* crude "estimator"
+class KullbackLeibler(DistanceTest) :
+    """ Use (asymmetric) Kullback-Leibler divergency to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self  , **params ) :         
+        
+        ## initialize the base 
+        super() .__init__ ( method = 'Kullback-Leibler' , **params )
         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -1218,29 +1182,140 @@ class KullbackLeibler(Mahalanobis) :
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
         
-        return v1.kullback_leibler ( v2 ) if self.symmetric else v1.asymmetric_kullback_leibler ( v2 )
+        return v1.kullback_leibler ( v2 ) 
 
+# ============================================================================
+## @class Jeffrey
+#  Use Jeffrey' (aka symmetric Kullback-Leibler divergency  to discriminiate the datasets 
+#  @attention it is *VERY* crude "estimator"
+class Jeffrey(DistanceTest) :
+    """ Use Jeffrey's (aka symmetric Kullback-Leibler) divergency to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self , **params ) :         
+        
+        ## initialize the base 
+        super() .__init__ ( method = 'Jeffrey' , **params )
+
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+        
+        return v1.jeffrey ( v2 ) 
+
+# ============================================================================
+## @class JensenShannon
+#  Use Jensen-Shannon', another form of  symmetric Kullback-Leibler divergency  to discriminiate the datasets 
+#  @attention it is *VERY* crude "estimator"
+class JensenShannon(DistanceTest) :
+    """ Use Jensen-Shannon's - another form of symmetric Kullback-Leibler) divergency to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self , **params ) :         
+        
+        ## initialize the base 
+        super() .__init__ ( method       = 'Jensen-Shannon' , **params )
+
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+
+        n1 = num_samples ( uds1 ) if weight_trivial ( weight1 ) else float ( numpy.sum ( weight1 ) ) 
+        n2 = num_samples ( uds2 ) if weight_trivial ( weight2 ) else float ( numpy.sum ( weight2 ) ) 
+        
+        return v1.jensen_shannon ( v2 , n1 , n2 ) 
+    
+# =============================================================================
+## @class Mahalanobis
+#  Use Mahalanobis distance to discriminiate the dataset
+#  @attention it is *VERY* crude "estimator"
+class Mahalanobis(DistanceTest) :
+    """ Use Mahalanobis distance to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self , **params ) :         
+        
+        ## initialize the base 
+        super().__init__ ( method       = "Mahalanobis" , **params )
+
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+        
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+        
+        n1 = num_samples ( uds1 ) if weight_trivial ( weight1 ) else float ( numpy.sum ( weight1 ) ) 
+        n2 = num_samples ( uds2 ) if weight_trivial ( weight2 ) else float ( numpy.sum ( weight2 ) ) 
+        
+        return v1.mahalanobis ( v2 , n1 , n2 )
+    
 # ============================================================================
 ## @class Hotelling  
 #  Use Hotelling's t-squared statistics to discriminiate the datasets
 #  @attention it is *VERY* crude "estimator"
-class Hotelling(Mahalanobis) :
+class Hotelling(DistanceTest) :
     """ Use Hotelling's t-squared statistics to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self        , *     ,
-                   nToys       = 400   ,
-                   parallel    = False , 
-                   silent      = False ,
-                   progress    = True  , **params ) :         
+    def __init__ ( self        , **params ) : 
 
         ## initialize the base 
-        super().__init__ ( nToys        = nToys            ,
-                           parallel     = parallel         , 
-                           silent       = silent           ,
-                           progress     = progress         ,                           
-                           method       = 'Hotelling'      , 
-                           normalize    = True             , **params )
+        super().__init__ ( method       = 'Hotelling' , **params )
         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -1263,29 +1338,137 @@ class Hotelling(Mahalanobis) :
         if normalize and self.normalize :
             uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
 
-        w1_trivial = weight_trivial ( weight1 )
-        w2_trivial = weight_trivial ( weight2 )
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+        
+        n1 = num_samples ( uds1 ) if weight_trivial ( weight1 ) else float ( numpy.sum ( weight1 ) ) 
+        n2 = num_samples ( uds2 ) if weight_trivial ( weight2 ) else float ( numpy.sum ( weight2 ) ) 
+                        
+        return v1.hotelling ( v2 , n1 , n2 ) 
 
-        nw1 = len ( uds1 )
-        nw2 = len ( uds2 )
+# ============================================================================
+## @class Bhattacharyya 
+#  Use Bhattacharyya' statistics to discriminiate the datasets
+#  @attention it is *VERY* crude "estimator"
+class Bhattacharyya(DistanceTest) :
+    """ Use Bhatatcharyya' statistics to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self        , **params ) :
+        ## initialize the base 
+        super().__init__ ( method       = 'Bhattacharyya' , **params )
         
-        if not w1_trivial :
-            
-            sumw  = numpy.sum ( weight1 )
-            sumw2 = numpy.sum ( weight1 * weight1 )
-            nw1   = math.floor ( float ( sumw * sumw / sumw2 ) )
-            
-        if not w2_trivial :
-            
-            sumw  = numpy.sum ( weight2 )
-            sumw2 = numpy.sum ( weight2 * weight2 )
-            nw2   = math.floor ( float ( sumw * sumw / sumw2 ) )
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ##
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
         
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+        
+        n1 = num_samples ( uds1 ) if weight_trivial ( weight1 ) else float ( numpy.sum ( weight1 ) ) 
+        n2 = num_samples ( uds2 ) if weight_trivial ( weight2 ) else float ( numpy.sum ( weight2 ) ) 
+                        
+        return v1.bhattacharyya ( v2 , n1 , n2 ) 
+
+# ============================================================================
+## @class Wasserstein
+#  Use Wasserstein' statistics to discriminiate the datasets
+#  @attention it is *VERY* crude "estimator"
+class Wasserstein(DistanceTest) :
+    """ Use Wassertein' statistics to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self        , **params ) :
+        ## initialize the base 
+        super().__init__ ( method       = 'Wasserstein' , **params )
+        
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ##
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
 
-        return Ostap.Math.hotelling ( v1 , int ( nw1 ) , v2 , int ( nw2 ) )
+        n1 = num_samples ( uds1 ) if weight_trivial ( weight1 ) else float ( numpy.sum ( weight1 ) ) 
+        n2 = num_samples ( uds2 ) if weight_trivial ( weight2 ) else float ( numpy.sum ( weight2 ) ) 
+                
+        return v1.wasserstein ( v2 , n1 , n2 ) 
 
+# ============================================================================
+## @class Hellinger
+#  Use Wasserstein' statistics to discriminiate the datasets
+#  @attention it is *VERY* crude "estimator"
+class Hellinger(DistanceTest) :
+    """ Use Hellinger' statistics to discriminiate the dataset
+    - attention it is *VERY* crude "estimator"
+    """    
+    def __init__ ( self        , **params ) :
+        ## initialize the base 
+        super().__init__ ( method       = 'Hellinger' , **params )
+        
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ##
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## check everything
+        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
+
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+
+        v1 = self.np2vstat ( uds1 , weight1 )
+        v2 = self.np2vstat ( uds2 , weight2 )
+
+        n1 = num_samples ( uds1 ) if weight_trivial ( weight1 ) else float ( numpy.sum ( weight1 ) ) 
+        n2 = num_samples ( uds2 ) if weight_trivial ( weight2 ) else float ( numpy.sum ( weight2 ) ) 
+                
+        return v1.hellinger ( v2 , n1 , n2 ) 
+    
 # =============================================================================
 if '__main__' == __name__ :
     

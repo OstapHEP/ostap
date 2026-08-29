@@ -8,9 +8,9 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Math.h"
 #include "Ostap/LorentzVectorWithError.h"
 #include "Ostap/MatrixTransforms.h"
-#include "Ostap/Math.h"
 #include "Ostap/Kinematics.h"
 // ============================================================================
 /** @file
@@ -775,11 +775,11 @@ Ostap::Math::LorentzVectorWithError::mean
  *  @see Ostap::Math::kullback_leibler 
  */
 // ============================================================================
-double Ostap::Math::kullback_leibler 
+double Ostap::Math::jeffrey
 ( const Ostap::Math::LorentzVectorWithError& a , 
   const Ostap::Math::LorentzVectorWithError& b ) 
 {
-  return Ostap::Math::kullback_leibler 
+  return Ostap::Math::jeffrey
     ( a.asVector4() , a.covariance () , 
       b.asVector4() , b.covariance () ) ;
 }
@@ -789,11 +789,11 @@ double Ostap::Math::kullback_leibler
  *  @see Ostap::Math::asymmetric_kullback_leibler 
  */
 // ============================================================================
-double Ostap::Math::asymmetric_kullback_leibler 
+double Ostap::Math::kullback_leibler 
 ( const Ostap::Math::LorentzVectorWithError& a , 
   const Ostap::Math::LorentzVectorWithError& b ) 
 {
-  return Ostap::Math::asymmetric_kullback_leibler 
+  return Ostap::Math::kullback_leibler 
     ( a.asVector4() , a.covariance () , 
       b.asVector4() , b.covariance () ) ;
 }

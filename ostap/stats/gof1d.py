@@ -1224,14 +1224,6 @@ class GoF_1D(AGoF) :
         return False 
 
     # =========================================================================
-    ## Are negatove weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are negative weights supported by this estimator?
-        """
-        return False 
-    
-    # =========================================================================
     ## Calculate T-value for Goodness-of-Git
     #  @code
     #  gof    = ...

@@ -334,7 +334,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      *  @see Ostap::Math::kullback_leibler 
      */
-    double kullback_leibler 
+    double jeffrey
     ( const LorentzVectorWithError& a , 
       const LorentzVectorWithError& b ) ;
     // ========================================================================
@@ -342,7 +342,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      *  @see Ostap::Math::asymmetric_kullback_leibler 
      */
-    double asymmetric_kullback_leibler 
+    double kullback_leibler 
     ( const LorentzVectorWithError& a , 
       const LorentzVectorWithError& b ) ;
     // ======================================================================

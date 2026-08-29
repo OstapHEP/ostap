@@ -1339,107 +1339,6 @@ namespace Ostap
       return ifail ;  
     }
     // ========================================================================
-    /** Get the asymmetrical  Kullback-Leibler divergency for two objects 
-     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-     *  @param v0 the first  data vector 
-     *  @param c0 the first  covariance matrix 
-     *  @param v1 the second data vector 
-     *  @param c1 the second covariance matrix 
-     *  @return asymmetric Kullback-Leibler divergency, or -999 
-     */
-    template <unsigned int N, typename SCALAR>
-    inline double 
-    asymmetric_kullback_leibler
-    ( const ROOT::Math::SVector<SCALAR,N>&                                    v0 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c0 , 
-      const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 )
-    {
-      /// the actual type of covariance matrix
-      typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
-      ///
-      static const double bad = -999 ;
-      ///
-      SCALAR det0 = 1 ;
-      if ( !c0.Det2 ( det0 ) ) { return bad ; }
-      SCALAR det1 = 1 ;
-      if ( !c1.Det2 ( det1 ) ) { return bad ; }
-      //
-      /// try to invert matrices 
-      COV g1 { c1 } ;
-      if  ( !g1.InvertChol () ) { return bad ; }
-      //
-      return 0.5 * ( Ostap::Math::trace     ( g1 * c0 ) - N  + 
-                     ROOT::Math::Similarity ( g1 , v1 - v0 ) + 
-                     std::log ( det1 / det0 )                ) ;
-    }
-    // ========================================================================
-    /** Get the symmetrized Kullback-Leibler divergency,
-     *  aka Jeffrey's divergence, for two objects 
-     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-     *  \f[ f(v_1, C_1, v_2, C_2) = 
-     *  (v_1-v_2)^{T} \left  ( C_1^{-1} + C_2^{-1} \right) (v_1 - v_2)  
-     *   + Sp \left ( C_1 - C_2 \right ) 
-     *    \times  \left ( C_2^{-1} - C_1^{-1} \right ) \f]
-     *  @param v1 the first  data vector 
-     *  @param c1 the first  covariance matrix 
-     *  @param v2 the second data vector 
-     *  @param c2 the second covariance matrix 
-     *  @return Symmetrised Kullback-Leibler divergency, or -999 
-     */
-    template <unsigned int N, typename SCALAR>
-    inline double kullback_leibler 
-    ( const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 , 
-      const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 )
-    {
-      /// the actual type of covariance matrix
-      typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
-      ///
-      static const double bad = -999 ;
-      /// try to invert matrices 
-      COV g1 { c1 } ;
-      if  ( !g1.InvertChol () ) { return bad ; }
-      COV g2 { c2 } ;
-      if  ( !g2.InvertChol () ) { return bad ; }
-      ///
-      return 0.5 * ( ROOT::Math::Similarity (   g1 + g2   ,   v1 - v2 )   + 
-                     Ostap::Math::trace     ( ( c1 - c2 ) * ( g2 - g1 ) ) ) ;
-    }
-    // ========================================================================
-    /** get Hotelling's t-squared statistics 
-     *  @see https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution#Two-sample_statistic
-     *  \f[ t^2 = \frac{n_1 n_2}{n_1+n_2} \left(v_1-v_2\right)^T \Sigma^{-1} \left( v1-v2) \sim
-     *   T^2 ( p , n_1 + n_2 -2 \f] 
-     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
-     *  @date 2023-03-07
-     */
-    template <unsigned int N, typename SCALAR>
-    inline double hotelling 
-    ( const ROOT::Math::SVector<SCALAR,N>&                                    v1 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 , 
-      const unsigned long long                                                n1 ,  
-      const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
-      const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 , 
-      const unsigned long long                                                n2 ) 
-    {
-      //
-      static const double bad = -999 ;
-      //
-      if ( n1 <= 1 || n2 <= 2 ) { return bad ; } 
-      /// the actual type of covariance matrix
-      typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
-      //
-      const double f1 = ( n1 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
-      const double f2 = ( n2 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
-      //
-      COV si { f1 * c1 + f2 * c2 } ;
-      if ( !si.InvertChol () ) { return bad ; }      
-      //
-      return n1 * n2 / ( n1 + n2 ) * ROOT::Math::Similarity ( si , v1 - v2 ) ;
-    }
-    // ========================================================================
     /*  get Cholesky decomposition for the covarance matrix 
      *  @param M (INPUT)  input symmetric positive definite matrix 
      *  @param L (OUTPUT) Cholesky decomposition of the covariance matrix 
@@ -1956,6 +1855,9 @@ namespace Ostap
           if  ( !std::isfinite ( mij ) || mij * mij > mii * mjj ) { return false ; }
         }
       }
+      ///
+      if constexpr ( D == 1 ) { return true ; }
+      ///
       /// check for positive definitess  
       const ROOT::Math::CholeskyDecomp<T,D> decomp ( mtrx ) ;
       return decomp.ok () ;      

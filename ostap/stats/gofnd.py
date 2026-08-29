@@ -51,10 +51,17 @@ __all__     = (
     'ZK'                 , ## ZK                GoF estimator
     'ZA'                 , ## ZA                GoF estimator
     'ZC'                 , ## ZC                GoF estimator
-    ## some crude estimators
-    'Mahalanobis'        , ## Use Mahalanobis'      distance as GoF estimator
-    'Hotelling'          , ## Use Hoellling'        distance as GoF estimator
-    'KullbackLeibler'    , ## Use Kullback-Leibler' distance as GoF estimator
+    ## 
+    ## some simble but crude estimators
+    'Chi2'               , ## Very crude estimator based on chi2 distance
+    'KullbackLeibler'    , ## Very crude estimator based on Kullback-Leibler's divergency 
+    'Jeffrey'            , ## Very crude estimator based on Jeffrey's divergency 
+    'JensenShannon'      , ## Very crude estimator based on Jensen-Shannon divergency 
+    'Mahalanobis'        , ## Very crude estimator based on Mahalanobis' distance
+    'Hotelling'          , ## Very crude estimator based on Hotelling's distance
+    'Bhattacharyya'      , ## Very crude estimator based on Bhattacharyya's divergency 
+    'Wasserstein'        , ## Very crude estimator based on Wasserstein's divergency 
+    'Hellinger'          , ## Very crude estimator based on Hellinger's divergency 
     ## 
 )
 # =============================================================================
@@ -174,14 +181,6 @@ class GoF(AGoF,Config) :
         """`weghts_supported`: Are weights supported by this estimator?
         """
         return self.gof.weights_supported
-    
-    # =========================================================================
-    ## Are negative weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are weights supported by this estimator?
-        """
-        return self.gof.negative_weights_supported
     
     @property
     def t_value ( self ) : return self.gof.t_value
@@ -345,10 +344,6 @@ class GoF(AGoF,Config) :
 
         if trivial_weight or weight_trivial ( w1 ) :
             return ds1 , ds2 , None , None 
-        
-        if ( w1 < 0 ).any ()  and not self.negative_weights_supported :
-            raise TypeError ( "data has negative weights but they are not supported %s/%s" % ( typename ( self     ) ,
-                                                                                               typename ( self.gof ) ) )
         
         N2 = len ( data2 )
         # =====================================================================
@@ -764,13 +759,6 @@ class NLL(AGoF,Config) :
         """
         return False 
 
-    ## Are negative weights supported by this GoF estimator?
-    @property 
-    def negative_weights_supported ( self ) :
-        """`negatove_weghts_supported`: Are negative weights supported by this estimator?
-        """
-        return False 
-    
     # =======================================================================
     ## get all configration parameters
     @property 
@@ -784,7 +772,6 @@ class NLL(AGoF,Config) :
         conf [ 'parallel'  ] = self.parallel 
         conf [ 'progress'  ] = self.progress
         conf [ 'weights_supported'         ] = self.weights_supported
-        conf [ 'negatve_weights_supported' ] = self.negative_weights_supported
         return conf
     
     ## serialize the object 
@@ -1757,6 +1744,178 @@ class ZK ( KolmogorovSmirnov ) :
         
 
 # =============================================================================
+## @class Chi2
+#  Use "Chi2" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class Chi2(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Chi2' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Chi2' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import Chi2 as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys    = nToys    ,
+                                         parallel = parallel ,
+                                         silent   = silent   ,
+                                         progress = progress , **params ) )
+        
+
+# =============================================================================
+## @class KullbackLeibler 
+#  Use "Kullback-Leibler" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class KullbackLeibler(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Kullback-Leibler' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   symmetric  = True  , 
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Mahalanobis' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import KullbackLeibler as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys     = nToys     ,
+                                         symmetric = symmetric ,
+                                         parallel  = parallel  ,
+                                         silent    = silent    ,
+                                         progress  = progress  , **params ) ) 
+                              
+
+# =============================================================================
+## @class Jeffrey
+#  Use Jeffrey' aka symmetrized "Kullback-Leibler" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class Jeffrey(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Kullback-Leibler' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   symmetric  = True  , 
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Jeffrey' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import Jeffrey as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys     = nToys     ,
+                                         symmetric = symmetric ,
+                                         parallel  = parallel  ,
+                                         silent    = silent    ,
+                                         progress  = progress  , **params ) ) 
+
+# =============================================================================
+## @class JensenShannon
+#  Use Jensen-Shannon' aka symmetrized "Kullback-Leibler" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class JensenShannon (GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Kullback-Leibler' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   symmetric  = True  , 
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Jensen-Shannon' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import JensenShannon as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys     = nToys     ,
+                                         symmetric = symmetric ,
+                                         parallel  = parallel  ,
+                                         silent    = silent    ,
+                                         progress  = progress  , **params ) ) 
+    
+# =============================================================================
 ## @class Mahalanobis
 #  Use "Mahalanobis" method to estimate the Goodness-of-Fit
 #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
@@ -1822,7 +1981,7 @@ class Hotelling(GoF) :
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     
-        """ Create the Mahalanobis' estimator 
+        """ Create the Hotteling' estimator 
 
         Parameters
 
@@ -1837,14 +1996,14 @@ class Hotelling(GoF) :
                                          parallel = parallel ,
                                          silent   = silent   ,
                                          progress = progress , **params ) ) 
-        
+
 # =============================================================================
-## @class Kullback-Leibler 
-#  Use "Kullback-Leibler" method to estimate the Goodness-of-Fit
+## @class Bhattacharyya
+#  Use Bhatatcharyya method to estimate the Goodness-of-Fit
 #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
-class KullbackLeibler(GoF) : 
+class Bhattacharyya(GoF) : 
     """ Implementation of concrete method for probing of Goodness-Of-Fit
-    -   t-value is defined as Kullback-Leibler' distance 
+    -   t-value is defined as Hotelling' distance 
     -   p-value if defined via permutations 
     Important parameters:
     
@@ -1860,11 +2019,10 @@ class KullbackLeibler(GoF) :
                    nToys      = 400   ,
                    parallel   = False ,
                    silent     = False ,
-                   symmetric  = True  , 
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     
-        """ Create the Mahalanobis' estimator 
+        """ Create the Bhattacharyya' estimator 
 
         Parameters
 
@@ -1872,15 +2030,98 @@ class KullbackLeibler(GoF) :
         - nToys    : (int) number of permutations/toys 
         """
         
-        from ostap.stats.gof_np import KullbackLeibler as GOF
+        from ostap.stats.gof_np import Bhattacharyya as GOF
         GoF.__init__ ( self      ,
                        mcFactor  = mcFactor , 
-                       estimator = GOF ( nToys     = nToys     ,
-                                         symmetric = symmetric ,
-                                         parallel  = parallel  ,
-                                         silent    = silent    ,
-                                         progress  = progress  , **params ) ) 
-                              
+                       estimator = GOF ( nToys    = nToys    ,
+                                         parallel = parallel ,
+                                         silent   = silent   ,
+                                         progress = progress , **params ) ) 
+
+# =============================================================================
+## @class Wasserstein
+#  Use Wasserstein method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class Wasserstein(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Hotelling' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Wasserstein' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import Wasserstein as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys    = nToys    ,
+                                         parallel = parallel ,
+                                         silent   = silent   ,
+                                         progress = progress , **params ) ) 
+
+        
+# =============================================================================
+## @class Hellinger
+#  Use Hellinger method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class Hellinger(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as Hotelling' distance 
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Hellinger' estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gof_np import Hellinger as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys    = nToys    ,
+                                         parallel = parallel ,
+                                         silent   = silent   ,
+                                         progress = progress , **params ) ) 
+
+        
 # =============================================================================
 if '__main__' == __name__ :
     

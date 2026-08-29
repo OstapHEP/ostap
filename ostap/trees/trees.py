@@ -992,13 +992,25 @@ def _rt_table_1_ ( tree                    ,
                    style     = ''          ) :
     """ Print tree as table 
     """
-
+    
+    if not variables :
+        return _rt_table_0_ ( tree      ,
+                              cuts      = cuts      ,
+                              first     = first     ,
+                              width     = width     ,
+                              precision = precision ,
+                              prefix    = prefix    ,
+                              title     = title     ,
+                              style     = style     )
+    
     branches = frozenset ( tree.branches () )
     leaves   = frozenset ( tree.leaves   () )
     if not variables : variables = sorted ( branches ) 
     
     variables , cuts , _ = vars_and_cuts ( variables , cuts )
 
+
+    
     bbs     = tuple ( sorted ( variables ) )
    
     bbstats = tree. statVar ( bbs       ,

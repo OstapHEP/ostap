@@ -78,7 +78,8 @@ from   ostap.fitting.variables  import SETVAR
 from   ostap.utils.cidict       import select_keys
 from   ostap.utils.core         import typename 
 from   ostap.fitting.roocmdarg  import check_arg , nontrivial_arg , flat_args , command
-from   ostap.logger.pretty      import pretty_float 
+from   ostap.logger.pretty      import pretty_float
+from   ostap.logger.symbols     import chi2ndf as chi2ndf_symbol 
 # 
 import ostap.fitting.roofit 
 import ostap.fitting.dataset 
@@ -1215,8 +1216,8 @@ class APDF1 ( Components ) :
                     if hasattr ( drawvar , 'xminmax' ) and drawvar.xminmax () :
                         xmn , xmx =  drawvar.xminmax()
                         binw = ( xmx - xmn ) / float ( nbins )
-                if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %.4g' % ( frame.chi2ndf , binw ) )
-                else        : self.info ( 'chi2/ndf: %.3f' %                   frame.chi2ndf          )
+                if 0 < binw : self.info ( '%s: %.3f, binwidth: %.6g' % ( chi2ndf_symbol , frame.chi2ndf , binw ) )
+                else        : self.info ( '%s: %.3f'                 % ( chi2ndf_symbol , frame.chi2ndf        ) )
                 
             copy_frame = root_info < ( 6 , 41 ) 
             if frame : frame.SetDirectory ( ROOT.nullptr )
@@ -1809,12 +1810,12 @@ class APDF1 ( Components ) :
     #  pdf.fitTo ( data , ... )
     #  sigmas = pdf.wilks ( 'S' , data )
     #  @endcode
-    def wilks ( self                     ,
-                var                      ,
-                dataset                  ,
-                range    = ( 0 , None )  ,
-                silent   = True          ,
-                args     = () , **kwargs ) :
+    def wilk_NLL ( self                     ,
+                   var                      ,
+                   dataset                  ,
+                   range    = ( 0 , None )  ,
+                   silent   = True          ,
+                   args     = () , **kwargs ) :
         """ Evaluate 'significance' using Wilks' theorem via NLL
         >>> data = ...
         >>> pdf  = ...
@@ -1831,11 +1832,11 @@ class APDF1 ( Components ) :
                 self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
-                return self.wilks ( var     = var      ,
-                                    dataset = hdataset ,
-                                    range   = range    ,
-                                    silent  = silent   , 
-                                    args    = args     , **kwargs )
+                return self.wilks_NLL ( var     = var      ,
+                                        dataset = hdataset ,
+                                        range   = range    ,
+                                        silent  = silent   , 
+                                        args    = args     , **kwargs )
         ## convert if needed 
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
             dataset = dataset.dset 
@@ -1902,25 +1903,25 @@ class APDF1 ( Components ) :
         return result if 0<=dnll else -1*result 
 
     # ========================================================================
-    ## evaluate "significance" using Wilks' theorem via NLL
+    ## evaluate "significance" using Wilks' theorem via profile likelihood 
     #  @code
     #  data = ...
     #  pdf  = ...
     #  pdf.fitTo ( data , ... )
     #  sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma' ] )
     #  @endcode
-    def wilks2 ( self                           ,
-                 var                            ,
-                 dataset                        ,
-                 fix                            , ## variables to fix 
-                 range          = ( 0 , None )  ,
-                 silent         = True          ,
-                 args           = () , **kwargs ) :
-        """ Evaluate 'significance' using Wilks' theorem via NLL
+    def wilks ( self                           ,
+                var                            ,
+                dataset                        ,
+                fix                            , ## variables to fix 
+                range          = ( 0 , None )  ,
+                silent         = True          ,
+                args           = () , **kwargs ) :
+        """ Evaluate 'significance' using Wilks' theorem via profile likelihood 
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )
-        >>> sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma'] )
+        >>> sigmas = pdf.wilks ( 'S' , data , fix = [ 'mean' , 'gamma'] )
         """
         # if histogram, convert it to RooDataHist object:
         if isinstance  ( dataset , ROOT.TH1 ) :
@@ -1932,12 +1933,12 @@ class APDF1 ( Components ) :
                 self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
-                return self.wilks2 ( var            = var             ,
-                                     dataset        = hdataset        ,
-                                     fix            = fix             ,
-                                     range          = range           , 
-                                     silent         = silent          ,
-                                     args           = args , **kwargs )
+                return self.wilks ( var            = var             ,
+                                    dataset        = hdataset        ,
+                                    fix            = fix             ,
+                                    range          = range           , 
+                                    silent         = silent          ,
+                                    args           = args , **kwargs )
         ## convert if needed 
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
             dataset = dataset.dset 
@@ -1953,6 +1954,7 @@ class APDF1 ( Components ) :
         
         fixed = []
         for f in fix :
+            
             assert f in pars , "Variable %s is not a parameter/2"   % f            
             fixed.append ( f if isinstance ( f , ROOT.RooAbsReal ) else pars [ f ] )
 

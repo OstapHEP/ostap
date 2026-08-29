@@ -182,15 +182,6 @@ class AGoF(abc.ABC) :
         """
         return NotImplemented
 
-    # =========================================================================
-    ## Are weights supported by this GoF estimator?
-    @property 
-    @abc.abstractmethod
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are weights supported by this estimator?
-        """
-        return NotImplemented
-    
 # =============================================================================
 ## @class AGoFnp
 #  An absract base class for numpy-related family of methods to probe goodness-of fit
@@ -294,15 +285,6 @@ class AGoFnp(abc.ABC) :
         """
         return NotImplemented
     
-    # =========================================================================
-    ## Are weights supported by this GoF estimator?
-    @property 
-    @abc.abstractmethod
-    def negative_weights_supported ( self ) :
-        """`negative_weghts_supported`: Are weights supported by this estimator?
-        """
-        return NotImplemented
-
     # =========================================================================
     ## Good for two-samples comparison?
     #  Can this estimator be used for comparison of two samples?

@@ -105,7 +105,7 @@ namespace Ostap
          *  @endcode 
          *
          *  @param mtrx      (input)  the matrix itself 
-         *  @param vals      (output) the vector fo eigenvalues 
+         *  @param vals      (output) the vector of eigenvalues 
          *  @param sorted    (input)  flag to be use for sorting 
          *  @return status code 
          */

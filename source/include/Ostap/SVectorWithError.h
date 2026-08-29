@@ -234,13 +234,6 @@ namespace Ostap
       // unary- 
       Self operator-() const { return Self ( -m_value , m_cov2 ) ; }  // unary- 
       // ======================================================================
-    public: //  chi2 distances
-      // ======================================================================
-      inline double chi2 ( const Self&  right ) const ;
-      inline double chi2 ( const Value& right ) const ;      
-      template <class B>
-      inline double chi2 ( const ROOT::Math::VecExpr<B,SCALAR,N>&  right ) const ;
-      // ======================================================================
     public:  // more functions 
       // ======================================================================
       /** valid data?
@@ -256,41 +249,151 @@ namespace Ostap
       /// calculate the weighted average for two vectors 
       inline Self average ( const Self& right ) const { return mean ( right ) ; }
       // ======================================================================
-    public:
+    public: //  chi2 distances
       // ======================================================================
-      /** Get symmetrized Kullback-Leibler divergency,
-       *  aka Jeffrey's divergency, for two objects 
+      inline double chi2 ( const Self&  right ) const ;
+      inline double chi2 ( const Value& right ) const ;      
+      template <class B>
+      inline double chi2 ( const ROOT::Math::VecExpr<B,SCALAR,N>&  right ) const ;
+      // ======================================================================
+    public: // distances 
+      // ======================================================================
+      /** Get (asymmetric) Kullback-Leibler divergency for two objects 
        *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
        *  @see Ostap::Math::kullback_leibler 
-       *  @return symmetrised KL-divergency (-1 in case of error)
+       *  @return KL-divergency (-1 in case of error)
        */
       inline double kullback_leibler 
       ( const SVectorWithError& a ) const ;
       // ========================================================================
-      /** Get asymmetric Kullback-Leibler divergency for two objects 
+      /** Symmetrized Kullback-Leibler divergency, aka Jeffrey's
+       *  aka Jeffrey's divergency, for two objects 
        *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-       *  @see Ostap::Math::asymmetric_kullback_leibler 
-       *  @return KL-divergency (-1 in case of error)
+       *  @see Ostap::Math::jefffrey 
+       *  @return symmetrised KL-divergency (-1 in case of error)
        */
-      inline double asymmetric_kullback_leibler 
+      inline double jeffrey 
       ( const SVectorWithError& a ) const ;
       // ========================================================================
-    public:
+      /** Another symmetrized Kullback-Leibler divergency, aka Jensen-Shannon 
+       *  aka Jeffrey's divergency, for two objects 
+       *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+       *  @see Ostap::Math::jensen_shannon
+       *  @return symmetrised KL-divergency (-1 in case of error)
+       */
+      inline double jensen_shannon
+      ( const SVectorWithError& a ) const ;
+      // ========================================================================      
+      /** Another symmetrized Kullback-Leibler divergency, aka Jensen-Shannon 
+       *  aka Jeffrey's divergency, for two objects 
+       *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+       *  @see Ostap::Math::jensen_shannon
+       *  @param n1  sum of weights for 1st data vector 
+       *  @param n2  sum of weights for 2nd data vector        
+       *  @return symmetrised KL-divergency (-1 in case of error)
+       */
+      inline double jensen_shannon
+      ( const SVectorWithError& a  ,
+        const double            n1 ,
+        const double            n2 ) const ;
+      // ========================================================================      
+      /** get Mahalanobis distance 
+       *  https://en.wikipedia.org/wiki/Mahalanobis_distance
+       *  @param a (INPUT) another vectro with errors
+       *  @param n1  sum of weights for 1st data vector 
+       *  @param n2  sum of weights for 2nd data vector        
+       *  @return Mahalanobis distance (-1 in case of error)
+       */
+      inline double mahalanobis 
+      ( const SVectorWithError& a  ,
+        const double            n1 ,
+        const double            n2 ) const ;
+      // ========================================================================
+      /** get Mahalanobis distance 
+       *  https://en.wikipedia.org/wiki/Mahalanobis_distance
+       *  @param a (INPUT) another vectro with errors
+       *  @return Mahalanobis distance (-1 in case of error)
+       */
+      inline double mahalanobis 
+      ( const SVectorWithError& a     ) const ;
       // ========================================================================
       /** get Mahalanobis distance 
        *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
        *  @return Mahalanobis distance (-1 in case of error)
        */
       inline double mahalanobis 
-      ( const SVectorWithError& a ) const ;
+      ( const Value&            a ) const ;
       // ========================================================================
-      /** get Mahalanobis distance 
-       *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
-       *  @return Mahalanobis distance (-1 in case of error)
+      /** get Hotelling's t-squared statistics 
+       *  @see https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution#Two-sample_statistic
+       *  \f[ t^2 = \frac{n_1 n_2}{n_1+n_2} \left(v_1-v_2\right)^T \Sigma^{-1} \left( v1-v2) \sim
+       *   T^2 ( p , n_1 + n_2 -2 \f] 
+       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+       *  @date 2023-03-07
        */
-      inline double mahalanobis 
-      ( const Value& a ) const ;
+      inline double hotelling
+      ( const SVectorWithError& a  ,
+        const double            n1 ,
+        const double            n2 ) const ;
+      // ========================================================================      
+      /** get Bhattacharyya's distance
+       *  \f[ D_B = \frac{1}{8} (v_2-v_1)^T\left(\frac{\Sigma_1+\Sigma_2}{2}\right)^{-1}(v_2-v_1)
+       *   + \frac{1}{2} \log \left( \frac{ det (\frac{\Sigma_1+\Sigma_2}{2}) }
+       *   { \sqrt{ det \sigma_1 det \Sigma_2 }} \right) \f] 
+       *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+       *  @date 2023-03-07
+       */
+      inline double bhattacharyya
+      ( const SVectorWithError& a  , 
+        const double            n1 , 
+        const double            n2 ) const ;
+      // ========================================================================      
+      /** get Bhattacharyya's distance
+       *  \f[ D_B = \frac{1}{8} (v_2-v_1)^T\left(\frac{\Sigma_1+\Sigma_2}{2}\right)^{-1}(v_2-v_1)
+       *   + \frac{1}{2} \log \left( \frac{ det (\frac{\Sigma_1+\Sigma_2}{2}) }
+       *   { \sqrt{ det \sigma_1 det \Sigma_2 }} \right) \f] 
+       *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+       *  @date 2023-03-07
+       */
+      inline double bhattacharyya
+      ( const SVectorWithError& a     ) const ;
       // ========================================================================
+      /** get Wasserstain' distance
+       *  \f[ W^2 = (v_2-v_1)^T \Sigma ^{-1} (v_2-v1) } 
+       *          + tr \left( \Sigma_1 + \Sigma_2
+       *          - 2  \left( \Sigma_2^{1/2}\Sigma_1 \Sigma_2^{1/2}\right)^{1/2} \right) \f]
+       */ 
+      inline double wasserstein
+      ( const SVectorWithError& a  ,
+        const double            n1 ,
+        const double            n2 ) const ;
+      // ========================================================================
+      /** get Wasserstain' distance
+       *  \f[ W^2 = (v_2-v_1)^T \Sigma ^{-1} (v_2-v1) } 
+       *          + tr \left( \Sigma_1 + \Sigma_2
+       *          - 2  \left( \Sigma_2^{1/2}\Sigma_1 \Sigma_2^{1/2}\right)^{1/2} \right) \f]
+       */ 
+      inline double wasserstein
+      ( const SVectorWithError& a  ) const ; 
+      // ========================================================================
+      /** get Hellinger's distance (squared) between two multivariate Gaussians
+       *  @see https://en.wikipedia.org/wiki/Hellinger_distance
+       *  \f[ H^2 = 1 - \frac{(\det C_1)^{1/4} (\det C_2)^{1/4}}{(\det \Sigma_{avg})^{1/4}} 
+       *      \exp \left( - \frac{1}{8} (v_2 - v_1)^T \Sigma_{avg}^{-1} (v_2 - v_1) \right) \f]
+       */
+      inline double hellinger 
+      ( const SVectorWithError& a  ,
+        const double            n1 ,
+        const double            n2 ) const ;
+      // ========================================================================
+      /** get Hellinger's distance (squared) between two multivariate Gaussians
+       *  @see https://en.wikipedia.org/wiki/Hellinger_distance
+       *  \f[ H^2 = 1 - \frac{(\det C_1)^{1/4} (\det C_2)^{1/4}}{(\det \Sigma_{avg})^{1/4}} 
+       *      \exp \left( - \frac{1}{8} (v_2 - v_1)^T \Sigma_{avg}^{-1} (v_2 - v_1) \right) \f]
+       */
+      inline double hellinger 
+      ( const SVectorWithError& a  ) const ;
+      // ========================================================================      
     public:
       // ========================================================================
       /** get the (unnornalized) weighted sum with set of weights 
@@ -357,14 +460,6 @@ namespace Ostap
       __rmul__ 
       ( const ROOT::Math::SMatrix<SCALAR,K,N,R>& M ) const ;
       // ======================================================================
-    public:
-      // ======================================================================
-      /// transform it 
-      // template <unsigned int K, typename R>
-      // Ostap::Math::SVectorWithError<K,SCALAR>
-      // transform ( )
-      // const ROOT::Math::SMatrix<SCALAR,K,N,R>& L ) const      
-      // ======================================================================      
     public: //  printout 
       // ======================================================================
       /// printout 
@@ -432,90 +527,11 @@ namespace Ostap
        const SVectorWithError<N,SCALAR>& v )
      { return i < N ? ValueWithError ( v.value ( i ) , v.cov2 ( i , i ) ) : ValueWithError()  ; }
     // ========================================================================
-    // /// specific case for N=1 
-    // template <> 
-    // class SVectorWithError<1,double> : public Ostap::Math::ValueWithError
-    // {
-    // public:
-    //   // =======================================================================
-    //   /// the actual type of data
-    //   typedef ROOT::Math::SVector<double,1>                                    Value       ;
-    //   /// the actual type of covarinace matrix
-    //   typedef ROOT::Math::SMatrix<double,1,1,ROOT::Math::MatRepSym<double,1> > Covariance ;
-    //   // ======================================================================
-    //   enum {
-    //     /// vector size
-    //     kSize = 1 // vector size 
-    //   } ;  
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   SVectorWithError 
-    //   ( const double value = 0 , 
-    //     const double cov2  = 0 ) 
-    //     : ValueWithError ( value , cov2 ) 
-    //   {}
-    //   // ======================================================================
-    //   SVectorWithError
-    //   ( const Value&      value , 
-    //     const Covariance& cov2  )
-    //     : SVectorWithError ( value [ 0 ] , cov2 ( 0 , 0 ) ) 
-    //   {}
-    //   // ======================================================================
-    //   /// constructor from expressions 
-    //   template <class B>
-    //   SVectorWithError 
-    //   ( const ROOT::Math::VecExpr<B,double,1>& value , 
-    //     const Covariance&                      cov2  ) 
-    //     : SVectorWithError ( Value ( value ) , cov2  ) 
-    //   {}
-    //   /// constructor from expressions
-    //   template <class B, class R>
-    //   SVectorWithError 
-    //   ( const Value&                            value , 
-    //     const ROOT::Math::Expr<B,double,1,1,R>& cov2  ) 
-    //     : SVectorWithError ( value , Covariance ( cov2 ) ) 
-    //   {}
-    //   /// constructor from expressions
-    //   template <class B1, class B2, class R>
-    //   SVectorWithError 
-    //   ( const ROOT::Math::VecExpr<B1,double,1>&  value , 
-    //     const ROOT::Math::Expr<B2,double,1,1,R>& cov2  ) 
-    //     : SVectorWithError ( Value ( value ) , cov2  ) 
-    //   {}
-    //   // ======================================================================      
-    // } ;  
-    // ========================================================================
     /// printout 
     template <unsigned int N, class SCALAR> 
     inline std::ostream& operator<<
     ( std::ostream& s , const SVectorWithError<N,SCALAR>& vct ) 
     { return vct.fillStream ( s ) ; }
-    // ========================================================================
-    template <unsigned int N, class SCALAR> 
-    inline double chi2 
-    ( const SVectorWithError<N,SCALAR>&      v1 , 
-      const SVectorWithError<N,SCALAR>&      v2 ) { return v1.chi2 ( v2 )  ; }
-    // ========================================================================
-    template <unsigned int N, class SCALAR> 
-    inline double chi2 
-    ( const ROOT::Math::SVector<SCALAR,N>&   v1 , 
-      const SVectorWithError<N,SCALAR>&      v2 ) { return v2.chi2 ( v1 )  ; }
-    // ========================================================================
-    template <unsigned int N, class SCALAR> 
-    inline double chi2 
-    ( const SVectorWithError<N,SCALAR>&       v1 , 
-      const ROOT::Math::SVector<SCALAR,N>&    v2 ) { return v1.chi2 ( v2 )  ; }
-    // ========================================================================
-    template <unsigned int N, class SCALAR, class B> 
-    inline double chi2 
-    (  const ROOT::Math::VecExpr<B,SCALAR,N>& v1 , 
-       const SVectorWithError<N,SCALAR>&      v2 ) { return v2.chi2 ( v1 )  ; }
-    // ========================================================================
-    template <unsigned int N, class SCALAR, class B> 
-    inline double chi2 
-    ( const SVectorWithError<N,SCALAR>&       v1 , 
-      const ROOT::Math::VecExpr<B,SCALAR,N>&  v2 ) { return v1.chi2 ( v2 )  ; }
     // ========================================================================
     template <unsigned int N, class SCALAR>
     inline 
@@ -687,60 +703,7 @@ namespace Ostap
     ( const SVectorWithError<N,SCALAR>& v1 , 
       const SVectorWithError<N,SCALAR>& v2 ) { return v1.mean ( v2 ) ; }
     // ========================================================================
-    /** Get symmetrized Kullback-Leibler divergency for two objects 
-     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-     *  @see Ostap::Math::kullback_leibler 
-     */
-    template <unsigned int N, class SCALAR>
-    inline double
-    kullback_leibler 
-    ( const SVectorWithError<N,SCALAR>& v1 , 
-      const SVectorWithError<N,SCALAR>& v2 ) 
-    { return v1.kullback_leibler  ( v2 ) ; }
-    // ========================================================================
-    /** Get asymmetric Kullback-Leibler divergency for two objects 
-     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
-     *  @see Ostap::Math::asymmetric_kullback_leibler 
-     */
-    template <unsigned int N, class SCALAR>
-    inline double 
-    asymmetric_kullback_leibler 
-    ( const SVectorWithError<N,SCALAR>& v1 , 
-      const SVectorWithError<N,SCALAR>& v2 ) 
-    { return v1.asymmetric_kullback_leibler  ( v2 ) ; }
-    // ========================================================================
-    /**  get Mahalanobis distance 
-     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
-     *  @return Mahalanobis distance (-1 in case of error)
-     */
-    template <unsigned int N, class SCALAR>
-    inline double
-    mahalanobis  
-    ( const Ostap::Math::SVectorWithError<N,SCALAR>& a , 
-      const Ostap::Math::SVectorWithError<N,SCALAR>& b )
-    { return a.mahalanobis ( b ) ; }
-    // ========================================================================    
-    /**  get Mahalanobis distance 
-     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
-     *  @return Mahalanobis distance (-1 in case of error)
-     */
-    template <unsigned int N, class SCALAR>
-    inline double
-    mahalanobis  
-    ( const Ostap::Math::SVectorWithError<N,SCALAR>& a ,
-      const ROOT::Math::SVector<SCALAR,N>&           b ) 
-    { return a.mahalanobis ( b ) ; }
-    // ========================================================================    
-    /**  get Mahalanobis distance 
-     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
-     *  @return Mahalanobis distance (-1 in case of error)
-     */
-    template <unsigned int N, class SCALAR>
-    inline double
-    mahalanobis  
-    ( const ROOT::Math::SVector<SCALAR,N>&           a ,  
-      const Ostap::Math::SVectorWithError<N,SCALAR>& b )
-    { return b.mahalanobis ( a ) ; }
+    
     // ========================================================================
     /** get Cholesky decomposition for the covarance matrix 
      *  @param v (INPUT)  vector with uncrtainties 
@@ -863,6 +826,127 @@ namespace Ostap
   // ==========================================================================
   namespace Math 
   {
+    // ========================================================================
+    /// get chi2-distance 
+    template <unsigned int N, class SCALAR>
+    inline double
+    chi2 
+    ( const SVectorWithError<N,SCALAR>& v1 , 
+      const SVectorWithError<N,SCALAR>& v2 )  { return v1.chi2 ( v2 ) ; }
+    // ========================================================================
+    /// get chi2-distance 
+    template <unsigned int N, class SCALAR>
+    inline double
+    chi2 
+    ( const SVectorWithError<N,SCALAR>    & v1 , 
+      const ROOT::Math::SVector<SCALAR,N> & v2 )  { return v1.chi2 ( v2 ) ; }    
+    // ========================================================================
+    /// get chi2-distance 
+    template <unsigned int N, class SCALAR>
+    inline double
+    chi2 
+    ( const ROOT::Math::SVector<SCALAR,N> & v2 ,  
+      const SVectorWithError<N,SCALAR>    & v1 ) { return v1.chi2 ( v2 ) ; }
+    // ========================================================================
+    template <unsigned int N, class SCALAR, class B> 
+    inline double chi2 
+    (  const ROOT::Math::VecExpr<B,SCALAR,N>& v1 , 
+       const SVectorWithError<N,SCALAR>&      v2 ) { return v2.chi2 ( v1 )  ; }
+    // ========================================================================
+    template <unsigned int N, class SCALAR, class B> 
+    inline double chi2 
+    ( const SVectorWithError<N,SCALAR>&       v1 , 
+      const ROOT::Math::VecExpr<B,SCALAR,N>&  v2 ) { return v1.chi2 ( v2 )  ; }
+    // ========================================================================    
+    /** Get asymmetric Kullback-Leibler divergency for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @see Ostap::Math::kullback_leibler 
+     */
+    template <unsigned int N, class SCALAR>
+    inline double 
+    kullback_leibler 
+    ( const SVectorWithError<N,SCALAR>& v1 , 
+      const SVectorWithError<N,SCALAR>& v2 ) { return v1.kullback_leibler  ( v2 ) ; }
+    // ========================================================================  
+    /** Get symmetrized Kullback-Leibler divergency for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @see Ostap::Math::jeffrey 
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    jeffrey
+    ( const SVectorWithError<N,SCALAR>& v1 , 
+      const SVectorWithError<N,SCALAR>& v2 ) { return v1.jeffrey ( v2 ) ; }
+    // =========================================================================
+    /** Another symmetrized Kullback-Leibler divergency, aka Jensen-Shannon 
+     *  aka Jeffrey's divergency, for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @see Ostap::Math::jensen_shannon
+     *  @param n1  sum of weights for 1st data vector 
+     *  @param n2  sum of weights for 2nd data vector 
+     *  @return symmetrised KL-divergency (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double 
+    jensen_shannon
+    ( const SVectorWithError<N,SCALAR>& v1 , 
+      const SVectorWithError<N,SCALAR>& v2 , 
+      const double                      n1 ,
+      const double                      n2 ) { return v1.jensen_shannon  ( v2 , n1 , n2 ) ; }
+    // =========================================================================
+    /** Another symmetrized Kullback-Leibler divergency, aka Jensen-Shannon 
+     *  aka Jeffrey's divergency, for two objects 
+     *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+     *  @see Ostap::Math::jensen_shannon
+     *  @return symmetrised KL-divergency (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double 
+    jensen_shannon
+    ( const SVectorWithError<N,SCALAR>& v1 , 
+      const SVectorWithError<N,SCALAR>& v2 ) { return v1.jensen_shannon  ( v2 ) ; }      
+    // ========================================================================      
+    /** Get Mahalanobis distance 
+     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+     *  @return Mahalanobis distance (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    mahalanobis  
+    ( const SVectorWithError<N,SCALAR>& v1 , 
+      const SVectorWithError<N,SCALAR>& v2 , 
+      const double                      n1 ,
+      const double                      n2 ) { return v1.mahalanobis ( v2 , n1 , n2 ) ; }
+    // ========================================================================    
+    /** Get Mahalanobis distance 
+     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+     *  @return Mahalanobis distance (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    mahalanobis  
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 ,
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v2 ) { return v1.mahalanobis ( v2 ) ; }
+    // ========================================================================    
+    /** Get Mahalanobis distance 
+     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+     *  @return Mahalanobis distance (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    mahalanobis  
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 ,
+      const ROOT::Math::SVector<SCALAR,N>&           v2 ) { return v1.mahalanobis ( v2 ) ; }
+    // ========================================================================    
+    /** Get Mahalanobis distance 
+     *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
+     *  @return Mahalanobis distance (-1 in case of error)
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    mahalanobis  
+    ( const ROOT::Math::SVector<SCALAR,N>&           v2 , 
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v1 ) { return v1.mahalanobis ( v2 ) ; }
     // =======================================================================
     /** get Hotelling's t-squared statistics 
      *  @see https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution#Two-sample_statistic
@@ -872,16 +956,88 @@ namespace Ostap
      *  @date 2023-03-07
      */
     template <unsigned int N, typename SCALAR>
-    inline double hotelling 
-    ( const Ostap::Math::SVectorWithError<N,SCALAR>& x  , 
-      const unsigned long                            nx ,  
-      const Ostap::Math::SVectorWithError<N,SCALAR>& y  , 
-      const unsigned long                            ny )
-    {
-      return Ostap::Math::hotelling 
-        ( x.value () , x.cov2 () , nx , 
-          y.value () , y.cov2 () , ny ) ;      
-    }
+    inline double
+    hotelling 
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 , 
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v2 , 
+      const double                                   n1 ,  
+      const double                                   n2 ) { return v1.hotelling ( v2 , n1 , n2  ) ; }
+    // ========================================================================
+    /** get Bhattacharyya's distance
+     *  \f[ D_B = \frac{1}{8} (v_2-v_1)^T\left(\frac{\Sigma_1+\Sigma_2}{2}\right)^{-1}(v_2-v_1)
+     *   + \frac{1}{2} \log \left( \frac{ det (\frac{\Sigma_1+\Sigma_2}{2}) }
+     *   { \sqrt{ det \sigma_1 det \Sigma_2 }} \right) \f] 
+     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @date 2023-03-07
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    bhattacharyya 
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 ,
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v2 , 
+      const double                                   n1 ,
+      const double                                   n2 ) { return v1.bhattacharyya ( v2 , n1 , n2 ) ; }
+    // ========================================================================    
+    /** get Bhattacharyya's distance
+     *  \f[ D_B = \frac{1}{8} (v_2-v_1)^T\left(\frac{\Sigma_1+\Sigma_2}{2}\right)^{-1}(v_2-v_1)
+     *   + \frac{1}{2} \log \left( \frac{ det (\frac{\Sigma_1+\Sigma_2}{2}) }
+     *   { \sqrt{ det \sigma_1 det \Sigma_2 }} \right) \f] 
+     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @date 2023-03-07
+     */
+    template <unsigned int N, class SCALAR>
+    inline double
+    bhattacharyya 
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 ,
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v2 ) { return v1.bhattacharyya ( v2 ) ; }
+    // ========================================================================    
+    /** get Wasserstein' distance
+     *  \f[ W^2 = (v_2-v_1)^T \Sigma ^{-1} (v_2-v1) } 
+     *          + tr \left( \Sigma_1 + \Sigma_2
+     *          - 2  \left( \Sigma_2^{1/2}\Sigma_1 \Sigma_2^{1/2}\right)^{1/2} \right) \f]
+     */     
+    template <unsigned int N, typename SCALAR>
+    inline double
+    wasserstein
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 , 
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v2 , 
+      const double                                   n1 ,  
+      const double                                   n2 ) { return v1.wasserstein ( v2 , n1 , n2  ) ; }
+    // ========================================================================    
+    /** get Wasserstein' distance
+     *  \f[ W^2 = (v_2-v_1)^T \Sigma ^{-1} (v_2-v1) } 
+     *          + tr \left( \Sigma_1 + \Sigma_2
+     *          - 2  \left( \Sigma_2^{1/2}\Sigma_1 \Sigma_2^{1/2}\right)^{1/2} \right) \f]
+     */     
+    template <unsigned int N, typename SCALAR>
+    inline double
+    wasserstein
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 , 
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v2 ) { return v1.wasserstein ( v2 ) ; }
+    // ========================================================================        
+    /** get Hellinger's distance (squared) between two multivariate Gaussians
+     *  @see https://en.wikipedia.org/wiki/Hellinger_distance
+     *  \f[ H^2 = 1 - \frac{(\det C_1)^{1/4} (\det C_2)^{1/4}}{(\det \Sigma_{avg})^{1/4}} 
+     *      \exp \left( - \frac{1}{8} (v_2 - v_1)^T \Sigma_{avg}^{-1} (v_2 - v_1) \right) \f]
+     */
+    template <unsigned int N, typename SCALAR>
+    inline double
+    hellinger
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 , 
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v2 , 
+      const double                                   n1 ,  
+      const double                                   n2 ) { return v1.hellinger ( v2 , n1 , n2  ) ; }
+    // ========================================================================            
+    /** get Hellinger's distance (squared) between two multivariate Gaussians
+     *  @see https://en.wikipedia.org/wiki/Hellinger_distance
+     *  \f[ H^2 = 1 - \frac{(\det C_1)^{1/4} (\det C_2)^{1/4}}{(\det \Sigma_{avg})^{1/4}} 
+     *      \exp \left( - \frac{1}{8} (v_2 - v_1)^T \Sigma_{avg}^{-1} (v_2 - v_1) \right) \f]
+     */
+    template <unsigned int N, typename SCALAR>
+    inline double
+    hellinger
+    ( const Ostap::Math::SVectorWithError<N,SCALAR>& v1 , 
+      const Ostap::Math::SVectorWithError<N,SCALAR>& v2 ) { return v1.hellinger ( v2 ) ; }    
     // ========================================================================
     /// Are all elements are finite? 
     template <unsigned int N, typename SCALAR> 
