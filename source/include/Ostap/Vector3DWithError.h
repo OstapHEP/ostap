@@ -260,7 +260,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      *  @see Ostap::Math::kullback_leibler 
      */
-    double kullback_leibler 
+    double jeffrey
     ( const Vector3DWithError& a , 
       const Vector3DWithError& b ) ;
     // ========================================================================
@@ -268,7 +268,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
      *  @see Ostap::Math::asymmetric_kullback_leibler 
      */
-    double asymmetric_kullback_leibler 
+    double kullback_leibler 
     ( const Vector3DWithError& a , 
       const Vector3DWithError& b ) ;
     // ========================================================================
