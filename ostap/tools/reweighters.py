@@ -1054,7 +1054,6 @@ class GBReweighter(Reweighter) :
                    target                 ,
                    original_weight        = None  ,
                    target_weight          = None  , 
-                   silent                 = False ,
                    n_splits               = 5     ,
                    store_original_weights = True  , **params ) :
         """ Helper class for reweighting using `GBReweighter`
@@ -1129,11 +1128,12 @@ class GBReweighter(Reweighter) :
         from hep_ml.reweight import GBReweighter as GBRW
         self.__reweighter = GBRW ( **self.params  )
         
-        if 0 < self.n_splits :
+        if 1 < self.n_splits :
             from hep_ml.reweight import FoldingReweighter as FRW
             self.__reweighter = FRW ( self.reweighter ,
                                       n_folds         = self.n_splits     , 
-                                      random_state    = self.random_state )
+                                      random_state    = self.random_state ,
+                                      verbose         = not  self.silent  )
                
         with logAttention() if self.silent else NoContext() : 
             self.__reweighter.fit ( original        ,
@@ -1146,7 +1146,7 @@ class GBReweighter(Reweighter) :
         self.__original_reweighted_weights = None
         if store_original_weights :
             factors = self.__reweighter.predict_weights (
-                original, 
+                original , 
                 original_weight = original_weight )
             self.__original_ratios             = factors 
             self.__original_reweighted_weights = factors if weight_trivial ( original_weight ) else factors * original_weight

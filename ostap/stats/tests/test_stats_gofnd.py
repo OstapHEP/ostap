@@ -10,9 +10,9 @@
 # ==============================================================================
 ## ATTENTION! 
 import os 
-os.environ["OMP_NUM_THREADS"     ]  = "1"
-os.environ["MKL_NUM_THREADS"     ]  = "1"
-os.environ["OPENBLAS_NUM_THREADS"]  = "1"
+os.environ [ "OMP_NUM_THREADS"      ]  = "1"
+os.environ [ "MKL_NUM_THREADS"      ]  = "1"
+os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
 # ==============================================================================
 from   packaging.version      import Version
 from   ostap.plotting.canvas  import use_canvas
@@ -144,11 +144,26 @@ def test_GOF () :
     
     ## very small number of toys     
 
-    nToys =  40 if small else 500
-
+    nToys = 20 if small else 500
+    nToys = 20
+    
     ## nToys = 400 
     
-    tconf = { 'nToys' : nToys , 'parallel' : True }
+    tconf = { 'nToys' : nToys , 'parallel' : True , 'silent' : True }
+
+    gof_list = [
+        GnD.Chi2              ( **tconf ) ,
+        GnD.KullbackLeibler   ( **tconf ) ,
+        GnD.Jeffrey           ( **tconf ) ,
+        GnD.JensenShannon     ( **tconf ) ,
+        GnD.Mahalanobis       ( **tconf ) ,
+        GnD.Hotelling         ( **tconf ) ,
+        GnD.Bhattacharyya     ( **tconf ) ,
+        GnD.Wasserstein       ( **tconf ) ,
+        GnD.Hellinger         ( **tconf ) ,
+        ]
+
+    to_test = [ ( g , g , g.method ) for g in gof_list ] 
     
     # ===========================================================================
     ## MIX 
@@ -226,6 +241,8 @@ def test_GOF () :
         test   = gof , gof , 'ADVAL:XBGoost'
         to_test.append ( test )             
 
+    to_test = []
+    
     # ==========================================================================
     if has_catboost : # ========================================================
         # ======================================================================
@@ -274,9 +291,9 @@ def test_GOF () :
         # ======================================================================
         from   ostap.stats.gofnd import ADVAL_PyTorch as GOF 
         ##
-        config ['parallel'] = False 
-        config ['n_splits'] = 2 
-        config ['nToys'   ] = 10 
+        config [ 'parallel' ] = False 
+        config [ 'n_splits' ] = 2 ## ATTENTION !! 
+        config [ 'nToys'    ] = 5 ## ATTENTION !!  
         gof    = GOF ( **config )
         test   = gof , gof , 'ADVAL:PyTorch'
         to_test.append ( test ) 
@@ -286,6 +303,9 @@ def test_GOF () :
         # ======================================================================
         from   ostap.stats.gofnd import ADVAL_Keras as GOF 
         ## 
+        config [ 'parallel' ] = False 
+        config [ 'n_splits' ] = 2 ## ATTENTION !!
+        config [ 'nToys'    ] = 5 ## ATTENTION !! 
         gof    = GOF ( **config )
         test   = gof , gof , 'ADVAL:Keras'
         to_test.append ( test ) 

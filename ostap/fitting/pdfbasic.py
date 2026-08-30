@@ -1822,6 +1822,7 @@ class APDF1 ( Components ) :
         >>> pdf.fitTo ( data , ... )
         >>> sigmas = pdf.wilks ( 'S' , data )
         """
+        self.error ( "wilks_NLL - It is a wrong method!" )
         # if histogram, convert it to RooDataHist object:
         if isinstance  ( dataset , ROOT.TH1 ) :
             # if histogram, convert it to RooDataHist object:
@@ -2025,7 +2026,10 @@ class APDF1 ( Components ) :
             del pLL , nLL
             
         return result if 0 <= dnll else -1 * result 
-                
+
+    # ========================================================================
+    ## alias
+    wilks2 = wilks 
     # ========================================================================
     ## get the actual minimizer for the explicit manipulations
     #  @code

@@ -718,7 +718,7 @@ class WeightingPlot(object) :
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
 
-        assert data and callable ( data ) , "WeightingPlot: `data' object must be callable!"
+        assert data and callable ( data ) , "WeightingPlot: `data' object must be callable: %s" % typename ( data ) 
         
         self.__what      = str ( what ).strip() if isinstance ( what , str ) else what 
         self.__how       = str ( how  ).strip() if isinstance ( how  , str ) else how 

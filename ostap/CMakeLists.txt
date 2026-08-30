@@ -485,20 +485,13 @@ if ( ${OSTAP_HAS_AVX2} )
 endif()
 
 # ========================================================================================
-## pytorch 
+## pytorch, tensorflow & keras 
 # ========================================================================================
-##
-find_python_module ( torch  QUIET )
-if ( NOT ${PY_torch_FOUND} ) 
-   message ( "----> warning               (py)torch is NOT found!" ) 
-endif()
-
-# ========================================================================================
-## tensorflow & keras 
-# ========================================================================================
-##
-
 if ( ${OSTAP_HAS_AVX2} )
+  find_python_module ( torch  QUIET )
+  if ( NOT ${PY_torch_FOUND} ) 
+    message ( "----> warning               (py)torch is NOT found!" ) 
+  endif()
   find_python_module ( tensorflow QUIET )
   if ( NOT ${PY_tensorflow_FOUND} ) 
     message ( "----> warning              tensorflow is NOT found!" ) 
@@ -733,7 +726,7 @@ if ( ${OSTAP_HAS_AVX2} AND ${PY_catboost_FOUND} )
   message ( "----> catboost         version    : " ${PY_catboost_VERSION} " \t" ${PY_CATBOOST} ) 
 endif()
 ##
-if ( ${PY_torch_FOUND} )
+if ( ${OSTAP_HAS_AVX2} AND ${PY_torch_FOUND} )
   find_python_module_version ( torch ) 
   message ( "----> torch            version    : " ${PY_torch_VERSION} " \t" ${PY_TORCH} ) 
 endif()

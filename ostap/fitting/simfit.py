@@ -846,7 +846,7 @@ class SimFit (VarMaker,ConfigReducer) :
                  ## max_iterations = -1            ,
                  ## strategy       = None          ,
                  args           = () , **kwargs ) :
-        """ Evaluate 'significance' using Wilks' theorem via NLL
+        """ Evaluate 'significance' using Wilks' theorem via LIKELIHOOD DPROFILE 
         >>> data = ...
         >>> pdf  = ...
         >>> pdf.fitTo ( data , ... )
@@ -863,6 +863,9 @@ class SimFit (VarMaker,ConfigReducer) :
                                  ## strategy       = strategy        ,
                                  args           = args , **kwargs )
     
+    # ========================================================================
+    ## alias
+    wilks2 = wilks     
     # ========================================================================
     ## get the actual minimizer for the explicit manipulations
     #  @code

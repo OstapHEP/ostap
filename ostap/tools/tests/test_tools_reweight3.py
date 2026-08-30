@@ -27,7 +27,11 @@ from   ostap.logger.colorized   import allright
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
-from   ostap.logger.symbols     import iteration, plus_minus, script_p, sup_eff 
+from   ostap.logger.symbols     import ( iteration , plus_minus ,
+                                         script_p  , sup_eff    , 
+                                         triangular_flag as start_symbol , 
+                                         trophy          as final_symbol ) 
+
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
@@ -77,10 +81,10 @@ small = True
 
 if small : 
     
-    NDATA1      =  5000 ## 00
-    NDATA2      =  5000 ## 00
-    NDATA3      =  5000 ## 00
-    NMC         =  5000 ## 00
+    NDATA1      =  1000 ## 00
+    NDATA2      =  1000 ## 00
+    NDATA3      =  1000 ## 00
+    NMC         =  3000 ## 00
     
 else :
      
@@ -286,40 +290,66 @@ else            :  logger.warning   ( 'HepML    is not available!' )
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
-from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATOR3 , 
-                                        Hotelling       as COMPARATOR2 , 
-                                        Mahalanobis     as COMPARATOR1 ) 
+# ==============================================================================
+## Compare datasets using several methods 
+# ==============================================================================
+import ostap.stats.gof_np as GnP
+cconf       = { 'parallel' : True , 'nToys' : 20 , 'silent' : True , 'progress' : True } 
+comparators = (
+    GnP.Chi2            ( **cconf ) ,
+    GnP.KullbackLeibler ( **cconf ) ,
+    GnP.Jeffrey         ( **cconf ) ,
+    GnP.JensenShannon   ( **cconf ) ,
+    GnP.Mahalanobis     ( **cconf ) ,
+    GnP.Hotelling       ( **cconf ) ,
+    GnP.Bhattacharyya   ( **cconf ) ,
+    GnP.Wasserstein     ( **cconf ) ,
+    GnP.Hellinger       ( **cconf ) )
 
-cconf = { 'parallel' : True , 'nToys' : 100 , 'silent' : True , 'progress' : True } 
-from ostap.stats.data_compare import data_compare     
-comparators = ( COMPARATOR1 ( **cconf ) ,
-                COMPARATOR2 ( **cconf ) ,
-                COMPARATOR3 ( **cconf ) ) 
+# =========================================================================
+has_lightgbm  = hasLightGBM  ()
+if has_lightgbm :  logger.attention ( 'USE LightGBM!'              )
+else            :  logger.warning   ( 'LightGBM is not available!' )
+            
+has_xgboost   = hasXGBoost  ()
+if has_xgboost  :  logger.attention ( 'USE XGBoost!'               )
+else            :  logger.warning   ( 'XGBoost is not available!'  )
+
+has_catboost  = hasCatBoost  ()
+if has_catboost :  logger.attention ( 'USE CatBoost!'              )
+else            :  logger.warning   ( 'CatBoost is not available!' )
+
+has_sklearn   = hasSkLearn  ()
+if has_sklearn  :  logger.attention ( 'USE SkLearn!'              )
+else            :  logger.warning   ( 'SkLearn  is not available!' )
 
 if has_lightgbm :  
-    from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
-    comparators += ( COMPARATOR5 ( **cconf ) , ) 
+    from ostap.stats.adval        import ADVAL_LGBM  as CMP 
+    comparators += ( CMP ( **cconf ) , ) 
 
 if has_xgboost:  
-    from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
-    comparators += ( COMPARATOR6 ( **cconf ) , ) 
+    from ostap.stats.adval        import ADVAL_XGB  as CMP
+    comparators += ( CMP ( **cconf ) , ) 
 
 if has_catboost:  
-    from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
-    comparators += ( COMPARATOR7 ( **cconf ) , ) 
+    from ostap.stats.adval        import ADVAL_CATB  as CMP 
+    comparators += ( CMP ( **cconf ) , ) 
 
-if has_sklearn:    
-    from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
-    comparators += ( COMPARATOR8 ( **cconf ) , )
+if False and has_sklearn:
     
-    from ostap.stats.adval        import ADVAL_GBC   as COMPARATOR9
-    comparators += ( COMPARATOR9 ( **cconf ) , ) 
+    from ostap.stats.adval        import ADVAL_HGBC  as CMP1 
+    comparators += ( CMP1 ( **cconf ) , )
     
+    from ostap.stats.adval        import ADVAL_GBC   as CMP2
+    comparators += ( CMP2 ( **cconf ) , ) 
+
+comparators = comparators
 # ============================================================================
 ## The table of global comparison statistics 
 header    = ( '#%s' % iteration , '#%s' % sup_eff ) + tuple ( c.method for c in comparators ) 
 glob_stat = [ header ]
 alignment = 'lc' + 'c' * len ( comparators )           
+
 
 # =============================================================================
 ## Read data from DB
@@ -436,6 +466,7 @@ maxIter     = 4
 
 weighter    = None
 
+from ostap.stats.data_compare import data_compare     
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
@@ -666,7 +697,7 @@ for weight in weights :
                               silent      = True   )
     
     n_eff = mctree.nEff ( weight ) 
-    trow  = [ weight , '%.1f' % n_eff ] 
+    trow  = [ final_symbol , '%.1f' % n_eff ] 
     for r in results :
         pv100 = VE ( r.pvalue ) * 100            
         trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )

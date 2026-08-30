@@ -150,28 +150,30 @@ class ADVAL_base (GoFnp):
                    normalize  = True  ,
                    n_splits   = 5     , 
                    method     = "Adversarial Validation (Regression)" , **params ) :
-        
-        n_splits = params.pop ( 'n_splits' , 5 ) 
-        if not isinstance ( n_splits , int ) : raise TypeError ( "Invalid `n_splits` type  : %s" % typename ( n_splits ) )
-        if n_splits < 2                      : raise TypeError ( "Invalid `n_splits` value : %d" %            n_splits   )
 
-        ## switch off parallel processing 
+        # =====================================================================
+        if   not isinstance ( n_splits , int ) : raise TypeError ( "Invalid `n_splits` type  : %s" % typename ( n_splits ) )
+        elif n_splits < 2                      : raise TypeError ( "Invalid `n_splits` value : %d" %            n_splits   )
+        ## store it! 
+        self.__n_splits = n_splits
+        
+        ## switch off parallel processing
+        parallel = True if parallel else False 
         if parallel and not run_parallel ( parallel ) :
             logger.info ( '%s: (internal) parallel processing is OFF' % typename ( self ) )
             parallel = False
             
         ## (re)define n_jobs     
-        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )
+        params [ 'n_jobs'    ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )        
+        params [ 'parallel'  ] = parallel
+        params [ 'normalize' ] = True if normalize else False 
 
-        
         self.__n_splits            = n_splits 
         self.__importance_features = {}
         
-        GoFnp.__init__ ( self                  ,
-                         nToys     = nToys     ,
-                         parallel  = parallel  , 
-                         normalize = normalize , 
-                         method    = method    , **params )
+        GoFnp.__init__ ( self            ,
+                         nToys  = nToys  ,
+                         method = method , **params )
                 
     # =========================================================================
     @property
@@ -1168,6 +1170,7 @@ class ADVAL_KERAS (ADVAL_base) :
                     'early_stopping_rounds' :  15    , 
                     'dropout'               :   0.1  }
 
+        # ======================================================================
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = True     , 

@@ -1142,8 +1142,7 @@ namespace Ostap
       // =======================================================================
       template <class T>
       struct Eigen ;
-      
-      
+          
       template <class T,unsigned int D> 
       struct Eigen<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > >
       {

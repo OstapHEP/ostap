@@ -1,12 +1,22 @@
+# v3.8.4.0
+
 ## New features
 
   1. add partial specializations for `N/D==1` for matrix method related to Cholesky decomposition oinversion and eigenvalues.
- 
+  1. add explicit treatment of `tensorflow`
+  1. temporarily disable `keras`
+  1. shorten `test_tools_reweight*` tests
+
 ## Bug fixes
   
   1. fix some remnants and typos 
  
 ## Backward incompatible
+
+  1. rename    `APDF.wilks`  -> `APDF1.wilks_NLL` (old wrong method)
+  1. rename    `APDF.wilks2` -> `APDF1.wilks`    
+  1. add alias `APDF.wilks2` -> `APDF1.wilks`
+  1. the same for `SimFit.wilks`
 
 # v3.8.3.0
 
@@ -19,8 +29,6 @@
     1. tiny fix for `SelectorWithVars` progress bar in parallel processing
     
 ## Backward incompatible
-
-
 
 # v3.8.2.0
 

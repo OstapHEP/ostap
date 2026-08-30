@@ -20,6 +20,7 @@ __all__     = (
     'hasPyTorch'         , ## Are (Py)Torch library and claffificators available?
     'hasKeras'           , ## Are Keras     library and claffificators available?
     'hasSkLearn'         , ## Are sckearn   library and claffificators available?
+    'hasTensorFlow'      , ## Is  TensorFlow library available? 
     'hasHepML'           , ## Are HepML tools available?
     # =========================================================================
 )
@@ -93,52 +94,6 @@ def hasCatBoost ( silent = True ) :
         # ======================================================================
         return False
 
-# ==============================================================================
-## Has PyTorch ?
-#  Are (Py)Torch library and claffificators available?
-def hasPyTorch ( silent = True ) :
-    """ Use PyTorch ?
-    - Are (Py)Torch library and claffificators available?
-    """
-    # ==========================================================================
-    try : # ====================================================================
-        # ======================================================================
-        import torch
-        if not silent : logger.info ( 'PyTorch  version: %s' %    torch .__version__ )
-        return Version ( "1.10" ) <= Version ( torch.__version__ )
-        # ======================================================================
-    except ImportError : # =====================================================
-        # ======================================================================
-        return False 
-    
-# ==============================================================================
-##   Has Keras  ?
-#  - Are Keras    library and claffificators available?
-def hasKeras ( silent = True ) : 
-    """ Use Keras
-    - Are Keras    library and claffificators available?
-    """
-    from ostap.core.cpu_info import HAS_AVX2
-    if not HAS_AVX2 : return  False 
-    # ==========================================================================
-    try : # ====================================================================
-        # ======================================================================
-        ## silence TensorFlow & oneDNN
-        os.environ [ 'TF_CPP_MIN_LOG_LEVEL'  ] = '2'        
-        os.environ [ 'TF_ENABLE_ONEDNN_OPTS' ] = '0'
-        # ======================================================================
-        import keras 
-        import torch 
-        if not silent :
-            logger.info ( 'PyTorch  version: %s' %    torch .__version__ )
-            logger.info ( 'Keras    version: %s' %    keras .__version__ )
-        return  ( Version ( "3.0" ) <= Version ( keras.__version__ ) and
-                  Version ( "2.0" ) <= Version ( torch.__version__ ) )
-        # ======================================================================
-    except ImportError : # =====================================================
-        # ======================================================================
-        return False
-
 # =============================================================================
 ##  Has sklearn?
 # - Has sklearn library & classificators available? 
@@ -155,17 +110,94 @@ def hasSkLearn ( silent = True ) :
         from   sklearn.ensemble import         RandomForestClassifier as _RFC
         # ====================================================================
         if not silent : logger.info ( 'sklearn  version: %s' %  sklearn.__version__ )
+        ## 
+        import warnings
+        warnings.filterwarnings ( "ignore", category = UserWarning , module = "sklearn.utils.parallel" )
+        ## 
         return True 
         # ====================================================================
     except ImportError : # ===================================================
         # ====================================================================
         return False 
-                
+                    
+# ==============================================================================
+## Has PyTorch ?
+#  Are (Py)Torch library and claffificators available?
+def hasPyTorch ( silent = True ) :
+    """ Use PyTorch ?
+    - Are (Py)Torch library and claffificators available?
+    """
+    # ==========================================================================
+    from ostap.core.cpu_info import HAS_AVX2
+    if not HAS_AVX2 : return  False
+    # ==========================================================================
+    try : # ====================================================================
+        # ======================================================================
+        import torch
+        if not silent : logger.info ( 'PyTorch  version: %s' %    torch .__version__ )
+        return Version ( "2.1.0" ) <= Version ( torch.__version__ )
+        # ======================================================================
+    except ImportError : # =====================================================
+        # ======================================================================
+        return False 
+
+# ==============================================================================
+## Has TensorFlow ?
+#  Is TensorFlow library available?
+def hasTensorFlow ( silent = True ) :
+    """ Has TensorFlow  ?
+    - Is TensorFlow library available?
+    """
+    # ========================================================================== 
+    from ostap.core.cpu_info import HAS_AVX2
+    if not HAS_AVX2 : return  False
+    # ==========================================================================
+    try : # ====================================================================
+        # ======================================================================
+        ## silence TensorFlow & oneDNN
+        os.environ [ 'TF_CPP_MIN_LOG_LEVEL'  ] = '2'        
+        os.environ [ 'TF_ENABLE_ONEDNN_OPTS' ] = '0'
+        # =====================================================================
+        import tensorflow
+        if not silent : logger.info ( 'TensorFlow version: %s' % tensorflow .__version__ )
+        tensorflow.get_logger().setLevel ( 'ERROR' )
+        return Version ( "2.16.1" ) <= Version ( tensorflow.__version__ )
+        # ======================================================================
+    except ImportError : # =====================================================
+        # ======================================================================
+        return False 
+    
+# ==============================================================================
+##   Has Keras  ?
+#  - Are Keras    library and claffificators available?
+def hasKeras ( silent = True ) : 
+    """ Use Keras
+    - Are Keras    library and claffificators available?
+    """
+    # ========================================================================
+    if not hasTensorFlow ( silent ) and not hasPyTorch ( silent ) : return False 
+    # ========================================================================
+    from ostap.core.cpu_info import HAS_AVX2
+    if not HAS_AVX2 : return  False 
+    # ========================================================================
+    logger.warning ( 'Keras is temporarily(?) disabled!' )
+    return False
+    # ========================================================================
+    try : # ==================================================================
+        # ====================================================================
+        import keras 
+        if not silent : logger.info ( 'Keras    version: %s' %    keras .__version__ )
+        return Version ( "3.0" ) <= Version ( keras.__version__ ) 
+        # ====================================================================
+    except ImportError : # ===================================================
+        # ====================================================================
+        return False
+
 # ============================================================================
 ##  Has hep_ml
 # - Are hep_ml tools available? 
 def hasHepML ( silent = True ) :
-    """ Use sklearn?
+    """ Use HepML?
     - Are hep_ml tools available? 
     """
     # =========================================================================
@@ -181,7 +213,7 @@ def hasHepML ( silent = True ) :
     except ImportError : # ===================================================
         # ====================================================================
         return False 
-    
+
 # ============================================================================
 if '__main__' == __name__ :
     
