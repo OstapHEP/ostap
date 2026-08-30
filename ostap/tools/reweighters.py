@@ -117,7 +117,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                  random_state           = 42    ,
                  store_original_weights = True  , **params ) :
 
-        if not isinstance ( n_splits, int ) : raise TypeError ( "Invalid `n_splits' type %s" % typename( n_splits ) )
+        if not isinstance ( n_splits, int ) : raise TypeError  ( "Invalid `n_splits' type %s" % typename( n_splits ) )
         if not 0 <= n_splits <= 1000        : raise ValueError ( "Invalid `n_splits' value %s" % n_splits )
         if not isinstance( clip_threshold, num_types ) :
             raise TypeError ( "Invalid `clip_threshold' type %s" % typename( clip_threshold ) )

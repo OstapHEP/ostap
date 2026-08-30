@@ -105,7 +105,6 @@ namespace Ostap
       struct CanIDiv<M1,double> 
       { static bool operation ( const M1&    /* m1 */ , const double /* m2 */ ) { return true ; } } ;
       
-      
       template <class T, unsigned int D, class R1>
       struct CanInvert< ROOT::Math::SMatrix<T,D,D,R1> > 
       {
@@ -114,8 +113,7 @@ namespace Ostap
         //
         static R operation ( const M1& /* m1 */ ) { return true ; } 
       } ;
-      
-      
+            
       // ======================================================================
       // new cases  with "almost" scalar
       // ======================================================================      
