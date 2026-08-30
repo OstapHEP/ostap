@@ -17,6 +17,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Power.h"
+#include "Ostap/MatrixUtils.h"
 #include "Ostap/EigenSystem.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
@@ -198,6 +199,17 @@ namespace Ostap
         return std::isfinite ( result ( 0 , 0 ) ) ;
       }
       //
+      typedef typename ROOT::Math::SMatriz<T,D,D,ROOT::Math::MatRepSym<T,D> > MTRX ;
+      static const Zero<MTRX> s_zero {} ;
+      static const Unit<MTRZ> s_unit {} ;
+      //
+      if ( s_zero ( mtrx ) )
+      { 
+        if ( 0 < n ) { result = T(0) ; return true ; }
+        return false ;
+      }
+      if ( s_unit ( mtrx ) ) { result = ROOT::Math::SMatrixIdentity() ; return true ; }
+      //
       if ( n < 0 )
       {
         /// here matrix needs to be inverted
@@ -240,6 +252,18 @@ namespace Ostap
         return pow ( mtrx , n , result ) ; 
       }
       //
+      typedef typename ROOT::Math::SMatriz<T,D,D,ROOT::Math::MatRepSym<T,D> > MTRX ;
+      static const Zero<MTRX> s_zero {} ;
+      static const Unit<MTRZ> s_unit {} ;
+      //
+      if ( s_zero ( mtrx ) )
+      { 
+        if ( 0 < p ) { result = T(0) ; return true ; }
+        return false ;
+      }
+      //
+      if ( s_unit ( mtrx ) ) { result = ROOT::Math::SMatrixIdentity() ; return true ; }
+      //
       auto func = [p]( T x ) -> T { return std::pow ( x , p ) ; } ;
       return apply ( mtrx , result , func ) ;
     }
@@ -259,6 +283,13 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx   ,
       ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >&       result ) 
     {
+      // 
+      typedef typename ROOT::Math::SMatriz<T,D,D,ROOT::Math::MatRepSym<T,D> > MTRX ;
+      static const Zero<MTRX> s_zero {} ;
+      static const Unit<MTRZ> s_unit {} ;
+      //
+      if ( s_zero ( mtrx ) ) { result = T(0)                          ; return true ; }
+      if ( s_unit ( mtrx ) ) { result = ROOT::Math::SMatrixIdentity() ; return true ; }
       //
       auto func = []( T x ) -> T { return std::sqrt ( x ) ; } ;
       return apply ( mtrx , result , func ) ;
@@ -280,6 +311,10 @@ namespace Ostap
       ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >&       result ) 
     {
       //
+      typedef typename ROOT::Math::SMatriz<T,D,D,ROOT::Math::MatRepSym<T,D> > MTRX ;
+      static const Zero<MTRX> s_zero {} ;
+      if ( z_zero ( mtrz ) ) { result = ROOT::Math::SMatrixIdentity() ; return true ; }
+      //
       auto func = []( T x ) -> T { return std::exp ( x ) ; } ;
       return apply ( mtrx , result , func ) ;
     }
@@ -299,6 +334,10 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx   ,
       ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >&       result ) 
     {
+      //
+      typedef typename ROOT::Math::SMatriz<T,D,D,ROOT::Math::MatRepSym<T,D> > MTRX ;
+      static const Unit<MTRX> s_one {} ;
+      if ( z_one ( mtrz ) ) { result = 0 ; return true ; }
       //
       auto func = []( T x ) -> T { return std::log ( x ) ; } ;
       return apply ( mtrx , result , func ) ;

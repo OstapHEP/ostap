@@ -146,6 +146,95 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /// Zero vector? 
+    template <class T, unsigned int D>
+    struct Zero<ROOT::Math::SVector<T,D> > 
+    {
+    public:
+      // ======================================================================
+      inline bool operator ()
+      ( const ROOT::Math::SVector<T,D>& vct ) const 
+      { return std::all_of ( vct.begin () , vct.end () , m_zt ) ;  }
+      // ======================================================================
+    private:
+      // ======================================================================
+      Zero<T> m_zt ; // =======================================================
+      // ======================================================================
+    }; 
+    // ========================================================================
+    /// Zero matrix? 
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    struct Zero<ROOT::Math::SMatrix<T,D1,D2,R> > 
+    {
+    public:
+      // ======================================================================
+      inline bool operator ()
+      ( const ROOT::Math::SMatrix<T,D1,D2,R>& mtrx ) const 
+      { return std::all_of ( mtrx.begin () , mtrx.end () , m_zt ) ;  }
+      // ======================================================================
+    private:
+      // ======================================================================
+      Zero<T> m_zt ; // =======================================================
+      // ======================================================================
+    }; 
+    // ========================================================================
+    template <class MATRIX>
+    struct Unit ; 
+    /// matrix is (square) uint matrix
+    template <class T, unsigned int D1, unsigned int D2,typename R>
+    struct Unit < ROOT::Math::SMatrix<T,D1,D2,R> >
+    {
+      inline bool operator () 
+      ( const ROOT::Math::SMatrix<T,D1,D2,R>& /* mtrx */) const 
+      { return false ; }
+    };
+   /// matrix is (square) Unit matrix
+    template <class T, unsigned int D,typename R>
+    struct Unit< ROOT::Math::SMatrix<T,D,D,R> > 
+    {
+      // =======================================================================
+      inline bool operator () 
+      ( const ROOT::Math::SMatrix<T,D,D,R>& mtrx ) const 
+      { 
+        for ( unsigned int i = 0 ; i < D  ; ++i )
+        {
+          const T mii { mtrx ( i , i ) } ;
+          if ( !m_one ( mii , 1 ) ) { return false ; }
+          for ( unsigned j = i + 1 ; j < D ; ++j )
+          { if ( !m_zero ( mtrx ( i , j ) ) ) { return false ; } }
+          for ( unsigned j = 0 ; j < i ;  ++j )
+          { if ( !m_zero ( mtrx ( i , j ) ) ) { return false ; } }
+          return true ; 
+        } 
+      }
+      private:
+        // ======================================================================
+        Zero<T>     m_zero {} ;
+        Equal_To<T> m_one  {} ;
+    };
+    /// matrix is (square) symmetric Unit matrix
+    template <class T, unsigned int D>
+    struct Unit< ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > > 
+    {
+      // =======================================================================
+      inline bool operator () 
+      ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > & mtrx ) const 
+      { 
+        for ( unsigned int i = 0 ; i < D  ; ++i )
+        {
+          const T mii { mtrx ( i , i ) } ;
+          if ( !m_one ( mii , 1 ) ) { return false ; }
+          for ( unsigned j = i + 1 ; j < D ; ++j )
+          { if ( !m_zero ( mtrx ( i , j ) ) ) { return false ; } }
+          return true ; 
+        } 
+      }
+      private:
+        // ======================================================================
+        Zero<T>     m_zero {} ;
+        Equal_To<T> m_one  {} ;
+    };
+    // ========================================================================
     /** set all elements of vector equal to some scalar value 
      * 
      *  @code 
