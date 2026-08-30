@@ -208,11 +208,12 @@ namespace Ostap
         if ( 0 < n ) { result = T(0) ; return true ; }
         return false ;
       }
+      //
       if ( s_unit ( mtrx ) ) { result = ROOT::Math::SMatrixIdentity() ; return true ; }
       //
       if ( n < 0 )
       {
-        /// here matrix needs to be inverted
+        /// here the matrix needs to be inverted
         int  ifail { 0 };
         /// 1) Try fast cholesky inversion 
         MTRX m { mtrx.InverseChol ( ifail ) } ; 
@@ -230,7 +231,7 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
-    /** pow-function for symmetric square matrices with real power 
+    /** pow-function \f$ M^p \f$ for symmetric square matrices with real power 
      *  @code
      *  MATRIX mtrx   = ...
      *  MATRIX result {} ; 
@@ -266,6 +267,35 @@ namespace Ostap
       //
       auto func = [p]( T x ) -> T { return std::pow ( x , p ) ; } ;
       return apply ( mtrx , result , func ) ;
+    }
+    // ========================================================================
+
+    // ========================================================================
+    /** pow-function \f$ p^M \f$ for symmetric square matrices
+     *  @code
+     *  MATRIX mtrx   = ...
+     *  MATRIX result {} ; 
+     *  if ( pow ( +4.1 , mtrx , result ) ) {  OK ; } 
+     *  @endcode
+     */
+    template <class T, unsigned int D, typename R>
+    inline 
+    bool pow 
+    ( const double                                                  p      , 
+      const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx   , 
+      ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >&       result ) 
+    {
+      //
+      typedef typename ROOT::Math::SMatriz<T,D,D,ROOT::Math::MatRepSym<T,D> > MTRX ;
+      static const Zero<MTRX> s_zero {} ;
+      static const Unit<MTRZ> s_unit {} ;
+      //
+      if ( s_zero ( mtrx ) ) { result = ROOT::Math::SMatrizIdentity () ;               return true  ; }
+      if ( p <= 0          ) {                                                         return false ; }
+      if ( s_unit ( mtrx ) ) { result = ROOT::Math::SMatrixIdentity () ; result *= p ; return true  ; }
+      //
+      auto func = [ p ]( T x ) -> T { return std::pow ( p , x ) ; } ;
+      return apply ( m , result , func ) ;
     }
     // ========================================================================
 
@@ -313,13 +343,15 @@ namespace Ostap
       //
       typedef typename ROOT::Math::SMatriz<T,D,D,ROOT::Math::MatRepSym<T,D> > MTRX ;
       static const Zero<MTRX> s_zero {} ;
-      if ( z_zero ( mtrz ) ) { result = ROOT::Math::SMatrixIdentity() ; return true ; }
+      if ( s_zero ( mtrz ) ) { result = ROOT::Math::SMatrixIdentity() ; return true ; }
       //
       auto func = []( T x ) -> T { return std::exp ( x ) ; } ;
       return apply ( mtrx , result , func ) ;
     }
     // ========================================================================
+
     
+
     // ========================================================================
     /** matrix logarithm (for symmetric positive deinite matrix)
      *  @code
@@ -337,7 +369,7 @@ namespace Ostap
       //
       typedef typename ROOT::Math::SMatriz<T,D,D,ROOT::Math::MatRepSym<T,D> > MTRX ;
       static const Unit<MTRX> s_one {} ;
-      if ( z_one ( mtrz ) ) { result = 0 ; return true ; }
+      if ( z_one ( mtrz ) ) { result = T ( 0 ) ; return true ; }
       //
       auto func = []( T x ) -> T { return std::log ( x ) ; } ;
       return apply ( mtrx , result , func ) ;
