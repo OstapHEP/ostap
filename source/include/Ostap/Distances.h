@@ -108,7 +108,24 @@ namespace Ostap
                      Ostap::Math::trace     ( g1 * c2 ) ) - N ;
     }
     // ========================================================================
-    /** Get Jensen-Shannon divergency
+
+    // ========================================================================
+    /** Get the weighted Jensen-Shannon divergence between two multivariate Gaussians
+     *  @see https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence
+     *  \f[ JS(P_1, P_2) = w_1 D_{KL}(P_1 \parallel M) + w_2 D_{KL}(P_2 \parallel M) \f]
+     *  where \f$ M = w_1 P_1 + w_2 P_2 \f$ is the mixture distribution with relative weights
+     *  \f[ w_1 = \frac{n_1 - 1}{n_1 + n_2 - 2}, \quad w_2 = \frac{n_2 - 1}{n_1 + n_2 - 2} \f]
+     *
+     *  @param v1 (INPUT) the first data vector
+     *  @param c1 (INPUT) the covariance matrix for the first data vector
+     *  @param n1 (INPUT) sum of weights (sample size) for the first dataset 
+     *  @param v2 (INPUT) the second data vector
+     *  @param c2 (INPUT) the covariance matrix for the second data vector
+     *  @param n2 (INPUT) sum of weights (sample size) for the second dataset 
+     *  @return Jensen-Shannon divergence, or -999 on failure (invalid matrices or n1, n2 <= 1.0)
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2023-03-07
      */
     template <unsigned int N, typename SCALAR>
     inline double jensen_shannon
@@ -148,10 +165,19 @@ namespace Ostap
       const double kl1 = kullback_leibler ( v1 , c1 , v , c ) ;
       const double kl2 = kullback_leibler ( v2 , c2 , v , c ) ;
       //
-      return ( s_bad == kl1 || s_bad == kl2 ) ? s_bad : kl1 + kl2 ;
+      return ( s_bad == kl1 || s_bad == kl2 ) ? s_bad : w1 * kl1 + w2 * kl2 ;
     }
     // ========================================================================
-    /** Get Jensen-Shannon divergency
+    /** Get the symmetric Jensen-Shannon divergence between two multivariate Gaussians (equal weights w1 = w2 = 0.5)
+     *  @see https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence
+     *  \f[ JS(P_1, P_2) = \frac{1}{2} D_{KL}\left(P_1 \parallel \frac{P_1 + P_2}{2}\right) 
+     *                   + \frac{1}{2} D_{KL}\left(P_2 \parallel \frac{P_1 + P_2}{2}\right) \f]
+     *
+     *  @param v1 (INPUT) the first data vector
+     *  @param c1 (INPUT) the covariance matrix for the first data vector
+     *  @param v2 (INPUT) the second data vector
+     *  @param c2 (INPUT) the covariance matrix for the second data vector
+     *  @return Symmetric Jensen-Shannon divergence, or -999 on failure
      */
     template <unsigned int N, typename SCALAR>
     inline double jensen_shannon
@@ -159,7 +185,7 @@ namespace Ostap
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 , 
       const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 )
-    { return jensen_shannon ( v1 , v1 , 2.0 , v2 , c2 , 2.0 ) ; }
+    { return jensen_shannon ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }
     // ========================================================================
     /** get Mahalanobis' distance
      *  \f[ D_M = \sqrt { (v_2-v_1)^T S^{-1} (v_2-v1) } \f]  , whre
@@ -172,7 +198,7 @@ namespace Ostap
      *  @param c2 (INPUT) the covariance matrix for the second data vector
      *  @param n2 (INPUT) sum of weights fot the second data vector 
      *
-     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2023-03-07
      */
     template <unsigned int N, typename SCALAR>
@@ -222,7 +248,7 @@ namespace Ostap
      *  @param v2 (INPUT) the second data vector
      *  @param c2 (INPUT) the covariance matrix for the second data vector
      *
-     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2023-03-07
      */
     template <unsigned int N, typename SCALAR>
@@ -245,7 +271,7 @@ namespace Ostap
      *  @param c2 (INPUT) the covariance matrix for the second data vector
      *  @param n2 (INPUT) sum of weights fot the second data vector 
      *
-     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2023-03-07
      */
     template <unsigned int N, typename SCALAR>
@@ -285,17 +311,21 @@ namespace Ostap
       return n1 * n2 / ( n1 + n2 ) * ROOT::Math::Similarity ( si , v1 - v2 ) ;
     }
     // ========================================================================
-    /** get Bhattacharyya's distance
-     *  \f[ D_B = \frac{1}{8} (v_2-v_1)^T\left(\frac{\Sigma_1+\Sigma_2}{2}\right)^{-1}(v_2-v_1)
-     *   + \frac{1}{2} \log \left( \frac{ det (\frac{\Sigma_1+\Sigma_2}{2}) }
-     *   { \sqrt{ det \sigma_1 det \Sigma_2 }} \right) \f] 
+
+    // ========================================================================
+    /** Get Bhattacharyya's distance between two multivariate Gaussians
+     *  @see https://en.wikipedia.org/wiki/Bhattacharyya_distance
+     *  \f[ D_B = \frac{1}{2} w_1 w_2 (v_2 - v_1)^T \Sigma_{pooled}^{-1} (v_2 - v_1)
+     *          + \frac{1}{2} \left( \ln\det\Sigma_{pooled} - w_1 \ln\det C_1 - w_2 \ln\det C_2 \right) \f]
      *
      *  @param v1 (INPUT) the first data vector
      *  @param c1 (INPUT) the covariance matrix for the first data vector
+     *  @param n1 (INPUT) sum of weights for the first data vector 
      *  @param v2 (INPUT) the second data vector
      *  @param c2 (INPUT) the covariance matrix for the second data vector
+     *  @param n2 (INPUT) sum of weights for the second data vector 
      *
-     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2023-03-07
      */
     template <unsigned int N, typename SCALAR>
@@ -318,39 +348,39 @@ namespace Ostap
       if constexpr ( N == 1 ) 
       {
         const double diff   = v2[0] - v1[0];
-        //
         const double c100   = c1 ( 0 , 0 ) ;
         const double c200   = c2 ( 0 , 0 ) ;
-        //
-        const double si_val = w1 * c100 + w2 * c200 ;
         
+        const double si_val = w1 * c100 + w2 * c200 ;
         if ( si_val <= 0 || c100 <= 0 || c200 <= 0 ) { return s_bad ; }
-        //
+
         const double quad = ( diff * diff ) / si_val;
         
-        // using pooled variance depending on definition, keeping consistent with matrix logic       
-        return 0.5 * w1 * w2 * quad + 0.5 * std::log ( si_val / std::sqrt ( c100 * c200 ) ) ;
+        // Weighted log-determinant variance difference to prevent overflow
+        return 0.5 * w1 * w2 * quad + 0.5 * ( std::log ( si_val ) - w1 * std::log ( c100 ) - w2 * std::log ( c200 ) ) ;
       }
+
       /// the actual type of covariance matrix
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
-      // 
-      // get "average"  covariance matrix 
+      
+      // pooled covariance matrix 
       COV si { w1 * c1 + w2 * c2 } ;
       //
-      // (1) calculate the determinant
+      // (1) calculate the determinant of pooled matrix
       SCALAR det  = 1 ;
-      if ( !si.Det2 ( det ) || 0 >= det ) { return s_bad ; }
-      // (2) invert it! 
+      if ( !si.Det2 ( det ) || det <= 0 ) { return s_bad ; }
+      // (2) invert it for quadratic form
       if ( !si.InvertChol ()            ) { return s_bad ; }      
       //
       SCALAR det1 = 1 ;
-      if ( !c1.Det2 ( det1 ) || det1 < 0 ) { return s_bad ; }
+      if ( !c1.Det2 ( det1 ) || det1 <= 0 ) { return s_bad ; }
       SCALAR det2 = 1 ;
-      if ( !c2.Det2 ( det2 ) || det2 < 0 ) { return s_bad ; }
+      if ( !c2.Det2 ( det2 ) || det2 <= 0 ) { return s_bad ; }
       //
-      return
-        0.5 * w1 * w2 * ROOT::Math::Similarity ( si , v2 - v1      ) + 
-        0.5           * std::log ( det / std::sqrt ( det1 * det2 ) ) ;
+      const double quad = ROOT::Math::Similarity ( si , v2 - v1 ) ;
+
+      // Weighted log-determinant difference
+      return 0.5 * w1 * w2 * quad + 0.5 * ( std::log ( det ) - w1 * std::log ( det1 ) - w2 * std::log ( det2 ) ) ;
     }
     // ========================================================================
     /** get Bhattacharyya's distance
@@ -372,9 +402,11 @@ namespace Ostap
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 ,
       const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 )
-      { return bhattachariyya  ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }    
+     { return bhattacharyya  ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }    
     // ========================================================================     
-    /** get Wasserstain' distance
+
+    // ========================================================================     
+    /** get Wasserstein' distance
      *  \f[ W^2 = (v_2-v_1)^T \Sigma ^{-1} (v_2-v1) } 
      *          + tr \left( \Sigma_1 + \Sigma_2
      *          - 2  \left( \Sigma_2^{1/2}\Sigma_1 \Sigma_2^{1/2}\right)^{1/2} \right) \f]
@@ -482,12 +514,12 @@ namespace Ostap
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 )
       { return wasserstein ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }       
     // ========================================================================
-
+    
     // ========================================================================
-    /** get Hellinger's distance (squared) between two multivariate Gaussians
+    /** Get Hellinger's distance (squared) between two multivariate Gaussians
      *  @see https://en.wikipedia.org/wiki/Hellinger_distance
-     *  \f[ H^2 = 1 - \frac{(\det C_1)^{1/4} (\det C_2)^{1/4}}{(\det \Sigma_{avg})^{1/4}} 
-     *      \exp \left( - \frac{1}{8} (v_2 - v_1)^T \Sigma_{avg}^{-1} (v_2 - v_1) \right) \f]
+     *  \f[ H^2 = 1 - \frac{(\det C_1)^{1/4} (\det C_2)^{1/4}}{(\det \Sigma_{pooled})^{1/2}} 
+     *      \exp \left( - \frac{1}{2} w_1 w_2 (v_2 - v_1)^T \Sigma_{pooled}^{-1} (v_2 - v_1) \right) \f]
      *
      *  @param v1 (INPUT) the first data vector
      *  @param c1 (INPUT) the covariance matrix for the first data vector
@@ -496,7 +528,7 @@ namespace Ostap
      *  @param c2 (INPUT) the covariance matrix for the second data vector
      *  @param n2 (INPUT) sum of weights for the second data vector 
      *
-     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date 2026-06-06
      */
     template <unsigned int N, typename SCALAR>
@@ -516,23 +548,25 @@ namespace Ostap
       const double w1 = ( n1 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
       const double w2 = ( n2 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
       //
-
+      // Specialization for N = 1 to avoid Cling warnings and overhead
       if constexpr ( N == 1 ) 
       {
-        const double diff = v2[0] - v1[0];
-        
-        const double c100 = c1 ( 0 , 0 ) ;
-        const double c200 = c2 ( 0 , 0 ) ;
+        const double diff   = v2[0] - v1[0];
+        const double c100   = c1 ( 0 , 0 ) ;
+        const double c200   = c2 ( 0 , 0 ) ;
         
         const double si_val = w1 * c100 + w2 * c200 ;
-        if ( si_val <= 0 || c100 < 0 || c200 < 0 ) { return s_bad ; }
+        if ( si_val <= 0 || c100 <= 0 || c200 <= 0 ) { return s_bad ; }
 
-        const double quad      = w1 * w2 * ( diff * diff ) / si_val;
-        const double exp_term  = std::exp ( -0.125 * quad );
+        const double quad      = ( diff * diff ) / si_val;
+        const double exp_term  = std::exp ( -0.5 * w1 * w2 * quad );
         
-        const double det_ratio = std::sqrt ( std::sqrt ( c100 * c200 / si_val ) ) ;        
-        const double h_sq      = 1.0 - det_ratio * exp_term ;
+        // Correct determinant ratio: (c100 * c200)^(1/4) / si_val^(1/2)
+        // const double det_ratio = std::sqrt ( std::sqrt ( c100 * c200 ) / si_val ) ;        
+        const double det_ratio = std::exp ( 0.5 * w1 * std::log ( c100 ) + 0.5 * w2 * std::log ( c200 ) - 0.5 * std::log ( si_val ) ) ;
 
+        const double h_sq      = 1.0 - det_ratio * exp_term ;
+        
         return ( h_sq >= 0.0 ) ? h_sq : 0.0 ;
       }
       
@@ -544,21 +578,23 @@ namespace Ostap
       //
       // (1) calculate the determinant of pooled matrix
       SCALAR det  = 1 ;
-      if ( !si.Det2 ( det ) || 0 >= det ) { return s_bad ; }
+      if ( !si.Det2 ( det ) || det <= 0 ) { return s_bad ; }
       // (2) invert it for quadratic form
       if ( !si.InvertChol ()            ) { return s_bad ; }      
       //
       SCALAR det1 = 1 ;
-      if ( !c1.Det2 ( det1 ) || det1 < 0 ) { return s_bad ; }
+      if ( !c1.Det2 ( det1 ) || det1 <= 0 ) { return s_bad ; }
       SCALAR det2 = 1 ;
-      if ( !c2.Det2 ( det2 ) || det2 < 0 ) { return s_bad ; }
+      if ( !c2.Det2 ( det2 ) || det2 <= 0 ) { return s_bad ; }
       //
-      // Calculate exponential term via quadratic form and weights
-      const double quad      = w1 * w2 * ROOT::Math::Similarity ( si , v2 - v1 ) ;
-      const double exp_term  = std::exp ( -0.125 * quad ) ;
+      // Calculate weighted exponential term via quadratic form
+      const double quad      = ROOT::Math::Similarity ( si , v2 - v1 ) ;
+      const double exp_term  = std::exp ( -0.5 * w1 * w2 * quad ) ;
       
-      // Calculate determinant ratio: (det1 * det2)^(1/4) / det^(1/4)
-      const double det_ratio = std::sqrt ( std::sqrt ( det1 * det2 / det ) ) ;
+      // Calculate determinant ratio: (det1 * det2)^(1/4) / det^(1/2)
+      // const double det_ratio = std::sqrt ( std::sqrt ( det1 * det2 ) / det ) ;
+      
+      const double det_ratio = std::exp ( 0.5 * w1 * std::log ( det1 ) + 0.5 * w2 * std::log ( det2 ) - 0.5 * std::log ( det ) ) ;
       
       const double h_sq      = 1.0 - det_ratio * exp_term ;
       
@@ -579,6 +615,8 @@ namespace Ostap
       const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 )
     { return hellinger ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }
+    // ========================================================================    
+
     // ========================================================================    
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

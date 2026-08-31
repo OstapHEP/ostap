@@ -3,9 +3,14 @@
 ## New features
 
    1. improve table-prints for `TTree`&`TChain` classes
+   1. improve computations in `Ostap/Distances.h`
    
 ## Bug fixes
-  
+
+   1. Fix a sad typo in `Ostap::Math::GSL::EigenSystem::eigenValues` 
+   1. Fix a funny typo in `Ostap::Math::bhattacharyya` 
+   1. Fix a bug in computation of `Ostap::Math::hellinger` 
+   
 ## Backward incompatible
 
 # v3.8.4.0

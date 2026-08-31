@@ -86,7 +86,7 @@ Ostap::Math::GSL::EigenSystem::eigenValues
 {
   if constexpr ( 1 == D )
   {
-    vals [ 0 ] == mtrx ( 0 , 0 ) ;
+    vals [ 0 ] = mtrx ( 0 , 0 ) ;
     return Ostap::StatusCode::SUCCESS ;
   }
   Ostap::StatusCode sc = _fill ( mtrx ) ;
