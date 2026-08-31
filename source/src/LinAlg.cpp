@@ -815,7 +815,6 @@ Ostap::GSL::Vector::multiply
   return result ;
 }
 
-
 // ============================================================================
 // constructor: allocate the permutation 
 // ============================================================================
@@ -1008,37 +1007,84 @@ std::ostream& Ostap::Utils::toStream
 // ============================================================================
 // few more utilties 
 // ============================================================================
+// get the max element
+// ============================================================================
+double Ostap::Math::max_element ( const Ostap::GSL::Vector& v )
+{ return gsl_vector_max ( v.vector () ) ; }  
+// ============================================================================
+// get the min element
+// ============================================================================
+double Ostap::Math::min_element ( const Ostap::GSL::Vector& v )
+{ return gsl_vector_max ( v.vector () ) ; }  
+// ============================================================================
+// get the max element
+// ============================================================================
+double Ostap::Math::max_element ( const Ostap::GSL::Matrix& m )
+{ return gsl_matrix_max ( m.matrix () ) ; }    
+// ============================================================================
+// get the min element
+// ============================================================================
+double Ostap::Math::min_element ( const Ostap::GSL::Matrix& m ) 
+{ return gsl_matrix_min ( m.matrix () ) ; }    
+
 
 // ============================================================================
-// get the element with maxina absolute value 
+// get the element with maximal absolute value 
 // ============================================================================
 double Ostap::Math::maxabs_element
 ( const Ostap::GSL::Matrix& m )
 {
   double result = -1 ;
   for ( std::size_t i = 0 ; i < m.nRows () ; ++i )
-    { for ( std::size_t j = 0 ; j < m.nCols () ; ++j )
-        { result = std::max ( result , std::abs ( m ( i , j ) ) ) ; } }
+  { for ( std::size_t j = 0 ; j < m.nCols () ; ++j )
+    { result = std::max ( result , std::abs ( m ( i , j ) ) ) ; } }
   return result ;
 }
 // ============================================================================
-// get the element with maxina absolute value 
+// get the element with maximal absolute value 
 // ============================================================================
 double Ostap::Math::maxabs_element
 ( const Ostap::GSL::Vector& v )
 {
   double result = -1 ;
   for ( std::size_t i = 0 ; i < v.size() ; ++i )
-    { result = std::max ( result , std::abs ( v ( i ) ) ) ; }
+  { result = std::max ( result , std::abs ( v ( i ) ) ) ; }
   return result ;
 }
 // ============================================================================
 // get the element with maxina absolute value 
 // ============================================================================
-double Ostap::Math::maxabs_element
-( const Ostap::GSL::Permutation& v ) { return v.size() ; }
+// double Ostap::Math::maxabs_element
+// ( const Ostap::GSL::Permutation& v ) { return v.size() ; }
 // ============================================================================
-// Actual Linar Algebra start here 
+// Is this matrix symmetric ?
+// ============================================================================
+bool Ostap::Math::symmetric ( const Ostap::GSL::Matrix& m )
+{
+  const std::size_t N = m.nRows () ;
+  const std::size_t M = m.nCols () ;
+  //
+  if ( N != M ) { return false ; }
+  //
+  for ( std::size_t i = 0 ; i < N ; ++i )
+  {
+    const double cii = m.get ( i , i ) ;
+    if ( !std::isfinite ( cii ) ) { return false ; } 
+    for ( std::size_t j = i + 1 ; j < M ; ++j )
+    {
+      const double cij = m.get ( i , j ) ;
+      if ( !std::isfinite ( cij ) ) { return false ; } 
+      const double cji = m.get ( j , i ) ;
+      if ( !std::isfinite ( cji ) ) { return false ; } 
+      if ( !s_equal ( cij , cji ) ) { return false ; }
+    }
+  }
+  return true ;
+}
+// ============================================================================
+   
+// ============================================================================
+// Actual Linear Algebra starts here 
 // ============================================================================
 
 // ============================================================================
@@ -1088,9 +1134,9 @@ Ostap::GSL::PLU ( Ostap::GSL::Matrix& A )
   int signum = 0 ;
   int status = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_LU_decomp"        ,
-		  "Ostap::GSL::PLU"                        ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;  
+                  "Error from gsl_linalg_LU_decomp"        ,
+                  "Ostap::GSL::PLU"                        ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;  
   //
   return P ;
 }
@@ -1194,9 +1240,9 @@ Ostap::GSL::PQR
     ( A.matrix()   , Q.matrix() , R.matrix() ,
       tau.vector() , P.permutation() , &signum , norm.vector() ) ;
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_QRPT_decomp2"     ,
-		  "Ostap::GSL::PQR"                        ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_linalg_QRPT_decomp2"     ,
+                  "Ostap::GSL::PQR"                        ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   
   //
   return P ;
@@ -1228,18 +1274,18 @@ void Ostap::GSL::LQ
   //
   int status = gsl_linalg_LQ_decomp ( R.matrix() , tau.vector() ) ;
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_LQ_decomp"        ,
-		  "Ostap::GSL::LQ"                         ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_linalg_LQ_decomp"        ,
+                  "Ostap::GSL::LQ"                         ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   //
   status = gsl_linalg_LQ_unpack ( R.matrix   () ,
-				  tau.vector () ,
-				  Q.matrix   () , 
-				  L.matrix   () ) ; 
+                                  tau.vector () ,
+                                  Q.matrix   () , 
+                                  L.matrix   () ) ; 
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_LQ_unpack"        ,
-		  "Ostap::GSL::LQ"                         ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_linalg_LQ_unpack"        ,
+                  "Ostap::GSL::LQ"                         ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   //
 }
 // ============================================================================
@@ -1278,18 +1324,18 @@ void Ostap::GSL::QL
   //
   int status = gsl_linalg_QL_decomp ( R.matrix() , tau.vector() ) ;
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_QL_decomp"        ,
-		  "Ostap::GSL::QL"                         ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_linalg_QL_decomp"        ,
+                  "Ostap::GSL::QL"                         ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   //
   status = gsl_linalg_QL_unpack ( R.matrix   () ,
-				  tau.vector () ,
-				  Q.matrix   () , 
-				  L.matrix   () ) ; 
+                                  tau.vector () ,
+                                  Q.matrix   () , 
+                                  L.matrix   () ) ; 
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_QL_unpack"        ,
-		  "Ostap::GSL::QL"                         ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_linalg_QL_unpack"        ,
+                  "Ostap::GSL::QL"                         ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   //
 #endif 
 }
@@ -1339,9 +1385,9 @@ Ostap::GSL::COD
       &rank            ,
       work.vector()  ) ;
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_COD_decomp"       ,
-		  "Ostap::GSL::COD"                        ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_linalg_COD_decomp"       ,
+                  "Ostap::GSL::COD"                        ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   //
   status = gsl_linalg_COD_unpack
     ( D.matrix() ,
@@ -1352,9 +1398,9 @@ Ostap::GSL::COD
       R.matrix     () ,
       Z.matrix     () ) ;
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_COD_unpack"       ,
-		  "Ostap::GSL::COD"                        ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_linalg_COD_unpack"       ,
+                  "Ostap::GSL::COD"                        ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   //
   return P ;
 }
@@ -1398,13 +1444,13 @@ Ostap::GSL::SVD
   if ( !golub )
     {
       int status = gsl_linalg_SV_decomp_jacobi 
-	( U.matrix () ,
-	  V.matrix () ,
-	  S.vector () ) ; 
+        ( U.matrix () ,
+          V.matrix () ,
+          S.vector () ) ; 
       Ostap::Assert ( GSL_SUCCESS == status                    ,
-		      "Error from gsl_linalg_SV_decomp_jacobi" ,
-		      "Ostap::GSL::SVD"                        ,
-		      ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                      "Error from gsl_linalg_SV_decomp_jacobi" ,
+                      "Ostap::GSL::SVD"                        ,
+                      ERROR_GSL + status , __FILE__ , __LINE__ ) ;
       
       return S ;  // RETURN 
     }
@@ -1416,14 +1462,14 @@ Ostap::GSL::SVD
   if ( M < 4 * N )
     {
       int status = gsl_linalg_SV_decomp
-	( U.matrix    () ,
-	  V.matrix    () ,
-	  S.vector    () ,
-	  work.vector () ) ;
+        ( U.matrix    () ,
+          V.matrix    () ,
+          S.vector    () ,
+          work.vector () ) ;
       Ostap::Assert ( GSL_SUCCESS == status                    ,
-		      "Error from gsl_linalg_SV_decomp"        ,
-		      "Ostap::GSL::SVD"                        ,
-		      ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                      "Error from gsl_linalg_SV_decomp"        ,
+                      "Ostap::GSL::SVD"                        ,
+                      ERROR_GSL + status , __FILE__ , __LINE__ ) ;
       return S ;  
     }
   
@@ -1438,9 +1484,9 @@ Ostap::GSL::SVD
       S.vector    () ,
       work.vector () ) ;
   Ostap::Assert ( GSL_SUCCESS == status                    ,
-		  "Error from gsl_linalg_SV_decomp_mod"    ,
-		  "Ostap::GSL::SVD"                        ,
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_linalg_SV_decomp_mod"    ,
+                  "Ostap::GSL::SVD"                        ,
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   return S ; 
 }
 // ============================================================================
@@ -1460,9 +1506,9 @@ void Ostap::GSL::POLAR
   const std::size_t K = std::min ( M , N ) ;
   //
   Ostap::Assert ( M == N ,
-		  "Polar decomposition exists only for square matrices!" ,
-		  "Ostap::GSL::POLAR" ,
-		  INVALID_GMATRIX     , __FILE__ , __LINE__ ) ;
+                  "Polar decomposition exists only for square matrices!" ,
+                  "Ostap::GSL::POLAR" ,
+                  INVALID_GMATRIX     , __FILE__ , __LINE__ ) ;
   //
   Matrix auxu { M  , K } ;
   Matrix auxv { N  , K } ;
@@ -1525,9 +1571,9 @@ void Ostap::GSL::SCHUR
   Ostap::GSL::Matrix&        T ) 
 {
   Ostap::Assert( A.nRows() == A.nCols()                 , 
-		 "Schur decomposiiton is only for square matrices!" ,
-		 "Ostap::GSL::SCHUR"                    , 
-		 INVALID_GMATRIX , __FILE__  , __LINE__ ) ;
+                 "Schur decomposiiton is only for square matrices!" ,
+                 "Ostap::GSL::SCHUR"                    , 
+                 INVALID_GMATRIX , __FILE__  , __LINE__ ) ;
   //
   const std::size_t N { A.nRows() } ; 
   //
@@ -1538,13 +1584,13 @@ void Ostap::GSL::SCHUR
   //
   gsl_eigen_nonsymm_params ( 1 , 0 , ws.workspace () ) ;
   int status = gsl_eigen_nonsymm_Z ( T.matrix     () , 
-				     eval.vector  () , 
-				     Z.matrix     () , 
-				     ws.workspace () ) ; 
+                                     eval.vector  () , 
+                                     Z.matrix     () , 
+                                     ws.workspace () ) ; 
   Ostap::Assert ( GSL_SUCCESS == status                    , 
-		  "Error from gsl_eigwn_nonsymm_Z"         , 
-		  "Ostap::GSL::SCHUR"                      , 
-		  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
+                  "Error from gsl_eigwn_nonsymm_Z"         , 
+                  "Ostap::GSL::SCHUR"                      , 
+                  ERROR_GSL + status , __FILE__ , __LINE__ ) ;
   // need to clean the lower left part of T
   // gsl_vector_complex_fprintf  ( stderr , eval.vector() , "%+.4g") ; 
   //

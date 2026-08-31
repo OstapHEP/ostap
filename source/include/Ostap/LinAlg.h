@@ -20,6 +20,8 @@ namespace Ostap
   namespace GSL
   {
     // =========================================================================
+    // Forward declarations 
+    // =========================================================================
     class Matrix      ;
     class Vector      ;
     class Permutation ;
@@ -28,13 +30,13 @@ namespace Ostap
     std::size_t GSL_version_major () ;
     /// GSL version minor
     std::size_t GSL_version_minor () ;
-    /// GSL versionmajor  x 1000 + GAL version minor  
+    /// GSL versionmajor  x 1000 + GSL version minor  
     std::size_t GSL_version_int   () ;
     /// GSL version as string
     std::string GSL_version       () ;
     // =========================================================================
     /** @class Ostap::GSL::Matrix
-     *  Internal class to  hold GSL-Matrix
+     *  Internal class to hold GSL-Matrix
      */
     class Matrix
     {
@@ -124,6 +126,7 @@ namespace Ostap
       // ========================================================================
     public:
       // ========================================================================
+      /// get the matrix element
       inline double operator ()
       ( const std::size_t i ,
         const std::size_t j ) const { return get ( i , j ) ; }
@@ -137,16 +140,16 @@ namespace Ostap
       // ========================================================================
     public:
       // ========================================================================
-      /// resize/reset matriz
+      /// resize/reset matrix
       Matrix& resize
       ( const std::size_t n1     ,
         const std::size_t n2     ) ;
-      /// resize/reset matriz
+      /// resize/reset matrix
       Matrix& resize
       ( const std::size_t n1     ,
         const std::size_t n2     ,
         const double      value  ) ;
-      /// resize/reset matriz
+      /// resize/reset matrix
       Matrix& resize
       ( const std::size_t n1     ,
         const std::size_t n2     ,
@@ -157,7 +160,7 @@ namespace Ostap
         const std::size_t n2     ,
         const Id      /* id */   ) ;         
       // ========================================================================
-    public: // simplest mathops  
+    public: // simplest math operations   
       // ========================================================================
       /// scale matrix
       Matrix&        imul ( const double  value ) ;
@@ -165,7 +168,7 @@ namespace Ostap
       Matrix&        imul ( const Matrix& value ) ;
       /// add matrix 
       Matrix&        iadd ( const Matrix& value ) ;
-      /// add I*vlue matrix 
+      /// add I*value matrix 
       Matrix&        iadd ( const double  value ) ;   
       /// subtract matrix  
       Matrix&        isub ( const Matrix& value ) ;      
@@ -174,7 +177,7 @@ namespace Ostap
       /// scale matrix
       inline Matrix& idiv ( const double  value ) { return imul ( 1/value ) ; } 
       // ========================================================================
-    public:
+    public: // multuplication 
       // ========================================================================
       /// multiply  matrices using CBLAS dgemm function 
       Matrix multiply ( const Matrix&      right ) const ;
@@ -183,7 +186,7 @@ namespace Ostap
       /// multiply matrix & permutation 
       Matrix multiply ( const Permutation& right ) const ;
       // ========================================================================
-    public: // simplest mathops  
+    public: // simplest math operations   
       // ========================================================================
       /// add matrix 
       inline Matrix& operator+=( const Matrix& right ) { return iadd (   right ) ; }
@@ -220,9 +223,9 @@ namespace Ostap
       // ========================================================================
     public: 
       // ========================================================================
-      /// permute the rows     of the ematrix according to permutation 
+      /// permute the rows    of the matrix according to permutation 
       Matrix& permute_rows ( const Permutation& p ) ;
-      /// permute the coluimns of the ematrix according to permutation 
+      /// permute the columns of the matrix according to permutation 
       Matrix& permute_cols ( const Permutation& p ) ;      
       // ========================================================================
     public:
@@ -242,8 +245,7 @@ namespace Ostap
       /// the  actual pointer to GSL-matrix 
       gsl_matrix* m_matrix { nullptr } ; // the  actual pointer to GSL-matrix
       // ========================================================================
-    } ; 
-    //                                    The end of class Ostap::GSL:Matrix 
+    } ; //                                    The end of class Ostap::GSL:Matrix 
     // ==========================================================================
     /** @class Ostap::GSL::Vector
      *  Internal class to  hold GSL-Vector
@@ -259,11 +261,11 @@ namespace Ostap
       /// allocate vector 
       Vector
       ( const std::size_t N     ) ;
-      /// allocate vector 
+      /// allocate vector & fill with with the value 
       Vector
       ( const std::size_t N     , 
         const double       value ) ;
-      /// allocate vector 
+      /// allocate vector and initiilze it  with zero 
       Vector
       ( const std::size_t N     , 
         const Zero     /* zero */  ) ;
@@ -311,14 +313,14 @@ namespace Ostap
       // ========================================================================
     public:
       // ========================================================================
-      // resie the vector
+      // resize the vector
       Vector& resize
       ( const std::size_t n     ) ; 
-      // resie the vector
+      // resize the vector and fill it with defined value
       Vector& resize
       ( const std::size_t n     ,
         const double       value ) ; 
-      // resie the vector
+      // resize & mullify the vector 
       Vector& resize
       ( const std::size_t n     ,
         const Zero    /* zero */ ) ;
@@ -349,7 +351,7 @@ namespace Ostap
       // ========================================================================      
       /// dot-product   of two vectors
       double dot      ( const Vector& right ) const ;
-      /// cross-product of two vectors 
+      /// cross/tensor product of two vectors 
       Matrix cross    ( const Vector& right ) const ;      
       // ========================================================================      
     public: // some simple math oprations 
@@ -458,15 +460,15 @@ namespace Ostap
     inline void swap ( Matrix& a      , Matrix&      b ) { a.swap ( b ) ; } 
     /// swap two vectors 
     inline void swap ( Vector& a      , Vector&      b ) { a.swap ( b ) ; } 
-    /// swap two permuattions 
+    /// swap two permutations 
     inline void swap ( Permutation& a , Permutation& b ) { a.swap ( b ) ; } 
     // ========================================================================
 
     // ========================================================================
     /// add two matrices 
     inline Matrix operator+( const Matrix& a , const Matrix& b )
-    { Matrix c { a } ; c += b ; return c ; }
-    
+    { Matrix c { a } ; c += b ; return c ; }    
+
     /// subtract two matrices 
     inline Matrix operator-( const Matrix& a , const Matrix& b )
     { Matrix c { a } ; c -= b ; return c ; }
@@ -495,7 +497,9 @@ namespace Ostap
     inline Matrix operator/( const Matrix& a , const double b  )
     { Matrix c { a } ; c/= b ; return c ;; }
     
+    // ========================================================================
     // "right"  forms 
+    // ========================================================================
 
     /// scale the matrix from the right 
     inline Matrix operator*( const double  b , const Matrix& a )
@@ -533,12 +537,14 @@ namespace Ostap
     inline Vector operator/( const Vector& a , const double b  )
     { Vector c { a } ; c/= b ; return c ;; }
     
+    // ========================================================================
     // "right"  forms 
+    // ========================================================================
     
     /// scale the vector  from the right 
     inline Vector operator*( const double  b , const Vector& a )
-    { Vector c { a } ; c*= b ; return c ;; }    
-    /// add constant from rrght 
+    { Vector c { a } ; c *= b ; return c ;; }    
+    /// add the constant from right 
     inline Vector operator+( const double& b , const Vector& a )
     { Vector c { a } ; c += b ; return c ; }
 
@@ -546,17 +552,26 @@ namespace Ostap
     // Matrix & permutations 
     // ========================================================================
     
+    // ========================================================================
     /// Apply permutation 
-    inline Matrix operator*( const Permutation& p ,
-			     const Matrix&      a ) { return p.apply    ( a ) ; }
+    inline Matrix operator*
+    ( const Permutation& p ,
+      const Matrix&      a ) { return p.apply    ( a ) ; }
+    // ========================================================================    
     /// apply permutation 
-    inline Matrix operator*( const Matrix&a       ,
-			     const Permutation& p ) { return a.multiply ( p ) ; }
-    
+    inline Matrix operator*
+    ( const Matrix&a       ,
+      const Permutation& p ) { return a.multiply ( p ) ; }
+    // ========================================================================
+
     // ========================================================================
     // Linear Algebra 
     // ========================================================================
     
+    // ========================================================================
+    // LU decomposition with pivoting 
+    // ========================================================================
+
     // ========================================================================
     /** "in-place" LU decomposition  
      *  \f$ PA = LU \f$, where 
@@ -622,9 +637,13 @@ namespace Ostap
       Matrix&       L ,
       Matrix&       U ) ;    
     // ========================================================================
+
+    // ========================================================================
     // QR decomposition with column pivoting 
     // ========================================================================
-    /** mape QR Decomposion of matrix A : \f$ AP = QR\f$ where 
+
+    // ========================================================================    
+    /** make QR Decomposion of matrix A : \f$ AP = QR\f$ where 
      *  - A is input                 MxN matrix  
      *  - P is permuutation matrix   NxN 
      *  - Q is orthogonal matrix     MxM 
@@ -640,7 +659,11 @@ namespace Ostap
       Matrix&       Q ,
       Matrix&       R ) ;    
     // ======================================================================
+
+    // ======================================================================
     // LQ decomposition
+    // ======================================================================
+    
     // ======================================================================
     /** LQ decomposition of matrix A: \f$ A = LQ\f$, where 
      *  - L is lower trapezoidal MxN 
@@ -651,7 +674,11 @@ namespace Ostap
       Matrix&       L ,
       Matrix&       Q ) ;
     // ======================================================================
+
+    // ======================================================================
     // QL decomposition
+    // ======================================================================
+
     // ======================================================================
     /** QL decomposition of matrix A: \f$ A = QL\f$, where 
      *  - Q is orthogonal MxM
@@ -662,7 +689,11 @@ namespace Ostap
       Matrix&       Q ,
       Matrix&       L ) ;
     // ======================================================================
+
+    // ======================================================================
     // COD decomposition
+    // ======================================================================
+
     // ======================================================================
     /** COD - Complete Orthogonal Decomposion
      *  \f$ AP = Q R Z^T \f$ 
@@ -679,7 +710,11 @@ namespace Ostap
       Matrix& R ,
       Matrix& Z ) ;
     // ========================================================================
+
+    // ========================================================================
     // SVD decomposition
+    // ========================================================================
+
     // ========================================================================
     /** SVD : singular Value Decomposition  \f$ A = U S V^T\f$
      *  - A input MxN matrix 
@@ -692,7 +727,7 @@ namespace Ostap
      *  @param V     (update) orthogonal matrix V 
      *  @param golub (input) use Golub or Jacobi algorithm 
      *  @return vector of singular values 
-     * -  Jacobi algorithm is more prrcise  and Golub algorithm is more CPU efficient 
+     * -  Jacobi' algorithm is more precise and Golub' algorithm is more CPU efficient 
      */
     Vector SVD
     ( const Matrix& A            ,
@@ -702,23 +737,28 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
-    // Schur decomposiiton of squre matrix
+    // Schur' decomposition of square matrix
     // ========================================================================
-    /** Schur decomposition of square matrix \f$ A = Z T Z^T\f$, where 
-     *  - A is inpur MxM (square) matrix
-     *  - T is Schur form of matix  
-     *  - Z is orthogonam matrix 
+
+    // ========================================================================
+    /** Schur's decomposition of square matrix \f$ A = Z T Z^T\f$, where 
+     *  - A is input MxM (square) matrix
+     *  - T is Schur' form of matrix  
+     *  - Z is orthogonal matrix 
      */
     void SCHUR 
     ( const Matrix&  A ,  
       Matrix&        Z , 
       Matrix&        T ) ; 
-      
+    // ========================================================================
+    
     // ========================================================================
     // Polar decomposition of square matrix 
     // ========================================================================
+    
+    // ========================================================================
     /** Polar decompositon of the square matrix A: \f$ A = UP \f$
-     *  - U ius orthogonal 
+     *  - U is orthogonal 
      *  - P is positive semi-definitive 
      */
     void POLAR
@@ -733,14 +773,28 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
-    /// get the element with maxina absolute value 
+    /// get the max element
+    double max_element    ( const Ostap::GSL::Matrix&      m ) ;
+    /// get the min element
+    double min_element    ( const Ostap::GSL::Matrix&      m ) ;
+    /// get the max element
+    double max_element    ( const Ostap::GSL::Vector&      v ) ;
+    /// get the min element
+    double min_element    ( const Ostap::GSL::Vector&      v ) ;    
+    /// get the element with maximal absolute value 
     double maxabs_element ( const Ostap::GSL::Matrix&      m ) ;
-    /// get the element with maxina absolute value 
+    /// get the element with maximal absolute value 
     double maxabs_element ( const Ostap::GSL::Vector&      v ) ;
-    /// get the element with maxina absolute value 
-    double maxabs_element ( const Ostap::GSL::Permutation& p ) ;
-    /// 
+    /// get the element with maximal absolute value 
+    /// double maxabs_element ( const Ostap::GSL::Permutation& p ) ;
     // ========================================================================
+    /// Is this vector finite    ?
+    inline bool isfinite  ( const Ostap::GSL::Vector& v ) { return v.isfinite () ; }
+    /// Is this matrix finite    ?
+    inline bool isfinite  ( const Ostap::GSL::Matrix& m ) { return m.isfinite () ; }
+    /// Is this matrix symmetric ?
+    bool        symmetric ( const Ostap::GSL::Matrix& m ) ;
+    // =======================================================================
   } //                                        The end of namespaxce Ostap::Math 
   // ==========================================================================
   namespace Utils 
@@ -831,6 +885,12 @@ inline std::ostream& operator<<
 ( std::ostream&             s ,
   const Ostap::GSL::Vector& v ) 
 { return Ostap::Utils::toStream ( v , s ) ; }
+// ============================================================================
+/// print operator 
+inline std::ostream& operator<<
+( std::ostream&                  s ,
+  const Ostap::GSL::Permutation& p ) 
+{ return Ostap::Utils::toStream ( p , s ) ; }
 // ============================================================================
 #endif // OSTAP_GSL_LINALG_H
 // ============================================================================
