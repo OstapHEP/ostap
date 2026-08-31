@@ -774,19 +774,17 @@ namespace Ostap
   {
     // ========================================================================
     /// get the max element
-    double max_element    ( const Ostap::GSL::Matrix&      m ) ;
+    double max_element    ( const Ostap::GSL::Matrix& m ) ;
     /// get the min element
-    double min_element    ( const Ostap::GSL::Matrix&      m ) ;
+    double min_element    ( const Ostap::GSL::Matrix& m ) ;
     /// get the max element
-    double max_element    ( const Ostap::GSL::Vector&      v ) ;
+    double max_element    ( const Ostap::GSL::Vector& v ) ;
     /// get the min element
-    double min_element    ( const Ostap::GSL::Vector&      v ) ;    
+    double min_element    ( const Ostap::GSL::Vector& v ) ;    
     /// get the element with maximal absolute value 
-    double maxabs_element ( const Ostap::GSL::Matrix&      m ) ;
+    double maxabs_element ( const Ostap::GSL::Matrix& m ) ;
     /// get the element with maximal absolute value 
-    double maxabs_element ( const Ostap::GSL::Vector&      v ) ;
-    /// get the element with maximal absolute value 
-    /// double maxabs_element ( const Ostap::GSL::Permutation& p ) ;
+    double maxabs_element ( const Ostap::GSL::Vector& v ) ;
     // ========================================================================
     /// Is this vector finite    ?
     inline bool isfinite  ( const Ostap::GSL::Vector& v ) { return v.isfinite () ; }

@@ -983,14 +983,12 @@ class NLL(AGoF,Config) :
         >>> gof = ...
         >>> header , row = gof.the_row ( ... ) 
         """
-        return super().the_row ( tvalue  = tvalue  if not tvalue  is None else self.__tvalue  ,
-                                 pvalue  = pvalue  if not pvalue  is None else self.__pvalue  ,
-                                 ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
-                                 counter = counter if not counter is None else self.__counter ,
-                                 title   = title  if title else '%s GoF-report [#%d]' %  ( typename ( self ) , self.nToys ) , 
-                                 prefix  = prefix ,
-                                 style   = style  )
-    
+        return super().the_row ( tvalue    = tvalue  if not tvalue  is None else self.__tvalue  ,
+                                 pvalue    = pvalue  if not pvalue  is None else self.__pvalue  ,
+                                 ecdf      = ecdf    if not ecdf    is None else self.__ecdf    ,
+                                 counter   = counter if not counter is None else self.__counter ,
+                                 precision = precision ,
+                                 width     = width     )
 # =============================================================================
 ## @class AkaikeIC
 #  Use Akaike information criterion as `estimate` for Goodness-of-Fit
@@ -1038,7 +1036,6 @@ class BayesianIC(NLL) :
                        parallel  = parallel  , 
                        silent    = silent    ,
                        progress  = progress  ) 
-
 
     # =======================================================================
     ## get all configration parameters
