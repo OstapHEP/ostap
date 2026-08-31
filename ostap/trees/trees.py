@@ -1535,7 +1535,7 @@ class ActiveBranches(object) :
         
         ## assert tree and vars , 'ActiveBranches: both tree and vars must be valid!'
         
-        self.__tree = tree if valid_pointer ( tree ) and isinstance ( tree , ROOT.TTree )  else None 
+        self.__tree = tree if isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) else None
         self.__vars = self.__tree.the_variables ( *vars ) if vars and self.__tree else () 
         
     ## context manager: ENTER 

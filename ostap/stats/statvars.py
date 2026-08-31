@@ -445,7 +445,7 @@ def data_hasEntry ( data               ,
 
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
-    with rootException() , ActiveBranches ( cuts ) :
+    with rootException() , ActiveBranches ( data , cuts ) :
         return sv.hasEntry ( data , cuts , first , last )
 
 # =============================================================================
@@ -516,7 +516,7 @@ def data_size ( data               ,
 
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
-    with rootException() , ActiveBranches ( cuts ) :
+    with rootException() , ActiveBranches ( data , cuts ) :
         return sv.size ( data , cuts , first , last )
     
 # =============================================================================
