@@ -766,242 +766,185 @@ for t in __types :
 __types    = tuple ( tmp )
 del tmp 
 
-
+# ==============================================================================
 def _in_types ( t ) :
     while 0 <= t.find ( 2 * ' ' ) : t = t.replace ( 2 * ' ' , ' ' )
     return t in __types 
 
-
 # ==============================================================================
+col_v_name   = 'Variable'
+col_v_branch = '%sbranch' % branch_symbol 
+col_v_leaf   = '%sleaf'   % leaf_symbol
+col_v_type   = '%s type'  % type_symbol
+col_v_mean   = 'mean'
+col_v_rms    = 'rms'
+col_v_min    = 'min'
+col_v_max    = 'max'
+col_v_unit   = 'unit' 
+col_v_num    = '#'
+
+_header0_    = ( col_v_branch ,
+                 col_v_leaf   ,
+                 col_v_type   ,
+                 col_v_mean   ,
+                 col_v_rms    ,
+                 col_v_min    ,
+                 col_v_max    ,
+                 col_v_unit   ,
+                 col_v_num    )
+# ===============================================================================
 ## print tree as table 
-def _rt_table_0_ ( tree                    , 
-                   pattern   = None        ,
-                   cuts      = ''          , *    , 
-                   first     = FIRST_ENTRY ,
-                   last      = LAST_ENTRY  ,
-                   width     = 6           ,
-                   precision = 4           ,                                      
-                   prefix    = ''          ,
-                   title     = ''          ,
-                   style     = ''          ) :
+def _rt_table0_ ( tree                    , 
+                  pattern   = None        ,
+                  cuts      = ''          , *    , 
+                  first     = FIRST_ENTRY ,
+                  last      = LAST_ENTRY  ,
+                  width     = 6           ,
+                  precision = 4           ,                                      
+                  prefix    = '# '        ,
+                  progress  = False       ,
+                  title     = ''          ,
+                  style     = ''          ) :
     """ Print tree as table 
     """
     ## get list of branches/leaves  
-    brs = tree.branches ( pattern )
+    brs   = tree.branches ( pattern )
 
-    ## collect information
-    _vars = []
+    ## (0) total number of entries 
+    total = len ( tree )
+    first , last = evt_range ( total , first , last )
 
-    ## 
-    from ostap.stats.statvars import data_size
-    n0 = data_size ( tree      ,
-                     cuts      = cuts  , 
-                     first     = first ,
-                     last      = last  , 
-                     use_frame = False ,
-                     parallel  = True  )
+    ## (1) decode (missing) vars and cuts 
+    _ , cuts , _ = vars_and_cuts  ( '' , cuts , allow_empty = True )
+        
+    ## (3) number of intresting entries
+    if not cuts and all_entries ( total , first , last ) : n0 = total
+    else : 
+        from ostap.stats.statvars import data_size
+        n0    = data_size ( tree      ,
+                            cuts      = cuts     , 
+                            first     = first    ,
+                            last      = last     , 
+                            use_frame = False    ,
+                            parallel  = True     ,
+                            progress  = progress )
+        
+    leaves = set ()
+    if n0 :        
+        b_list = tree.GetListOfBranches ()
+        if valid_pointer ( b_list ) : 
+            for b in b_list :
+                l_list = b.GetListOfLeaves ()
+                if valid_pointer ( l_list ) :
+                    bname = b.GetName()                    
+                    for l in l_list :
+                        lname     = l.GetName()
+                        full_name = '%s.%s' % ( bname , lname )
+                        leaves.add ( full_name )
+                        
+    leaves = tuple ( leaves )
+
+    ## get the statistics
+    the_stats  = tree. statVar ( leaves    ,
+                                 cuts      = cuts     ,
+                                 first     = first    ,
+                                 last      = last     , 
+                                 use_frame = True     ,
+                                 parallel  = True     ,
+                                 progress  = progress ) if leaves else {} 
     
-    if not n0 : return '', 0  
-    
-    ## no entries passed the cuts 
-    brs   = () if 0 == n0 else brs
+    rows = [ _header0_ ] 
+    if the_stats :
+        b_list = tree.GetListOfBranches ()        
+        if valid_pointer ( b_list ) : 
+            for b in b_list :
+                l_list = b.GetListOfLeaves ()
+                if valid_pointer ( l_list ) :
+                    bname = b.GetName()                    
+                    for l in l_list :                        
+                        lname      = l.GetName()
+                        
+                        full_name  = '%s.%s' % ( bname , lname )
+                        stat       = the_stats.get ( full_name , None )
+                        if stat is None : continue 
+                        type_name  = l.get_type() 
 
-    ## from ostap.utils.progress_bar import ProgressBar 
-    ## progress = ProgressBar ( max_value = len ( brs ) )
+                        n           = stat.nEntries ()
+                        mean        = stat.mean     ()
+                        rms         = stat.rms      () 
+                        vmin , vmax = stat.minmax   () 
+                        
+                        items = mean , rms , vmin , vmax
+                        row , unit = pretty_row ( *items  , precision = precision , width = width )
+                        
+                        num   = '' if n == n0 else '%.3g' % ( n / n0 )
+                        row   = ( bname , '' if lname == bname else lname, type_name ) + row + ( unit , num )
+                        rows.append ( row )
 
-    ## get the interesting branches:
-
-    if not brs : brs = sorted ( set ( tree.branches() ) | set ( tree.leaves() ) )         
-    
-    bbs     = []
-    selvars = 0 
-    for b in brs :
-        
-        l = tree.leaf ( b )
-
-        if not l :
-            logger.warning ("table: can't get the leaf/1  \"%s\"" % b )
-            continue
-        
-        tn        = l.GetTypeName ()
-
-        selvars += 1 
-        if not _in_types ( tn ) : continue
-        
-        bbs.append ( b ) 
-        
-    if not bbs : bbs = sorted ( set ( tree.branches() ) | set ( tree.leaves() ) )         
-        
-    ## get the statistic
-    bbstats = tree. statVar ( bbs       ,
-                              cuts      = cuts  ,
-                              first     = first ,
-                              last      = last  , 
-                              use_frame = True  ,
-                              parallel  = True  )
-    
-    from ostap.stats.counters import WSE, SE  
-    if   isinstance ( bbstats , ( WSE , SE ) )  : bbstats = { bbs [ 0 ] : bbstats }
-        
-    for b in brs :
-        
-        l = tree.leaf ( b )
-
-        if not l :
-            logger.warning ("table: can't get the leaf/2  \"%s\"" % b )
-            continue
-        
-        type_name = l.get_type()
-        
-        rr = [ b , l.get_type () ]
-        
-        stat = bbstats.get ( b , None  )
-        if stat :  
-            n    = stat.nEntries() 
-            mnmx = stat.minmax ()
-            mean = stat.mean   () 
-            rms  = stat.rms    ()
-            rr += [ ( '%+.5g' % mean.value() ).strip()                  , ## 2
-                    ( '%.5g'  % rms          ).strip()                  , ## 3 
-                    ( '%+.5g' % mnmx[0]      ).strip()                  , ## 4
-                    ( '%+.5g' % mnmx[1]      ).strip()                  , ## 5
-                    '' if  n == n0 else '%.3g' % ( float ( n ) / n0 ) ]   ## 6            
-        else :
-            rr +=  [ '-' , '-' , '-' , '-' , '' ]
-            
-        _vars.append ( tuple  ( rr ) )
-        
-    _vars.sort()
-
-    name_l  = len ( 'Variable' )  
-    mean_l  = len ( 'mean' ) 
-    rms_l   = len ( 'rms'  ) 
-    min_l   = len ( 'min'  )  
-    max_l   = len ( 'max'  )  
-    num_l   = len ( '#'    )    
-    type_l  = len ( 'type' )    
-    for v in _vars :
-        name_l = max ( name_l , len ( v[0] ) )
-        type_l = max ( type_l , len ( v[1] ) )
-        mean_l = max ( mean_l , len ( v[2] ) )
-        rms_l  = max ( rms_l  , len ( v[3] ) )
-        min_l  = max ( min_l  , len ( v[4] ) )
-        max_l  = max ( max_l  , len ( v[5] ) )
-        num_l  = max ( num_l  , len ( v[6] ) )
-
-    __vars = []
-    for v in _vars :
-        if not ' ' in v[1]  :
-            __vars.append ( v )
-            continue 
-        tn    = v [1]
-        cl    = len ( tn )
-        ml    = type_l
-        vv    = list  ( v )
-        vv[1] = tn.replace ( ' ' , ( ml + 1 - cl ) * ' ' , 1 ) 
-        vv    = tuple ( vv ) 
-        __vars.append ( vv )
-        
-    _vars = __vars 
-
-    index_l =   int ( math.ceil ( math.log10( len ( _vars ) + 1 ) ) )
-        
-    fmt_name  = '%%%ds. %%-%ds' % ( index_l , name_l )
-    fmt_type  = '%%-%ds'        % type_l
-    fmt_mean  = '%%%ds'         % mean_l
-    fmt_rms   = '%%-%ds'        % rms_l
-    fmt_min   = '%%%ds'         % mean_l
-    fmt_max   = '%%-%ds'        % rms_l
-    fmt_num   = '%%%ds'         % num_l
-
-    title_l = index_l + 2 + name_l 
-    header = (
-        ( '{:^%d}' % title_l ).format ( 'Variable' ) ,
-        ( '{:^%d}' % type_l  ).format ( 'type'     ) ,
-        ( '{:^%d}' % mean_l  ).format ( 'mean'     ) ,
-        ( '{:^%d}' % rms_l   ).format ( 'rms'      ) ,
-        ( '{:^%d}' % min_l   ).format ( 'min'      ) ,
-        ( '{:^%d}' % max_l   ).format ( 'max'      ) ,
-        ( '{:^%d}' % num_l   ).format ( '#'        ) )    
-               
-    table_data = [ header ] 
-    for i , v in enumerate ( _vars ) :
-        table_data.append ( ( fmt_name  % ( i + 1 , v [ 0 ] ) ,
-                              fmt_type  %           v [ 1 ] ,
-                              fmt_mean  %           v [ 2 ] ,
-                              fmt_rms   %           v [ 3 ] ,
-                              fmt_min   %           v [ 4 ] ,
-                              fmt_max   %           v [ 5 ] ,
-                              fmt_num   %           v [ 6 ] ) )
-
-    
+    ## construct the title 
     if not title :
-        
-        tt = tree.GetTitle()
-        if tt and tt != tree.GetName() : 
-            title  = '%s("%s","%s"): %d#,' % ( typename ( tree ) , tree.path , tt , len ( tree ) )
-        else :
-            title  = '%s("%s"): %d#,'      % ( typename ( tree ) , tree.path ,      len ( tree ) )
-        if tree_symbol : title = '%s %s' %  ( tree_symbol , title )
-        
-        nb = len ( tree.branches () )
-        title += '%d%s' % ( nb , branch_symbol if branch_symbol else 'branches' ) 
-        nl = len ( tree.leaves   () )
-        if nl != nb :            
-            title += '%d%s'  % ( nl , leaves_symbol if leaves_symbole else  'leaves' )  
+        tt  = tree.GetTitle ()
+
+        ### name and ttile 
+        if tt and tt != tree.GetName() : title  = '%s%s("%s","%s"):' % ( tree_symbol , typename ( tree ) , tree.path , tt  )
+        else                           : title  = '%s%s("%s"):'      % ( tree_symbol , typename ( tree ) , tree.path       )
+
+        ## number of entries 
+        num    = ( '%d' % n0 ) if total == n0 else '%d/%d' % ( n0 / total )
+        title  = '%s: #%s' % ( title , num ) 
+
+        ## number of branches and number of leaves 
+        nb     = len ( tree.branches () )
+        title  = '%s %s%s' % ( title , nb ,branch_symbol if branch_symbol else 'branches')        
+        nl     = len ( tree.leaves   () ) 
+        if nl != nb :
+            title  = '%s %d%s' % ( title , nl , leaves_symbol if leaves_symbol else  'leaves' )
         
         if isinstance ( tree , ROOT.TChain ) :
-            nfiles = tree.nFiles 
-            if 1 < nfiles : title += ',%d%s' %  ( nfiles , files_symbol if files_symbol else 'files' )
-
+            nf = tree.nFiles 
+            if 1 < nf : title = '%s %d%s' % ( title , nf , files_symbol if files_symbol else 'files' )
+            
     import ostap.logger.table as T
-    if table_data : table_data = T.remove_empty_columns ( table_data ) 
-    return T.table ( table_data , title , prefix = prefix , style = style )
-
-
-# ==============================================================================
-## col_v_name = '%s'   %   script_v 
-## col_v_num  = '#'
-## col_v_mean = '%s%s' % ( script_v , sub_mean )
-## col_v_rms  = '%s%s' % ( script_v , sub_rms  )
-## col_v_min  = '%s%s' % ( script_v , sub_min  )
-## col_v_max  = '%s%s' % ( script_v , sub_max  )
-## col_v_unit = '%s%s' % ( script_v , '-unit'  )
-
-col_v_name = 'Variable'
-col_v_leaf = leaf_symbol if leaf_symbol else 'Leaf'
-col_v_type = type_symbol if type_symbol else 'type'
-col_v_num  = '#'
-col_v_mean = 'mean'
-col_v_rms  = 'rms'
-col_v_min  = 'min'
-col_v_max  = 'max'
-col_v_unit = 'unit' 
-
+    rows      = T.remove_empty_columns ( rows )
+    alignment = 'lll' + 6 * 'c'
+    return T.table ( rows , title , prefix = prefix , style = style , alignment = alignment )
+                            
+# ==============================================================================                      
+_header1_  = ( col_v_name  ,
+               col_v_leaf  ,
+               col_v_type  ,
+               col_v_mean  ,
+               col_v_rms   ,
+               col_v_min   ,
+               col_v_max   ,
+               col_v_unit  ,
+               col_v_num   )                      
 # ==============================================================================
 ## print tree as table 
-def _rt_table_1_ ( tree                    , 
-                   variables = []          ,
-                   cuts      = ''          , * ,
-                   first     = FIRST_ENTRY ,
-                   last      = LAST_ENTRY  ,
-                   width     = 6           ,
-                   precision = 4           ,                   
-                   prefix    = ''          , 
-                   title     = ''          ,                   
-                   style     = ''          ) :
+def _rt_table_ ( tree                    , 
+                 variables = []          ,
+                 cuts      = ''          , * ,
+                 first     = FIRST_ENTRY ,
+                 last      = LAST_ENTRY  ,
+                 width     = 6           ,
+                 precision = 4           ,                   
+                 prefix    = '# '        ,
+                 progress  = False       , 
+                 title     = ''          ,                   
+                 style     = ''          ) :
     """ Print tree as table 
     """
     
     if not variables :
-        return _rt_table_0_ ( tree      ,
-                              cuts      = cuts      ,
-                              first     = first     ,
-                              width     = width     ,
-                              precision = precision ,
-                              prefix    = prefix    ,
-                              title     = title     ,
-                              style     = style     )
+        return _rt_table0_ ( tree      ,
+                             cuts      = cuts      ,
+                             first     = first     ,
+                             width     = width     ,
+                             precision = precision ,
+                             prefix    = prefix    ,
+                             progress  = progress  , 
+                             title     = title     ,
+                             style     = style     )
     
     branches = frozenset ( tree.branches () )
     leaves   = frozenset ( tree.leaves   () )
@@ -1010,28 +953,35 @@ def _rt_table_1_ ( tree                    ,
     variables , cuts , _ = vars_and_cuts ( variables , cuts )
 
 
+    ## (0) total number of entries 
+    total = len ( tree )
+    first , last = evt_range ( total , first , last )
     
-    bbs     = tuple ( sorted ( variables ) )
-   
+    ## (1) number of intresting entries
+    if not cuts and all_entries ( total , first , last ) : n0 = total
+    else : 
+        from ostap.stats.statvars import data_size
+        n0    = data_size ( tree      ,
+                            cuts      = cuts     , 
+                            first     = first    ,
+                            last      = last     , 
+                            use_frame = False    ,
+                            parallel  = True     ,
+                            progress  = progress )
+
+    bbs     = tuple ( sorted ( variables ) ) if 1 <= n0 else () 
     bbstats = tree. statVar ( bbs       ,
-                              cuts      = cuts  ,
-                              first     = first ,
-                              last      = last  ,
-                              use_frame = True  ,
-                              parallel  = True  ) 
+                              cuts      = cuts     ,
+                              first     = first    ,
+                              last      = last     ,
+                              use_frame = True     ,
+                              parallel  = True     ,
+                              progress  = progress ) if bbs else {}  
 
     from ostap.stats.counters import WSE 
     if isinstance ( bbstats , WSE )  : bbstats = { bbs [ 0 ] : bbstats } 
     
-    header = ( col_v_name ,               
-               col_v_leaf , 
-               col_v_type , 
-               col_v_mean , col_v_rms ,
-               col_v_min  , col_v_max  ,
-               col_v_unit ,
-               col_v_num  )
-    
-    rows   = [ header ]     
+    rows   = [ _header1_ ]     
     for v in sorted ( bbstats ) :
 
         rr   = [ v ]        
@@ -1049,22 +999,33 @@ def _rt_table_1_ ( tree                    ,
         row        = ( v , '' , '' ) + row + ( unit , '' )
         
         rows.append ( row ) 
-        
+
+    ## construct the title 
     if not title :
-        
-        tt = tree.GetTitle()
-        if tt and tt != tree.GetName() :
-            title  = '%s("%s","%s") %d entries,' % ( typename ( tree ) , tree.path , tt , len ( tree ) )
-        else :
-            title  = '%s("%s") %d entries,'      % ( typename ( tree ) , tree.path ,      len ( tree ) )
+        tt  = tree.GetTitle ()
+
+        ### name and ttile 
+        if tt and tt != tree.GetName() : title  = '%s%s("%s","%s"):' % ( tree_symbol , typename ( tree ) , tree.path , tt  )
+        else                           : title  = '%s%s("%s"):'      % ( tree_symbol , typename ( tree ) , tree.path       )
+
+        ## number of entries 
+        num    = ( '%d' % n0 ) if total == n0 else '%d/%d' % ( n0 / total )
+        title  = '%s: #%s' % ( title , num ) 
+
+        ## number of branches and number of leaves 
+        nb     = len ( tree.branches () )
+        title  = '%s %s%s' % ( title , nb ,branch_symbol if branch_symbol else 'branches')        
+        nl     = len ( tree.leaves   () ) 
+        if nl != nb :
+            title  = '%s %d%s' % ( title , nl , leaves_symbol if leaves_symbol else  'leaves' )
         
         if isinstance ( tree , ROOT.TChain ) :
-            nFiles = tree.nFiles 
-            if 1 < nFiles : title += '/%d files ' % nFiles 
+            nf = tree.nFiles 
+            if 1 < nf : title = '%s %d%s' % ( title , nf , files_symbol if files_symbol else 'files' )
         
     import ostap.logger.table as T
     rows      = T.remove_empty_columns ( rows )
-    alignment = 'lccccccccccccccccc'
+    alignment = 'l' + 10 * 'c'
     return T.table ( rows , title , prefix = prefix , style = style , alignment = alignment )
 
 # ==============================================================================
@@ -1144,71 +1105,17 @@ ROOT.TLeaf . get_type       = _tl_type_
 ROOT.TLeaf . get_type_short = _tl_type_short_
 ROOT.TLeaf . get_short_type = _tl_type_short_
 
-# ==============================================================================
-## print root-tree in a form of the table
-#  @code
-#  data = ...
-#  print dat.table() 
-#  @endcode
-def _rt_table_ (  dataset        ,
-                  variables = [] ,
-                  cuts      = '' ,
-                  prefix    = '' ,
-                  title     = '' ,
-                  style     = '' , *args ) :
-    """ Print dataset in a form of the table
-    >>> dataset = ...
-    >>> print dataset.table()
-    """
-    return _rt_table_1_ ( dataset               ,
-                          variables = variables ,
-                          cuts      = cuts      ,
-                          prefix    = prefix    ,
-                          title     = title     ,
-                          style     = style     , *args )
-
-# ==============================================================================
-## print root-tree in a form of the table
-#  @code
-#  data = ...
-#  print dat.table2 () 
-#  @endcode
-def _rt_table_ ( dataset                 ,
-                 variables = []          ,
-                 cuts      = ''          , * ,
-                 first     = FIRST_ENTRY ,
-                 last      = LAST_ENTRY  ,
-                 width     = 6           ,
-                 precision = 4           ,                                                     
-                 prefix    = ''          ,
-                 title     = ''          ,
-                style     = ''          ) :
-    """ Print dataset in a form of the table
-    >>> dataset = ...
-    >>> print dataset.table()
-    """
-    return _rt_table_1_ ( dataset   ,
-                          variables = variables ,
-                          cuts      = cuts      ,
-                          first     = first     ,
-                          last      = last      ,
-                          width     = width     ,
-                          precision = precision ,                          
-                          prefix    = prefix    ,
-                          title     = title     ,
-                          style     = style     )
-
 # =============================================================================
 ##  print DataSet
 def _rt_print_ ( data  , prefix = '' ) :
     """ Print TTree/TChain
-    """
-    
+    """    
     vars = data.leaves () 
     size = len ( vars ) * len ( data )
-    
-    if size <= 10_000_000 : return _rt_table_ ( data )
-    
+    ## 
+    if   size <=  1_000_000 : return _rt_table_ ( data , prefix = prefix )
+    elif size <= 10_000_000 : return _rt_table_ ( data , prefix = prefix , progress = True )
+    ## 
     data.Print ( 'vvv' )
 
 ROOT.TTree.__repr__ = _rt_print_
