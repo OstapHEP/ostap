@@ -2445,7 +2445,7 @@ class LinAlg(object) :
     def M_2GSL ( mtrx ) :
         """ Convert SMatrix/TMatrix objects into GSL Matrix
         """
-        return Ostap.GSL.matrix ( mtrx )
+        return Ostap.Math.GSL.matrix ( mtrx )
     
     # =========================================================================
     ## Convert SVector/TVector objects into GSL Vector
@@ -2453,7 +2453,7 @@ class LinAlg(object) :
     def V_2GSL ( vct ) :
         """ Convert SVecto/TVector objects into GSL Vector
         """
-        return Ostap.GSL.vector ( vct )
+        return Ostap.Math.GSL.vector ( vct )
     
     # =========================================================================
     ## (P)LU decomposition
@@ -2467,14 +2467,14 @@ class LinAlg(object) :
         """ Perform (P)LU decomposition of the matrix 
         >>> matrix = ...\
         >>> P, L, U = matarix.PLU() 
-        - see `Ostap.GSL.PLU` 
+        - see `Ostap.Math.GSL.PLU` 
         """
         ## convert to GLS 
         A = mtrx.to_GSL()
         ## mape (P)LU decomposiiton 
         P, L, U = A.PLU ()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P )
+        P = Ostap.Math.GSL.Matrix ( P )
         ## 
         P = P.to_SMatrix()
         L = L.to_SMatrix()
@@ -2494,14 +2494,14 @@ class LinAlg(object) :
         """ Perform (P)QR decomposition of the matrix 
         >>> matrix = ...\
         >>> P, Q, R = matarix.PQR() 
-        - see `Ostap.GSL.PQR` 
+        - see `Ostap.Math.GSL.PQR` 
         """
         ## convert to GLS 
         A = mtrx.to_GSL()
         ## mape (P)LU decomposiiton 
         P, Q, R = A.PQR ()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P ).transpose() 
+        P = Ostap.Math.GSL.Matrix ( P ).transpose() 
         ## 
         P = P.to_SMatrix()
         Q = Q.to_SMatrix()
@@ -2568,7 +2568,7 @@ class LinAlg(object) :
         ## make decomposition
         P , Q , R , Z = A.COD()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P ).transpose() 
+        P = Ostap.Math.GSL.Matrix ( P ).transpose() 
         ## 
         P = P.to_SMatrix()
         Q = Q.to_SMatrix()

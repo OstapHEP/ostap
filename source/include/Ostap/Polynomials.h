@@ -1359,7 +1359,6 @@ namespace Ostap
     } ;
     // ========================================================================
     
-
     // =========================================================================
     // Non-templated 
     // ========================================================================
@@ -2131,7 +2130,7 @@ namespace Ostap
      *  @date 2015-02-22
      */
     class ChebyshevSum : public PolySum
-		                   , public Ostap::Math::WStatistic  
+                                   , public Ostap::Math::WStatistic  
     {
     public:
       // =====================================================================
@@ -2473,7 +2472,7 @@ namespace Ostap
      *  @date 2015-02-22
      */
     class LegendreSum : public PolySum
-		      , public Ostap::Math::WStatistic
+                      , public Ostap::Math::WStatistic
     {
     public:
       // =====================================================================

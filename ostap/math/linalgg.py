@@ -31,9 +31,9 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalgg' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 
-Matrix      = Ostap.GSL.Matrix
-Vector      = Ostap.GSL.Vector
-Permutation = Ostap.GSL.Permutation
+Matrix      = Ostap.Math.GSL.Matrix
+Vector      = Ostap.Math.GSL.Vector
+Permutation = Ostap.Math.GSL.Permutation
 Zero        = Matrix.Zero 
 # =============================================================================
 ## matrix += value 
@@ -519,9 +519,10 @@ def _m_PLU_ ( A ) :
     K    = min ( M , N ) 
     L    = Matrix ( M , K , Zero () )
     U    = Matrix ( K , N , Zero () )
-    P    = Ostap.GSL.PLU ( A , L , U )
-    ##
-    return P, L , U
+    P    = Permutation ( M ) 
+    sc   = Ostap.Math.GSL.PLU ( A , P , L , U )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::PLU" % sc )        
+    return P , L , U
 
 # ===============================================================================
 ## Get (P)QR decompositoon with column piviting such as  \f$ AP = QR\f$
@@ -542,10 +543,11 @@ def _m_PQR_ ( A ) :
     M, N = A.nRows() , A.nCols ()
     Q    = Matrix ( M , M )
     R    = Matrix ( M , N , Zero () )
-    P    = Ostap.GSL.PQR( A , Q , R )
+    P    = Permutation ( N ) 
+    sc   = Ostap.Math.GSL.PQR( A , P , Q , R )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::PQR" % sc )        
     ##
     return P, Q , R 
-
 
 # ===============================================================================
 ## Get LQ decompositionn with column piviting such as  \f$ A = LQ\f$
@@ -563,9 +565,9 @@ def _m_LQ_ ( A ) :
     M, N = A.nRows() , A.nCols ()
     L    = Matrix ( M , N , Zero ()  )
     Q    = Matrix ( N , N )
-    Ostap.GSL.LQ ( A , L , Q )
+    sc   = Ostap.Math.GSL.LQ ( A , L , Q )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::LQ" % sc )        
     return L , Q 
-
 
 # ===============================================================================
 ## Get QL decompositionn with column piviting such as  \f$ A = QL \f$
@@ -583,7 +585,8 @@ def _m_QL_ ( A ) :
     M, N = A.nRows() , A.nCols ()
     Q    = Matrix ( M , M )
     L    = Matrix ( M , N , Zero() )
-    Ostap.GSL.QL ( A , Q , L )
+    sc   = Ostap.Math.GSL.QL ( A , Q , L )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::QL" % sc )        
     return Q , L
 
 # ===============================================================================
@@ -607,10 +610,12 @@ def _m_COD_ ( A ) :
     >>> P , Q , R , Z = A.COD() 
     """
     M, N = A.nRows() , A.nCols ()
-    Q    = Matrix ( M , M )
-    R    = Matrix ( M , N , Zero () )
-    Z    = Matrix ( N , N )
-    P    = Ostap.GSL.COD ( A , Q , R , Z )
+    Q    = Matrix      ( M , M )
+    R    = Matrix      ( M , N , Zero () )
+    Z    = Matrix      ( N , N )
+    P    = Permutation ( N ) 
+    sc   = Ostap.Math.GSL.COD ( A , P , Q , R , Z )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL:COD" % sc )            
     return P , Q , R , Z 
 
 # ===============================================================================
@@ -622,7 +627,7 @@ def _m_COD_ ( A ) :
 #   - V NxK orthogonal matrix 
 #   @param golub (input) use Golub or Jacobi algorithm 
 #   @return vector of singular values 
-#  -  Jacobi algorithm is more prrcise  and Golub algorithm is more CPU efficient 
+#  -  Jacobi algorithm is more precise  and Golub algorithm is more CPU efficient 
 def _m_SVD_ ( A , golub = True ) :
     """ SVD : singular Value Decomposition  \f$ A = U S V^T\f$
     - A input MxN matrix 
@@ -634,28 +639,13 @@ def _m_SVD_ ( A , golub = True ) :
     >>> S , U , V = A.SVD() 
     """
     M, N = A.nRows() , A.nCols ()
-    U = Matrix ( M , N )
-    V = Matrix ( N , N )
-    S = Ostap.GSL.SVD ( A , U , V , True if golub else False )
+    U    = Matrix ( M , N )
+    V    = Matrix ( N , N )
+    S    = Vector ( min ( M , N ) ) 
+    sc   = Ostap.Math.GSL.SVD ( A , S , U , V , True if golub else False )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::SVD" % sc )        
+    ##
     return S , U , V 
-
-# ===============================================================================
-## Schur decompositon of the square matrix A: \f$ A = Z T z^t \f$
-#  - Z is orthogonal 
-#  - T is a Schur form  
-def _m_SCHUR_ ( A ) :
-    """ Schur decomposition of the square matrix A: A = Z T Z^T
-    - Z is orthogonal 
-    - T is a Schur forms  
-    >>> A = ...,
-    >>> Z , T = A.SCHUR () 
-    """
-    M, N = A.nRows() , A.nCols ()
-    assert M == N , "Schur decomposition is defined only for square matrices!"
-    Z = Matrix ( M , M )
-    T = Matrix ( M , M )
-    Ostap.GSL.SCHUR ( A , Z , T )
-    return Z , T  
 
 # ===============================================================================
 ## Polar decompositon of the square matrix A: \f$ A = UP \f$
@@ -670,10 +660,32 @@ def _m_POLAR_ ( A ) :
     """
     M, N = A.nRows() , A.nCols ()
     assert M == N , "Polar decomposition is defined only for square matrices!"
-    U = Matrix ( M , M )
-    P = Matrix ( M , M )
-    Ostap.GSL.POLAR ( A , U , P )
+    U  = Matrix ( M , M )
+    P  = Matrix ( M , M )
+    sc = Ostap.Math.GSL.POLAR ( A , U , P )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::POLAR!" % sc )
+    ## 
     return U , P 
+
+# ===============================================================================
+## Schur decompositon of the square matrix A: \f$ A = Z T z^t \f$
+#  - Z is orthogonal 
+#  - T is a Schur form  
+def _m_SCHUR_ ( A ) :
+    """ Schur decomposition of the square matrix A: A = Z T Z^T
+    - Z is orthogonal 
+    - T is a Schur forms  
+    >>> A = ...,
+    >>> Z , T = A.SCHUR () 
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert M == N , "Schur decomposition is defined only for square matrices!"
+    Z  = Matrix ( M , M )
+    T  = Matrix ( M , M )
+    sc = Ostap.Math.GSL.SCHUR ( A , Z , T )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::SCHUR" % sc )    
+    return Z , T  
+
 
 Matrix.PLU       = _m_PLU_
 Matrix.PQR       = _m_PQR_ 

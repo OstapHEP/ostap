@@ -239,7 +239,7 @@ class LinAlgT(LA.LinAlg) :
         """ Perform (P)LU decomposition of the matrix 
         >>> matrix = ...\
         >>> P, L, U = matarix.PLU() 
-        - see `Ostap.GSL.PLU` 
+        - see `Ostap.Math.GSL.PLU` 
         """
         assert mtrx.IsValid () , 'Matrix is not valid!'
         ## convert to GLS 
@@ -247,7 +247,7 @@ class LinAlgT(LA.LinAlg) :
         ## mape (P)LU decomposiiton 
         P, L, U = A.PLU ()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P )
+        P = Ostap.Math.GSL.Matrix ( P )
         ## 
         P = P.to_TMatrix()
         L = L.to_TMatrix()
@@ -267,7 +267,7 @@ class LinAlgT(LA.LinAlg) :
         """ Perform (P)QR decomposition of the matrix 
         >>> matrix = ...\
         >>> P, Q, R = matarix.PQR() 
-        - see `Ostap.GSL.PQR` 
+        - see `Ostap.Math.GSL.PQR` 
         """ 
         assert mtrx.IsValid () , 'Matrix is not valid!'
         ## convert to GLS 
@@ -275,7 +275,7 @@ class LinAlgT(LA.LinAlg) :
         ## mape (P)LU decomposiiton 
         P, Q, R = A.PQR ()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P ).t() 
+        P = Ostap.Math.GSL.Matrix ( P ).t() 
         ## 
         P = P.to_TMatrix()
         Q = Q.to_TMatrix()
@@ -344,7 +344,7 @@ class LinAlgT(LA.LinAlg) :
         ## make decomposition
         P , Q , R , Z = A.COD()
         ## convert BACK:
-        P = Ostap.GSL.Matrix ( P ).T() 
+        P = Ostap.Math.GSL.Matrix ( P ).T() 
         ## 
         P = P.to_TMatrix()
         Q = Q.to_TMatrix()

@@ -1276,10 +1276,53 @@ namespace Ostap
     inline bool 
     equal_if  
     ( const ROOT::Math::SMatrix<T,D1,D2,R>& m1 , 
-      const ROOT::Math::SMatrix<T,D1,D2,R>& m2 , P pred )
-    { return std::equal ( m1.begin() , m1.end() , m2.begin() , pred ) ; } 
+      const ROOT::Math::SMatrix<T,D1,D2,R>& m2 , P&& pred )
+    { return std::equal ( m1.begin() , m1.end() , m2.begin() , std::forward<P> ( pred ) ) ; } 
+    // ========================================================================
+
+    // ========================================================================
+    // ABS 
+    // =========================================================================
+    
+    // =========================================================================
+    /** apply <code>std::abs</code> to all elements of vector
+     *  @code
+     *  VECTOR b = .... ;
+     *  auto   a = abs ( v ) ;
+     *  @endcode
+     *  @attention do not confuse it with the vector norm(s) ! 
+     */
+    template <class T,unsigned int D>
+    inline ROOT::Math::SVector<T,D>
+    abs ( const ROOT::Math::SVector<T,D>& v )
+    {
+      typedef typename ROOT::Math::SVector<T,D> RESULT ;
+      RESULT r { v } ;      
+      std::transform ( v.begin() , v.end () , r.begin() , [] ( T x ) -> T { return std::abs ( x ) ; } ) ;
+      return r ;
+    }
+    // =========================================================================    
+    /** apply <code>std::abs</code> to all elements of matrix 
+     *  @code
+     *  MATRIX b = .... ;
+     *  auto   a = abs ( v ) ;
+     *  @endcode
+     *  @attention do not confuse it with the vector norm(s) ! 
+     */
+    template <class T,unsigned int D1,unsigned int D2,typename R >
+    inline ROOT::Math::SMatrix<T,D1,D2,R>
+    abs ( const ROOT::Math::SMatrix<T,D1,D2,R>& m )
+    {
+      typedef typename ROOT::Math::SMatrix<T,D1,D2,R> RESULT ;
+      RESULT r { ROOT::Math::SMatrixNoInit () } ;
+      std::transform ( m.begin() , m.end () , r.begin() , [] ( T x ) -> T { return std::abs ( x ) ; } ) ;
+      return r ;
+    }
+
     // ========================================================================
     // UPDATE
+    // =========================================================================
+
     // =========================================================================
     /** update the symmetric matrix according to the rule m +=  s*v*v^T
      *
@@ -1381,10 +1424,10 @@ namespace Ostap
       const double                                              scale = 1.0 ) 
     {
       for ( unsigned int i = 0 ; i < D ; ++i ) 
-        {
-          for ( unsigned int j = i ; j < D ; ++j ) 
-            { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
-        }
+      {
+        for ( unsigned int j = i ; j < D ; ++j ) 
+        { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
+      }
     }
     // =========================================================================
     /** update the symmetric matrix according to the rule m +=  scale * ( m + m^T )  
@@ -1402,10 +1445,10 @@ namespace Ostap
       const double                                              scale = 1.0 ) 
     {
       for ( unsigned int i = 0 ; i < D ; ++i ) 
-        {
-          for ( unsigned int j = i ; j < D ; ++j ) 
-            { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
-        }
+      {
+        for ( unsigned int j = i ; j < D ; ++j ) 
+        { left ( i , j ) += scale * ( right ( i , j ) + right ( j , i ) ) ; }
+      }
     }
     // ========================================================================
     /** inversion of symmetric positively defined matrices
@@ -1997,11 +2040,144 @@ namespace Ostap
       return decomp.ok () ;      
     }
     // ========================================================================
+
+    // ========================================================================
+    /** Get the symmetric part of the general matrix
+     *  @code
+     *  MATRIX m = ...
+     *  auto   s = symmetric_part ( m ) ;
+     *  @endcode 
+     */ 
+    template <class T, unsigned int D, typename R>
+    inline ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>
+    symmetric_part(const ROOT::Math::SMatrix<T, D, D, R>& mtrx)
+    {
+      /// result type 
+      typedef typename ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>> RESULT;
+
+      RESULT  result {} ;
+      const T half = static_cast<T> ( 0.5 ) ;
+
+      for (unsigned int i = 0; i < D; ++i)
+      {
+        result ( i , i ) = mtrx ( i , i ) ;
+        for ( unsigned int j = i + 1; j < D; ++j)
+        {
+          const T mij = mtrx ( i , j ) ;
+          const T mji = mtrx ( j , i ) ;           
+          result ( i , j ) = half * ( mij + mji );
+        }
+      }
+
+      return result;
+    }
+    
+    // ========================================================================
+    /** Get the symmetric part of the symmetric matrix
+     *  @code
+     *  MATRIX m = ...
+     *  MATRIX s = symmetric_part ( m ) ;
+     *  @endcode 
+     */ 
+    template <class T, unsigned int D>
+    inline const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>&
+    symmetric_part ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& mtrx)
+    { return mtrx; }
+
+    // ========================================================================
+    /** Get the skew part of the general matrix
+     *  @code
+     *  MATRIX m = ...
+     *  auto   s = skew_part ( m ) ;
+     *  @endcode 
+     */ 
+    template <class T, unsigned int D, typename R>
+    inline ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepStd<T, D, D>>
+    skew_part ( const ROOT::Math::SMatrix<T, D, D, R>& mtrx)
+    {
+      // return type 
+      typedef ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepStd<T, D, D>> RESULT;
+      //
+      RESULT result{};
+      const T half = static_cast<T> ( 0.5 ) ;
+      //
+      for ( unsigned int i = 0; i < D; ++i )
+      {
+        for ( unsigned int j = i + 1; j < D; ++j)
+        {
+          const T rij = half * ( mtrx ( i , j ) - mtrx ( j , i ) ) ;
+          result ( i , j ) =  rij;
+          result ( j , i ) = -rij;
+        }
+      }
+      //
+      return result;
+    }
+    // ========================================================================
+    /** Get the skew part of the symmetric matrix (always zero)
+     *  @code
+     *  MATRIX m = ...
+     *  auto   s = skew_part ( m ) ;
+     *  @endcode 
+     */ 
+    template <class T, unsigned int D>
+    inline ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepStd<T, D, D>>
+    skew_part ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& /* mtrx */)
+    {  return ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepStd<T, D, D>> () ;  }    
+    // ========================================================================
+
+    // ========================================================================
+    /** get upper triangular part of the matrix
+     *  @code
+     *  MATRIX m = ...
+     *  auto   s = upper_triangular_part  ( m ) ;
+     *  @endcode 
+     */ 
+    template <class T, unsigned int D, typename R>
+    inline ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepStd<T, D, D>>
+    upper_triangular_part ( const ROOT::Math::SMatrix<T,D,D,R>&  mtrx )
+    {
+      //
+      typedef typename ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepStd<T, D, D>> RESULT ;
+      //
+      RESULT result {} ;
+      //
+      for ( unsigned int i = 0; i < D; ++i )
+      { for ( unsigned int j = i ; j < D; ++j )
+        { result ( i , j ) = mtrx ( i, j ) ; } }
+      //
+      return result;
+    }
+    // ==========================================================================
+    /** get lower triangular part of the matrix
+     *  @code
+     *  MATRIX m = ...
+     *  auto   s = lower_triangular_part  ( m ) ;
+     *  @endcode 
+     */ 
+    template <class T, unsigned int D, typename R>
+    inline ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepStd<T, D, D>>
+    lower_triangular_part ( const ROOT::Math::SMatrix<T,D,D,R>&  mtrx )
+    {
+      //
+      typedef typename ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepStd<T, D, D>> RESULT ;
+      //
+      RESULT result {} ;
+      //
+      for ( unsigned int i = 0; i < D; ++i )
+      { for ( unsigned int j = 0 ; j <= i ; ++j )
+        { result ( i , j ) = mtrx ( i, j ) ; } }
+      //
+      return result;
+    }
+    // ========================================================================
+    
+    // ========================================================================
   } //                                                    end of namespace Math
   // ==========================================================================
 } //                                               end of namespace Ostap::Math
 // ============================================================================
-// The END 
+#endif // OSTAP_MATRIXUTILS_H
 // ============================================================================
-#endif // LHCBMATH_MATRIXUTILS_H
+//                                                                      The END 
 // ============================================================================

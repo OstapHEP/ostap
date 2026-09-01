@@ -35,6 +35,15 @@ namespace Ostap
     namespace GSL
     {      
       // ======================================================================
+      // Forward declaratinos 
+      // ======================================================================
+      class Matrix ;
+      class Vector ;      
+      // ======================================================================
+
+
+
+      
       /** @class EigenSystem Ostap/EigenSystem.h
        *  Helper class with allows to find eigenvalues and eigenvector
        *  for symmetrical MathLib matrices ("SMatrix") using GSL library
@@ -53,7 +62,7 @@ namespace Ostap
             VectorAllocationFailure     = 102 , 
             WorkspaceAllocationFailure  = 103 , 
             // the actual return value is ErrorFromGSL + error code )
-            ErrorFromGSL                = 200 ///< ErrorFromGSL + error code
+            ErrorFromGSL                = 2000000 ///< ErrorFromGSL + error code
           } ;
         // ====================================================================
       public:

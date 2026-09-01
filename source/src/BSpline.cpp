@@ -3052,7 +3052,7 @@ Ostap::Math::Interpolation::bspline
   // mismatch for number of input parameters 
   if ( N != bs.npars() ) { return 110 ; }             // RETURN 110 
   //
-  Ostap::GSL::Matrix m { N , N }  ;
+  Ostap::Math::GSL::Matrix m { N , N }  ;
   if ( !m.matrix()     ) { return 141 ; }             // RETURN 141  
   // 
   const double xmin = bs.xmin () ;
@@ -3076,12 +3076,12 @@ Ostap::Math::Interpolation::bspline
     } 
   }
   //
-  Ostap::GSL::Vector x { N } ;
+  Ostap::Math::GSL::Vector x { N } ;
   if ( !x.vector()       ) { return 142 ; }
   //
   for ( unsigned short i = 0 ; i < N ; ++i ) { x.set ( i , xy.y ( i ) ) ;  }
   //
-  Ostap::GSL::Permutation p { N };
+  Ostap::Math::GSL::Permutation p { N };
   if ( !p.permutation () ) { return 143 ; }
   //
   // make LU decomposition 

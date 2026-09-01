@@ -558,13 +558,13 @@ namespace
     std::vector<double> pars{};
     if ( p.empty() )
       {
-	pars.reserve   ( 1 + q.size() ) ;
-	pars.push_back ( 1 ) ;               // ATTENTION! 
+        pars.reserve   ( 1 + q.size() ) ;
+        pars.push_back ( 1 ) ;               // ATTENTION! 
       }
     else
       {
-	pars.reserve ( p.size() + q.size() ) ;
-	pars.insert ( pars.end() , p.begin() , p.end() ) ;
+        pars.reserve ( p.size() + q.size() ) ;
+        pars.insert ( pars.end() , p.begin() , p.end() ) ;
       }
     pars.insert ( pars.end() , q.begin() , q.end() ) ;
     return pars ;
@@ -600,7 +600,7 @@ Ostap::Math::Pade::Pade
 ( const std::vector<double>&                pars   ,
   const unsigned short                      n      ,
   const std::vector<double>&                zeroes ,
-  const std::vector<double>&                poles  ,	
+  const std::vector<double>&                poles  ,    
   const double                              xmin   ,
   const double                              xmax   )
   : Pade ( pars , n , zeroes , poles, {} , {} , xmin , xmax )
@@ -621,7 +621,7 @@ Ostap::Math::Pade::Pade
 ( const std::vector<double>&                pars    ,
   const unsigned short                      n       ,
   const std::vector<double>&                zeroes  ,
-  const std::vector<double>&                poles   ,	
+  const std::vector<double>&                poles   ,   
   const std::vector<std::complex<double> >& czeroes ,
   const std::vector<std::complex<double> >& cpoles  ,
   const double                              xmin    ,
@@ -645,7 +645,7 @@ Ostap::Math::Pade::Pade
   setPars ( pars ) ;
   //
   auto cless = [] ( const std::complex<double>& a ,
-		    const std::complex<double>& b ) -> bool
+                    const std::complex<double>& b ) -> bool
   { return std::real ( a ) < std::real ( b ) ; } ;
   //
   std::sort        ( m_poles .begin() , m_poles .end() ) ; 
@@ -657,7 +657,7 @@ Ostap::Math::Pade::Pade
     {
       const std::complex<double> tz = m_scale * ( z - m_x0 ) ;
       if ( std::abs ( std::imag ( tz ) ) < 0.02 )
-	{ m_pnts.push_back ( std::real ( z ) ) ; }
+        { m_pnts.push_back ( std::real ( z ) ) ; }
     } 
   //
   std::sort ( m_pnts   .begin() , m_pnts   .end () ) ;
@@ -679,8 +679,8 @@ Ostap::Math::Pade::Pade
   const double               xmin  ,
   const double               xmax  )
   : Pade ( ::pq_pars ( ps , qs ) ,
-	   ps.empty() ? 0 : ps.size() - 1 ,
-	   xmin , xmax )
+           ps.empty() ? 0 : ps.size() - 1 ,
+           xmin , xmax )
 {}
 // ==========================================================================
 /*  simplified constructor
@@ -697,12 +697,12 @@ Ostap::Math::Pade::Pade
 ( const std::vector<double>& ps     ,
   const std::vector<double>& qs     ,
   const std::vector<double>& zeroes ,
-  const std::vector<double>& poles  ,	
+  const std::vector<double>& poles  ,   
   const double               xmin   ,
   const double               xmax   )
   : Pade ( ::pq_pars ( ps , qs ) ,
-	   ps.empty() ? 0 : ps.size() - 1 ,
-	   zeroes , poles , xmin , xmax )
+           ps.empty() ? 0 : ps.size() - 1 ,
+           zeroes , poles , xmin , xmax )
 {}
 // ===========================================================================
 /*  full constructor
@@ -721,14 +721,14 @@ Ostap::Math::Pade::Pade
 ( const std::vector<double>&                ps      ,
   const std::vector<double>&                qs      ,
   const std::vector<double>&                zeroes  ,
-  const std::vector<double>&                poles   ,	
+  const std::vector<double>&                poles   ,   
   const std::vector<std::complex<double> >& czeroes ,
   const std::vector<std::complex<double> >& cpoles  ,
   const double                              xmin    ,
   const double                              xmax    ) 
   : Pade ( ::pq_pars ( ps , qs ) ,
-	   ps.empty() ? 0 : ps.size() - 1 ,
-	   zeroes , poles , czeroes , cpoles , xmin , xmax )
+           ps.empty() ? 0 : ps.size() - 1 ,
+           zeroes , poles , czeroes , cpoles , xmin , xmax )
 {}
 
 // ============================================================================
@@ -776,22 +776,22 @@ double Ostap::Math::Pade::integral
       std::vector<double>::const_iterator ih = std::upper_bound ( il             , m_pnts.end(), xhigh ) ;
       // points in the interval 
       if ( m_pnts.end() != il && il != ih ) 
-	{
-	  std::vector<double> points ( il , ih ) ;
-	  std::tie ( ierror , result , error ) = s_integrator.qagp_integrate
-	    ( tag  () , 
-	      &F      , 
-	      xlow    , xhigh ,           // low & high edges
-	      points                    , // poles/special points 
-	      workspace ( m_workspace ) , // workspace
-	      s_APRECISION              , // absolute precision
-	      s_RPRECISION              , // relative precision
-	      m_workspace.size()        , // size of workspace
-	      s_message                 , 
-	      __FILE__ , __LINE__       ) ;
-	  //
-	  return result ;                                             // RETURN
-	}
+        {
+          std::vector<double> points ( il , ih ) ;
+          std::tie ( ierror , result , error ) = s_integrator.qagp_integrate
+            ( tag  () , 
+              &F      , 
+              xlow    , xhigh ,           // low & high edges
+              points                    , // poles/special points 
+              workspace ( m_workspace ) , // workspace
+              s_APRECISION              , // absolute precision
+              s_RPRECISION              , // relative precision
+              m_workspace.size()        , // size of workspace
+              s_message                 , 
+              __FILE__ , __LINE__       ) ;
+          //
+          return result ;                                             // RETURN
+        }
     }
   // regular case 
   std::tie ( ierror , result , error ) = s_integrator.qag_integrate
@@ -921,35 +921,35 @@ Ostap::Math::Pade::Pade
 ( const Ostap::Math::Interpolation::Table&  table   ,
   const unsigned short                      n       ,
   const std::vector<double>&                zeroes  ,
-  const std::vector<double>&                poles   ,	
+  const std::vector<double>&                poles   ,   
   const std::vector<std::complex<double> >& czeroes ,
   const std::vector<std::complex<double> >& cpoles  )
   : Pade ( std::vector<double>( table.size() , 0.0 )              ,
-	   n             , 
-	   zeroes        ,
-	   poles         ,
-	   czeroes       ,
-	   cpoles        ,
-	   table.xmin () ,
-	   table.xmax () )
+           n             , 
+           zeroes        ,
+           poles         ,
+           czeroes       ,
+           cpoles        ,
+           table.xmin () ,
+           table.xmax () )
 {
   //
   Ostap::Assert ( !table.empty()               ,
-		  "Empty interpolation table!" ,
-		  "Ostap::Math::Pade"          ) ;
+                  "Empty interpolation table!" ,
+                  "Ostap::Math::Pade"          ) ;
   //
   Ostap::Assert ( m_n + 1 <= table.size ()       ,
-		  "Invalid size of interpolation table!" ,
-		  "Ostap::Math::Pade"          ) ;
+                  "Invalid size of interpolation table!" ,
+                  "Ostap::Math::Pade"          ) ;
   //
   const unsigned short N = table.size() ;
   Ostap::Assert ( npars() == N  ,
-		  "Mismatch interpolation table size/#pars!" ,
-		  "Ostap::Math::Pade"          ) ;
+                  "Mismatch interpolation table size/#pars!" ,
+                  "Ostap::Math::Pade"          ) ;
   //
   // =====================================================================  
-  Ostap::GSL::Matrix A { N , N , Ostap::GSL::Matrix::Zero() } ;  
-  Ostap::GSL::Vector b { N     } ; // free column 
+  Ostap::Math::GSL::Matrix A { N , N , Ostap::Math::GSL::Matrix::Zero() } ;  
+  Ostap::Math::GSL::Vector b { N     } ; // free column 
   // (2) fill the matrix A and free column b
   for ( unsigned short j = 0 ; j < N ; ++j )
     {
@@ -966,8 +966,8 @@ Ostap::Math::Pade::Pade
         for ( unsigned int i = 0 ; i < m_n + 1 ; ++i ) 
           {
             A.set ( j , i , xx ) ;
-            xx *= t ;	   
-          }	
+            xx *= t ;      
+          }     
       }
       // =================================================================
       { // remaining columns 
@@ -975,7 +975,7 @@ Ostap::Math::Pade::Pade
         for ( unsigned int i = m_n + 1 ; i < N ; ++i ) 
           {
             A.set ( j , i , xx ) ;
-            xx *= t ;	   
+            xx *= t ;      
           }
       }
       // free column
@@ -986,7 +986,7 @@ Ostap::Math::Pade::Pade
   // (3) solve the system Ax=b using LU decomposition with pivoting 
   
   // (3.1) make LU decomposition with pivoting 
-  Ostap::GSL::Permutation  P { N } ;  
+  Ostap::Math::GSL::Permutation  P { N } ;  
   int signum ; 
   int ierror  = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
   if ( ierror ) { gsl_error ( "Failure in LU-decomposition" , __FILE__  , __LINE__ , ierror ) ; }
@@ -995,7 +995,7 @@ Ostap::Math::Pade::Pade
                   "Ostap::Math::Pade"            , 1100 + ierror ) ;
   
   // (3.2) solve the system Ax=b 
-  Ostap::GSL::Vector       x { N     } ; // solution 
+  Ostap::Math::GSL::Vector       x { N     } ; // solution 
   ierror  = gsl_linalg_LU_solve ( A.matrix(), P.permutation() , b.vector() , x.vector() );
   if ( ierror ) { gsl_error ( "Failure in LU-solve" , __FILE__  , __LINE__ , ierror ) ; }
   Ostap::Assert ( !ierror                ,
@@ -1020,63 +1020,63 @@ Ostap::Math::Pade::Pade
   const double               xmin ,
   const double               xmax )
   : Pade ( std::vector<double> ( m + n + 1 , 0.0 ) ,
-	   n , {} , {} , {} , {} , xmin , xmax )
+           n , {} , {} , {} , {} , xmin , xmax )
 {
   Ostap::Assert ( n + m + 1 <= f.size ()               ,
-		  "Invalid Polynomial->Pade setting!"  , 
-		  "Ostap::Math::Pade"                  ) ;
+                  "Invalid Polynomial->Pade setting!"  , 
+                  "Ostap::Math::Pade"                  ) ;
   //
   const unsigned short N = this->npars () ;
   //
   typedef std::vector<double>::const_iterator         CI  ;
   typedef std::vector<double>::const_reverse_iterator CRI ;
   //
-  Ostap::GSL::Matrix A { N , N , Ostap::GSL::Matrix::Zero() } ;
-  Ostap::GSL::Vector b { N     } ; // free column 
+  Ostap::Math::GSL::Matrix A { N , N , Ostap::Math::GSL::Matrix::Zero() } ;
+  Ostap::Math::GSL::Vector b { N     } ; // free column 
   //
   for ( unsigned short j = 0 ; j < N ; ++j )
     {
       if ( j < n + 1 ) { A.set ( j , j , 1 ) ; }
       //
       if ( 1 <= j && j < m + 1 )
-	{
-	  CI  i1 = f.begin()       ;
-	  CRI i2 { f.begin() + j } ;
-	  for ( unsigned short k = 0 ; k < j ; ++k )
-	    {	     
-	      A.set ( j , n + 1 + k , -1 * ( *i2++ ) ) ;
-	    }
-	}
+        {
+          CI  i1 = f.begin()       ;
+          CRI i2 { f.begin() + j } ;
+          for ( unsigned short k = 0 ; k < j ; ++k )
+            {        
+              A.set ( j , n + 1 + k , -1 * ( *i2++ ) ) ;
+            }
+        }
       if ( m + 1 <= j )
-	{
-	  CRI i1 { f.begin() + ( j - m ) } ;
-	  CRI i2 { f.begin() +   j       } ;	  
-	  for ( unsigned short k = 0 ; k < m ; ++k )
-	    {	     
-	      A.set ( j , n + 1 + k , -1 * ( *i2++ ) ) ;
-	    }
-	}
+        {
+          CRI i1 { f.begin() + ( j - m ) } ;
+          CRI i2 { f.begin() +   j       } ;      
+          for ( unsigned short k = 0 ; k < m ; ++k )
+            {        
+              A.set ( j , n + 1 + k , -1 * ( *i2++ ) ) ;
+            }
+        }
       b.set( j , f[j] ) ;
     }
   // ===============================================================================
   // (3) solve the system Ax=b using LU decomposition with pivoting 
   
   // (3.1) make LU decomposition with pivoting 
-  Ostap::GSL::Permutation  P { N } ;  
+  Ostap::Math::GSL::Permutation  P { N } ;  
   int signum ; 
   int ierror  = gsl_linalg_LU_decomp ( A.matrix() , P.permutation() , &signum ) ;
   if ( ierror ) { gsl_error ( "Failure in LU-decomposition" , __FILE__  , __LINE__ , ierror ) ; }
   Ostap::Assert ( !ierror ,
-		  "Failure in LU-decomposition!" ,
-		  "Ostap::Math::Pade"            , 1100 + ierror ) ;
+                  "Failure in LU-decomposition!" ,
+                  "Ostap::Math::Pade"            , 1100 + ierror ) ;
   
   // (3.2) solve the system Ax=b 
-  Ostap::GSL::Vector       x { N     } ; // solution 
+  Ostap::Math::GSL::Vector       x { N     } ; // solution 
   ierror  = gsl_linalg_LU_solve ( A.matrix(), P.permutation() , b.vector() , x.vector() );
   if ( ierror ) { gsl_error ( "Failure in LU-solve" , __FILE__  , __LINE__ , ierror ) ; }
   Ostap::Assert ( !ierror                ,
-		  "Failure in LU-solve!" ,
-		  "Ostap::Math::Pade"    , 1200 + ierror ) ;
+                  "Failure in LU-solve!" ,
+                  "Ostap::Math::Pade"    , 1200 + ierror ) ;
   
   // (4) Feed Pade with calculated parameters 
   for ( unsigned short k = 0 ; k < N ; ++k ) { setPar ( k , x.get ( k ) ) ; }
@@ -1106,8 +1106,8 @@ Ostap::Math::Pade::Pade
   : Pade ( p , n , n + 1 <= p.npars() ? p.npars() - n - 1 : 0 )
 {
   Ostap::Assert ( n  + 1 <= p.npars ()                ,
-		  "Invalid Poliynomial->Pade setting!" , 
-		  "Ostap::Math::Pade"                  ) ;
+                  "Invalid Poliynomial->Pade setting!" , 
+                  "Ostap::Math::Pade"                  ) ;
 }
 // ===============================================================================
 

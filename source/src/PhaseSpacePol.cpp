@@ -42,8 +42,8 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
   const unsigned short n           , 
   const unsigned short N           )  // degree of polynomial
   : Ostap::Math::PolyFactor1D ( N , 
-				std::min ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) , 
-				std::max ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) )     
+                                std::min ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) , 
+                                std::max ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) )     
   , m_phasespace ( threshold1 , threshold2 , l , n ) 
   , m_workspace  ()
 {}
@@ -72,8 +72,8 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
   const double                     xlow  , 
   const double                     xhigh ) 
   : Ostap::Math::PolyFactor1D ( N  , 
-				std::max ( ps. lowEdge() , std::min ( xlow , xhigh ) ) ,
-				std::min ( ps.highEdge() , std::max ( xlow , xhigh ) ) )
+                                std::max ( ps. lowEdge() , std::min ( xlow , xhigh ) ) ,
+                                std::min ( ps.highEdge() , std::max ( xlow , xhigh ) ) )
   , m_phasespace ( ps ) 
   , m_workspace  ()
 {}
@@ -90,11 +90,11 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
   Ostap::Assert ( m_phasespace.lowEdge () < m_positive.xmax      () , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
                   "Ostap::Math::PhaseSpacePol"                      ,
-		  INVALID_PARAMETERS , __FILE__ , __LINE__          ) ;
+                  INVALID_PARAMETERS , __FILE__ , __LINE__          ) ;
   Ostap::Assert ( m_positive.xmin      () < m_phasespace.highEdge() , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
                   "Ostap::Math::PhaseSpacePol"                      , 
-		  INVALID_PARAMETERS , __FILE__ , __LINE__          ) ;
+                  INVALID_PARAMETERS , __FILE__ , __LINE__          ) ;
 }
 // =====================================================================
 // evaluate N/L-body modulated phase space

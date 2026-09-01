@@ -1,3 +1,15 @@
+## New features
+
+   1. improve the content of the `Ostap/LinAlg.h` file 
+   1. slightly extend `Ostap::Math::GSL::(Mattrix/Vector/Permutation)` classes
+   
+## Bug fixes
+
+## Backward incompatible
+
+   1. move `Ostap::GSL` into `Ostap::Math::GSL`
+   1. change the C++ interface for LinAlg-functions from `Ostap/LinAlg.h` file (python interface is preserved)
+
 # v3.8.5.0
 
 ## New features

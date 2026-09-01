@@ -31,7 +31,7 @@ from collections import namedtuple
 from ostap.core.core import Ostap 
 # =============================================================================
 GSLInfo  = namedtuple ( 'GSLInfo'  , ( 'major' , 'minor' ) )
-gsl_info = GSLInfo ( Ostap.GSL.GSL_version_major() , Ostap.GSL.GSL_version_minor() )
+gsl_info = GSLInfo ( Ostap.Math.GSL.GSL_version_major() , Ostap.Math.GSL.GSL_version_minor() )
 
 # ============================================================================
 ## Helper base class/context manager  
