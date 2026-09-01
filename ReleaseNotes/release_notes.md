@@ -10,8 +10,10 @@
    1. Fix a sad typo in `Ostap::Math::GSL::EigenSystem::eigenValues` 
    1. Fix a funny typo in `Ostap::Math::bhattacharyya` 
    1. Fix a bug in computation of `Ostap::Math::hellinger` 
+   1. Fix a recently introduced bug in `ActiveBranches` 
    
 ## Backward incompatible
+
 
 # v3.8.4.0
 
