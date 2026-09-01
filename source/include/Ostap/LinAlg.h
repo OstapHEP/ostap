@@ -566,11 +566,11 @@ namespace Ostap
       
       /// scale the vector
       inline Vector operator*( const Vector& a , const double b  )
-      { Vector c { a } ; c*= b ; return c ;; }
+      { Vector c { a } ; c*= b ; return c ; }
       
       /// scale the vector
       inline Vector operator/( const Vector& a , const double b  )
-      { Vector c { a } ; c/= b ; return c ;; }
+      { Vector c { a } ; c/= b ; return c ; }
       
       // ========================================================================
       // "right"  forms 
@@ -599,6 +599,19 @@ namespace Ostap
         const Permutation& p ) { return a.multiply ( p ) ; }
       // ========================================================================
       
+      // ========================================================================
+      /// \f$ r = a \times b\f$
+      inline Matrix product   ( const Matrix& a , const Matrix& b ) { return a.multiply ( b ) ; }
+ 
+      /// \f$ r = m \times m^T\f$
+      Matrix MMT  ( const Matrix& m                     ) ;
+      /// \f$ r = m_1 \times m_2^T\f$
+      Matrix MMT  ( const Matrix& m1 , const Matrix& m2 ) ; 
+      /// \f$ r = m \times d \times m^T\f$
+      /// Matrix MDMT ( const Matrix& m  , const Vector& d  ) ; 
+      /// \f$ r = m_1 \times d \times m_2^T\f$
+      /// Matrix MDMT ( const Matrix& m1 , const Vector& d  , const Matrix& m2 ) ; 
+
       // ========================================================================
       // Linear Algebra 
       // ========================================================================

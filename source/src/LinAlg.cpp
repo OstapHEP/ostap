@@ -619,6 +619,79 @@ Ostap::Math::GSL::Matrix::T () const
 }
 // ============================================================================
 
+
+// ============================================================================
+// multiply matrices  \f$  r = m_1 \times m_2^T \f$    
+// ============================================================================
+Ostap::Math::GSL::Matrix                            
+Ostap::Math::GSL::MMT
+( const Ostap::Math::GSL::Matrix& m1 , 
+  const Ostap::Math::GSL::Matrix& m2 ) 
+{
+  // special case
+  if ( &m1 == &m2 ) { return MMT ( m1 ) ; } 
+  //
+  Ostap::Assert ( m1.nCols () == m2.nCols()                            ,
+                  "Cannot multiply matrices of incompatible structure" ,
+                  "Ostap::Math::GSL::Martix::MMT"                      ,
+                  INVALID_GMATRIX                                      , __FILE__ , __LINE__ ) ;
+  
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  Matrix result { m1.nRows() , m2.nRows() } ;
+  // 
+  const int status = gsl_blas_dgemm ( CblasNoTrans    ,
+                                      CblasTrans      ,
+                                      1.0             ,
+                                      m1.matrix()     ,
+                                      m2.matrix()     ,
+                                      0.0             ,
+                                      result.matrix() ) ;
+  //
+  Ostap::Assert ( !status ,
+                  "Error from gsl_blas_dgemm function" ,
+                  "Ostap::Math::GSL::Matrix::MMT"      , 
+                  ERROR_GSL + status                   , __FILE__ , __LINE__ ) ; 
+  //
+  return result ;
+}
+
+
+// ============================================================================
+// multiply matrices  \f$  r = m \times m^T \f$    
+// ============================================================================
+Ostap::Math::GSL::Matrix                            
+Ostap::Math::GSL::MMT
+( const Ostap::Math::GSL::Matrix& m )    
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  Matrix result { m.nRows() , m.nRows() } ;
+  // 
+  const int status = gsl_blas_dsyrk ( CblasUpper , CblasNoTrans , 1.0 , m.matrix() , 0.0 , result.matrix() ) ;
+  Ostap::Assert ( !status ,
+                  "Error from gsl_blas_dsyrk function" ,
+                  "Ostap::Math::GSL::Matrix::MMT"      , 
+                  ERROR_GSL + status                   , __FILE__ , __LINE__ ) ; 
+  //
+  gsl_matrix* Res = result.matrix() ;
+  const std::size_t rows = Res -> size1 ;
+  for ( std::size_t i = 0; i < rows ; ++i ) 
+  {
+    for ( std::size_t j = i + 1 ; j < rows ; ++j ) 
+    {
+      const  double val = gsl_matrix_get ( Res , i , j ) ;
+      gsl_matrix_set ( Res , j , i , val ) ; 
+    }
+  }
+  //
+  return result ;
+}
+
+
+
 // ============================================================================
 // Vector 
 // ============================================================================
