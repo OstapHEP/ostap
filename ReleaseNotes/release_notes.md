@@ -2,6 +2,9 @@
 
    1. improve the content of the `Ostap/LinAlg.h` file 
    1. slightly extend `Ostap::Math::GSL::(Mattrix/Vector/Permutation)` classes
+   1. extend `TTree.valid_expressions`
+   1. add variable check for `TTre.slice` and `TTree.table`
+   1. couple of tweaks in `TTree.table`
    
 ## Bug fixes
 

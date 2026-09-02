@@ -853,18 +853,26 @@ def _rt_table0_ ( tree                    ,
                                  parallel  = True     ,
                                  progress  = progress ) if leaves else {} 
     
-    rows = [ _header0_ ] 
+    rows = []
     if the_stats :
+        bdone   = set() 
+        ldone   = set()
+        
         b_list = tree.GetListOfBranches ()        
         if valid_pointer ( b_list ) : 
             for b in b_list :
+                bname = b.GetName()                    
+                if bname in bdone : continue
+                bdone.add ( bname ) 
                 l_list = b.GetListOfLeaves ()
                 if valid_pointer ( l_list ) :
-                    bname = b.GetName()                    
-                    for l in l_list :                        
-                        lname      = l.GetName()
+                    for l in l_list :
                         
+                        lname      = l.GetName()                        
                         full_name  = '%s.%s' % ( bname , lname )
+                        if full_name in ldone : continue
+                        ldone.add ( full_name )
+                        
                         stat       = the_stats.get ( full_name , None )
                         if stat is None : continue 
                         type_name  = l.get_type() 
@@ -881,6 +889,10 @@ def _rt_table0_ ( tree                    ,
                         row   = ( bname , '' if lname == bname else lname, type_name ) + row + ( unit , num )
                         rows.append ( row )
 
+    ## sort rows 
+    rows.sort()
+    rows = [ _header0_ ] + rows
+    
     ## construct the title 
     if not title :
         tt  = tree.GetTitle ()
@@ -948,10 +960,25 @@ def _rt_table_ ( tree                    ,
     
     branches = frozenset ( tree.branches () )
     leaves   = frozenset ( tree.leaves   () )
-    if not variables : variables = sorted ( branches ) 
-    
-    variables , cuts , _ = vars_and_cuts ( variables , cuts )
 
+    ## decode variables 
+    variables , cuts , _ = vars_and_cuts ( variables , cuts , allow_empty = True )
+    if not variables or all ( v in branches for v in variables ) :
+        return _rt_table0_ ( tree      ,
+                             cuts      = cuts      ,
+                             first     = first     ,
+                             width     = width     ,
+                             precision = precision ,
+                             prefix    = prefix    ,
+                             progress  = progress  , 
+                             title     = title     ,
+                             style     = style     )
+    
+    if cuts and not tree.valid_expression ( cuts ) :
+        raise ValueError ( "Invalid cuts expression: `%s'" % cuts ) 
+    for v in variables :
+        if v and not tree.valid_expression ( v ) :
+            raise ValueError ( "Invalid variable expression: `%s'" % v ) 
 
     ## (0) total number of entries 
     total = len ( tree )
@@ -981,7 +1008,7 @@ def _rt_table_ ( tree                    ,
     from ostap.stats.counters import WSE 
     if isinstance ( bbstats , WSE )  : bbstats = { bbs [ 0 ] : bbstats } 
     
-    rows   = [ _header1_ ]     
+    rows = []     
     for v in sorted ( bbstats ) :
 
         rr   = [ v ]        
@@ -1000,6 +1027,10 @@ def _rt_table_ ( tree                    ,
         
         rows.append ( row ) 
 
+    ## sort roww 
+    rows.sort()
+    rows = [ _header1_ ] + rows
+    
     ## construct the title 
     if not title :
         tt  = tree.GetTitle ()
@@ -1154,7 +1185,21 @@ def tree_slice ( tree                       ,
     first , last = evt_range ( tree , first , last ) 
     if last <= first :
         return () , None 
+    
+    ## decode cuts & the expressions 
+    expressions , cuts , _ = vars_and_cuts ( expressions , cuts )
 
+    ## sort it? NO! 
+    ## varlst = tuple ( sorted ( varlst ) )
+    
+    if cuts and not tree.valid_expression ( cuts ) :
+        raise ValueError ( "Invalid cuts expression: `%s'" % cuts ) 
+    for i , e in enumerate ( expressions , start = 1 )  :
+        if e and not tree.valid_expression ( e ) :
+            raise ValueError ( "Invalid column[%d] expression: `%s'" % ( i , e ) )
+        
+    varlst = expressions 
+        
     ## (0) check for prescale
     from ostap.stats.statvars import check_prescale
     check_prescale ( prescale )
@@ -1189,11 +1234,7 @@ def tree_slice ( tree                       ,
                                 use_frame    = False        , ## ATTENTION! 
                                 parallel     = parallel     )
     
-    ## decode cuts & the expressions 
-    varlst , cuts , _ = vars_and_cuts  ( expressions , cuts )
-    ## sort it? NO! 
-    ## varlst = tuple ( sorted ( varlst ) )
-
+        
     the_cuts = ROOT.TCut ( cuts ) 
     
     if   prescale is None  : pass
@@ -1365,8 +1406,7 @@ def the_variables ( tree , *expressions ) :
             n = n.split   ( ',' ) 
             for i in n :
                 if i in vall : sizes.add ( i )
-
-    
+                
     vars = [ v for v in vars if not v in sizes ] + [ v for v in var_branches  ] 
     vars = set    ( vars )
     vars = sorted ( vars ) 
@@ -1376,7 +1416,6 @@ def the_variables ( tree , *expressions ) :
 
     ## SIZES MUST BE FIRST! 
     return  tuple ( sizes ) + tuple ( vars )  ## SIZES MUST BE FIRST! 
-
 
 ROOT.TTree.the_variables = the_variables
 
@@ -1414,19 +1453,26 @@ ROOT.TTree.good_variables = good_variables
 #  tree =
 #  if not tree.valid_expression ( 'QQ>1' ) : ...
 #  @endcode 
-def _rt_valid_formula_ ( tree , expression ) :
+def _rt_valid_formula_ ( tree , *expressions ) :
     """ Valid formula expression?
     >>> tree =
     >>> if not tree.valid_expression ( 'QQ>1' ) : ...
     """
     with rootError () :
-        ff   = Ostap.Formula ( fID() , expression , tree ) 
-        result = ff.ok ()
-        del ff 
-        return result
+        for expression in expressions :
+            if expression : 
+                ff     = Ostap.Formula ( fID () , expression , tree ) 
+                result = ff.ok ()
+                if not result : logger.error ( "Invalid expression: `%s'" % expression ) 
+                del ff
+                if not result : return False
+                
+    return True
     
-ROOT.TTree.valid_formula    = _rt_valid_formula_ 
-ROOT.TTree.valid_expression = _rt_valid_formula_ 
+ROOT.TTree.valid_formula     = _rt_valid_formula_ 
+ROOT.TTree.valid_formulae    = _rt_valid_formula_ 
+ROOT.TTree.valid_expression  = _rt_valid_formula_ 
+ROOT.TTree.valid_expressions = _rt_valid_formula_ 
 
 # ===============================================================================
 ## Get all `size'-variables
@@ -2639,8 +2685,10 @@ _new_methods_  += (
     ROOT.TTree.size_vars    , 
     ROOT.TTree.array_vars   , 
     #
-    ROOT.TTree.valid_formula    ,
-    ROOT.TTree.valid_expression ,
+    ROOT.TTree.valid_formula     ,
+    ROOT.TTree.valid_formulae    ,
+    ROOT.TTree.valid_expression  ,
+    ROOT.TTree.valid_expressions ,
     #
     ROOT.TTree.the_variables    ,
     ROOT.TTree.good_variables   ,
