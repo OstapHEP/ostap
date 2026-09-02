@@ -19,6 +19,16 @@
 #include "Ostap/StatusCode.h"
 #include "Ostap/Math.h"
 // ============================================================================
+// forward declarations
+// ============================================================================
+namespace Ostap
+{
+  namespace Utils
+  { 
+    template <class DATA> class Buffer ; 
+  }
+}
+// ============================================================================
 namespace Ostap 
 {
   // ==========================================================================
@@ -52,6 +62,67 @@ namespace Ostap
         // =====================================================================
         struct Zero {} ;
         struct Id   {} ;
+        // ====================================================================
+      public :
+        // ====================================================================
+        /** @class const_iterator
+         *  Row-major forward iterator for GSL matrix
+         */
+        class const_iterator 
+        {
+        public:
+          using iterator_category = std::forward_iterator_tag ;
+          using value_type        = double ;
+          using difference_type   = std::ptrdiff_t ;
+          using pointer           = const double* ;
+          using reference         = double ;
+
+          const_iterator 
+          ( const gsl_matrix* m   = nullptr , 
+            std::size_t       row = 0       , 
+            std::size_t col = 0 )
+            : m_mat ( m   ) 
+            , m_row ( row ) 
+            , m_col ( col ) {}
+
+          reference operator* () const 
+          { return gsl_matrix_get ( m_mat , m_row , m_col ) ;  }
+
+          const_iterator& operator++ () 
+          {
+            if ( !m_mat ) { return *this ; }
+            ++m_col ;
+            if ( m_mat->size2 <= m_col ) 
+            {
+              m_col = 0 ;
+              ++m_row ;
+            }
+            return *this ;
+          }
+
+          const_iterator operator++ ( int ) 
+          {
+            const_iterator tmp = *this ;
+            ++(*this) ;
+            return tmp ;
+          }
+
+          bool operator== ( const const_iterator& other ) const 
+          {
+            if ( m_mat != other.m_mat ) return false ;
+            if ( m_mat->size1 <= m_row  && other.m_mat->size1 <= other.m_row ) { return true ; } 
+            return m_row == other.m_row && m_col == other.m_col ;
+          }
+
+          bool operator!= ( const const_iterator& other ) const 
+          { return !(*this == other) ; }
+
+        private:
+
+          const gsl_matrix* m_mat { nullptr } ;
+          std::size_t       m_row { 0 } ;
+          std::size_t       m_col { 0 } ;
+        } ;
         // ======================================================================
       public : 
         // ======================================================================
@@ -76,6 +147,7 @@ namespace Ostap
         ( const std::size_t  N1      , 
           const std::size_t  N2      , 
           const Id        /* id  */  ) ;
+      
         // =====================================================================
         // Square matrix 
         // ======================================================================
@@ -94,7 +166,23 @@ namespace Ostap
         explicit Matrix ( const Vector&      ) ; 
         /// create a permutation matrix
         explicit Matrix ( const Permutation& ) ;
-        // =======================================================================      
+        // =======================================================================  
+        /// from the shape and continious buffer- to be replaced wth std::span later 
+        template <class DATA> 
+        Matrix
+        ( const std::size_t                 N1     , 
+          const std::size_t                 N2     , 
+          const Ostap::Utils::Buffer<DATA>& buffer ) 
+          : Matrix ( N1 , N2)
+        { this -> fill_impl ( buffer.data () , buffer.size () ) ; }
+        /// from the shape and continious buffer- to be replaced wth std::span later 
+        template <class DATA> 
+        Matrix
+        ( const std::size_t                 N      ,  
+          const Ostap::Utils::Buffer<DATA>& buffer ) 
+          : Matrix ( N )
+        { this -> fill_impl ( buffer.data () , buffer.size () ) ; }
+        // =======================================================================
       public : 
         // =======================================================================    
         /// copy constructor 
@@ -147,6 +235,19 @@ namespace Ostap
         inline std::size_t nCols () const { return m_matrix->size2 ; }      
         // ========================================================================
       public:
+        // ==============================================================
+        /// begin-iterator 
+        const_iterator begin () const 
+        { return const_iterator ( m_matrix , 0 , 0 ) ; }
+        /// end-iterator  
+        const_iterator end () const 
+        { return const_iterator ( m_matrix , nRows() , 0 ) ; }
+        /// begin-iterator 
+        const_iterator cbegin () const { return begin() ; }
+        /// end-iterator 
+        const_iterator cend   () const { return end()   ; }
+        // ========================================================================
+      public : 
         // ========================================================================
         /// matrices are equal ?
         bool equal  ( const Matrix & right ) const ;
@@ -253,6 +354,14 @@ namespace Ostap
         /// swap two matrices 
         void swap ( Matrix& right ) ; // swap two matrices 
         // ========================================================================
+      private :
+        // ========================================================================
+        /// fill the matrix from continious buffer 
+        template <class DATA>
+        void fill_impl
+        ( const DATA*       buffer , 
+          const std::size_t size   ) ;
+        // ========================================================================
       private:
         // ========================================================================
         /// the  actual pointer to GSL-matrix 
@@ -269,6 +378,65 @@ namespace Ostap
         // ========================================================================
         typedef Ostap::Math::GSL::Matrix::Zero Zero ;
         // ========================================================================
+      public :
+        // ========================================================================
+        /** @class const_iterator
+         *  Robust, stride-aware forward iterator for GSL vector 
+         *  delegating element access to gsl_vector_get
+         */
+        class const_iterator 
+        {
+        public:
+          using iterator_category = std::forward_iterator_tag ;
+          using value_type        = double ;
+          using difference_type   = std::ptrdiff_t ;
+          using pointer           = const double* ;
+          using reference         = double ;
+          /// Construct iterator from GSL vector pointer and logical index
+          const_iterator 
+          ( const gsl_vector* v     = nullptr , 
+            const std::size_t index = 0 )
+            : m_vec   ( v     )
+            , m_index ( index )
+          {}
+
+          /// Dereference operator: fetches value via official GSL API
+          reference operator* () const 
+          { return gsl_vector_get ( m_vec , m_index ) ; }
+
+          /// Prefix increment operator (++it)
+          const_iterator& operator++ () 
+          { if ( m_vec ) { ++m_index ; } return *this ; }
+
+          /// Postfix increment operator (it++)
+          const_iterator operator++ ( int ) 
+          {
+            const_iterator tmp { *this } ;
+            ++(*this) ;
+            return tmp ;
+          }
+
+          /// Equality operator handling logical end-of-range comparisons
+          bool operator== ( const const_iterator& other ) const 
+          {
+            // Pointing to the exact same underlying object
+            if ( m_vec == other.m_vec ) 
+            { return m_index == other.m_index ; }
+            // Logical end check for empty or uninitialized vectors
+            const std::size_t s1 = ( m_vec       ? m_vec->size       : 0 ) ;
+            const std::size_t s2 = ( other.m_vec ? other.m_vec->size : 0 ) ;
+            return ( s1 <= m_index  ) && ( s2 <= other.m_index  ) ;
+          }
+
+          /// Inequality operator
+          bool operator!= ( const const_iterator& other ) const 
+          { return !(*this == other) ; }
+
+        private:
+          const gsl_vector* m_vec   { nullptr } ;
+          std::size_t       m_index { 0 }       ;
+        } ;
+        // ======================================================================== 
       public: 
         // ========================================================================
         /// allocate vector 
@@ -323,6 +491,17 @@ namespace Ostap
         inline double      operator[] ( const std::size_t i ) const { return get ( i ) ; }
         /// the size of the vector 
         inline std::size_t size    () const { return m_vector -> size ; } 
+        // ========================================================================
+      public:
+        // ========================================================================
+        // Iterator accessor methods
+        // ========================================================================
+        const_iterator begin () const 
+        { return const_iterator ( m_vector , 0      ) ; }
+        const_iterator end () const 
+        { return const_iterator ( m_vector , size() ) ; }
+        const_iterator cbegin () const { return begin() ; }
+        const_iterator cend   () const { return end()   ; }
         // ========================================================================
       public:
         // ========================================================================
@@ -681,6 +860,18 @@ namespace Ostap
         const Matrix& b  ,
         const bool    Tb ,
         Matrix&       c  ) ; 
+
+      // ============================================================================
+      /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
+       *  @param a     (INPUT)  Input matrix A (m x n)
+       *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+       *  @param tol   (INPUT)  Tolerance for zeroing small singular values (< 0 for default)
+       *  @return status code
+       */
+      Ostap::StatusCode PINV
+      ( const Matrix& a      ,
+        Matrix&       a_pinv ,
+        double        tol    = - 1 ) ;
 
       // ========================================================================
       // Linear Algebra 

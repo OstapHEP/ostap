@@ -9,6 +9,7 @@
 // ============================================================================
 #include "Ostap/LinAlg.h"
 #include "Ostap/StatusCode.h"
+#include "Ostap/Buffer.h"
 // ============================================================================
 // GSL
 // ============================================================================
@@ -49,6 +50,41 @@ std::size_t Ostap::Math::GSL::GSL_version_int   ()
 // GSL version as string
 // ============================================================================
 std::string Ostap::Math::GSL::GSL_version () { return gsl_version ; }
+// ============================================================================
+
+
+// ===========================================================================
+// Matrix class 
+// ===========================================================================
+
+template <typename T>
+void Ostap::Math::GSL::Matrix::fill_impl 
+( const T* data , std::size_t size )
+{
+  //
+  const std::size_t rows = nRows () ;
+  const std::size_t cols = nCols () ;
+  //
+  Ostap::Assert ( data != nullptr                       , 
+                  "Matrix: null buffer pointer"         , 
+                  "Ostap::Math::GSL::Matrix::fill_impl" , 
+                  INVALID_BUFFER                        , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( rows * cols <= size                   , 
+                  "Matrix: buffer too small"            , 
+                  "Ostap::Math::GSL::Matrix::fill_impl" , 
+                  INVALID_BUFFER                        , __FILE__ , __LINE__  ) ;
+  //
+  for ( std::size_t i = 0 ; i < rows ; ++i )
+  { for ( std::size_t j = 0 ; j < cols ; ++j )
+    { gsl_matrix_set ( m_matrix , i , j , static_cast<double>( data[i * cols + j] ) ) ; } }
+  //
+}
+// ============================================================================
+template void Ostap::Math::GSL::Matrix::fill_impl<float>       ( const       float* , std::size_t ) ;
+template void Ostap::Math::GSL::Matrix::fill_impl<double>      ( const      double* , std::size_t ) ;
+template void Ostap::Math::GSL::Matrix::fill_impl<long double> ( const long double* , std::size_t ) ;
+// ============================================================================
+
 // ============================================================================
 // allocate GSL-matrix 
 // ============================================================================
@@ -1053,6 +1089,76 @@ Ostap::StatusCode Ostap::Math::GSL::MDM
 
   // Step 2: Multiply A_scaled by op(B) using optimized general MM
   return MM ( A_scaled , false , b , Tb , c ) ;
+}
+
+// ============================================================================
+/*  Compute Moore-Penrose Pseudoinverse using SVD & MDM:
+ *  \f$ A^+ = V \times \text{diag}(\sigma^+) \times U^T \f$
+ *
+ *  @param a     (INPUT)  Input matrix A (m x n)
+ *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+ *  @param tol   (INPUT)  Tolerance for zeroing small singular values (< 0 for default)
+ *  @return status code
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::GSL::PINV
+( const Ostap::Math::GSL::Matrix& a      ,
+  Ostap::Math::GSL::Matrix&       a_pinv ,
+  double                          tol    )
+{
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+
+  const std::size_t m = a.nRows() ;
+  const std::size_t n = a.nCols() ;
+
+  // Handle Aliasing (&a == &a_pinv)
+  if ( &a == &a_pinv )
+  {
+    Matrix tmp { n , m } ;
+    Ostap::StatusCode sc = PINV ( a , tmp , tol ) ;
+    if ( sc.isSuccess() ) { a_pinv.swap ( tmp ) ; }
+    return sc ;
+  }
+
+  // Ensure target dimensions (n x m)
+  if ( a_pinv.nRows() != n || a_pinv.nCols() != m )
+  { a_pinv = Matrix ( n , m ) ; }
+
+  // SVD requires working copy of A (m x n), matrix V (n x n), vector S (n)
+  // GSL computes A = U * S * V^T, where A_copy holds U on output
+  Matrix A_copy { a } ; // Holds U after SVD
+  Matrix V      { n , n } ;
+  Vector S      { n } ;
+  Vector work   { n } ;
+
+  // Compute SVD
+  int status = gsl_linalg_SV_decomp ( A_copy.matrix() , V.matrix() , S.vector() , work.vector() ) ;
+  if ( status )
+  {
+    gsl_error ( "Ostap::Math::GSL::PINV: SVD decomposition failed" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+
+  // Determine cutoff threshold for singular values
+  const double max_s = S ( 0 ) ;
+  if ( tol < 0.0 )
+  {
+    const double eps = 2.2204460492503131e-16 ; // machine epsilon for double
+    tol = std::max ( m , n ) * max_s * eps ;
+  }
+
+  // Build the inverted singular vector d = sigma^+
+  Vector d { n } ;
+  gsl_vector* vd = d.vector() ;
+  for ( std::size_t i = 0 ; i < n ; ++i )
+  {
+    const double s_i = S ( i ) ;
+    gsl_vector_set ( vd , i , ( s_i > tol ) ? ( 1.0 / s_i ) : 0.0 ) ;
+  }
+
+  // Compute A^+ = V * diag(d) * U^T  using our optimized MDM function!
+  // V (n x n), d (n), A_copy holds U (m x n), transposed Tu = true -> U^T (n x m)
+  return MDM ( V , false , d , A_copy , true , a_pinv ) ;
 }
 
 // ============================================================================
