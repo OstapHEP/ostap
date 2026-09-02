@@ -23,6 +23,7 @@ from   ostap.core.ostap_types import num_types
 from   ostap.math.math_base   import Ostap
 from   ostap.utils.gsl        import gsl_info 
 import ostap.math.linalg      as     LA 
+import ctypes   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -525,13 +526,13 @@ def _m_PLU_ ( A ) :
     return P , L , U
 
 # ===============================================================================
-## Get (P)QR decompositoon with column piviting such as  \f$ AP = QR\f$
+## Get (P)QR decompositoon with column pivoting such as  \f$ AP = QR\f$
 #  - A is input MxN matrix 
 #  - P is permutation (NxN) 
 #  - Q is orthogonal MxM matrix
 #  - R is right triangular MxN matrix
 def _m_PQR_ ( A ) :
-    """ Get QR decompositoon with column piviting such as  AP = QR
+    """ Get QR decompositoon with column pivoting such as  AP = QR
     - A is input MxN matrix 
     - P is permutation (NxN) 
     - Q is orthogonal MxM matrix
@@ -548,6 +549,33 @@ def _m_PQR_ ( A ) :
     if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::PQR" % sc )        
     ##
     return P, Q , R 
+
+# ===============================================================================
+## Get (P)QR decompositoon with column pivoting such as  \f$ AP = QR\f$
+#  - A is input MxN matrix 
+#  - P is permutation (NxN) 
+#  - Q is orthogonal MxM matrix
+#  - R is right triangular MxN matrix
+#  - r is the reciprocal condition number of R
+def _m_PQRr_ ( A ) :
+    """ Get QR decompositoon with column pivoting such as  AP = QR
+    - A is input MxN matrix 
+    - P is permutation (NxN) 
+    - Q is orthogonal MxM matrix
+    - R is right triangular MxN matrix
+    - r is the reciprocal condition number of R
+    >>> A = ...
+    >>> P, Q, R, r = A.PQRr () 
+    """
+    M, N = A.nRows() , A.nCols ()
+    Q    = Matrix ( M , M )
+    R    = Matrix ( M , N , Zero () )
+    P    = Permutation ( N ) 
+    r    = ctypes.c_c_double( -1.0 )
+    sc   = Ostap.Math.GSL.PQRr ( A , P , Q , R , r )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::PQR" % sc )        
+    ##
+    return P, Q , R, r.value 
 
 # ===============================================================================
 ## Get LQ decompositionn with column piviting such as  \f$ A = LQ\f$
@@ -647,6 +675,25 @@ def _m_SVD_ ( A , golub = True ) :
     ##
     return S , U , V 
 
+
+# ===============================================================================
+##  LLT: Cholesky decomposition of the square matrix A: \f$ A = L L^T \f$
+#  Only lower triangular part of A is used, the upper part is ignored.
+#  - A input MxM matrix
+#  - L is lower triangular matrix
+def _m_LLT_ ( A ) :
+    """ LLT: Cholesky decomposition of the square matrix A: A = L L^T
+    - A input MxM matrix
+    - L is lower triangular matrix
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert M == N , "LLT decomposition is defined only for square matrices!"
+    L  = Matrix ( M , M )
+    sc = Ostap.Math.GSL.LLT ( A , L )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::LLT" % sc )
+    ##
+    return L
+
 # ===============================================================================
 ## Polar decompositon of the square matrix A: \f$ A = UP \f$
 #  - U is orthogonal 
@@ -689,9 +736,11 @@ def _m_SCHUR_ ( A ) :
 
 Matrix.PLU       = _m_PLU_
 Matrix.PQR       = _m_PQR_ 
+Matrix.PQRr      = _m_PQRr_
 Matrix.LQ        = _m_LQ_ 
-Matrix.COD       = _m_COD_ 
+Matrix.COD       = _m_COD_
 Matrix.SVD       = _m_SVD_
+Matrix.LLT       = _m_LLT_
 Matrix.SCHUR     = _m_SCHUR_  
 Matrix.POLAR     = _m_POLAR_ 
 Matrix.t         = Matrix.T
@@ -788,8 +837,9 @@ _new_methods_ += (
     ##
     Matrix.PLU                , 
     Matrix.PQR                , 
+    Matrix.PQRr               ,
     Matrix.LQ                 ,
-   
+    Matrix.LLT                ,
     Matrix.COD                ,
     Matrix.SVD                ,
     Matrix.SCHUR              , 

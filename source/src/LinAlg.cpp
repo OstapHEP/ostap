@@ -620,77 +620,440 @@ Ostap::Math::GSL::Matrix::T () const
 // ============================================================================
 
 
+
 // ============================================================================
-// multiply matrices  \f$  r = m_1 \times m_2^T \f$    
+/*  Matrix multiplication:
+ *  \f$ C = a^{(T_a)} \times b^{(T_b)}\f$
+ *  @param a (INPUT) the first input matrix
+ *  @param Ta (INPUT) transpose the first matrix?
+ *  @param b (INPUT) the second input matrix
+ *  @param Tb (INPUT) transpose the second matrix?
+ *  @param c (OUTPUT) the output matrix
+ *  @return status code      
+ */
 // ============================================================================
-Ostap::Math::GSL::Matrix                            
-Ostap::Math::GSL::MMT
-( const Ostap::Math::GSL::Matrix& m1 , 
-  const Ostap::Math::GSL::Matrix& m2 ) 
+Ostap::StatusCode Ostap::Math::GSL::MM
+( const Ostap::Math::GSL::Matrix& a  ,
+  const bool                      Ta ,
+  const Ostap::Math::GSL::Matrix& b  ,
+  const bool                      Tb , 
+  Ostap::Math::GSL::Matrix&       c  ) 
 {
-  // special case
-  if ( &m1 == &m2 ) { return MMT ( m1 ) ; } 
   //
-  Ostap::Assert ( m1.nCols () == m2.nCols()                            ,
-                  "Cannot multiply matrices of incompatible structure" ,
-                  "Ostap::Math::GSL::Martix::MMT"                      ,
-                  INVALID_GMATRIX                                      , __FILE__ , __LINE__ ) ;
-  
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
-  Matrix result { m1.nRows() , m2.nRows() } ;
-  // 
-  const int status = gsl_blas_dgemm ( CblasNoTrans    ,
-                                      CblasTrans      ,
-                                      1.0             ,
-                                      m1.matrix()     ,
-                                      m2.matrix()     ,
-                                      0.0             ,
-                                      result.matrix() ) ;
+
+  // Determine transpose operations based on flags
+  const CBLAS_TRANSPOSE_t transA = Ta ? CblasTrans : CblasNoTrans;
+  const CBLAS_TRANSPOSE_t transB = Tb ? CblasTrans : CblasNoTrans;
+
   //
-  Ostap::Assert ( !status ,
-                  "Error from gsl_blas_dgemm function" ,
-                  "Ostap::Math::GSL::Matrix::MMT"      , 
-                  ERROR_GSL + status                   , __FILE__ , __LINE__ ) ; 
+  const std::size_t rows_A = Ta ? a.nCols() : a.nRows() ;
+  const std::size_t cols_A = Ta ? a.nRows() : a.nCols() ;
+  const std::size_t rows_B = Tb ? b.nCols() : b.nRows() ;
+  const std::size_t cols_B = Tb ? b.nRows() : b.nCols() ;
   //
-  return result ;
+  if ( cols_A != rows_B )
+  {
+    const int status = GSL_EBADLEN ; 
+    gsl_error ( "Ostap::Math::GSL::MM: Incompatible matrix dimensions for multiplication" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ; 
+  }
+
+  // resize otuput if the size is wrong
+  if ( ( &a != &c ) &&  ( &b != &c ) && ( c.nRows() != rows_A || c.nCols() != cols_B ) )
+  { c = Matrix ( rows_A , cols_B ) ; }
+  
+  // aliasing ? 
+  if ( &a == &c || &b == &c )
+  {
+    // use temporary matrix to avoid aliasing issues
+    Matrix tmp { rows_A , cols_B } ;
+    Ostap::StatusCode sc = MM ( a , Ta , b , Tb , tmp ) ;
+    if ( sc.isSuccess() ) { c.swap ( tmp ) ; } 
+    return sc ; 
+  }
+
+  // OPTIMIZATION: Symmetric product (A^T * A or A * A^T) when A == B and T1 != T2
+  // Uses dsyrk which only computes the upper triangle, doubling the performance.
+  if ( &a == &b && Ta != Tb ) 
+  {
+    // T1 = 1, T2 = 0 -> A^T * A (trans = CblasTrans)
+    // T1 = 0, T2 = 1 -> A * A^T (trans = CblasNoTrans)
+    const CBLAS_TRANSPOSE_t trans = Ta ? CblasTrans : CblasNoTrans;
+
+    // 1. Compute upper triangle of C: C = 1.0 * op(A) * op(A)^T + 0.0 * C
+    const int status = gsl_blas_dsyrk ( CblasUpper , trans , 1.0 , a.matrix () , 0.0 , c.matrix () ) ;
+    if ( status ) 
+    { 
+      gsl_error ( "Ostap::Math::GSL::MM:   Error from gsl_blas_dsyrk function" , __FILE__ , __LINE__ , status ) ;
+      return ERROR_GSL + status ;
+    }
+
+    // 2. Mirror upper triangle to lower triangle to complete the symmetric matrix
+    const std::size_t n = c.nRows  () ;
+    gsl_matrix*       m = c.matrix ();
+    for ( std::size_t i = 0; i < n; i++) 
+    {
+      for ( std::size_t j = i + 1 ; j < n; j++ ) 
+      {
+        const double val = gsl_matrix_get ( m , i , j ) ;
+        gsl_matrix_set ( m , j , i , val ) ;
+      }
+    }
+    //
+    return Ostap::StatusCode::SUCCESS;
+  }
+  // END OF OPTIMIZATION  
+
+  //
+  // general case: C = op(A) * o
+  // Standard BLAS Level 3 general matrix multiplication: C = 1.0 * op(A) * op(B) + 0.0 * C
+  const int status = gsl_blas_dgemm ( transA , transB , 1.0 , a.matrix () , b.matrix () , 0.0 , c.matrix () ) ;
+  if ( status ) 
+  { 
+    gsl_error ( "Ostap::Math::GSL::MM:   Error from gsl_blas_dgemm function" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  return Ostap::StatusCode::SUCCESS;
 }
 
+// ============================================================================
+/*  Matrix multiplication of 3 matrices:
+ *  \f$ D = a^{(T_a)} \times b^{(T_b)} \times c^{(T_c)}\f$
+ *  @param a  (INPUT) the first input matrix
+ *  @param Ta (INPUT) transpose the first matrix?
+ *  @param b  (INPUT) the second input matrix
+ *  @param Tb (INPUT) transpose the second matrix?
+ *  @param c  (INPUT) the third input matrix
+ *  @param Tc (INPUT) transpose the third matrix?
+ *  @param d  (OUTPUT) the output matrix
+ *  @return status code      
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::GSL::MMM
+( const Ostap::Math::GSL::Matrix& a  ,
+  const bool                      Ta ,
+  const Ostap::Math::GSL::Matrix& b  ,
+  const bool                      Tb , 
+  const Ostap::Math::GSL::Matrix& c  ,
+  const bool                      Tc , 
+  Ostap::Math::GSL::Matrix&       d  ) 
+{
+  // use GSL error handler sentry
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+
+  // Calculate dimensions for transposed/non-transposed representations
+  const std::size_t m      = Ta ? a.nCols() : a.nRows() ; // Rows of op(A)
+  const std::size_t k      = Ta ? a.nRows() : a.nCols() ; // Cols of op(A)
+  const std::size_t rows_B = Tb ? b.nCols() : b.nRows() ;
+  const std::size_t p      = Tb ? b.nRows() : b.nCols() ; // Cols of op(B)
+  const std::size_t rows_C = Tc ? c.nCols() : c.nRows() ;
+  const std::size_t n      = Tc ? c.nRows() : c.nCols() ; // Cols of op(C)
+
+  // Validate internal dimensions consistency
+  if ( k != rows_B || p != rows_C )
+  {
+    const int status = GSL_EBADLEN ; 
+    gsl_error ( "Ostap::Math::GSL::MMM: Incompatible matrix dimensions for 3-matrix multiplication" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ; 
+  }
+
+  // Handle Aliasing (&a == &d || &b == &d || &c == &d):
+  // Compute into a temporary matrix first to prevent corrupting inputs
+  if ( &a == &d || &b == &d || &c == &d )
+  {
+    Matrix tmp { m , n } ;
+    Ostap::StatusCode sc = MMM ( a , Ta , b , Tb , c , Tc , tmp ) ;
+    if ( sc.isSuccess() ) { d.swap ( tmp ) ; } 
+    return sc ; 
+  }
+
+  // Ensure matrix d has the correct size (m x n)
+  if ( d.nRows() != m || d.nCols() != n ) { d = Matrix ( m , n ) ;  }
+
+  // Cost analysis to choose optimal multiplication chain order:
+  // Cost 1: (A * B) * C = 2 * m * p * (k + n)
+  // Cost 2: A * (B * C) = 2 * k * n * (p + m)
+  const std::size_t cost_AB_C = m * p * ( k + n ) ;
+  const std::size_t cost_A_BC = k * n * ( p + m ) ;
+
+  if ( cost_AB_C <= cost_A_BC )
+  {
+    // Strategy 1: Compute AB_tmp = op(A) * op(B), then d = AB_tmp * op(C)
+    Matrix AB_tmp { m , p } ;
+    Ostap::StatusCode sc = MM ( a , Ta , b , Tb , AB_tmp ) ;
+    if ( sc.isFailure () ) { return sc ; }
+    //
+    return MM ( AB_tmp , false , c , Tc , d ) ;
+  }
+  else
+  {
+    // Strategy 2: Compute BC_tmp = op(B) * op(C), then d = op(A) * BC_tmp
+    Matrix BC_tmp { k , n } ;
+    Ostap::StatusCode sc = MM ( b , Tb , c , Tc , BC_tmp ) ;
+    if ( sc.isFailure () ) { return sc ; }
+    //
+    return MM ( a , Ta , BC_tmp , false , d ) ;
+  }
+}
 
 // ============================================================================
-// multiply matrices  \f$  r = m \times m^T \f$    
+/*  Matrix multiplication of 4 matrices:
+ *  \f$ E = a^{(T_a)} \times b^{(T_b)} \times c^{(T_c)} \times d^{(T_d)}\f$
+ *  @param a  (INPUT) the first input matrix
+ *  @param Ta (INPUT) transpose the first matrix?
+ *  @param b  (INPUT) the second input matrix
+ *  @param Tb (INPUT) transpose the second matrix?
+ *  @param c  (INPUT) the third input matrix
+ *  @param Tc (INPUT) transpose the third matrix?
+ *  @param d  (INPUT) the fourth input matrix
+ *  @param Td (INPUT) transpose the fourth matrix?
+ *  @param e  (OUTPUT) the output matrix
+ *  @return status code      
+ */
 // ============================================================================
-Ostap::Math::GSL::Matrix                            
-Ostap::Math::GSL::MMT
-( const Ostap::Math::GSL::Matrix& m )    
+Ostap::StatusCode Ostap::Math::GSL::MMMM
+( const Ostap::Math::GSL::Matrix& a  ,
+  const bool                      Ta ,
+  const Ostap::Math::GSL::Matrix& b  ,
+  const bool                      Tb , 
+  const Ostap::Math::GSL::Matrix& c  ,
+  const bool                      Tc , 
+  const Ostap::Math::GSL::Matrix& d  ,
+  const bool                      Td , 
+  Ostap::Math::GSL::Matrix&       e  ) 
 {
-  // use GSL: 
+  // use GSL error handler sentry
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
-  //
-  Matrix result { m.nRows() , m.nRows() } ;
-  // 
-  const int status = gsl_blas_dsyrk ( CblasUpper , CblasNoTrans , 1.0 , m.matrix() , 0.0 , result.matrix() ) ;
-  Ostap::Assert ( !status ,
-                  "Error from gsl_blas_dsyrk function" ,
-                  "Ostap::Math::GSL::Matrix::MMT"      , 
-                  ERROR_GSL + status                   , __FILE__ , __LINE__ ) ; 
-  //
-  gsl_matrix* Res = result.matrix() ;
-  const std::size_t rows = Res -> size1 ;
-  for ( std::size_t i = 0; i < rows ; ++i ) 
+
+  // Dimensions of the 4 matrices (rows x cols) after accounting for transposes
+  // op(A): m x k
+  // op(B): k x p
+  // op(C): p x q
+  // op(D): q x n
+  const std::size_t m = Ta ? a.nCols() : a.nRows() ; // Rows of op(A)
+  const std::size_t k = Ta ? a.nRows() : a.nCols() ; // Cols of op(A)
+  const std::size_t rows_B = Tb ? b.nCols() : b.nRows() ;
+  const std::size_t p      = Tb ? b.nRows() : b.nCols() ; // Cols of op(B)
+  const std::size_t rows_C = Tc ? c.nCols() : c.nRows() ;
+  const std::size_t q      = Tc ? c.nRows() : c.nCols() ; // Cols of op(C)
+  const std::size_t rows_D = Td ? d.nCols() : d.nRows() ;
+  const std::size_t n      = Td ? d.nRows() : d.nCols() ; // Cols of op(D)
+
+  // Validate internal matrix dimension compatibility
+  if ( k != rows_B || p != rows_C || q != rows_D )
   {
-    for ( std::size_t j = i + 1 ; j < rows ; ++j ) 
+    const int status = GSL_EBADLEN ; 
+    gsl_error ( "Ostap::Math::GSL::MMMM: Incompatible matrix dimensions for 4-matrix multiplication" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ; 
+  }
+
+  // Handle Aliasing (&a == &e || &b == &e || &c == &e || &d == &e):
+  // Compute into a temporary matrix first to prevent overwriting inputs
+  if ( &a == &e || &b == &e || &c == &e || &d == &e )
+  {
+    Matrix tmp { m , n } ;
+    Ostap::StatusCode sc = MMMM ( a , Ta , b , Tb , c , Tc , d , Td , tmp ) ;
+    if ( sc.isSuccess() ) { e.swap ( tmp ) ; } 
+    return sc ; 
+  }
+
+  // Ensure matrix e has correct dimensions (m x n)
+  if ( e.nRows() != m || e.nCols() != n ) { e = Matrix ( m , n ) ;  }
+
+  // Cost calculation for all 5 possible evaluation trees (ignoring multiplier 2 for simplicity):
+  // 1. ((AB)C)D : AB(m*k*p) + (AB)C(m*p*q) + ((AB)C)D(m*q*n)
+  const std::size_t cost1 = m*k*p + m*p*q + m*q*n ;
+  
+  // 2. (A(BC))D : BC(k*p*q) + A(BC)(m*k*q) + (A(BC))D(m*q*n)
+  const std::size_t cost2 = k*p*q + m*k*q + m*q*n ;
+  
+  // 3. (AB)(CD) : AB(m*k*p) + CD(p*q*n) + (AB)(CD)(m*p*n)
+  const std::size_t cost3 = m*k*p + p*q*n + m*p*n ;
+  
+  // 4. A((BC)D) : BC(k*p*q) + (BC)D(k*q*n) + A((BC)D)(m*k*n)
+  const std::size_t cost4 = k*p*q + k*q*n + m*k*n ;
+  
+  // 5. A(B(CD)) : CD(p*q*n) + B(CD)(k*p*n) + A(B(CD))(m*k*n)
+  const std::size_t cost5 = p*q*n + k*p*n + m*k*n ;
+
+  // Find minimum cost among the 5 strategies
+  std::size_t min_cost = cost1 ;
+  int strategy = 1 ;
+
+  if ( cost2 < min_cost ) { min_cost = cost2 ; strategy = 2 ; }
+  if ( cost3 < min_cost ) { min_cost = cost3 ; strategy = 3 ; }
+  if ( cost4 < min_cost ) { min_cost = cost4 ; strategy = 4 ; }
+  if ( cost5 < min_cost ) { min_cost = cost5 ; strategy = 5 ; }
+
+  // Execute optimal strategy utilizing our robust MMM or MM subroutines
+  switch ( strategy )
+  {
+    case 1: 
     {
-      const  double val = gsl_matrix_get ( Res , i , j ) ;
-      gsl_matrix_set ( Res , j , i , val ) ; 
+      // ((A * B) * C) * D  ==>  MMM(A, B, C) * D
+      Matrix ABC_tmp { m , q } ;
+      Ostap::StatusCode sc = MMM ( a , Ta , b , Tb , c , Tc , ABC_tmp ) ;
+      if ( sc.isFailure () ) { return sc ; }
+      return MM ( ABC_tmp , false , d , Td , e ) ;
+    }
+    case 2: 
+    {
+      // (A * (B * C)) * D  ==>  MMM(A, B, C) * D
+      Matrix ABC_tmp { m , q } ;
+      Ostap::StatusCode sc = MMM ( a , Ta , b , Tb , c , Tc , ABC_tmp ) ;
+      if ( sc.isFailure () ) { return sc ; }
+      return MM ( ABC_tmp , false , d , Td , e ) ;
+    }
+    case 3: 
+    {
+      // (A * B) * (C * D)  ==>  MM(A, B) * MM(C, D)
+      Matrix AB_tmp { m , p } ;
+      Matrix CD_tmp { p , n } ;
+      Ostap::StatusCode sc1 = MM ( a , Ta , b , Tb , AB_tmp ) ;
+      if ( sc1.isFailure () ) { return sc1 ; }
+      Ostap::StatusCode sc2 = MM ( c , Tc , d , Td , CD_tmp ) ;
+      if ( sc2.isFailure () ) { return sc2 ; }
+      return MM ( AB_tmp , false , CD_tmp , false , e ) ;
+    }
+    case 4: 
+    {
+      // A * ((B * C) * D)  ==>  A * MMM(B, C, D)
+      Matrix BCD_tmp { k , n } ;
+      Ostap::StatusCode sc = MMM ( b , Tb , c , Tc , d , Td , BCD_tmp ) ;
+      if ( sc.isFailure () ) { return sc ; }
+      return MM ( a , Ta , BCD_tmp , false , e ) ;
+    }
+    case 5: 
+    {
+      // A * (B * (C * D))  ==>  A * MMM(B, C, D)
+      Matrix BCD_tmp { k , n } ;
+      Ostap::StatusCode sc = MMM ( b , Tb , c , Tc , d , Td , BCD_tmp ) ;
+      if ( sc.isFailure () ) { return sc ; }
+      return MM ( a , Ta , BCD_tmp , false , e ) ;
     }
   }
   //
-  return result ;
+  return Ostap::StatusCode::SUCCESS ;
 }
 
+// ============================================================================
+/*  Matrix multiplication with a diagonal matrix in the middle:
+ *  \f$ C = a^{(T_a)} \times \text{diag}(d) \times b^{(T_b)}\f$
+ *
+ *  @param a  (INPUT) the first input matrix
+ *  @param Ta (INPUT) transpose the first matrix?
+ *  @param d  (INPUT) diagonal elements of the middle matrix
+ *  @param b  (INPUT) the second input matrix
+ *  @param Tb (INPUT) transpose the second matrix?
+ *  @param c  (OUTPUT) the output matrix
+ *  @return status code      
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::GSL::MDM
+( const Ostap::Math::GSL::Matrix& a  ,
+  const bool                      Ta ,
+  const Ostap::Math::GSL::Vector& d  ,
+  const Ostap::Math::GSL::Matrix& b  ,
+  const bool                      Tb ,
+  Ostap::Math::GSL::Matrix&       c  )
+{
+  // use GSL error handler sentry
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
 
+  // Dimensions of op(A): rows_A x cols_A
+  const std::size_t rows_A = Ta ? a.nCols() : a.nRows() ;
+  const std::size_t cols_A = Ta ? a.nRows() : a.nCols() ;
+
+  // Dimensions of op(B): rows_B x cols_B
+  const std::size_t rows_B = Tb ? b.nCols() : b.nRows() ;
+  const std::size_t cols_B = Tb ? b.nRows() : b.nCols() ;
+
+  // Size of the diagonal vector d
+  const std::size_t dim_d = d.size() ;
+
+  // Check dimension compatibility: cols(op(A)) == dim(d) && dim(d) == rows(op(B))
+  if ( cols_A != dim_d || rows_B != dim_d )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::MDM: Incompatible matrix/vector dimensions" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+
+  // Handle Aliasing (&a == &c || &b == &c):
+  // Compute into a temporary matrix first to prevent overwriting inputs
+  if ( &a == &c || &b == &c )
+  {
+    Matrix tmp { rows_A , cols_B } ;
+    Ostap::StatusCode sc = MDM ( a , Ta , d , b , Tb , tmp ) ;
+    if ( sc.isSuccess() ) { c.swap ( tmp ) ; }
+    return sc ;
+  }
+
+  // Ensure output matrix c has correct dimensions (rows_A x cols_B)
+  if ( c.nRows() != rows_A || c.nCols() != cols_B )
+  { c = Matrix ( rows_A , cols_B ) ; }
+
+  // OPTIMIZATION for Symmetric case: A * diag(d) * A^T or A^T * diag(d) * A
+  // Uses dsyrk via column scaling with sqrt(d) if all d_k >= 0
+  if ( &a == &b && Ta != Tb && gsl_vector_isnonneg ( d.vector() ) )
+  {
+    // 1. Prepare scaled matrix: A_scaled = op(A) * diag(sqrt(d))
+    Matrix A_scaled { rows_A , dim_d } ;
+    for ( std::size_t k = 0 ; k < dim_d ; ++k )
+    {
+      const double sqrt_d_k = std::sqrt ( d ( k ) ) ;
+      if ( Ta )
+      { for ( std::size_t i = 0 ; i < rows_A ; ++i )
+        { A_scaled.set ( i , k , a ( k , i ) * sqrt_d_k ) ; } }
+      else
+        { for ( std::size_t i = 0 ; i < rows_A ; ++i )
+          { A_scaled.set ( i , k , a ( i , k ) * sqrt_d_k ) ; } }
+    }
+
+    // 2. Compute upper triangle via dsyrk: C = 1.0 * A_scaled * A_scaled^T
+    const int status = gsl_blas_dsyrk ( CblasUpper , CblasNoTrans , 1.0 , A_scaled.matrix() , 0.0 , c.matrix() ) ;
+    if ( status )
+    {
+      gsl_error ( "Ostap::Math::GSL::MDM: Error from gsl_blas_dsyrk function" , __FILE__ , __LINE__ , status ) ;
+      return ERROR_GSL + status ;
+    }
+
+    // 3. Mirror upper triangle to lower triangle
+    gsl_matrix* m_c = c.matrix () ;
+    for ( std::size_t i = 0 ; i < rows_A ; ++i )
+    {
+      for ( std::size_t j = i + 1 ; j < rows_A ; ++j )
+      {
+        const double val = gsl_matrix_get ( m_c , i , j ) ;
+        gsl_matrix_set ( m_c , j , i , val ) ;
+      }
+    }
+    //
+    return Ostap::StatusCode::SUCCESS ;
+  }
+
+  // General Case:
+  // Step 1: Scale columns of op(A) by vector d: A_scaled = op(A) * diag(d)
+  Matrix A_scaled { rows_A , dim_d } ;
+  gsl_matrix* as = A_scaled.matrix() ;
+  for ( std::size_t k = 0 ; k < dim_d ; ++k )
+  {
+    const double d_k = d ( k ) ;
+    if ( Ta )
+    { for ( std::size_t i = 0 ; i < rows_A ; ++i )
+      { gsl_matrix_set ( as , i , k , a ( k , i ) * d_k ) ; } }
+    else
+    { for ( std::size_t i = 0 ; i < rows_A ; ++i )
+      { gsl_matrix_set ( as , i , k , a ( i , k ) * d_k ) ; } }
+  }
+
+  // Step 2: Multiply A_scaled by op(B) using optimized general MM
+  return MM ( A_scaled , false , b , Tb , c ) ;
+}
 
 // ============================================================================
 // Vector 
@@ -1505,6 +1868,78 @@ Ostap::Math::GSL::PLU
 // ============================================================================
 // QR decomposition with column pivoting 
 // ============================================================================
+
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  /** make QR Decomposion of matrix A : \f$ AP = QR\f$ where 
+   *  - A is input                 MxN matrix  
+   *  - P is permuutation matrix   NxN 
+   *  - Q is orthogonal matrix     MxM 
+   *  - R is right triaular matrix MxN 
+   *  - r is the reciprocal condition number of R
+   *  
+   *  @param A  (input) the matrix to decopose 
+   *  @param P  (output/update) permutation matrix P
+   *  @param Q  (output/update) orthogonal matrix Q 
+   *  @param R  (output/update) rigth triangular matrix R 
+   *  @param r  (output/update) reciprocal condition number of R
+   *  @return status code 
+   */
+  Ostap::StatusCode _PQR_
+  ( const Ostap::Math::GSL::Matrix& A ,
+    Ostap::Math::GSL::Permutation&  P , 
+    Ostap::Math::GSL::Matrix&       Q ,
+    Ostap::Math::GSL::Matrix&       R , 
+    double*                         r = nullptr )
+  {
+    // use GSL: 
+    Ostap::Math::GSL::GSL_Error_Handler sentry ;
+    //    
+    const std::size_t M = A.nRows() ;
+    const std::size_t N = A.nCols() ;
+    const std::size_t K = std::min ( M , N ) ; 
+    //
+    P.resize ( N     ) ;
+    //
+    Q.resize ( M , M ) ;
+    R.resize ( M , N , Ostap::Math::GSL::Matrix::Zero() ) ;
+    //
+    Ostap::Math::GSL::Vector      tau  { K } ;
+    Ostap::Math::GSL::Vector      norm { N } ;
+    //
+    int signum = 0 ;
+    int status = gsl_linalg_QRPT_decomp2
+      ( A.matrix      () ,
+        Q.matrix      () ,
+        R.matrix      () ,
+        tau.vector    () ,
+        P.permutation () , &signum , norm.vector() ) ;
+    //
+    if ( status )
+    {
+      gsl_error ( "PQR: Error from gsl_linalg_QRPT_decomp2" , __FILE__ , __LINE__ , status ) ;
+      return ERROR_GSL + status ;
+    }
+    //
+    if ( r )
+    {
+      Ostap::Math::GSL::Vector ws { 3 * N } ;
+      status = gsl_linalg_QRPT_rcond ( R.matrix () , r , ws.vector() ) ;
+      if ( status )
+      {
+        gsl_error ( "PQR: Error from gsl_linalg_QRPT_rcond" , __FILE__ , __LINE__ , status ) ;
+        return ERROR_GSL + status ;
+      }
+    }
+    return Ostap::StatusCode::SUCCESS ;
+  }
+  // ==========================================================================
+}
+// ============================================================================
+
+// ============================================================================
 /*  mape QR Decomposion of matrix A : \f$ AP = QR\f$ where 
  *  - A is input                 MxN matrix  
  *  - P is permuutation matrix   NxN 
@@ -1512,9 +1947,10 @@ Ostap::Math::GSL::PLU
  *  - R is right triaular matrix MxN 
  *  
  *  @param A  (input) the matrix to decopose 
+ *  @param P  (output/update) permutation matrix P
  *  @param Q  (output/update) orthogonal matrix Q 
  *  @param R  (output/update) rigth triangular matrix R 
- *  @return permutation P 
+ *  @return status code  
  */
 // ============================================================================
 Ostap::StatusCode
@@ -1523,39 +1959,33 @@ Ostap::Math::GSL::PQR
   Ostap::Math::GSL::Permutation&  P , 
   Ostap::Math::GSL::Matrix&       Q ,
   Ostap::Math::GSL::Matrix&       R )
-{
-  // use GSL: 
-  Ostap::Math::GSL::GSL_Error_Handler sentry ;
-  //    
-  const std::size_t M = A.nRows() ;
-  const std::size_t N = A.nCols() ;
-  const std::size_t K = std::min ( M , N ) ; 
-  //
-  P.resize ( N     ) ;
-  //
-  Q.resize ( M , M ) ;
-  R.resize ( M , N , Ostap::Math::GSL::Matrix::Zero() ) ;
-  //
-  Vector      tau  { K } ;
-  Vector      norm { N } ;
-  //
-  int signum = 0 ;
-  int status = gsl_linalg_QRPT_decomp2
-    ( A.matrix      () ,
-      Q.matrix      () ,
-      R.matrix      () ,
-      tau.vector    () ,
-      P.permutation () , &signum , norm.vector() ) ;
-  //
-  if ( status )
-  {
-    gsl_error ( "Error from gsl_linalg_QRPT_decomp2" , __FILE__ , __LINE__ , status ) ;
-    return ERROR_GSL + status ;
-  }
-  //
-  return Ostap::StatusCode::SUCCESS ;
-}
+{ return _PQR_ ( A , P , Q , R , nullptr ) ; }
 // ============================================================================
+/*  make QR Decomposion of matrix A : \f$ AP = QR\f$ where 
+ *  - A is input                 MxN matrix  
+ *  - P is permuutation matrix   NxN 
+ *  - Q is orthogonal matrix     MxM 
+ *  - R is right triaular matrix MxN 
+ *  - r is the reciprocal condition number of R
+ *  
+ *  @param A  (input) the matrix to decopose 
+ *  @param P  (output/update) permutation matrix P
+ *  @param Q  (output/update) orthogonal matrix Q 
+ *  @param R  (output/update) rigth triangular matrix R 
+ *  @param r  (output/update) reciprocal condition number of R
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Math::GSL::PQR
+( const Ostap::Math::GSL::Matrix& A ,
+  Ostap::Math::GSL::Permutation&  P , 
+  Ostap::Math::GSL::Matrix&       Q ,
+  Ostap::Math::GSL::Matrix&       R , 
+  double&                         r )
+{ return _PQR_ ( A , P , Q , R , &r ) ; }
+// ============================================================================
+
 
 // ============================================================================
 // LQ decomposition
@@ -1828,6 +2258,57 @@ Ostap::Math::GSL::SVD
   //
   return Ostap::StatusCode::SUCCESS ;
 }
+
+
+// ===========================================================================
+/** LLT : Cholesky decomposition of positive definite matrix \f$ A = L L^T\f$, 
+ *  Only lower triangular part of the matrix A is used.
+ *  @param A (input)  input MxM matrix
+ *  @param L (update) lower triangular matrix
+ *  @return status code
+ */  
+// ===========================================================================
+Ostap::StatusCode Ostap::Math::GSL::LLT
+( const Ostap::Math::GSL::Matrix& A , 
+  Ostap::Math::GSL::Matrix&       L ) 
+  {
+    // use GSL: 
+    Ostap::Math::GSL::GSL_Error_Handler sentry ;
+    //
+    const std::size_t M = A.nRows  () ;
+    const std::size_t N = A.nCols  () ;
+    // 
+    if ( N != M ) 
+    {
+      gsl_error ( "LLT: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;
+      return MATRIX_IS_NOT_SQUARE ;
+    }
+    //
+    if ( L.nRows() != M || L.nCols() != N ) { L.resize ( M , N , 0 ) ; }
+    //
+    Matrix aux { A } ;
+    //
+    const int status = gsl_linalg_cholesky_decomp1 ( aux.matrix() ) ;
+    if ( status ) 
+    {
+      gsl_error ( "LLT: Error from gsl_linalg_cholesky_decomp1" , __FILE__ , __LINE__ , status ) ;
+      return ERROR_GSL + status ;
+    }  
+    /// copy results to L 
+    gsl_matrix* l = L.matrix() ;
+    for ( std::size_t i = 0 ; i < M ; ++i ) 
+    {
+      for ( std::size_t j = 0 ; j <= i ; ++j ) 
+      { gsl_matrix_set ( l , i , j , gsl_matrix_get ( aux.matrix() , i , j ) ) ; }
+      for ( std::size_t j = i + 1 ; j < N ; ++j ) 
+      { gsl_matrix_set ( l , i , j , 0.0 ) ; }  
+    }
+    //
+    return Ostap::StatusCode::SUCCESS ; 
+  }
+
+
+
 // ============================================================================
 /*  Polar decompositon of the square matrix A: \f$ A = UP \f$
  *  - U ius orthogonal 

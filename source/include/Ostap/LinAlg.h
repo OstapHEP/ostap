@@ -600,17 +600,87 @@ namespace Ostap
       // ========================================================================
       
       // ========================================================================
-      /// \f$ r = a \times b\f$
-      inline Matrix product   ( const Matrix& a , const Matrix& b ) { return a.multiply ( b ) ; }
- 
-      /// \f$ r = m \times m^T\f$
-      Matrix MMT  ( const Matrix& m                     ) ;
-      /// \f$ r = m_1 \times m_2^T\f$
-      Matrix MMT  ( const Matrix& m1 , const Matrix& m2 ) ; 
-      /// \f$ r = m \times d \times m^T\f$
-      /// Matrix MDMT ( const Matrix& m  , const Vector& d  ) ; 
-      /// \f$ r = m_1 \times d \times m_2^T\f$
-      /// Matrix MDMT ( const Matrix& m1 , const Vector& d  , const Matrix& m2 ) ; 
+      /** Matrix multiplication:
+       *  \f$ C = a^{(T_a)} \times b^{(T_b)}\f$
+       *  @param a (INPUT) the first input matrix
+       *  @param Ta (INPUT) transpose the first matrix?
+       *  @param b (INPUT) the second input matrix
+       *  @param Tb (INPUT) transpose the second matrix?
+       *  @param c (OUTPUT) the output matrix
+       *  @return status code      
+       */
+      Ostap::StatusCode MM
+      ( const Matrix& a  ,
+        const bool    Ta ,
+        const Matrix& b  ,
+        const bool    Tb , 
+        Matrix&       c  ) ;
+
+      // =====================================================================
+      /** Matrix multiplication of 3 matrices:
+       *  \f$ D = a^{(T_a)} \times b^{(T_b)} \times c^{(T_c)}\f$
+       *  @param a  (INPUT) the first input matrix
+       *  @param Ta (INPUT) transpose the first matrix?
+       *  @param b  (INPUT) the second input matrix
+       *  @param Tb (INPUT) transpose the second matrix?
+       *  @param c  (INPUT) the third input matrix
+       *  @param Tc (INPUT) transpose the third matrix?
+       *  @param d  (OUTPUT) the output matrix
+       *  @return status code      
+       */
+      Ostap::StatusCode MMM
+      ( const Matrix& a  ,
+        const bool    Ta ,
+        const Matrix& b  ,
+        const bool    Tb , 
+        const Matrix& c  ,
+        const bool    Tc , 
+        Matrix&       d  ) ;
+
+      // =====================================================================
+      /**  Matrix multiplication of 4 matrices:
+       *  \f$ E = a^{(T_a)} \times b^{(T_b)} \times c^{(T_c)} \times d^{(T_d)}\f$
+       *  @param a  (INPUT) the first input matrix
+       *  @param Ta (INPUT) transpose the first matrix?
+       *  @param b  (INPUT) the second input matrix
+       *  @param Tb (INPUT) transpose the second matrix?
+       *  @param c  (INPUT) the third input matrix
+       *  @param Tc (INPUT) transpose the third matrix?
+       *  @param d  (INPUT) the fourth input matrix
+       *  @param Td (INPUT) transpose the fourth matrix?
+       *  @param e  (OUTPUT) the output matrix
+       *  @return status code      
+       */
+      Ostap::StatusCode MMMM
+      ( const Matrix& a  ,
+        const bool    Ta ,
+        const Matrix& b  ,
+        const bool    Tb , 
+        const Matrix& c  ,
+        const bool    Tc , 
+        const Matrix& d  ,
+        const bool    Td , 
+        Matrix&       e  ) ;
+
+      // =====================================================================
+      /**Matrix multiplication with a diagonal matrix in the middle:
+       *  \f$ C = a^{(T_a)} \times \text{diag}(d) \times b^{(T_b)}\f$
+       *
+       *  @param a  (INPUT) the first input matrix
+       *  @param Ta (INPUT) transpose the first matrix?
+       *  @param d  (INPUT) diagonal elements of the middle matrix
+       *  @param b  (INPUT) the second input matrix
+       *  @param Tb (INPUT) transpose the second matrix?
+       *  @param c  (OUTPUT) the output matrix
+       *  @return status code      
+       */
+      Ostap::StatusCode MDM
+      ( const Matrix& a  ,
+        const bool    Ta ,
+        const Vector& d  ,
+        const Matrix& b  ,
+        const bool    Tb ,
+        Matrix&       c  ) ; 
 
       // ========================================================================
       // Linear Algebra 
@@ -703,11 +773,12 @@ namespace Ostap
       // ========================================================================    
       /** make QR Decomposion of matrix A : \f$ AP = QR\f$ where 
        *  - A is input                 MxN matrix  
-       *  - P is permuutation matrix   NxN 
+       *  - P is permutation           N  
        *  - Q is orthogonal matrix     MxM 
        *  - R is right triaular matrix MxN 
        *  
        *  @param A  (input) the matrix to decopose 
+       *  @param P  (outpt/update) permutation matrix P
        *  @param Q  (outpt/update) orthogonal matrix Q 
        *  @param R  (outpt/update) rigth triangular matrix R 
        *  @return permutation P 
@@ -716,11 +787,32 @@ namespace Ostap
       ( const Matrix& A ,
         Permutation&  P , 
         Matrix&       Q ,
-        Matrix&       R ) ;    
+        Matrix&       R ) ;   
+    // ======================================================================== 
+      /** make QR Decomposion of matrix A : \f$ AP = QR\f$ where 
+       *  - A is input                 MxN matrix  
+       *  - P is permutation           N 
+       *  - Q is orthogonal matrix     MxM 
+       *  - R is right triaular matrix MxN
+       *  - r is a condition number of the matrix R 
+       *  
+       *  @param A  (input) the matrix to decopose 
+       *  @param P  (outpt/update) permutation matrix P
+       *  @param Q  (outpt/update) orthogonal matrix Q 
+       *  @param R  (outpt/update) rigth triangular matrix R 
+       *  @param r  (outpt/update) condition number of the matrix R
+       *  @return permutation P 
+       */
+      Ostap::StatusCode PQR
+      ( const Matrix& A ,
+        Permutation&  P , 
+        Matrix&       Q ,
+        Matrix&       R , 
+        double&       r ) ;    
       // ======================================================================
       
       // ======================================================================
-      // LQ decomposition
+      // LQ & ql decompositions
       // ======================================================================
       
       // ======================================================================
@@ -732,12 +824,6 @@ namespace Ostap
       ( const Matrix& A ,
         Matrix&       L ,
         Matrix&       Q ) ;
-      // ======================================================================
-      
-      // ======================================================================
-      // QL decomposition
-      // ======================================================================
-      
       // ======================================================================
       /** QL decomposition of matrix A: \f$ A = QL\f$, where 
        *  - Q is orthogonal MxM
@@ -798,6 +884,17 @@ namespace Ostap
         const bool    golub = true ) ;
       // ======================================================================
       
+      // ======================================================================
+      /** LLT : Cholesky decomposition of positive definite matrix \f$ A = L L^T\f$, 
+       *  Only lower triangular part of the matrix A is used.
+       *  @param A (input)  input MxM matrix
+       *  @param L (update) lower triangular matrix
+       *  @return
+       */  
+      Ostap::StatusCode LLT
+      ( const Matrix& A ,
+        Matrix&       L ) ;
+
       // ======================================================================
       // Schur' decomposition of square matrix
       // ======================================================================
