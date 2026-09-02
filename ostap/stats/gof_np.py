@@ -1062,12 +1062,12 @@ class DistanceTest(GoFnp) :
                    nToys       = 1000  ,
                    parallel    = True  , 
                    method      = "<UNSPECIFIED>" , 
-                   check_vct   = False ,
+                   check_vct   = True  ,
                    normalize   = True  , **params ) :         
         
         ## check data-vectors ?
-        self.__check_vct = True if check_vct else False
-        
+        self.__check_vct    = True if check_vct else False
+        self.__invalid_data = 0 
         ## initialize the base 
         GoFnp.__init__ ( self                            , 
                          nToys        = nToys            ,
@@ -1081,7 +1081,23 @@ class DistanceTest(GoFnp) :
     def check_vct ( self ) :
         """`check_vct` : check data vectors ? """
         return self.__check_vct
-        
+
+    # =========================================================================
+    @property
+    def invalid_data ( self ) :
+        """`invaild_data` : number of cases where data-vector is invalid
+        """
+        return self.__invalid_data
+
+    # ==================================================================================
+    @property
+    def config ( self ) :
+        """`config` : get all configuration parameters"""
+        conf = {} 
+        conf.update ( super().config )
+        if self.check_vct : conf [ 'invalid_data'] = self.invalid_data
+        return conf
+    
     # =========================================================================
     ## Are weights supported by this estimator?
     @property
@@ -1106,8 +1122,13 @@ class DistanceTest(GoFnp) :
         """ Convert numpy-array statistics into `Ostap.Math.SVectorWithError`
         - see `Ostap.Math.SVectorWithError`
         """
-        return np2vct ( data , weight = weight )
-                        
+        vct = np2vct ( data , weight = weight )
+        if self.check_vct and not vct.valid () :
+            self.__invalid_data += 1 
+            if not self.silent :
+                logger.warning ( '%s: data-vector is not valid #%d' % ( typename ( self ) , self.__invalid_data ) ) 
+        return vct 
+                                    
 # =============================================================================
 ## @class Chi2
 #  Use Chi2 distance to discriminiate the dataset
