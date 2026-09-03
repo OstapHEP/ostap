@@ -215,8 +215,8 @@ Ostap::Math::GSL::EigenSystem::eigenVectors
   if ( !m_ws_symmv )
   {
     m_ws_symmv  = gsl_eigen_symmv_alloc ( N ) ;    
-    Ostap::Assert ( m_ws_symm ,
-                    "(GSL)EigenSYMMS workspace allocation failure" ,
+    Ostap::Assert ( m_ws_symmv ,
+                    "(GSL)EigenSYMMV workspace allocation failure" ,
                     "Ostap::Math::GSL::EigenSystem::eigenVectors"  ,
                     WORKSPACE_ALLOCATION_FAILURE                   , __FILE__ , __LINE__ ) ;
   }

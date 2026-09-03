@@ -1147,6 +1147,300 @@ Ostap::StatusCode Ostap::Math::GSL::MDM
   return MM ( A_scaled , false , b , Tb , c ) ;
 }
 
+// ===========================================================================
+/* Element-wise multiplication of two diagonal matrices: d = a * b
+ *  @param a [in]  first diagonal vector
+ *  @param b [in]  second diagonal vector
+ *  @param d [out] resulting diagonal vector
+ *  @return status code (Ostap::StatusCode::SUCCESS on success)
+ */
+// ===========================================================================
+Ostap::StatusCode 
+Ostap::Math::GSL::DD 
+( const Ostap::Math::GSL::Vector& a , 
+  const Ostap::Math::GSL::Vector& b , 
+  Ostap::Math::GSL::Vector&       d )
+{
+  if ( a.size () != b.size() )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::DD: vector size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  // 1. Create a copy of vector 'a' into a temporary object 'tmp'
+  //    to guarantee safety against parameter aliasing (d == a or d == b)
+  Vector tmp { a } ;
+  //
+  // 2. Delegate element-wise multiplication to GSL C-API: tmp_i = tmp_i * b_i
+  const int status = gsl_vector_mul ( tmp.vector () , b.vector () ) ;
+  if ( status ) 
+  { 
+    gsl_error ( "Ostap::Math::GSL::DD: gsl_vector_mul execution failed" , __FILE__ , __LINE__ , status ) ; 
+    return ERROR_GSL + status ;
+  }
+  //     
+  // 3. Move temporary result to output parameter d (O(1) pointer swap)
+  d.swap ( tmp ) ; 
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+
+
+// ===========================================================================
+// Symmetric matrix scaling shortcut: r = d * m * d
+// ===========================================================================
+/* Symmetric scaling: r = d * m * d
+ *  @param d [in]  diagonal vector
+ *  @param m [in]  input matrix
+ *  @param r [out] resulting matrix
+ *  @return status code
+ */
+// ===========================================================================
+Ostap::StatusCode 
+Ostap::Math::GSL::DMD 
+( const Ostap::Math::GSL::Vector& d , 
+  const Ostap::Math::GSL::Matrix& m , 
+  Ostap::Math::GSL::Matrix&       r )
+{ return DMD ( d , m , d , r ) ; }
+
+
+// ===========================================================================
+// General asymmetric matrix scaling: r = a * m * b
+// ===========================================================================
+/* Asymmetric scaling: r = a * m * b
+ *  @param a [in]  left diagonal vector (scales rows)
+ *  @param m [in]  input matrix
+ *  @param b [in]  right diagonal vector (scales columns) 
+ *  @param r [out] resulting matrix
+ *  @return status code
+ */
+// ===========================================================================
+Ostap::StatusCode 
+Ostap::Math::GSL::DMD 
+( const Ostap::Math::GSL::Vector& a , 
+  const Ostap::Math::GSL::Matrix& m , 
+  const Ostap::Math::GSL::Vector& b , 
+  Ostap::Math::GSL::Matrix&       r )
+{
+  const std::size_t rows = m.nRows () ;
+  const std::size_t cols = m.nCols () ;
+  //
+  if ( a.size() != rows )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::DMD: vector/matrix  size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+   if ( b.size() != cols )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::DMD: matrix/vector size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  // 1. Calculate into a temporary matrix to prevent aliasing (e.g. r == m)
+  Matrix tmp { rows , cols } ;
+  gsl_matrix* t = tmp.matrix() ;
+  for ( std::size_t i = 0 ; i < rows ; ++i ) 
+  {
+    const double scale_i = a [ i ] ;
+    for ( std::size_t j = 0 ; j < cols ; ++j ) 
+    {
+      const double scale = scale_i * b [ j ] ;
+      gsl_matrix_set ( t , i , j , scale * m ( i , j ) ) ;
+    }
+  }
+  //
+  // 2. Safely move the temporary result to output matrix r
+  r.swap ( tmp ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+
+// ===========================================================================
+/** Apply permutation transformation to a square matrix: R = P * M * P^T
+ *  
+ *  @param p [in]  Permutation matrix P
+ *  @param m [in]  Square matrix M (N x N)
+ *  @param r [out] Resulting permuted matrix (N x N)
+ *  @return Status code (Ostap::StatusCode::SUCCESS on success)
+ *
+ *  @note Safe against argument aliasing (e.g., PMPt(p, m, m))
+ */
+// ===========================================================================
+Ostap::StatusCode Ostap::Math::GSL::PMP
+( const Ostap::Math::GSL::Permutation& P ,
+  const Ostap::Math::GSL::Matrix&      m ,
+  Ostap::Math::GSL::Matrix&            r ) 
+{ return PMP ( P , m , P , r ) ; } 
+
+// ===========================================================================
+/*  General asymmetric permutation transformation: R = Pl * M * Pr^T
+ *  
+ *  @param pl [in]  Left permutation matrix Pl (size matching M.k1())
+ *  @param m  [in]  Input matrix M (M x N)
+ *  @param pr [in]  Right permutation matrix Pr (size matching M.k2())
+ *  @param r  [out] Resulting permuted matrix (M x N)
+ *  @return Status code (Ostap::StatusCode::SUCCESS on success)
+ *
+ *  @note Safe against argument aliasing (e.g., PLMPrT(pl, m, pr, m))
+ */
+// ========================================================================
+Ostap::StatusCode 
+Ostap::Math::GSL::PMP
+( const Ostap::Math::GSL::Permutation& PL ,
+  const Ostap::Math::GSL::Matrix&      m  ,
+  const Ostap::Math::GSL::Permutation& PR ,
+  Ostap::Math::GSL::Matrix&            r  ) 
+{
+  //
+  const std::size_t rows = m.nRows () ;
+  const std::size_t cols = m.nCols () ;
+  //
+  if ( PL.size() != rows )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::PMP: permutation/matrix  size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+   if ( PR.size() != cols )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::PMP: matrix/permutation size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  // 1. Temporary buffer for aliasing safety (e.g., PLMPrT(pl, m, pr, m))
+  Matrix tmp { rows , cols } ;
+
+  // 2. Direct indexing: R(i, j) = M( Pl[i], Pr[j] )
+  const gsl_permutation* pl = PL .permutation () ;
+  const gsl_permutation* pr = PR .permutation () ;
+  gsl_matrix*            t  = tmp.matrix      () ;  
+  const gsl_matrix*      a  = m  .matrix      () ;
+  for ( std::size_t i = 0 ; i < rows ; ++i )
+  {
+    const std::size_t pli = pl->data[i] ;
+    for ( std::size_t j = 0 ; j < cols ; ++j )
+    {
+      const std::size_t prj = pr->data[j] ;
+      const double      val = gsl_matrix_get ( a , pli , prj ) ;
+      gsl_matrix_set ( t , i , j , val ) ;
+    }
+  }
+
+  // 3. Move result to output matrix
+  r.swap ( tmp ) ;
+  // 
+  return Ostap::StatusCode::SUCCESS ;
+}
+
+// ===========================================================================
+/** General asymmetric combination: 
+ *  \f$ R = P_l \cdot D_1 \cdot M \cdot D_2 \cdot P_r^T \f$
+ *  
+ *  @param pl [in]  Left permutation matrix Pl
+ *  @param d1 [in]  Left diagonal vector D1
+ *  @param m  [in]  Input matrix A (M x N)
+ *  @param d2 [in]  Right diagonal vector D2
+ *  @param pr [in]  Right permutation matrix Pr
+ *  @param r  [out] Resulting matrix R (M x N)
+ *  @return Status code
+ */
+// =========================================================================== 
+Ostap::StatusCode Ostap::Math::GSL::PDM 
+( const Ostap::Math::GSL::Permutation& pl ,
+  const Ostap::Math::GSL::Vector&      d1 ,
+  const Ostap::Math::GSL::Matrix&      m  ,
+  const Ostap::Math::GSL::Vector&      d2 ,
+  const Ostap::Math::GSL::Permutation& pr ,
+  Ostap::Math::GSL::Matrix&            r  ) 
+{
+  //
+  const std::size_t rows = m.nRows () ;
+  const std::size_t cols = m.nCols () ;
+  //
+  if ( pl.size() != rows )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::PDM: permutation/matrix  size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  if ( pr.size() != cols )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::PDM: matrix/permutation size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  if ( pl.size() != d1.size()  )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::PDM: permutation/vector size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  if ( pr.size() != d2.size() )
+  {
+    const int status = GSL_EBADLEN ;
+    gsl_error ( "Ostap::Math::GSL::PDM: vector/permutation size mismatch" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+
+  // 1. Temporary matrix to prevent argument aliasing (e.g. r == a)
+  Matrix tmp { rows , cols } ;
+
+  // 2. Direct single-pass index & scaling mapping
+  const gsl_permutation* lp = pl .permutation () ;
+  const gsl_permutation* rp = pr .permutation () ;
+  const gsl_matrix*      a  = m  .matrix      () ;
+  gsl_matrix*            t  = tmp.matrix      () ;
+  const gsl_vector*      s1 = d1 .vector      () ;
+  const gsl_vector*      s2 = d2 .vector      () ;      
+  for ( std::size_t i = 0 ; i < rows ; ++i )
+  {
+    const std::size_t pli     = lp -> data [ i ] ;
+    const double      scale_i = gsl_vector_get ( s1 , pli ) ;
+    for ( std::size_t j = 0 ; j < cols ; ++j )
+    {
+      const std::size_t prj     = rp -> data [ j ] ;
+      const double      scale_j = gsl_vector_get ( s2  , prj ) ;
+      const double      val     = scale_i * gsl_matrix_get ( a , pli , prj ) * scale_j ;
+      gsl_matrix_set ( t , i , j , val );
+    }
+  }
+
+  // 3. Move temporary buffer to output matrix
+  r.swap ( tmp ) ; 
+
+  return Ostap::StatusCode::SUCCESS ;
+}
+
+// ===========================================================================
+/** Symmetric combination of permutation and diagonal scaling: 
+ *  \f$ R = P \cdot D \cdot M \cdot D \cdot P^T \f$
+ *  
+ *  @param p [in]  Permutation matrix P
+ *  @param d [in]  Diagonal vector D
+ *  @param m [in]  Input square matrix A (N x N)
+ *  @param r [out] Resulting matrix R (N x N)
+ *  @return Status code (Ostap::StatusCode::SUCCESS on success)
+ *
+ *  @note Safe against argument aliasing (e.g., PDADPt(p, d, a, a))
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::GSL::PDM 
+( const Ostap::Math::GSL::Permutation& p  ,
+  const Ostap::Math::GSL::Vector&      d  ,
+  const Ostap::Math::GSL::Matrix&      m  ,
+  Ostap::Math::GSL::Matrix&            r  ) 
+{ return PDM  ( p , d , m , d , p , r ) ; } 
+ 
 // ============================================================================
 /*  Compute Moore-Penrose Pseudoinverse using SVD & MDM:
  *  \f$ A^+ = V \times \text{diag}(\sigma^+) \times U^T \f$
@@ -2550,42 +2844,111 @@ Ostap::Math::GSL::SVD
 Ostap::StatusCode Ostap::Math::GSL::LLT
 ( const Ostap::Math::GSL::Matrix& A , 
   Ostap::Math::GSL::Matrix&       L ) 
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  // 
+  if ( N != M ) 
   {
-    // use GSL: 
-    Ostap::Math::GSL::GSL_Error_Handler sentry ;
-    //
-    const std::size_t M = A.nRows  () ;
-    const std::size_t N = A.nCols  () ;
-    // 
-    if ( N != M ) 
-    {
-      gsl_error ( "LLT: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;
-      return MATRIX_IS_NOT_SQUARE ;
-    }
-    //
-    if ( L.nRows() != M || L.nCols() != N ) { L.resize ( M , N , 0 ) ; }
-    //
-    Matrix aux { A } ;
-    //
-    const int status = gsl_linalg_cholesky_decomp1 ( aux.matrix() ) ;
-    if ( status ) 
-    {
-      gsl_error ( "LLT: Error from gsl_linalg_cholesky_decomp1" , __FILE__ , __LINE__ , status ) ;
-      return ERROR_GSL + status ;
-    }  
-    /// copy results to L 
-    gsl_matrix* l = L.matrix() ;
-    for ( std::size_t i = 0 ; i < M ; ++i ) 
-    {
-      for ( std::size_t j = 0 ; j <= i ; ++j ) 
-      { gsl_matrix_set ( l , i , j , gsl_matrix_get ( aux.matrix() , i , j ) ) ; }
-      for ( std::size_t j = i + 1 ; j < N ; ++j ) 
-      { gsl_matrix_set ( l , i , j , 0.0 ) ; }  
-    }
-    //
-    return Ostap::StatusCode::SUCCESS ; 
+    gsl_error ( "LLT: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;
+    return MATRIX_IS_NOT_SQUARE ;
   }
+  //
+  if ( L.nRows() != M || L.nCols() != N ) { L.resize ( M , N , 0 ) ; }
+  //
+  Matrix aux { A } ;
+  //
+  const int status = gsl_linalg_cholesky_decomp1 ( aux.matrix() ) ;
+  if ( status ) 
+  {
+    gsl_error ( "LLT: Error from gsl_linalg_cholesky_decomp1" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }  
+  /// copy results to L 
+  gsl_matrix* l = L.matrix() ;
+  for ( std::size_t i = 0 ; i < M ; ++i ) 
+  {
+    for ( std::size_t j = 0 ; j <= i ; ++j ) 
+    { gsl_matrix_set ( l , i , j , gsl_matrix_get ( aux.matrix() , i , j ) ) ; }
+    for ( std::size_t j = i + 1 ; j < N ; ++j ) 
+    { gsl_matrix_set ( l , i , j , 0.0 ) ; }  
+  }
+  //
+   return Ostap::StatusCode::SUCCESS ; 
+}
 
+// ===========================================================================
+/* LDLT : Cholesky decomposition of positive definite matrix 
+ * \f$ PSASP^T = L D L^T\f$, 
+ *  Only lower triangular part of the matrix A is used.
+ *  @param A (input)  input MxM matrix
+ *  @param S (output/update) scale vector/diagonal matrix 
+ *  @param P (output/update) permutation 
+ *  @param L (utput/update)  lower triangular matrix
+ *  @param D (output/update) vector/diagonal matrix   
+ *  @return status code
+ */
+// ===========================================================================  
+Ostap::StatusCode Ostap::Math::GSL::LDLT
+( const Ostap::Math::GSL::Matrix& A ,
+  Ostap::Math::GSL::Vector&       S ,
+  Ostap::Math::GSL::Permutation&  P , 
+  Ostap::Math::GSL::Matrix&       L , 
+  Ostap::Math::GSL::Vector&       D ) 
+{
+
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  const std::size_t M = A.nRows () ;
+  const std::size_t N = A.nCols () ;
+  //
+  if ( N != M ) 
+  {
+    gsl_error ( "LDLT: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;
+    return MATRIX_IS_NOT_SQUARE ;
+  }
+  //
+  if ( L.nRows() != M || L.nCols() != N ) { L.resize ( M , N , 0 ) ; }
+  //
+  Matrix      a { A } ;
+  Permutation p { N } ;
+  if ( S.size() != N ) { S.resize ( N ) ; } 
+  if ( D.size() != N ) { D.resize ( N ) ; } 
+  const int status = gsl_linalg_pcholesky_decomp2 ( a.matrix      () , 
+                                                    p.permutation () ,  
+                                                    S.vector      () ) ;
+  if ( status ) 
+  {
+    gsl_error ( "LLT: Error from gsl_linalg_pcholesky_decomp2" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }  
+
+  /// copy results to L and D  
+  gsl_matrix* l = L.matrix () ;
+  gsl_vector* d = D.vector () ;
+  gsl_matrix* m = a.matrix () ; 
+  for ( std::size_t i = 0 ; i < M ; ++i ) 
+  {
+    // lower triangle 
+    for ( std::size_t j = 0 ; j < i ; ++j ) 
+    { gsl_matrix_set ( l , i , j , gsl_matrix_get ( m , i , j ) ) ; }
+    // unit diagonal 
+    const double aii = gsl_matrix_get( m , i , i ) ;
+    gsl_vector_set ( d , i , aii   ) ;
+    gsl_matrix_set ( l , i , i , 1 ) ;
+    // above diagonal
+    for ( std::size_t j = i + 1 ; j < N ; ++j ) 
+    { gsl_matrix_set ( l , i , j , 0.0 ) ; }  
+  }
+  //
+  P.swap ( p ) ;
+  // 
+  return Ostap::StatusCode::SUCCESS ;
+}
 
 
 // ============================================================================

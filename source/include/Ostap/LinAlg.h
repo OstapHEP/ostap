@@ -76,8 +76,8 @@ namespace Ostap
           /// create iterator 
           const_iterator 
           ( const gsl_matrix* m   = nullptr , 
-            std::size_t       row = 0       , 
-            std::size_t col = 0 )
+            const std::size_t row = 0       , 
+            const std::size_t col = 0       )
             : m_mat ( m   ) 
             , m_row ( row ) 
             , m_col ( col ) {}
@@ -167,6 +167,38 @@ namespace Ostap
         /// create a permutation matrix
         explicit Matrix ( const Permutation& ) ;
         // =======================================================================  
+        /** Create the matrix from the shape and continious buffer:
+         *  - to be replaced wth std::span later
+         *  
+         *  For <code>N1 == N2</code> (square matrix) :
+         *  if <code>buffer.size() == N1 * ( N1 + 1 ) / 2 </code> 
+         *  the matrix is treated as symmetric
+         */
+        template <class SCALAR , 
+                  typename std::enable_if<Ostap::is_convertible_to_double<SCALAR>::value, bool>::type = true>            
+        Matrix
+        ( const std::size_t N1     , 
+          const std::size_t N2     , 
+          const SCALAR*     buffer , 
+          const std::size_t size   ) 
+          : Matrix ( N1 , N2)
+        { this -> fill_impl ( buffer , size ) ; }
+        // ========================================================================
+        /** Create square matrix from the shape and continious buffer:
+         *  - to be replaced wth std::span later
+         *
+         *  If <code>buffer.size() == N * ( N + 1 ) / 2 </code> 
+         *  the matrix is treated as symmetric
+         */
+        template <class SCALAR , 
+                  typename std::enable_if<Ostap::is_convertible_to_double<SCALAR>::value, bool>::type = true>            
+        Matrix
+        ( const std::size_t N      ,  
+          const SCALAR*     buffer ,
+          const std::size_t size   ) 
+          : Matrix ( N )
+        { this -> fill_impl ( buffer , size ) ; }
+        // =======================================================================
         /** Create the matrix from the shape and continious buffer:
          *  - to be replaced wth std::span later
          *  
@@ -412,9 +444,9 @@ namespace Ostap
       private :
         // ========================================================================
         /// fill the matrix from continious buffer 
-        template <class DATA>
+        template <class SCALAR>
         void fill_impl
-        ( const DATA*       buffer , 
+        ( const SCALAR*     buffer , 
           const std::size_t size   ) ;
         // ========================================================================
       private:
@@ -916,6 +948,116 @@ namespace Ostap
         const bool    Tb ,
         Matrix&       c  ) ; 
 
+      // ======================================================================
+      // DD operations (Diagonal x Diagonal)
+      // ======================================================================
+
+      /** Element-wise multiplication of two diagonal matrices: d = a * b
+       *  @param a [in]  first diagonal vector
+       *  @param b [in]  second diagonal vector
+       *  @param d [out] resulting diagonal vector
+       *  @return status code (Ostap::StatusCode::SUCCESS on success)
+       */
+      Ostap::StatusCode DD
+      ( const Vector& a , 
+        const Vector& b , 
+        Vector&       d ) ;
+
+      // ======================================================================
+      // DMD operations (Diagonal x Matrix x Diagonal)
+      // ======================================================================
+
+      /** Symmetric scaling: r = d * m * d
+       *  @param d [in]  diagonal vector
+       *  @param m [in]  input matrix
+       *  @param r [out] resulting matrix
+       *  @return status code
+       */
+      Ostap::StatusCode DMD 
+      ( const Vector& d , 
+        const Matrix& m , 
+        Matrix&       r ) ;
+
+      /** Asymmetric scaling: r = a * m * b
+       *  @param a [in]  left diagonal vector (scales rows)
+       *  @param m [in]  input matrix
+       *  @param b [in]  right diagonal vector (scales columns)
+       *  @param r [out] resulting matrix
+       *  @return status code
+       */
+      Ostap::StatusCode DMD
+      ( const Vector& a , 
+        const Matrix& m , 
+        const Vector& b , 
+        Matrix&       r ) ;
+
+      /** Apply permutation transformation to a square matrix: R = P * M * P^T
+       *  
+       *  @param p [in]  Permutation matrix P
+       *  @param m [in]  Square matrix M (N x N)
+       *  @param r [out] Resulting permuted matrix (N x N)
+       *  @return Status code (Ostap::StatusCode::SUCCESS on success)
+       *
+       *  @note Safe against argument aliasing (e.g., PMPt(p, m, m))
+       */
+      Ostap::StatusCode PMP 
+      ( const Permutation& P ,
+        const Matrix&      m ,
+        Matrix&            r ) ;
+
+      /** General asymmetric permutation transformation: R = Pl * M * Pr^T
+       *  
+       *  @param pl [in]  Left permutation matrix Pl (size matching M.k1())
+       *  @param m  [in]  Input matrix M (M x N)
+       *  @param pr [in]  Right permutation matrix Pr (size matching M.k2())
+       *  @param r  [out] Resulting permuted matrix (M x N)
+       *  @return Status code (Ostap::StatusCode::SUCCESS on success)
+       *
+       *  @note Safe against argument aliasing (e.g., PLMPrT(pl, m, pr, m))
+       */
+      Ostap::StatusCode PMP 
+      ( const Permutation& PL ,
+        const Matrix&      m  ,
+        const Permutation& PR ,
+        Matrix&            r  ) ;
+
+      // ============================================================================
+      /** General asymmetric combination: 
+       *  \f$ R = P_l \cdot D_1 \cdot M \cdot D_2 \cdot P_r^T \f$
+       *  
+       *  @param pl [in]  Left permutation matrix Pl
+       *  @param d1 [in]  Left diagonal vector D1
+       *  @param m  [in]  Input matrix A (M x N)
+       *  @param d2 [in]  Right diagonal vector D2
+       *  @param pr [in]  Right permutation matrix Pr
+       *  @param r  [out] Resulting matrix R (M x N)
+       *  @return Status code
+       */
+      Ostap::StatusCode PDM 
+      ( const Permutation& pl ,
+        const Vector&      d1 ,
+        const Matrix&      m  ,
+        const Vector&      d2 ,
+        const Permutation& pr ,
+        Matrix&            r  ) ;
+
+      /** Symmetric combination of permutation and diagonal scaling: 
+       *  \f$ R = P \cdot D \cdot M \cdot D \cdot P^T \f$
+       *  
+       *  @param p [in]  Permutation matrix P
+       *  @param d [in]  Diagonal vector D
+       *  @param m [in]  Input square matrix A (N x N)
+       *  @param r [out] Resulting matrix R (N x N)
+       *  @return Status code (Ostap::StatusCode::SUCCESS on success)
+       *
+       *  @note Safe against argument aliasing (e.g., PDADPt(p, d, a, a))
+       */
+      Ostap::StatusCode PDM  
+      ( const Permutation& p  ,
+        const Vector&      d  ,
+        const Matrix&      m  ,
+        Matrix&            r  ) ;
+      
       // ============================================================================
       /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
        *  @param a     (INPUT)  Input matrix A (m x n)
@@ -1058,7 +1200,7 @@ namespace Ostap
       // ======================================================================
       
       // ======================================================================
-      // LQ & ql decompositions
+      // LQ & QL decompositions
       // ======================================================================
       
       // ======================================================================
@@ -1140,6 +1282,24 @@ namespace Ostap
       Ostap::StatusCode LLT
       ( const Matrix& A ,
         Matrix&       L ) ;
+
+      // ======================================================================
+      /** LDLT : Cholesky decomposition of positive definite matrix 
+       * \f$ PSASP^T = L D L^T\f$, 
+       *  Only lower triangular part of the matrix A is used.
+       *  @param A (input)  input MxM matrix
+       *  @param S (output/update) scale vector/diagonal matrix 
+       *  @param P (output/update) permutation 
+       *  @param L (utput/update)  lower triangular matrix
+       *  @param D (output/update) vector/diagonal matrix   
+       *  @return status code
+       */  
+      Ostap::StatusCode LDLT
+      ( const Matrix& A ,
+        Vector&       S ,
+        Permutation&  P , 
+        Matrix&       L , 
+        Vector&       D ) ;
 
       // ======================================================================
       // Schur' decomposition of square matrix
