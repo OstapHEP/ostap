@@ -27,6 +27,14 @@ ClassImp ( Ostap::BLOB ) ; // =================================================
 // ============================================================================
 #endif // =====================================================================
 // ============================================================================
+namespace
+{
+#if defined(OSTAP_HAS_STD_BYTE) && OSTAP_HAS_STD_BYTE
+  static_assert ( sizeof ( std::byte ) == sizeof ( Char_t ) ,"Mismatch in std::byte/Char_t size!" ) ;
+  static_assert ( sizeof ( std::byte ) == sizeof ( char   ) ,"Mismatch in std::byte/char size!" ) ;
+#endif // OSTAP_HAS_STD_BYTE
+}
+// ========================================================================
 // Standard constructor
 // ============================================================================
 Ostap::BLOB::BLOB

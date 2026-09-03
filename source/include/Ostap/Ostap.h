@@ -46,7 +46,6 @@
 #include "Ostap/ECDF.h"
 #include "Ostap/EPDF.h"
 #include "Ostap/EigenSystem.h"
-#include "Ostap/EigenSystem.icpp"
 #include "Ostap/Error2Exception.h"
 #include "Ostap/Exception.h"
 #include "Ostap/Extrema.h"

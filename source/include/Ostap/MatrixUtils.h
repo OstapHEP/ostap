@@ -1857,9 +1857,9 @@ namespace Ostap
     { return false ; }
     // ========================================================================
     /** Can this matrix be symmetric & positive-definite ?
+     *  - Finite 
      *  - Diagonal elements are finite and positive
      *  - Symmetric
-     *  - Off-diagonal elements are finite
      *  - have CholeskyDecomposition
      */
     template <class T, unsigned int D, class R>
@@ -1938,7 +1938,10 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
-    /** Can this matrix be a covariance matrix? 
+    /** Can this matrix be a covariance matrix?
+     *  - Square 
+     *  - Finite 
+     *  - Symmetrical 
      *  - Diagonal elements are finite and positive
      *  - Off-diagonal elements are finite and not too large 
      *  - have CholeskyDecomposition
@@ -1949,8 +1952,10 @@ namespace Ostap
     { return false ; }    
     // ========================================================================
     /** Can this matrix be a covariance matrix? 
-     *  - Diagonal elements are finite and positive
+     *  - Square 
+     *  - Finite 
      *  - Symmetrical 
+     *  - Diagonal elements are finite and positive
      *  - Off-diagonal elements are finite and not too large 
      *  - have CholeskyDecomposition
      */
@@ -2073,7 +2078,7 @@ namespace Ostap
     }
     
     // ========================================================================
-    /** Get the symmetric part of the symmetric matrix
+    /** Get the symmetric part of the symmetric matrix (trivial) 
      *  @code
      *  MATRIX m = ...
      *  MATRIX s = symmetric_part ( m ) ;
@@ -2085,7 +2090,7 @@ namespace Ostap
     { return mtrx; }
 
     // ========================================================================
-    /** Get the skew part of the general matrix
+    /** Get the skew part of the general matrix 
      *  @code
      *  MATRIX m = ...
      *  auto   s = skew_part ( m ) ;

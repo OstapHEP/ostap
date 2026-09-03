@@ -22,9 +22,9 @@ namespace
   static_assert ( std::numeric_limits<Ostap::EventIndex>::is_integer           ,
                   "numeric_limits<Ostap::EventIndex>      is NOT integer!"     ) ;
   static_assert ( 0 < TVirtualTreePlayer::kMaxEntries                          ,
-		  "TVirtualTreePlayer::kMaxEntries is not positive!"           ) ;
+                  "TVirtualTreePlayer::kMaxEntries is not positive!"           ) ;
   static_assert ( TVirtualTreePlayer::kMaxEntries <= Ostap::LastEvent          ,
-		  "numeric_limits<Ostap::EventIndex>::max is too small"        ) ;
+                  "numeric_limits<Ostap::EventIndex>::max is too small"        ) ;
   // =========================================================================
   static_assert ( std::numeric_limits<Ostap::DataType>::is_specialized        ,
                   "numeric_limits<Ostap::DataType>      is NOT specialized!"  ) ;

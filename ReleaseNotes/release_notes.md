@@ -5,6 +5,9 @@
    1. extend `TTree.valid_expressions`
    1. add variable check for `TTre.slice` and `TTree.table`
    1. couple of tweaks in `TTree.table`
+   1. large improvements for Linear Algebra
+   1. make use of `sdt::byte` and `std::span`
+   1. completely rewrite `EigenSystem`
    
 ## Bug fixes
 

@@ -138,6 +138,7 @@ namespace
     MATRIX_ALLOCATION_FAILURE      = 920 ,
     VECTOR_ALLOCATION_FAILURE      = 921 ,    
     PERMUTATION_ALLOCATION_FAILURE = 922 ,
+    WORKSPACE_ALLOCATION_FAILURE   = 923 ,
     MATRIX_IS_NOT_SQUARE           = 925 , 
     GSL_VERSION_IS_TOO_OLD         = 930 , 
     // =========================================================================

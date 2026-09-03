@@ -16,18 +16,11 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/StatusCode.h"
+#include "Ostap/Span.h"
+#include "Ostap/Types.h"
+#include "Ostap/Buffer.h"
 #include "Ostap/Math.h"
-// ============================================================================
-// forward declarations
-// ============================================================================
-namespace Ostap
-{
-  namespace Utils
-  { 
-    template <class DATA> class Buffer ; 
-  }
-}
+#include "Ostap/StatusCode.h"
 // ============================================================================
 namespace Ostap 
 {
@@ -63,7 +56,7 @@ namespace Ostap
         struct Zero {} ;
         struct Id   {} ;
         // ====================================================================
-      public :
+      public : // iterator 
         // ====================================================================
         /** @class const_iterator
          *  Row-major forward iterator for GSL matrix
@@ -71,12 +64,16 @@ namespace Ostap
         class const_iterator 
         {
         public:
+          // =================================================================
           using iterator_category = std::forward_iterator_tag ;
           using value_type        = double ;
           using difference_type   = std::ptrdiff_t ;
           using pointer           = const double* ;
           using reference         = double ;
-
+          // =================================================================          
+        public:
+          // =================================================================
+          /// create iterator 
           const_iterator 
           ( const gsl_matrix* m   = nullptr , 
             std::size_t       row = 0       , 
@@ -84,11 +81,11 @@ namespace Ostap
             : m_mat ( m   ) 
             , m_row ( row ) 
             , m_col ( col ) {}
-
-          reference operator* () const 
+          /// dereference iterator 
+          inline reference operator* () const 
           { return gsl_matrix_get ( m_mat , m_row , m_col ) ;  }
-
-          const_iterator& operator++ () 
+          /// advance iterator 
+          inline const_iterator& operator++ () 
           {
             if ( !m_mat ) { return *this ; }
             ++m_col ;
@@ -99,29 +96,33 @@ namespace Ostap
             }
             return *this ;
           }
-
-          const_iterator operator++ ( int ) 
+          /// advance iterator 
+          inline const_iterator operator++ ( int ) 
           {
             const_iterator tmp = *this ;
             ++(*this) ;
             return tmp ;
           }
-
-          bool operator== ( const const_iterator& other ) const 
+          /// iterator equality 
+          inline bool operator== ( const const_iterator& other ) const 
           {
             if ( m_mat != other.m_mat ) return false ;
             if ( m_mat->size1 <= m_row  && other.m_mat->size1 <= other.m_row ) { return true ; } 
             return m_row == other.m_row && m_col == other.m_col ;
           }
-
-          bool operator!= ( const const_iterator& other ) const 
+          /// iterator non-equality 
+          inline bool operator!= ( const const_iterator& other ) const 
           { return !(*this == other) ; }
-
+          // =====================================================================
         private:
-
-          const gsl_matrix* m_mat { nullptr } ;
-          std::size_t       m_row { 0 } ;
-          std::size_t       m_col { 0 } ;
+          // =====================================================================
+          /// the matrix 
+          const gsl_matrix* m_mat { nullptr } ; ///<  the matrix
+          /// row index 
+          std::size_t       m_row { 0 }       ; ///< row index
+          /// column index 
+          std::size_t       m_col { 0 }       ; ///< column index
+          // =====================================================================
         } ;
         // ======================================================================
       public : 
@@ -146,8 +147,7 @@ namespace Ostap
         Matrix
         ( const std::size_t  N1      , 
           const std::size_t  N2      , 
-          const Id        /* id  */  ) ;
-      
+          const Id        /* id  */  ) ;      
         // =====================================================================
         // Square matrix 
         // ======================================================================
@@ -167,21 +167,69 @@ namespace Ostap
         /// create a permutation matrix
         explicit Matrix ( const Permutation& ) ;
         // =======================================================================  
-        /// from the shape and continious buffer- to be replaced wth std::span later 
-        template <class DATA> 
+        /** Create the matrix from the shape and continious buffer:
+         *  - to be replaced wth std::span later
+         *  
+         *  For <code>N1 == N2</code> (square matrix) :
+         *  if <code>buffer.size() == N1 * ( N1 + 1 ) / 2 </code> 
+         *  the matrix is treated as symmetric
+         */
+        template <class SCALAR , 
+                  typename std::enable_if<Ostap::is_convertible_to_double<SCALAR>::value, bool>::type = true>            
+        Matrix
+        ( const std::size_t                   N1     , 
+          const std::size_t                   N2     , 
+          const Ostap::Utils::Buffer<SCALAR>& buffer ) 
+          : Matrix ( N1 , N2)
+        { this -> fill_impl ( buffer.data () , buffer.size () ) ; }
+        // ========================================================================
+        /** Create square matrix from the shape and continious buffer:
+         *  - to be replaced wth std::span later
+         *
+         *  If <code>buffer.size() == N * ( N + 1 ) / 2 </code> 
+         *  the matrix is treated as symmetric
+         */
+        template <class SCALAR , 
+                  typename std::enable_if<Ostap::is_convertible_to_double<SCALAR>::value, bool>::type = true>            
+        Matrix
+        ( const std::size_t                   N      ,  
+          const Ostap::Utils::Buffer<SCALAR>& buffer ) 
+          : Matrix ( N )
+        { this -> fill_impl ( buffer.data () , buffer.size () ) ; }
+        // =======================================================================
+#if defined(OSTAP_HAS_STD_SPAN) && OSTAP_HAS_STD_SPAN
+        // ======================================================================
+        /** Create the matrix from the shape and continious buffer:
+         *  - to be replaced wth std::span later
+         *  
+         *  For <code>N1 == N2</code> (square matrix) :
+         *  if <code>buffer.size() == N1 * ( N1 + 1 ) / 2 </code> 
+         *  the matrix is treated as symmetric
+         */
+        template <class SCALAR, 
+                  typename std::enable_if<Ostap::is_convertible_to_double<SCALAR>::value, bool>::type = true>            
         Matrix
         ( const std::size_t                 N1     , 
           const std::size_t                 N2     , 
-          const Ostap::Utils::Buffer<DATA>& buffer ) 
+          const std::span<SCALAR>&          buffer ) 
           : Matrix ( N1 , N2)
         { this -> fill_impl ( buffer.data () , buffer.size () ) ; }
-        /// from the shape and continious buffer- to be replaced wth std::span later 
-        template <class DATA> 
+        // ========================================================================
+        /** Create square matrix from the shape and continious buffer:
+         *  - to be replaced wth std::span later
+         *
+         *  If <code>buffer.size() == N * ( N + 1 ) / 2 </code> 
+         *  the matrix is treated as symmetric
+         */
+        template <class SCALAR , 
+                  typename std::enable_if<Ostap::is_convertible_to_double<SCALAR>::value, bool>::type = true>            
         Matrix
         ( const std::size_t                 N      ,  
-          const Ostap::Utils::Buffer<DATA>& buffer ) 
+          const std::span<SCALAR>&          buffer ) 
           : Matrix ( N )
         { this -> fill_impl ( buffer.data () , buffer.size () ) ; }
+        // =======================================================================
+#endif  // OSTAP_HAS_STD_SPAN 
         // =======================================================================
       public : 
         // =======================================================================    
@@ -246,6 +294,13 @@ namespace Ostap
         const_iterator cbegin () const { return begin() ; }
         /// end-iterator 
         const_iterator cend   () const { return end()   ; }
+        // ========================================================================
+      public : // rows and colum by value 
+        // ========================================================================
+        /// get matrix row   (by value)
+        Vector  row    ( const std::size_t r ) const ;
+        /// get matrix column (by value)
+        Vector  column ( const std::size_t r ) const ;  
         // ========================================================================
       public : 
         // ========================================================================
@@ -1133,6 +1188,8 @@ namespace Ostap
     /// get the element with maximal absolute value 
     double maxabs_element ( const Ostap::Math::GSL::Vector& v ) ;
     // ========================================================================
+    
+    // ========================================================================
     /// Is this vector finite    ?
     inline bool isfinite  ( const Ostap::Math::GSL::Vector& v ) { return v.isfinite () ; }
     /// Is this matrix finite    ?
@@ -1140,6 +1197,28 @@ namespace Ostap
     /// Is this matrix symmetric ?
     bool        symmetric ( const Ostap::Math::GSL::Matrix& m ) ;
     // =======================================================================
+    
+    // =======================================================================
+    /** Can this matrix be symmetric & positive-definite ?
+     *  - Finite 
+     *  - Diagonal elements are finite and positive
+     *  - Symmetric
+     *  - have CholeskyDecomposition
+     */
+    bool symmetric_positive_definite 
+    ( const Ostap::Math::GSL::Matrix& mtrx ) ;
+
+    // ========================================================================
+    /** Can this matrix be a covariance matrix?
+     *  - Square
+     *  - Finite 
+     *  - Symmetric 
+     *  - Diagonal elements are finite and positive
+     *  - Off-diagonal elements are finite and not too large 
+     *  - have CholeskyDecomposition
+     */
+    bool covariance_matrix 
+    ( const Ostap::Math::GSL::Matrix& mtrx ) ;
 
     // =======================================================================
     /// numerical equality of two matrices 

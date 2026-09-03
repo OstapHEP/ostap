@@ -2,18 +2,33 @@
 #ifndef OSTAP_TYPES_H
 #define OSTAP_TYPES_H 1
 // ============================================================================
-// Inclide files  
+// Include files  
 // ============================================================================
 // STD&STL
 // ============================================================================
+#if defined(__has_include)
+#if __has_include(<version>)
+#include <version>
+#endif
+#endif
+// ============================================================================
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <limits>
 #include <string>
 #include <vector>
 #include <map> 
 // ============================================================================
-/** @file OStap/Typees.h
- *  Helper file with efinitini of few useful types  
+#if defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L
+#include <cstddef>
+#define OSTAP_HAS_STD_BYTE 1
+#else
+#define OSTAP_HAS_STD_BYTE 0
+#endif
+// ============================================================================
+/** @file Ostap/Types.h
+ *  Helper file with definition of few useful types  
  *  @author  Vanya BELYAEV Ivan.Belyaev@cern.ch
  *  @date 2025-06-15
  */
@@ -21,7 +36,7 @@
 namespace Ostap
 {
   // ==========================================================================
-  /** the type for Event  Index (for TTtee/RooAbsData looping
+  /** the type for Event  Index (for TTree/RooAbsData looping
    * It should be in agreement with TTree::kMaxEntries 
    * @see TTree::kMaxEntries
    * @see TVirtualTreePlayer::kMaxEntries 
@@ -47,7 +62,7 @@ namespace Ostap
   constexpr DataType MinValue { -std::numeric_limits<DataType>::max () } ; 
   // ==========================================================================
   /** @var MaxValue 
-   *  minimal value for varioys ranges 
+   *  maximal value for various ranges 
    */
   constexpr DataType MaxValue {  std::numeric_limits<DataType>::max () } ; 
   // ==========================================================================
@@ -55,7 +70,7 @@ namespace Ostap
   using Key        = std::string ; 
   /// Type fot names 
   using Name       = Key ;
-  /// Disctionanry type with string keys 
+  /// Dictionary type with string keys 
   template <typename Value>
   using Dict       = std::map<Key,Value>  ;
   /// the dictorinnaty 
@@ -69,7 +84,70 @@ namespace Ostap
   /// vector of doubles 
   using Doubles    = std::vector<double>  ;  
   // =========================================================================
-}  //                                               The end of namespace Ostap
+  
+  // =========================================================================
+  /// Numeric Type ? 
+  template <typename T>
+  struct is_numeric
+  {
+    // =======================================================================
+  private:
+    // =======================================================================
+    using CleanT = typename std::remove_cv<T>::type;
+    // =======================================================================
+  public:
+    // =======================================================================
+    static constexpr bool value = std::is_arithmetic<CleanT>::value ;
+    // =======================================================================
+  };
+  // =========================================================================  
+  /// Numeric Type or Bytes (for buffers) 
+  template <typename T>
+  struct is_numeric_or_byte
+  {
+  private:
+    // =======================================================================
+    using CleanT = typename std::remove_cv<T>::type;
+    // =======================================================================
+  public:
+    // =======================================================================
+    static constexpr bool value = std::is_arithmetic<CleanT>::value
+#if defined(OSTAP_HAS_STD_BYTE) && OSTAP_HAS_STD_BYTE      
+      || std::is_same<CleanT, std::byte>::value
+#endif 
+      ;
+    // =======================================================================
+  }; 
+  // =========================================================================
+  /// convertibe to double ? iterators for numerical sequences 
+  template <typename T>
+  struct is_convertible_to_double 
+  {
+    // =======================================================================
+  private:
+    // =======================================================================
+    using CleanT = typename std::remove_cv<T>::type;
+    // =======================================================================
+  public:
+    // =======================================================================
+    static constexpr bool value = std::is_convertible<CleanT,double>::value ;
+    // =======================================================================
+  };
+  // =========================================================================
+
+  // =========================================================================
+  template <typename T>
+  constexpr bool is_numeric_v               = is_numeric<T>::value;
+  // =========================================================================
+  template <typename T>
+  constexpr bool is_numeric_or_byte_v       = is_numeric_or_byte<T>::value;
+  // =========================================================================
+  template <typename T>
+  constexpr bool is_convertible_to_double_v = is_convertible_to_double<T>::value;
+  // =========================================================================
+
+  // =========================================================================
+} //                                                The end of namespace Ostap
 // ===========================================================================
 #endif // OSTAP_TYPES_H  
 // ===========================================================================

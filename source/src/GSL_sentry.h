@@ -27,6 +27,12 @@ namespace Ostap
        */
       typedef Ostap::Utils::GslError                        GSL_Error_Handler ;
       // ======================================================================
+      /** @typedef GSL_Error_Ignore 
+       *  helper class to manipulate with GSL error handlers 
+       *  @author Vanya BELAYEV Ivan.Belyaev@itep.ru
+       */
+      typedef Ostap::Utils::GslIgnore                        GSL_Error_Ignore ;
+      // ======================================================================
     } //                                      end of namespace Gaudi::Math::GSL 
     // ========================================================================
   } //                                             end of namespace Gaudi::Math

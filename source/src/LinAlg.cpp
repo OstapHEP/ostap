@@ -52,14 +52,14 @@ std::size_t Ostap::Math::GSL::GSL_version_int   ()
 std::string Ostap::Math::GSL::GSL_version () { return gsl_version ; }
 // ============================================================================
 
-
 // ===========================================================================
 // Matrix class 
 // ===========================================================================
 
 template <typename T>
 void Ostap::Math::GSL::Matrix::fill_impl 
-( const T* data , std::size_t size )
+( const T*          data ,
+  const std::size_t size )
 {
   //
   const std::size_t rows = nRows () ;
@@ -69,8 +69,32 @@ void Ostap::Math::GSL::Matrix::fill_impl
                   "Matrix: null buffer pointer"         , 
                   "Ostap::Math::GSL::Matrix::fill_impl" , 
                   INVALID_BUFFER                        , __FILE__ , __LINE__ ) ;
-  Ostap::Assert ( rows * cols <= size                   , 
-                  "Matrix: buffer too small"            , 
+  
+  // =========================================================================
+  // symmetric representation (lower triangular matrix)
+  // =========================================================================
+  
+  if ( rows == cols && rows * ( rows + 1 ) == 2 * size )
+  {
+    std::size_t idx = 0;
+    for ( std::size_t i = 0; i < rows ; ++i )
+    {
+      for ( std::size_t j = 0; j <= i ; ++j )
+      {
+        const double val = static_cast<double> ( data [ idx++ ] ) ; // Elements go one by one: (0,0), (1,0), (1,1), (2,0)...
+        gsl_matrix_set ( m_matrix , i , j , val ) ;
+        if ( i != j ) { gsl_matrix_set ( m_matrix , j , i , val ) ; } 
+      }
+    }
+    return ;
+  }
+  
+  // =========================================================================
+  // Generic representation
+  // =========================================================================
+  
+  Ostap::Assert ( rows * cols == size                   , 
+                  "Matrix: invalid buffer size"         , 
                   "Ostap::Math::GSL::Matrix::fill_impl" , 
                   INVALID_BUFFER                        , __FILE__ , __LINE__  ) ;
   //
@@ -80,9 +104,9 @@ void Ostap::Math::GSL::Matrix::fill_impl
   //
 }
 // ============================================================================
-template void Ostap::Math::GSL::Matrix::fill_impl<float>       ( const       float* , std::size_t ) ;
-template void Ostap::Math::GSL::Matrix::fill_impl<double>      ( const      double* , std::size_t ) ;
-template void Ostap::Math::GSL::Matrix::fill_impl<long double> ( const long double* , std::size_t ) ;
+template void Ostap::Math::GSL::Matrix::fill_impl<float>       ( const       float* , const std::size_t ) ;
+template void Ostap::Math::GSL::Matrix::fill_impl<double>      ( const      double* , const std::size_t ) ;
+template void Ostap::Math::GSL::Matrix::fill_impl<long double> ( const long double* , const std::size_t ) ;
 // ============================================================================
 
 // ============================================================================
@@ -339,6 +363,38 @@ Ostap::Math::GSL::Matrix::resize
   resize ( n1 , n2 ) ;
   gsl_matrix_set_identity ( m_matrix ) ;
   return *this ;
+}
+// ============================================================================
+// get matrix row by value)
+// ============================================================================
+Ostap::Math::GSL::Vector
+Ostap::Math::GSL::Matrix::row
+( const std::size_t n ) const  
+{
+  Ostap::Assert ( n < nRows ()                    ,
+                  "(GSL)Invalid row index"        ,
+                  "Ostap::Math::GSL::Matrix::row" ,
+                  INVALID_INDEX                   , __FILE__ , __LINE__ ) ;
+  //
+  Vector r { nCols() } ; 
+  gsl_matrix_get_row ( r.vector() , m_matrix , n ) ;
+  return r ;
+}
+// ============================================================================
+// get matrix column by value)
+// ============================================================================
+Ostap::Math::GSL::Vector
+Ostap::Math::GSL::Matrix::column
+( const std::size_t n ) const  
+{
+  Ostap::Assert ( n < nCols ()                       ,
+                  "(GSL)Invalid column index"        ,
+                  "Ostap::Math::GSL::Matrix::column" ,
+                  INVALID_INDEX                      , __FILE__ , __LINE__ ) ;
+  //
+  Vector c { nRows() } ; 
+  gsl_matrix_get_col ( c.vector () , m_matrix , n ) ;
+  return c ;
 }
 // ============================================================================
 // Numerical equality of two GSL matrices 
@@ -697,7 +753,7 @@ Ostap::StatusCode Ostap::Math::GSL::MM
     return ERROR_GSL + status ; 
   }
 
-  // resize otuput if the size is wrong
+  // resize output if the size is wrong
   if ( ( &a != &c ) &&  ( &b != &c ) && ( c.nRows() != rows_A || c.nCols() != cols_B ) )
   { c = Matrix ( rows_A , cols_B ) ; }
   
@@ -1812,10 +1868,7 @@ double Ostap::Math::maxabs_element
   return result ;
 }
 // ============================================================================
-// get the element with maxina absolute value 
-// ============================================================================
-// double Ostap::Math::maxabs_element
-// ( const Ostap::Math::GSL::Permutation& v ) { return v.size() ; }
+
 // ============================================================================
 // Is this matrix symmetric ?
 // ============================================================================
@@ -1842,7 +1895,127 @@ bool Ostap::Math::symmetric ( const Ostap::Math::GSL::Matrix& m )
   return true ;
 }
 // ============================================================================
-   
+/*  Can this matrix be symmetric & positive-definite ?
+ *  - Finite 
+ *  - Diagonal elements are finite and positive
+ *  - Symmetric
+ *  - have CholeskyDecomposition
+ */
+// ============================================================================
+bool Ostap::Math::symmetric_positive_definite
+( const Ostap::Math::GSL::Matrix& m )
+{
+  //
+  const std::size_t N = m.nRows () ;
+  const std::size_t M = m.nCols () ;
+  //
+  // (1) Square 
+  if ( N != M ) { return false ; } 
+  //
+  for ( std::size_t i = 0 ; i < N ; ++i )
+  {
+    const double cii = m.get ( i , i ) ;
+    if ( !std::isfinite ( cii )        ) { return false ; } // diagonal is finite 
+    if ( cii <= 0  || s_zero ( cii )   ) { return false ; } // diagonal is positive 
+    
+    for ( std::size_t j = 0 ; j < i ; ++j )
+    {
+      // already checked in "i"-loop 
+      const double cjj = m.get ( j , j ) ;
+      //      
+      const double cij = m.get ( i , j ) ;
+      if ( !std::isfinite ( cij )      ) { return false ; } // element is finite
+      //
+      const double cji = m.get ( j , i ) ;
+      if ( !std::isfinite ( cji )      ) { return false ; } // element is finite
+      //
+      if ( !s_equal ( cij , cji )      ) { return false ; } // matrix is symmetric
+      //
+    }
+    // 
+  }
+
+  // 
+  // The final shot: try Cholesky decomposition 
+  //
+  Ostap::Math::GSL::Matrix      A { m } ;
+  Ostap::Math::GSL::Permutation P { N } ;
+  Ostap::Math::GSL::Vector      S { N } ;
+  //
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Ignore sentry { true } ;
+  const int status = gsl_linalg_pcholesky_decomp2 ( A.matrix      () ,
+                                                    P.permutation () ,
+                                                    S.vector      () ) ;  
+  return GSL_SUCCESS == status ;
+}
+
+
+// ============================================================================
+/*  Can this matrix be a covariance matrix?
+ *  - Square
+ *  - Finite 
+ *  - Symmetric 
+ *  - Diagonal elements are finite and positive
+ *  - Off-diagonal elements are finite and not too large 
+ *  - have CholeskyDecomposition
+ */
+// ============================================================================
+bool Ostap::Math::covariance_matrix 
+( const Ostap::Math::GSL::Matrix& m )
+{
+  //
+  const std::size_t N = m.nRows () ;
+  const std::size_t M = m.nCols () ;
+  //
+  // (1) Square 
+  if ( N != M ) { return false ; } 
+  //
+  for ( std::size_t i = 0 ; i < N ; ++i )
+  {
+    const double cii = m.get ( i , i ) ;
+    if ( !std::isfinite ( cii )        ) { return false ; } // diagonal is finite 
+    if ( cii <= 0  || s_zero ( cii )   ) { return false ; } // diagonal is positive 
+    
+    for ( std::size_t j = 0 ; j < i ; ++j )
+    {
+      // already checked in "i"-loop 
+      const double cjj = m.get ( j , j ) ;
+      //      
+      const double cij = m.get ( i , j ) ;
+      if ( !std::isfinite ( cij )      ) { return false ; } // element is finite
+      //
+      const double cji = m.get ( j , i ) ;
+      if ( !std::isfinite ( cji )      ) { return false ; } // element is finite
+      //
+      if ( !s_equal ( cij , cji )      ) { return false ; } // matrix is symmetric
+      //
+      const double cc = cii * cjj ;
+      //
+      if  ( cc < cij * cij             ) { return false ; }  // off-diagonal element is too large 
+    }
+    // 
+  }
+
+  // 
+  // The final shot: try Cholesky decomposition 
+  //
+  Ostap::Math::GSL::Matrix      A { m } ;
+  Ostap::Math::GSL::Permutation P { N } ;
+  Ostap::Math::GSL::Vector      S { N } ;
+  //
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Ignore sentry { true } ;
+  const int status = gsl_linalg_pcholesky_decomp2 ( A.matrix      () ,
+                                                    P.permutation () ,
+                                                    S.vector      () ) ;  
+  return GSL_SUCCESS == status ;
+}
+
+
+
 // ============================================================================
 // Actual Linear Algebra starts here 
 // ============================================================================

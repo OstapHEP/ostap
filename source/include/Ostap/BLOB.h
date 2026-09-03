@@ -9,6 +9,11 @@
 #include "TNamed.h"
 #include "TArrayC.h"
 // ============================================================================
+// Ostap:
+// ============================================================================
+#include "Ostap/Types.h"
+#include "Ostap/Span.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -51,6 +56,30 @@ namespace Ostap
     void setBuffer 
     ( const std::size_t size   , 
       const void*       buffer ) ;
+    // ========================================================================
+  public : // Bytes & span 
+    // ========================================================================
+#if defined(OSTAP_HAS_STD_BYTE) && OSTAP_HAS_STD_BYTE
+    // ========================================================================
+    /// get the buffer as const std::byte*
+    inline const std::byte*     bytes     () const 
+    { return reinterpret_cast<const std::byte*> ( m_data.GetArray() ) ; }
+    /// set the buffer from bytes 
+    inline void                 setBuffer ( const std::size_t size   ,
+                                            const std::byte*  buffer )
+    { this->setBuffer ( size , static_cast<const void*> ( buffer ) ) ; }    
+    // ========================================================================
+#if defined(OSTAP_HAS_STD_SPAN) && OSTAP_HAS_STD_SPAN
+    // ========================================================================
+    /// get std::span<const std::byte> view of the BLOB
+    inline std::span<const std::byte> byte_span () const 
+    { return std::span<const std::byte> ( bytes () , size() ) ; }
+    /// set the buffer from span 
+    inline void                 setBuffer ( const std::span<const std::byte>& buffer )
+    { this->setBuffer ( buffer.size () , buffer.data () ) ; }     
+    // ========================================================================   
+#endif // OSTAP_HAS_STD_SPAN 
+#endif // OSTAP_HAS_STD_BYTE 
     // ========================================================================
   private:
     // ========================================================================

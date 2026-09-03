@@ -7,23 +7,22 @@
 // STD & STL 
 // ============================================================================
 #include <vector>
+#include <array>
 // ============================================================================
 // ROOT 
 // ============================================================================
 #include "Math/SMatrix.h"
 #include "Math/SVector.h"
 // ============================================================================
-// GSL 
-// ============================================================================
-#include "gsl/gsl_eigen.h"
-// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
+#include "Ostap/LinAlg.h"
 // ============================================================================
 /** @file Ostap/EigenSystem.h
- *  Helper class with allows to find eigenvalues and eigenvector
- *  for symmetrical MathLib matrices ("SMatrix") using GSL library
+ *  Helper class with allows to find eigenvalues and eigenvectors 
+ *  @author Vanya BELYAEV
+ *  @date   2006-05-24
  */
 // ============================================================================
 namespace Ostap
@@ -35,18 +34,13 @@ namespace Ostap
     namespace GSL
     {      
       // ======================================================================
-      // Forward declaratinos 
+      // Forward declarations 
       // ======================================================================
       class Matrix ;
       class Vector ;      
       // ======================================================================
-
-
-
-      
       /** @class EigenSystem Ostap/EigenSystem.h
-       *  Helper class with allows to find eigenvalues and eigenvector
-       *  for symmetrical MathLib matrices ("SMatrix") using GSL library
+       *  Helper class to find eigenvalues and eigenvectors
        *  @author Vanya BELYAEV
        *  @date   2006-05-24
        */
@@ -55,240 +49,190 @@ namespace Ostap
         // ====================================================================
       public:
         // ====================================================================
-        /// error codes 
-        enum 
-          { 
-            MatrixAllocationFailure     = 101 , 
-            VectorAllocationFailure     = 102 , 
-            WorkspaceAllocationFailure  = 103 , 
-            // the actual return value is ErrorFromGSL + error code )
-            ErrorFromGSL                = 2000000 ///< ErrorFromGSL + error code
-          } ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// Standard constructor
-        EigenSystem  () ;
+        EigenSystem  ( const unsigned short N  = 0 ) ;
+        /// copy constructor
+        EigenSystem  ( const EigenSystem&  ) ;
+        /// move constructor
+        EigenSystem  (       EigenSystem&& ) ;        
         /// destructor 
         ~EigenSystem () ;
         // ====================================================================
       public:
         // ====================================================================
-        /** evaluate the eigenvalues of symmetrical matrix 
-         * 
-         *  @code 
-         * 
-         *  // create the evaluator 
-         *  EigenSystem eval ;
-         *
-         *  const Ostap::SymMatrix3x3 matrix = ... ;
-         * 
-         *  // get the sorted vector of eigenvalues:
-         *  const Ostap::Vector2 result = eval.eigenValues ( matrix ) ;
-         * 
-         *  @endcode 
-         *  @exception Ostap::Exception is thrown in the case of errors 
-         *  @param mtrx   (input) the matrix itself 
-         *  @param sorted (input) flag to be use for sorting 
-         *  @return vector of eigenvalues 
+        /** Get the eigenvalues of symmetrical matrix
+         *  @param matrix    (INPUT)  input matrix
+         *  @param values    (UPDATE) output vector of eigenvalues
+         *  @param sorted    (INPUT)  get the eigenvalues sorted ?
+         *  @param ascending (INPUT)  sorting order  
+         *  @return Status code 
          */
-        template <class T,unsigned int D>
-        inline ROOT::Math::SVector<T,D>
+        Ostap::StatusCode
         eigenValues
-        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx , 
-          const bool sorted = true ) const ;
+        ( const Matrix& matrix            ,
+          Vector&       values            ,
+          const bool    sorted    = false , 
+          const bool    ascending = true  ) const ;
         // ====================================================================
-        /** evaluate the eigenvalues of symmetrical matrix 
-         *
-         *  @code 
-         * 
-         *  // create the evaluator 
-         *  EigenSystem eval ;
-         *
-         *  const Ostap::SymMatrix3x3 matrix = ... ;
-         *  Ostap::Vector3 resutl 
-         * 
-         *  // find the eigenvalues:
-         *  StatusCode sc = eval.eigenValues ( matrix , result ) ;
-         * 
-         *  @endcode 
-         *
-         *  @param mtrx      (input)  the matrix itself 
-         *  @param vals      (output) the vector of eigenvalues 
-         *  @param sorted    (input)  flag to be use for sorting 
-         *  @return status code 
+        /** Get the eigenvalues and eigenvectors of symmetrical matrix
+         *  @param matrix    (INPUT)  input matrix
+         *  @param values    (UPDATE) output vector of eigenvalues
+         *  @param vectors   (UPDATE) output matrix where each column is eigen-vector
+         *  @param sorted    (INPUT)  get the eigenvaleus sorted ?
+         *  @param ascending (INPUT)  sorting order 
+         *  @return Status code 
+         */
+        Ostap::StatusCode
+        eigenVectors
+        ( const Matrix& matrix            ,
+          Vector&       values            ,
+          Matrix&       vectors           ,
+          const bool    sorted    = false ,
+          const bool    ascending = true  ) const ;
+        // =====================================================================
+        /** Get the eigenvalues and eigenvectors of symmetrical matrix
+         *  @param matrix    (INPUT)  input matrix
+         *  @param values    (UPDATE) output vector of eigenvalues
+         *  @param vectors   (UPDATE) output matrix where each column is eigen-vector
+         *  @param sorted    (INPUT)  get the eigenvaleus sorted ?
+         *  @param ascending (INPUT)  sorting order 
+         *  @return Status code 
+         */
+        Ostap::StatusCode
+        eigenVectors
+        ( const Matrix&        matrix            ,
+          Vector&              values            ,
+          std::vector<Vector>& vectors           ,
+          const bool           sorted    = false ,
+          const bool           ascending = true  ) const ;
+        // =====================================================================
+      public : // symmetrix SMatrix 
+        // =====================================================================
+        /** Get the eigenvalues of symmetrical matrix
+         *  @param  matrix    (INPUT)  input matrix
+         *  @param  values    (UPDATE) output vector of eigenvalues
+         *  @param  sorted    (INPUT)  get the eigenvalues sorted ?
+         *  @param  ascending (INPUT)  sorting order  
+         *  @return Status code 
          */
         template <class T,unsigned int D>
         inline Ostap::StatusCode
         eigenValues
-        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
-          ROOT::Math::SVector<T,D>&                                     vals , 
-          const bool sorted    = true ) const ;
-        // ====================================================================
-        /** evaluate the eigenvalues and eigenvectors of the symmetrical matrix 
-         *
-         *  @code 
-         * 
-         *  // create the evaluator 
-         *  EigenSystem eval ;
-         *
-         *  const Ostap::SymMatrix3x3 matrix = ... ;
-         *  // matrix with eigenvectors: 
-         *  Ostap::Matrix3x3          vectors ; 
-         *  // vector of eigenvalues:
-         *  Gausi::Vector3            values  ;
-         *
-         *  // find the eigenvalues & eigenvectors: 
-         *  StatusCode sc = eval.eigenvectors ( matrix , values , vectors ) ;
-         * 
-         *  @endcode 
-         *
-         *  Eigenvectors are returned as columns for the matrix "vecs".
-         *  This matrix could be easily used to for diagonalization of 
-         *  the initial matrix, e.g. 
-         * 
-         *  @code 
-         *
-         *  // avoid long names:
-         *  using namespace ROOT::Math ;
-         *  // *NUMERICALLY* DIAGONAL MATRIX: 
-         *  Ostap::SymMatrix3x3 res = 
-         *      Similarity ( Transpose ( vectors ) , matrix ) ;
-         *
-         *  @endcode 
-         * 
-         *  
-         *  @param  mtrx      (input)  the matrix itself 
-         *  @param  vals      (output) the vector fo eigenvalues 
-         *  @param  vecs      (output) the matrix with eigenvectors 
-         *  @param  sorted    (input)  flag to be use for sorting 
-         *  @param  ascending (input)  ascending order for sorting?
-         *  @return status code 
+        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& matrix ,
+          ROOT::Math::SVector<T,D>&                                     values , 
+          const bool           sorted    = false ,
+          const bool           ascending = true  ) const 
+        {          
+          /// copy S-matrix into GSL-matrix 
+          const Matrix m { D , D , matrix.Array() , D * ( D + 1 ) / 2 } ;
+          Vector v { D } ;
+          // calculate the eigenvalues 
+          const Ostap::StatusCode sc = this -> eigenValues ( m , v , sorted , ascending ) ;
+          if ( sc.isFailure() ) { return sc ; }
+          /// copy back
+          std::copy ( v.begin () , v.end () , values.begin () ) ;
+          return Ostap::StatusCode::SUCCESS ;
+        }
+        // =====================================================================
+        /** Get the eigenvalues and eigenvectors of symmetrical matrix
+         *  @param matrix    (INPUT)  input matrix
+         *  @param values    (UPDATE) output vector of eigenvalues
+         *  @param vectors   (UPDATE) output matrix where each column is eigen-vector
+         *  @param sorted    (INPUT)  get the eigenvaleus sorted ?
+         *  @param ascending (INPUT)  sorting order 
+         *  @return Status code 
          */
-        template <class T, unsigned int D>
-        inline Ostap::StatusCode 
-        eigenVectors 
-        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
-          ROOT::Math::SVector<T,D>&                                     vals , 
-          ROOT::Math::SMatrix<T,D,D>&                                   vecs , 
-          const bool sorted    = true ,
-          const bool ascending = true ) const ;
-        // ====================================================================
-        /** evaluate the eigenvalues and eigenvectors of the symmetrical matrix 
-         *
-         *  @code 
-         * 
-         *  // create the evaluator 
-         *  EigenSystem eval ;
-         *
-         *  const Ostap::SymMatrix3x3   matrix = ... ;
-         *  // vector  with eigenvectors: 
-         *  std::vector<Ostap::Vector3> vectors ; 
-         *  // vector of eigenvalues:
-         *  Ostap::Vector3              values  ;
-         *
-         *  // find the eigenvalues & eigenvectors: 
-         *  StatusCode sc = eval.eigenvectors ( matrix , values , vectors ) ;
-         * 
-         *  @endcode 
-         *
-         *  @param  mtrx      (input)  the matrix itself 
-         *  @param  vals      (output) the vector fo eigenvalues 
-         *  @param  vecs      (output) the vector of eigenvectors 
-         *  @param  sorted    (input)  flag to be use for sorting 
-         *  @param  ascending (input)  ascending order for sorting?
-         *  @return status code 
-         */
-        template <class T, unsigned int D>
-        inline Ostap::StatusCode 
-        eigenVectors 
-        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
-          ROOT::Math::SVector<T,D>&                                     vals , 
-          std::vector<ROOT::Math::SVector<T,D> >&                       vecs , 
-          const bool sorted    = true ,
-          const bool ascending = true ) const ;
-        // ====================================================================
-      protected:
-        // ====================================================================
-        /// find the eigenvalues   (& sort them if needed ) 
-        Ostap::StatusCode _fun1
-        ( const bool sorted    = true ) const ;
-        /// find the eigenvalues&eigenvectors (& sort them if needed ) 
-        Ostap::StatusCode _fun2
-        ( const bool sorted    = true ,
-          const bool ascending = true ) const ;
-        // ====================================================================
-      private:        
-        // ====================================================================
-        /// fill the internal structures with the input data 
         template <class T,unsigned int D>
-        inline StatusCode _fill
-        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ) const;
-        /// check/adjust the  internal structures 
-        Ostap::StatusCode _check    ( const unsigned int D ) const ;
-        // thrown the exception 
-        Ostap::StatusCode Exception
-        ( const StatusCode& sc             ,
-          const char*       file = nullptr ,
-          const std::size_t line = 0       ) const ;       
-        // ====================================================================
-      private:
-        // ====================================================================
-        // the size of workspace 
-        mutable unsigned int   m_dim1   ; ///< the size of workspace 
-        mutable unsigned int   m_dim2   ; ///< the size of workspace 
-        // workspace itself 
-        mutable gsl_eigen_symm_workspace*  m_work1 ; ///< workspace itself 
-        // workspace itself 
-        mutable gsl_eigen_symmv_workspace* m_work2 ; ///< workspace itself 
-        // the matrix with input data  
-        mutable gsl_matrix*     m_matrix ; ///< the matrix with input data 
-        // the matrix with eigenvectors  
-        mutable gsl_matrix*     m_evec   ; ///< the matrix with eigenvectors  
-        // the vector with eigenvalues 
-        mutable gsl_vector*     m_vector ; ///< the vector with eigenvalues
-        // ====================================================================
-      } ;      
-      // ======================================================================
-      /** copy GSL vector into MathLib vector 
-       *  @attention Fast!no checks are performed!
-       *  @param input   GSL vector to be copyed (source)
-       *  @param output  MathLib vector (destination)
-       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-       *  @date 2006-05-24
-       */
-      template <class T, unsigned int D>
-      inline void 
-      _copy 
-      ( const gsl_vector*         input  , 
-        ROOT::Math::SVector<T,D>& output ) ;
-      // ======================================================================
-      /** copy GSL matrix into MathLib matrix into GSL  
-       *  @attention Fast!no checks are performed!
-       *  @param input  GSL matrix (source)
-       *  @param output MathLib matrix (destination)
-       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-       *  @date 2006-05-24
-       */
-      template < class T, unsigned int D, class R> 
-      inline void 
-      _copy 
-      ( const gsl_matrix*             input  ,
-        ROOT::Math::SMatrix<T,D,D,R>& output ) ;
-      // ======================================================================      
-      /** copy symmetric MathLib matrix into GSL matrix 
-       *  @attention Fast!no checks are performed!
-       *  @param input  MathLib symmetric matrix (source)
-       *  @param output GSL matrix  (destination)
-       *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-       *  @date 2006-05-24
-       */
-      template < class T, unsigned int D> 
-      inline void 
-      _copy 
-      ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& input , 
-        gsl_matrix* output ) ;
-      // ======================================================================
+        Ostap::StatusCode
+        eigenVectors
+        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& matrix  ,
+          ROOT::Math::SVector<T,D>&                                     values  , 
+          ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >&     vectors , 
+          const bool           sorted    = false ,
+          const bool           ascending = true  ) const 
+        {
+          /// copy S-matrix into GSL-matrix 
+          const Matrix m { D , D , matrix.Array() , D * ( D + 1 ) / 2 } ;
+          /// vector of eigenvalues  
+          Vector v { D } ;
+          /// matrix of eigenvectors 
+          Matrix b { D , D } ;
+          // calculate the eigenvalues & eigenvectors 
+          const Ostap::StatusCode sc = this -> eigenVectors ( m , v , b , sorted , ascending ) ;
+          if ( sc.isFailure() ) { return sc ; }
+          /// copy back
+          std::copy ( v.begin () , v.end () , values.begin  () ) ;
+          std::copy ( b.begin () , b.end () , vectors.begin () ) ;
+          return Ostap::StatusCode::SUCCESS ;          
+        }
+        // =====================================================================
+        /** Get the eigenvalues and eigenvectors of symmetrical matrix
+         *  @param matrix    (INPUT)  input matrix
+         *  @param values    (UPDATE) output vector of eigenvalues
+         *  @param vectors   (UPDATE) output matrix where each column is eigen-vector
+         *  @param sorted    (INPUT)  get the eigenvaleus sorted ?
+         *  @param ascending (INPUT)  sorting order 
+         *  @return Status code 
+         */
+        template <class T,unsigned int D>
+        Ostap::StatusCode
+        eigenVectors
+        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& matrix  ,
+          ROOT::Math::SVector<T,D>&                                     values  , 
+          // std::vector<ROOT::Math::SVector<T,D>> &                       vectors ,
+          std::array<ROOT::Math::SVector<T,D>,D> &                      vectors ,
+          const bool           sorted    = false ,
+          const bool           ascending = true  ) const 
+        {
+          /// copy S-matrix into GSL-matrix 
+          const Matrix m { D , D , matrix.Array() , D * ( D + 1 ) / 2 } ;
+          /// vector of eigenvalues  
+          Vector v { D } ;
+          /// vector of eigenvectors 
+          std::vector<Vector> b { D } ;
+          // calculate the eigenvalues & eigenvectors 
+          const Ostap::StatusCode sc = this -> eigenVectors ( m , v , b , sorted , ascending ) ;
+          if ( sc.isFailure() ) { return sc ; }
+          /// copy back
+          std::copy ( v.begin () , v.end () , values.begin  () ) ;
+          std::copy ( b.begin () , b.end () , vectors.begin () ) ;
+          return Ostap::StatusCode::SUCCESS ;          
+        }
+        // =====================================================================
+      public :  
+        // =====================================================================
+        /// assignement operator
+        EigenSystem& operator= ( const EigenSystem&  right ) ;
+        /// assignement operator
+        EigenSystem& operator= (       EigenSystem&& right ) ; 
+        // =====================================================================
+        /// swap two objects
+        void swap ( EigenSystem& right ) ;
+        // =====================================================================
+      public : 
+        // =====================================================================
+        /// release allocated workspaces 
+        void release () ;
+        // =====================================================================
+      private : 
+        // =====================================================================
+        void release1 () const ;
+        void release2 () const ;
+        // =====================================================================
+      private :
+        // =====================================================================
+        /// SYMM&SYMMV  workspaces 
+        // mutable gsl_eigen_symm_workspace*  m_ws_symm  { nullptr } ;
+        // mutable gsl_eigen_symmv_workspace* m_ws_symmv { nullptr } ;
+        mutable void* m_ws_symm  { nullptr } ;
+        mutable void* m_ws_symmv { nullptr } ;        
+        // =====================================================================        
+      } ;
+      // =======================================================================
+      /// swap two objects
+      inline void swap ( EigenSystem& a , EigenSystem& b ) { a.swap ( b ) ; } 
+      // =======================================================================
+
+      // =======================================================================
     } //                                                   end of namespace GSL
     // ========================================================================
   } //                                                    end of namespace Math 
@@ -296,8 +240,6 @@ namespace Ostap
 } //                                                     end of namespace Ostap
 // ============================================================================
 #endif // LHCBMATH_EIGENSYSTEM_H
-// ============================================================================
-#include "Ostap/EigenSystem.icpp"  
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

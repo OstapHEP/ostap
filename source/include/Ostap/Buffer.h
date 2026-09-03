@@ -10,10 +10,7 @@
 #include <iterator>
 #include <algorithm>
 #include <map>
-// ============================================================================
-#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) && defined ( __cpp_lib_span ) 
-#include <span> 
-#endif 
+#include <type_traits>
 // ============================================================================
 // ROOT 
 // ============================================================================
@@ -22,6 +19,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Types.h"
+#include "Ostap/Span.h"
 // ============================================================================
 namespace Ostap
 {
@@ -29,14 +27,15 @@ namespace Ostap
   namespace Utils
   {
     // ========================================================================
-#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) && defined ( __cpp_lib_span )
+#if defined(OSTAP_HAS_STD_SPAN) && OSTAP_HAS_STD_SPAN
     // ========================================================================
     /** @class Buffer 
      *  Helper class to add the content of buffer to TTree
      *  - actually it is span + default value 
      *  @date 2025-02-05
      */
-    template <class DATA> 
+    template <class DATA,
+              typename std::enable_if<Ostap::is_numeric_or_byte<DATA>::value, bool>::type = true>            
     class Buffer
     {
       // ======================================================================
@@ -45,9 +44,9 @@ namespace Ostap
     public: // ================================================================
       // ======================================================================
       Buffer
-      ( const DATA*       data  = nullptr    ,
-        const std::size_t size  = 0          ,
-        const DATA        value = DATA ( 0 ) )
+      ( const DATA*       data  = nullptr ,
+        const std::size_t size  = 0       ,
+        const DATA        value = DATA {} )
         : m_span  ( data  , size ) 
         , m_value ( value ) 
       {} ;                   
@@ -55,7 +54,10 @@ namespace Ostap
     public: // ================================================================
       // ======================================================================
       /// create new fuffer with offset 
-      inline Buffer offset ( const std::size_t offset ) const ; 
+      inline Buffer offset ( const std::size_t offset ) const
+      { return   ( this -> size () <= offset ) ? 
+          Buffer ( this -> data () + this->size () , 0                        , this -> value () ) :
+          Buffer ( this -> data () + offset        , this -> size () - offset , this -> value () ) ; }      
       // ======================================================================
     public: // ================================================================
       // ======================================================================
@@ -96,16 +98,17 @@ namespace Ostap
      *  - actually it is span + default value 
      *  @date 2025-02-05
      */
-    template <typename DATA> 
+    template <typename DATA,
+              typename std::enable_if<Ostap::is_numeric_or_byte<DATA>::value, bool>::type = true>            
     class Buffer
     {
       // ======================================================================
     public: // ================================================================
       // ======================================================================
       Buffer
-      ( const DATA*       data  = nullptr    ,
-        const std::size_t size  = 0          ,
-        const DATA        value = DATA ( 0 ) )
+      ( const DATA*       data  = nullptr ,
+        const std::size_t size  = 0       ,
+        const DATA        value = DATA {} )
         : m_data  ( data  )
         , m_size  ( size  )
         , m_value ( value ) 
@@ -114,7 +117,10 @@ namespace Ostap
     public: // ================================================================
       // ======================================================================
       /// create new fuffer with offset 
-      inline Buffer offset ( const std::size_t offset ) const ;
+      inline Buffer offset ( const std::size_t offset ) const
+      { return   ( this -> size () <= offset ) ? 
+          Buffer ( this -> data () + this->size () , 0                        , this -> value () ) :
+          Buffer ( this -> data () + offset        , this -> size () - offset , this -> value () ) ; }            
       // ======================================================================
     public: // ================================================================
       // ======================================================================
@@ -150,30 +156,22 @@ namespace Ostap
       // ======================================================================
     } ;  // ===================================================================
     // ========================================================================
-#endif // =====================================================================
+#endif // OSTAP_HAS_STD_SPAN ==================================================
     // ========================================================================
     /// swap two buffers
     template<class DATA>
-    inline void swap ( Buffer<DATA>& a , Buffer<DATA>& b ) { a.swap ( b ) ; }
+    inline void swap
+    ( Buffer<DATA>& a ,
+      Buffer<DATA>& b ) { a.swap ( b ) ; }
     // ========================================================================
-    /// create new fuffer with offset 
-    template <class DATA> 
+    template <class SCALAR>    
     inline
-    Buffer<DATA>
-    Buffer<DATA>::offset ( const std::size_t offset ) const 
-    { return ( size() <= offset ) ? 
-        Buffer ( data () + size   () , 0                , value () ) :
-        Buffer ( data () + offset    , size () - offset , value () ) ;
-    }
-    // =========================================================================
-    template <class DATA>
-    inline
-    Buffer<DATA>
+    Buffer<SCALAR>
     make_buffer
-    ( const DATA*       data           ,
-      const std::size_t size           ,
-      const DATA        value = DATA() )
-    { return Buffer<DATA> ( data , size , value ) ; }
+    ( const SCALAR*       data              ,
+      const std::size_t size                ,
+      const SCALAR        value = SCALAR {} )
+    { return Buffer<SCALAR> ( data , size , value ) ; }
     // =========================================================================
     inline 
     Buffer<signed char>
@@ -186,9 +184,9 @@ namespace Ostap
     inline
     Buffer<unsigned char>
     uchar_buffer
-    ( const void*         data       ,
-      const std::size_t   size       ,
-      const unsigned char value = 0  )
+    ( const void*         data      ,
+      const std::size_t   size      ,
+      const unsigned char value = 0 )
     { return Buffer<unsigned char> ( static_cast<const unsigned char*> ( data ) , size , value ) ; }
     // =======================================================================
     inline
@@ -199,13 +197,17 @@ namespace Ostap
       const char          value = 0  )
     { return Buffer<char> ( static_cast<const char*> ( data ) , size , value ) ; }
     // =======================================================================
+#if defined(OSTAP_HAS_STD_BYTE) && OSTAP_HAS_STD_BYTE
+    // ========================================================================
     inline
     Buffer<std::byte>
     byte_buffer
     ( const void*         data  ,
       const std::size_t   size  ,
-      const std::byte     value = std::byte ( 0 ) )
+      const std::byte     value = std::byte{} )
     { return Buffer<std::byte> ( static_cast<const std::byte*> ( data ) , size , value ) ; }
+    // =========================================================================
+#endif // OSTAP_HAS_STD_BYTE
     // =========================================================================    
     /** @class Buffers 
      *  a collection of several named buffers 
