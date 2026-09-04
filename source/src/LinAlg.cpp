@@ -2168,6 +2168,82 @@ double Ostap::Math::maxabs_element
 // ============================================================================
 
 // ============================================================================
+/* @brief Compute L0 "norm" (count of non-zero elements) for GSL vector
+ *  ||v||_0 = count(|v_i| > eps)
+ *  @param[in] v Input GSL vector pointer
+ *  @param[in] eps Tolerance threshold for zero elements
+ *  @return Number of non-zero elements
+ */
+// ============================================================================
+std::size_t Ostap::Math::norm_L0 
+( const Ostap::Math::GSL::Vector& v   , 
+  const double                    eps )
+{
+  std::size_t       count = 0;
+  const gsl_vector* vv = v.vector () ;
+  const std::size_t N  = v.size   () ; 
+  for ( std::size_t i = 0; i < N  ; ++i )
+  { if ( eps < std::abs ( gsl_vector_get ( vv , i ) )  ) { ++count; } }
+  return count;
+}
+// ===========================================================================
+/* @brief Compute L1 norm (sum of absolute values) for GSL vector
+ *  Delegates directly to optimized GSL BLAS (gsl_blas_dasum).
+ *  @param[in] v Input GSL vector pointer
+ *  @return L1 norm value
+ */
+// ===========================================================================
+double Ostap::Math::norm_L1 
+( const Ostap::Math::GSL::Vector& v   )  
+{ return gsl_blas_dasum ( v.vector ()  ) ; }
+
+// ===========================================================================
+/* @brief Compute L2 norm (Euclidean norm) for GSL vector
+ *  Delegates directly to optimized GSL BLAS (gsl_blas_dnrm2) which handles overflow/underflow.
+ *  @param[in] v Input GSL vector pointer
+ *  @return L2 norm value
+ */
+// ===========================================================================
+double Ostap::Math::norm_L2 
+( const Ostap::Math::GSL::Vector& v   )  
+{ return gsl_blas_dnrm2 ( v.vector ()  ) ; }
+
+// ===========================================================================
+/* @brief Compute L_infinity norm (maximum absolute element) for GSL vector
+ *  ||v||_inf = max(|v_i|)
+ *  @param[in] v Input GSL vector pointer
+ *  @return L_infinity norm value
+ */
+// ============================================================================
+double Ostap::Math::norm_Linf
+( const Ostap::Math::GSL::Vector& v )  
+{ return maxabs_element ( v ) ; }
+
+// ===========================================================================
+/* @brief Compute generalized Lp norm (p >= 0) for GSL vector
+ *  @param[in] v Input GSL vector pointer
+ *  @param[in] p Order of the norm
+ *  @return Lp norm value
+ */
+// ===========================================================================
+double Ostap::Math::norm_Lp
+( const Ostap::Math::GSL::Vector& v ,  
+  const double                    p )
+{
+  if      ( 0 == p           ) { return static_cast<double> ( norm_L0 ( v ) ) ; }
+  else if ( 1 == p           ) { return norm_L1   ( v ) ; }
+  else if ( 2 == p           ) { return norm_L2   ( v ) ; }
+  else if ( std::isinf ( p ) ) { return norm_Linf ( v ) ; }
+ 
+  double sum = 0.0;
+  const gsl_vector* vv = v.vector() ;
+  const std::size_t N = v.size() ;
+  for ( std::size_t i = 0; i < N ; ++i )
+  { sum += std::pow ( std::abs ( gsl_vector_get ( vv , i ) ) , p ); }
+  return std::pow ( sum, 1.0 / p );
+}
+
+// ============================================================================
 // Is this matrix symmetric ?
 // ============================================================================
 bool Ostap::Math::symmetric ( const Ostap::Math::GSL::Matrix& m )
@@ -3369,7 +3445,8 @@ Ostap::StatusCode Ostap::Math::GSL::SCHUR
   Ostap::Math::GSL::SchurWorkspace ws   { N } ;
   Ostap::Math::GSL::ComplexVector  eval { N } ;
   //
-  gsl_eigen_nonsymm_params ( 1 , 1 , ws.workspace () ) ;
+  // balanc is OFF
+  gsl_eigen_nonsymm_params ( 1 , 0 , ws.workspace () ) ;
   int status = gsl_eigen_nonsymm_Z ( S.matrix     () , 
                                      eval.vector  () , 
                                      Z.matrix     () , 

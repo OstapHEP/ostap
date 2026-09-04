@@ -1494,6 +1494,53 @@ namespace Ostap
     ( const Ostap::Math::GSL::Matrix& mtrx ) ;
 
     // =======================================================================
+    // Vector norms
+    // =======================================================================
+
+    /** @brief Compute L0 "norm" (count of non-zero elements) for GSL vector
+     *  ||v||_0 = count(|v_i| > eps)
+     *  @param[in] v Input GSL vector pointer
+     *  @param[in] eps Tolerance threshold for zero elements
+     *  @return Number of non-zero elements
+     */
+    std::size_t norm_L0 
+    ( const Ostap::Math::GSL::Vector& v  , 
+      const double                    eps = std::numeric_limits<double>::epsilon() ) ;
+
+    /** @brief Compute L1 norm (sum of absolute values) for GSL vector
+     *  Delegates directly to optimized GSL BLAS (gsl_blas_dasum).
+     *  @param[in] v Input GSL vector pointer
+     *  @return L1 norm value
+     */
+    double norm_L1 
+    ( const Ostap::Math::GSL::Vector& v ) ;
+
+    /** @brief Compute L2 norm (Euclidean norm) for GSL vector
+     *  Delegates directly to optimized GSL BLAS (gsl_blas_dnrm2) which handles overflow/underflow.
+     *  @param[in] v Input GSL vector pointer
+     *  @return L2 norm value
+     */
+    double norm_L2 
+    ( const Ostap::Math::GSL::Vector& v ) ; 
+
+    /** @brief Compute L_infinity norm (maximum absolute element) for GSL vector
+     *  ||v||_inf = max(|v_i|)
+     *  @param[in] v Input GSL vector pointer
+     *  @return L_infinity norm value
+     */
+    double norm_Linf
+    ( const Ostap::Math::GSL::Vector& v ) ;
+
+    /** @brief Compute generalized Lp norm (p >= 0) for GSL vector
+     *  @param[in] v Input GSL vector pointer
+     *  @param[in] p Order of the norm
+     *  @return Lp norm value
+     */
+    double norm_Lp 
+    ( const Ostap::Math::GSL::Vector& v     , 
+      const double                    p = 2 ) ;
+
+    // =======================================================================
     /// numerical equality of two matrices 
     template <> 
     struct Equal_To<Ostap::Math::GSL::Matrix>

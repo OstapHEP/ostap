@@ -1914,7 +1914,144 @@ namespace Ostap
     }
     // ========================================================================
     
-    
+    // ========================================================================
+    // Vector norms
+    // ========================================================================
+
+    /** @brief Compute L0 "norm" (count of non-zero elements)
+     *  ||v||_0 = count(|v_i| > eps)
+     *  @param[in] v Input vector
+     *  @param[in] eps Absolute tolerance threshold below which elements are considered zero
+     *  @return Number of non-zero elements
+     */
+    template <typename T, unsigned int N>
+    inline std::size_t norm_L0 
+    ( const ROOT::Math::SVector<T, N>& v   , 
+      const T                          eps = std::numeric_limits<T>::epsilon() )
+    {
+      return std::transform_reduce(
+        v.begin(), v.end(),
+        std::size_t(0),
+        std::plus<std::size_t>(),
+        [eps]( T x ) -> std::size_t { return std::abs( x ) > eps ? 1 : 0; }
+      );
+    }
+
+    // =======================================================================
+    /** @brief Compute L1 norm (Manhattan norm / sum of absolute values)
+     *  ||v||_1 = sum(|v_i|)
+     *  @param[in] v Input vector
+     *  @return L1 norm value
+     */
+    template <typename T, unsigned int N>
+    inline T norm_L1 ( const ROOT::Math::SVector<T, N>& v )
+    {
+      return std::transform_reduce(
+        v.begin(), v.end(),
+        T(0),
+        std::plus<T>(),
+        []( T x ) { return std::abs( x ); }
+      );
+    }
+
+    // =======================================================================
+    /** @brief Compute fast L2 norm via std::transform_reduce (unprotected against overflow)
+     *  ||v||_2 = sqrt(v . v)
+     *  @param[in] v Input vector
+     *  @return Fast L2 norm value
+     */
+    template <typename T, unsigned int N>
+    inline T norm_L2 ( const ROOT::Math::SVector<T, N>& v )
+    {
+      const T sum_sq = std::transform_reduce(
+        v.begin(), v.end(),
+        T(0),
+        std::plus<T>(),
+        []( T x ) { return x * x; }
+      );
+      return std::sqrt( sum_sq );
+    }
+
+    // =======================================================================
+    /** @brief Compute L2 norm (Euclidean norm / magnitude)
+     *  ||v||_2 = sqrt(sum(v_i^2))
+     *  Uses Blue's/Golub's scaling algorithm to prevent overflow and underflow.
+     *  @param[in] v Input vector
+     *  @return L2 norm value
+     */
+    template <typename T, unsigned int N>
+    inline T norm_L2_safe ( const ROOT::Math::SVector<T, N>& v )
+    {
+      if constexpr ( N == 0 ) { return T(0); }
+      if constexpr ( N == 1 ) { return std::abs( v[0] ); }
+
+      T scale = T(0);
+      T ssq   = T(1);
+
+      for ( unsigned int i = 0; i < N; ++i )
+      {
+        const T abs_xi = std::abs( v[i] );
+        if ( abs_xi != T(0) )
+        {
+          if ( scale < abs_xi )
+          {
+            const T ratio = scale / abs_xi;
+            ssq   = T(1) + ssq * ratio * ratio;
+            scale = abs_xi;
+          }
+          else
+          {
+            const T ratio = abs_xi / scale;
+            ssq += ratio * ratio;
+          }
+        }
+      }
+      return scale * std::sqrt( ssq );
+    }
+
+    // =======================================================================
+    /** @brief Compute L_infinity norm (Chebyshev norm / maximum absolute element)
+     *  ||v||_inf = max(|v_i|)
+     *  @param[in] v Input vector
+     *  @return L_infinity norm value
+     */
+    template <typename T, unsigned int N>
+    inline T norm_Linf ( const ROOT::Math::SVector<T, N>& v )
+    {
+      if constexpr ( N == 0 ) { return T(0); }
+
+      return std::transform_reduce(
+        v.begin(), v.end(),
+        T(0),
+        []( T a, T b ) { return std::max( a, b ); },
+        []( T x ) { return std::abs( x ); }
+      );
+    }
+
+    // =======================================================================
+    /** @brief Compute generalized Lp norm (p >= 0)
+     *  @param[in] v Input vector
+     *  @param[in] p Order of the norm (p=0 returns L0 norm as T)
+     *  @return Lp norm value
+     */
+    template <typename T, unsigned int N>
+    inline T norm_Lp ( const ROOT::Math::SVector<T, N>& v, const double p = 2 )
+    {
+      if      ( 0 == p          ) { return static_cast<T> ( norm_L0 ( v ) ); }
+      else if ( 1 == p          ) { return norm_L1   ( v ) ; }
+      else if ( 2 == p          ) { return norm_L2   ( v ) ; }
+      else if ( std::isinf( p ) ) { return norm_Linf ( v ) ; }
+
+      const T sum = std::transform_reduce(
+        v.begin(), v.end(),
+        T(0),
+        std::plus<T>(),
+        [p]( T x ) { return std::pow( std::abs( x ), static_cast<T>( p ) ); }
+      );
+
+      return std::pow ( sum, static_cast<T>( 1.0 / p ) );
+    }
+
     // ========================================================================
     // Vector operations 
     // ========================================================================

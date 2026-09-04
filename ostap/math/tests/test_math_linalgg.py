@@ -12,7 +12,8 @@
 from   ostap.math.math_base   import Ostap
 from   ostap.math.linalgg     import Matrix, gsl_info
 from   ostap.utils.root_utils import batch_env
-import math, random  
+from   ostap.logger.pretty    import nice_print
+import random  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -218,18 +219,18 @@ def test_linalg_SVD ( M = 4 , N = 4 ) :
     
     D      = U * Matrix ( S ) * V.t() - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
-    logger.info ( 'SVD max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    logger.info ( 'SVD max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
 
     
     UU      = U.t() * U if M >= N else U * U.t() 
     UU     -= 1 
     delta2  = Ostap.Math.maxabs_element ( UU )    
-    logger.info ( 'SVD non-orthogonality of U %.3g \n%s' % ( delta2 , UU ) ) 
+    logger.info ( 'SVD non-orthogonality of U %s \n%s' % ( nice_print ( delta2 ), UU ) ) 
 
     VV      = V*V.t() if M >= N else V.t() * V 
     VV     -= 1 
     delta3  = Ostap.Math.maxabs_element ( VV )    
-    logger.info ( 'SVD non-orthogonality of V %.3g \n%s' % ( delta3 , VV ) ) 
+    logger.info ( 'SVD non-orthogonality of V %s \n%s' % ( nice_print ( delta3 ) , VV ) ) 
     
     assert delta1 < tolerance1 , 'SVD: result are inconsistent delta1=%.3g' % delta1
     assert delta2 < tolerance1 , 'SVD: result are inconsistent delta2=%.3g' % delta2
@@ -258,24 +259,24 @@ def test_linalg_SCHUR ( M = 4 ) :
     logger.info ( 'SCHUR decomposition: S :\n%s' % S )
 
 
-    logger.info ( 'SCHUR decomposition: Z^T*Z :\n%s' % ( Z.t() * Z      ) )
-    logger.info ( 'SCHUR decomposition: Z*Z^T :\n%s' % ( Z     * Z.t () ) )
+    logger.info ( 'SCHUR decomposition: Z^T*Z-1 :\n%s' % ( Z.T() * Z      - 1 ) )
+    logger.info ( 'SCHUR decomposition: Z*Z^T-1 :\n%s' % ( Z     * Z.T () - 1 ) )
     
 
-    D      = Z * S * Z.t() - A 
+    D      = Z * S * Z.T() - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
-    logger.info ( 'SCHUR max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    logger.info ( 'SCHUR max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
     
-    UU      = Z * Z.t() 
+    UU      = Z * Z.T() 
     UU     -= 1 
     delta2  = Ostap.Math.maxabs_element ( UU )    
-    logger.info ( 'SCHUR non-orthogonality of Z %.3g \n%s' % ( delta2 , UU ) ) 
+    logger.info ( 'SCHUR non-orthogonality of Z %s \n%s' % ( nice_print ( delta2 ) , UU ) ) 
     
-    assert delta1 < tolerance1 , 'SCHUR: result are inconsistent delta1=%.3g' % delta1
-    assert delta2 < tolerance1 , 'SCHUR: result are inconsistent delta2=%.3g' % delta2
+    assert delta1 < tolerance1 , 'SCHUR: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    assert delta2 < tolerance1 , 'SCHUR: result are inconsistent delta2=%s' % nice_print ( delta2 ) 
     
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
-    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g" % delta2 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) )
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s" % nice_print ( delta2 ) )
 
 # ==========================================================================
 def test_linalg_POLAR( M = 4 ) :
@@ -297,18 +298,18 @@ def test_linalg_POLAR( M = 4 ) :
     
     D      = U * P - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
-    logger.info ( 'POLAR max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    logger.info ( 'POLAR max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
     
     UU      = U * U.t() 
     UU     -= 1 
     delta2  = Ostap.Math.maxabs_element ( UU )    
-    logger.info ( 'POLAR non-orthogonality of U %.3g \n%s' % ( delta2 , UU ) ) 
+    logger.info ( 'POLAR non-orthogonality of U %s \n%s' % ( nice_print ( delta2 ) , UU ) ) 
     
-    assert delta1 < tolerance1 , 'POLAR: result are inconsistent delta1=%.3g' % delta1
-    assert delta2 < tolerance1 , 'POLAR: result are inconsistent delta2=%.3g' % delta2
+    assert delta1 < tolerance1 , 'POLAR: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    assert delta2 < tolerance1 , 'POLAR: result are inconsistent delta2=%s' % nice_print ( delta2 )
     
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
-    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g" % delta2 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) )
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s" % nice_print ( delta2 ) )
     
 # =============================================================================
 if '__main__' == __name__ :
