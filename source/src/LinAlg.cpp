@@ -3,6 +3,7 @@
 // ============================================================================
 // STD/STL
 // ============================================================================
+#include <cstddef>
 #include <complex>
 // ============================================================================
 // Ostap
@@ -56,25 +57,25 @@ std::string Ostap::Math::GSL::GSL_version () { return gsl_version ; }
 // Matrix class 
 // ===========================================================================
 
-template <typename T>
-void Ostap::Math::GSL::Matrix::fill_impl 
-( const T*          data ,
+template <class TYPE>
+void Ostap::Math::GSL::Matrix::fill_impl
+( const TYPE*       data ,
   const std::size_t size )
 {
   //
   const std::size_t rows = nRows () ;
   const std::size_t cols = nCols () ;
   //
-  Ostap::Assert ( data != nullptr                       , 
+  Ostap::Assert ( nullptr != data                       , 
                   "Matrix: null buffer pointer"         , 
                   "Ostap::Math::GSL::Matrix::fill_impl" , 
                   INVALID_BUFFER                        , __FILE__ , __LINE__ ) ;
   
   // =========================================================================
-  // symmetric representation (lower triangular matrix)
+  // (1) symmetric representation (lower triangular matrix)
   // =========================================================================
-  
-  if ( rows == cols && rows * ( rows + 1 ) == 2 * size )
+
+  if ( rows == cols && rows * ( rows + 1 ) / 2 == size )
   {
     std::size_t idx = 0;
     for ( std::size_t i = 0; i < rows ; ++i )
@@ -90,7 +91,7 @@ void Ostap::Math::GSL::Matrix::fill_impl
   }
   
   // =========================================================================
-  // Generic representation
+  // (2) Generic representation
   // =========================================================================
   
   Ostap::Assert ( rows * cols == size                   , 

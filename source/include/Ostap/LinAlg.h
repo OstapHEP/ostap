@@ -444,9 +444,9 @@ namespace Ostap
       private :
         // ========================================================================
         /// fill the matrix from continious buffer 
-        template <class SCALAR>
+        template <class TYPE>
         void fill_impl
-        ( const SCALAR*     buffer , 
+        ( const TYPE*       buffer , 
           const std::size_t size   ) ;
         // ========================================================================
       private:
@@ -455,6 +455,10 @@ namespace Ostap
         gsl_matrix* m_matrix { nullptr } ; // the  actual pointer to GSL-matrix
         // ========================================================================
       } ; //                                    The end of class Ostap::GSL:Matrix 
+      // ==========================================================================
+      extern template void Matrix::fill_impl<float>       ( const       float* , const std::size_t ) ;
+      extern template void Matrix::fill_impl<double>      ( const      double* , const std::size_t ) ;
+      extern template void Matrix::fill_impl<long double> ( const long double* , const std::size_t ) ;
       // ==========================================================================
       /** @class Vector
        *  Internal class to  hold GSL-Vector
@@ -752,8 +756,8 @@ namespace Ostap
       /// swap two permutations 
       inline void swap ( Permutation& a , Permutation& b ) { a.swap ( b ) ; } 
       // ========================================================================
-
-      // ========================================================================
+      
+       // ========================================================================
       /// equality of two matrices 
       inline bool operator==( const Matrix& a , const Matrix& b )
       { return &a == &b || ( a.nRows() == b.nRows() && a.nCols() == b.nCols() && a.equal ( b ) ) ; }

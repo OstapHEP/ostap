@@ -357,22 +357,33 @@ sc=$?
 if [ "${sc}" -ne 0 ]; then
     printf "%s [3/8] FAILURE: Cannot remove OSTAP_BUILD remnants&garbage (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_BUILD}"
 else
-    printf "%s [3/8] SUCCESS: OSTAP_BUILD remnants&grabage is removed (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [3/8] SUCCESS: OSTAP_BUILD remnants&garbage is removed (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_BUILD}"
 fi
 
 # ==========================================================================
-## CMAKE supports "--fresh" option from 3.24+
+# Check if CMake supports the "--fresh" option (available in CMake 3.24+)
 # ==========================================================================
-cmake_ver=$(cmake --version | head -n 1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+
+# Extract the version string (matches both X.Y and X.Y.Z formats)
+cmake_ver=$(cmake --version | head -n 1 | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?')
+
+# Parse major and minor version numbers
 cmake_major=$(echo "$cmake_ver" | cut -d. -f1)
 cmake_minor=$(echo "$cmake_ver" | cut -d. -f2)
 
+# Fallback to 0 if parsing fails to prevent syntax errors during integer comparison
+cmake_major=${cmake_major:-0}
+cmake_minor=${cmake_minor:-0}
+
+# Enable the --fresh flag if CMake version is 3.24 or higher
 fresh=""
 if [ "$cmake_major" -gt 3 ] || { [ "$cmake_major" -eq 3 ] && [ "$cmake_minor" -ge 24 ]; }; then
     fresh="--fresh"
 fi
 
+# Retrieve the number of available CPU cores
 NCPU=$(get_cpu_count)
+
 
 # =========================================================================
 ## (FRESH) build
