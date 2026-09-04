@@ -299,7 +299,7 @@ permille         = '‰'  if show else '/1000'
 size             = '⌀'  if show else 'size'
 
 ## indices: circled numbers from 0 to 50 (inclusive)
-indices = '⓿➊➋➌➍➎➏➐➑➒⓫⓬⓯⓰⓱⓲⓳⓴㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿' if show else tuple ( '%s' % i for i in range ( 51 ) ) 
+indices = '⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿' if show else tuple ( '%s' % i for i in range ( 51 ) ) 
 indices = tuple ( indices )
 
 ## capital Greek Sigma 
