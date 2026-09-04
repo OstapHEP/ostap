@@ -57,6 +57,9 @@ std::string Ostap::Math::GSL::GSL_version () { return gsl_version ; }
 // Matrix class 
 // ===========================================================================
 
+// ===========================================================================
+// fill the matrix from continious buffer
+// ===========================================================================
 template <class TYPE>
 void Ostap::Math::GSL::Matrix::fill_impl
 ( const TYPE*       data ,

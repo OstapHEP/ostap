@@ -17,9 +17,6 @@
 // ============================================================================
 #include "Math/SMatrix.h"
 #include "Math/SVector.h"
-#include "Math/Point3D.h"
-#include "Math/Vector4D.h"
-#include "Math/Vector3D.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -36,6 +33,280 @@ namespace Ostap
   // ==========================================================================
   namespace Math 
   {
+    // ========================================================================
+    
+    // ========================================================================
+    // helper functions to allow proper operations in PyROOT
+    // - need to bypass expressions  (no easy way to use them in PyROOT)
+    // ========================================================================
+
+    // ========================================================================
+    // Vector operations 
+    // ========================================================================
+    template <class VECTOR>
+    struct VctrOps ;
+    
+    // ========================================================================
+    template <class T, unsigned int D>
+    struct VctrOps < ROOT::Math::SVector<T,D> >
+    {
+      // a + b 
+      static
+      ROOT::Math::SVector<T,D> 
+      add  ( const ROOT::Math::SVector<T,D>& a ,
+             const ROOT::Math::SVector<T,D>& b ) { return a + b ; }
+      // a + c 
+      static
+      ROOT::Math::SVector<T,D>
+      add  ( const ROOT::Math::SVector<T,D>& a ,
+             const double                    c ) { return a + c ; }
+      // a - b 
+      static
+      ROOT::Math::SVector<T,D> 
+      sub  ( const ROOT::Math::SVector<T,D>& a ,
+             const ROOT::Math::SVector<T,D>& b ) { return a - b ; }
+      // a - c 
+      static
+      ROOT::Math::SVector<T,D> 
+      sub  ( const ROOT::Math::SVector<T,D>& a ,
+             const double                    b ) { return a + b ; }
+      // c - a  
+      static
+      ROOT::Math::SVector<T,D> 
+      rsub ( const ROOT::Math::SVector<T,D>& a ,
+             const double                    c ) { return c - a  ; }
+    };
+    
+    // ========================================================================
+    // matrix operations 
+    // ========================================================================
+    template <class MATRIX>
+    struct MtrxOps ;
+
+    /// generic matrices 
+    template <class T, unsigned int D1, unsigned int D2>
+    struct MtrxOps< ROOT::Math::SMatrix<T,D1,D2,ROOT::Math::MatRepStd<T,D1,D2> > > 
+    {
+      typedef ROOT::Math::SMatrix<T,D1,D2,ROOT::Math::MatRepStd<T,D1,D2> > MATRIX ;
+      //
+      // ======================================================================
+      // m + m 
+      static MATRIX add  ( const MATRIX& a ,
+                           const MATRIX& b ) { return a + b ; }
+      // m + c 
+      static MATRIX add  ( const MATRIX& a ,
+                           const double  c ) { return a + c ; }
+      // ======================================================================
+      // m - m 
+      static MATRIX sub  ( const MATRIX& a ,
+                           const MATRIX& b ) { return a - b ; }
+      // m - c
+      static MATRIX sub  ( const MATRIX& a ,
+                           const double  c ) { return a - c ; }
+      // ======================================================================
+      // c - m
+      static MATRIX rsub ( const MATRIX& a ,
+                           const double  c ) { return c - a ; }
+      // ======================================================================
+    };
+
+    /// square matrices 
+    template <class T, unsigned int D>
+    struct MtrxOps<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> > > 
+    {
+      typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >      MATRIX ;
+      typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >     SYMMATRIX ;
+      //
+      // ======================================================================
+      // m + m
+      static MATRIX add  ( const    MATRIX& a ,
+                           const    MATRIX& b ) { return a + b ; }
+      // m + s 
+      static MATRIX add  ( const    MATRIX& a ,
+                           const SYMMATRIX& b ) { return a + b ; }
+      // m + c
+      static MATRIX add  ( const    MATRIX& a ,
+                           const    double  b ) { return a + b ; }
+      // ======================================================================
+      // m - m 
+      static MATRIX sub  ( const    MATRIX& a ,
+                           const    MATRIX& b ) { return a - b ; }
+      // m - s 
+      static MATRIX sub  ( const    MATRIX& a ,
+                           const SYMMATRIX& b ) { return a - b ; }
+      // m - c 
+      static MATRIX sub  ( const    MATRIX& a ,
+                           const    double  c ) { return a - c ; }
+      // ======================================================================
+      // s - m 
+      static MATRIX rsub ( const    MATRIX& a ,
+                           const SYMMATRIX& b ) { return b - a ; }
+      // c - m  
+      static MATRIX rsub ( const    MATRIX& a ,
+                           const    double  c ) { return c - a ; }
+      
+      // ======================================================================
+    };
+
+    /// symmetric matrices
+    template <class T, unsigned int D>
+    struct MtrxOps<ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > > 
+    {
+      typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >      MATRIX ;
+      typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> > GENMATRIX ;
+      //
+      // ======================================================================
+      // s + s 
+      static MATRIX    add  ( const    MATRIX& a ,
+                              const    MATRIX& b ) { return a + b ; }
+      // s + m      
+      static GENMATRIX add  ( const    MATRIX& a ,
+                              const GENMATRIX& b ) { return a + b ; }
+      // s + c
+      static MATRIX    add  ( const    MATRIX& a ,
+                              const     double c ) { return a + c ; }      
+      // ======================================================================
+      // s - s 
+      static MATRIX    sub  ( const    MATRIX& a ,
+                              const    MATRIX& b ) { return a - b ; }
+      // s - m      
+      static GENMATRIX sub  ( const    MATRIX& a ,
+                              const GENMATRIX& b ) { return a - b ; }
+      // s - c
+      static MATRIX    sub  ( const    MATRIX& a ,
+                              const     double c ) { return a - c ; }
+      // ======================================================================      
+      // m - s      
+      static GENMATRIX rsub ( const    MATRIX& a ,
+                              const GENMATRIX& b ) { return b - a ; }
+      // c - s 
+      static MATRIX    rsub ( const    MATRIX& a ,
+                              const     double c ) { return c - a ; }
+      // ======================================================================      
+    };
+
+    
+    // ========================================================================
+    /// multiplication
+    template <class OBJ1, class OBJ2>
+    struct MultiplyOp ;
+    // ========================================================================
+    // vector * vector  
+    template <class T, unsigned int D>
+    struct MultiplyOp < ROOT::Math::SVector<T,D>, ROOT::Math::SVector<T,D> >
+    {
+      // dot:
+      static
+      double 
+      dot ( const ROOT::Math::SVector<T,D> & a , 
+            const ROOT::Math::SVector<T,D> & b ) 
+      {
+        double result = 0 ;
+        for ( unsigned short i = 0 ; i < D ; ++i ) { result +=  double( a[i] ) * b[i] ; }
+        return result ;
+      }
+      // cross: 
+      static
+      ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >
+      cross ( const ROOT::Math::SVector<T,D> & a , 
+              const ROOT::Math::SVector<T,D> & b ) 
+      {
+        ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> > result ;
+        for ( unsigned short i = 0 ; i < D ; ++i ) 
+        { for ( unsigned short j = 0 ; j < D ; ++j ) 
+          { result(i,j) = a[i] * b[j] ; } }
+        return result ;
+      }
+      // multiply
+      static 
+      double 
+      multiply ( const ROOT::Math::SVector<T,D> & a , 
+                 const ROOT::Math::SVector<T,D> & b ) { return dot ( a , b ) ; }
+    } ;
+    // ========================================================================    
+    /// cross/tensor : vector * vector  
+    template <class T, unsigned int D1, unsigned int D2>
+    struct MultiplyOp < ROOT::Math::SVector<T,D1>, ROOT::Math::SVector<T,D2> >
+    {
+      //
+      static
+      ROOT::Math::SMatrix<T,D1,D2,ROOT::Math::MatRepStd<T,D1,D2> >
+      cross ( const ROOT::Math::SVector<T,D1> & a , 
+              const ROOT::Math::SVector<T,D2> & b ) 
+      {
+        ROOT::Math::SMatrix<T,D1,D2,ROOT::Math::MatRepStd<T,D1,D2> > result ;
+        for ( unsigned short i = 0 ; i < D1 ; ++i ) 
+        { for ( unsigned short j = 0 ; j < D2 ; ++j ) 
+          { result(i,j) = a[i] * b[j] ; } }
+        return result ;
+      }
+    } ;
+    // ========================================================================
+    // vector * matrix 
+    template <class T, unsigned int D, unsigned D2, class  R>
+    struct MultiplyOp<ROOT::Math::SVector<T,D>,ROOT::Math::SMatrix<T,D,D2,R> >
+    {
+      static 
+      ROOT::Math::SVector<T,D2> 
+      multiply ( const ROOT::Math::SVector<T,D>      & a , 
+                 const ROOT::Math::SMatrix<T,D,D2,R> & b ) { return a * b ; }
+    } ;
+    // =======================================================================
+    // matrix * matrix  
+    template <class T, unsigned int D1, unsigned D2, unsigned D3, class R1, class R2>
+    struct MultiplyOp<ROOT::Math::SMatrix<T,D1,D2,R1>,ROOT::Math::SMatrix<T,D2,D3,R2> > 
+    {
+      static 
+      ROOT::Math::SMatrix<T,D1,D3,ROOT::Math::MatRepStd<T,D1,D3> >  
+      multiply  ( const ROOT::Math::SMatrix<T,D1,D2,R1> & a , 
+                  const ROOT::Math::SMatrix<T,D2,D3,R2> & b ) { return a * b ; }
+    } ;
+    // =======================================================================
+    // matrix * vector  
+    template <class T, unsigned int D, unsigned D2, class  R>
+    struct MultiplyOp <ROOT::Math::SMatrix<T,D,D2,R>,ROOT::Math::SVector<T,D2> >
+    {
+      static 
+      ROOT::Math::SVector<T,D> 
+      multiply  ( const ROOT::Math::SMatrix<T,D,D2,R> & a , 
+                  const ROOT::Math::SVector<T,D2>     & b ) { return a * b ; }
+    } ;
+    // ========================================================================
+
+    // ========================================================================
+    template <class OBJ1, class OBJ2> 
+    struct EqualityOp ;
+    // ========================================================================
+    // vector == vector 
+    template <class T1,class T2, unsigned int D>
+    struct EqualityOp< ROOT::Math::SVector<T1,D>,ROOT::Math::SVector<T2,D> >
+    {
+      static 
+      bool 
+      equal ( const ROOT::Math::SVector<T1,D>& v1 , 
+              const ROOT::Math::SVector<T2,D>& v2 ) 
+      {
+        static const Equal_To<ROOT::Math::SVector<T1,D> > m_cmp{} ;
+        return m_cmp ( v1 , v2 ) ;
+      }
+    } ;
+    // ========================================================================
+    // matrix == matrix 
+    template <class T1,class T2, unsigned int D1,unsigned int D2, class R1, class R2>
+    struct EqualityOp< ROOT::Math::SMatrix<T1,D1,D2,R1>,ROOT::Math::SMatrix<T2,D1,D2,R2> >
+    {
+      static 
+      bool 
+      equal ( const ROOT::Math::SMatrix<T1,D1,D2,R1>& v1 , 
+              const ROOT::Math::SMatrix<T2,D1,D2,R2>& v2 ) 
+      {
+        static const Equal_To<ROOT::Math::SMatrix<T1,D1,D2,R1> > m_cmp{} ;
+        return m_cmp ( v1 , v2 ) ;
+      }
+    } ;
+    // ========================================================================
+    
+    // ========================================================================
     namespace  Ops
     {
       // ======================================================================

@@ -166,38 +166,8 @@ namespace Ostap
         explicit Matrix ( const Vector&      ) ; 
         /// create a permutation matrix
         explicit Matrix ( const Permutation& ) ;
-        // =======================================================================  
-        /** Create the matrix from the shape and continious buffer:
-         *  - to be replaced wth std::span later
-         *  
-         *  For <code>N1 == N2</code> (square matrix) :
-         *  if <code>buffer.size() == N1 * ( N1 + 1 ) / 2 </code> 
-         *  the matrix is treated as symmetric
-         */
-        template <class SCALAR , 
-                  typename std::enable_if<Ostap::is_convertible_to_double<SCALAR>::value, bool>::type = true>            
-        Matrix
-        ( const std::size_t N1     , 
-          const std::size_t N2     , 
-          const SCALAR*     buffer , 
-          const std::size_t size   ) 
-          : Matrix ( N1 , N2)
-        { this -> fill_impl ( buffer , size ) ; }
-        // ========================================================================
-        /** Create square matrix from the shape and continious buffer:
-         *  - to be replaced wth std::span later
-         *
-         *  If <code>buffer.size() == N * ( N + 1 ) / 2 </code> 
-         *  the matrix is treated as symmetric
-         */
-        template <class SCALAR , 
-                  typename std::enable_if<Ostap::is_convertible_to_double<SCALAR>::value, bool>::type = true>            
-        Matrix
-        ( const std::size_t N      ,  
-          const SCALAR*     buffer ,
-          const std::size_t size   ) 
-          : Matrix ( N )
-        { this -> fill_impl ( buffer , size ) ; }
+        // =======================================================================
+      public : // create the matrix from shape and continuous buffer 
         // =======================================================================
         /** Create the matrix from the shape and continious buffer:
          *  - to be replaced wth std::span later
@@ -226,8 +196,8 @@ namespace Ostap
         Matrix
         ( const std::size_t                   N      ,  
           const Ostap::Utils::Buffer<SCALAR>& buffer ) 
-          : Matrix ( N )
-        { this -> fill_impl ( buffer.data () , buffer.size () ) ; }
+          : Matrix ( N , N , buffer )
+        {}
         // =======================================================================
 #if defined(OSTAP_HAS_STD_SPAN) && OSTAP_HAS_STD_SPAN
         // ======================================================================
@@ -258,8 +228,8 @@ namespace Ostap
         Matrix
         ( const std::size_t                 N      ,  
           const std::span<SCALAR>&          buffer ) 
-          : Matrix ( N )
-        { this -> fill_impl ( buffer.data () , buffer.size () ) ; }
+          : Matrix ( N , N , buffer )
+        {}
         // =======================================================================
 #endif  // OSTAP_HAS_STD_SPAN 
         // =======================================================================

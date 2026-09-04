@@ -34,6 +34,11 @@
     <field name = "m_workspace_cquad"   transient="true"/>      
     <field name = "m_workspace_romberf" transient="true"/>      
   </class>
+
+  <class name   = "Ostap::Math::GSL::EigenSystem">
+    <field name = "m_ws_symm"         transient="true"/>
+    <field name = "m_ws_symmv"        transient="true"/>
+  </class>
   
   <class name   = "Ostap::Exception">
     <field name = "m_previous"          transient="true"/>      

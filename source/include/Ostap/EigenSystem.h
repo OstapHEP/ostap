@@ -8,6 +8,7 @@
 // ============================================================================
 #include <vector>
 #include <array>
+#include <memory>
 // ============================================================================
 // ROOT 
 // ============================================================================
@@ -18,6 +19,7 @@
 // ============================================================================
 #include "Ostap/StatusCode.h"
 #include "Ostap/LinAlg.h"
+#include "Ostap/MatrixAsBuffer.h"
 // ============================================================================
 /** @file Ostap/EigenSystem.h
  *  Helper class with allows to find eigenvalues and eigenvectors 
@@ -123,7 +125,7 @@ namespace Ostap
           const bool           ascending = true  ) const 
         {          
           /// copy S-matrix into GSL-matrix 
-          const Matrix m { D , D , matrix.Array() , D * ( D + 1 ) / 2 } ;
+          const Matrix m { D , Ostap::Utils::buffer ( matrix ) } ;
           Vector v { D } ;
           // calculate the eigenvalues 
           const Ostap::StatusCode sc = this -> eigenValues ( m , v , sorted , ascending ) ;
@@ -151,7 +153,7 @@ namespace Ostap
           const bool           ascending = true  ) const 
         {
           /// copy S-matrix into GSL-matrix 
-          const Matrix m { D , D , matrix.Array() , D * ( D + 1 ) / 2 } ;
+          const Matrix m { D , Ostap::Utils::buffer ( matrix ) } ;
           /// vector of eigenvalues  
           Vector v { D } ;
           /// matrix of eigenvectors 
@@ -184,7 +186,7 @@ namespace Ostap
           const bool           ascending = true  ) const 
         {
           /// copy S-matrix into GSL-matrix 
-          const Matrix m { D , D , matrix.Array() , D * ( D + 1 ) / 2 } ;
+          const Matrix m { D , Ostap::Utils::buffer ( matrix ) } ;
           /// vector of eigenvalues  
           Vector v { D } ;
           /// vector of eigenvectors 
@@ -224,7 +226,7 @@ namespace Ostap
         // mutable gsl_eigen_symm_workspace*  m_ws_symm  { nullptr } ;
         // mutable gsl_eigen_symmv_workspace* m_ws_symmv { nullptr } ;
         mutable void* m_ws_symm  { nullptr } ;
-        mutable void* m_ws_symmv { nullptr } ;        
+        mutable void* m_ws_symmv { nullptr } ;
         // =====================================================================        
       } ;
       // =======================================================================
