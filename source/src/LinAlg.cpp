@@ -343,16 +343,16 @@ Ostap::Math::GSL::Matrix::resize
   const Ostap::Math::GSL::Matrix::Zero /* zero */ ) 
 {
   if ( n1 != m_matrix->size1 || n2 != m_matrix->size2 )
-    {
-      gsl_matrix_free ( m_matrix ) ; 
-      m_matrix = gsl_matrix_calloc ( n1 , n2 ) ;      // CALLOC!
-      Ostap::Assert ( m_matrix                           ,
-                      "(GSL)Matrix allocation failure"   ,
-                      "Ostap::Math::GSL::Matrix::resize" ,
-                      MATRIX_ALLOCATION_FAILURE          , __FILE__ , __LINE__ ) ;      
-    }
-  else
-    { gsl_matrix_set_all ( m_matrix , 0 ) ; }
+  {
+    gsl_matrix_free ( m_matrix ) ; 
+    m_matrix = gsl_matrix_calloc ( n1 , n2 ) ;      // CALLOC!
+    Ostap::Assert ( m_matrix                           ,
+                    "(GSL)Matrix allocation failure"   ,
+                    "Ostap::Math::GSL::Matrix::resize" ,
+                    MATRIX_ALLOCATION_FAILURE          , __FILE__ , __LINE__ ) ;      
+  }
+  else { gsl_matrix_set_all ( m_matrix , 0 ) ; }
+  //
   return *this ;
 }
 // ============================================================================
@@ -2954,11 +2954,311 @@ Ostap::StatusCode Ostap::Math::GSL::LDLT
   return Ostap::StatusCode::SUCCESS ;
 }
 
+// ============================================================================
+/*  D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
+ *  - \f$ Q \f$ is orthogonal matrix
+ *  - \f$ D_2\fF is symmetric  trigiagonal matrix 
+ *  @param A (INPUT) input matrix A
+ *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+ *  @param d (OUTPUT/UPDATE) main diagonal of symmetric  matrix \f$ D_3 \f$
+ *  @param s (OUTPUT/UPDATE) sub-diagonal of symmetric  matrix \f$ D_3 \f$
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::GSL::D3
+( const Ostap::Math::GSL::Matrix& A ,
+  Ostap::Math::GSL::Matrix&       Q ,
+  Ostap::Math::GSL::Vector&       d ,
+  Ostap::Math::GSL::Vector&       s )
+{
+  //
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  //
+  if ( M != N )
+  {
+    gsl_error ( "D3: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;
+    return MATRIX_IS_NOT_SQUARE ;
+  }
+  //
+  if ( N < 2 )
+  {
+    const int status = GSL_EBADLEN ; 
+    gsl_error ( "D3: matrix is too small" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  Matrix a   { A } ;
+  Vector tau { N } ;
+  //
+  int status = gsl_linalg_symmtd_decomp ( a.matrix () , tau.vector () ) ;
+  if ( status )
+  {
+    gsl_error ( "D3: Error from gsl_linalg_symmtd_decomp" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  Q.resize ( N ) ;
+  if ( d.size ()     != N ) { d.resize ( N     ) ; }
+  if ( s.size () + 1 != N ) { s.resize ( N - 1 ) ; }
+  //
+  status = gsl_linalg_symmtd_unpack ( a  .matrix () ,
+                                      tau.vector () ,
+                                      Q  .matrix () ,
+                                      d  .vector () ,
+                                      s  .vector () ) ;
+  if ( status )
+  {
+    gsl_error ( "D3: Error from gsl_linalg_symmtd_unpack" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+   
+// ============================================================================
+/* D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
+ *  - \f$ Q \f$ is orthogonal matrix
+ *  - \f$ D_2\fF is symmetric  trigiagonal matrix 
+ *  @param A (INPUT) input matrix A
+ *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+ *  @param D (OUTPUT/UPDATE) symmetric tridiagonal matrix 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::GSL::D3
+( const Ostap::Math::GSL::Matrix& A ,
+  Ostap::Math::GSL::Matrix&       Q ,
+  Ostap::Math::GSL::Matrix&       D )
+{  
+  //
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  //
+  if ( M != N )
+  {
+    gsl_error ( "D3: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;
+    return MATRIX_IS_NOT_SQUARE ;
+  }
+  //
+  if ( N < 2 )
+  {
+    const int status = GSL_EBADLEN ; 
+    gsl_error ( "D3: matrix is too smal" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  Vector d  { N     } ;
+  Vector s  { N - 1 } ;
+  //
+  Ostap::StatusCode sc = D3 ( A , Q , d , s ) ;
+  if ( sc.isFailure() ) { return sc ; }
+  //
+  /// copy diagonal to the output matrix 
+  Matrix d3 { d } ;
+  gsl_matrix* gd = d3.matrix () ;
+  gsl_vector* gs = s .vector () ;
+  /// copy subdiagonal for the output matrix 
+  for ( std::size_t i = 0 ; i + 1 < N ; ++i )
+  {
+    const double val = gsl_vector_get ( gs , i ) ;
+    gsl_matrix_set ( gd , i + 1 , i     , val ) ;
+    gsl_matrix_set ( gd , i     , i + 1 , val );
+  }
+  //
+  D.swap ( d3 ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;          
+}
+
+
+// ============================================================================
+/*  Hessenberg decomposition of square matrix \f$ A = U H Q^T \f$, where
+ *  - \f$ U \f$ is orthogonal 
+ *  - \f$ H \f$ is Hessenberg' matrix: \f$ H(i,i)=0 \f$ for \f$ i > j + 1 \f$
+ *  @param A (INPUT) input matrix A
+ *  @param U (OUTPUT/UPDATE) orthogonal matrix U
+ *  @param H (OUTPUT/UPDATE) Hessenberg matrix 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::GSL::UHUT
+( const Ostap::Math::GSL::Matrix& A ,
+  Ostap::Math::GSL::Matrix&       U ,
+  Ostap::Math::GSL::Matrix&       H )
+{
+  //
+  //
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  //
+  if ( M != N )
+    {
+    gsl_error ( "UHUT: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;
+    return MATRIX_IS_NOT_SQUARE ;
+  }
+  //
+  if ( N < 2 )
+  {
+    const int status = GSL_EBADLEN ; 
+    gsl_error ( "UHUT: matrix is too small" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status  ;
+  }
+  //
+  Matrix a   { A } ;
+  Vector tau { N } ; 
+  //
+  int status = gsl_linalg_hessenberg_decomp ( a.matrix() , tau.vector() ) ;
+  if ( status )
+  {
+    gsl_error ( "UHUT: error from gsl_linalg_hessenebrg_decomp" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  U.resize ( N ) ;
+  status = gsl_linalg_hessenberg_unpack ( a  .matrix () ,
+                                          tau.vector () ,
+                                          U  .matrix () ) ;   
+  if ( status )
+  {
+    gsl_error ( "UHUT: error from gsl_linalg_hessenebrg_unpack" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  status = gsl_linalg_hessenberg_set_zero ( a.matrix () ) ;
+  if ( status )
+  {
+    gsl_error ( "UHUT: error from gsl_linalg_hessenebrg_set_zero" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  H.swap ( a ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+
+// ============================================================================
+/*  Bidiagonalization of of general matrix \f$ A = U B V^T \f$, where
+ *  - \f$ A \f$ is \f$ M \times N \f$ matrix
+ *  - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
+ *  - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
+ *  - \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
+ *  @param A (INPUT) input matrix A
+ *  @param U (OUTPUT/UPDATE) orthogonal matrix U
+ *  @param d (OUTPUT/UPDATE) diagonal 
+ *  @param s (OUTPUT/UPDATE) super-diagonal  
+ *  @param V (OUTPUT/UPDATE) orthogonal matrix V
+ *  @return status code        
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::GSL::UBVT
+( const Ostap::Math::GSL::Matrix& A ,
+  Ostap::Math::GSL::Matrix      & U ,
+  Ostap::Math::GSL::Vector      & d ,
+  Ostap::Math::GSL::Vector      & s ,
+  Ostap::Math::GSL::Matrix      & V )
+{
+  //
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  const std::size_t K = std::min ( M , N ) ; 
+  //
+  if ( K < 2 )
+  {
+    const int status = GSL_EBADLEN ; 
+    gsl_error ( "UBVT: matrix is too small" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  Matrix a     { A     } ;
+  Vector tau_U { K     } ;
+  Vector tau_V { K - 1 } ;
+  //
+  int status = gsl_linalg_bidiag_decomp ( a    .matrix () ,
+                                          tau_U.vector () , 
+                                          tau_V.vector () ) ;
+  if ( status )
+  {
+    gsl_error ( "UBVT: error from gsl_linalg_bidiag_decomp" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  U.resize ( M , N ) ;
+  d.resize ( N     ) ;
+  d.resize ( N - 1 ) ;  
+  V.resize ( N     ) ;
+  //
+  status = gsl_linalg_bidiag_unpack ( a    .matrix () ,
+                                      tau_U.vector () ,
+                                      U    .matrix () ,                               
+                                      tau_V.vector () ,
+                                      V    .matrix () ,                               
+                                      d    .vector () ,
+                                      s    .vector () ) ;
+  if ( status )
+    {
+    gsl_error ( "UBVT: error from gsl_linalg_bidiag_unpack" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  return Ostap::StatusCode::SUCCESS ; 
+}
+
+
+// ============================================================================
+/* Bidiagonalization of of general matrix \f$ A = U B V^T \f$, where
+ *  - \f$ A \f$ is \f$ M \times N \f$ matrix
+ *  - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
+ *  - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
+ *  - \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
+ *  @param A (INPUT) input matrix A
+ *  @param U (OUTPUT/UPDATE) orthogonal matrix U
+ *  @param B (OUTPUT/UPDATE) bidiagonal matrix B
+ *  @param V (OUTPUT/UPDATE) orthogonal matrix V
+ *  @return status code        
+ */
+// ============================================================================    
+Ostap::StatusCode Ostap::Math::GSL::UBVT
+( const Ostap::Math::GSL::Matrix& A ,
+  Ostap::Math::GSL::Matrix      & U ,
+  Ostap::Math::GSL::Matrix      & B ,
+  Ostap::Math::GSL::Matrix      & V )
+{
+  //
+  const std::size_t M = A.nRows  () ;
+  const std::size_t N = A.nCols  () ;
+  const std::size_t K = std::min ( M , N ) ; 
+  //
+  if ( K < 2 )
+  {
+    const int status = GSL_EBADLEN ; 
+    gsl_error ( "UBVT: matrix is too small" , __FILE__ , __LINE__ , status ) ;
+    return ERROR_GSL + status ;
+  }
+  //
+  Vector d  { N     } ;
+  Vector s  { N - 1 } ;
+  //
+  const Ostap::StatusCode sc = UBVT ( A , U , d , s , V ) ;
+  if ( sc.isFailure() ) { return sc ; }
+  //
+  B.resize ( N , N , Matrix::Zero() ) ;
+  //
+  gsl_matrix* b = B.matrix() ;
+  //
+  gsl_vector_view main_diag  = gsl_matrix_diagonal     ( b     ) ;
+  gsl_vector_view super_diag = gsl_matrix_superdiagonal( b , 0 ) ;
+  //
+  gsl_vector_memcpy ( &main_diag.vector  , d.vector () ) ;
+  gsl_vector_memcpy ( &super_diag.vector , s.vector () ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ;   
+}
+
 
 // ============================================================================
 /*  Polar decompositon of the square matrix A: \f$ A = UP \f$
- *  - U ius orthogonal 
- *  - P is positiev semi-definitive 
+ *  - U is orthogonal 
+ *  - P is positibe semi-definitive 
  */
 // ============================================================================
 Ostap::StatusCode Ostap::Math::GSL::POLAR
@@ -2980,14 +3280,18 @@ Ostap::StatusCode Ostap::Math::GSL::POLAR
   Matrix auxv { N , K } ;
   Vector S    { K }     ; // vector of singular values 
   //
+  /// SVD-decompositino
   Ostap::StatusCode sc = SVD ( A , S , auxu , auxv ) ;
+  if ( sc.isFailure() ) { return sc ; }
   //
-  U = auxu                * auxv . T () ;
+  // U = auxu * auxv . T () ;
+  sc = MM ( auxu , false , auxv , true , U ) ;
+  if ( sc.isFailure() ) { return sc ; } 
   ///
-  /// TO DO :  NEED TO MAKE IT EFFICIENT!! MAtrix(S) is a diagonal!!!
-  P = auxv * Matrix ( S ) * auxv . T () ;
+  /// TO DO :  NEED TO MAKE IT EFFICIENT!! Matrix(S) is a diagonal!!!
+  // P = auxv * Matrix ( S ) * auxv . T () ;
+  return MDM ( auxv , false , S , auxv , true , P ) ;
   //
-  return Ostap::StatusCode::SUCCESS ;
 }
 // ===============================================================================
 namespace Ostap
@@ -3037,32 +3341,36 @@ namespace Ostap
   // =============================================================================
 }
 // ===============================================================================
-/* Schur decomposition of square matrix \f$ A = Z T Z^T\f$, where 
- *  - A is inpur MxM (square) matrix
- *  - T is Schur form of matix  
- *  - Z is orthogonam matrix 
+/* Schur decomposition of square matrix \f$ A = Z S Z^T\f$, where 
+ *  - A is input MxM (square) matrix
+ *  - S is Schur' form of matix  
+ *  - Z is orthogonal matrix 
  */
 // ==============================================================================
 Ostap::StatusCode Ostap::Math::GSL::SCHUR 
 ( const Ostap::Math::GSL::Matrix&  A ,  
   Ostap::Math::GSL::Matrix&        Z , 
-  Ostap::Math::GSL::Matrix&        T ) 
+  Ostap::Math::GSL::Matrix&        S ) 
 {
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
   // Schur decomposition exists only for square matrices!
-  if ( A.nRows() != A.nCols() ) { return MATRIX_IS_NOT_SQUARE ; }
+  if ( A.nRows() != A.nCols() )
+  {
+    gsl_error ( "SCHUR: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;    
+    return MATRIX_IS_NOT_SQUARE ;
+  }
   //
   const std::size_t N { A.nRows() } ; 
   //
-  T = A ;
+  S = A ;
   Z.resize ( N , N ) ;
   Ostap::Math::GSL::SchurWorkspace ws   { N } ;
   Ostap::Math::GSL::ComplexVector  eval { N } ;
   //
-  gsl_eigen_nonsymm_params ( 1 , 0 , ws.workspace () ) ;
-  int status = gsl_eigen_nonsymm_Z ( T.matrix     () , 
+  gsl_eigen_nonsymm_params ( 1 , 1 , ws.workspace () ) ;
+  int status = gsl_eigen_nonsymm_Z ( S.matrix     () , 
                                      eval.vector  () , 
                                      Z.matrix     () , 
                                      ws.workspace () ) ;
@@ -3072,12 +3380,15 @@ Ostap::StatusCode Ostap::Math::GSL::SCHUR
     gsl_error ( "Error from gsl_eigen_nonsymm_Z" , __FILE__ , __LINE__ , status ) ;
     return ERROR_GSL + status ;
   }
-  // need to clean the lower left part of T
-  // gsl_vector_complex_fprintf  ( stderr , eval.vector() , "%+.4g") ; 
   //
-  for  ( std::size_t j = 0 ; j < N ; ++j   )
-    { for ( std::size_t i = j + 2 ; i < N ; ++i ) { T.set ( i , j , 0.0 ) ; } }
-  //
+  
+  // remove the garbage below first subdiagonal 
+  gsl_matrix* s = S.matrix() ; 
+  for ( std::size_t i = 2 ; i < N ; ++i )
+  { for ( std::size_t j = 0 ; j < i - 1 ; ++j )
+    { gsl_matrix_set ( s , i , j , 0.0 ) ; } }
+
+
   return Ostap::StatusCode::SUCCESS ;
 }
 // ============================================================================

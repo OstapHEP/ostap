@@ -24,7 +24,7 @@ from   ostap.math.math_base   import isequal   , iszero, std , Ostap, numpy
 from   ostap.core.core        import hID 
 from   ostap.utils.core       import typename 
 from   ostap.utils.clsgetter  import classgetter
-from   ostap.logger.pretty    import fmt_pretty_float, fmt_pretty_error 
+from   ostap.logger.pretty    import fmt_pretty_float, fmt_pretty_error, format_pow10
 from   ostap.math.math_base   import pretty_array
 from   ostap.logger.colorized import infostr, attstr, warning_info 
 from   ostap.utils.gsl        import gsl_info
@@ -1392,7 +1392,7 @@ class LinAlg(object) :
         # =====================================================================
         if expo : # ===========================================================
             scale = 10 ** expo
-            title = attstr ( '[%s10^%+d] ' % ( times , expo ) ) + title 
+            title = attstr ( '[%s] ' % format_pow10 ( expo ) ) + title 
         else    :
             scale = 1
             
@@ -1485,7 +1485,7 @@ class LinAlg(object) :
 
         if expo :
             scale = 10 ** expo
-            title = attstr ( '[%s10^%+d] ' %( times , expo ) ) + title 
+            title = attstr ( '[%s] ' % format_pow10 ( expo ) ) + title 
         else    : scale = 1
 
         if correlations :
@@ -1505,7 +1505,7 @@ class LinAlg(object) :
             zeros.append ( f % ( -0 ) )
         zeros = tuple ( zeros )
         
-        top_cell = attstr ( '[%s10^%+d]' % ( times , expo ) ) if expo else '\\'
+        top_cell = attstr ( '[%s]' % format_po10 ( expo ) ) if expo else '\\'
         
         ## table = [ tuple ( [ top_cell ] + [ '%d' % i for i in range ( cols ) ] ) ]        
         table = [ tuple ( [ top_cell ] + [ l for l in labels ( cols ) ] ) ] 
@@ -1821,11 +1821,11 @@ class LinAlg(object) :
         zeros = fmtv % ( +0.0 ) , fmtv % ( -0.0 )        
         if expo :
             scale  = 10 ** expo
-            title  = attstr ( '[%s10^%+d] ' % ( times , expo ) ) + title 
+            title  = attstr ( '[%s] ' % format_pow10 ( expo ) ) + title 
         else    :
             scale = 1 
 
-        top_cell = attstr ( '[%s10^%+d]' % ( times , expo ) ) if expo else '\\'
+        top_cell = attstr ( '[%s]' % format_pow10 ( expo ) )  if expo else '\\'
         
         ## table = [ tuple ( [ '\\' ] + [ '%d' % i for i in range ( cols ) ] ) ]
         table = [ tuple ( [ top_cell ] + [ l for l in labels ( cols , col_labs ) ] ) ]
@@ -1984,11 +1984,11 @@ class LinAlg(object) :
         zeros = fmtv % ( +0.0 ) , fmtv % ( -0.0 )        
         if expo :
             scale  = 10 ** expo
-            title  = attstr ( '[%s10^%+d] ' % ( times , expo ) ) + title 
+            title  = attstr ( '[%s] ' % format_pow10 ( expo ) ) + title 
         else    :
             scale = 1 
 
-        top_cell = attstr ( '[%s10^%+d]' % ( times , expo ) ) if expo else '\\'
+        top_cell = attstr ( '[%s]' % format_pow10 ( expo ) ) if expo else '\\'
         
         ## table = [ tuple ( [ top_cell ] + [ '%d' % i for i in range ( cols ) ] ) ]
         table = [ tuple ( [ top_cell ] + [ l for l in labels ( cols , col_labs ) ] ) ]

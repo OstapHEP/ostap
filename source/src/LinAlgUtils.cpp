@@ -11,6 +11,11 @@
 // ============================================================================
 #include "gsl/gsl_linalg.h"
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/LinAlg.h"
+#include "Ostap/Buffer.h"
+// ============================================================================
 // local
 // ============================================================================
 #include "status_codes.h"
@@ -21,106 +26,84 @@
  *  @author Vanya BELYAEV IvanBelyaev@iter.ru
  */
 // ============================================================================
-// convert T-matrix into GSL matrix 
-// ============================================================================
-Ostap::Math::GSL::Matrix
-Ostap::Math::GSL::matrix
-( const TMatrixT<float>&          m )
+namespace
 {
-  Ostap::Assert ( m.IsValid() && m.GetNrows() && m.GetNcols () , 
-                  "T-matrix is not valid!" , 
-                  "Ostap::Math::GSL::matrix"     ,
-                  INVALID_TMATRIX          , __FILE__ , __LINE__ ) ;
-  
-  const unsigned int nr = m.GetNrows () ;
-  const unsigned int nc = m.GetNcols () ;
-  //
-  Matrix result { nr , nc }  ;
-  for ( unsigned long i = 0 ; i < nr ; ++i )
-  { for ( unsigned long j = 0 ; j < nc ; ++j )
-    { result.set ( i , j , m ( i , j ) ) ; } }
-  //
-  return result ;
-}
-// ============================================================================
-// convert T-matrix into GSL matrix 
-// ============================================================================
-Ostap::Math::GSL::Matrix
-Ostap::Math::GSL::matrix
-( const TMatrixT<double>&          m )
-{
-  Ostap::Assert ( m.IsValid() && m.GetNrows() && m.GetNcols () , 
-                  "T-matrix is not valid!" , 
-                  "Ostap::Math::GSL::matrix"     ,
-                  INVALID_TMATRIX          , __FILE__ , __LINE__ ) ;
-  
-  const unsigned int nr = m.GetNrows () ;
-  const unsigned int nc = m.GetNcols () ;
-  //
-  Matrix result { nr , nc }  ;
-  for ( unsigned long i = 0 ; i < nr ; ++i )
-  { for ( unsigned long j = 0 ; j < nc ; ++j )
-    { result.set ( i , j , m ( i , j ) ) ; } }
-  //
-  return result ;
-}
-// ============================================================================
-// convert T-matrix into GSL matrix 
-// ============================================================================
-Ostap::Math::GSL::Matrix
-Ostap::Math::GSL::matrix
-( const TMatrixTSym<float>&          m )
-{
-  Ostap::Assert ( m.IsValid() && m.GetNrows() && m.GetNrows() == m.GetNcols () , 
-                  "T-matrix is not valid!" , 
-                  "Ostap::Math::GSL::matrix"     ,
-                  INVALID_TMATRIX          , __FILE__ , __LINE__ ) ;
-  
-  const unsigned int N  = m.GetNrows () ;
-  //
-  Matrix result { N }  ;
-  for ( unsigned long i = 0 ; i < N  ; ++i )
+  // ==========================================================================
+  // convert TMatrixT into GSL matrix 
+  // ============================================================================
+  template <typename FLOAT>
+  inline Ostap::Math::GSL::Matrix
+  _matrix_ ( const TMatrixT<FLOAT>& m )
   {
-    result.set ( i , i , m ( i , i ) ) ;      
-    for ( unsigned long j = i + 1  ; j < N ; ++j )
-    {
-      const double mij = m ( i , j ) ;
-      result.set ( i , j , mij ) ;
-      result.set ( j , i , mij ) ;
-    }
+    //
+    Ostap::Assert ( m.IsValid() && 1 <= m.GetNrows() && 1 <= m.GetNcols () , 
+                    "T-matrix is not valid!" , 
+                    "Ostap::Math::GSL::matrix" ,
+                    INVALID_TMATRIX , __FILE__ , __LINE__ ) ;
+    
+    const std::size_t NR = m.GetNrows () ;
+    const std::size_t NC = m.GetNcols () ;
+    //
+    return Ostap::Math::GSL::Matrix { NR , NC , Ostap::Utils::Buffer<FLOAT> ( m.GetMatrixArray() , NR * NC ) } ;
   }
-  //
-  return result ;
+  // ==========================================================================
+
+  // ==========================================================================
+  /** convert TMatrixTSym into GSL matrix
+   *  @attention It reads only the upper triangle part and fill both upper&lower parts
+   */
+  // ============================================================================
+  template <typename FLOAT>
+  inline Ostap::Math::GSL::Matrix
+  _matrix_ ( const TMatrixTSym<FLOAT>& m )
+  {
+    Ostap::Assert ( m.IsValid() && 1 <= m.GetNrows() && m.GetNrows() == m.GetNcols () , 
+                    "T-matrix is not valid!" , 
+                    "Ostap::Math::GSL::matrix" ,
+                    INVALID_TMATRIX , __FILE__ , __LINE__ ) ;
+    
+    const std::size_t N = m.GetNrows () ;
+    //
+    Ostap::Math::GSL::Matrix result { N } ;
+    for ( std::size_t i = 0 ; i < N ; ++i )
+    {
+      result.set ( i , i , m ( i , i ) ) ;      
+      for ( std::size_t j = i + 1 ; j < N ; ++j )
+      {
+        const double mij = m ( i , j ) ;
+        result.set ( i , j , mij ) ;
+        result.set ( j , i , mij ) ;
+      }
+    }
+    //
+    return result ;
+  }
+  // ==========================================================================  
 }
 // ============================================================================
 // convert T-matrix into GSL matrix 
 // ============================================================================
 Ostap::Math::GSL::Matrix
 Ostap::Math::GSL::matrix
-( const TMatrixTSym<double>&         m )
-{
-  Ostap::Assert ( m.IsValid() && m.GetNrows() && m.GetNrows() == m.GetNcols () , 
-                  "T-matrix is not valid!" , 
-                  "Ostap::Math::GSL::matrix"     ,
-                  INVALID_TMATRIX          , __FILE__ , __LINE__ ) ;
-  
-  const unsigned int N  = m.GetNrows () ;
-  //
-  Matrix result { N }  ;
-  for ( unsigned long i = 0 ; i < N  ; ++i )
-  {
-    result.set ( i , i , m ( i , i ) ) ;      
-    for ( unsigned long j = i + 1  ; j < N ; ++j )
-    {
-      const double mij = m ( i , j ) ;
-      result.set ( i , j , mij ) ;
-      result.set ( j , i , mij ) ;
-    }
-  }
-  //
-  return result ;
-}
+( const TMatrixT<float>&  m ) { return _matrix_ ( m ) ; }
 // ============================================================================
+// convert T-matrix into GSL matrix 
+// ============================================================================
+Ostap::Math::GSL::Matrix
+Ostap::Math::GSL::matrix
+( const TMatrixT<double>&  m ) { return _matrix_ ( m ) ; }
+// ============================================================================
+// convert T-matrix into GSL matrix 
+// ============================================================================
+Ostap::Math::GSL::Matrix
+Ostap::Math::GSL::matrix
+( const TMatrixTSym<float>& m ) { return _matrix_ ( m ) ; }
+// ============================================================================
+// convert T-matrix into GSL matrix 
+// ============================================================================
+Ostap::Math::GSL::Matrix
+Ostap::Math::GSL::matrix
+( const TMatrixTSym<double>& m ) { return _matrix_ ( m ) ; }
 
 // ============================================================================
 //                                                                      The END 

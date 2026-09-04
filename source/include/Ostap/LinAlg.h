@@ -22,6 +22,32 @@
 #include "Ostap/Math.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
+/** @file Ostap/LinAlg.h
+ *  File provides utilities to access to the basic Linear Algebra from GSL
+ *
+ *  First it provides ilght wrappers for GSL matrices, vectors and permutaitons
+ *  with all basic operations included
+ *
+ *  @see class Ostap::Math::GSL::Matrix
+ *  @see class Ostap::Math::GSL::Vectors
+ *  @see class Ostap::Math::GSL::Permutation
+ *  @see https://www.gnu.org/software/gsl/doc/html/vectors.html
+ *
+ *  The basic Linear Alegbra functinons are:
+ *  - LU decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
+ *  - PQR: QR decomposition with column pivoting  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#qr-decomposition-with-column-pivoting
+ *  - LQ decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lq-decomposition
+ *  - QL decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#ql-decomposition
+ *  - COD: Complete Orthogonal Decomposition @see  https://www.gnu.org/software/gsl/doc/html/linalg.html#complete-orthogonal-decomposition
+ *  - SVD: Singular Value Decomposition @see  https://www.gnu.org/software/gsl/doc/html/linalg.html#singular-value-decomposition
+ *  - LLT: Cholesky decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#cholesky-decomposition
+ *  - LDLT: Pivoted Cholesky Decompositon with scale factor @see https://www.gnu.org/software/gsl/doc/html/linalg.html#pivoted-cholesky-decomposition
+ *  - D3: Trigiagonal decomposition of symmetric matrices @see https://www.gnu.org/software/gsl/doc/html/linalg.html#tridiagonal-decomposition-of-real-symmetric-matrices
+ *  - UHUT: Hessenberg decomposition of matrices @see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decomposition-of-real-matrices
+ *  - UBVT: Bidiagolalization of general matrices @see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization
+ *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html
+ */
+// ============================================================================
 namespace Ostap 
 {
   // ==========================================================================
@@ -36,7 +62,7 @@ namespace Ostap
       class Matrix      ;
       class Vector      ;
       class Permutation ;
-      // =========================================================================
+      // ======================================================================
       // GSL version major 
       std::size_t GSL_version_major () ;
       /// GSL version minor
@@ -45,14 +71,14 @@ namespace Ostap
       std::size_t GSL_version_int   () ;
       /// GSL version as string
       std::string GSL_version       () ;
-      // =========================================================================
+      // ======================================================================
       /** @class Ostap::GSL::Matrix
        *  Internal class to hold GSL-Matrix
        */
       class Matrix
       {
       public : 
-        // =====================================================================
+        // ====================================================================
         struct Zero {} ;
         struct Id   {} ;
         // ====================================================================
@@ -329,7 +355,19 @@ namespace Ostap
         Matrix& resize
         ( const std::size_t n1     ,
           const std::size_t n2     ,
-          const Id      /* id */   ) ;         
+          const Id      /* id */   ) ;
+        // ========================================================================
+        /// resize to square matrix 
+        inline Matrix& resize
+        ( const std::size_t n  ) { return resize ( n , n ) ; } 
+        /// resize to square matrix 
+        inline Matrix& resize
+        ( const std::size_t n  ,
+          const Zero        z  ) { return resize ( n , n , z  ) ; } 
+        /// resize to square matrix 
+        inline Matrix& resize
+        ( const std::size_t n  ,
+          const Id          id ) { return resize ( n , n , id ) ; } 
         // ========================================================================
       public: // simplest math operations   
         // ========================================================================
@@ -476,7 +514,6 @@ namespace Ostap
             ++(*this) ;
             return tmp ;
           }
-
           /// Equality operator handling logical end-of-range comparisons
           bool operator== ( const const_iterator& other ) const 
           {
@@ -488,14 +525,15 @@ namespace Ostap
             const std::size_t s2 = ( other.m_vec ? other.m_vec->size : 0 ) ;
             return ( s1 <= m_index  ) && ( s2 <= other.m_index  ) ;
           }
-
           /// Inequality operator
           bool operator!= ( const const_iterator& other ) const 
           { return !(*this == other) ; }
-
+          // ======================================================================
         private:
+          // ======================================================================
           const gsl_vector* m_vec   { nullptr } ;
           std::size_t       m_index { 0 }       ;
+          //=======================================================================
         } ;
         // ======================================================================== 
       public: 
@@ -511,6 +549,23 @@ namespace Ostap
         Vector
         ( const std::size_t N     , 
           const Zero     /* zero */  ) ;
+        // =========================================================================
+        /// templated contructor from non-empty  sequence of elements 
+        template < typename ITERATOR                                                               , 
+                   typename CATEGORY = typename std::iterator_traits<ITERATOR>::iterator_category  ,
+                   typename VALUE    = typename std::iterator_traits<ITERATOR>::value_type         ,
+                   typename          = std::enable_if_t<std::is_base_of_v<std::forward_iterator_tag, CATEGORY>> ,
+                   typename          = std::enable_if_t<Ostap::is_convertible_to_double<VALUE>::value   > >
+        Vector
+        ( ITERATOR begin ,
+          ITERATOR end   ) 
+        : Vector ( std::distance ( begin , end ) )
+        {
+          std::size_t index = 0 ;
+          for ( ; begin != end ; ++begin , ++index )
+          { gsl_vector_set ( this->m_vector , index , static_cast<double> ( *begin ) ) ; }          
+        }
+        // =========================================================================        
         /// copy constructor 
         Vector
         ( const Vector&  right ) ;
@@ -519,7 +574,7 @@ namespace Ostap
         (       Vector&& right ) ;
         /// destructor : free GSL-Vector
         ~Vector () ;
-        // =======================================================================
+        // ========================================================================
         /// no default constructor 
         Vector() = delete ;
         /// copy assignement! 
@@ -1277,6 +1332,88 @@ namespace Ostap
         Matrix&       L , 
         Vector&       D ) ;
 
+      // =======================================================================
+      /** D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
+       *  - \f$ Q \f$ is orthogonal matrix
+       *  - \f$ D_2\fF is symmetric  trigiagonal matrix 
+       *  @param A (INPUT) input matrix A
+       *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+       *  @param d (OUTPUT/UPDATE) main diagonal of symmetric  matrix \f$ D_3 \f$
+       *  @param s (OUTPUT/UPDATE) sub-diagonal of symmetric  matrix \f$ D_3 \f$
+       *  @return status code 
+       */
+      Ostap::StatusCode D3
+      ( const Matrix& A ,
+        Matrix&       Q ,
+        Vector&       d ,
+        Vector&       s ) ;
+             
+      // =======================================================================
+      /** D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
+       *  - \f$ Q \f$ is orthogonal matrix
+       *  - \f$ D_2\fF is symmetric  trigiagonal matrix 
+       *  @param A (INPUT) input matrix A
+       *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+       *  @param D (OUTPUT/UPDATE) symmetric tridiagonal matrix 
+       *  @return status code 
+       */
+      Ostap::StatusCode D3
+      ( const Matrix& A ,
+        Matrix&       Q ,
+        Matrix&       D ) ;
+
+      // =======================================================================
+      /** Hessenberg decomposition of square matrix \f$ A = U H Q^T \f$, where
+       *  - \f$ U \f$ is orthogonal 
+       *  - \f$ H \f$ is Hessenberg' matrix: \f$ H(i,i)=0 \f$ for \f$ i > j + 1 \f$
+       *  @param A (INPUT) input matrix A
+       *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+       *  @param H (OUTPUT/UPDATE) Hessenberg matrix 
+       *  @return status code 
+       */
+      Ostap::StatusCode UHUT
+      ( const Matrix& A ,
+        Matrix&       Q ,
+        Matrix&       H ) ;
+
+      // =======================================================================
+      /** Bidiagonalization of of general matrix \f$ A = U B V^T \f$, where
+       *  - \f$ A \f$ is \f$ M \times N \f$ matrix
+       *  - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
+       *  - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
+       *  - \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
+       *  @param A (INPUT) input matrix A
+       *  @param U (OUTPUT/UPDATE) orthogonal matrix U
+       *  @param B (OUTPUT/UPDATE) bidiagonal matrix B
+       *  @param V (OUTPUT/UPDATE) orthogonal matrix V
+       *  @return status code        
+       */
+      Ostap::StatusCode UBVT
+      ( const Matrix& A ,
+        Matrix&       U ,
+        Matrix&       B , 
+        Matrix&       V ) ;
+      
+      // =======================================================================
+      /** Bidiagonalization of of general matrix \f$ A = U B V^T \f$, where
+       *  - \f$ A \f$ is \f$ M \times N \f$ matrix
+       *  - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
+       *  - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
+       *  - \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
+       *  @param A (INPUT) input matrix A
+       *  @param U (OUTPUT/UPDATE) orthogonal matrix U
+       *  @param d (OUTPUT/UPDATE) diagonal 
+       *  @param s (OUTPUT/UPDATE) super-diagonal  
+       *  @param V (OUTPUT/UPDATE) orthogonal matrix V
+       *  @return status code        
+       */
+      Ostap::StatusCode UBVT
+      ( const Matrix& A ,
+        Matrix&       U ,
+        Vector&       d ,
+        Vector&       s ,        
+        Matrix&       V ) ;      
+      
       // ======================================================================
       // Schur' decomposition of square matrix
       // ======================================================================
@@ -1284,13 +1421,13 @@ namespace Ostap
       // ======================================================================
       /** Schur's decomposition of square matrix \f$ A = Z T Z^T\f$, where 
        *  - A is input MxM (square) matrix
-       *  - T is Schur' form of matrix  
+       *  - S is Schur' form of matrix  
        *  - Z is orthogonal matrix 
        */
       Ostap::StatusCode SCHUR 
       ( const Matrix&  A ,  
         Matrix&        Z , 
-        Matrix&        T ) ; 
+        Matrix&        S ) ; 
       // ======================================================================
       
       // ======================================================================

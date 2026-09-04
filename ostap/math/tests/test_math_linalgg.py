@@ -252,12 +252,17 @@ def test_linalg_SCHUR ( M = 4 ) :
     logger.info ( 'SCHUR The matrix is:\n%s' % A )
 
     ## COD-decomposition 
-    Z , T = A.SCHUR() 
+    Z , S = A.SCHUR() 
     
     logger.info ( 'SCHUR decomposition: Z :\n%s' % Z )
-    logger.info ( 'SCHUR decomposition: T :\n%s' % T )
+    logger.info ( 'SCHUR decomposition: S :\n%s' % S )
+
+
+    logger.info ( 'SCHUR decomposition: Z^T*Z :\n%s' % ( Z.t() * Z      ) )
+    logger.info ( 'SCHUR decomposition: Z*Z^T :\n%s' % ( Z     * Z.t () ) )
     
-    D      = Z * T * Z.t() - A 
+
+    D      = Z * S * Z.t() - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
     logger.info ( 'SCHUR max-difference %.3g :\n%s' % ( delta1 , D ) ) 
     

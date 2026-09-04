@@ -9,7 +9,8 @@
    1. make use of `sdt::byte` and `std::span`
    1. completely rewrite `EigenSystem`
    1. cmake : locate optimized BLAS if/when available and make use of it! 
-
+   1. more improvements for Linear Algebra
+   
 ## Bug fixes
 
 ## Backward incompatible

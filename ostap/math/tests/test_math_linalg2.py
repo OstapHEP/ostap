@@ -620,13 +620,13 @@ def test_linalg2_SCHUR ( M = 4 ) :
                         
     logger.info ( 'SCHUR The matrix is:\n%s' % A )
 
-    ## COD-decomposition 
-    Z , T = A.SCHUR() 
+    ## SCHUR -decomposition 
+    Z , S = A.SCHUR() 
     
     logger.info ( 'SCHUR decomposition: Z :\n%s' % Z )
-    logger.info ( 'SCHUR decomposition: T :\n%s' % T )
+    logger.info ( 'SCHUR decomposition: S :\n%s' % S )
     
-    D      = Z * T * Z.t() - A 
+    D      = Z * S * Z.t() - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
     logger.info ( 'SCHUR max-difference %.3g :\n%s' % ( delta1 , D ) ) 
     
@@ -634,6 +634,7 @@ def test_linalg2_SCHUR ( M = 4 ) :
     UU     -= 1 
     delta2  = Ostap.Math.maxabs_element ( UU )    
     logger.info ( 'SCHUR non-orthogonality of Z %.3g \n%s' % ( delta2 , UU ) ) 
+
     
     assert delta1 < tolerance1 , 'SCHUR: result are inconsistent delta1=%.3g' % delta1
     assert delta2 < tolerance1 , 'SCHUR: result are inconsistent delta2=%.3g' % delta2
