@@ -32,6 +32,8 @@ namespace
   static_assert ( std::numeric_limits<Ostap::DataType>::is_signed             ,
                   "numeric_limits<Ostap::DataType>      is NOT signed!"       ) ;
   // =========================================================================
+  
+  // =========================================================================
 } //                                            The end of anonymous namespace
 // ===========================================================================
 //                                                                     The END 

@@ -13,12 +13,13 @@
   <class pattern    = "Ostap::MoreRooFit::*"        />
   <class pattern    = "Ostap::Math::FormFactors::*" />
   
-  <function pattern = "Ostap::Math::*"            />
-  <function pattern = "Ostap::Math::Lomont::*"    />
-  <function pattern = "Ostap::Math::Clausen::*"   />
-  <function pattern = "Ostap::Utils::*"           />
-  <function pattern = "Ostap::Utils::Histos::*"   />
-  <function pattern = "Ostap::Kinematics::*"      />
+  <function pattern = "Ostap::Math::*"              />
+  <function pattern = "Ostap::Math::Lomont::*"      />
+  <function pattern = "Ostap::Math::Clausen::*"     />
+  <function pattern = "Ostap::Math::GSL::*"         />
+  <function pattern = "Ostap::Utils::*"             />
+  <function pattern = "Ostap::Utils::Histos::*"     />
+  <function pattern = "Ostap::Kinematics::*"        />
   
   <function name    = "Ostap::TMVA::addResponse"  />
   
@@ -28,6 +29,7 @@
   <class name    = "Ostap::Math::Tensors::Epsilon"  />
   
   <class pattern = "std::vector&lt;Ostap::WStatEntity,*&gt;" />
+  <class pattern = "std::vector&lt;Ostap::StatEntity,*&gt;"  />
   
   <class name   = "Ostap::Math::WorkSpace">
     <field name = "m_workspace"         transient="true"/>      
@@ -49,8 +51,11 @@
   
   <exclusion>
      
-    <class pattern   = "std::array<*>"      />
+    <class pattern = "std::array<*>"      />
     
+    <class pattern = "Ostap::is_numeric*"     />
+    <class pattern = "Ostap::is_convertible*" />
+
     <class name    = "Ostap::StatVar::Interval"     />
     <class name    = "Ostap::Math::Interpolation::DATAVCT" />    
     <class name    = "Ostap::Math::Bernstein2D::VB" />

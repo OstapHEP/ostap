@@ -34,14 +34,20 @@ namespace Ostap
      *  - actually it is span + default value 
      *  @date 2025-02-05
      */
-    template <class DATA,
-              typename std::enable_if<Ostap::is_numeric_or_byte<DATA>::value, bool>::type = true>            
+    template <class DATA>
     class Buffer
     {
       // ======================================================================
-      typedef std::span<const DATA>  SPAN ;
+      static_assert ( Ostap::is_numeric_or_byte<DATA>::value, "Ostap::Utils::Buffer can only be used with numeric types or std::byte!");
       // ======================================================================
-    public: // ================================================================
+    public :
+      // ======================================================================
+      /// data type 
+      using TYPE = std::remove_cv_t<std::remove_reference_t<DATA>>;
+      /// span type
+      using SPAN = std::span<const TYPE> ;
+      // ======================================================================
+    public : // ===============================================================
       // ======================================================================
       Buffer
       ( const DATA*       data  = nullptr ,
@@ -53,7 +59,7 @@ namespace Ostap
       // ======================================================================
     public: // ================================================================
       // ======================================================================
-      /// create new fuffer with offset 
+      /// create new buffer with offset 
       inline Buffer offset ( const std::size_t offset ) const
       { return   ( this -> size () <= offset ) ? 
           Buffer ( this -> data () + this->size () , 0                        , this -> value () ) :
@@ -84,6 +90,11 @@ namespace Ostap
         std::swap ( m_value , another.m_value ) ;
       }
       // ======================================================================
+    public : // ===============================================================
+      // ======================================================================
+      /// conversion to span
+      operator const SPAN& () const { return m_span ; } 
+      // ======================================================================
     private: // ===============================================================
       // ======================================================================
       SPAN m_span  {   } ;
@@ -98,17 +109,23 @@ namespace Ostap
      *  - actually it is span + default value 
      *  @date 2025-02-05
      */
-    template <typename DATA,
-              typename std::enable_if<Ostap::is_numeric_or_byte<DATA>::value, bool>::type = true>            
+    template <typename DATA>
     class Buffer
     {
       // ======================================================================
+      static_assert ( Ostap::is_numeric_or_byte<DATA>::value, "Ostap::Utils::Buffer can only be used with numeric types or std::byte!");
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// data type 
+      using TYPE = std::remove_cv_t<std::remove_reference_t<DATA>>;
+      // ======================================================================      
     public: // ================================================================
       // ======================================================================
       Buffer
-      ( const DATA*       data  = nullptr ,
+      ( const TYPE*       data  = nullptr ,
         const std::size_t size  = 0       ,
-        const DATA        value = DATA {} )
+        const TYPE        value = TYPE {} )
         : m_data  ( data  )
         , m_size  ( size  )
         , m_value ( value ) 
@@ -126,11 +143,11 @@ namespace Ostap
       // ======================================================================
       bool        empty () const { return m_size == 0     ; }
       std::size_t size  () const { return m_size          ; }
-      const DATA& value () const { return m_value         ; }
-      const DATA* data  () const { return m_data          ; }
-      const DATA* begin () const { return m_data          ; }
-      const DATA* end   () const { return m_data + m_size ; }      
-      const DATA& operator[] ( const std::size_t index ) const
+      const TYPE& value () const { return m_value         ; }
+      const TYPE* data  () const { return m_data          ; }
+      const TYPE* begin () const { return m_data          ; }
+      const TYPE* end   () const { return m_data + m_size ; }      
+      const TYPE& operator[] ( const std::size_t index ) const
       { return  index < m_size ? *(m_data+index) : m_value ; }
       // ======================================================================
     public: // ================================================================
@@ -150,9 +167,9 @@ namespace Ostap
       // ======================================================================
     private: // ===============================================================
       // ======================================================================
-      const DATA* m_data  { nullptr } ;
+      const TYPE* m_data  { nullptr } ;
       std::size_t m_size  { 0 } ;
-      DATA        m_value { 0 } ;
+      TYPE        m_value {} ;
       // ======================================================================
     } ;  // ===================================================================
     // ========================================================================

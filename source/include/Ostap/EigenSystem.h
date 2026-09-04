@@ -225,8 +225,8 @@ namespace Ostap
         /// SYMM&SYMMV  workspaces 
         // mutable gsl_eigen_symm_workspace*  m_ws_symm  { nullptr } ;
         // mutable gsl_eigen_symmv_workspace* m_ws_symmv { nullptr } ;
-        mutable void* m_ws_symm  { nullptr } ;
-        mutable void* m_ws_symmv { nullptr } ;
+        mutable void* m_ws_symm  { nullptr } ; //! the actual GSL workspace 
+        mutable void* m_ws_symmv { nullptr } ; //! the actual GSL workspace 
         // =====================================================================        
       } ;
       // =======================================================================
