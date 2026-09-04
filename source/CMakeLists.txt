@@ -14,9 +14,9 @@ endif ()
 ## endif ()
 
 if    (ROOT_VERSION VERSION_LESS "6.26")
-  message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} "<6.26 is not supported anymore" )
+  message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} "<6.26 is *NOT* supported anymore" )
 elseif(ROOT_VERSION VERSION_LESS "6.28")
-  message ( WARNING     " ROOT   version " ${ROOT_VERSION} "<6.28 support will be drop soon" )
+  message ( WARNING     " ROOT   version " ${ROOT_VERSION} "<6.28 support will be drop *SOON*" )
 endif() 
     
 message ( "----> ROOT            version    : " ${ROOT_VERSION} )
@@ -92,8 +92,83 @@ if ( NOT EXISTS "${GSL_ROOT_DIR}" )
  endif()
 endif()
 
-find_package(GSL REQUIRED GSL_ROOT_DIR COMPONENTS gsl)
-if (GSL_FOUND) 
+find_package(GSL REQUIRED GSL_ROOT_DIR COMPONENTS gsl gslcblas )
+if (GSL_FOUND)
+
+  # ===========================================================================
+  # Generic search for ANY optimized BLAS library (MKL, OpenBLAS, Atlas, etc.)
+  # ==========================================================================
+  find_package(BLAS QUIET)
+
+  if ( BLAS_FOUND )
+    message ( "----> Found Candidate BLAS         : " "${BLAS_LIBRARIES}" )
+
+    include(CheckCXXSourceCompiles)
+    include(CheckCXXSourceRuns)
+
+    # Save previous state
+    set( SAFE_CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES}" )
+    set( SAFE_CMAKE_REQUIRED_INCLUDES  "${CMAKE_REQUIRED_INCLUDES}" )
+
+    # Pass FlexiBLAS + System Dynamic Loading Library (libdl) + GSL Headers
+    set( CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES} ${CMAKE_DL_LIBS} )
+    set( CMAKE_REQUIRED_INCLUDES  ${GSL_INCLUDE_DIRS} )
+
+    # Clear cached check results from previous failed runs
+    unset( OPTIMIZED_BLAS_LINKS CACHE )
+    unset( OPTIMIZED_BLAS_RUNS CACHE )
+
+    # 1. Verify compilation and linking against GSL CBLAS interface
+    check_cxx_source_compiles("
+      extern \"C\" {
+          #include <gsl/gsl_cblas.h>
+      }
+      int main() {
+          double a[1] = {1.0}, b[1] = {2.0}, c[1] = {0.0};
+          enum CBLAS_ORDER order = CblasRowMajor;
+          enum CBLAS_TRANSPOSE trans = CblasNoTrans;
+          cblas_dgemm(order, trans, trans, 1, 1, 1, 1.0, a, 1, b, 1, 0.0, c, 1);
+          return 0;
+      }
+    " OPTIMIZED_BLAS_LINKS )
+
+    # 2. Verify runtime execution (ensures FlexiBLAS backend exists and works)
+    if ( OPTIMIZED_BLAS_LINKS AND NOT CMAKE_CROSSCOMPILING )
+      check_cxx_source_runs("
+        extern \"C\" {
+            #include <gsl/gsl_cblas.h>
+        }
+        int main() {
+            double a[1] = {1.0}, b[1] = {2.0}, c[1] = {0.0};
+            enum CBLAS_ORDER order = CblasRowMajor;
+            enum CBLAS_TRANSPOSE trans = CblasNoTrans;
+            cblas_dgemm(order, trans, trans, 1, 1, 1, 1.0, a, 1, b, 1, 0.0, c, 1);
+            return (c[0] > 1.9 && c[0] < 2.1) ? 0 : 1;
+        }
+      " OPTIMIZED_BLAS_RUNS )
+    endif()
+
+    # Restore state
+    set( CMAKE_REQUIRED_LIBRARIES "${SAFE_CMAKE_REQUIRED_LIBRARIES}" )
+    set( CMAKE_REQUIRED_INCLUDES  "${SAFE_CMAKE_REQUIRED_INCLUDES}" )
+
+    # 3. Apply library list substitution if checks passed
+    if ( OPTIMIZED_BLAS_LINKS AND (CMAKE_CROSSCOMPILING OR OPTIMIZED_BLAS_RUNS) )
+      set( GSL_LIBRARIES_OPTIMIZED "" )
+      foreach( _lib IN LISTS GSL_LIBRARIES )
+        if ( NOT _lib MATCHES "gslcblas" )
+          list( APPEND GSL_LIBRARIES_OPTIMIZED "${_lib}" )
+        endif()
+      endforeach()
+
+      list( APPEND GSL_LIBRARIES_OPTIMIZED ${BLAS_LIBRARIES} ${CMAKE_DL_LIBS} )
+      set( GSL_LIBRARIES "${GSL_LIBRARIES_OPTIMIZED}" CACHE STRING "GSL libraries with optimized BLAS" FORCE )
+
+      message ( "----> Successfully linked optimized BLAS into GSL_LIBRARIES" )
+    endif()
+
+  endif()
+
   message ( "----> GSL             version    : " ${GSL_VERSION} )
   message ( "----> GSL             include    : " ${GSL_INCLUDE_DIRS} )
   message ( "----> GSL             libraries  : " ${GSL_LIBRARIES} )

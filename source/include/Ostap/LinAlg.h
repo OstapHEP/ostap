@@ -422,7 +422,7 @@ namespace Ostap
       private:
         // ========================================================================
         /// the  actual pointer to GSL-matrix 
-        gsl_matrix* m_matrix { nullptr } ; // the  actual pointer to GSL-matrix
+        gsl_matrix* m_matrix { nullptr } ; //! the  actual pointer to GSL-matrix
         // ========================================================================
       } ; //                                    The end of class Ostap::GSL:Matrix 
       // ==========================================================================
@@ -644,7 +644,7 @@ namespace Ostap
       private:
         // ========================================================================
         /// the  actual pointer to GSL-vector 
-        gsl_vector* m_vector { nullptr } ; // the  actual pointer to GSL-vector
+        gsl_vector* m_vector { nullptr } ; //! the  actual pointer to GSL-vector
         // ========================================================================
       };
       // ==========================================================================
@@ -713,21 +713,23 @@ namespace Ostap
         void swap ( Permutation& right ) ; // swap two permutations 
         // ========================================================================
       private :
-        // =====================================================================
+        // ========================================================================
         /// the  actual pointer to GSL-permutation
-        gsl_permutation* m_permutation { nullptr } ; // the  actual pointer to GSL-vector
-        // ======================================================================
+        gsl_permutation* m_permutation { nullptr } ; //! the  actual pointer to GSL-permutation
+        // ========================================================================
       };
-      // ========================================================================
+      // ==========================================================================
+
+      // ==========================================================================
       /// swap two matrices 
       inline void swap ( Matrix& a      , Matrix&      b ) { a.swap ( b ) ; } 
       /// swap two vectors 
       inline void swap ( Vector& a      , Vector&      b ) { a.swap ( b ) ; } 
       /// swap two permutations 
       inline void swap ( Permutation& a , Permutation& b ) { a.swap ( b ) ; } 
-      // ========================================================================
+      // =========================================================================
       
-       // ========================================================================
+      // =========================================================================
       /// equality of two matrices 
       inline bool operator==( const Matrix& a , const Matrix& b )
       { return &a == &b || ( a.nRows() == b.nRows() && a.nCols() == b.nCols() && a.equal ( b ) ) ; }

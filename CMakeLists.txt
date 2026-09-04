@@ -145,7 +145,41 @@ cmake_host_system_information(RESULT OSTAP_HAS_IA64    QUERY HAS_IA64)
 message ( "----> IA64       ?               : " ${OSTAP_HAS_IA64} )
 
 
+
+# ============================================================================
+### CHECK FOR AVX
+# ============================================================================
+
+include(CheckCXXSourceRuns)
+
+# 2. Set the flags temporarily
+set(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+
+# Temporarily add the compiler flag for AVX
+if(MSVC)
+    set(CMAKE_REQUIRED_FLAGS "/arch:AVX")
+else()
+    set(CMAKE_REQUIRED_FLAGS "-mavx") # For GCC / Clang
+endif()
+
+check_cxx_source_runs("
+    #include <immintrin.h>
+    int main() {
+        __m256d a = _mm256_set1_pd(1.0);
+        __m256d b = _mm256_set1_pd(2.0);
+        __m256d c = _mm256_add_pd(a, b);
+        return 0;
+    }
+" OSTAP_HAS_AVX)
+
+# Restore flags
+set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
+
+message ( "----> AVX        ?               : " ${OSTAP_HAS_AVX}  )
+
+# ============================================================================
 ### CHECK FOR AVX2 
+# ============================================================================
 
 # Use 'Runs' instead of 'Compiles'
 include(CheckCXXSourceRuns)
@@ -178,7 +212,8 @@ set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
 
 message ( "----> AVX2       ?               : " ${OSTAP_HAS_AVX2} )
 
-###
+# ============================================================================
+
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake

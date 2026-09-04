@@ -38,7 +38,7 @@ namespace Ostap
     class Buffer
     {
       // ======================================================================
-      static_assert ( Ostap::is_numeric_or_byte<DATA>::value, "Ostap::Utils::Buffer can only be used with numeric types or std::byte!");
+      static_assert ( Ostap::is_numeric_or_byte<DATA>::value , "Ostap::Utils::Buffer can only be used with numeric types or std::byte!");
       // ======================================================================
     public :
       // ======================================================================
@@ -50,9 +50,9 @@ namespace Ostap
     public : // ===============================================================
       // ======================================================================
       Buffer
-      ( const DATA*       data  = nullptr ,
+      ( const TYPE*       data  = nullptr ,
         const std::size_t size  = 0       ,
-        const DATA        value = DATA {} )
+        const TYPE        value = TYPE {} )
         : m_span  ( data  , size ) 
         , m_value ( value ) 
       {} ;                   
@@ -69,10 +69,12 @@ namespace Ostap
       // ======================================================================
       bool        empty () const { return m_span.empty () ; }
       std::size_t size  () const { return m_span.size  () ; }
-      const DATA& value () const { return m_value         ; }
-      typename SPAN::const_pointer   data  () const { return m_span.data  () ; }
-      typename SPAN::iterator        begin () const { return m_span.begin () ; }
-      typename SPAN::iterator        end   () const { return m_span.end   () ; }
+      const TYPE& value () const { return m_value         ; }
+      typename SPAN::const_pointer   data   () const { return m_span.data  () ; }
+      typename SPAN::iterator        begin  () const { return m_span.begin () ; }
+      typename SPAN::iterator        end    () const { return m_span.end   () ; }
+      typename SPAN::iterator        cbegin () const { return m_span.begin () ; }
+      typename SPAN::iterator        cend   () const { return m_span.end   () ; }
       typename SPAN::const_reference operator[] ( const std::size_t index ) const
       { return  index < size () ? m_span [ index ] : m_value ; }
       // ======================================================================
@@ -98,7 +100,7 @@ namespace Ostap
     private: // ===============================================================
       // ======================================================================
       SPAN m_span  {   } ;
-      DATA m_value { 0 } ;
+      TYPE m_value {   } ;
       // ======================================================================
     } ;  // ===================================================================
     // ========================================================================
@@ -113,7 +115,7 @@ namespace Ostap
     class Buffer
     {
       // ======================================================================
-      static_assert ( Ostap::is_numeric_or_byte<DATA>::value, "Ostap::Utils::Buffer can only be used with numeric types or std::byte!");
+      static_assert ( Ostap::is_numeric_or_byte<DATA>::value , "Ostap::Utils::Buffer can only be used with numeric types or std::byte!");
       // ======================================================================
     public:
       // ======================================================================
@@ -141,12 +143,14 @@ namespace Ostap
       // ======================================================================
     public: // ================================================================
       // ======================================================================
-      bool        empty () const { return m_size == 0     ; }
-      std::size_t size  () const { return m_size          ; }
-      const TYPE& value () const { return m_value         ; }
-      const TYPE* data  () const { return m_data          ; }
-      const TYPE* begin () const { return m_data          ; }
-      const TYPE* end   () const { return m_data + m_size ; }      
+      bool        empty  () const { return m_size == 0     ; }
+      std::size_t size   () const { return m_size          ; }
+      const TYPE& value  () const { return m_value         ; }
+      const TYPE* data   () const { return m_data          ; }
+      const TYPE* begin  () const { return m_data          ; }
+      const TYPE* end    () const { return m_data + m_size ; }      
+      const TYPE* cbegin () const { return m_data          ; }
+      const TYPE* cend   () const { return m_data + m_size ; }      
       const TYPE& operator[] ( const std::size_t index ) const
       { return  index < m_size ? *(m_data+index) : m_value ; }
       // ======================================================================
@@ -252,10 +256,12 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      bool           empty () const { return m_buffers.empty () ; }
-      std::size_t    size  () const { return m_buffers.size  () ; }
-      const_iterator begin () const { return m_buffers.begin () ; }
-      const_iterator end   () const { return m_buffers.end   () ; }
+      bool           empty  () const { return m_buffers.empty () ; }
+      std::size_t    size   () const { return m_buffers.size  () ; }
+      const_iterator begin  () const { return m_buffers.begin () ; }
+      const_iterator end    () const { return m_buffers.end   () ; }
+      const_iterator cbegin () const { return m_buffers.begin () ; }
+      const_iterator cend   () const { return m_buffers.end   () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -264,7 +270,7 @@ namespace Ostap
       {
         Buffers result {}  ;
         for ( const_iterator it = this->begin() ; this->end() != it ; ++it )
-          { result.add ( it->first , it->second.offset ( offset ) ) ; } 
+        { result.add ( it->first , it->second.offset ( offset ) ) ; } 
         return result;       
       }
       // ======================================================================

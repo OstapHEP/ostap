@@ -45,6 +45,16 @@
   <class name   = "Ostap::Exception">
     <field name = "m_previous"          transient="true"/>      
   </class>
+
+  <class name   = "Ostap::Math::GSL::Matrix">
+    <field name = "m_matrix"          transient="true"/>      
+  </class>
+  <class name   = "Ostap::Math::GSL::Vector">
+    <field name = "m_vector"          transient="true"/>      
+  </class>
+  <class name   = "Ostap::Math::GSL::Permutation">
+    <field name = "m_permutation"      transient="true"/>      
+  </class>
   
   <class name = "Ostap::IFuncTree"  />
   <class name = "Ostap::IFuncData"  />
@@ -53,9 +63,6 @@
      
     <class pattern = "std::array<*>"      />
     
-    <class pattern = "Ostap::is_numeric*"     />
-    <class pattern = "Ostap::is_convertible*" />
-
     <class name    = "Ostap::StatVar::Interval"     />
     <class name    = "Ostap::Math::Interpolation::DATAVCT" />    
     <class name    = "Ostap::Math::Bernstein2D::VB" />

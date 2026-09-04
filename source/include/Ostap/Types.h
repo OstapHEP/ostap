@@ -136,7 +136,7 @@ namespace Ostap
   // =========================================================================
   
   // =========================================================================
-#if !defined(__ROOTCLING__) && !defined(__GCCXML__) && !defined(__REFLEX__)
+  // #if !defined(__ROOTCLING__) && !defined(__GCCXML__) && !defined(__REFLEX__)
   // =========================================================================
   template <typename T>
   constexpr bool is_numeric_v               = is_numeric<T>::value;
@@ -147,7 +147,7 @@ namespace Ostap
   template <typename T>
   constexpr bool is_convertible_to_double_v = is_convertible_to_double<T>::value;
   // =========================================================================
-#endif // ROOTCLING/GCCXML/REFLEX 
+  // #endif // ROOTCLING/GCCXML/REFLEX 
   // =========================================================================
   
   // =========================================================================
