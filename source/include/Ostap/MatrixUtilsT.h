@@ -21,6 +21,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Norms.h"
 #include "Ostap/MatrixUtils2.h"
 // ============================================================================
 /** @file Ostap/MatrixUtils2.h
@@ -451,6 +452,413 @@ namespace Ostap
       return result ;
     }
     // =======================================================================
+
+    
+    // =======================================================================
+    // Vector norms 
+    // =======================================================================
+
+    /** @brief Compute L0 "norm" (count of non-zero elements)
+     *  ||v||_0 = count(|v_i| > eps)
+     *  @param[in] v Input vector
+     *  @param[in] eps Absolute tolerance threshold below which elements are considered zero
+     *  @return Number of non-zero elements
+     */
+    template <class T>
+    inline std::size_t norm_L0
+    ( const TVectorT<T>& v   , 
+      const T            eps = std::numeric_limits<T>::epsilon() )
+    { return norm_L0 ( v.begin () , v.end () , static_cast<double> ( eps ) ) ; }
+    
+    // =======================================================================
+    /** @brief Compute L1 norm (Manhattan norm / sum of absolute values)
+     *  ||v||_1 = sum(|v_i|)
+     *  @param[in] v Input vector
+     *  @return L1 norm value
+     */
+    template <typename T>
+    inline T norm_L1
+    ( const TVectorT<T>& v )
+    { return static_cast<T> ( norm_L1 ( v.begin () , v.end () ) ) ; }
+    
+    // =======================================================================
+    /** @brief Compute fast L2 norm via std::transform_reduce (unprotected against overflow)
+     *  ||v||_2 = sqrt(v . v)
+     *  @param[in] v Input vector
+     *  @return Fast L2 norm value
+     */
+    template <typename T>
+    inline T norm_L2
+    ( const TVectorT<T>& v )
+    { return static_cast<T> ( norm_L2 ( v.begin() , v.end() ) ) ; }
+
+   // =======================================================================
+    /** @brief Compute L2 norm (Euclidean norm / magnitude)
+     *  ||v||_2 = sqrt(sum(v_i^2))
+     *  Uses Blue's/Golub's scaling algorithm to prevent overflow and underflow.
+     *  @param[in] v Input vector
+     *  @return L2 norm value
+     */
+    template <typename T>
+    inline T norm_L2_safe
+    ( const TVectorT<T>& v )
+    { return static_cast<T> ( norm_L2_safe ( v.begin () , v.end () ) ) ; }
+
+    // =======================================================================
+    /** @brief Compute L_infinity norm (Chebyshev norm / maximum absolute element)
+     *  ||v||_inf = max(|v_i|)
+     *  @param[in] v Input vector
+     *  @return L_infinity norm value
+     */
+    template <typename T>
+    inline T norm_Linf
+    ( const TVectorT<T>& v )
+    { return static_cast<T> ( norm_Linf ( v.begin() , v.end() ) ) ; }
+    
+    // =======================================================================
+    /** @brief Compute generalized Lp norm (p >= 0)
+     *  @param[in] v Input vector
+     *  @param[in] p Order of the norm (p=0 returns L0 norm as T)
+     *  @return Lp norm value
+     */
+    template <typename T>
+    inline T norm_Lp
+    ( const TVectorT<T>& v ,
+      const T            p = T{2}  )
+    { return static_cast<T> ( norm_Lp ( v.begin () ,
+                                        v.end   () ,
+                                        static_cast<double>( p ) ) ) ; } 
+
+
+    // ========================================================================
+    // Matrix norms 
+    // ========================================================================
+
+    // ========================================================================
+    /** @brief Compute L0 "norm" (count of non-zero elements) for ROOT TMatrixT
+     *  ||m||_0 = count(|m_{ij}| > eps)
+     *  @param m     (INPUT) Input matrix
+     *  @param eps   (INPUT) Absolute tolerance threshold below which elements are considered zero
+     *  @return Number of non-zero elements
+     */
+    template <typename Element>
+    inline std::size_t norm_L0 
+    ( const TMatrixT<Element>& m                                                   , 
+      const double             eps = std::numeric_limits<double>::epsilon () ) 
+    {
+      const Int_t nrows = m.GetNrows();
+      const Int_t ncols = m.GetNcols();
+      const Element* ptr = m.GetMatrixArray();
+      //
+      return norm_L0 ( ptr, ptr + nrows * ncols, eps );
+    }
+    
+    // ========================================================================
+    /** @brief Compute maximum absolute element (L-infinity vector norm / max norm) for ROOT TMatrixT
+     *  ||m||_max = max(|m_{ij}|)
+     *  @param m (INPUT) Input matrix
+     *  @return Maximum absolute value among all matrix elements
+     */
+    template <typename Element>
+    inline double norm_max ( const TMatrixT<Element>& m ) 
+    {
+      const Int_t nrows = m.GetNrows();
+      const Int_t ncols = m.GetNcols();
+      const Element* ptr = m.GetMatrixArray();
+      //
+      return norm_Linf ( ptr, ptr + nrows * ncols );
+    }
+
+    // ========================================================================
+    /** @brief Compute matrix L1-norm (maximum absolute column sum) for ROOT TMatrixT
+     *  ||m||_1 = max_j sum_i |m_{ij}|
+     *  @param m (INPUT) Input matrix
+     *  @return Matrix L1-norm value
+     */
+    template <typename Element>
+    inline double norm_L1 ( const TMatrixT<Element>& m ) 
+    {
+      //
+      const Int_t row_lwb = m.GetRowLwb();
+      const Int_t row_upb = m.GetRowUpb();
+      const Int_t col_lwb = m.GetColLwb();
+      const Int_t col_upb = m.GetColUpb();
+      //
+      double max_col_sum = 0.0;
+      for ( Int_t j = col_lwb; j <= col_upb; ++j ) 
+      {
+        double col_sum = 0.0;
+        for ( Int_t i = row_lwb; i <= row_upb; ++i ) { col_sum += std::abs ( m(i, j) ); }
+        max_col_sum = std::max ( max_col_sum, col_sum );
+      }
+      return max_col_sum;
+    }
+
+    // ========================================================================
+    /** @brief Compute matrix L-infinity norm (maximum absolute row sum) for ROOT TMatrixT
+     *  ||m||_\inf = max_i sum_j |m_{ij}|
+     *  @param m (INPUT) Input matrix
+     *  @return Matrix L-infinity norm value
+     */
+    template <typename Element>
+    inline double norm_Linf
+    ( const TMatrixT<Element>& m ) 
+    {
+      //
+      const Int_t row_lwb = m.GetRowLwb();
+      const Int_t row_upb = m.GetRowUpb();
+      const Int_t col_lwb = m.GetColLwb();
+      const Int_t col_upb = m.GetColUpb();
+      //
+      double max_row_sum = 0.0;
+      for ( Int_t i = row_lwb; i <= row_upb; ++i ) 
+      {
+        double row_sum = 0.0;
+        for ( Int_t j = col_lwb; j <= col_upb; ++j ) { row_sum += std::abs ( m(i, j) ); }
+        max_row_sum = std::max ( max_row_sum, row_sum );
+      }
+      return max_row_sum;
+    }
+
+    // ========================================================================
+    /** @brief Compute Frobenius norm (Euclidean matrix norm) for ROOT TMatrixT
+     *  ||m||_2 = sqrt(sum_{ij} |m_{ij}|^2)
+     *  @param m (INPUT) Input matrix
+     *  @return Frobenius norm value
+     */
+    template <typename Element>
+    inline double norm_L2
+    ( const TMatrixT<Element>& m ) 
+    {
+      //
+      const Int_t    nrows = m.GetNrows () ;
+      const Int_t    ncols = m.GetNcols () ;
+      //
+      const Element* ptr   = m.GetMatrixArray () ;
+      return norm_L2_safe ( ptr, ptr + nrows * ncols );
+    }
+
+    // ========================================================================
+    /** @brief Compute element-wise generalized Lp-norm for ROOT TMatrixT
+     *  ||m||_p = (sum_{ij} |m_{ij}|^p)^(1/p)
+     *  @param m (INPUT) Input matrix
+     *  @param p (INPUT) Power parameter \f$ p \ge 0 \f$
+     *  @return Element-wise Lp-norm value
+     */
+    template <typename Element>
+    inline double norm_Lp
+    ( const TMatrixT<Element>& m      ,
+      const double             p  = 2 ) 
+    {
+      const Int_t    nrows = m.GetNrows () ;
+      const Int_t    ncols = m.GetNcols () ;
+      //
+      const Element* ptr   = m.GetMatrixArray    () ;
+      return norm_Lp ( ptr, ptr + nrows * ncols , p ) ;
+    }
+    
+    // ========================================================================
+    /** @brief Compute Frobenius norm (Euclidean matrix norm) for ROOT TMatrixT
+     *  ||m||_2 = sqrt(sum_{ij} |m_{ij}|^2)
+     *  @param m (INPUT) Input matrix
+     *  @return Frobenius norm value
+     */
+    template <typename Element>
+    inline double norm_Frobenius
+    ( const TMatrixT<Element>& m ) { return norm_L2 ( m ) ; } 
+    
+    // ========================================================================
+    /** @brief Compute Frobenius norm (Euclidean matrix norm) for ROOT TMatrixT
+     *  ||m||_2 = sqrt(sum_{ij} |m_{ij}|^2)
+     *  @param m (INPUT) Input matrix
+     *  @return Frobenius norm value
+     */
+    template <typename Element>
+    inline double norm_F
+    ( const TMatrixT<Element>& m ) { return norm_L2 ( m ) ; } 
+
+    // ========================================================================
+    /** @brief Compute L0 "norm" (count of non-zero elements) for ROOT TMatrixTSym 
+     *         using the upper triangular part (including diagonal).
+     *  @param m     (INPUT) Input symmetric matrix
+     *  @param eps   (INPUT) Absolute tolerance threshold below which elements are considered zero
+     *  @return Number of non-zero elements in the upper triangle
+     */
+    template <typename Element>
+    inline std::size_t norm_L0 
+    ( const TMatrixTSym<Element>& m                                                   , 
+      const double              eps = std::numeric_limits<double>::epsilon () ) 
+    {
+      //
+      const Int_t lwb = m.GetRowLwb(); // usually 0
+      const Int_t upb = m.GetRowUpb(); // nrows - 1
+      //
+      std::size_t count = 0;
+      for ( Int_t i = lwb; i <= upb; ++i ) 
+      {
+        const double vii = m ( i , i ) ;
+        if ( std::isfinite ( vii ) && vii &&  ( eps < std::abs ( vii ) ) ) { ++count  ; }
+        for ( Int_t j = i + 1 ; j <= upb; ++j ) 
+        {
+          const double val = m(i, j);
+          if ( std::isfinite ( val ) && val &&  ( eps < std::abs ( val ) ) )  
+          { count += 2  ; }
+        }
+      }
+      return count;
+    }
+
+    // ========================================================================
+    /** @brief Compute maximum absolute element for ROOT TMatrixTSym 
+     *         using the upper triangular part.
+     *  @param m (INPUT) Input symmetric matrix
+     *  @return Maximum absolute value in the matrix
+     */
+    template <typename Element>
+    inline Element norm_max
+    ( const TMatrixTSym<Element>& m ) 
+    {
+      //
+      const Int_t lwb = m.GetRowLwb();
+      const Int_t upb = m.GetRowUpb();
+      
+      Element max_val { 0 } ; 
+      for ( Int_t i = lwb; i <= upb; ++i ) 
+      {
+        max_val = std::max ( max_val, std::abs ( m ( i , i ) ) ) ;
+        for ( Int_t j = i + 1; j <= upb; ++j ) 
+        { max_val = std::max ( max_val, std::abs ( m ( i , j ) ) ) ; }
+      }
+      return max_val;
+    }
+    
+    // ========================================================================
+    /** @brief Compute matrix L1-norm for ROOT TMatrixTSym 
+     *         using the upper triangular part (accounting for symmetry).
+     *  @param m (INPUT) Input symmetric matrix
+     *  @return Matrix L1-norm value
+     */
+    template <typename Element>
+    inline Element norm_L1
+    ( const TMatrixTSym<Element>& m ) 
+    {
+      //
+      using Type = std::conditional_t<std::is_same_v<std::decay_t<Element>, long double>, long double, double>;
+      //
+      const Int_t lwb = m.GetRowLwb();
+      const Int_t upb = m.GetRowUpb();
+      const Int_t n   = upb - lwb + 1;
+      //
+      std::vector<Type> col_sums ( n , Type { 0 } );
+
+      for ( Int_t i = lwb; i <= upb; ++i ) 
+      {
+        //
+        col_sums [ i - lwb ] += static_cast<Type> ( std::abs ( m ( i , i ) ) ) ;
+        for ( Int_t j = i + 1; j <= upb; ++j ) 
+        {
+          const Type val = static_cast<Type>(std::abs ( m ( i, j ) ) ) ;
+          col_sums [ j - lwb ] += val ;
+          col_sums [ i - lwb ] += val ;
+        }
+      }
+      //
+      Type max_col_sum = 0;
+      for ( Type sum : col_sums ) { max_col_sum = std::max ( max_col_sum, sum  ) ; }
+      //
+      return static_cast<Element> ( max_col_sum ) ;
+    }
+
+    // ========================================================================
+    /** @brief Compute matrix L-infinity norm for ROOT TMatrixTSym 
+     *         using the upper triangular part.
+     *  @param m (INPUT) Input symmetric matrix
+     *  @return Matrix L-infinity norm value
+     */
+    template <typename Element>
+    inline Element norm_Linf
+    ( const TMatrixTSym<Element>& m ) 
+    { return norm_L1 ( m ); }
+
+    // ========================================================================
+    /** @brief Compute Frobenius norm for ROOT TMatrixTSym 
+     *         using the upper triangular part (weighting off-diagonals by 2).
+     *  @param m (INPUT) Input symmetric matrix
+     *  @return Frobenius norm value
+     */
+    template <typename Element>
+    inline Element norm_L2
+    ( const TMatrixTSym<Element>& m ) 
+    {
+      //
+      using Type = std::conditional_t<std::is_same_v<std::decay_t<Element>, long double>, long double, double>;
+      //
+      const Int_t lwb = m.GetRowLwb();
+      const Int_t upb = m.GetRowUpb();
+      //
+      const Type scale = static_cast<Type> ( norm_max ( m ) ) ; 
+      if ( 0 == scale ) { return Element { 0 } ; }
+      
+      Type sum_sq = 0;
+      for ( Int_t i = lwb; i <= upb; ++i ) 
+      {
+        const Type vii = static_cast<Type> ( std::abs ( m ( i , i ) ) ) / scale;
+        sum_sq += vii * vii;
+        for ( Int_t j = i + 1; j <= upb; ++j ) 
+        {
+          const Type val = static_cast<Type> ( std::abs ( m ( i, j ) ) ) / scale;
+          sum_sq += 2 * ( val * val );
+        }
+      }
+      //
+      return static_cast<Element> ( scale * std::sqrt ( sum_sq ) ) ; 
+    }
+    
+    // ========================================================================
+    /** @brief Compute element-wise generalized Lp-norm for ROOT TMatrixTSym 
+     *         using the upper triangular part.
+     *  @param m (INPUT) Input symmetric matrix
+     *  @param p (INPUT) Power parameter \f$ p \ge 0 \f$
+     *  @return Element-wise Lp-norm value
+     */
+    template <typename Element>
+    inline Element norm_Lp
+    ( const TMatrixTSym<Element>& m ,
+      const double                p = 2 ) 
+    {
+      //
+      using Type = std::conditional_t<std::is_same_v<std::decay_t<Element>, long double>, long double, double>;
+      //
+      static const Ostap::Math::Equal_To<double> s_equal {} ;
+      static const Ostap::Math::Zero    <double> s_zero  {} ;
+      //
+      if ( std::isinf ( p ) ) { return static_cast<Element> ( norm_max ( m ) ) ; }
+      else if ( 1 == p || s_equal ( 1 , p ) ) { return norm_L1         ( m )   ; }
+      else if ( 2 == p || s_equal ( 2 , p ) ) { return norm_L2         ( m )   ; }
+      else if ( 0 >= p || s_zero  ( p     ) ) { return static_cast<Element> ( norm_L0 ( m , std::numeric_limits<double>::epsilon () ) ) ; }
+      //
+      const Int_t lwb = m.GetRowLwb();
+      const Int_t upb = m.GetRowUpb();
+
+      Type scale = static_cast<Type> ( norm_max ( m ) ) ; 
+      if ( 0 == scale  ) { return Element { 0 } ; }
+
+      Type sum_pow = 0;
+      for ( Int_t i = lwb; i <= upb; ++i ) 
+      {
+        const Type vii = static_cast<Type> ( std::abs ( m ( i, i ) ) ) / scale;
+        sum_pow += std::pow ( vii, p );
+        for ( Int_t j = i + 1; j <= upb; ++j ) 
+        {
+          const Type val = static_cast<Type> ( std::abs ( m ( i , j ) ) ) / scale;
+          sum_pow += 2 * std::pow ( val, p );
+        }
+      }
+      //
+      return static_cast<Element> ( scale * std::pow ( sum_pow, Type{1} / p ) ) ; 
+    }
+    
+    // ========================================================================
     namespace  Ops
     {      
       // ======================================================================

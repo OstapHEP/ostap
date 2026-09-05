@@ -7,14 +7,15 @@
 // STD & STL 
 // ============================================================================
 #include <cstdint>
-#include <cmath>
 #include <complex>
+#include <cmath>
+#include <utility>
+#include <type_traits>
 #include <algorithm>
 #include <functional>
 #include <vector>
 #include <array>
-#include <utility>
-#include <type_traits>
+#include <numeric>
 #if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
 #include <numbers>
 #endif
@@ -265,7 +266,7 @@ namespace Ostap
       ( const long double v1 ,
         const long double v2 ) const
       { return  m_cmp ( static_cast<double> ( v1 ) ,
-			static_cast<double> ( v2 ) ) ; }
+                        static_cast<double> ( v2 ) ) ; }
       // ======================================================================
     private :
       // ======================================================================
@@ -1553,6 +1554,53 @@ namespace Ostap
     void negate ( std::vector<TYPE,ALLOCATOR>& vct ) 
     { negate ( vct.begin() , vct.end() ) ; }
     // ========================================================================
+    
+    // ========================================================================
+    /// sum of all vector elements \f$ \Sum v_i \f$
+    template <class ITERATOR>
+    inline long double sum
+    ( ITERATOR      begin , 
+      ITERATOR      end   )
+    { return std::reduce ( begin , end , 0.0L ) ; }
+    // ========================================================================
+    /// sum of all absolute values of vector elements \f$ \Sum \left| v_i  \right| \f$
+    template <class ITERATOR>
+    inline long double sum1
+    ( ITERATOR      begin , 
+      ITERATOR      end   )      
+    { return std::transform_reduce
+        ( begin ,
+          end   ,
+          0.0L  ,
+          std::plus<>() ,
+          []( long double v ) { return std::abs ( v ) ; } ) ; }
+    // ========================================================================
+    /// sum of all squared values of vector elements \f$ \Sum v_i^2 \f$
+    template <class ITERATOR>
+    inline long double sum2
+    ( ITERATOR      begin , 
+      ITERATOR      end   )      
+    { return std::transform_reduce
+        ( begin       ,
+          end         ,
+          0.0L        ,
+          std::plus<>() ,
+          []( const long double v ) { return v * v ; } ) ; }
+    // ========================================================================
+    /// sum of all powered values of vector elements \f$ \Sum \left| v_i\right|^p \f$
+    template <class ITERATOR>
+    inline long double sum_pow
+    ( ITERATOR      begin , 
+      ITERATOR      end   ,
+      const double  p     ) 
+    { return std::transform_reduce
+        ( begin       ,
+          end         ,
+          0.0L        ,
+          std::plus<>() ,
+          [ p ]( const long double v ) { return std::pow ( std::abs ( v ) , p ) ; } ) ; } 
+           
+    // ========================================================================
     /** Calculate p-norm for the vector 
      *  \f$ |v|_{p} \equiv = \left( \sum_i  \left| v_i\right|^{p} \right)^{1/p}\f$ 
      *  Few special cases:
@@ -1575,12 +1623,7 @@ namespace Ostap
       long  double r  = 0 ;
       /// few "easy" cases:  treat explicitely
       /// 1) (p==1)        : sum of absolute values 
-      if      ( 1 == ip ) 
-      {
-        for ( ; begin != end ; ++begin ) 
-        { const long double c = *begin ; r += std::abs ( c ) ; }
-        return r ;                                                     // RETURN 
-      }
+      if      ( 1 == ip ) { return sum1 ( begin , end ) ; } 
       /// 2) (p==infinity) : maximal  absolute value 
       else if ( 0 == ip )    // p = infinity
       {
@@ -1593,11 +1636,7 @@ namespace Ostap
       }
       /// 3) (p==2) : frequent case 
       else if ( 0.5 == ip )  // p = 2 : frequent case 
-      {
-        for ( ; begin != end ; ++begin ) 
-        { const long double c  = *begin ; r += c * c ; }
-        return std::sqrt ( r ) ;                                        // RETURN 
-      }
+      { return std::sqrt ( sum2 ( begin , end ) ) ; }
       /// 4) not very large integer 
       else if (  ( 0.05 < ip ) && Ostap::Math::isushort ( 1 / ip ) ) 
       {
@@ -1609,14 +1648,10 @@ namespace Ostap
         }
         return std::pow ( r , ip ) ;                                    // RETURN 
       }
-      /// 5) generic case 
+      /// 5) generic case
       const long double p = 1.0L/ip ;
-      for ( ; begin != end ; ++begin ) 
-      { 
-        const long  double c = *begin ;
-        r += std::pow ( std::abs ( c )  , p ) ;
-      }
-      return std::pow ( r , ip ) ;
+      //
+      return std::pow ( sum_pow ( begin , end , p ) , ip ) ;
     }
     // ========================================================================
     /** Calculate p-norm for the vector 
@@ -1753,6 +1788,12 @@ namespace Ostap
     inline T absmax ( const T& a , const T& b , Ts&&... ts ) 
     { return absmax ( absmax ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
     //
+    
+    // ========================================================================
+    // some vector sums 
+    // ========================================================================
+
+    
     
     // ========================================================================
     /// Nolume of N-ball 

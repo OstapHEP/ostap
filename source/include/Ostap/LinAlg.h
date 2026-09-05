@@ -1493,6 +1493,21 @@ namespace Ostap
     bool covariance_matrix 
     ( const Ostap::Math::GSL::Matrix& mtrx ) ;
 
+
+    // ======================================================================
+    // vector sums 
+    // ======================================================================
+    /// sum of all vector elements \f$ \Sum v_i \f$
+    double sum  ( const Ostap::Math::GSL::Vector& v )  ;
+    /// sum of all absolute values of vector elements \f$ \Sum \left| v_i  \right| \f$
+    double sum1 ( const Ostap::Math::GSL::Vector& v )  ;
+    /// sum of all squared values of vector elements \f$ \Sum v_i^2 \f$
+    double sum2 ( const Ostap::Math::GSL::Vector& v )  ;
+    /// sum of all powered values of vector elements \f$ \Sum \left| v_i\right|^p \f$
+    double sum_pow
+    ( const Ostap::Math::GSL::Vector& v , 
+      const double                    p ) ;
+    
     // =======================================================================
     // Vector norms
     // =======================================================================
@@ -1540,6 +1555,107 @@ namespace Ostap
     ( const Ostap::Math::GSL::Vector& v     , 
       const double                    p = 2 ) ;
 
+    // =======================================================================
+    // Matrix norms
+    // =======================================================================
+    
+    /** @brief Compute L0 "norm" (count of non-zero elements)
+     *  ||v||_0 = count(|v_i| > eps)
+     *  @param[in] v Input matrix 
+     *  @param[in] eps Absolute tolerance threshold below which elements are considered zero
+     *  @return Number of non-zero elements
+     */
+    std::size_t norm_L0
+    ( const Ostap::Math::GSL::Matrix& m , 
+      const double                    eps = std::numeric_limits<double>::epsilon() ) ;
+
+    // ========================================================================
+    /** @brief Compute maximum absolute element norm (entry-wise max norm) for matrices
+     *  ||A||_max = max_{i,j} |A_{ij}|
+     *  @param matrix (INPUT) Input matrix 
+     *  @return Maximum absolute element value
+     */
+    double norm_max ( const Ostap::Math::GSL::Matrix& m ) ; 
+
+    // ========================================================================
+    /** @brief Compute L1 matrix norm (maximum absolute column sum) for general matrices
+     *  ||A||_1 = max_j sum_i |A_{ij}|
+     *  @param matrix (INPUT) Input matrix 
+     *  @return L1 matrix norm value
+     */
+      double norm_L1 ( const Ostap::Math::GSL::Matrix& m ) ; 
+    
+    // ========================================================================
+    /** @brief Compute L_infinity matrix norm (maximum absolute row sum) for general matrices
+     *  ||A||_inf = max_i sum_j |A_{ij}|
+     *  @param matrix (INPUT) Input matrix 
+     *  @return L_infinity matrix norm value
+     */
+    double norm_Linf ( const Ostap::Math::GSL::Matrix& m ) ; 
+
+    // ========================================================================
+    /** @brief Compute L2 (Frobenius) norm of matrix
+     *  ||A||_F = sqrt(sum_{i,j} |A_{ij}|^2)
+     *  @param matrix (INPUT) Input matrix 
+     *  @return Frobenius norm value
+     */
+    double norm_L2 ( const Ostap::Math::GSL::Matrix& m ) ; 
+    
+   // ========================================================================
+    /** @brief Compute entry-wise Lp norm for general matrices
+     *  ||A||_p = (sum_{i,j} |A_{ij}|^p)^(1/p)
+     *  @param matrix (INPUT) Input matrix 
+     *  @param p      (INPUT) Power parameter p
+     *  @return Lp norm value
+     */
+    double norm_Lp
+    ( const Ostap::Math::GSL::Matrix& m     ,
+      const double                    p = 2 ) ;
+    
+    /// Frobenius' norm 
+    inline double norm_Frobenius ( const Ostap::Math::GSL::Matrix& m ) { return norm_L2 ( m ) ; }
+    inline double norm_F         ( const Ostap::Math::GSL::Matrix& m ) { return norm_L2 ( m ) ; }
+
+    // ========================================================================
+    // Spectral norms 
+    // ========================================================================
+
+    // ========================================================================
+    /** @brief Compute spectral norm (maximum singular value) for Ostap::Math::GSL::Matrix.
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    double norm_spectral
+    ( const Ostap::Math::GSL::Matrix& m ) ;
+
+    // ========================================================================
+    /** @brief Compute nuclear norm (sum of singular values) for Ostap::Math::GSL::Matrix.
+     *  @param m (INPUT) Input general matrix
+     *  @return Nuclear norm value
+     */
+    double norm_nuclear
+    ( const Ostap::Math::GSL::Matrix& m ) ;
+    
+    // ========================================================================
+    /** @brief Compute Schatten p-norm for Ostap::Math::GSL::Matrix.
+     *  @param m (INPUT) Input general matrix
+     *  @param p (INPUT) Schatten power parameter \f$ p \ge 1 \f$
+     *  @return Schatten p-norm value
+     */
+    double norm_schatten
+    ( const Ostap::Math::GSL::Matrix& m     ,
+      const double                    p = 2 ) ; 
+
+    /** Matrix rank - number of non-zero singualr values 
+     *  @param[in] v Input matrix 
+     *  @param[in] eps Absolute tolerance threshold below which elements are considered zero
+     *  @return Number of non-zero singualr values 
+     */
+    std::size_t rank 
+    ( const Ostap::Math::GSL::Matrix& m , 
+      const double                    eps = std::numeric_limits<double>::epsilon() ) ;
+
+    
     // =======================================================================
     /// numerical equality of two matrices 
     template <> 

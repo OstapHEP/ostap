@@ -22,6 +22,7 @@
 // ============================================================================
 #include "Ostap/Math.h"
 #include "Ostap/Span.h"
+#include "Ostap/Norms.h"
 #include "Ostap/Buffer.h"
 // ============================================================================
 /** @file Ostap/MatrixUtils.h
@@ -1915,6 +1916,40 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
+    
+    // ========================================================================
+    // Vector sums 
+    // ========================================================================
+
+    // =======================================================================
+    /// sum of all vector elements \f$ \Sum v_i \f$
+    template <class T, unsigned D>
+    inline T sum
+    ( const ROOT::Math::SVector<T,D>& v )
+    { return static_cast<T> ( sum  ( v.begin() , v.end () ) ) ; } 
+    // =======================================================================    
+    /// sum of all absolute values of vector elements \f$ \Sum \left| v_i  \right| \f$
+    template <class T, unsigned D>
+    inline T sum1
+    ( const ROOT::Math::SVector<T,D>& v )
+    { return static_cast<T> ( sum1 ( v.begin() , v.end () ) ) ; } 
+    // =======================================================================
+    /// sum of all squared values of vector elements \f$ \Sum v_i^2 \f$
+    template <class T, unsigned D>
+    inline T sum2
+    ( const ROOT::Math::SVector<T,D>& v )
+    { return static_cast<T> ( sum2 ( v.begin() , v.end () ) ) ; } 
+    // =======================================================================    
+    /// sum of all powered values of vector elements \f$ \Sum \left| v_i\right|^p \f$
+    template <class T, unsigned D>
+    inline T sum_pow
+    ( const ROOT::Math::SVector<T,D>& v     ,
+      const double                    p = 2 )
+    { return static_cast<T> ( sum_pow ( v.begin() , v.end () , p ) ) ; } 
+
+    // ========================================================================
+
+    // ========================================================================
     // Vector norms
     // ========================================================================
 
@@ -1929,14 +1964,11 @@ namespace Ostap
     ( const ROOT::Math::SVector<T, N>& v   , 
       const T                          eps = std::numeric_limits<T>::epsilon() )
     {
-      return std::transform_reduce(
-        v.begin(), v.end(),
-        std::size_t(0),
-        std::plus<std::size_t>(),
-        [eps]( T x ) -> std::size_t { return std::abs( x ) > eps ? 1 : 0; }
-      );
+      if constexpr ( N == 0 ) { return T { 0 } ; }
+      if constexpr ( N == 1 ) { return eps < std::abs( v [ 0 ] ); }
+      return norm_L0 ( v.begin () , v.end () , static_cast<double> ( eps ) ) ;
     }
-
+    
     // =======================================================================
     /** @brief Compute L1 norm (Manhattan norm / sum of absolute values)
      *  ||v||_1 = sum(|v_i|)
@@ -1946,12 +1978,9 @@ namespace Ostap
     template <typename T, unsigned int N>
     inline T norm_L1 ( const ROOT::Math::SVector<T, N>& v )
     {
-      return std::transform_reduce(
-        v.begin(), v.end(),
-        T(0),
-        std::plus<T>(),
-        []( T x ) { return std::abs( x ); }
-      );
+      if constexpr ( N == 0 ) { return T { 0 } ; }
+      if constexpr ( N == 1 ) { return std::abs( v [ 0 ] ); }
+      return static_cast<T> ( norm_L1 ( v.begin () , v.end () ) ) ;
     }
 
     // =======================================================================
@@ -1963,13 +1992,9 @@ namespace Ostap
     template <typename T, unsigned int N>
     inline T norm_L2 ( const ROOT::Math::SVector<T, N>& v )
     {
-      const T sum_sq = std::transform_reduce(
-        v.begin(), v.end(),
-        T(0),
-        std::plus<T>(),
-        []( T x ) { return x * x; }
-      );
-      return std::sqrt( sum_sq );
+      if constexpr ( N == 0 ) { return T { 0 } ; }
+      if constexpr ( N == 1 ) { return std::abs( v [ 0 ] ); }
+      return static_cast<T> ( norm_L2 ( v.begin() , v.end() ) ) ;
     }
 
     // =======================================================================
@@ -1982,31 +2007,9 @@ namespace Ostap
     template <typename T, unsigned int N>
     inline T norm_L2_safe ( const ROOT::Math::SVector<T, N>& v )
     {
-      if constexpr ( N == 0 ) { return T(0); }
-      if constexpr ( N == 1 ) { return std::abs( v[0] ); }
-
-      T scale = T(0);
-      T ssq   = T(1);
-
-      for ( unsigned int i = 0; i < N; ++i )
-      {
-        const T abs_xi = std::abs( v[i] );
-        if ( abs_xi != T(0) )
-        {
-          if ( scale < abs_xi )
-          {
-            const T ratio = scale / abs_xi;
-            ssq   = T(1) + ssq * ratio * ratio;
-            scale = abs_xi;
-          }
-          else
-          {
-            const T ratio = abs_xi / scale;
-            ssq += ratio * ratio;
-          }
-        }
-      }
-      return scale * std::sqrt( ssq );
+      if constexpr ( N == 0 ) { return T { 0 } ; }
+      if constexpr ( N == 1 ) { return std::abs( v [ 0 ] ); }
+      return static_cast<T> ( norm_L2_safe ( v.begin () , v.end () ) ) ;
     }
 
     // =======================================================================
@@ -2018,14 +2021,9 @@ namespace Ostap
     template <typename T, unsigned int N>
     inline T norm_Linf ( const ROOT::Math::SVector<T, N>& v )
     {
-      if constexpr ( N == 0 ) { return T(0); }
-
-      return std::transform_reduce(
-        v.begin(), v.end(),
-        T(0),
-        []( T a, T b ) { return std::max( a, b ); },
-        []( T x ) { return std::abs( x ); }
-      );
+      if constexpr ( N == 0 ) { return T { 0 } ; }
+      if constexpr ( N == 1 ) { return std::abs ( v [ 0 ] ); }
+      return static_cast<T> ( norm_Linf ( v.begin() , v.end() ) ) ;
     }
 
     // =======================================================================
@@ -2035,23 +2033,290 @@ namespace Ostap
      *  @return Lp norm value
      */
     template <typename T, unsigned int N>
-    inline T norm_Lp ( const ROOT::Math::SVector<T, N>& v, const double p = 2 )
+    inline T norm_Lp
+    ( const ROOT::Math::SVector<T, N>& v ,
+      const T                          p = T{2}  )
+    { return static_cast<T> ( norm_Lp ( v.begin () ,
+                                        v.end   () ,
+                                        static_cast<double> ( p ) ) ) ; } 
+
+
+    // ========================================================================
+    // Matrix norms 
+    // ========================================================================
+    
+    /** @brief Compute L0 "norm" (count of non-zero elements)
+     *  ||v||_0 = count(|v_i| > eps)
+     *  @param[in] v Input matrix 
+     *  @param[in] eps Absolute tolerance threshold below which elements are considered zero
+     *  @return Number of non-zero elements
+     */
+    template <typename T, unsigned int D1, unsigned int D2, typename R>
+    inline std::size_t norm_L0 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& matrix ) 
+    { return norm_L0  ( matrix.begin () , matrix.end () ) ; }
+    
+    /** @brief Compute L0 "norm" (count of non-zero elements) for symmetric matrices 
+     *  ||v||_0 = count(|v_i| > eps)
+     *  @param[in] v Input matrix 
+     *  @param[in] eps Absolute tolerance threshold below which elements are considered zero
+     *  @return Number of non-zero elements
+     */
+    template <typename T, unsigned int D>
+    inline std::size_t norm_L0
+    ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& matrix ,
+      const T                                                          eps    = std::numeric_limits<T>::epsilon () ) 
     {
-      if      ( 0 == p          ) { return static_cast<T> ( norm_L0 ( v ) ); }
-      else if ( 1 == p          ) { return norm_L1   ( v ) ; }
-      else if ( 2 == p          ) { return norm_L2   ( v ) ; }
-      else if ( std::isinf( p ) ) { return norm_Linf ( v ) ; }
+      std::size_t count = 0;
+      for ( unsigned int i = 0; i < D; ++i ) 
+      { 
+        const auto vii = matrix ( i , i ) ;
+        if ( std::isfinite ( vii ) && vii && ( eps < std::abs ( vii ) ) )  { ++count ; }      
+        for ( unsigned int j = i + 1 ; j < D; ++j ) 
+        {
+          const auto vij = matrix ( i, j );
+          if ( std::isfinite ( vij ) && vij && ( eps < std::abs ( vij ) ) ) { count += 2 ; } 
+        }
+      }
+      return count ;
+    }
+    // ========================================================================
+    /** @brief Compute maximum absolute element norm (entry-wise max norm) for matrices
+     *  ||A||_max = max_{i,j} |A_{ij}|
+     *  @param matrix (INPUT) Input matrix 
+     *  @return Maximum absolute element value
+     */
+    template <typename T, unsigned int D1, unsigned int D2, typename R>
+    inline T norm_max 
+    ( const ROOT::Math::SMatrix<T, D1, D2, R>& matrix ) 
+    { return static_cast<T> ( norm_max ( matrix.begin () , matrix.end () ) ) ; }
 
-      const T sum = std::transform_reduce(
-        v.begin(), v.end(),
-        T(0),
-        std::plus<T>(),
-        [p]( T x ) { return std::pow( std::abs( x ), static_cast<T>( p ) ); }
-      );
-
-      return std::pow ( sum, static_cast<T>( 1.0 / p ) );
+    // ========================================================================
+    /** @brief Compute L1 matrix norm (maximum absolute column sum) for general matrices
+     *  ||A||_1 = max_j sum_i |A_{ij}|
+     *  @param matrix (INPUT) Input matrix 
+     *  @return L1 matrix norm value
+     */
+    template <typename T, unsigned int D1, unsigned int D2, typename R>
+    inline T norm_L1 
+    ( const ROOT::Math::SMatrix<T, D1, D2, R>& matrix ) 
+    {
+      using Type = std::conditional_t<std::is_same_v<std::decay_t<T>, long double>, long double, double>;
+      
+      Type max_col_sum = 0;
+      for ( unsigned int j = 0; j < D2; ++j ) 
+      {
+        Type col_sum = 0;
+        for ( unsigned int i = 0; i < D1; ++i ) 
+        { col_sum += static_cast<Type> ( std::abs ( matrix ( i, j ) ) ); }
+        max_col_sum = std::max ( max_col_sum, col_sum );
+      }
+      return static_cast<T> ( max_col_sum ) ;
+    }
+    
+    // ========================================================================
+    /** @brief Compute L1 matrix norm for symmetric matrices
+     *  For symmetric matrices, ||A||_1 == ||A||_inf (max absolute row/column sum)
+     *  @param matrix (INPUT) Input symmetric matrix 
+     *  @return L1 matrix norm value (accounting for symmetry)
+     */
+    template <typename T, unsigned int D>
+    inline T norm_L1 
+    ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& matrix ) 
+    {
+      using Type = std::conditional_t<std::is_same_v<std::decay_t<T>, long double>, long double, double>;
+      Type max_sum = 0;
+      for ( unsigned int i = 0; i < D; ++i ) 
+      {
+        Type row_sum = 0;
+        for ( unsigned int j = 0; j < D; ++j ) 
+        { row_sum += static_cast<Type> ( std::abs ( matrix ( i, j ) ) ); }
+        max_sum = std::max ( max_sum, row_sum );
+      }
+      return static_cast<T> ( max_sum ) ;
     }
 
+    // ========================================================================
+    /** @brief Compute L_infinity matrix norm (maximum absolute row sum) for general matrices
+     *  ||A||_inf = max_i sum_j |A_{ij}|
+     *  @param matrix (INPUT) Input matrix 
+     *  @return L_infinity matrix norm value
+     */
+    template <typename T, unsigned int D1, unsigned int D2, typename R>
+    inline T norm_Linf 
+    ( const ROOT::Math::SMatrix<T, D1, D2, R>& matrix ) 
+    {
+      using Type = std::conditional_t<std::is_same_v<std::decay_t<T>, long double>, long double, double>;
+
+      Type max_row_sum = 0;
+      for ( unsigned int i = 0; i < D1; ++i ) 
+      {
+         Type row_sum = 0;
+         for ( unsigned int j = 0; j < D2; ++j ) 
+         { row_sum += static_cast<Type> ( std::abs ( matrix ( i, j ) ) ); }
+        max_row_sum = std::max ( max_row_sum, row_sum );
+      }
+      return static_cast<T> ( max_row_sum ) ;
+    }
+
+    // ========================================================================
+    /** @brief Compute L_infinity matrix norm for symmetric matrices
+     *  For symmetric matrices, ||A||_inf == ||A||_1
+     *  @param matrix (INPUT) Input symmetric matrix 
+     *  @return L_infinity matrix norm value (accounting for symmetry)
+     */
+    template <typename T, unsigned int D>
+    inline auto norm_Linf 
+    ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& matrix ) 
+    {
+      // Symmetric matrix norms L1 and Linf are identical, can reuse norm_L1 or compute symmetrically
+      return norm_L1 ( matrix );
+    }
+    
+    // ========================================================================
+    /** @brief Compute L2 (Frobenius) norm of a general matrix
+     *  ||A||_F = sqrt(sum_{i,j} |A_{ij}|^2)
+     *  @param matrix (INPUT) Input matrix 
+     *  @return Frobenius norm value
+     */
+    template <typename T, unsigned int D1, unsigned int D2, typename R >
+    inline T norm_L2
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& matrix ) 
+    { return static_cast<T> ( norm_L2 ( matrix.begin () , matrix.end () ) ) ; }
+    
+    // ========================================================================
+    /** @brief Compute L2 (Frobenius) norm of symmetric matrix
+     *  ||A||_F = sqrt(sum_{i,j} |A_{ij}|^2)
+     *  @param matrix (INPUT) Input matrix 
+     *  @return Frobenius norm value
+     */
+    template <typename T, unsigned int D>
+    inline T norm_L2
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D>>& matrix ) 
+    {
+      using Type = std::conditional_t<std::is_same_v<std::decay_t<T>, long double>, long double, double>;
+      
+      // Step 1: Find max absolute value for scaling (can use the stored elements directly via iterators)
+      Type scale = static_cast<Type> ( norm_max ( matrix ) ) ;
+      if ( 0 == scale ) { return T { 0 } ; }
+
+      // Step 2: Sum squares taking symmetry into account
+      Type sum_sq = 0;
+      for ( unsigned int i = 0; i < D; ++i ) 
+      {
+        Type vii = static_cast<Type> ( matrix ( i , i ) ) / scale;
+        sum_sq += vii * vii ;        
+        for ( unsigned int j = i; j < D ; ++j ) 
+        {
+          const auto vij = static_cast<Type> ( matrix ( i , j ) ) / scale;
+          sum_sq += 2 * vij * vij ;
+        }
+      }
+      //
+      return static_cast<Type> ( scale * std::sqrt ( sum_sq ) ) ;
+    }
+    /// Frobenius' norm 
+    template <typename T, unsigned int D1, unsigned int D2, typename R >
+    inline auto norm_Frobenius 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& matrix ) { return norm_L2 ( matrix ) ; }    
+    /// Frobenius' norm 
+    template <typename T, unsigned int D1, unsigned int D2, typename R >
+    inline auto norm_F 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& matrix ) { return norm_L2 ( matrix ) ; }
+
+    
+    // ========================================================================
+    /** @brief Compute entry-wise Lp norm for general matrices
+     *  ||A||_p = (sum_{i,j} |A_{ij}|^p)^(1/p)
+     *  @param matrix (INPUT) Input matrix 
+     *  @param p      (INPUT) Power parameter p
+     *  @return Lp norm value
+     */
+    template <typename T, unsigned int D1, unsigned int D2, typename R>
+    inline T norm_Lp 
+    ( const ROOT::Math::SMatrix<T, D1, D2, R>& matrix ,
+      const double                             p      = 2 ) 
+    { return static_cast<T> ( norm_Lp ( matrix.begin () , matrix.end () , p ) ) ; }
+
+    // ========================================================================
+    /** @brief Compute entry-wise Lp norm for symmetric matrices
+     *  ||A||_p = (sum_{i,j} |A_{ij}|^p)^(1/p) (accounting for symmetry)
+     *  @param matrix (INPUT) Input symmetric matrix 
+     *  @param p      (INPUT) Power parameter p
+     *  @return Lp norm value
+     */
+    template <typename T, unsigned int D>
+    inline T norm_Lp 
+    ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& matrix ,
+      const double                                                     p      = 2 ) 
+    {
+      //
+      using Type = std::conditional_t<std::is_same_v<std::decay_t<T>, long double>, long double, double>;
+      
+      static const Ostap::Math::Equal_To<Type> s_equal {} ;
+      static const Ostap::Math::Zero    <Type> s_zero  {} ;
+      
+      //
+      if ( 0 >= p || s_zero ( p ) ) { return static_cast<T> ( norm_L0 ( matrix ) ) ; } 
+      
+      // Step 1: Find max absolute element for scaling using storage iterators
+      const Type scale = static_cast<Type> ( norm_max ( matrix ) ) ;      
+      if ( !scale ) { return T { 0 } ; }
+      
+      // Handle p = infinity
+      if ( std::isinf ( p ) ) { return static_cast<T> ( scale ) ; }
+      
+      if ( 1 == p || s_equal ( 1 , p ) ) 
+      {
+        Type sum_pow = 0 ;
+        for ( unsigned int i = 0; i < D; ++i ) 
+        {
+          const auto vii = static_cast<Type> ( std::abs ( matrix ( i, i ) ) ) / scale ;
+          sum_pow += vii ;          
+          for ( unsigned int j = i + 1; j < D; ++j ) 
+          {
+            const auto vij = static_cast<Type> ( std::abs ( matrix ( i, j ) ) ) / scale ;
+            sum_pow += 2 * vij;
+          }
+        }
+        //
+        return static_cast<T> ( scale * sum_pow ) ;
+        //
+      }
+      else if ( 2 == p || s_equal ( 2 , p ) ) 
+      {
+        Type sum_pow = 0 ;
+        for ( unsigned int i = 0; i < D; ++i ) 
+        {
+          const auto vii = static_cast<Type> ( std::abs ( matrix ( i, i ) ) ) / scale ;
+          sum_pow += vii * vii ;          
+          for ( unsigned int j = i + 1; j < D; ++j ) 
+          {
+            const auto vij = static_cast<Type> ( std::abs ( matrix ( i, j ) ) ) / scale ;
+            sum_pow += 2 * vij * vij ; 
+          }
+        }
+        //
+        return static_cast<T> ( scale * std::sqrt ( sum_pow ) ) ;
+        //
+      }
+      //
+      Type sum_pow = 0;
+      for ( unsigned int i = 0; i < D; ++i ) 
+      {
+        const auto vii = static_cast<Type> ( std::abs ( matrix ( i, i ) ) ) / scale ;
+        sum_pow += std::pow ( vii, p );
+
+        for ( unsigned int j = i + 1; j < D; ++j ) 
+        {
+          const auto vij = static_cast<Type> ( std::abs ( matrix ( i, j ) ) ) / scale ;
+          sum_pow += 2 * std::pow ( vij, p );
+        }
+      }
+      //
+      return static_cast<T> ( scale * std::pow ( sum_pow, Type ( 1 ) / p ) ) ;
+    }
+    
     // ========================================================================
     // Vector operations 
     // ========================================================================

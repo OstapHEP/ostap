@@ -46,12 +46,12 @@ namespace Ostap
       Matrix matrix ( const TMatrixT<double>&    m ) ;      
       // =====================================================================
       /** convert TMatrixTSym into GSL matrix
-       *  @attention It reads only the upper triangle part and fill both upper & lower parts
+       *  @attention It reads only the upper triangle part and fills both upper & lower parts
        */
       Matrix matrix ( const TMatrixTSym<float>&  m ) ;
       // =====================================================================
       /** convert TMatrixTSym into GSL matrix
-       *  @attention It reads only the upper triangle part and fill both upper & lower parts
+       *  @attention It reads only the upper triangle part and fills both upper & lower parts
        */
       Matrix matrix ( const TMatrixTSym<double>& m ) ;
       // =====================================================================

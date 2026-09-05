@@ -10,7 +10,10 @@
    1. completely rewrite `EigenSystem`
    1. cmake : locate optimized BLAS if/when available and make use of it! 
    1. more improvements for Linear Algebra
+   1. add simple matrix&vector norms for all three LA areas
+   1. add spectral norms for GSL world
    
+
 ## Bug fixes
 
 ## Backward incompatible
