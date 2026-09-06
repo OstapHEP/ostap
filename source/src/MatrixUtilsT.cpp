@@ -233,7 +233,7 @@ double Ostap::Math::norm_schatten
 ( const TMatrixTSym<float>& matrix , 
   const double              p      )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () != matrix.GetNcols () ) { return INVALID_NORM_v ; } 
   /// convert to double 
   TMatrixTSym<double> m { matrix } ;
   return norm_schatten ( m , p ) ;
@@ -415,6 +415,103 @@ Ostap::StatusCode Ostap::Math::PINV
   return Ostap::StatusCode::SUCCESS; 
 }
 
+// =============================================================================
+namespace
+{
+  // ===========================================================================
+  /** @brief Compute Variance Inflation Factors (VIF) for a TMatrixTSym covariance matrix.
+   *
+   *  Calculates the Variance Inflation Factor (VIF) vector \f$ \vec{v} \f$ 
+   *  for a ROOT ROOT::TMatrixTSym<T> covariance matrix \f$ \Sigma \f$:
+   *  \f[
+   *      v_i = \Sigma_{ii} \cdot (\Sigma^+)_{ii}
+   *  \f]
+   *  where \f$ \Sigma_{ii} \f$ is the variance of variable $i$, and 
+   *  \f$ (\Sigma^+)_{ii} \f$ is the corresponding diagonal element of the 
+   *  Moore-Penrose pseudoinverse matrix \f$ \Sigma^+ \f$.
+   *
+   *  @par Connection to Global Correlation Coefficient:
+   *  In classical linear regression, the VIF of variable $i$ measures how much 
+   *  the variance of the estimated regression coefficient is inflated due to 
+   *  multicollinearity. It is strictly related to the **Global Correlation 
+   *  Coefficient** \f$ R_i \f$ (the coefficient of determination when regressing 
+   *  variable $i$ against all other $D-1$ variables):
+   *  \f[
+   *      v_i = \frac{1}{1 - R_i^2} \quad \Longleftrightarrow \quad R_i = \sqrt{1 - \frac{1}{v_i}}
+   *  \f]
+   *  - \f$ R_i = 0 \implies v_i = 1 \f$: Variable $i$ is orthogonal (uncorrelated) to all others.
+   *  - \f$ R_i \to 1 \implies v_i \to \infty \f$: Variable $i$ is a linear combination of other variables.
+   *
+   *  @par Numerical Robustness & Fallback Architecture:
+   *  1. **Fast Path**: Attempts in-place fast Cholesky/LU inversion on a local copy. 
+   *     Optimal for well-behaved Positive Definite matrices.
+   *  2. **Fallback Path**: If fast inversion fails (due to zero or negative eigenvalues 
+   *     arising from exact linear dependencies or negative \f$sPlot\f$ event weights), 
+   *     it gracefully falls back to spectral pseudoinversion (`PINV`). Zero and negative 
+   *     eigenvalues (\f$\lambda_k \le \text{eps} \cdot \lambda_{\max}\f$) are zeroed out.
+   *  3. **Non-positive Variances**: Variables with \f$ \Sigma_{ii} \le 0 \f$ (constants or 
+   *     severe \f$sPlot\f$ noise) are explicitly assigned `std::numeric_limits<T>::infinity()`, 
+   *     marking them as primary targets for elimination.
+   *
+   *  @tparam T Data type (`double`, `float`).
+   *  @param[in]  cov Input symmetric covariance matrix \f$ \Sigma \f$ (TMatrixTSym<T>).
+   *  @param[out] vif Output vector containing VIF values (TVectorT<T>).
+   *  @param[in]  eps Numerical tolerance ratio for truncating small eigenvalues in `PINV`.
+   *  @return `Ostap::StatusCode::SUCCESS` if computation completed successfully.
+   */
+   template <typename T>
+   inline Ostap::StatusCode _VIF_ 
+   ( const TMatrixTSym<T>& cov  ,
+     TVectorT<T>&          vif  ,
+     const T               eps = std::numeric_limits<T>::epsilon() ) 
+    {
+      //
+      if ( !cov.IsValid () || cov.GetNcols() < 1 || cov.GetNrows () != cov.GetNcols () ) 
+      { return INVALID_TMATRIX ; } 
+      // 
+      const Int_t nrows = cov.GetNrows() ;
+
+      // Resize output vector if necessary
+      if ( vif.GetNrows() != nrows ) { vif.ResizeTo( nrows ) ; }
+
+      // Working copy for inversion
+      TMatrixTSym<T> sp { cov } ;
+      
+      // Fast path inversion (Cholesky / Fast inversion)
+      sp.InvertFast() ;
+      
+      // Check if InvertFast failed (sp becomes invalid or non-invertible)
+      if ( !sp.IsValid() )
+      {
+        // Reset copy to original matrix before pseudoinversion
+        sp = cov ;
+        Ostap::StatusCode sc = Ostap::Math::PINV ( cov , sp , eps ) ; 
+        if ( sc.isFailure () ) { return sc ; }
+      }
+
+      // Compute VIF array
+      for ( Int_t i = 0 ; i < nrows ; ++i )
+      {
+        const T cii = cov ( i , i ) ;
+        vif [ i ]   = cii <= 0 ? std::numeric_limits<T>::infinity () : cii * sp ( i , i ) ;
+      }
+      //
+      return Ostap::StatusCode::SUCCESS ;
+    }
+  // ==========================================================================
+}
+// ============================================================================
+
+Ostap::StatusCode Ostap::Math::VIF 
+( const TMatrixTSym<float>& cov ,
+  TVectorT<float>&          vif ,
+  const float               eps )
+{ return _VIF_ ( cov , vif , eps ) ; } 
+Ostap::StatusCode VIF 
+( const TMatrixTSym<double>& cov ,
+  TVectorT<double>&          vif ,
+  const double               eps ) 
+{ return _VIF_ ( cov , vif , eps ) ; } 
 
 // ============================================================================
 //                                                                      The END 

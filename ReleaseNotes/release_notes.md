@@ -15,7 +15,7 @@
    1. more polishing for Linar Algebra
    1. add `rank` functions for T-matrices 
    1. complete norms (including sepctral, nuclear an Schatten), ranks and Moore-Penrouse pseudoinverses 
-
+   1. add `VIF` methods to get the variance inflation factors for badly-defined covariance matrices 
 
 ## Bug fixes
 

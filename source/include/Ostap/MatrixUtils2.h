@@ -219,7 +219,7 @@ namespace Ostap
       const double                             eps  = std::numeric_limits<T>::epsilon () )
     {      
       Ostap::Math::GSL::Matrix A ( D1, D2, Ostap::Utils::buffer ( m ) ) ;
-      return Ostap::Math::rank ( A , dynamic_cast<double> ( eps ) ) ;
+      return Ostap::Math::rank ( A , static_cast<double> ( eps ) ) ;
     }
     
     // ========================================================================
@@ -326,7 +326,6 @@ namespace Ostap
       const Ostap::StatusCode sc = eigen_system.eigenVectors ( A , S , V , false ) ; 
       if ( sc.isFailure() ) { return sc ; } 
 
-      
       const double max_val  = norm_max ( D ) ;
       const double tol = ( 0 < eps ? eps : std::numeric_limits<T>::epsilon() ) * max_val * D ;
       
@@ -351,6 +350,85 @@ namespace Ostap
       return Ostap::StatusCode::SUCCESS ;
     }
     
+    // ========================================================================
+    /** @brief Compute Variance Inflation Factors (VIF) for a covariance matrix.
+     *
+     *  Calculates the Variance Inflation Factor (VIF) vector \f$ \vec{v} \f$ 
+     *  for a symmetric $D \times D$ covariance matrix \f$ \Sigma \f$:
+     *  \f[
+     *      v_i = \Sigma_{ii} \cdot (\Sigma^+)_{ii}
+     *  \f]
+     *  where \f$ \Sigma_{ii} \f$ is the variance of variable $i$, and 
+     *  \f$ (\Sigma^+)_{ii} \f$ is the corresponding diagonal element of the 
+     *  Moore-Penrose pseudoinverse matrix \f$ \Sigma^+ \f$.
+     *
+     *  @par Connection to Global Correlation Coefficient:
+     *  In classical linear regression, the VIF of variable $i$ measures how much 
+     *  the variance of the estimated regression coefficient is inflated due to 
+     *  multicollinearity. It is strictly related to the **Global Correlation 
+     *  Coefficient** \f$ R_i \f$ (the coefficient of determination when regressing 
+     *  variable $i$ against all other $D-1$ variables):
+     *  \f[
+     *      v_i = \frac{1}{1 - R_i^2} \quad \Longleftrightarrow \quad R_i = \sqrt{1 - \frac{1}{v_i}}
+     *  \f]
+     *  - \f$ R_i = 0 \implies v_i = 1 \f$: Variable $i$ is orthogonal (uncorrelated) to all others.
+     *  - \f$ R_i \to 1 \implies v_i \to \infty \f$: Variable $i$ is a linear combination of other variables.
+     *
+     *  @par Numerical Robustness & Fallback Architecture:
+     *  1. **Fast Path**: Attempts in-place Cholesky decomposition (\f$ \Sigma = L L^T \f$). 
+     *     This is $O(D^3)$ with minimal overhead for well-behaved, Positive Definite matrices.
+     *  2. **Fallback Path**: If Cholesky fails (due to zero or negative eigenvalues 
+     *     arising from exact linear dependencies or negative \f$sPlot\f$ event weights), 
+     *     it gracefully falls back to spectral pseudoinversion (`PINV`). Zero and negative 
+     *     eigenvalues (\f$\lambda_k \le \text{eps} \cdot \lambda_{\max}\f$) are zeroed out, 
+     *     preventing division-by-zero crashes while preserving the subspace mapping.
+     *  3. **Non-positive Variances**: Variables with \f$ \Sigma_{ii} \le 0 \f$ (constants or 
+     *     severe \f$sPlot\f$ noise) are explicitly assigned `std::numeric_limits<T>::infinity()`, 
+     *     marking them as primary targets for elimination.
+     *
+     *  @par Interpretation Thresholds:
+     *  - \f$ v_i \approx 1 \f$: No collinearity.
+     *  - \f$ 1 < v_i < 5 \f$: Moderate, acceptable correlation.
+     *  - \f$ v_i > 10 \f$: High collinearity (\f$ R_i > 0.95 \f$), feature removal recommended.
+     *  - \f$ v_i > 10^4 \text{ or } \infty \f$: Critical geometric degeneracy or constant feature.
+     *
+     *  @tparam T Data type (`double`, `float`).
+     *  @tparam D Dimension of the covariance matrix.
+     *  @param[in]  cov Input $D \times D$ symmetric covariance matrix \f$ \Sigma \f$.
+     *  @param[out] vif Output $D$-dimensional vector containing VIF values.
+     *  @param[in]  eps Numerical tolerance ratio for truncating small eigenvalues in `PINV`.
+     *  @return `Ostap::StatusCode::SUCCESS` if computation completed successfully.
+     */
+    template <typename T, unsigned int D>
+    inline Ostap::StatusCode VIF 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& cov  ,
+      ROOT::Math::SVector<T,D>&                                     vif  ,
+      const T                                                       eps = std::numeric_limits<T>::epsilon() ) 
+    {
+      // (symmetric) matrix type 
+      typedef typename ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >  MTRX ;
+      //
+      //  Inverse/pseudoinverse matrix 
+      MTRX sp { cov };
+      // (1) try Cholesky' inversion 
+      if  ( !sp.InvertChol() )
+      {
+        // (2) if Cholesky fails - use Moore-Penrouse'
+        const Ostap::StatusCode sc = PINV ( cov , sp , eps ) ;
+        if ( sc.isFailure() ) { return sc ; } 
+      }
+      //
+      // (3) finally calculate VIFs
+      for  ( std::size_t i = 0 ; i < D ; ++i )
+      {
+        const T cii = cov ( i , i ) ;
+        // (4) mark the pathological components with infinities 
+        vif [ i ] = cii <= 0 ? std::numeric_limits<T>::infinity () : cii * sp ( i , i )  ;
+      }
+      return Ostap::StatusCode::SUCCESS ;
+    }
+
+
     // ========================================================================
     // helper functions to allow proper operations in PyROOT
     // - need to bypass expressions  (no easy way to use them in PyROOT)
