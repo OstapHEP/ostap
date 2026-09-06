@@ -17,10 +17,11 @@
 #include "TVectorT.h"
 #include "TMatrixT.h"
 #include "TMatrixTSym.h"
-#include "TMatrixTUtils.h"
+// #include "TMatrixTUtils.h"
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Math.h"
 #include "Ostap/Norms.h"
 #include "Ostap/MatrixUtils2.h"
 // ============================================================================
@@ -43,9 +44,7 @@ namespace Ostap
       if ( !vct.IsValid() ) { return false ; }
       const T* begin =         vct.GetMatrixArray () ;
       const T* end   = begin + vct.GetNrows       () ;
-      for ( const T* v = begin ; v != end ; ++v )
-        { if ( !std::isfinite ( *v ) ) { return false ; } }
-      return true ;
+      return isfinite ( begin , end ) ;
     }
     /// Are all elements are finite? 
     template <class T> 
@@ -55,9 +54,7 @@ namespace Ostap
       if ( !mtrx.IsValid() ) { return false ; }
       const T* begin =         mtrx.GetMatrixArray () ;
       const T* end   = begin + mtrx.GetNrows() * mtrx.GetNcols() ;
-      for ( const T* v = begin ; v != end ; ++v )
-        { if ( !std::isfinite ( *v ) ) { return false ; } }
-      return true ;
+      return isfinite ( begin , end ) ;
     }
     /// Are all elements are finite? 
     template <class T> 
@@ -67,9 +64,7 @@ namespace Ostap
       if ( !mtrx.IsValid() ) { return false ; }
       const T* begin =         mtrx.GetMatrixArray () ;
       const T* end   = begin + mtrx.GetNrows() * mtrx.GetNcols() ;
-      for ( const T* v = begin ; v != end ; ++v )
-        { if ( !std::isfinite ( *v ) ) { return false ; } }
-      return true ;
+      return isfinite ( begin , end ) ;
     }
     // ========================================================================
     /// specialisation for vectors  
@@ -137,7 +132,7 @@ namespace Ostap
       /** constructor
        *  @see Ostap::Math::mULPS_double
        */
-      Equal_To ( const unsigned int eps  = mULPS_double ) : m_cmp ( eps ) {}
+      Equal_To ( const unsigned int eps  = mULPS<T> ) : m_cmp ( eps ) {}
       // ======================================================================
       /// comparison:
       inline bool operator()
@@ -170,20 +165,40 @@ namespace Ostap
       /// compare with another matrix type 
       template <class T1, class T2>
       inline bool operator()
-      ( const TMatrixT<T1>&    v1 , 
-        const TMatrixTSym<T2>& v2 ) const
+      ( const TMatrixT<T1>&    m1 , 
+        const TMatrixTSym<T2>& m2 ) const
       {
-        if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
-        if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
-        if (  v1.GetNcols () !=  v2.GetNcols () ) { return false ; }
+        if ( !m1.IsValid  () || !m2.IsValid  () ) { return false ; }
+        if (  m1.GetNrows () <= 0               ) { return false ; } 
+        if (  m1.GetNcols () <= 0               ) { return false ; }           
+        if (  m1.GetNrows () !=  m2.GetNrows () ) { return false ; }
+        if (  m1.GetNcols () !=  m2.GetNcols () ) { return false ; }
         //
-        const unsigned long nr = v1.GetNrows () ;
-        const unsigned long nc = v1.GetNcols () ;
+        const std::size_t nr = m1.GetNrows () ;
+        const std::size_t nc = m1.GetNcols () ;
         //
-        for ( unsigned long i = 0 ; i < nr ; ++i )
-        { for ( unsigned long j = 0 ; j < nc ; ++j )
-          { if ( !m_cmp ( v1 ( i , j ) , v2 ( i , j ) ) )
-            { return false ; } } }
+        for ( std::size_t i = 0 ; i < nr ; ++i )
+        {          
+          const T m1_ii { static_cast<T> ( m1 ( i , i ) ) } ;
+          if ( !std::isfinite ( m1_ii ) ) { return false ; }  // 1st diagonal is finite 
+          const T m2_ii { static_cast<T> ( m2 ( i , i ) ) } ;
+          if ( !std::isfinite ( m2_ii  ) ) { return false ; }  // 2nd diagonal is finite 
+          if ( !m_cmp ( m1_ii , m2_ii  ) ) { return false ; }  // diagonals are equal
+          //
+          for ( std::size_t j = 0 ; i < nc ; ++i )
+          {
+            const T m1_ij  { static_cast<T> ( m1 ( i , j ) ) } ;
+            if ( !std::isfinite ( m1_ij ) ) { return false ; }  // m1 element is not finite 
+            const T m1_ji  { static_cast<T> ( m1 ( j , i ) ) } ;
+            if ( !std::isfinite ( m1_ji ) ) { return false ; }  // m1 element is not finite
+            if ( !m_cmp ( m1_ij , m1_ji ) ) { return false ; }  // m1 is not symmetric            
+            //
+            const T m2_ij  { static_cast<T> ( m2 ( i , j ) ) } ;
+            if ( !std::isfinite ( m2_ij ) ) { return false ; }  // m2 element is not finite
+            if ( !m_cmp ( m1_ij , m2_ij ) ) { return false ; }  // m1 != m2             
+          }
+        }
+        // 
         return true ;
       }
       // ======================================================================
@@ -191,21 +206,27 @@ namespace Ostap
       template <class T1, class T2>      
       inline bool operator()
       ( const TMatrixTSym<T2>&  v1 , 
-        const TMatrixT<T1>&     v2 ) const
-      { return  (*this) ( v2 , v1 ) ; }
+        const TMatrixT<T1>&     v2 ) const { return  (*this) ( v2 , v1 ) ; }
       // ======================================================================
       /// compare with another matrix type
       template <class T1, class T2, unsigned int D1 , unsigned int D2, class R1>
       inline bool operator()
-      ( const TMatrixT<T1>&                     v1 , 
-        const ROOT::Math::SMatrix<T2,D1,D2,R1>& v2 ) const
+      ( const TMatrixT<T1>&                     m1 , 
+        const ROOT::Math::SMatrix<T2,D1,D2,R1>& m2 ) const
       {
-        if ( !v1.IsValid() || v1.GetNrows() != D1 || v1.GetNcols() != D2 ) 
+        if ( !m1.IsValid() || D1 != m1.GetNrows() || D2 != m1.GetNcols() ) 
         { return false ; }
         //
-        for ( unsigned long i = 0 ; i < D1 ; ++i )
-        { for ( unsigned long j = 0 ; j < D2 ; ++j )
-          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
+        for ( std::size_t i = 0 ; i < D1 ; ++i )
+        { for ( std::size_t j = 0 ; j < D2 ; ++j )
+          {
+            const T e1 { static_cast<T> ( m1 ( i , j ) ) } ;
+            if ( !std::isfinite ( e1 ) ) { return false ; }   // m1 is not finite 
+            const T e2 { static_cast<T> ( m2 ( i , j ) ) } ;
+            if ( !std::isfinite ( e2 ) ) { return false ; }   // m2 is not finite 
+            if ( !m_cmp ( e1 , e2    ) ) { return false ; }   // m1 != m2   
+          }
+        }
         //
         return true ;
       }
@@ -217,141 +238,140 @@ namespace Ostap
         const TMatrixT<T1>&                     v2 ) const 
       { return  (*this) ( v2 , v1 ) ; }
       // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D>
+      inline bool operator()
+      ( const TMatrixT<T1>&                                            m1 , 
+        const ROOT::Math::SMatrix<T2,D,D,ROOT::Math::MatRepSym<T2,D>>& m2 ) const
+      {
+        if ( !m1.IsValid() || D != m1.GetNrows() || D != m1.GetNcols() ) { return false ; }
+        //
+        for ( std::size_t i = 0 ; i < D ; ++i )
+        {
+          const T  m1_ii { static_cast<T> ( m1 ( i , i ) ) } ;
+          if ( !std::isfinite     ( m1_ii ) ) { return false ; } // m1 is not finite
+          const T  m2_ii { static_cast<T> ( m2 ( i , i ) ) } ;
+          if ( !std::isfinite     ( m2_ii ) ) { return false ; } // m2 is not finite
+          if ( !m_cmp  (  m1_ii ,   m2_ii ) ) { return false ; } // diagonals are not equal                    
+          for ( std::size_t j = i + 1 ; j < D ; ++j )
+          {
+            const T m1_ij { static_cast<T> ( m1 ( i , j ) ) } ; 
+            if ( !std::isfinite   ( m1_ij ) ) { return false ; } // m1 is not finite
+            const T m1_ji { static_cast<T> ( m1 ( j , i ) ) } ; 
+            if ( !std::isfinite   ( m1_ji ) ) { return false ; } // m1 is not finite
+            if ( !m_cmp  (  m1_ij , m1_ji ) ) { return false ; } // m1 is not symmetric
+            //
+            const T m2_ij { static_cast<T> ( m2 ( i , j ) ) } ;
+            if ( !std::isfinite   ( m2_ij ) ) { return false ; } // m2 is not finite
+            if ( !m_cmp  (  m1_ij , m2_ij ) ) { return false ; } // m1 != m2             
+          }
+        }
+        //
+        return true ;
+      }
+      // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D>
+      inline bool operator()
+      ( const ROOT::Math::SMatrix<T2,D,D,ROOT::Math::MatRepSym<T2,D>>& m2 ,
+        const TMatrixT<T1>&                                            m1 ) const 
+      { return ( *this ) ( m1 , m2 ) ; } 
+      // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D1 , unsigned int D2, class R1>
+      inline bool operator()
+      ( const TMatrixTSym<T1>&                  m1 , 
+        const ROOT::Math::SMatrix<T2,D1,D2,R1>& m2 ) const
+      {
+        if ( !m1.IsValid() || D1 != m1.GetNrows() || D2 != m1.GetNcols() ) 
+        { return false ; }
+        //
+        for ( std::size_t i = 0 ; i < D1 ; ++i )
+        {
+          const T  m1_ii { static_cast<T> ( m1 ( i , i ) ) } ;
+          if ( !std::isfinite     ( m1_ii ) ) { return false ; } // m1 is not finite
+          const T  m2_ii { static_cast<T> ( m2 ( i , i ) ) } ;
+          if ( !std::isfinite     ( m2_ii ) ) { return false ; } // m2 is not finite
+          if ( !m_cmp  (  m1_ii ,   m2_ii ) ) { return false ; } // diagonals are not equal                    
+          for ( std::size_t j = i + 1 ; j < D2 ; ++j )
+          {
+            const T m1_ij { static_cast<T> ( m1 ( i , j ) ) } ; 
+            if ( !std::isfinite   ( m1_ij ) ) { return false ; } // m1 is not finite
+            const T m2_ij { static_cast<T> ( m2 ( i , j ) ) } ;
+            if ( !std::isfinite   ( m2_ij ) ) { return false ; } // m2 is not finite
+            const T m2_ji { static_cast<T> ( m2 ( j , i ) ) } ;
+            if ( !std::isfinite   ( m2_ji ) ) { return false ; } // m2 is not finite
+            if ( !m_cmp  (  m2_ij , m2_ji ) ) { return false ; } // m2 is not symmetric
+            //
+            if ( !m_cmp  (  m1_ij , m2_ij ) ) { return false ; } // m1 != m2                
+          }
+        }
+        //
+        return true ;
+      }
+      // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D1 , unsigned int D2, class R1>
+      inline bool operator()
+      ( const ROOT::Math::SMatrix<T2,D1,D2,R1>& m2 , 
+        const TMatrixTSym<T1>&                  m1 ) const
+      { return ( *this ) ( m1 , m2 ) ; }       
+      // ======================================================================
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D>
+      inline bool operator()
+      ( const TMatrixTSym<T1>&                                          m1 , 
+        const ROOT::Math::SMatrix<T2,D,D,ROOT::Math::MatRepSym<T2,D> >& m2 ) const
+      {
+        if ( !m1.IsValid() || D != m1.GetNrows() || D != m1.GetNcols() ) { return false ; }
+        //
+        for ( std::size_t i = 0 ; i < D ; ++i )       
+        {
+          const T m1_ii { static_cast<T> ( m1 ( i , i ) ) } ;
+          if ( !std::isfinite     ( m1_ii ) ) { return false ; } // m1 is not finite
+          const T m2_ii { static_cast<T> ( m2 ( i , i ) ) } ;
+          if ( !std::isfinite     ( m2_ii ) ) { return false ; } // m2 is not finite
+          if ( !m_cmp  (  m1_ii ,   m2_ii ) ) { return false ; } // diagonals are not equal                    
+          for ( std::size_t j = i + 1 ; j < D ; ++j )
+          {
+            const T m1_ij { static_cast<T> ( m1 ( i , j ) ) } ;
+            if ( !std::isfinite   ( m1_ij ) ) { return false ; } // m1 is not finite
+            const T m2_ij { static_cast<T> ( m2 ( i , j ) ) } ;
+            if ( !std::isfinite   ( m2_ij ) ) { return false ; } // m2 is not finite
+            if ( !m_cmp  (  m1_ij , m2_ij ) ) { return false ; } // m1 != m2                        
+          }
+        }
+        //
+        return true ;
+      }
+      // ======================================================================      
+      /// compare with another matrix type
+      template <class T1, class T2, unsigned int D>
+      inline bool operator()
+      ( const ROOT::Math::SMatrix<T2,D,D,ROOT::Math::MatRepSym<T2,D> >& m2 , 
+        const TMatrixTSym<T1>&                                          m1 ) const 
+      { return ( *this ) ( m1 , m2 ) ; }       
+      // ======================================================================
     private:
       // ======================================================================
       /// the evaluator 
       Equal_To<T> m_cmp ;                                 // the evaluator 
       // ======================================================================
     } ;
+    
     // ========================================================================
     /// specialisation for matrices  
     template <class T>
-    struct Equal_To<TMatrixTSym<T> > 
+    struct Equal_To<TMatrixTSym<T>> : public Equal_To< TMatrixT<T> >
     {
     public:
       // ======================================================================
       /** constructor
        *  @see Ostap::Math::mULPS_double
        */
-      Equal_To ( const unsigned int eps  = mULPS_double ) : m_cmp ( eps ) {}
-      // ======================================================================
-      /// comparison:
-      inline bool operator()
-      ( const TMatrixTSym<T>& v1 , 
-        const TMatrixTSym<T>& v2 ) const  
-      {
-        if ( &v1             ==  &v2            ) { return true  ; }
-        if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
-        if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
-        //
-        const unsigned long nc = v1.GetNcols () ;
-        //
-        for ( unsigned long i = 0 ; i < nc ; ++i )
-        { for ( unsigned long j = i ; j < nc ; ++j ) // ATTENTION!!!
-          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
-        //
-        return true ;
-      }
-      // ======================================================================
-      /// compare with another matrix type (e.g. double and float
-      template <class T1, class T2>
-      inline bool operator()
-      ( const TMatrixTSym<T1>& v1 , 
-        const TMatrixTSym<T2>& v2 ) const  
-      {
-        if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
-        if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
-        //
-        const unsigned long nc = v1.GetNcols () ;
-        //
-        for ( unsigned long i = 0 ; i < nc ; ++i )
-        { for ( unsigned long j = i ; j < nc ; ++j ) // ATTENTION!!!
-          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
-        //
-        return true ;
-      }
-      // ======================================================================
-      /// compare with another matrix type
-      template <class T1, class T2>
-      inline bool operator()
-      ( const TMatrixTSym<T1>& v1 , 
-        const TMatrixT<T2>&    v2 ) const
-      {
-        if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
-        if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
-        if (  v1.GetNcols () !=  v2.GetNcols () ) { return false ; }
-        //
-        const unsigned long nc = v1.GetNcols () ;
-        const unsigned long nr = v1.GetNrows () ;
-        //
-        for ( unsigned long i = 0 ; i < nr ; ++i )
-        { for ( unsigned long j = 0 ; j < nc ; ++j )
-          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
-        //
-        return true ;
-      }
-      // ======================================================================
-      /// compare with another matrix type
-      template <class T1, class T2>
-      inline bool operator()
-      ( const TMatrixT<T2>&    v1 ,
-        const TMatrixTSym<T1>& v2 ) const  
-      {
-        if ( !v1.IsValid  () || !v2.IsValid  () ) { return false ; }
-        if (  v1.GetNrows () !=  v2.GetNrows () ) { return false ; }
-        if (  v1.GetNcols () !=  v2.GetNcols () ) { return false ; }
-        //
-        const unsigned long nc = v1.GetNcols () ;
-        const unsigned long nr = v1.GetNrows () ;
-        //
-        for ( unsigned long i = 0 ; i < nr ; ++i )
-        { for ( unsigned long j = 0 ; j < nc ; ++j )
-          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
-        //
-        return true ;
-      }
-      // ======================================================================
-      /// compare with another matrix type
-      template <class T1, class T2, unsigned int D, class R1>
-      inline bool operator()
-      ( const TMatrixTSym<T1>&                v1 , 
-        const ROOT::Math::SMatrix<T2,D,D,R1>& v2 ) const
-      {
-        if ( !v1.IsValid() || v1.GetNrows() != D || v1.GetNcols() != D ) { return false ; }
-        //
-        for ( unsigned long i = 0 ; i < D ; ++i )
-        { for ( unsigned long j = 0 ; j < D ; ++j )
-          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
-        //
-        return true ;
-      }
-      // ==========================================================================
-      /// compare with another matrix type
-      template <class T1, class T2, unsigned int D>
-      inline bool operator()
-      ( const TMatrixTSym<T1>&                                          v1 , 
-        const ROOT::Math::SMatrix<T2,D,D,ROOT::Math::MatRepSym<T2,D> >& v2 ) const
-      {
-        if ( !v1.IsValid() || v1.GetNrows() != D || v1.GetNcols() != D ) { return false ; }
-        //
-        for ( unsigned long i = 0 ; i < D ; ++i )
-        { for ( unsigned long j = i  ; j < D ; ++j ) // ATTENTION HERE 
-          { if ( !m_cmp ( v1 ( i , j ) , v2  ( i , j ) ) ) { return false ; } } }
-        //
-        return true ;
-      }
-      // ======================================================================
-      /// compare with another matrix type
-      template <class T1, class T2, unsigned int D, class R1>
-      inline bool operator()
-      ( const ROOT::Math::SMatrix<T2,D,D,R1>& v1 , 
-        const TMatrixTSym<T1>&                v2 ) const 
-      { return  (*this) ( v2 , v1 ) ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the evaluator 
-      Equal_To<T> m_cmp ;                                 // the evaluator 
+      Equal_To ( const unsigned int eps  = mULPS<T> )
+        : Equal_To< TMatrixT<T> > ( eps )
+      {}
       // ======================================================================
     } ;
     // ========================================================================
@@ -366,13 +386,13 @@ namespace Ostap
       const unsigned int rows = m.GetNrows () ;
       const unsigned int cols = m.GetNcols () ;
       for ( unsigned int i = 0 ; i < rows ; ++i )
+      {
+        for ( unsigned int j = 0 ; j < cols ; ++j )
         {
-          for ( unsigned int j = 0 ; j < cols ; ++j )
-            {
-              const double value = m ( i , j ) ;
-              if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
-            }
+          const double value = m ( i , j ) ;
+          if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
         }
+      }
       return result ;
     }
     // ========================================================================
@@ -387,13 +407,13 @@ namespace Ostap
       const unsigned int rows = m.GetNrows () ;
       const unsigned int cols = m.GetNcols () ;
       for ( unsigned int i = 0 ; i < rows ; ++i )
+      {
+        for ( unsigned int j = i ; j < cols ; ++j )
         {
-          for ( unsigned int j = i ; j < cols ; ++j )
-            {
-              const double value = m ( i , j ) ;
-              if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
-            }
+          const double value = m ( i , j ) ;
+          if ( std::abs ( result ) < std::abs ( value ) ) { result = value ; }
         }
+      }
       return result ;
     }
     // ========================================================================
@@ -453,6 +473,55 @@ namespace Ostap
     }
     // =======================================================================
 
+
+    // =======================================================================
+    // Vector sums 
+    // =======================================================================
+
+    // =======================================================================
+    /// sum of all vector elements \f$ \Sum v_i \f$
+    template <typename T>
+    inline T sum
+    ( const TVectorT<T>& v  )
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( sum ( begin , end ) ) ; 
+    }
+    
+    // =======================================================================
+    /// sum of all absolute values of vector elements \f$ \Sum \left| v_i  \right| \f$
+    template <typename T>
+    inline T sum1
+    ( const TVectorT<T>& v  )
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( sum1 ( begin , end ) ) ; 
+    }
+    
+    // =======================================================================
+    /// sum of all squared values of vector elements \f$ \Sum v_i^2 \f$
+    template <typename T>
+    inline T sum2
+    ( const TVectorT<T>& v  )
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( sum2 ( begin , end ) ) ; 
+    }
+    
+    // =======================================================================
+    /// sum of all powered values of vector elements \f$ \Sum \left| v_i\right|^p \f$
+    template <typename T>
+    inline T sum_pow
+    ( const TVectorT<T>& v ,
+      const double       p ) 
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( sum_pow ( begin , end , p  ) ) ; 
+    }
     
     // =======================================================================
     // Vector norms 
@@ -468,7 +537,14 @@ namespace Ostap
     inline std::size_t norm_L0
     ( const TVectorT<T>& v   , 
       const T            eps = std::numeric_limits<T>::epsilon() )
-    { return norm_L0 ( v.begin () , v.end () , static_cast<double> ( eps ) ) ; }
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return norm_L0
+        ( begin ,
+          end   ,
+          static_cast<double> ( eps ) ) ;
+    }
     
     // =======================================================================
     /** @brief Compute L1 norm (Manhattan norm / sum of absolute values)
@@ -479,7 +555,11 @@ namespace Ostap
     template <typename T>
     inline T norm_L1
     ( const TVectorT<T>& v )
-    { return static_cast<T> ( norm_L1 ( v.begin () , v.end () ) ) ; }
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( norm_L1 ( begin , end ) ) ;
+    }
     
     // =======================================================================
     /** @brief Compute fast L2 norm via std::transform_reduce (unprotected against overflow)
@@ -490,7 +570,11 @@ namespace Ostap
     template <typename T>
     inline T norm_L2
     ( const TVectorT<T>& v )
-    { return static_cast<T> ( norm_L2 ( v.begin() , v.end() ) ) ; }
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( norm_L2 ( begin , end ) ) ;
+    }
 
    // =======================================================================
     /** @brief Compute L2 norm (Euclidean norm / magnitude)
@@ -502,7 +586,11 @@ namespace Ostap
     template <typename T>
     inline T norm_L2_safe
     ( const TVectorT<T>& v )
-    { return static_cast<T> ( norm_L2_safe ( v.begin () , v.end () ) ) ; }
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( norm_L2_safe ( begin  , end ) ) ;
+    }
 
     // =======================================================================
     /** @brief Compute L_infinity norm (Chebyshev norm / maximum absolute element)
@@ -513,7 +601,22 @@ namespace Ostap
     template <typename T>
     inline T norm_Linf
     ( const TVectorT<T>& v )
-    { return static_cast<T> ( norm_Linf ( v.begin() , v.end() ) ) ; }
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( norm_Linf ( begin , end ) ) ;
+    }
+
+    // ========================================================================
+    /** @brief Compute matrix L-infinity norm (maximum absolute row sum) for ROOT TMatrixT
+     *  ||v||_inf = max(|v_i|)
+     *  @param v (INPUT) Input vector 
+     *  @return L-infinity norm value
+     */
+    template <typename Element>
+    inline double norm_max 
+    ( const TVectorT<Element>& v ) { return norm_Linf ( v ) ; }
+    
     
     // =======================================================================
     /** @brief Compute generalized Lp norm (p >= 0)
@@ -525,10 +628,13 @@ namespace Ostap
     inline T norm_Lp
     ( const TVectorT<T>& v ,
       const T            p = T{2}  )
-    { return static_cast<T> ( norm_Lp ( v.begin () ,
-                                        v.end   () ,
-                                        static_cast<double>( p ) ) ) ; } 
-
+    {
+      const T* begin =         v.GetMatrixArray () ;
+      const T* end   = begin + v.GetNrows       () ;
+      return static_cast<T> ( norm_Lp ( begin      ,
+                                        end        ,
+                                        static_cast<double>( p ) ) ) ;
+    } 
 
     // ========================================================================
     // Matrix norms 
@@ -859,6 +965,181 @@ namespace Ostap
     }
     
     // ========================================================================
+    // Spectral norms 
+    // ========================================================================
+        
+    // ========================================================================
+    /** @brief Compute spectral norm (maximum singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    double norm_spectral
+    ( const TMatrixT<float>&     matrix ) ;
+    
+    // ========================================================================
+    /** @brief Compute spectral norm (maximum singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    double norm_spectral
+    ( const TMatrixT<double>&    matrix ) ;
+
+    // ========================================================================
+    /** @brief Compute spectral norm (maximum singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    double norm_spectral
+    ( const TMatrixTSym<float>&     matrix ) ;
+    
+    // ========================================================================
+    /** @brief Compute spectral norm (maximum singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    double norm_spectral
+    ( const TMatrixTSym<double>&    matrix ) ;
+
+    // ========================================================================
+    /** @brief Compute nuclear norm (sum of singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Nuclear norm value
+     */
+    double norm_nuclear 
+    ( const TMatrixT<float>&     matrix ) ;
+    
+    // ========================================================================
+    /** @brief Compute nuclear norm (sum of singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Nuclear norm value
+     */
+    double norm_nuclear 
+    ( const TMatrixT<double>&   matrix ) ;
+    
+    // ========================================================================
+    /** @brief Compute nuclear norm (sum of singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Nuclear norm value
+     */
+    double norm_nuclear 
+    ( const TMatrixTSym<float>&  matrix ) ;
+    
+    // ========================================================================
+    /** @brief Compute nuclear norm (sum of singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Nuclear norm value
+     */
+    double norm_nuclear 
+    ( const TMatrixTSym<double>&  matrix ) ;          
+
+    // ========================================================================
+    /** @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
+     *  @param m (INPUT) Input general matrix
+     *  @return Schatten's norm value
+     */
+    double norm_schatten 
+    ( const TMatrixT<float>&    matrix , 
+      const double              p      = 2 ) ;
+    
+    // ========================================================================
+    /** @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
+     *  @param m (INPUT) Input general matrix
+     *  @return Schatten's norm value
+     */
+    double norm_schatten 
+    ( const TMatrixTSym<float>& matrix , 
+      const double              p      = 2 ) ;
+        
+    // ========================================================================
+    /** @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
+     *  @param m (INPUT) Input general matrix
+     *  @return Schatten's norm value
+     */
+    double norm_schatten 
+    ( const TMatrixT<double>&    matrix , 
+      const double               p      = 2 ) ;
+    
+    // ========================================================================
+    /** @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
+     *  @param m (INPUT) Input general matrix
+     *  @return Schatten's norm value
+     */
+    double norm_schatten 
+    ( const TMatrixTSym<double>& matrix , 
+      const double               p      = 2 ) ;
+    
+    // ========================================================================
+    /// get the rank of the matrix
+    std::size_t  rank
+    ( const TMatrixT<float>&     matrix , 
+      const float                eps    = std::numeric_limits<float>::epsilon () ) ;
+    // ========================================================================
+    /// get the rank of the symmetric matrix
+    std::size_t  rank
+    ( const TMatrixTSym<float>&  matrix , 
+      const float                eps    = std::numeric_limits<float>::epsilon () ) ;
+    // ========================================================================
+    /// get the rank of the matrix
+    std::size_t  rank
+    ( const TMatrixT<double>&    matrix , 
+      const double               eps    = std::numeric_limits<double>::epsilon () ) ;
+    // ========================================================================
+    /// get the rank of the symmetric matrix
+    std::size_t  rank
+    ( const TMatrixTSym<double>& matrix , 
+      const double               eps    = std::numeric_limits<double>::epsilon () ) ;
+    // ========================================================================
+
+    // ============================================================================
+    /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
+     *  @param a     (INPUT)  Input matrix A (m x n)
+     *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+     *  @param tol   (INPUT)  Tolerance for zeroing small singular values ( 0>= for default)
+     *  @return status code
+     */
+    Ostap::StatusCode PINV
+    ( const TMatrixT<float>& a      ,
+      TMatrixT<float>&       a_pinv ,
+      const float            tol    = std::numeric_limits<float>::epsilon()  ) ;
+    
+    // ============================================================================
+    /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
+     *  @param a     (INPUT)  Input matrix A (m x n)
+     *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+     *  @param tol   (INPUT)  Tolerance for zeroing small singular values ( 0>= for default)
+     *  @return status code
+     */
+    Ostap::StatusCode PINV
+    ( const TMatrixT<double>& a      ,
+      TMatrixT<double>&       a_pinv ,
+      const double            tol    = std::numeric_limits<float>::epsilon()  ) ;
+    
+    // ============================================================================
+    /** Compute Moore-Penrose Pseudoinverse for symmetric matrix 
+     *  @param a     (INPUT)  Input matrix A (m x n)
+     *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+     *  @param tol   (INPUT)  Tolerance for zeroing small singular values ( 0>= for default)
+     *  @return status code
+     */
+    Ostap::StatusCode PINV
+    ( const TMatrixTSym<float>& a      ,
+      TMatrixTSym<float>&       a_pinv ,
+      const float               tol    = std::numeric_limits<float>::epsilon()  ) ;
+    
+    // ============================================================================
+    /** Compute Moore-Penrose Pseudoinverse for symmetric matrix 
+     *  @param a     (INPUT)  Input matrix A (m x n)
+     *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+     *  @param tol   (INPUT)  Tolerance for zeroing small singular values ( 0>= for default)
+     *  @return status code
+     */
+    Ostap::StatusCode PINV
+    ( const TMatrixTSym<double>& a      ,
+      TMatrixTSym<double>&       a_pinv ,
+      const double               tol    = std::numeric_limits<float>::epsilon()  ) ;
+    
+      
+    // ========================================================================    
     namespace  Ops
     {      
       // ======================================================================

@@ -1456,7 +1456,7 @@ Ostap::StatusCode Ostap::Math::GSL::PDM
  *  @return status code
  */
 // ============================================================================
-Ostap::StatusCode Ostap::Math::GSL::PINV
+Ostap::StatusCode Ostap::Math::PINV
 ( const Ostap::Math::GSL::Matrix& a      ,
   Ostap::Math::GSL::Matrix&       a_pinv ,
   double                          tol    )
@@ -1469,22 +1469,21 @@ Ostap::StatusCode Ostap::Math::GSL::PINV
   // Handle Aliasing (&a == &a_pinv)
   if ( &a == &a_pinv )
   {
-    Matrix tmp { n , m } ;
+    Ostap::Math::GSL::Matrix tmp { n , m } ;
     Ostap::StatusCode sc = PINV ( a , tmp , tol ) ;
     if ( sc.isSuccess() ) { a_pinv.swap ( tmp ) ; }
     return sc ;
   }
 
   // Ensure target dimensions (n x m)
-  if ( a_pinv.nRows() != n || a_pinv.nCols() != m )
-  { a_pinv = Matrix ( n , m ) ; }
+  if ( a_pinv.nRows() != n || a_pinv.nCols() != m ) { a_pinv.resize ( n , m ) ; }
 
   // SVD requires working copy of A (m x n), matrix V (n x n), vector S (n)
   // GSL computes A = U * S * V^T, where A_copy holds U on output
-  Matrix A_copy { a } ; // Holds U after SVD
-  Matrix V      { n , n } ;
-  Vector S      { n } ;
-  Vector work   { n } ;
+  Ostap::Math::GSL::Matrix A_copy { a } ; // Holds U after SVD
+  Ostap::Math::GSL::Matrix V      { n , n } ;
+  Ostap::Math::GSL::Vector S      { n } ;
+  Ostap::Math::GSL::Vector work   { n } ;
 
   // Compute SVD
   int status = gsl_linalg_SV_decomp ( A_copy.matrix() , V.matrix() , S.vector() , work.vector() ) ;
@@ -1493,17 +1492,17 @@ Ostap::StatusCode Ostap::Math::GSL::PINV
     gsl_error ( "Ostap::Math::GSL::PINV: SVD decomposition failed" , __FILE__ , __LINE__ , status ) ;
     return ERROR_GSL + status ;
   }
-
+  
   // Determine cutoff threshold for singular values
   const double max_s = S ( 0 ) ;
-  if ( tol < 0.0 )
+  if ( tol <= 0.0 )
   {
-    const double eps = 2.2204460492503131e-16 ; // machine epsilon for double
+    const double eps = std::numeric_limits<double>::epsilon () ;
     tol = std::max ( m , n ) * max_s * eps ;
   }
 
   // Build the inverted singular vector d = sigma^+
-  Vector d { n } ;
+  Ostap::Math::GSL::Vector d { n } ;
   gsl_vector* vd = d.vector() ;
   for ( std::size_t i = 0 ; i < n ; ++i )
   {
@@ -1513,7 +1512,7 @@ Ostap::StatusCode Ostap::Math::GSL::PINV
 
   // Compute A^+ = V * diag(d) * U^T  using our optimized MDM function!
   // V (n x n), d (n), A_copy holds U (m x n), transposed Tu = true -> U^T (n x m)
-  return MDM ( V , false , d , A_copy , true , a_pinv ) ;
+  return Ostap::Math::GSL::MDM ( V , false , d , A_copy , true , a_pinv ) ;
 }
 
 // ============================================================================
@@ -2383,7 +2382,7 @@ double Ostap::Math::norm_spectral
   Ostap::Math::GSL::Matrix V ( N , K ) ;
   //
   const Ostap::StatusCode sc = Ostap::Math::GSL::SVD ( m, s, U, V ) ;
-  if ( sc.isFailure() ) { return -999 ; }
+  if ( sc.isFailure() ) { return INVALID_NORM_v ; }
   //
   return Ostap::Math::max_element ( s ) ;
 }
@@ -2398,7 +2397,7 @@ double Ostap::Math::norm_nuclear
 {
   //
   const std::size_t M = m.nRows();
-  const std::size_t N  = m.nCols();
+  const std::size_t N = m.nCols();
   //
   const std::size_t K = std::min ( M , N  );
   //
@@ -2407,7 +2406,7 @@ double Ostap::Math::norm_nuclear
   Ostap::Math::GSL::Matrix V ( N , K ) ;
   //
   const Ostap::StatusCode sc = Ostap::Math::GSL::SVD ( m, s, U, V ) ;
-  if ( sc.isFailure() ) { return -999 ; }
+  if ( sc.isFailure() ) { return INVALID_NORM_v ; }
   //
   return sum ( s ) ;
 }
@@ -2432,7 +2431,7 @@ double Ostap::Math::norm_schatten
   else if ( 0 >= p || s_zero  (     p ) ) { return rank          ( m ) ; }
   //
   const std::size_t M = m.nRows();
-  const std::size_t N  = m.nCols();
+  const std::size_t N = m.nCols();
   //
   const std::size_t K = std::min ( M , N  );
   //
@@ -2441,7 +2440,7 @@ double Ostap::Math::norm_schatten
   Ostap::Math::GSL::Matrix V ( N , K ) ;
   //
   const Ostap::StatusCode sc = Ostap::Math::GSL::SVD ( m, s, U, V ) ;
-  if ( sc.isFailure() ) { return -999 ; }
+  if ( sc.isFailure() ) { return INVALID_NORM_v ; }
   //
   double sump = sum_pow ( s , p ) ;
   //

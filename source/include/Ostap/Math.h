@@ -10,6 +10,7 @@
 #include <complex>
 #include <cmath>
 #include <utility>
+#include <iterator>
 #include <type_traits>
 #include <algorithm>
 #include <functional>
@@ -79,6 +80,51 @@ namespace Ostap
      */
     constexpr unsigned int mULPS_double = 1000 ;
     // ========================================================================
+    namespace detail
+    {
+      // ======================================================================
+      /// Default fallback: return mULPS_double for any generic type
+      template <class T>
+      struct ulps_deducer
+      {
+        static constexpr auto value = mULPS_double ;
+      };      
+      // ======================================================================
+      /// Specialization for float types
+      template <>
+      struct ulps_deducer<float>
+      {
+        static constexpr auto value = mULPS_float;
+      };      
+      // ======================================================================
+      /// Specialization for complex types: delegate to the underlying scalar type T
+      template <class T>
+      struct ulps_deducer<std::complex<T>>
+      {
+        static constexpr auto value = ulps_deducer<std::decay_t<T>>::value;
+      } ;
+      // ======================================================================
+      /// Specialization for std::vector: delegate to its element type
+      template <class TYPE, class ALLOCATOR>
+      struct ulps_deducer<std::vector<TYPE, ALLOCATOR>>
+      {
+        static constexpr auto value = ulps_deducer<std::decay_t<TYPE>>::value;
+      };
+      // ======================================================================      
+      /// Specialization for std::array: delegate to its element type
+      template <class TYPE, std::size_t N>
+      struct ulps_deducer<std::array<TYPE, N>>
+      {
+        static constexpr auto value = ulps_deducer<std::decay_t<TYPE>>::value;
+      };
+      // =====================================================================
+    } 
+    // =======================================================================
+    /// Compile-time selection of mULPs supporting raw scalars and complex types
+    template <class T>
+    inline constexpr auto mULPS = detail::ulps_deducer<std::decay_t<T>>::value;
+    // ========================================================================
+    
     namespace detail
     {
       // ======================================================================
@@ -204,6 +250,9 @@ namespace Ostap
     struct Equal_To 
     {
       // ======================================================================
+      /// (fake) constructor
+      Equal_To ( const unsigned int eps = mULPS<TYPE> ) {} 
+      // ======================================================================        
       /// the actual type 
       typedef typename detail::param<const TYPE>::param_type T ;
       // ======================================================================
@@ -235,7 +284,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor
-      Equal_To ( const unsigned int eps = mULPS_double ) : m_cmp ( eps ) {}
+      Equal_To ( const unsigned int eps = mULPS<double> ) : m_cmp ( eps ) {}
       /// comparison:
       inline bool operator() ( const double v1 , const double v2 ) const
       { return m_cmp ( v1 , v2 ) ; }
@@ -260,7 +309,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor
-      Equal_To ( const unsigned int eps = mULPS_double ) : m_cmp ( eps ) {}
+      Equal_To ( const unsigned int eps = mULPS<long double> ) : m_cmp ( eps ) {}
       /// comparison:
       inline bool operator() 
       ( const long double v1 ,
@@ -293,15 +342,10 @@ namespace Ostap
       /** constructor
        *  @see Ostap::Math::mULPS_float
        */
-      Equal_To ( const unsigned short eps =  mULPS_float ) : m_cmp ( eps ) {}
+      Equal_To ( const unsigned short eps =  mULPS<float> ) : m_cmp ( eps ) {}
       /// comparison:
       inline bool operator() ( const float v1 , const float v2 ) const
       { return m_cmp( v1 , v2 ) ; }
-      // ======================================================================
-    private:
-      // ======================================================================      
-      /// constructor
-      Equal_To ( const float /* eps */ ) ;
       // ======================================================================
     private :
       // ======================================================================
@@ -317,7 +361,7 @@ namespace Ostap
     public: 
       // ======================================================================
       /// constructor
-      Equal_To ( const unsigned int eps = mULPS_double ) : m_equal ( eps ) {}
+      Equal_To ( const unsigned int eps = mULPS<TYPE> ) : m_equal ( eps ) {}
       // ======================================================================
     public:
       // ======================================================================
@@ -365,7 +409,7 @@ namespace Ostap
       /** constructor
        *  @see Ostap::Math::mULPS_double
        */
-      Equal_To ( const unsigned int eps  = mULPS_double ) : m_cmp ( eps ) {}
+      Equal_To ( const unsigned int eps  = mULPS<double> ) : m_cmp ( eps ) {}
       // ======================================================================
       /// comparison:
       inline bool operator()
@@ -444,6 +488,7 @@ namespace Ostap
     struct Zero
     {
       // ======================================================================
+      Zero ( const unsigned int eps  = mULPS<TYPE> ) : m_cmp ( eps ) {}
       /// parameter type 
       typedef typename detail::param<const TYPE>::param_type T ;
       /// comparison
@@ -452,14 +497,15 @@ namespace Ostap
     private:
       // ======================================================================
       // the comparizon criteria 
-      Equal_To<TYPE> m_cmp ;
+      Equal_To<TYPE> m_cmp {} ;
       // ======================================================================
     } ;
     // ========================================================================
     template <>
-    struct Zero<double> 
+    struct Zero<double>
     {
       // ======================================================================
+      Zero ( const unsigned int eps  = mULPS<double> ) : m_cmp ( eps ) {}
       /// comparison
       inline bool operator() ( const double  v ) const 
       { return !v || m_cmp ( v , 0 ) ; }
@@ -475,6 +521,7 @@ namespace Ostap
     struct Zero<float>
     {
       // ======================================================================
+      Zero ( const unsigned int eps  = mULPS<float> ) : m_cmp ( eps ) {}
       /// comparison
       inline bool operator() ( const float  v ) const 
       { return !v || m_cmp ( v , 0 ) ; }
@@ -499,6 +546,8 @@ namespace Ostap
     struct Zero< std::complex<TYPE> >
     {
       // ======================================================================
+      Zero ( const unsigned int eps  = mULPS<TYPE> ) : m_zero ( eps ) {}
+      // ======================================================================
       /// comparison
       inline bool operator() ( const std::complex<TYPE>& v ) const 
       { return m_zero ( v.real() ) && m_zero ( v.imag () ) ; }
@@ -519,6 +568,8 @@ namespace Ostap
     struct NotZero 
     {
       // ======================================================================
+      NotZero ( const unsigned int eps  = mULPS<TYPE> ) : m_zero ( eps ) {}
+      // ======================================================================      
       typedef typename detail::param<const TYPE>::param_type T ;
       /// comparison
       inline bool operator() ( T v ) const { return !m_zero ( v ) ; }
@@ -548,6 +599,8 @@ namespace Ostap
     {
     public:
       // ======================================================================
+      Zero ( const unsigned int eps = mULPS<TYPE> ) : m_nz ( eps ) {}
+      // ======================================================================      
       ///  comparison
       inline bool operator () ( const std::vector<TYPE>& v ) const
       {
@@ -1413,14 +1466,15 @@ namespace Ostap
      *  @return   "dot" product of two sequences 
      */
     template <class TYPE     ,
-              unsigned int N , 
+              std::size_t  N , 
               class ITERATOR , 
               typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
               typename std::enable_if<std::is_convertible<TYPE,long double>::value,bool>::type       = true  , 
               typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true>
     inline double dot_kahan 
     ( TYPE(&x)[N] , 
-      ITERATOR y  ) { return dot_kahan ( x , x + N , y ) ; }
+      ITERATOR y  )
+    { return dot_kahan ( x , x + N , y ) ; }
    // ========================================================================
     /** make dot-multiplication of two sequences using Kahan summation
      *  \f$ r = \sum_i  x_i y_i \f$
@@ -1430,12 +1484,13 @@ namespace Ostap
      */
     template <class TYPE1, 
               class TYPE2, 
-              unsigned int N ,
+              std::size_t  N ,
               typename std::enable_if<std::is_convertible<TYPE1,long double>::value,bool>::type = true  , 
               typename std::enable_if<std::is_convertible<TYPE2,long double>::value,bool>::type = true  > 
     inline double dot_kahan
     ( TYPE1(&x)[N] , 
-      TYPE2(&y)[N] ) { return dot_kahan ( x , x + N , y ) ; }
+      TYPE2(&y)[N] )
+    { return dot_kahan ( x , x + N , y ) ; }
     // ========================================================================
     /** make dot-multiplication of two sequences using Kahan summation
      *  \f$ r = \sum_i  x_i y_i \f$
@@ -1450,8 +1505,8 @@ namespace Ostap
     ( const unsigned int N     , 
       const double*      x     , 
       const double*      y     , 
-      const unsigned int skipx ,
-      const unsigned int skipy )
+      const std::size_t  skipx ,
+      const std::size_t  skipy )
     { return dot_kahan ( x + skipx     ,
                          x + skipx + N , 
                          y + skipy     ) ; }
@@ -1512,10 +1567,7 @@ namespace Ostap
     ( ITERATOR    first ,
       ITERATOR    last  , 
       const short iexp  )
-    { 
-      if ( 0 != iexp ) 
-      { for ( ; first != last ; ++first ) { (*first) = std::ldexp ( *first , iexp ) ; } }
-    }
+    { if ( 0 != iexp ) { for ( ; first != last ; ++first ) { (*first) = std::ldexp ( *first , iexp ) ; } } }
     // ========================================================================
     /// scale all elements of vector 
     template <class    TYPE      ,
@@ -1554,6 +1606,18 @@ namespace Ostap
     void negate ( std::vector<TYPE,ALLOCATOR>& vct ) 
     { negate ( vct.begin() , vct.end() ) ; }
     // ========================================================================
+    
+    // ========================================================================
+    /// check that all elements osf sequence are finite        
+    template <class ITERATOR, 
+              typename = std::enable_if_t<std::is_arithmetic_v<typename std::iterator_traits<ITERATOR>::value_type>>>
+    inline bool isfinite
+    ( ITERATOR begin ,
+      ITERATOR end   )
+    { return std::all_of ( begin ,
+                           end   ,
+                           [](const auto& val) -> bool
+                           { return std::isfinite ( val ) ; } ) ; }
     
     // ========================================================================
     /// sum of all vector elements \f$ \Sum v_i \f$

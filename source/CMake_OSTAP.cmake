@@ -70,6 +70,7 @@ add_library(ostap SHARED src/format.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp
                          src/MatrixUtils.cpp
+                         src/MatrixUtilsT.cpp
                          src/Misc.cpp
                          src/Models.cpp
                          src/Moebius.cpp                                                 

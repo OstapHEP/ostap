@@ -119,10 +119,10 @@ namespace Ostap
         template <class T,unsigned int D>
         inline Ostap::StatusCode
         eigenValues
-        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& matrix ,
-          ROOT::Math::SVector<T,D>&                                     values , 
-          const bool           sorted    = false ,
-          const bool           ascending = true  ) const 
+        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& matrix    ,
+          ROOT::Math::SVector<T,D>&                                     values    , 
+          const bool                                                    sorted    = false ,
+          const bool                                                    ascending = true  ) const 
         {          
           /// copy S-matrix into GSL-matrix 
           const Matrix m { D , Ostap::Utils::buffer ( matrix ) } ;
@@ -146,11 +146,11 @@ namespace Ostap
         template <class T,unsigned int D>
         Ostap::StatusCode
         eigenVectors
-        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& matrix  ,
-          ROOT::Math::SVector<T,D>&                                     values  , 
-          ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >&     vectors , 
-          const bool           sorted    = false ,
-          const bool           ascending = true  ) const 
+        ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& matrix    ,
+          ROOT::Math::SVector<T,D>&                                     values    , 
+          ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepStd<T,D,D> >&     vectors   , 
+          const bool                                                    sorted    = false ,
+          const bool                                                    ascending = true  ) const 
         {
           /// copy S-matrix into GSL-matrix 
           const Matrix m { D , Ostap::Utils::buffer ( matrix ) } ;

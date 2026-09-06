@@ -67,7 +67,7 @@ namespace Ostap
       /** constructor
        *  @see Ostap::Math::mULPS_double
        */
-      Equal_To ( const unsigned int eps  = mULPS_double ) : m_cmp ( eps ) {}
+      Equal_To ( const unsigned int eps  = mULPS<T> ) : m_cmp ( eps ) {}
       // ======================================================================
       /// comparison:
       inline bool operator()
@@ -106,7 +106,7 @@ namespace Ostap
       /** constructor
        *  @see Ostap::Math::mULPS_double
        */
-      Equal_To ( const unsigned int eps  = mULPS_double ) : m_cmp ( eps ) {}
+      Equal_To ( const unsigned int eps  = mULPS<T> ) : m_cmp ( eps ) {}
       // ======================================================================
       /// comparison:
       inline bool operator()
@@ -152,6 +152,8 @@ namespace Ostap
     {
     public:
       // ======================================================================
+      Zero ( const unsigned int eps  = mULPS<T> ) : m_zt ( eps ) {}
+      // ======================================================================
       inline bool operator ()
       ( const ROOT::Math::SVector<T,D>& vct ) const 
       { return std::all_of ( vct.begin () , vct.end () , m_zt ) ;  }
@@ -193,6 +195,11 @@ namespace Ostap
     struct Unit< ROOT::Math::SMatrix<T,D,D,R> > 
     {
       // =======================================================================
+      Unit ( const unsigned int eps  = mULPS<T> )
+        : m_zero ( eps )
+        , m_one  ( eps )
+      {}
+      // =======================================================================      
       inline bool operator () 
       ( const ROOT::Math::SMatrix<T,D,D,R>& mtrx ) const 
       { 
@@ -217,6 +224,11 @@ namespace Ostap
     struct Unit< ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > > 
     {
       // =======================================================================
+      Unit ( const unsigned int eps  = mULPS<T> )
+        : m_zero ( eps )
+        , m_one  ( eps )
+      {}
+      // =======================================================================      
       inline bool operator () 
       ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > & mtrx ) const 
       { 
@@ -1547,18 +1559,12 @@ namespace Ostap
     /// Are all elements of the vector finite?
     template <class T, unsigned int D>
     inline bool isfinite ( const ROOT::Math::SVector<T,D>& vct )
-    {
-      for ( const T& v : vct ) { if ( !std::isfinite ( v ) ) { return false ; } }
-      return true ;
-    }    
+    { return isfinite ( vct.begin() , vct.end() ) ; }    
     // ========================================================================
     // Are all elements of the matrix finite?
     template <class T, unsigned int D1, unsigned int D2, class R>
     inline bool isfinite ( const ROOT::Math::SMatrix<T,D1,D2,R>& mtrx ) 
-    {
-      for ( const T& v : mtrx ) { if ( !std::isfinite ( v ) ) { return false ; } }
-      return true ;
-    }
+    { return isfinite ( mtrx.begin() , mtrx.end() ) ; }    
     // ========================================================================
     
     // ========================================================================
@@ -1573,7 +1579,7 @@ namespace Ostap
     inline bool  symmetric
     ( const ROOT::Math::SMatrix<T,D,D,R>& mtrx) 
     {
-      const Ostap::Math::Equal_To<T> equal ;
+      const Ostap::Math::Equal_To<T> equal {} ;
       for ( unsigned i = 0 ; i < D ; ++i )
       { for ( unsigned j = 0 ; j < i ; ++j )
         { if ( !equal ( mtrx ( i , j ) , mtrx ( j , i ) ) ) { return false ; } } }
@@ -1605,8 +1611,8 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D,D,R> & mtrx )
     {
       //
-      const Ostap::Math::Zero<T>     zero  ;
-      const Ostap::Math::Equal_To<T> equal ;
+      const Ostap::Math::Zero<T>     zero  {} ;
+      const Ostap::Math::Equal_To<T> equal {} ;
       //
       if constexpr ( 1 == D )
       {
@@ -1648,7 +1654,7 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D>> & mtrx )
     {
       //
-      const Ostap::Math::Zero<T>     zero;
+      const Ostap::Math::Zero<T>     zero {} ;
       //
       if constexpr ( 1 == D )
       {
@@ -1702,8 +1708,8 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D,D,R> & mtrx )
     {
       //
-      const Ostap::Math::Zero<T>     zero  ;
-      const Ostap::Math::Equal_To<T> equal ;
+      const Ostap::Math::Zero<T>     zero  {} ;
+      const Ostap::Math::Equal_To<T> equal {} ;
       //  
       if constexpr ( 1 == D )
       {
@@ -1754,7 +1760,7 @@ namespace Ostap
     ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D>> & mtrx )
     {
       //
-      const Ostap::Math::Zero<T>     zero;
+      const Ostap::Math::Zero<T>     zero {} ;
       //
       if constexpr ( 1 == D )
       {
@@ -2316,6 +2322,44 @@ namespace Ostap
       //
       return static_cast<T> ( scale * std::pow ( sum_pow, Type ( 1 ) / p ) ) ;
     }
+
+    // ========================================================================
+    /** @brief Compute spectral matrix norm (maximum singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    template <typename T,
+              unsigned int D1,
+              unsigned int D2,
+              typename R>            
+    double norm_spectral
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& matrix ) ;
+
+    // ========================================================================
+    /** @brief Compute nuclear  matrix norm (sum of singular values) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    template <typename T,
+              unsigned int D1,
+              unsigned int D2,
+              typename R>            
+    double norm_spectral
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& matrix ) ;
+    
+    // ========================================================================
+    /** @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$        
+     *  @param m (INPUT) Input general matrix
+     *  @return Schatten' norm value
+     */
+    template <typename T,
+              unsigned int D1,
+              unsigned int D2,
+              typename R>            
+    double norm_shatten
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& matrix ,
+      const double                          p      = 2 ) ;
+    
     
     // ========================================================================
     // Vector operations 

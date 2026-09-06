@@ -21,7 +21,12 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Norms.h"
+#include "Ostap/MatrixAsBuffer.h"
+#include "Ostap/LinAlg.h"
 #include "Ostap/EigenSystem.h"
+#include "Ostap/StatusCode.h"
+#include "Ostap/MatrixUtils.h"
 // ============================================================================
 /** @file Ostap/MatrixUtils2.h
  *  The collection of functions for manipulation with matrices and vectors.
@@ -34,6 +39,317 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
+
+    // ========================================================================
+    // spectral matrix norms
+    // ========================================================================
+
+    // ========================================================================
+    /** @brief Compute spectral matrix norm (maximum singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    template <typename T,
+              unsigned int D1,
+              unsigned int D2,
+              typename R>            
+    inline T norm_spectral
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m )
+    {
+      //
+      // 1. Wrap SMatrix data into a GSL matrix via Ostap::Utils::Buffer
+      Ostap::Math::GSL::Matrix A ( D1 , D2 ,  Ostap::Utils::buffer ( m  ) ) ;
+      //
+      // 2. Allocate structures for SVD[cite: 1]
+      const  std::size_t K = std::min ( D1 , D2 ) ;
+      Ostap::Math::GSL::Vector S ( K      ) ; // singular values 
+      Ostap::Math::GSL::Matrix U ( D1 , K ) ; 
+      Ostap::Math::GSL::Matrix V ( D2 , K ) ;
+      //
+      // 3. Compute SVD using the GSL module
+      const Ostap::StatusCode sc = Ostap::Math::GSL::SVD( A , S , U , V ) ;
+      if ( sc.isFailure () ) { return static_cast<T> ( INVALID_NORM_v ) ; }
+      //      
+      // 4. Spectral norm is the maximum singular value
+      return static_cast<T> ( norm_max ( S ) ) ;
+    }
+    
+    // ========================================================================
+    /** @brief Compute spectral matrix norm (maximum singular value) for symmetric matrices 
+     *  @param m (INPUT) Input general matrix
+     *  @return Spectral norm value
+     */
+    template <typename T,
+              unsigned int D>
+    inline T norm_spectral
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& m  )
+    {
+      // allocate eigensystem 
+      Ostap::Math::GSL::EigenSystem eigen_system {}  ;      
+      ROOT::Math::SVector<T, D>     values;
+      //
+      // compute eigenvalues 
+      const Ostap::StatusCode sc = eigen_system.eigenValues ( m , values , false ) ;
+      if ( sc.isFailure () ) { return static_cast<T> ( INVALID_NORM_v ) ; }
+      //
+      //  Spectral norm is the maximum singular value
+      return static_cast<T> ( norm_max ( values ) ) ;
+    }
+
+    // ========================================================================
+    /** @brief Compute nuclear norm (sum of singular value) 
+     *  @param m (INPUT) Input general matrix
+     *  @return Nuclear norm value
+     */
+    template <typename T,
+              unsigned int D1,
+              unsigned int D2,
+              typename R>            
+    inline T norm_nuclear 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m )
+    {
+      //
+      // 1. Wrap SMatrix data into a GSL matrix via Ostap::Utils::Buffer
+      Ostap::Math::GSL::Matrix A ( D1 , D2 ,  Ostap::Utils::buffer ( m ) ) ;
+      //
+      // 2. Allocate structures for SVD[cite: 1]
+      const  std::size_t K = std::min ( D1 , D2 ) ;
+      Ostap::Math::GSL::Vector S ( K      ) ; // singular values 
+      Ostap::Math::GSL::Matrix U ( D1 , K ) ; 
+      Ostap::Math::GSL::Matrix V ( D2 , K ) ;
+      //
+      // 3. Compute SVD using the GSL module
+      const Ostap::StatusCode sc = Ostap::Math::GSL::SVD( A , S , U , V ) ;
+      if ( sc.isFailure () ) { return staic_cast<T> ( INVALID_NORM_v ) ; }
+      //      
+      // 4. Nuclear norm is a sum of singular values 
+      return norm_L1 ( S );
+    }
+
+    // ========================================================================
+    /** @brief Compute nuclear norm (sum of singular value) foe symmetric matrix 
+     *  @param m (INPUT) Input general matrix
+     *  @return Nuclear norm value
+     */
+    template <typename T,
+              unsigned int D>
+    inline T norm_nuclear
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& m )
+    {
+      // allocate eigensystem 
+      Ostap::Math::GSL::EigenSystem eigen_system {}  ;      
+      ROOT::Math::SVector<T, D>     values;
+      //
+      // compute eigenvalues 
+      const Ostap::StatusCode sc = eigen_system.eigenValues ( m , values , false ) ;
+      if ( sc.isFailure () ) { return static_cast<T> ( INVALID_NORM_v ) ; }
+      //
+      //  Nuclear norm is a sum of singular value = sum of eigenvalues moduli 
+      return static_cast<T> ( norm_L1( values ) ) ;
+    }
+
+    // ========================================================================
+    /** @brief Compute Schatten matrix norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
+     *  @param m (INPUT) Input general matrix
+     *  @param p (INPUT) power parameter 
+     *  @return Spectral norm value
+     */
+    template <typename T,
+              unsigned int D1,
+              unsigned int D2,
+              typename R>            
+    inline T norm_schatten 
+    ( const ROOT::Math::SMatrix<T,D1,D2,R>& m , 
+      const double                          p = 2 )
+    {
+      //
+      // 1. Wrap SMatrix data into a GSL matrix via Ostap::Utils::Buffer
+      Ostap::Math::GSL::Matrix A ( D1 , D2 ,  Ostap::Utils::buffer ( m ) ) ;
+      //
+      // 2. Allocate structures for SVD[cite: 1]
+      const  std::size_t K = std::min ( D1 , D2 ) ;
+      Ostap::Math::GSL::Vector S ( K      ) ; // singular values 
+      Ostap::Math::GSL::Matrix U ( D1 , K ) ; 
+      Ostap::Math::GSL::Matrix V ( D2 , K ) ;
+      //
+      // 3. Compute SVD using the GSL module
+      const Ostap::StatusCode sc = Ostap::Math::GSL::SVD( A , S , U , V ) ;
+      if ( sc.isFailure () ) { return INVALID_NORM_v ; }
+      //      
+      // 4. Schatten' norm is Lp norm fro vector of singular values 
+      return norm_Lp ( S , p );
+    }
+
+    // ========================================================================
+    /** @brief Compute Schatten matrix norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
+     *  @param m (INPUT) Input general matrix
+     *  @param p (INPUT) power parameter 
+     *  @return Schatten norm value
+     */
+    template <typename T,
+              unsigned int D>
+    inline T norm_schatten 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& m    , 
+      const double                                                  p = 2 )
+    {
+      // allocate eigensystem 
+      Ostap::Math::GSL::EigenSystem eigen_system {}  ;      
+      ROOT::Math::SVector<T, D>     values;
+      //
+      // compute eigenvalues 
+      const Ostap::StatusCode sc = eigen_system.eigenValues ( m , values , false ) ;
+      if ( sc.isFailure () ) { return static_cast<T> ( INVALID_NORM_v ) ; }
+      //
+      //  Schatten' norm is a Lp norm of vector of eigenvalues 
+      return static_cast<T> ( norm_Lp ( values , p ) ) ;
+    }
+
+    // ========================================================================
+    /** Get the rank of general matrix (SMatrix) via GSL rank function.
+     *  @param  m   (INPUT) input matrix
+     *  @param  eps (INPUT) tolerance for rank determination (negative for default)
+     *  @return matrix rank
+     */
+    template <typename     T ,
+              unsigned int D1,
+              unsigned int D2,
+              typename     R>
+    inline std::size_t rank
+    ( const ROOT::Math::SMatrix<T, D1, D2, R>& m    ,
+      const double                             eps  = std::numeric_limits<T>::epsilon () )
+    {      
+      Ostap::Math::GSL::Matrix A ( D1, D2, Ostap::Utils::buffer ( m ) ) ;
+      return Ostap::Math::rank ( A , dynamic_cast<double> ( eps ) ) ;
+    }
+    
+    // ========================================================================
+    /** Get the rank of symmetrical matrix (SMatrix) via EigenSystem.
+     *  @param  m   (INPUT) input symmetrical matrix
+     *  @param  eps (INPUT) tolerance for rank determination (negative for default)
+     *  @return matrix rank
+     */
+    template <typename T, unsigned int D>
+    inline std::size_t rank
+    ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& m   ,
+      const T                                                          eps = std::numeric_limits<T>::epsilon () )
+    {
+      //
+      Ostap::Math::GSL::EigenSystem eigen_system {} ;
+      ROOT::Math::SVector<T, D>     values          ;
+      //
+      const Ostap::StatusCode sc = eigen_system.eigenValues ( m , values , false ) ;
+      if ( sc.isFailure() ) { return 0 ; }
+      //
+      return norm_L0 ( values ,  eps ) ;
+    }
+
+    // ========================================================================
+    /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
+     *  @param a     (INPUT)  Input matrix A (m x n)
+     *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+     *  @param tol   (INPUT)  Tolerance for zeroing small singular values (< 0 for default)
+     *  @return status code
+     */
+    template <typename T,
+              unsigned int D1,
+              unsigned int D2,
+              typename     R>
+    inline Ostap::StatusCode PINV 
+    ( const ROOT::Math::SMatrix<T, D1, D2, R>& a      ,
+      ROOT::Math::SMatrix<T, D2, D1, R>&       a_pinv ,      
+      const T                                  eps = std::numeric_limits<T>::epsilon () )
+    {
+      
+      // Wrap SMatrix data into a GSL matrix
+      Ostap::Math::GSL::Matrix A ( D1, D2 , Ostap::Utils::buffer ( a ) );
+      
+      // Allocate structures for SVD
+      std::size_t K = std::min ( D1, D2 );
+      Ostap::Math::GSL::Vector S ( K );
+      Ostap::Math::GSL::Matrix U ( D1, K );
+      Ostap::Math::GSL::Matrix V ( D2, K );
+      
+      // Compute SVD: A = U * S * V^T
+      const Ostap::StatusCode sc1 = Ostap::Math::GSL::SVD ( A , S, U, V  ) ;
+      if ( sc1.isFailure() ) { return sc1 ; }
+
+      //
+      const double tol = ( 0 < eps ? eps : std::numeric_limits<T>::epsilon() ) * S ( 0 ) * std::max ( D1 , D2 ) ;
+      //
+      // Compute pseudo-inverse: A^+ = V * S^+ * U^T
+      for ( std::size_t k = 0 ; k < K ; ++ k ) 
+      {
+        const double si = S ( k ) ;
+        const double v  = ( si && tol < std::abs ( si ) ) ? 1.0/si : 0.0 ;
+        S.set ( k , v ) ;
+      }
+      //
+      // final result 
+      Ostap::Math::GSL::Matrix r ( D2, D1 ) ;       
+      const Ostap::StatusCode sc2 = Ostap::Math::GSL::MDM ( V , false , S , U , true , r ) ;
+      if ( sc2.isFailure() ) { return sc2 ; }
+      //
+      // Convert the result to S-matrix            
+      for ( std::size_t i = 0 ; i < D2 ; ++i )
+      { for ( std::size_t j = 0; j < D1; ++j )
+        { a_pinv ( i, j ) = r.get ( i , j ) ;} }
+      //
+      return Ostap::StatusCode::SUCCESS ;
+    }
+
+    // ========================================================================
+    /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
+     *  @param a     (INPUT)  Input matrix A (m x n)
+     *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+     *  @param tol   (INPUT)  Tolerance for zeroing small singular values (< 0 for default)
+     *  @return status code
+     */
+    template <typename T,
+              unsigned int D>
+    inline Ostap::StatusCode PINV 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T, D>>& a      ,
+      ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T, D>>&       a_pinv ,      
+      const T                                                       eps = std::numeric_limits<T>::epsilon () )
+    {
+      //
+      Ostap::Math::GSL::EigenSystem                            eigen_system ( D ) ;
+      
+      // Wrap SMatrix data into a GSL matrix
+      Ostap::Math::GSL::Matrix A ( D , D , Ostap::Utils::buffer ( a ) ) ;
+
+      // eigenvalues 
+      Ostap::Math::GSL::Vector S ( D ) ;
+      
+      // eigenvectors 
+      Ostap::Math::GSL::Matrix V ( D , D ) ; 
+      //
+      const Ostap::StatusCode sc = eigen_system.eigenVectors ( A , S , V , false ) ; 
+      if ( sc.isFailure() ) { return sc ; } 
+
+      
+      const double max_val  = norm_max ( D ) ;
+      const double tol = ( 0 < eps ? eps : std::numeric_limits<T>::epsilon() ) * max_val * D ;
+      
+      // Compute pseudo-inverse of eigenvalues: S^+
+      for ( std::size_t k = 0; k < D; ++k )  
+      {
+        const double si = S.get( k );
+        const double s  = ( si && tol < std::abs ( si ) ) ? 1.0 / si : 0.0 ;
+        S.set ( k , s ) ;
+      }
+      
+      // final result: A^+ = V * S^+ * V^T      
+      Ostap::Math::GSL::Matrix r ( D, D );      
+      const Ostap::StatusCode sc2 = Ostap::Math::GSL::MDM ( V , false, S, V, true, r );
+      if ( sc2.isFailure() ) { return sc2; }
+      
+      // Convert the result to S-matrix            
+      for ( std::size_t i = 0; i < D; ++i )
+      { for ( std::size_t j = 0; j <= i ; ++j )
+        { a_pinv ( i, j ) = r.get ( i, j ) ; } }
+      //
+      return Ostap::StatusCode::SUCCESS ;
+    }
     
     // ========================================================================
     // helper functions to allow proper operations in PyROOT

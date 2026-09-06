@@ -12,7 +12,10 @@
    1. more improvements for Linear Algebra
    1. add simple matrix&vector norms for all three LA areas
    1. add spectral norms for GSL world
-   
+   1. more polishing for Linar Algebra
+   1. add `rank` functions for T-matrices 
+   1. complete norms (including sepctral, nuclear an Schatten), ranks and Moore-Penrouse pseudoinverses 
+
 
 ## Bug fixes
 

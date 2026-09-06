@@ -1089,18 +1089,6 @@ namespace Ostap
         const Matrix&      m  ,
         Matrix&            r  ) ;
       
-      // ============================================================================
-      /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
-       *  @param a     (INPUT)  Input matrix A (m x n)
-       *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
-       *  @param tol   (INPUT)  Tolerance for zeroing small singular values (< 0 for default)
-       *  @return status code
-       */
-      Ostap::StatusCode PINV
-      ( const Matrix& a      ,
-        Matrix&       a_pinv ,
-        double        tol    = - 1 ) ;
-
       // ========================================================================
       // Linear Algebra 
       // ========================================================================
@@ -1546,6 +1534,14 @@ namespace Ostap
     double norm_Linf
     ( const Ostap::Math::GSL::Vector& v ) ;
 
+    /** @brief Compute L_infinity norm (maximum absolute element) for GSL vector
+     *  ||v||_inf = max(|v_i|)
+     *  @param[in] v Input GSL vector pointer
+     *  @return L_infinity norm value
+     */
+    inline double norm_max 
+    ( const Ostap::Math::GSL::Vector& v ) { return norm_Linf ( v ) ; }
+    
     /** @brief Compute generalized Lp norm (p >= 0) for GSL vector
      *  @param[in] v Input GSL vector pointer
      *  @param[in] p Order of the norm
@@ -1646,6 +1642,7 @@ namespace Ostap
     ( const Ostap::Math::GSL::Matrix& m     ,
       const double                    p = 2 ) ; 
 
+    // =======================================================================
     /** Matrix rank - number of non-zero singualr values 
      *  @param[in] v Input matrix 
      *  @param[in] eps Absolute tolerance threshold below which elements are considered zero
@@ -1655,6 +1652,17 @@ namespace Ostap
     ( const Ostap::Math::GSL::Matrix& m , 
       const double                    eps = std::numeric_limits<double>::epsilon() ) ;
 
+    // ============================================================================
+    /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
+     *  @param a     (INPUT)  Input matrix A (m x n)
+     *  @param a_pinv(OUTPUT) Pseudoinverse matrix A^+ (n x m)
+     *  @param tol   (INPUT)  Tolerance for zeroing small singular values (< 0 for default)
+     *  @return status code
+     */
+    Ostap::StatusCode PINV
+    ( const Ostap::Math::GSL::Matrix& a       ,
+      Ostap::Math::GSL::Matrix&       a_pinv  ,
+      double                          tol     = -1 ) ;    
     
     // =======================================================================
     /// numerical equality of two matrices 

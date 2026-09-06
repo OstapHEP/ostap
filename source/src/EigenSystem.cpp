@@ -37,7 +37,7 @@ Ostap::Math::GSL::EigenSystem::EigenSystem
   : m_ws_symm  { nullptr } 
   , m_ws_symmv { nullptr }
 {
-  if ( 0 < N )
+  if ( 1 <= N )
   {
     m_ws_symm  = gsl_eigen_symm_alloc  ( N ) ;
     Ostap::Assert ( m_ws_symm ,
