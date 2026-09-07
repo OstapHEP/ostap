@@ -796,7 +796,7 @@ def _m_UBVT_  ( A ) :
     """ Bidiagonalization of of general matrix: A = U B V^T , where
     - A  is  M times N  matrix
     - U  is  M times N  orthogonal matrix
-    - B  is  N times N  square biadiagonal matrix : \ B_{i,j} = 0 if  j != i,i+1 
+    - B  is  N times N  square biadiagonal matrix : B_{i,j} = 0 if  j != i,i+1 
     - V  is  N times N  orthogonal matrix 
     >>> A = ...
     >>> U, B, V = A.UBVT()
