@@ -1968,7 +1968,7 @@ namespace Ostap
     template <typename T, unsigned int N>
     inline std::size_t norm_L0 
     ( const ROOT::Math::SVector<T, N>& v   , 
-      const T                          eps = std::numeric_limits<T>::epsilon() )
+      const T                          eps = epsilon_v<T> )
     {
       if constexpr ( N == 0 ) { return T { 0 } ; }
       if constexpr ( N == 1 ) { return eps < std::abs( v [ 0 ] ); }
@@ -2071,7 +2071,7 @@ namespace Ostap
     template <typename T, unsigned int D>
     inline std::size_t norm_L0
     ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& matrix ,
-      const T                                                          eps    = std::numeric_limits<T>::epsilon () ) 
+      const T                                                          eps    = epsilon_v<T> )
     {
       std::size_t count = 0;
       for ( unsigned int i = 0; i < D; ++i ) 

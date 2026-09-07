@@ -6,6 +6,7 @@
 #include "TVectorT.h"
 #include "TMatrixT.h"
 #include "TMatrixTSym.h"
+#include "TDecompBK.h"
 #include "TDecompSVD.h"
 #include "TMatrixDEigen.h"
 #include "TMatrixDSymEigen.h"
@@ -501,17 +502,18 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
-
 Ostap::StatusCode Ostap::Math::VIF 
 ( const TMatrixTSym<float>& cov ,
   TVectorT<float>&          vif ,
   const float               eps )
 { return _VIF_ ( cov , vif , eps ) ; } 
-Ostap::StatusCode VIF 
+Ostap::StatusCode VIF
+// ============================================================================
 ( const TMatrixTSym<double>& cov ,
   TVectorT<double>&          vif ,
   const double               eps ) 
 { return _VIF_ ( cov , vif , eps ) ; } 
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END 

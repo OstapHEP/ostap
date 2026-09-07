@@ -716,8 +716,6 @@ Ostap::Math::GSL::Matrix::T () const
 }
 // ============================================================================
 
-
-
 // ============================================================================
 /*  Matrix multiplication:
  *  \f$ C = a^{(T_a)} \times b^{(T_b)}\f$
@@ -3295,10 +3293,11 @@ Ostap::StatusCode Ostap::Math::GSL::D3
     return ERROR_GSL + status ;
   }
   //
-  Matrix a   { A } ;
-  Vector tau { N } ;
+  Matrix a   { A     } ;
+  Vector tau { N - 1 } ;
   //
   int status = gsl_linalg_symmtd_decomp ( a.matrix () , tau.vector () ) ;
+  //
   if ( status )
   {
     gsl_error ( "D3: Error from gsl_linalg_symmtd_decomp" , __FILE__ , __LINE__ , status ) ;
@@ -3321,8 +3320,7 @@ Ostap::StatusCode Ostap::Math::GSL::D3
   }
   //
   return Ostap::StatusCode::SUCCESS ;
-}
-   
+}   
 // ============================================================================
 /* D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
  *  - \f$ Q \f$ is orthogonal matrix
@@ -3359,10 +3357,10 @@ Ostap::StatusCode Ostap::Math::GSL::D3
   Vector s  { N - 1 } ;
   //
   Ostap::StatusCode sc = D3 ( A , Q , d , s ) ;
-  if ( sc.isFailure() ) { return sc ; }
+  if ( sc.isFailure () ) { return sc ; }
   //
   /// copy diagonal to the output matrix 
-  Matrix d3 { d } ;
+  Matrix      d3 { d } ;
   gsl_matrix* gd = d3.matrix () ;
   gsl_vector* gs = s .vector () ;
   /// copy subdiagonal for the output matrix 
@@ -3377,7 +3375,6 @@ Ostap::StatusCode Ostap::Math::GSL::D3
   //
   return Ostap::StatusCode::SUCCESS ;          
 }
-
 
 // ============================================================================
 /*  Hessenberg decomposition of square matrix \f$ A = U H Q^T \f$, where
@@ -3399,7 +3396,7 @@ Ostap::StatusCode Ostap::Math::GSL::UHUT
   const std::size_t N = A.nCols  () ;
   //
   if ( M != N )
-    {
+  {
     gsl_error ( "UHUT: matrix is not square" , __FILE__ , __LINE__ , GSL_EBADLEN ) ;
     return MATRIX_IS_NOT_SQUARE ;
   }
@@ -3442,19 +3439,31 @@ Ostap::StatusCode Ostap::Math::GSL::UHUT
   //
   return Ostap::StatusCode::SUCCESS ;
 }
-
 // ============================================================================
-/*  Bidiagonalization of of general matrix \f$ A = U B V^T \f$, where
- *  - \f$ A \f$ is \f$ M \times N \f$ matrix
- *  - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
- *  - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
- *  - \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
- *  @param A (INPUT) input matrix A
- *  @param U (OUTPUT/UPDATE) orthogonal matrix U
- *  @param d (OUTPUT/UPDATE) diagonal 
- *  @param s (OUTPUT/UPDATE) super-diagonal  
- *  @param V (OUTPUT/UPDATE) orthogonal matrix V
- *  @return status code        
+/** @brief Bidiagonalization of a general matrix \f$ A = U B V^T \f$ returning diagonal vectors.
+ *  
+ *  Computes the bidiagonalization of an \f$ M \times N \f$ matrix \f$ A \f$.
+ *  Depending on the relation between matrix dimensions \f$ M \f$ and \f$ N \f$, 
+ *  the dimensions and structures of the output factors natively adjust:
+ *  - **For \f$ M \ge N \f$ (Thin or Square case):**
+ *    - \f$ A \f$ is \f$ M \times N \f$.
+ *    - \f$ U \f$ is \f$ M \times N \f$ with orthonormal columns (\f$ U^T U = I_N \f$).
+ *    - \f$ B \f$ is upper bidiagonal, represented by diagonal vector \f$ d \f$ of size \f$ K \f$ 
+ *      and super-diagonal vector \f$ s \f$ of size \f$ K-1 \f$, where \f$ K = \min(M, N) \f$.
+ *    - \f$ V \f$ is an \f$ N \times N \f$ orthogonal matrix (\f$ V V^T = I_N \f$).
+ *  - **For \f$ M < N \f$ (Wide case):**
+ *    - \f$ A \f$ is \f$ M \times N \f$.
+ *    - \f$ U \f$ is an \f$ M \times M \f$ orthogonal matrix (\f$ U U^T = I_M \f$).
+ *    - \f$ B \f$ is lower bidiagonal, represented by diagonal vector \f$ d \f$ of size \f$ K \f$ 
+ *      and sub-diagonal vector \f$ s \f$ of size \f$ K-1 \f$.
+ *    - \f$ V \f$ is \f$ N \times M \f$ with orthonormal columns (\f$ V^T V = I_M \f$).
+ *  
+ *  @param[in]  A input matrix of size \f$ M \times N \f$
+ *  @param[out] U orthogonal or orthonormal matrix \f$ U \f$
+ *  @param[out] d diagonal elements vector of size \f$ K = \min(M, N) \f$
+ *  @param[out] s super-diagonal (or sub-diagonal) elements vector of size \f$ K-1 \f$
+ *  @param[out] V orthogonal or orthonormal matrix \f$ V \f$
+ *  @return     Ostap::StatusCode indicating success or GSL error
  */
 // ============================================================================
 Ostap::StatusCode Ostap::Math::GSL::UBVT
@@ -3464,64 +3473,84 @@ Ostap::StatusCode Ostap::Math::GSL::UBVT
   Ostap::Math::GSL::Vector      & s ,
   Ostap::Math::GSL::Matrix      & V )
 {
-  //
-  const std::size_t M = A.nRows  () ;
-  const std::size_t N = A.nCols  () ;
+  const std::size_t M = A.nRows () ;
+  const std::size_t N = A.nCols () ;
   const std::size_t K = std::min ( M , N ) ; 
-  //
+  
   if ( K < 2 )
   {
     const int status = GSL_EBADLEN ; 
     gsl_error ( "UBVT: matrix is too small" , __FILE__ , __LINE__ , status ) ;
     return ERROR_GSL + status ;
   }
-  //
+  
+  // Handle wide matrices (M < N) via transposition: A^T is N x M (N >= M)
+  if ( M < N )
+  {
+    Matrix A_T ( A.T() ) ;
+    Matrix U_T ( N, M )  ; // N x M
+    Matrix V_T ( M, M )  ; // M x M
+    
+    StatusCode sc = UBVT ( A_T, U_T, d , s , V_T );
+    if ( sc.isFailure () ) { return sc; }
+
+    // Since A = (A^T)^T = (U_T * B_T * V_T^T)^T = V_T * B_T^T * U_T^T:
+    // U = V_T (M x M)
+    // V = U_T (N x M)
+    U = V_T ;
+    V = U_T ;
+    
+    return Ostap::StatusCode::SUCCESS ; 
+  }
+  
+  // Standard case ("thin matrix"): M >= N
   Matrix a     { A     } ;
-  Vector tau_U { K     } ;
-  Vector tau_V { K - 1 } ;
-  //
+  Vector tau_U { N     } ; 
+  Vector tau_V { N - 1 } ;
+  
   int status = gsl_linalg_bidiag_decomp ( a    .matrix () ,
-                                          tau_U.vector () , 
-                                          tau_V.vector () ) ;
+                                        tau_U.vector () , 
+                                        tau_V.vector () ) ;
   if ( status )
   {
     gsl_error ( "UBVT: error from gsl_linalg_bidiag_decomp" , __FILE__ , __LINE__ , status ) ;
     return ERROR_GSL + status ;
   }
-  //
+  
   U.resize ( M , N ) ;
-  d.resize ( N     ) ;
-  d.resize ( N - 1 ) ;  
-  V.resize ( N     ) ;
-  //
+  V.resize ( N , N ) ;
+  d.resize ( K     ) ;
+  s.resize ( K - 1 ) ;  
+  
   status = gsl_linalg_bidiag_unpack ( a    .matrix () ,
                                       tau_U.vector () ,
-                                      U    .matrix () ,                               
+                                      U    .matrix () ,                            
                                       tau_V.vector () ,
-                                      V    .matrix () ,                               
+                                      V    .matrix () ,                            
                                       d    .vector () ,
                                       s    .vector () ) ;
   if ( status )
-    {
+  {
     gsl_error ( "UBVT: error from gsl_linalg_bidiag_unpack" , __FILE__ , __LINE__ , status ) ;
     return ERROR_GSL + status ;
   }
-  //
-  return Ostap::StatusCode::SUCCESS ; 
+  
+  return Ostap::StatusCode::SUCCESS ;    
 }
 
-
 // ============================================================================
-/* Bidiagonalization of of general matrix \f$ A = U B V^T \f$, where
- *  - \f$ A \f$ is \f$ M \times N \f$ matrix
- *  - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
- *  - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
- *  - \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
- *  @param A (INPUT) input matrix A
- *  @param U (OUTPUT/UPDATE) orthogonal matrix U
- *  @param B (OUTPUT/UPDATE) bidiagonal matrix B
- *  @param V (OUTPUT/UPDATE) orthogonal matrix V
- *  @return status code        
+/** @brief Bidiagonalization of a general matrix \f$ A = U B V^T \f$ returning matrix B.
+ *  
+ *  Computes the bidiagonalization of an \f$ M \times N \f$ matrix \f$ A \f$, 
+ *  returning explicit matrix factors where \f$ B \f$ is square and bidiagonal:
+ *  - **For \f$ M \ge N \f$:** \f$ B \f$ is an \f$ N \times N \f$ upper bidiagonal matrix.
+ *  - **For \f$ M < N \f$:** \f$ B \f$ is an \f$ M \times M \f$ lower bidiagonal matrix.
+ *  
+ *  @param[in]  A input matrix of size \f$ M \times N \f$
+ *  @param[out] U orthogonal or orthonormal matrix \f$ U \f$
+ *  @param[out] B square bidiagonal matrix \f$ B \f$ (size \f$ N \times N \f$ or \f$ M \times M \f$)
+ *  @param[out] V orthogonal or orthonormal matrix \f$ V \f$
+ *  @return     Ostap::StatusCode indicating success or GSL error
  */
 // ============================================================================    
 Ostap::StatusCode Ostap::Math::GSL::UBVT
@@ -3531,8 +3560,8 @@ Ostap::StatusCode Ostap::Math::GSL::UBVT
   Ostap::Math::GSL::Matrix      & V )
 {
   //
-  const std::size_t M = A.nRows  () ;
-  const std::size_t N = A.nCols  () ;
+  const std::size_t M = A.nRows () ;
+  const std::size_t N = A.nCols () ;
   const std::size_t K = std::min ( M , N ) ; 
   //
   if ( K < 2 )
@@ -3542,25 +3571,41 @@ Ostap::StatusCode Ostap::Math::GSL::UBVT
     return ERROR_GSL + status ;
   }
   //
-  Vector d  { N     } ;
-  Vector s  { N - 1 } ;
+  Vector d ( K     ) ;
+  Vector s ( K - 1 ) ;
   //
   const Ostap::StatusCode sc = UBVT ( A , U , d , s , V ) ;
   if ( sc.isFailure() ) { return sc ; }
+  
+  if ( M >= N )
+  {
+    B.resize ( N , N , Matrix::Zero() ) ;
+    gsl_matrix* b = B.matrix() ;
+    
+    gsl_vector_view main_diag = gsl_matrix_diagonal ( b ) ;
+    gsl_vector_view main_sub  = gsl_vector_subvector ( &main_diag.vector , 0 , K ) ;
+    gsl_vector_memcpy ( &main_sub.vector , d.vector () ) ;
+    
+    gsl_vector_view super_diag = gsl_matrix_superdiagonal ( b , 1 ) ;
+    gsl_vector_view super_sub  = gsl_vector_subvector ( &super_diag.vector , 0 , K - 1 ) ;
+    gsl_vector_memcpy ( &super_sub.vector , s.vector () ) ;
+  }
+  else
+  {
+    B.resize ( M , M , Matrix::Zero() ) ;
+    gsl_matrix* b = B.matrix() ;
+    
+    gsl_vector_view main_diag = gsl_matrix_diagonal ( b ) ;
+    gsl_vector_view main_sub  = gsl_vector_subvector ( &main_diag.vector , 0 , K ) ;
+    gsl_vector_memcpy ( &main_sub.vector , d.vector () ) ;
+    
+    gsl_vector_view sub_diag = gsl_matrix_subdiagonal ( b , 1 ) ;
+    gsl_vector_view sub_sub  = gsl_vector_subvector ( &sub_diag.vector , 0 , K - 1 ) ;
+    gsl_vector_memcpy ( &sub_sub.vector , s.vector () ) ;
+  }
   //
-  B.resize ( N , N , Matrix::Zero() ) ;
-  //
-  gsl_matrix* b = B.matrix() ;
-  //
-  gsl_vector_view main_diag  = gsl_matrix_diagonal     ( b     ) ;
-  gsl_vector_view super_diag = gsl_matrix_superdiagonal( b , 0 ) ;
-  //
-  gsl_vector_memcpy ( &main_diag.vector  , d.vector () ) ;
-  gsl_vector_memcpy ( &super_diag.vector , s.vector () ) ;
-  //
-  return Ostap::StatusCode::SUCCESS ;   
+  return Ostap::StatusCode::SUCCESS ;    
 }
-
 
 // ============================================================================
 /*  Polar decompositon of the square matrix A: \f$ A = UP \f$

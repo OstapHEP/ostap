@@ -143,6 +143,7 @@ namespace
     GSL_VERSION_IS_TOO_OLD         = 930 ,
     // =========================================================================    
     INVALID_SVD_DECOMPOSITION      = 935 ,
+    INVALID_BK_DECOMPOSITION       = 936 ,
     // =========================================================================
     NOT_IMPLEMENTED                = 995 ,
     NOT_IMPLEMENTED_YET            = 996 , 

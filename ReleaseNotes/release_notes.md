@@ -16,7 +16,9 @@
    1. add `rank` functions for T-matrices 
    1. complete norms (including sepctral, nuclear an Schatten), ranks and Moore-Penrouse pseudoinverses 
    1. add `VIF` methods to get the variance inflation factors for badly-defined covariance matrices 
-
+   1. re-factor some function from `Ostap/Math.h` allowing the separate access to them without heavy `Math.h`
+   1. complete linalg-tests
+   
 ## Bug fixes
 
 ## Backward incompatible

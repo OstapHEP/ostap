@@ -12,6 +12,7 @@
 from   ostap.math.math_base   import Ostap
 from   ostap.math.linalgg     import Matrix, gsl_info
 from   ostap.utils.root_utils import batch_env
+from   ostap.utils.gsl        import GslError 
 from   ostap.logger.pretty    import nice_print
 import random  
 # =============================================================================
@@ -48,10 +49,10 @@ def test_linalg_PLU ( M = 4 , N = 4 ) :
     D      = L * U - P * A
     delta1 = Ostap.Math.maxabs_element ( D )
     
-    logger.info ( '(P)LU max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    logger.info ( '(P)LU max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
 
-    assert delta1 < tolerance1 , '(P)LU: result are inconsistent delta1=%.3g' % delta1
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g"   % delta1 )
+    assert delta1 < tolerance1 , '(P)LU: result are inconsistent delta1=%s' % nice_print ( delta1 ) 
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"   % nice_print ( delta1 ) )
 
 # ==========================================================================
 def test_linalg_PQR ( M = 4 , N = 4 ) :
@@ -74,17 +75,17 @@ def test_linalg_PQR ( M = 4 , N = 4 ) :
 
     D      = Q * R - A * P
     delta1 = Ostap.Math.maxabs_element ( D ) 
-    logger.info ( '(P)QR max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    logger.info ( '(P)QR max-difference %s :\n%s' % ( nice_print ( delta1 )  , D ) ) 
 
     QQ     = Q*Q.t()
     QQ    -= 1 
     delta2 = Ostap.Math.maxabs_element ( QQ )    
     logger.info ( '(P)QR non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 
 
-    assert delta1 < tolerance1 , '(P)QR: result are inconsistent delta1=%.3g' % delta1
-    assert delta2 < tolerance1 , '(P)QR: result are inconsistent delta2=%.3g' % delta2
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g"   % delta1 )
-    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g"   % delta2 )
+    assert delta1 < tolerance1 , '(P)QR: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    assert delta2 < tolerance1 , '(P)QR: result are inconsistent delta2=%s' % nice_print ( delta2 ) 
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"   % nice_print ( delta1 ) ) 
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %S"   % nice_print ( delta2 ) )
     
 # ==========================================================================
 def test_linalg_LQ ( M = 4 , N = 4 ) :
@@ -107,17 +108,17 @@ def test_linalg_LQ ( M = 4 , N = 4 ) :
     D      = L * Q - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
     
-    logger.info ( 'LQ max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    logger.info ( 'LQ max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
 
     QQ     = Q*Q.t()
     QQ    -= 1 
     delta2 = Ostap.Math.maxabs_element ( QQ )    
-    logger.info ( 'LQ non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 
+    logger.info ( 'LQ non-orthogonality of Q %s \n%s' % ( nice_print ( delta2 ) , QQ ) ) 
     
-    assert delta1 < tolerance1 , 'LQ: result are inconsistent delta1=%.3g'  % delta1
-    assert delta2 < tolerance1 , 'LQ: result are inconsistent delta2=%.3g'  % delta2
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
-    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g" % delta2 )
+    assert delta1 < tolerance1 , 'LQ: result are inconsistent delta1=%s'  % nice_print ( delta1 ) 
+    assert delta2 < tolerance1 , 'LQ: result are inconsistent delta2=%s'  % nice_print ( delta2 ) 
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) ) 
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s" % nice_print ( delta2 ) ) 
     
 # ==========================================================================
 def test_linalg_QL ( M = 4 , N = 4 ) :
@@ -125,7 +126,7 @@ def test_linalg_QL ( M = 4 , N = 4 ) :
     logger = getLogger ( 'test_linalg_QL(%s,%s)' % ( M , N )  )
     
     if gsl_info < ( 2 , 7 ) :
-        logger.info ( 'Test is disbaled for GSL<2.7')
+        logger.info ( 'Test is disabled for GSL<2.7')
         return 
     
     A = Matrix ( M , N )
@@ -144,17 +145,17 @@ def test_linalg_QL ( M = 4 , N = 4 ) :
     D      = Q * L - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
     
-    logger.info ( 'QL max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    logger.info ( 'QL max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
 
     QQ     = Q*Q.t()
     QQ    -= 1 
     delta2 = Ostap.Math.maxabs_element ( QQ )    
-    logger.info ( 'QL non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 
+    logger.info ( 'QL non-orthogonality of Q %s \n%s' % ( nice_print ( delta2 ) , QQ ) ) 
 
-    assert delta1 < tolerance1 , 'QL: result are inconsistent delta1=%.3g'   % delta1
-    assert delta2 < tolerance1 , 'QL: result are inconsistent delta2=%.3g'   % delta2
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g"  % delta1 )
-    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g"  % delta2 )
+    assert delta1 < tolerance1 , 'QL: result are inconsistent delta1=%s'   % nice_print ( delta1 ) 
+    assert delta2 < tolerance1 , 'QL: result are inconsistent delta2=%s'   % nice_print ( delta2 ) 
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"  % nice_print ( delta1 ) ) 
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s"  % nice_print ( delta2 ) ) 
            
 # ==========================================================================
 def test_linalg_COD ( M = 4 , N = 4 ) :
@@ -178,25 +179,25 @@ def test_linalg_COD ( M = 4 , N = 4 ) :
     
     D      = Q * R * Z.t() - A * P  
     delta1 = Ostap.Math.maxabs_element ( D ) 
-    logger.info ( 'COD max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    logger.info ( 'COD max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
     
     QQ      = Q*Q.t()
     QQ     -= 1 
     delta2  = Ostap.Math.maxabs_element ( QQ )    
-    logger.info ( 'COD non-orthogonality of Q %.3g \n%s' % ( delta2 , QQ ) ) 
+    logger.info ( 'COD non-orthogonality of Q %s \n%s' % ( nice_print ( delta2 ) , QQ ) ) 
     
     ZZ      = Z*Z.t()
     ZZ     -= 1 
     delta3  = Ostap.Math.maxabs_element ( ZZ )    
-    logger.info ( 'COD non-orthogonality of Z %.3g \n%s' % ( delta3 , ZZ ) ) 
+    logger.info ( 'COD non-orthogonality of Z %s \n%s' % ( nice_print ( delta3 ) , ZZ ) ) 
     
-    assert delta1 < tolerance1 , 'COD: result are inconsistent delta1=%.3g' % delta1
-    assert delta2 < tolerance1 , 'COD: result are inconsistent delta2=%.3g' % delta2
-    assert delta3 < tolerance1 , 'COD: result are inconsistent delta3=%.3g' % delta3 
+    assert delta1 < tolerance1 , 'COD: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    assert delta2 < tolerance1 , 'COD: result are inconsistent delta2=%s' % nice_print ( delta2 ) 
+    assert delta3 < tolerance1 , 'COD: result are inconsistent delta3=%s' % nice_print ( delta3 ) 
     
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
-    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g" % delta2 )
-    if not delta3 < tolerance2 : logger.error ( "delta3 is too large: %.3g" % delta3 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) ) 
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s" % nice_print ( delta2 ) ) 
+    if not delta3 < tolerance2 : logger.error ( "delta3 is too large: %s" % nice_print ( delta3 ) ) 
 
 # ==========================================================================
 def test_linalg_SVD ( M = 4 , N = 4 ) :
@@ -232,14 +233,178 @@ def test_linalg_SVD ( M = 4 , N = 4 ) :
     delta3  = Ostap.Math.maxabs_element ( VV )    
     logger.info ( 'SVD non-orthogonality of V %s \n%s' % ( nice_print ( delta3 ) , VV ) ) 
     
-    assert delta1 < tolerance1 , 'SVD: result are inconsistent delta1=%.3g' % delta1
-    assert delta2 < tolerance1 , 'SVD: result are inconsistent delta2=%.3g' % delta2
-    assert delta3 < tolerance1 , 'SVD: result are inconsistent delta3=%.3g' % delta3 
+    assert delta1 < tolerance1 , 'SVD: result are inconsistent delta1=%s' % nice_print ( delta1 ) 
+    assert delta2 < tolerance1 , 'SVD: result are inconsistent delta2=%s' % nice_print ( delta2 ) 
+    assert delta3 < tolerance1 , 'SVD: result are inconsistent delta3=%s' % nice_print ( delta3 ) 
     
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
-    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g" % delta2 )
-    if not delta3 < tolerance2 : logger.error ( "delta3 is too large: %.3g" % delta3 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) ) 
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s" % nice_print ( delta2 ) )
+    if not delta3 < tolerance2 : logger.error ( "delta3 is too large: %s" % ncie_print ( delta3 ) ) 
 
+# ==========================================================================
+def test_linalg_LLT ( N = 5 ) :
+    
+    logger = getLogger ( 'test_linalg_LLT(%s)' %  N )
+    
+    A = Matrix ( N , N )
+    for i in range ( A.kRows ) :
+        for j in range ( i + 1  ) :
+            a = random.gauss ( 1 , 1 )
+            if i == j : 
+                A.set ( i , i , a + 5  )
+            else : 
+                A.set ( j , i , a )
+                A.set ( i , j , a )
+            
+    logger.info ( 'LLT The matrix is:\n%s' % A )
+
+    ## LLT-decomposition 
+    L = A.LLT () 
+    
+    logger.info ( 'LLT decomposition: L :\n%s' % L )
+    
+    D      = L * L.T()  - A 
+    delta1 = Ostap.Math.maxabs_element ( D ) 
+    logger.info ( 'LLT max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
+
+    assert delta1 < tolerance1 , 'LLT: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) ) 
+
+
+# ==========================================================================
+def test_linalg_LDLT ( N = 5 ) :
+    
+    logger = getLogger ( 'test_linalg_LDLT(%s)' %  N )
+    
+    A = Matrix ( N , N )
+    for i in range ( A.kRows ) :
+        for j in range ( i + 1  ) :
+            a = random.gauss ( 1 , 1 )
+            if i == j : 
+                A.set ( i , i , a + 5  )
+            else : 
+                A.set ( j , i , a )
+                A.set ( i , j , a )
+            
+    logger.info ( 'LDLT The matrix is:\n%s' % A )
+
+    ## LDLT-decomposition 
+    S , P , L , D = A.LDLT () 
+    
+    logger.info ( 'LDLT decomposition: S :\n%s' % S )
+    logger.info ( 'LDLT decomposition: P :\n%s' % P )
+    logger.info ( 'LDLT decomposition: L :\n%s' % L )
+    logger.info ( 'LDLT decomposition: D :\n%s' % D )
+
+    R1 = Matrix ( N , N )
+    sc = Ostap.Math.GSL.PDM ( P , S , A , R1 )
+    assert sc.isSuccess() , "Error code %s from PDM" % sc
+    
+    R2 = Matrix ( N , N )
+    sc = Ostap.Math.GSL.MDM ( L , False , D , L , True , R2 )
+    assert sc.isSuccess() , "Error code %s from MDM" % sc
+    
+    DD    =  R1 - R2 
+    delta1 = Ostap.Math.maxabs_element ( DD ) 
+    logger.info ( 'LDLT max-difference %s :\n%s' % ( nice_print ( delta1 ) , DD ) ) 
+
+    assert delta1 < tolerance1 , 'LDLT: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) ) 
+
+# ==========================================================================
+def test_linalg_D3 ( N = 5 ) :
+    
+    logger = getLogger ( 'test_linalg_D3(%s)' %  N )
+    
+    A = Matrix ( N , N )
+    for i in range ( A.kRows ) :
+        for j in range ( i + 1  ) :
+            a = random.gauss ( 1 , 1 )
+            if i == j : 
+                A.set ( i , i , a + 5  )
+            else : 
+                A.set ( j , i , a )
+                A.set ( i , j , a )
+            
+    logger.info ( 'D3 The matrix is:\n%s' % A )
+
+    ## D3-decomposition 
+    Q , D  = A.D3 () 
+    
+    logger.info ( 'D3 decomposition: Q :\n%s' % Q )
+    logger.info ( 'D3 decomposition: D :\n%s' % D )
+
+    DD = Q * D * Q.T() - A     
+    delta1 = Ostap.Math.maxabs_element ( DD ) 
+    logger.info ( 'D3 max-difference %s :\n%s' % ( nice_print ( delta1 ) , DD ) ) 
+
+    assert delta1 < tolerance1 , 'LDLT: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) ) 
+
+# ==========================================================================
+def test_linalg_UHUT ( N = 5 ) :
+    
+    logger = getLogger ( 'test_linalg_UHUT(%d)' %  ( N  ) )
+    
+    A = Matrix ( N , N )
+    for i in range ( A.kRows ) :
+        for j in range (  A.kCols  ) :
+            a = 3 + random.gauss ( 1 , 1 )
+            A.set ( i , j , a )
+            
+    logger.info ( 'UHUT The matrix is:\n%s' % A )
+    
+    ## UHUT-decomposition 
+    U , H = A.UHUT () 
+    
+    logger.info ( 'UHUT decomposition: U :\n%s' % U )
+    
+    logger.info ( 'UHUT decomposition: H :\n%s' % H )
+
+    DD = U * H * U.T() - A 
+    delta1 = Ostap.Math.maxabs_element ( DD ) 
+    logger.info ( 'UHUT max-difference %s :\n%s' % ( nice_print ( delta1 ) , DD ) ) 
+
+    assert delta1 < tolerance1 , 'UHUT: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"  % nice_print ( delta1 ) ) 
+
+# ==========================================================================
+def test_linalg_UBVT ( M = 4 , N = 5 ) :
+    
+    logger = getLogger ( 'test_linalg_UBVT(%d,%d)' %  ( M , N  ) )
+    
+    A = Matrix ( M , N )
+    for i in range ( A.kRows ) :
+        for j in range (  A.kCols  ) :
+            a = 3 + random.gauss ( 1 , 1 )
+            A.set ( i , j , a )
+            
+    logger.info ( 'UBVT The matrix is:\n%s' % A )
+
+    with GslError() : 
+        ## UBVT-decomposition 
+        U , B , V  = A.UBVT () 
+        
+    logger.info ( 'UBVT decomposition: U :\n%s' % U )
+    logger.info ( 'UBVT decomposition: B :\n%s' % B )
+    logger.info ( 'UBVT decomposition: V :\n%s' % V )
+
+    UUT   = U      * U.T()
+    UTU   = U.T () * U
+    VVT   = V      * V.T()
+    
+    logger.info ( 'UBVT decomposition: UUT :\n%s' % UUT )
+    logger.info ( 'UBVT decomposition: UTU :\n%s' % UTU )
+    logger.info ( 'UBVT decomposition: VVT :\n%s' % VVT )
+    
+    DD     = U * B * V.T() - A 
+    logger.info ( 'UBVT decomposition: UBV^T - A :\n%s' % DD  )
+    delta1 = Ostap.Math.maxabs_element ( DD ) 
+    logger.info ( 'UBVT max-difference %s :\n%s' % ( nice_print ( delta1 ) , DD ) ) 
+
+    assert delta1 < tolerance1 , 'UBVT: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"  % nice_print ( delta1 ) ) 
+    
 # ==========================================================================
 def test_linalg_SCHUR ( M = 4 ) :
     
@@ -308,12 +473,13 @@ def test_linalg_POLAR( M = 4 ) :
     assert delta1 < tolerance1 , 'POLAR: result are inconsistent delta1=%s' % nice_print ( delta1 )
     assert delta2 < tolerance1 , 'POLAR: result are inconsistent delta2=%s' % nice_print ( delta2 )
     
-    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s" % nice_print ( delta1 ) )
-    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s" % nice_print ( delta2 ) )
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"   % nice_print ( delta1 ) )
+    if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s"   % nice_print ( delta2 ) )
     
 # =============================================================================
 if '__main__' == __name__ :
 
+    """
     test_linalg_PLU   ( 3, 6 )
     test_linalg_PLU   ( 3, 3 )
     test_linalg_PLU   ( 6, 3 )
@@ -337,13 +503,37 @@ if '__main__' == __name__ :
     test_linalg_SVD   ( 3, 6 )
     test_linalg_SVD   ( 3, 3 )
     test_linalg_SVD   ( 6, 3 )
+    
+    test_linalg_LLT   ( 4 )    
+    test_linalg_LLT   ( 6 )    
+    test_linalg_LLT   ( 8 )    
 
+    test_linalg_LDLT  ( 4 )    
+    test_linalg_LDLT  ( 6 )    
+    test_linalg_LDLT  ( 8 )    
+
+    test_linalg_D3    ( 4 )    
+    test_linalg_D3    ( 6 )    
+    test_linalg_D3    ( 8 )    
+
+    test_linalg_UHUT  ( 4 )    
+    test_linalg_UHUT  ( 6 )    
+    test_linalg_UHUT  ( 8 )    
+
+    """
+
+    test_linalg_UBVT  ( 5 , 3 )    
+    test_linalg_UBVT  ( 3 , 6 )    
+    test_linalg_UBVT  ( 8 , 8 )    
+    
+    """
     test_linalg_SCHUR ( 3 )
     test_linalg_SCHUR ( 6 )
     test_linalg_SCHUR ( 8 )
     
     test_linalg_POLAR ( 3 )
     test_linalg_POLAR ( 6 )
+    """
     
 # =============================================================================
 ##                                                                      The END 

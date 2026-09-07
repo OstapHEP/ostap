@@ -675,7 +675,6 @@ def _m_SVD_ ( A , golub = True ) :
     ##
     return S , U , V 
 
-
 # ===============================================================================
 ##  LLT: Cholesky decomposition of the square matrix A: \f$ A = L L^T \f$
 #  Only lower triangular part of A is used, the upper part is ignored.
@@ -693,6 +692,126 @@ def _m_LLT_ ( A ) :
     if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::LLT" % sc )
     ##
     return L
+
+
+# ===============================================================================
+##  LDLT: Cholesky decomposition of the square matrix A: \f$ PSASP^T = L D L^T \f$
+#  Only lower triangular part of A is used, the upper part is ignored.
+#  - A input MxM matrix
+#  - S is scale vector ("diagonal matrix" )
+#  - P is permutation  
+#  - L is lower triangular matrix
+#  - D is vector ("diagonal matrix" )
+#  @code
+#  A = ...
+#  S , P , L , D = A.LDLT()
+#  @endcode
+def _m_LDLT_ ( A ) :
+    """ LLT: Cholesky decomposition of the square matrix A: PSASP^T = L D L^T
+    - A input MxM matrix
+    - S is scale vector ('diagonal matrix')
+    - P is permutation  
+    - L is lower triangular matrix
+    - D is vector ('diagonal matrix')    
+    >>> A  = ...
+    >>> S , P , L , D = A.LDLT()
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert M == N , "LDLT decomposition is defined only for square matrices!"
+    S  = Vector      ( M )
+    P  = Permutation ( M )
+    L  = Matrix ( M , M )
+    D  = Vector      ( M )
+    ## 
+    sc = Ostap.Math.GSL.LDLT ( A , S , P , L , D  )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::LDLT" % sc )
+    ##
+    return S , P , L , D 
+
+# ===============================================================================
+## D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
+#  - \f$ Q \f$ is orthogonal matrix
+#  - \f$ D_3\fF is symmetric  trigiagonal matrix 
+#  @param A (INPUT) input matrix A
+#  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+#  @param d (OUTPUT/UPDATE) main diagonal of symmetric  matrix \f$ D_3 \f$
+#  @param s (OUTPUT/UPDATE) sub-diagonal of symmetric  matrix \f$ D_3 \f$
+#  @return status code
+def _m_D3_ ( A ) :
+    """ D3 : decomposition of symmetric matrix:  A = Q D_3 Q^T , where
+    - Q   is orthogonal matrix
+    - D_3 is symmetric  trigiagonal matrix
+
+    Output :
+    - Q : orthogonal matrix Q
+    - D : symmetric tridiagonal matrix 
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert M == N , "P3 decomposition is defined only for square matrices!"
+    assert 2 <= M , "P3 decomposition is defined for 2x2 or larger matrices!" 
+    Q = Matrix ( M , M )
+    D = Matrix ( M , M )
+    ##
+    sc = Ostap.Math.GSL.D3 ( A , Q , D )     
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::D3" % sc )
+    ## 
+    return Q , D 
+
+# ================================================================================
+## Hessenberg decomposition of square matrix \f$ A = U H Q^T \f$, where
+#  - \f$ U \f$ is orthogonal 
+#  - \f$ H \f$ is Hessenberg' matrix: \f$ H(i,i)=0 \f$ for \f$ i > j + 1 \f$
+#  @param A (INPUT) input matrix A
+#  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+#  @param H (OUTPUT/UPDATE) Hessenberg matrix 
+def _m_UHUT_ ( A ) :
+    """ Hessenberg decomposition of square matrix: A = U H Q^T, where
+    - U   is orthogonal 
+    - H  is Hessenberg' matrix:  H(i,i)=0 for i > j + 1 
+    >>> A = ...
+    >>> U , H = A.UHUT ()
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert M == N , "Hessenberg decomposition is defined only for square matrices!"
+    assert 2 <= M , "Hessenberg decomposition is defined for 2x2 or larger matrices!" 
+    U = Matrix ( M , M )
+    H = Matrix ( M , M )
+    ##
+    sc = Ostap.Math.GSL.UHUT ( A , U , H )     
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::UHUT" % sc )
+    ## 
+    return U , H 
+    
+# ================================================================================
+## Bidiagonalization of of general matrix \f$ A = U B V^T \f$ , where
+# - \f$ A \f$ is \f$ M \times N \f$ matrix
+# - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
+# - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
+#  \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
+#  @param A (INPUT) input matrix A
+#  @param U (OUTPUT/UPDATE) orthogonal matrix U
+#  @param B (OUTPUT/UPDATE) bidiagonal matrix B
+#  @param V (OUTPUT/UPDATE) orthogonal matrix V
+def _m_UBVT_  ( A ) :
+    """ Bidiagonalization of of general matrix: A = U B V^T , where
+    - A  is  M times N  matrix
+    - U  is  M times N  orthogonal matrix
+    - B  is  N times N  square biadiagonal matrix : \ B_{i,j} = 0 if  j != i,i+1 
+    - V  is  N times N  orthogonal matrix 
+    >>> A = ...
+    >>> U, B, V = A.UBVT()
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert 2 <=  min ( M , N )  , "Bidiagonalization is defined for 2x2 or larger matrices!" 
+    U  = Matrix  ( M , N )
+    B  = Matrix  ( N , N )
+    V  = Matrix  ( N , N )
+    sc = Ostap.Math.GSL.UBVT ( A , U , B , V ) 
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::UBVT" % sc )
+    ## 
+    return U , B , V 
+
+
 
 # ===============================================================================
 ## Polar decompositon of the square matrix A: \f$ A = UP \f$
@@ -738,9 +857,15 @@ Matrix.PLU       = _m_PLU_
 Matrix.PQR       = _m_PQR_ 
 Matrix.PQRr      = _m_PQRr_
 Matrix.LQ        = _m_LQ_ 
+Matrix.QL        = _m_QL_ 
 Matrix.COD       = _m_COD_
 Matrix.SVD       = _m_SVD_
 Matrix.LLT       = _m_LLT_
+Matrix.LDLT      = _m_LDLT_
+Matrix.D3        = _m_D3_
+Matrix.UHUT      = _m_UHUT_
+Matrix.UBVT      = _m_UBVT_
+
 Matrix.SCHUR     = _m_SCHUR_  
 Matrix.POLAR     = _m_POLAR_ 
 Matrix.t         = Matrix.T
@@ -835,13 +960,23 @@ _new_methods_ += (
     Permutation.__str__       , 
     Permutation.__repr__      , 
     ##
-    Matrix.PLU                , 
+    Matrix.PLU                ,
+    #
     Matrix.PQR                , 
     Matrix.PQRr               ,
+    #
     Matrix.LQ                 ,
-    Matrix.LLT                ,
+    Matrix.QL                 ,
+    ## 
     Matrix.COD                ,
     Matrix.SVD                ,
+    ## 
+    Matrix.LLT                ,
+    Matrix.LDLT               ,
+    Matrix.D3                 ,
+    Matrix.UHUT               ,
+    Matrix.UBVT               ,
+    ## 
     Matrix.SCHUR              , 
     Matrix.POLAR              ,
     ##

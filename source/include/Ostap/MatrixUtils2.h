@@ -20,6 +20,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Epsilon.h"
 #include "Ostap/Math.h"
 #include "Ostap/Norms.h"
 #include "Ostap/MatrixAsBuffer.h"
@@ -216,7 +217,7 @@ namespace Ostap
               typename     R>
     inline std::size_t rank
     ( const ROOT::Math::SMatrix<T, D1, D2, R>& m    ,
-      const double                             eps  = std::numeric_limits<T>::epsilon () )
+      const double                             eps  = epsilon_v<T> )
     {      
       Ostap::Math::GSL::Matrix A ( D1, D2, Ostap::Utils::buffer ( m ) ) ;
       return Ostap::Math::rank ( A , static_cast<double> ( eps ) ) ;
@@ -231,7 +232,7 @@ namespace Ostap
     template <typename T, unsigned int D>
     inline std::size_t rank
     ( const ROOT::Math::SMatrix<T, D, D, ROOT::Math::MatRepSym<T, D>>& m   ,
-      const T                                                          eps = std::numeric_limits<T>::epsilon () )
+      const T                                                          eps = epsilon_v<T> )
     {
       //
       Ostap::Math::GSL::EigenSystem eigen_system {} ;
@@ -257,7 +258,7 @@ namespace Ostap
     inline Ostap::StatusCode PINV 
     ( const ROOT::Math::SMatrix<T, D1, D2, R>& a      ,
       ROOT::Math::SMatrix<T, D2, D1, R>&       a_pinv ,      
-      const T                                  eps = std::numeric_limits<T>::epsilon () )
+      const T                                  eps    = epsilon_v<T> )
     {
       
       // Wrap SMatrix data into a GSL matrix
@@ -274,7 +275,7 @@ namespace Ostap
       if ( sc1.isFailure() ) { return sc1 ; }
 
       //
-      const double tol = ( 0 < eps ? eps : std::numeric_limits<T>::epsilon() ) * S ( 0 ) * std::max ( D1 , D2 ) ;
+      const double tol = ( 0 < eps ? eps : epsilon_v<T> ) * S ( 0 ) * std::max ( D1 , D2 ) ;
       //
       // Compute pseudo-inverse: A^+ = V * S^+ * U^T
       for ( std::size_t k = 0 ; k < K ; ++ k ) 
@@ -309,7 +310,7 @@ namespace Ostap
     inline Ostap::StatusCode PINV 
     ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T, D>>& a      ,
       ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T, D>>&       a_pinv ,      
-      const T                                                       eps = std::numeric_limits<T>::epsilon () )
+      const T                                                       eps    = epsilon_v<T> )
     {
       //
       Ostap::Math::GSL::EigenSystem                            eigen_system ( D ) ;
@@ -327,7 +328,7 @@ namespace Ostap
       if ( sc.isFailure() ) { return sc ; } 
 
       const double max_val  = norm_max ( D ) ;
-      const double tol = ( 0 < eps ? eps : std::numeric_limits<T>::epsilon() ) * max_val * D ;
+      const double tol = ( 0 < eps ? eps : epsilon_v<T> ) * max_val * D ;
       
       // Compute pseudo-inverse of eigenvalues: S^+
       for ( std::size_t k = 0; k < D; ++k )  
@@ -401,9 +402,9 @@ namespace Ostap
      */
     template <typename T, unsigned int D>
     inline Ostap::StatusCode VIF 
-    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& cov  ,
-      ROOT::Math::SVector<T,D>&                                     vif  ,
-      const T                                                       eps = std::numeric_limits<T>::epsilon() ) 
+    ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& cov ,
+      ROOT::Math::SVector<T,D>&                                     vif ,
+      const T                                                       eps = epsilon_v<T> ) 
     {
       // (symmetric) matrix type 
       typedef typename ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >  MTRX ;

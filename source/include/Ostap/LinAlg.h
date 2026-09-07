@@ -1,6 +1,6 @@
 // ============================================================================
-#ifndef OSTAP_GSL_LINALG_H 
-#define OSTAP_GSL_LINALG_H 1
+#ifndef OSTAP_LINALG_H 
+#define OSTAP_LINALG_H 1
 // ============================================================================
 // Include files
 // ============================================================================
@@ -19,13 +19,14 @@
 #include "Ostap/Span.h"
 #include "Ostap/Types.h"
 #include "Ostap/Buffer.h"
-#include "Ostap/Math.h"
+#include "Ostap/Epsilon.h"
+#include "Ostap/Comparisons.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
 /** @file Ostap/LinAlg.h
  *  File provides utilities to access to the basic Linear Algebra from GSL
  *
- *  First it provides ilght wrappers for GSL matrices, vectors and permutaitons
+ *  First it provides light wrappers for GSL matrices, vectors and permutaitons
  *  with all basic operations included
  *
  *  @see class Ostap::Math::GSL::Matrix
@@ -33,7 +34,8 @@
  *  @see class Ostap::Math::GSL::Permutation
  *  @see https://www.gnu.org/software/gsl/doc/html/vectors.html
  *
- *  The basic Linear Alegbra functinons are:
+ *  The basic Linear Alegbra functions are:
+ *
  *  - LU decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
  *  - PQR: QR decomposition with column pivoting  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#qr-decomposition-with-column-pivoting
  *  - LQ decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lq-decomposition
@@ -416,7 +418,7 @@ namespace Ostap
         // ========================================================================
         /// transpose the matrix
         Matrix T () const ; 
-        /// transose the matrix
+        /// transpose the matrix
         inline Matrix transpose () const { return T() ; }
         // ========================================================================
       public:
@@ -1323,7 +1325,7 @@ namespace Ostap
       // =======================================================================
       /** D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
        *  - \f$ Q \f$ is orthogonal matrix
-       *  - \f$ D_2\fF is symmetric  trigiagonal matrix 
+       *  - \f$ D_3\fF is symmetric  trigiagonal matrix 
        *  @param A (INPUT) input matrix A
        *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
        *  @param d (OUTPUT/UPDATE) main diagonal of symmetric  matrix \f$ D_3 \f$
@@ -1481,7 +1483,6 @@ namespace Ostap
     bool covariance_matrix 
     ( const Ostap::Math::GSL::Matrix& mtrx ) ;
 
-
     // ======================================================================
     // vector sums 
     // ======================================================================
@@ -1507,8 +1508,8 @@ namespace Ostap
      *  @return Number of non-zero elements
      */
     std::size_t norm_L0 
-    ( const Ostap::Math::GSL::Vector& v  , 
-      const double                    eps = std::numeric_limits<double>::epsilon() ) ;
+    ( const Ostap::Math::GSL::Vector& v   , 
+      const double                    eps = epsilon_v<double> ) ;
 
     /** @brief Compute L1 norm (sum of absolute values) for GSL vector
      *  Delegates directly to optimized GSL BLAS (gsl_blas_dasum).
@@ -1563,7 +1564,7 @@ namespace Ostap
      */
     std::size_t norm_L0
     ( const Ostap::Math::GSL::Matrix& m , 
-      const double                    eps = std::numeric_limits<double>::epsilon() ) ;
+      const double                    eps = epsilon_v<double> ) ;
 
     // ========================================================================
     /** @brief Compute maximum absolute element norm (entry-wise max norm) for matrices
@@ -1649,8 +1650,8 @@ namespace Ostap
      *  @return Number of non-zero singualr values 
      */
     std::size_t rank 
-    ( const Ostap::Math::GSL::Matrix& m , 
-      const double                    eps = std::numeric_limits<double>::epsilon() ) ;
+    ( const Ostap::Math::GSL::Matrix& m   , 
+      const double                    eps = epsilon_v<double> ) ;
 
     // ============================================================================
     /** Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
@@ -1804,7 +1805,7 @@ inline std::ostream& operator<<
   const Ostap::Math::GSL::Permutation& p ) 
 { return Ostap::Utils::toStream ( p , s ) ; }
 // ============================================================================
-#endif // OSTAP_GSL_LINALG_H
+#endif // OSTAP_LINALG_H
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -125,12 +125,14 @@ def fmt_pretty_values ( *values             ,
     
     v_a , v_e = frexp10 ( av )
     v_ee      = v_e - 1
-    n , r     = divmod  ( v_ee , 3 )    
+    n , r     = divmod  ( v_ee , 3  )    
 
-    scale  = 10 ** ( r - v_ee  )
+    a , b     = v_a , v_e 
+    scaled    = ldexp10 ( a , b + r - v_ee ) 
     
-    scaled = av * scale 
-
+    ## scale     = 10 **   ( r - v_ee  )    
+    ## scaled    = av * scale
+    
     ## get formats for properly scaled data
     fmtv , expo = fmt_pretty_values ( scaled                ,
                                       width     = width     ,
@@ -163,8 +165,8 @@ def the_expo ( value , *values ) :
     n , r     = divmod  ( v_ee , 3 )    
     ## 
     
-    a , b = frexp10 ( av )
-    av    = ldexp10 ( a , b + r - v_ee )
+    a , b     = v_a , v_e 
+    av        = ldexp10 ( a , b + r - v_ee )
     
     ## scale     = 10 ** ( r - v_ee  )   
     ## av       *= scale
