@@ -81,8 +81,9 @@ namespace Ostap
       {
       public : 
         // ====================================================================
-        struct Zero {} ;
-        struct Id   {} ;
+        struct Zero      {} ;
+        struct Id        {} ;
+        struct Transpose {} ;
         // ====================================================================
       public : // iterator 
         // ====================================================================
@@ -190,6 +191,32 @@ namespace Ostap
         Matrix
         ( const std::size_t  N        ,  
           const Id        /* id  */    ) ;
+        /// create a transposed Matrix 
+        Matrix
+        ( const Matrix&      right   , 
+          const Transpose /* tr   */ ) ;
+        /// create a transposed Matrix 
+        Matrix
+        ( const Transpose /* tr   */ , 
+          const Matrix&      right   ) ;
+        /// create matrix slice
+        Matrix 
+        ( const Matrix&     right     , 
+          const std::size_t row_begin , 
+          const std::size_t row_end   , 
+          const std::size_t col_begin , 
+          const std::size_t col_end   ) ; 
+        /// create matrix slice
+        Matrix 
+        ( const Matrix&     right     , 
+          const std::size_t row_end   , 
+          const std::size_t col_end   ) ; 
+        /// create matrix slice
+        Matrix 
+        ( const std::size_t row_begin , 
+          const std::size_t col_begin , 
+          const Matrix&     right     ) ; 
+          
         /// create a diagonal diagonal matrix 
         explicit Matrix ( const Vector&      ) ; 
         /// create a permutation matrix
@@ -568,6 +595,10 @@ namespace Ostap
           { gsl_vector_set ( this->m_vector , index , static_cast<double> ( *begin ) ) ; }          
         }
         // =========================================================================        
+        /// get slice from the vector 
+        Vector ( const Vector&     right , 
+                 const std::size_t begin ,
+                 const std::size_t end   ) ;
         /// copy constructor 
         Vector
         ( const Vector&  right ) ;

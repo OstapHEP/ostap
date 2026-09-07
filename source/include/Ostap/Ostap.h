@@ -108,6 +108,7 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/MoreRooFit.h"
 #include "Ostap/MoreVars.h"
+#include "Ostap/MtrxExprs.h"
 #include "Ostap/Mute.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/Norms.h"

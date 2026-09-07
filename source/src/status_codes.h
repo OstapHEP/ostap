@@ -140,6 +140,10 @@ namespace
     PERMUTATION_ALLOCATION_FAILURE = 922 ,
     WORKSPACE_ALLOCATION_FAILURE   = 923 ,
     MATRIX_IS_NOT_SQUARE           = 925 , 
+    INVALID_MATRIX_SIZE            = 926 ,
+    INVALID_VECTOR_SIZE            = 927 ,
+    INVALID_MATRIX_SLICE           = 928 , 
+    INVALID_VECTOR_SLICE           = 929 ,  
     GSL_VERSION_IS_TOO_OLD         = 930 ,
     // =========================================================================    
     INVALID_SVD_DECOMPOSITION      = 935 ,

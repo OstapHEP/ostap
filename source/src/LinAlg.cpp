@@ -120,8 +120,14 @@ template void Ostap::Math::GSL::Matrix::fill_impl<long double> ( const long doub
 Ostap::Math::GSL::Matrix::Matrix
 ( const std::size_t N1 , 
   const std::size_t N2 )
-  : m_matrix ( gsl_matrix_alloc ( N1 , N2 ) )
+  : m_matrix ( nullptr )
 {
+  Ostap::Assert ( 1 <= N1 && 1 <= N2 ,
+                  "(GSL)Matrix dimension must be at leeant one!" , 
+                  "Ostap::Math::GSL::Matrix"                     , 
+                  INVALID_MATRIX_SIZE , __FILE__ , __LINE__      ) ;
+  // allocate matrix 
+  m_matrix =  gsl_matrix_alloc ( N1 , N2 ) ;  
   Ostap::Assert ( m_matrix                         ,
                   "(GSL)Matrix allocation failure" ,
                   "Ostap::Math::GSL::Matrix" ,
@@ -134,12 +140,8 @@ Ostap::Math::GSL::Matrix::Matrix
 ( const std::size_t N1    , 
   const std::size_t N2    , 
   const double       value )
-  : m_matrix ( gsl_matrix_alloc ( N1 , N2 ) )
+  : Matrix ( N1 , N2 ) 
 {
-  Ostap::Assert ( m_matrix                         ,
-                  "(GSL)Matrix allocation failure" ,
-                  "Ostap::Math::GSL::Matrix"       ,
-                  MATRIX_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;
   Ostap::Assert ( std::isfinite ( value )          ,
                   "Cannot use !std::isfinite"      ,
                   "Ostap::Math::GSL::Matrix"       ,
@@ -167,7 +169,7 @@ Ostap::Math::GSL::Matrix::Matrix
 ( const std::size_t N1    , 
   const std::size_t N2    , 
   const Ostap::Math::GSL::Matrix::Id /* zero */ ) 
-  : m_matrix ( gsl_matrix_alloc ( N1 , N2 ) )
+  : Matrix ( N1 , N2 )
 {
   Ostap::Assert ( m_matrix                         ,
                   "(GSL)Matrix allocation failure" ,
@@ -175,6 +177,25 @@ Ostap::Math::GSL::Matrix::Matrix
                   MATRIX_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;  
   gsl_matrix_set_identity ( m_matrix ) ;
 }
+// ============================================================================
+// allocate transposed GSL-matrix 
+// ============================================================================
+Ostap::Math::GSL::Matrix::Matrix
+( const Ostap::Math::GSL::Matrix&             right   ,
+  const Ostap::Math::GSL::Matrix::Transpose /* tr */  )
+  : Matrix ( right.nCols() , right.nRows () )
+{
+  gsl_matrix_transpose_memcpy ( m_matrix , right.matrix () ) ;
+}
+// ============================================================================
+// allocate transposed GSL-matrix 
+// ============================================================================
+Ostap::Math::GSL::Matrix::Matrix
+( const Ostap::Math::GSL::Matrix::Transpose tr    ,
+  const Ostap::Math::GSL::Matrix&           right )  
+  : Matrix ( right  , tr )
+{}
+
 // ============================================================================
 // allocate square GSL-matrix 
 // ============================================================================
@@ -199,17 +220,74 @@ Ostap::Math::GSL::Matrix::Matrix
   : Matrix ( N , N , id )
 {}
 // ============================================================================
+// create matrix slice 
+// ============================================================================
+Ostap::Math::GSL::Matrix::Matrix
+( const Ostap::Math::GSL::Matrix& right     , 
+  const std::size_t               row_begin , 
+  const std::size_t               row_end   , 
+  const std::size_t               col_begin , 
+  const std::size_t               col_end   ) 
+  : m_matrix ( nullptr )
+{
+  Ostap::Assert ( row_begin < row_end && row_end <= right.nRows () &&
+                  col_begin < col_end && col_end <= right.nCols ()  , 
+                  "(GLS)Matrix invalid slice indices!"    ,
+                  "Ostap::Math::GSL::Matrix"              ,
+                  INVALID_MATRIX_SLICE                    , __FILE__ , __LINE__ ) ;
+
+  const std::size_t NR = row_end - row_begin ;
+  const std::size_t NC = col_end - col_begin ;
+
+  m_matrix =  gsl_matrix_alloc ( NR , NC ) ;  
+  Ostap::Assert ( m_matrix                         ,
+                  "(GSL)Matrix allocation failure" ,
+                  "Ostap::Math::GSL::Matrix" ,
+                  MATRIX_ALLOCATION_FAILURE  , __FILE__ , __LINE__ ) ;
+  // 
+  gsl_matrix_view sub = gsl_matrix_submatrix
+  ( const_cast<gsl_matrix*> ( right.matrix() ) , 
+    row_begin , 
+    col_begin , 
+    NR        , 
+    NC        ) ;
+  //
+  gsl_matrix_memcpy( m_matrix , &sub.matrix ) ;
+}
+// ============================================================================
+// create matrix slice 
+// ============================================================================
+Ostap::Math::GSL::Matrix::Matrix
+( const Ostap::Math::GSL::Matrix& right   , 
+  const std::size_t               row_end , 
+  const std::size_t               col_end )
+  : Matrix ( right   , 
+             0       , 
+             row_end , 
+             0       , 
+             col_end )
+  {}
+// ============================================================================
+// create matrix slice 
+// ============================================================================
+Ostap::Math::GSL::Matrix::Matrix
+( const std::size_t               row_begin , 
+  const std::size_t               col_begin ,
+  const Ostap::Math::GSL::Matrix& right     ) 
+  : Matrix ( right          , 
+             row_begin      , 
+             right.nRows () ,
+             col_begin      , 
+             right.nCols () )
+{}
+
+// ============================================================================
 // allocate square permutation GSL-matrix 
 // ============================================================================
 Ostap::Math::GSL::Matrix::Matrix
 ( const Ostap::Math::GSL::Permutation& p ) 
-  : m_matrix ( gsl_matrix_calloc ( p.size () , p.size () ) ) 
+: Matrix ( p.size() ,  p.size() , Matrix::Zero () ) 
 {
-  //
-  Ostap::Assert ( m_matrix                         ,
-                  "(GSL)Matrix allocation failure" ,
-                  "Ostap::Math::GSL::Matrix"       ,
-                  MATRIX_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;  
   //
   Ostap::Assert ( p.valid()                        ,
                   "(GSL)Permutation is invalid!"   , 
@@ -225,14 +303,8 @@ Ostap::Math::GSL::Matrix::Matrix
 // ==========================================================================
 Ostap::Math::GSL::Matrix::Matrix
 ( const Ostap::Math::GSL::Vector & v ) 
-  : m_matrix ( gsl_matrix_calloc ( v.size () , v.size () ) ) 
+ : Matrix ( v.size() , v.size() , Matrix::Id() )
 {
-  //
-  Ostap::Assert ( m_matrix                         ,
-                  "(GSL)Matrix allocation failure" ,
-                  "Ostap::Math::GSL::Matrix"       ,
-                  MATRIX_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;  
-  //
   const std::size_t N = v.size() ;
   for ( std::size_t i = 0 ; i < N ; ++i )
     { set ( i , i , v.get ( i ) ) ; }
@@ -242,15 +314,8 @@ Ostap::Math::GSL::Matrix::Matrix
 // ============================================================================
 Ostap::Math::GSL::Matrix::Matrix  
 ( const Ostap::Math::GSL::Matrix&  right ) 
-  : m_matrix ( gsl_matrix_alloc ( right.m_matrix->size1 , 
-                                  right.m_matrix->size2 ) )  
+  : Matrix  ( right.nRows() , right.nCols () ) 
 {
-  //
-  Ostap::Assert ( m_matrix                         ,
-                  "(GSL)Matrix allocation failure" ,
-                  "Ostap::Math::GSL::Matrix"       ,
-                  MATRIX_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;
-  //
   gsl_matrix_memcpy ( m_matrix , right.m_matrix ) ;
 }
 // ============================================================================
@@ -1522,9 +1587,14 @@ Ostap::StatusCode Ostap::Math::PINV
 // ============================================================================
 Ostap::Math::GSL::Vector::Vector
 ( const std::size_t N  ) 
-  : m_vector ( gsl_vector_alloc ( N ) )
+  : m_vector ( nullptr )
 {
-  //
+ Ostap::Assert ( 1 <= N ,
+                  "(GSL)Vector  size must be at least one!" , 
+                  "Ostap::Math::GSL::Vector"                ,
+                  INVALID_VECTOR_SIZE , __FILE__ , __LINE__ ) ;
+  // allocate vector 
+  m_vector = gsl_vector_alloc ( N ) ; 
   Ostap::Assert ( m_vector                         ,
                   "(GSL)Vector allocation failure" ,
                   "Ostap::Math::GSL::Vector" ,
@@ -1537,18 +1607,14 @@ Ostap::Math::GSL::Vector::Vector
 Ostap::Math::GSL::Vector::Vector
 ( const std::size_t  N     ,   
   const double       value )
-  : m_vector ( gsl_vector_alloc ( N ) )
+  : Vector ( N )
 {
-  //
-  Ostap::Assert ( m_vector                         ,
-                  "(GSL)Vector allocation failure" ,
-                  "Ostap::Math::GSL::Vector"       ,
-                  VECTOR_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;
   //
   Ostap::Assert ( std::isfinite ( value )          ,
                   "Cannot use !std::isfinite"      ,
                   "Ostap::Math::GSL::Vector"       ,
                   INVALID_SCALE                    , __FILE__ , __LINE__ ) ;
+  //
   gsl_vector_set_all ( m_vector , value ) ;
 }
 // ============================================================================
@@ -1557,28 +1623,54 @@ Ostap::Math::GSL::Vector::Vector
 Ostap::Math::GSL::Vector::Vector
 ( const std::size_t                N       ,   
   const Ostap::Math::GSL::Vector::Zero /* zero */ ) 
-  : m_vector ( gsl_vector_calloc ( N ) )  //    NB! calloc here! 
+  : m_vector ( nullptr )  
 {
-  //
+  // 
+  Ostap::Assert ( 1 <= N ,
+                  "(GSL)Vector  size must be at least one!" , 
+                  "Ostap::Math::GSL::Vector"     ,
+                  INVALID_VECTOR_SIZE , __FILE__ , __LINE__ ) ;
+  // allocate it! 
+  m_vector = gsl_vector_calloc ( N ) ; 
   Ostap::Assert ( m_vector                         ,
                   "(GSL)Vector allocation failure" ,
                   "Ostap::Math::GSL::Vector"       ,
                   VECTOR_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;
   //
 }
+// ===========================================================================
+/// get the slice from the vector 
+// ===========================================================================
+ Ostap::Math::GSL::Vector::Vector  
+( const Ostap::Math::GSL::Vector&     right , 
+  const std::size_t begin ,
+  const std::size_t end   ) 
+  : m_vector ( nullptr )
+{
+ Ostap::Assert (  begin < end && end <= right.size () ,
+                  "(GSL)Vector invaiz slice"   , 
+                  "Ostap::Math::GSL::Vector"   ,
+                  INVALID_VECTOR_SLICE         , __FILE__ , __LINE__ ) ;
+  // allocate it! 
+  const std::size_t N = end - begin ; 
+  m_vector = gsl_vector_calloc ( N ) ; 
+  Ostap::Assert ( m_vector                         ,
+                  "(GSL)Vector allocation failure" ,
+                  "Ostap::Math::GSL::Vector"       ,
+                  VECTOR_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;
+
+  gsl_vector_view sub = gsl_vector_subvector
+  ( const_cast<gsl_vector*> ( right.vector () ) , begin , N ) ;
+  gsl_vector_memcpy ( m_vector , &sub.vector);
+}
+
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Math::GSL::Vector::Vector  
 ( const Ostap::Math::GSL::Vector&  right ) 
-  : m_vector ( gsl_vector_alloc ( right.m_vector->size ) )  
+  : Vector ( right.size () )  
 {
-  //
-  Ostap::Assert ( m_vector                         ,
-                  "(GSL)Vector allocation failure" ,
-                  "Ostap::Math::GSL::Vector"       ,
-                  VECTOR_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;
-  //
   gsl_vector_memcpy ( m_vector , right.m_vector ) ;
 }
 // ============================================================================

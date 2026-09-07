@@ -7,6 +7,10 @@
 // ============================================================================
 #include <cstdint>
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/mULPS.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -85,8 +89,8 @@ namespace Ostap
        */
       bool compare_float
       ( const float          af      , 
-	const float          bf      , 
-	const unsigned short maxULPs ) ;
+	      const float          bf      , 
+	      const unsigned short maxULPs = mULPS<float> ) ;
       // ========================================================================
       /** equality comparison of double numbers using as the metric the maximal 
        *  number of Units in the Last Place (ULP).
@@ -125,8 +129,8 @@ namespace Ostap
        */
       bool compare_double
       ( const double         af      , 
-	const double         bf      , 
-	const unsigned int   maxULPs ) ;
+	      const double         bf      , 
+	      const unsigned int   maxULPs = mULPS<double> ) ;
       // ======================================================================
       /** Get the floating number that representation 
        *  is different with respect  to the argument for 
@@ -217,18 +221,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from ULPS:
-      Lomont_ ( const unsigned short ulps ) : m_ulps ( ulps ) {}
+      constexpr Lomont_ ( const unsigned short ulps = mULPS<float> ) 
+      : m_ulps ( ulps ) {}
       // ======================================================================
     public:
       // ======================================================================
       /// the only one important method:
       inline bool operator () ( const float a , const float b ) const 
       { return Ostap::Math::Lomont::compare_float ( a , b , m_ulps ) ; }
-      // ======================================================================
-    private: 
-      // ======================================================================
-      /// the default constructor is disabled 
-      Lomont_() ;                        // the default constructor is disabled
       // ======================================================================
     private: 
       // ======================================================================
@@ -263,18 +263,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from ULPS:
-      Lomont_ ( const unsigned int ulps ) : m_ulps ( ulps ) {}
+      constexpr Lomont_ ( const unsigned int ulps = mULPS<double> ) : m_ulps ( ulps ) {}
       // ======================================================================
     public:
       // ======================================================================
       /// the only one important method:
       inline bool operator () ( const double a , const double b ) const 
       { return Ostap::Math::Lomont::compare_double ( a , b , m_ulps ) ; }
-      // ======================================================================
-    private: 
-      // ======================================================================
-      /// the default constructor is disabled 
-      Lomont_ () ;                        // the default constructor is disabled
       // ======================================================================
     private: 
       // ======================================================================
@@ -287,7 +282,7 @@ namespace Ostap
   // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
-// The END 
-// ============================================================================
 #endif // OSTAP_LOMONT_H
+// ============================================================================
+//                                                                      The END 
 // ============================================================================
