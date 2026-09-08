@@ -1580,7 +1580,38 @@ namespace Ostap
         Matrix&        Z , 
         Matrix&        S ) ; 
       // ======================================================================
-      
+
+      // ======================================================================
+      /** Bunch-Kaufman decompositon of symmetric matrices 
+       * @param[in]  A Input symmetric matrix to decompose.
+       * @param[out] U triangular factor matrix U.
+       * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+       * @return status code
+       * @attention  here we use TDecompBK from ROOT 
+       * @see  TDecompBK 
+       */
+      Ostap::StatusCode BK 
+      ( const Matrix&  A ,  
+        Matrix&        U , 
+        Matrix&        D ) ; 
+      // ======================================================================
+
+      // ======================================================================
+      /** Bunch-Kaufman decompositon of symmetric matrices 
+       * @param[in]  A Input symmetric matrix to decompose.
+       * @param[out] U triangular factor matrix U.
+       * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+       * @return status code
+       * @attention  here we use TDecompBK from ROOT 
+       * @see  TDecompBK 
+       */
+      inline Ostap::StatusCode BunchKaufmann 
+      ( const Matrix&  A ,  
+        Matrix&        U , 
+        Matrix&        D ) 
+      { return BK ( A , U , D ) ; } 
+      // ======================================================================
+
       // ======================================================================
       // Polar decomposition of square matrix 
       // ======================================================================

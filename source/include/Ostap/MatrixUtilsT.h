@@ -1229,8 +1229,33 @@ namespace Ostap
     ( const TMatrixTSym<double>& cov ,
       TVectorT<double>&          vif ,
       const double               eps = epsilon_v<double> ) ;
+    
+    // ========================================================================    
+    /** Bunch-Kaufman decompositon of symmetric matrices 
+     * @tparam Element The numeric type of the matrix elements (e.g., double, float).
+     * @param[in]  A Input symmetric matrix to decompose.
+     * @param[out] U triangular factor matrix U.
+     * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+     * @return status code 
+     */
+    Ostap::StatusCode BunchKaufman
+    ( const TMatrixTSym<double>& A ,
+      TMatrixT<double>&          U ,
+      TMatrixTSym<double>&       D ) ;
 
-
+    // ========================================================================    
+    /** Bunch-Kaufman decompositon of symmetric matrices 
+     * @tparam Element The numeric type of the matrix elements (e.g., double, float).
+     * @param[in]  A Input symmetric matrix to decompose.
+     * @param[out] U triangular factor matrix U.
+     * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+     * @return status code 
+     */
+    Ostap::StatusCode BunchKaufman
+    ( const TMatrixTSym<float>& A ,
+      TMatrixT<float>&          U ,
+      TMatrixTSym<float>&       D ) ;
+    
     // ========================================================================    
     namespace  Ops
     {      

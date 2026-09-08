@@ -477,6 +477,37 @@ def test_linalg_POLAR( M = 4 ) :
     
     if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"   % nice_print ( delta1 ) )
     if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %s"   % nice_print ( delta2 ) )
+
+# ==========================================================================
+def test_linalg_BK ( M = 4 ) :
+    
+    logger = getLogger ( 'test_linalg_BK(%s)' % ( M )  )
+    
+    A = Matrix ( M , M )
+    for i in range ( A.kRows ) :
+        for j in range ( i + 1  ) :
+            a = random.gauss ( 1 , 1 )
+            if i == j : 
+                A.set ( i , i , a + 1  )
+            else : 
+                A.set ( j , i , a )
+                A.set ( i , j , a )
+            
+    logger.info ( 'BK The matrix is:\n%s' % A )
+
+    ## BK-decomposition 
+    U , D = A.BK () 
+    
+    logger.info ( 'BK decomposition: U :\n%s' % U )
+    logger.info ( 'BK decomposition: D :\n%s' % D )
+    
+    D      = U * D * U.T()  - A 
+    delta1 = Ostap.Math.maxabs_element ( D ) 
+    logger.info ( 'BK max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
+        
+    assert delta1 < tolerance1 , 'BK: result are inconsistent delta1=%s' % nice_print ( delta1 )
+    
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"   % nice_print ( delta1 ) )
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -533,7 +564,13 @@ if '__main__' == __name__ :
     test_linalg_POLAR ( 3 )
     test_linalg_POLAR ( 6 )
     test_linalg_POLAR ( 8 )
-    
+
+    test_linalg_BK    (  3 )
+    test_linalg_BK    (  6 )
+    test_linalg_BK    ( 10 )
+    test_linalg_BK    ( 15 )
+
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

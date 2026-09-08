@@ -20,7 +20,7 @@
    1. add "transpose" constructor to GSL =matrix
    1. add "diagonal matrix expressions" for SMatrix
    1. vaildate `linalgg`-tests
-
+   1. add Bunch-Kaufman decomposition 
 
 ## Bug fixes
 

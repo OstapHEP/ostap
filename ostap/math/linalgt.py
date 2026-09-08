@@ -226,7 +226,6 @@ class LinAlgT(LA.LinAlg) :
                 result [ i,j ] = 0.5 * ( obj (i,j) + obj(j,i) )                
         return result 
 
-
     # =========================================================================
     ## (P)LU decomposition
     #  @see Ostap::GSL::PLU
@@ -419,6 +418,33 @@ class LinAlgT(LA.LinAlg) :
         P = P.to_TMatrix()
         U = U.to_TMatrix()
         return U , P 
+
+    # ===============================================================================
+    ## BK : Bunch-Kaufman  decomposition  of symmetric matrix \f$ A = U D U^T \f$
+    #  - U - triangular matrix
+    #  - D - symmetric block matrix with diagional 1x1 and 2x2 blocks
+    #  @see TDecompBK 
+    def TS_BK ( mtrx ) :
+        """ Bunch-Kaufmann decomposition of the symmetric matrix A: A = U D U^T 
+        - U is triangular 
+        - D is symmetric block matrix with diagonal 1x1 and 2x2 blocks 
+        >>> A = ...,
+        >>> U , D = A.BK () 
+        """
+        assert mtrx.IsValid () , 'Matrix is not valid!'
+        M , N = mtrx.GetNrows() , mtrx.GetNcols()
+        print( 'BK' , type(mtrx) , M , N , M == N ) 
+        assert 2 <= M and M == N , "Bunch-Kaufman decomposition is defined only for symmetric matrices!"
+
+        ## if isinstance ( mtrx , Ostap.TMatrixSymD ) : a = mtrx
+        ## else                                       : a = Ostap.TMatrixSymD ( mtrx ) 
+        A  = mtrx
+
+        U  = Ostap.TMatrixD    ( M , M )
+        D  = Ostap.TMatrixSymD ( M  )
+        sc = Ostap.Math.BunchKaufman ( A , U , D )
+        if sc.isFailure() : raise ValueError ( "Error code %s from Ostap::Math:BunchKaufman" % sc )        
+        return U , D
     
     # ==========================================================================
     
@@ -633,6 +659,8 @@ class LinAlgT(LA.LinAlg) :
         m.sim            = LinAlgT.SIM
         m.SimT           = LinAlgT.SIMT
         m.simT           = LinAlgT.SIMT
+
+        m.BK             = LinAlgT.TS_BK 
 
         m._old_call_     = m.__call__
         m._old_setitem_  = m.__setitem__

@@ -37,7 +37,10 @@
 #  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decomposition-of-real-matrices
 #  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization
 #  @see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems
-
+#
+#  For completeness: 
+#  - Bunch-Kaufman decompositio of symmetric matrix using <code>TDecompBK</code>
+# 
 #  @see Ostap::Math::GSL
 #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
 #  @date 2009-09-12
@@ -78,6 +81,9 @@ see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decompositi
 see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization
 see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems
 
+ For completeness: 
+ - Bunch-Kaufman decomposittion of symmetric matrix using `TDecompBK`
+ 
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
@@ -923,7 +929,48 @@ def _m_SCHUR_ ( A ) :
     T  = Matrix ( M , M )
     sc = Ostap.Math.GSL.SCHUR ( A , Z , T )
     if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::SCHUR" % sc )    
-    return Z , T  
+    return Z , T
+
+# ===============================================================================
+## Bunch-Kaufman decomposition of symmetric matrices 
+# 
+# Factorizes a symmetric matrix \f$ A = U D U^T \f$
+# - A Input symmetric matrix to decompose.
+# - U Triangular factor matrix U.
+# - D Block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+#
+# @see J. R. Bunch, L. Kaufman,
+#      "Some stable methods for calculating inertia and solving symmetric linear systems
+#      https://doi.org/10.1090/S0025-5718-1977-0428693-9), Math. Comp. 31 (1977), pp. 163–179.
+#
+# @see TDecompBK
+# @code
+# A = ..
+# U , D = A.BK () 
+# @endcode 
+def _m_BK_ ( A ) :
+    """ Bunch-Kaufman decomposition of symmetric matrices 
+    Factorizes a symmetric matrix as  A = U D U^T 
+    - A Input symmetric matrix to decompose.
+    - U Triangular factor matrix U
+    - D Block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+    
+    see J. R. Bunch, L. Kaufman,
+    "Some stable methods for calculating inertia and solving symmetric linear systems
+    https://doi.org/10.1090/S0025-5718-1977-0428693-9), Math. Comp. 31 (1977), pp. 163–179.
+    
+    >>> A = ..
+    >>> U , D = A.BK () 
+    """
+    M, N = A.nRows() , A.nCols ()
+    assert M == N , "BunchKaufmann decomposition is defined only for square(symmetric) matrices!"
+    U  = Matrix ( M , M )
+    D  = Matrix ( M , M )
+    sc = Ostap.Math.GSL.BK ( A , U , D )
+    if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::BK" % sc )    
+    return U , D 
+
+# ===============================================================================
 
 Matrix.PLU       = _m_PLU_
 Matrix.PQR       = _m_PQR_ 
@@ -940,6 +987,7 @@ Matrix.UBVT      = _m_UBVT_
 
 Matrix.POLAR     = _m_POLAR_ 
 Matrix.SCHUR     = _m_SCHUR_  
+Matrix.BK        = _m_BK_  
 
 Matrix.t         = Matrix.T
 Matrix.transpose = Matrix.T
@@ -1050,8 +1098,9 @@ _new_methods_ += (
     Matrix.UHUT               ,
     Matrix.UBVT               ,
     ## 
-    Matrix.SCHUR              , 
     Matrix.POLAR              ,
+    Matrix.SCHUR              , 
+    Matrix.BK                 , 
     ##
 )
 

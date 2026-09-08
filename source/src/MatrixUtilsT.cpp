@@ -16,6 +16,8 @@
 #include "Ostap/StatusCode.h"
 #include "Ostap/Constants.h"
 #include "Ostap/Math.h"
+#include "Ostap/LinAlg.h"
+#include "Ostap/LinAlgUtils.h"
 #include "Ostap/MatrixUtilsT.h"
 // ============================================================================
 // local
@@ -515,6 +517,213 @@ Ostap::StatusCode VIF
   const double               eps ) 
 { return _VIF_ ( cov , vif , eps ) ; } 
 // ============================================================================
+
+
+
+// ============================================================================
+namespace
+{
+  // ==========================================================================
+  /**
+   * @brief Helper class to access the protected fIpiv array of TDecompBK.
+   */
+  class TDecompBKSpy : public TDecompBK 
+  {
+  public:
+    using TDecompBK::TDecompBK;    
+    /// Get the internal pivoting and block index array.
+    const Int_t* GetIpiv() const { return fIpiv; }
+  };
+  // ==========================================================================
+} 
+// ========================================================================
+/* Bunch-Kaufman decomposition of symmetric matrices 
+ * @param[in]  A Input symmetric matrix to decompose.
+ * @param[out] U triangular factor matrix U.
+ * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+ * @return status code 
+ */
+// ========================================================================
+Ostap::StatusCode Ostap::Math::BunchKaufman
+( const TMatrixTSym<double>& A ,
+  TMatrixT<double>&          U ,
+  TMatrixTSym<double>&       D ) 
+{
+  if ( !A.IsValid () || A.GetNrows() < 1 || A.GetNrows () != A.GetNcols () ) { return INVALID_TMATRIX ; }
+    
+  ::TDecompBKSpy bk ( A ) ;
+  if ( !bk.Decompose () ) { return INVALID_BK_DECOMPOSITION ; }
+
+  const TMatrixD& rawU = bk.GetU();
+  
+  const Int_t*    ipiv = bk.GetIpiv();
+  if ( !ipiv ) { return INVALID_BK_DECOMPOSITION ; }
+  
+  const Int_t n = A.GetNrows();
+  //
+  // Инициализируем U как единичную матрицу
+  U.ResizeTo   ( n , n ) ;
+  U.UnitMatrix (       ) ;  
+  D.ResizeTo   ( n , n ) ;
+  D.Zero       (       ) ;
+  //
+  // Идем вперед (от 0 до n-1), чтобы правильно собрать матрицу U 
+  // с учетом всех LAPACK перестановок.
+  Int_t k = 0;
+  while ( k < n )
+  {
+    if ( ipiv[k] > 0 )
+    {
+      // --- 1x1 блок ---
+      D ( k , k ) = rawU ( k , k );
+      //
+      // В LAPACK индексы ipiv 1-based, переводим в 0-based
+      Int_t kp = ipiv[k] - 1; 
+      //
+      // 1. Применяем верхние множители к текущей матрице U
+      for ( Int_t i = 0; i < k; ++i )
+      {
+        double mult = rawU ( i , k );
+        for ( Int_t c = 0; c < n; ++c ) {
+          U ( i , c ) += mult * U ( k , c );
+        }
+      }
+      // 
+      // 2. Применяем перестановку строк (pivoting)
+      if ( kp != k )
+      {
+        for ( Int_t c = 0; c < n; ++c )
+        {
+          double tmp = U ( k , c );
+          U ( k  , c ) = U ( kp , c );
+          U ( kp , c ) = tmp;
+        }
+      }
+      //
+      k += 1;
+    }
+    else
+    {
+      // --- 2x2 блок ---
+      D ( k     , k     ) = rawU ( k     , k     ) ;
+      D ( k     , k + 1 ) = rawU ( k     , k + 1 ) ;
+      D ( k + 1 , k     ) = rawU ( k     , k + 1 ) ; // Симметрия
+      D ( k + 1 , k + 1 ) = rawU ( k + 1 , k + 1 ) ;
+      //
+      // Индекс перестановки для 2x2 блока
+      Int_t kp = -ipiv[k] - 1; 
+      //
+      // 1. Применяем верхние множители сразу от двух колонок
+      for ( Int_t i = 0; i < k; ++i )
+      {
+        double mult1 = rawU ( i , k     );
+        double mult2 = rawU ( i , k + 1 );
+        for ( Int_t c = 0; c < n; ++c ) {
+          U ( i , c ) += mult1 * U ( k , c ) + mult2 * U ( k + 1 , c );
+        }
+      }
+      //
+      // 2. Применяем перестановку (для 2x2 блока LAPACK меняет строку k и kp)
+      if ( kp != k )
+      {
+        for ( Int_t c = 0; c < n; ++c )
+        {
+          double tmp = U ( k , c );
+          U ( k  , c ) = U ( kp , c );
+          U ( kp , c ) = tmp;
+        }
+      }
+
+      k += 2;
+    }
+  }
+  // 
+  return Ostap::StatusCode::SUCCESS;
+}
+// ============================================================================
+/* Bunch-Kaufman decomposition of symmetric matrices 
+ * @param[in]  A Input symmetric matrix to decompose.
+ * @param[out] U triangular factor matrix U.
+ * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+ * @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode Ostap::Math::BunchKaufman
+( const TMatrixTSym<float>& A ,
+  TMatrixT<float>&          U ,
+  TMatrixTSym<float>&       D )
+{
+  //
+  if ( !A.IsValid () || A.GetNrows() < 1 || A.GetNrows () != A.GetNcols () ) { return INVALID_TMATRIX ; }
+  //
+  const Int_t N = A.GetNrows() ;
+  //
+  const TMatrixTSym<double> a { A     } ;
+  TMatrixT<double>          u { N , N } ;
+  TMatrixTSym<double>       d { N     } ;
+  //
+  const Ostap::StatusCode sc = BunchKaufman ( a , u , d ) ;
+  if ( sc.isFailure() ) { return sc ; } 
+  //
+  U.ResizeTo ( N , N ) ;
+  D.ResizeTo ( N , N ) ;
+  //
+  U = u ;
+  D = d ;
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+// ======================================================================
+
+
+// ======================================================================
+/* Bunch-Kaufman decomposition of symmetric matrices 
+ * @param[in]  A Input symmetric matrix to decompose.
+ * @param[out] U triangular factor matrix U.
+ * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+ * @return status code
+ * @attention  here we use TDecompBK from ROOT 
+ * @see  TDecompBK 
+ */
+// ======================================================================
+Ostap::StatusCode Ostap::Math::GSL::BK
+( const Ostap::Math::GSL::Matrix&  A ,  
+  Ostap::Math::GSL::Matrix&        U , 
+  Ostap::Math::GSL::Matrix&        D )
+{
+  //
+  if ( A.nRows() != A.nCols() ) { return INVALID_GMATRIX ; }
+  //
+  const std::size_t N = A.nRows() ;
+  const Int_t       n = static_cast<Int_t> ( N ) ;
+  //
+  TMatrixTSym<double>  a { n     } ;
+  TMatrixT<double>     u { n , n } ;
+  TMatrixTSym<double>  d { n     } ;
+  //
+  // copy GSL matrix into symmetric T-matrix 
+  for ( Int_t i = 0 ; i < n ; ++i )
+  {
+    const double aii = A ( i , i ) ;
+    a ( i , i ) = aii ;
+    // read only low-triangular part 
+    for ( Int_t j = 0 ; j < i ; ++j )
+    {
+      const double aij = A ( i , j ) ;
+      a ( i , j ) = aij ;
+      a ( j , i ) = aij ;      
+    }
+  }
+  //
+  const Ostap::StatusCode sc = Ostap::Math::BunchKaufman ( a , u , d ) ;
+  if ( sc.isFailure() ) { return sc ; }
+  //
+  U = Ostap::Math::GSL::matrix ( u ) ;
+  D = Ostap::Math::GSL::matrix ( d ) ;
+  //
+  return Ostap::StatusCode::SUCCESS ; 
+}
+
 
 // ============================================================================
 //                                                                      The END 

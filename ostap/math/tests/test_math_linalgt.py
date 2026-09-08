@@ -888,7 +888,7 @@ def test_linalgt_POLAR( M = 4 ) :
             
     logger.info ( 'POLAR The matrix is:\n%s' % A )
 
-    ## COD-decomposition 
+    ## POLAR-decomposition 
     U , P = A.POLAR() 
     
     logger.info ( 'POLAR decomposition: U :\n%s' % U )
@@ -908,11 +908,41 @@ def test_linalgt_POLAR( M = 4 ) :
     
     if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
     if not delta2 < tolerance2 : logger.error ( "delta2 is too large: %.3g" % delta2 )
+
+# ==========================================================================
+def test_linalgt_BK ( M = 4 ) :
+    
+    logger = getLogger ( 'test_linalgt_BK(%d)' % ( M )  )
+    
+    A = Ostap.Math.TMatrixSym ( M )
+
+    print ( 'TYPE:' , type ( A ) , A.GetNrows() , A.GetNcols() )
+    for i in range ( A.kRows ) :
+        A [ i , i ] = 5 + random.gauss ( 1 , 1 ) 
+        for j in range ( 0 , i ) :
+            aij = random.gauss ( 1 , 1 )
+            A [ i , j ] = aij
+            A [ j , i ] = aij 
+            
+    logger.info ( 'BK The matrix is:\n%s' % A )
+
+    ## BK-decomposition 
+    U , D = A.BK() 
+    
+    logger.info ( 'BK decomposition: U :\n%s' % U )
+    logger.info ( 'BK decomposition: D :\n%s' % D )
+    
+    D      = U * D * U.t()  - A 
+    delta1 = Ostap.Math.maxabs_element ( D ) 
+    logger.info ( 'BK max-difference %.3g :\n%s' % ( delta1 , D ) ) 
+    
+    assert delta1 < tolerance1 , 'BK: result are inconsistent delta1=%.3g' % delta1    
+    if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
     
 
 # =============================================================================
 if '__main__' == __name__ :
-    
+
     test_linalgt_vct   () 
     test_linalgt_mtrx  () 
     test_linalgt_old   ()
@@ -948,6 +978,10 @@ if '__main__' == __name__ :
     
     test_linalgt_POLAR ( 3 )
     test_linalgt_POLAR ( 6 )
+
+    test_linalgt_BK    (  3 )
+    test_linalgt_BK    (  6 )
+    test_linalgt_BK    ( 15 )
 
 # =============================================================================
 ##                                                                      The END 
