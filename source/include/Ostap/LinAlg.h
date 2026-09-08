@@ -34,20 +34,34 @@
  *  @see class Ostap::Math::GSL::Permutation
  *  @see https://www.gnu.org/software/gsl/doc/html/vectors.html
  *
- *  The basic Linear Alegbra functions are:
+ *  Basic Linear Algebra:
+ *  - (P)LU       decomposition of general (rectangular) matrix \f$ PA = LU      \f$
+ *  - (P)QR       decomposition of general (rectangular) matrix \f$ AP = QR      \f$
+ *  - LQ          decomposition of general (rectangular) matrix \f$ A  = LQ      \f$
+ *  - QL          decomposition of general (reclangular) matrix \f$ A  = QL      \f$
+ *  - COD         decomposition of general (rectangular) matrix \f$ AP = QRZ^T   \f$
+ *  - SVD         decomposition of general (rectangular) matrix \f$ AP = U S V^T \f$
+ *  - Cholesky    decomposition of symmetric positive-definite matrix \f$ A = L L^T    \f$
+ *  - Cholesky    decomposition of symmetric positive-definite matrix \f$ PSASP^T = L D L^T    \f$
+ *  - Tridiagonal decomposition of symmetric matrix     \f$ A = Q D_3 Q^T \f$
+ *  - Hessenberg  decomposition of square matrix        \f$ A = U H U^T   \f$
+ *  - Bidiagonalization of general (rectangular) matrix \f$ A = U B_2 U^T \f$
+ *  - Polar       decomposition of square matrix        \f$ A = UP        \f$
+ *  - Schur'      decomposition of square matrix        \f$ A = Z S Z^T \f$
  *
- *  - LU decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
- *  - PQR: QR decomposition with column pivoting  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#qr-decomposition-with-column-pivoting
- *  - LQ decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lq-decomposition
- *  - QL decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#ql-decomposition
- *  - COD: Complete Orthogonal Decomposition @see  https://www.gnu.org/software/gsl/doc/html/linalg.html#complete-orthogonal-decomposition
- *  - SVD: Singular Value Decomposition @see  https://www.gnu.org/software/gsl/doc/html/linalg.html#singular-value-decomposition
- *  - LLT: Cholesky decomposition @see https://www.gnu.org/software/gsl/doc/html/linalg.html#cholesky-decomposition
- *  - LDLT: Pivoted Cholesky Decompositon with scale factor @see https://www.gnu.org/software/gsl/doc/html/linalg.html#pivoted-cholesky-decomposition
- *  - D3: Trigiagonal decomposition of symmetric matrices @see https://www.gnu.org/software/gsl/doc/html/linalg.html#tridiagonal-decomposition-of-real-symmetric-matrices
- *  - UHUT: Hessenberg decomposition of matrices @see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decomposition-of-real-matrices
- *  - UBVT: Bidiagolalization of general matrices @see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization
- *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#qr-decomposition-with-column-pivoting
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lq-decomposition
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#ql-decomposition
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#complete-orthogonal-decomposition
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#singular-value-decomposition
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#cholesky-decomposition
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#pivoted-cholesky-decomposition
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#tridiagonal-decomposition-of-real-symmetric-matrices
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decomposition-of-real-matrices
+ * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization
+ * @see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems 
  */
 // ============================================================================
 namespace Ostap 
@@ -76,6 +90,7 @@ namespace Ostap
       // ======================================================================
       /** @class Ostap::GSL::Matrix
        *  Internal class to hold GSL-Matrix
+       *  @see https://www.gnu.org/software/gsl/doc/html/vectors.html
        */
       class Matrix
       {
@@ -499,6 +514,7 @@ namespace Ostap
       // ==========================================================================
       /** @class Vector
        *  Internal class to  hold GSL-Vector
+       *  @see https://www.gnu.org/software/gsl/doc/html/vectors.html
        */
       class Vector
       {
@@ -738,6 +754,7 @@ namespace Ostap
       // ==========================================================================
       /** @class Permutation
        *  Internal class to keep GSL-permuation
+       *  @see https://www.gnu.org/software/gsl/doc/html/permutation.html
        */
       class  Permutation
       {
@@ -1169,7 +1186,9 @@ namespace Ostap
        *  The j-th column of the matrix P is given by the j-th column of the 
        *   identity matrix, where \f$ k = p_j \f%  
        *  the j-th element of the permutation vector. 
-       * 
+       *
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
+       *
        *  @param  A (update) input/update MxN  marix 
        *  @param  P (UPDATE/OUTPUT) permutation 
        *  @return status code 
@@ -1177,27 +1196,31 @@ namespace Ostap
        */
       Ostap::StatusCode PLU
       ( Matrix&      A  , 
-        Permutation& P ) ;        
+        Permutation& P ) ;
+      
       // ========================================================================
-      /** perfom LU decomposition  
+      /** perfom  (P)LU decomposition  
        *  @param  A   (INOUT)         input matrix 
        *  @param  P   (UPDATE/OUTPUT) permutation 
        *  @param  LU  (UPDATE/OUTPUT) output LU matrix 
        *  @return status code 
        *  @see gsl_linalg_LU_decomp 
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
        */
       Ostap::StatusCode PLU
       ( const Matrix& A  ,
         Permutation&  P  , 
         Matrix&       LU ) ;
+      
       // ========================================================================
-      /** perfom LU decomposition  
+      /** perfom (P)LU decomposition  
        *  @param  A   (INOUT)         input matrix 
        *  @param  P   (UPDATE/OUTPUT) permutation 
        *  @param  L   (UPDATE/OUTPUT) lower triangular matrix 
        *  @param  U   (UPDATE/OUTPUT) upper triangular matrix 
        *  @return status code
        *  @see gsl_linalg_LU_decomp 
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
        */
       Ostap::StatusCode PLU
       ( const Matrix& A ,
@@ -1221,7 +1244,8 @@ namespace Ostap
        *  @param P  (outpt/update) permutation matrix P
        *  @param Q  (outpt/update) orthogonal matrix Q 
        *  @param R  (outpt/update) rigth triangular matrix R 
-       *  @return permutation P 
+       *  @return status code 
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#qr-decomposition-with-column-pivoting
        */
       Ostap::StatusCode PQR
       ( const Matrix& A ,
@@ -1241,7 +1265,8 @@ namespace Ostap
        *  @param Q  (outpt/update) orthogonal matrix Q 
        *  @param R  (outpt/update) rigth triangular matrix R 
        *  @param r  (outpt/update) condition number of the matrix R
-       *  @return permutation P 
+       *  @return status code 
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#qr-decomposition-with-column-pivoting
        */
       Ostap::StatusCode PQR
       ( const Matrix& A ,
@@ -1258,7 +1283,8 @@ namespace Ostap
       // ======================================================================
       /** LQ decomposition of matrix A: \f$ A = LQ\f$, where 
        *  - L is lower trapezoidal MxN 
-       *  - Q is orthogonal NxN 
+       *  - Q is orthogonal NxN
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lq-decomposition
        */ 
       Ostap::StatusCode LQ
       ( const Matrix& A ,
@@ -1267,7 +1293,8 @@ namespace Ostap
       // ======================================================================
       /** QL decomposition of matrix A: \f$ A = QL\f$, where 
        *  - Q is orthogonal MxM
-       *  - L is lower trapezoidal MxN 
+       *  - L is lower trapezoidal MxN
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#ql-decomposition
        */ 
       Ostap::StatusCode QL
       ( const Matrix& A ,
@@ -1287,7 +1314,8 @@ namespace Ostap
        *  - Q is MxM orthogonal matrix 
        *  - Z is NxN orthogonal matrix 
        *  - R is 2x2 block matrix with top-left blobck being right triangular matrix and
-       *    other blocks are zeroes 
+       *    other blocks are zeroes
+       * @see https://www.gnu.org/software/gsl/doc/html/linalg.html#complete-orthogonal-decomposition
        */
       Ostap::StatusCode COD
       ( const Matrix& A ,
@@ -1314,7 +1342,8 @@ namespace Ostap
        *  @param V     (update) orthogonal matrix V 
        *  @param golub (input) use Golub or Jacobi algorithm 
        *  @return vector of singular values 
-       * -  Jacobi' algorithm is more precise and Golub' algorithm is more CPU efficient 
+       * -  Jacobi' algorithm is more precise and Golub' algorithm is more CPU efficient
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#singular-value-decomposition
        */
       Ostap::StatusCode SVD
       ( const Matrix& A            ,
@@ -1329,11 +1358,45 @@ namespace Ostap
        *  Only lower triangular part of the matrix A is used.
        *  @param A (input)  input MxM matrix
        *  @param L (update) lower triangular matrix
-       *  @return
+       *  @return status code 
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#cholesky-decomposition
        */  
       Ostap::StatusCode LLT
       ( const Matrix& A ,
         Matrix&       L ) ;
+
+      // ======================================================================
+      /** LLT : Cholesky decomposition of positive definite matrix \f$ A = L L^T\f$, 
+       *  Only lower triangular part of the matrix A is used.
+       *  @param A (input)  input MxM matrix
+       *  @param L (update) lower triangular matrix
+       *  @return status code 
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#cholesky-decomposition
+       */  
+      inline Ostap::StatusCode
+      cholesky
+      ( const Matrix& A ,
+        Matrix&       L )
+      { return LLT ( A , L ) ; } 
+      
+      // ======================================================================
+      /** LDLT : Cholesky decomposition of positive definite matrix 
+       * \f$ PSASP^T = L D L^T\f$, 
+       *  Only lower triangular part of the matrix A is used.
+       *  @param A (input)  input MxM matrix
+       *  @param S (output/update) scale vector/diagonal matrix 
+       *  @param P (output/update) permutation 
+       *  @param L (utput/update)  lower triangular matrix
+       *  @param D (output/update) vector/diagonal matrix   
+       *  @return status code
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#pivoted-cholesky-decomposition
+       */  
+      Ostap::StatusCode LDLT
+      ( const Matrix& A ,
+        Vector&       S ,
+        Permutation&  P , 
+        Matrix&       L , 
+        Vector&       D ) ;
 
       // ======================================================================
       /** LDLT : Cholesky decomposition of positive definite matrix 
@@ -1345,14 +1408,17 @@ namespace Ostap
        *  @param L (utput/update)  lower triangular matrix
        *  @param D (output/update) vector/diagonal matrix   
        *  @return status code
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#pivoted-cholesky-decomposition
        */  
-      Ostap::StatusCode LDLT
+      inline Ostap::StatusCode
+      cholesky 
       ( const Matrix& A ,
         Vector&       S ,
         Permutation&  P , 
         Matrix&       L , 
-        Vector&       D ) ;
-
+        Vector&       D )
+      { return LDLT ( A , S , P , L , D ) ; }
+      
       // =======================================================================
       /** D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
        *  - \f$ Q \f$ is orthogonal matrix
@@ -1361,14 +1427,15 @@ namespace Ostap
        *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
        *  @param d (OUTPUT/UPDATE) main diagonal of symmetric  matrix \f$ D_3 \f$
        *  @param s (OUTPUT/UPDATE) sub-diagonal of symmetric  matrix \f$ D_3 \f$
-       *  @return status code 
+       *  @return status code
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#tridiagonal-decomposition-of-real-symmetric-matrices
        */
       Ostap::StatusCode D3
       ( const Matrix& A ,
         Matrix&       Q ,
         Vector&       d ,
         Vector&       s ) ;
-             
+      
       // =======================================================================
       /** D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
        *  - \f$ Q \f$ is orthogonal matrix
@@ -1377,6 +1444,7 @@ namespace Ostap
        *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
        *  @param D (OUTPUT/UPDATE) symmetric tridiagonal matrix 
        *  @return status code 
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#tridiagonal-decomposition-of-real-symmetric-matrices
        */
       Ostap::StatusCode D3
       ( const Matrix& A ,
@@ -1384,18 +1452,74 @@ namespace Ostap
         Matrix&       D ) ;
 
       // =======================================================================
+      /** D3 : decomposition of symmetric matrix \f$ A = Q D_3 Q^T \f$, where
+       *  - \f$ Q \f$ is orthogonal matrix
+       *  - \f$ D_2\fF is symmetric  trigiagonal matrix 
+       *  @param A (INPUT) input matrix A
+       *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+       *  @param D (OUTPUT/UPDATE) symmetric tridiagonal matrix 
+       *  @return status code 
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#tridiagonal-decomposition-of-real-symmetric-matrices
+       */
+      inline Ostap::StatusCode
+      tridiagonailzation 
+      ( const Matrix& A ,
+        Matrix&       Q ,
+        Matrix&       D )
+      { return D3 ( A , Q , D ) ; } 
+      
+      // =======================================================================
       /** Hessenberg decomposition of square matrix \f$ A = U H Q^T \f$, where
        *  - \f$ U \f$ is orthogonal 
        *  - \f$ H \f$ is Hessenberg' matrix: \f$ H(i,i)=0 \f$ for \f$ i > j + 1 \f$
        *  @param A (INPUT) input matrix A
        *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
        *  @param H (OUTPUT/UPDATE) Hessenberg matrix 
-       *  @return status code 
+       *  @return status code
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decomposition-of-real-matrices
        */
       Ostap::StatusCode UHUT
       ( const Matrix& A ,
         Matrix&       Q ,
         Matrix&       H ) ;
+      
+      // =======================================================================
+      /** Hessenberg decomposition of square matrix \f$ A = U H Q^T \f$, where
+       *  - \f$ U \f$ is orthogonal 
+       *  - \f$ H \f$ is Hessenberg' matrix: \f$ H(i,i)=0 \f$ for \f$ i > j + 1 \f$
+       *  @param A (INPUT) input matrix A
+       *  @param Q (OUTPUT/UPDATE) orthogonal matrix Q
+       *  @param H (OUTPUT/UPDATE) Hessenberg matrix 
+       *  @return status code
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decomposition-of-real-matrices
+       */
+      inline Ostap::StatusCode
+      hessenberg
+      ( const Matrix& A ,
+        Matrix&       Q ,
+        Matrix&       H )
+      { return UHUT ( A , Q , H ) ; } 
+      
+      // =======================================================================
+      /** Bidiagonalization of of general matrix \f$ A = U B V^T \f$, where
+       *  - \f$ A \f$ is \f$ M \times N \f$ matrix
+       *  - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
+       *  - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
+       *  - \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
+       *  @param A (INPUT) input matrix A
+       *  @param U (OUTPUT/UPDATE) orthogonal matrix U
+       *  @param d (OUTPUT/UPDATE) diagonal 
+       *  @param s (OUTPUT/UPDATE) super-diagonal  
+       *  @param V (OUTPUT/UPDATE) orthogonal matrix V
+       *  @return status code        
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization       
+       */
+      Ostap::StatusCode UBVT
+      ( const Matrix& A ,
+        Matrix&       U ,
+        Vector&       d ,
+        Vector&       s ,        
+        Matrix&       V ) ;      
 
       // =======================================================================
       /** Bidiagonalization of of general matrix \f$ A = U B V^T \f$, where
@@ -1407,7 +1531,8 @@ namespace Ostap
        *  @param U (OUTPUT/UPDATE) orthogonal matrix U
        *  @param B (OUTPUT/UPDATE) bidiagonal matrix B
        *  @param V (OUTPUT/UPDATE) orthogonal matrix V
-       *  @return status code        
+       *  @return status code
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization       
        */
       Ostap::StatusCode UBVT
       ( const Matrix& A ,
@@ -1423,27 +1548,32 @@ namespace Ostap
        *  - \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
        *  @param A (INPUT) input matrix A
        *  @param U (OUTPUT/UPDATE) orthogonal matrix U
-       *  @param d (OUTPUT/UPDATE) diagonal 
-       *  @param s (OUTPUT/UPDATE) super-diagonal  
+       *  @param B (OUTPUT/UPDATE) bidiagonal matrix B
        *  @param V (OUTPUT/UPDATE) orthogonal matrix V
-       *  @return status code        
+       *  @return status code
+       *  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization       
        */
-      Ostap::StatusCode UBVT
+      inline Ostap::StatusCode
+      bidiagonalization 
       ( const Matrix& A ,
         Matrix&       U ,
-        Vector&       d ,
-        Vector&       s ,        
-        Matrix&       V ) ;      
-      
+        Matrix&       B , 
+        Matrix&       V )
+      { return UBVT ( A , U , B , V ) ; } 
+            
       // ======================================================================
       // Schur' decomposition of square matrix
       // ======================================================================
       
       // ======================================================================
-      /** Schur's decomposition of square matrix \f$ A = Z T Z^T\f$, where 
+      /** Schur's decomposition of square matrix \f$ A = Z T Z^T\f$, where
        *  - A is input MxM (square) matrix
        *  - S is Schur' form of matrix  
-       *  - Z is orthogonal matrix 
+       *  - Z is orthogonal matrix
+       *
+       *  Eigen value decomposition for non-symmetric real matrices 
+       *  @see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems
+       *  @see gsl_eigen_nonsymm_Z
        */
       Ostap::StatusCode SCHUR 
       ( const Matrix&  A ,  
@@ -1456,7 +1586,7 @@ namespace Ostap
       // ======================================================================
       
       // ======================================================================
-      /** Polar decompositon of the square matrix A: \f$ A = UP \f$
+      /** Polar decomposition of the square matrix A: \f$ A = UP \f$
        *  - U is orthogonal 
        *  - P is positive semi-definitive 
        */

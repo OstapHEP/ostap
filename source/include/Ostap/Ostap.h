@@ -32,6 +32,7 @@
 #include "Ostap/Combine.h"
 #include "Ostap/Combiner.h"
 #include "Ostap/Comparisons.h"
+#include "Ostap/Constants.h"
 #include "Ostap/CornishFisher.h"
 #include "Ostap/Covariance.h"
 #include "Ostap/Covariances.h"

@@ -384,7 +384,7 @@ def test_linalg_UBVT ( M = 4 , N = 5 ) :
     with GslError() : 
         ## UBVT-decomposition 
         U , B , V  = A.UBVT () 
-        
+
     logger.info ( 'UBVT decomposition: U :\n%s' % U )
     logger.info ( 'UBVT decomposition: B :\n%s' % B )
     logger.info ( 'UBVT decomposition: V :\n%s' % V )
@@ -417,17 +417,16 @@ def test_linalg_SCHUR ( M = 4 ) :
             
     logger.info ( 'SCHUR The matrix is:\n%s' % A )
 
-    ## COD-decomposition 
+    ## Schur-decomposition 
     Z , S = A.SCHUR() 
     
     logger.info ( 'SCHUR decomposition: Z :\n%s' % Z )
     logger.info ( 'SCHUR decomposition: S :\n%s' % S )
 
-
+    
     logger.info ( 'SCHUR decomposition: Z^T*Z-1 :\n%s' % ( Z.T() * Z      - 1 ) )
     logger.info ( 'SCHUR decomposition: Z*Z^T-1 :\n%s' % ( Z     * Z.T () - 1 ) )
     
-
     D      = Z * S * Z.T() - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
     logger.info ( 'SCHUR max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
@@ -455,17 +454,20 @@ def test_linalg_POLAR( M = 4 ) :
             
     logger.info ( 'POLAR The matrix is:\n%s' % A )
 
-    ## COD-decomposition 
+    ## POLAR-decomposition 
     U , P = A.POLAR() 
     
     logger.info ( 'POLAR decomposition: U :\n%s' % U )
     logger.info ( 'POLAR decomposition: P :\n%s' % P )
     
+    logger.info ( 'POLAR decomposition: U^T*U-1 :\n%s' % ( U.T() * U      - 1 ) )
+    logger.info ( 'POLAR decomposition: U*U^T-1 :\n%s' % ( U     * U.T () - 1 ) )
+
     D      = U * P - A 
     delta1 = Ostap.Math.maxabs_element ( D ) 
     logger.info ( 'POLAR max-difference %s :\n%s' % ( nice_print ( delta1 ) , D ) ) 
     
-    UU      = U * U.t() 
+    UU      = U * U.T() 
     UU     -= 1 
     delta2  = Ostap.Math.maxabs_element ( UU )    
     logger.info ( 'POLAR non-orthogonality of U %s \n%s' % ( nice_print ( delta2 ) , UU ) ) 
@@ -479,7 +481,6 @@ def test_linalg_POLAR( M = 4 ) :
 # =============================================================================
 if '__main__' == __name__ :
 
-    """
     test_linalg_PLU   ( 3, 6 )
     test_linalg_PLU   ( 3, 3 )
     test_linalg_PLU   ( 6, 3 )
@@ -520,20 +521,18 @@ if '__main__' == __name__ :
     test_linalg_UHUT  ( 6 )    
     test_linalg_UHUT  ( 8 )    
 
-    """
 
     test_linalg_UBVT  ( 5 , 3 )    
     test_linalg_UBVT  ( 3 , 6 )    
-    test_linalg_UBVT  ( 8 , 8 )    
-    
-    """
+    test_linalg_UBVT  ( 8 , 8 )
+        
     test_linalg_SCHUR ( 3 )
     test_linalg_SCHUR ( 6 )
     test_linalg_SCHUR ( 8 )
-    
+
     test_linalg_POLAR ( 3 )
     test_linalg_POLAR ( 6 )
-    """
+    test_linalg_POLAR ( 8 )
     
 # =============================================================================
 ##                                                                      The END 

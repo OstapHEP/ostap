@@ -20,6 +20,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Constants.h"
 #include "Ostap/Epsilon.h"
 #include "Ostap/Math.h"
 #include "Ostap/Norms.h"
@@ -69,7 +70,7 @@ namespace Ostap
       //
       // 3. Compute SVD using the GSL module
       const Ostap::StatusCode sc = Ostap::Math::GSL::SVD( A , S , U , V ) ;
-      if ( sc.isFailure () ) { return static_cast<T> ( INVALID_NORM_v ) ; }
+      if ( sc.isFailure () ) { return static_cast<T> ( Ostap::v_INVALID_NORM ) ; }
       //      
       // 4. Spectral norm is the maximum singular value
       return static_cast<T> ( norm_max ( S ) ) ;
@@ -91,7 +92,7 @@ namespace Ostap
       //
       // compute eigenvalues 
       const Ostap::StatusCode sc = eigen_system.eigenValues ( m , values , false ) ;
-      if ( sc.isFailure () ) { return static_cast<T> ( INVALID_NORM_v ) ; }
+      if ( sc.isFailure () ) { return static_cast<T> ( Ostap::v_INVALID_NORM ) ; }
       //
       //  Spectral norm is the maximum singular value
       return static_cast<T> ( norm_max ( values ) ) ;
@@ -121,7 +122,7 @@ namespace Ostap
       //
       // 3. Compute SVD using the GSL module
       const Ostap::StatusCode sc = Ostap::Math::GSL::SVD( A , S , U , V ) ;
-      if ( sc.isFailure () ) { return staic_cast<T> ( INVALID_NORM_v ) ; }
+      if ( sc.isFailure () ) { return static_cast<T> ( Ostap::v_INVALID_NORM ) ; }
       //      
       // 4. Nuclear norm is a sum of singular values 
       return norm_L1 ( S );
@@ -143,7 +144,7 @@ namespace Ostap
       //
       // compute eigenvalues 
       const Ostap::StatusCode sc = eigen_system.eigenValues ( m , values , false ) ;
-      if ( sc.isFailure () ) { return static_cast<T> ( INVALID_NORM_v ) ; }
+      if ( sc.isFailure () ) { return static_cast<T> ( Ostap::v_INVALID_NORM ) ; }
       //
       //  Nuclear norm is a sum of singular value = sum of eigenvalues moduli 
       return static_cast<T> ( norm_L1( values ) ) ;
@@ -174,8 +175,8 @@ namespace Ostap
       Ostap::Math::GSL::Matrix V ( D2 , K ) ;
       //
       // 3. Compute SVD using the GSL module
-      const Ostap::StatusCode sc = Ostap::Math::GSL::SVD( A , S , U , V ) ;
-      if ( sc.isFailure () ) { return INVALID_NORM_v ; }
+      const Ostap::StatusCode sc = Ostap::Math::GSL::SVD ( A , S , U , V ) ;
+      if ( sc.isFailure () ) { return static_cast<T> ( Ostap::v_INVALID_NORM ) ; }
       //      
       // 4. Schatten' norm is Lp norm fro vector of singular values 
       return norm_Lp ( S , p );
@@ -199,7 +200,7 @@ namespace Ostap
       //
       // compute eigenvalues 
       const Ostap::StatusCode sc = eigen_system.eigenValues ( m , values , false ) ;
-      if ( sc.isFailure () ) { return static_cast<T> ( INVALID_NORM_v ) ; }
+      if ( sc.isFailure () ) { return static_cast<T> ( Ostap::v_INVALID_NORM ) ; }
       //
       //  Schatten' norm is a Lp norm of vector of eigenvalues 
       return static_cast<T> ( norm_Lp ( values , p ) ) ;

@@ -14,6 +14,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/StatusCode.h"
+#include "Ostap/Constants.h"
 #include "Ostap/Math.h"
 #include "Ostap/MatrixUtilsT.h"
 // ============================================================================
@@ -89,7 +90,7 @@ std::size_t Ostap::Math::rank
 double Ostap::Math::norm_spectral
 ( const TMatrixT<float>&     matrix )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   /// convert to double 
   TMatrixT<double> m { matrix } ;
   return norm_spectral ( m ) ;
@@ -103,10 +104,10 @@ double Ostap::Math::norm_spectral
 double Ostap::Math::norm_spectral
 ( const TMatrixT<double>&     matrix )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   /// SVD decomposition
   TDecompSVD svd ( matrix );
-  if ( !svd.Decompose () ) { return INVALID_NORM_v ; }
+  if ( !svd.Decompose () ) { return Ostap::v_INVALID_NORM ; }
 
   //
   return norm_Linf ( svd.GetSig() ) ;    
@@ -120,7 +121,7 @@ double Ostap::Math::norm_spectral
 double Ostap::Math::norm_spectral
 ( const TMatrixTSym<float>&     matrix )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   /// convert to double 
   TMatrixTSym<double> m { matrix } ;
   return norm_spectral ( m ) ;  
@@ -134,7 +135,7 @@ double Ostap::Math::norm_spectral
 double Ostap::Math::norm_spectral
 ( const TMatrixTSym<double>&     matrix )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   // 
   TMatrixDSymEigen eigen ( matrix ) ;
   return norm_Linf ( eigen.GetEigenValues () ) ;
@@ -150,7 +151,7 @@ double Ostap::Math::norm_spectral
 double Ostap::Math::norm_nuclear 
 ( const TMatrixT<float>&     matrix )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   /// convert to double 
   TMatrixT<double> m { matrix } ;
   return norm_nuclear ( m ) ;
@@ -164,7 +165,7 @@ double Ostap::Math::norm_nuclear
 double Ostap::Math::norm_nuclear 
 ( const TMatrixTSym<float>&     matrix )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   /// convert to double 
   TMatrixTSym<double> m { matrix } ;
   return norm_nuclear ( m ) ;
@@ -178,10 +179,10 @@ double Ostap::Math::norm_nuclear
 double Ostap::Math::norm_nuclear 
 ( const TMatrixT<double>&     matrix )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   /// SVD decomposition
   TDecompSVD svd ( matrix );
-  if ( !svd.Decompose () ) { return INVALID_NORM_v ; }
+  if ( !svd.Decompose () ) { return Ostap::v_INVALID_NORM ; }
   //
   return sum ( svd.GetSig() ) ;    
 }   
@@ -194,7 +195,7 @@ double Ostap::Math::norm_nuclear
 double Ostap::Math::norm_nuclear 
 ( const TMatrixTSym<double>&     matrix )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   //
   TMatrixDSymEigen eigen ( matrix ) ;
   return sum1 ( eigen.GetEigenValues () ) ; 
@@ -210,7 +211,7 @@ double Ostap::Math::norm_schatten
 ( const TMatrixT<float>&    matrix , 
   const double              p      )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   /// special cases:
   static const Ostap::Math::Equal_To<double> s_equal {} ;
   static const Ostap::Math::Zero    <double> s_zero  {} ;
@@ -234,7 +235,7 @@ double Ostap::Math::norm_schatten
 ( const TMatrixTSym<float>& matrix , 
   const double              p      )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () != matrix.GetNcols () ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () != matrix.GetNcols () ) { return Ostap::v_INVALID_NORM ; } 
   /// convert to double 
   TMatrixTSym<double> m { matrix } ;
   return norm_schatten ( m , p ) ;
@@ -249,7 +250,7 @@ double Ostap::Math::norm_schatten
 ( const TMatrixT<double>&   matrix , 
   const double              p      )
 {
-  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return INVALID_NORM_v ; } 
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
   ///
   static const Ostap::Math::Equal_To<double> s_equal {} ;
   static const Ostap::Math::Zero    <double> s_zero  {} ;
@@ -261,7 +262,7 @@ double Ostap::Math::norm_schatten
   //  
   /// SVD decomposition
   TDecompSVD svd ( matrix );
-  if ( !svd.Decompose () ) { return INVALID_NORM_v ; }  
+  if ( !svd.Decompose () ) { return Ostap::v_INVALID_NORM ; }  
   //
   return std::pow ( sum_pow ( svd.GetSig() , p ) , 1 / p ) ;
 }

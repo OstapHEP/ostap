@@ -2,11 +2,82 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/math/linalgg.py
-#  Few utilities to simplify linear algebra manipulations using GSL 
+#  Few utilities to simplify linear algebra manipulations using GSL
+#  - easy-to-use wrappers for vector and matrix classes
+#  - easy vector & matrix manipulations and basic operations
+# 
+#  @see https://www.gnu.org/software/gsl/doc/html/vectors.html
+#
+#
+#  Basic Linear Algebra:
+#  - (P)LU       decomposition of general (rectangular) matrix \f$ PA = LU      \f$
+#  - (P)QR       decomposition of general (rectangular) matrix \f$ AP = QR      \f$
+#  - LQ          decomposition of general (rectangular) matrix \f$ A  = LQ      \f$
+#  - QL          decomposition of general (reclangular) matrix \f$ A  = QL      \f$
+#  - COD         decomposition of general (rectangular) matrix \f$ AP = QRZ^T   \f$
+#  - SVD         decomposition of general (rectangular) matrix \f$ AP = U S V^T \f$
+#  - Cholesky    decomposition of symmetric positive-definite matrix \f$ A = L L^T    \f$
+#  - Cholesky    decomposition of symmetric positive-definite matrix \f$ PSASP^T = L D L^T    \f$
+#  - Tridiagonal decomposition of symmetric matrix     \f$ A = Q D_3 Q^T \f$
+#  - Hessenberg  decomposition of square matrix        \f$ A = U H U^T   \f$
+#  - Bidiagonalization of general (rectangular) matrix \f$ A = U B_2 U^T \f$
+#  - Polar       decomposition of square matrix        \f$ A = UP        \f$
+#  - Schur'      decomposition of square matrix        \f$ A = Z S Z^T \f$
+#
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#qr-decomposition-with-column-pivoting
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#lq-decomposition
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#ql-decomposition
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#complete-orthogonal-decomposition
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#singular-value-decomposition
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#cholesky-decomposition
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#pivoted-cholesky-decomposition
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#tridiagonal-decomposition-of-real-symmetric-matrices
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decomposition-of-real-matrices
+#  @see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization
+#  @see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems
+
+#  @see Ostap::Math::GSL
 #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
 #  @date 2009-09-12
 # =============================================================================
-""" Few utilities to simplify linear algebra manipulations unisg GSL 
+""" Few utilities to simplify linear algebra manipulations using GSL
+
+  - easy-to-use wrappers for vector and matrix classes
+  - easy vector & matrix manipulations and basic operations 
+
+see https://www.gnu.org/software/gsl/doc/html/vectors.html
+
+  Basic Linear Algebra:
+  - (P)LU       decomposition of general (rectangular) matrix         PA = LU     
+  - (P)QR       decomposition of general (rectangular) matrix         AP = QR     
+  - LQ          decomposition of general (rectangular) matrix         A  = LQ     
+  - QL          decomposition of general (reclangular) matrix         A  = QL      
+  - COD         decomposition of general (rectangular) matrix         AP = QRZ^T   
+  - SVD         decomposition of general (rectangular) matrix         AP = U S V^T 
+  - Cholesky    decomposition of symmetric positive-definite matrix   A = L L^T    
+  - Cholesky    decomposition of symmetric positive-definite matrix   PSASP^T = L D L^T  
+  - Tridiagonal decomposition of symmetric matrix                     A = Q D_3 Q^T 
+  - Hessenberg  decomposition of square matrix                        A = U H U^T  
+  - Bidiagonalization of general (rectangular) matrix                 A = U B_2 U^T 
+  - Polar       decomposition of square matrix                        A = UP        
+  - Schur'      decomposition of square matrix                        A = Z S Z^T 
+
+see https://www.gnu.org/software/gsl/doc/html/linalg.html
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#lu-decomposition
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#qr-decomposition-with-column-pivoting
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#lq-decomposition
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#ql-decomposition
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#complete-orthogonal-decomposition
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#singular-value-decomposition
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#cholesky-decomposition
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#pivoted-cholesky-decomposition
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#tridiagonal-decomposition-of-real-symmetric-matrices
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#hessenberg-decomposition-of-real-matrices
+see https://www.gnu.org/software/gsl/doc/html/linalg.html#bidiagonalization
+see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems
+
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
@@ -437,8 +508,7 @@ def _to_symtmatrix_ ( mtrx ) :
     """
     ## get dimension 
     nr , nc = mtrx.nRows() , mtrx.nCols()
-    assert nr and nr == nc , "Impossible to crrate symmetruc from rectangular matrix!"
-    
+    if not nr or  nr != nc : raise TypeError ( "Impossible to create symmetric from rectangular matrix!" )     
     ## get the result 
     result  = Ostap.Math.TMatrixSymD ( nr  )
     ## fill it!
@@ -465,30 +535,24 @@ Matrix.kCols = property ( Matrix.nCols , None , None , "`kCols` : number of colu
 _m_shape_    = lambda m : ( m.nRows(), m.nCols() ) 
 Matrix.shape = property ( _m_shape_ , None , None , "`shape` : shape f matrix: (#rows,#columns)" )
 
-def _m_pretty_print_ ( mtrx , **kwargs ) :    
-    return LA.LinAlgT.M_PRETTY ( mtrx , **kwargs )
-def _m_str_          ( mtrx , **kwargs ) :    
-    return LA.LinAlgT.M_STR    ( mtrx , **kwargs )
+def _m_pretty_print_ ( mtrx , **kwargs ) : return LA.LinAlgT.M_PRETTY ( mtrx , **kwargs )
+def _m_str_          ( mtrx , **kwargs ) : return LA.LinAlgT.M_STR    ( mtrx , **kwargs )
 
 Matrix.pretty_print  = _m_pretty_print_
 Matrix.table         = _m_str_ 
 Matrix.__str__       = _m_str_ 
 Matrix.__repr__      = _m_str_ 
 
-def _v_pretty_print_ ( mtrx , **kwargs ) :    
-    return LA.LinAlgT.V_PRETTY ( mtrx , **kwargs )
-def _v_str_          ( mtrx , **kwargs ) :    
-    return LA.LinAlgT.V_STR    ( mtrx , **kwargs )
+def _v_pretty_print_ ( mtrx , **kwargs ) : return LA.LinAlgT.V_PRETTY ( mtrx , **kwargs )
+def _v_str_          ( mtrx , **kwargs ) : return LA.LinAlgT.V_STR    ( mtrx , **kwargs )
 
 Vector.pretty_print  = _v_pretty_print_
 Vector.table         = _v_str_ 
 Vector.__str__       = _v_str_ 
 Vector.__repr__      = _v_str_ 
 
-def _p_pretty_print_ ( mtrx , **kwargs ) :    
-    return LA.LinAlgT.P_PRETTY ( mtrx , **kwargs )
-def _p_str_          ( mtrx , **kwargs ) :    
-    return LA.LinAlgT.P_STR    ( mtrx , **kwargs )
+def _p_pretty_print_ ( mtrx , **kwargs ) : return LA.LinAlgT.P_PRETTY ( mtrx , **kwargs )
+def _p_str_          ( mtrx , **kwargs ) : return LA.LinAlgT.P_STR    ( mtrx , **kwargs )
 
 Permutation.pretty_print  = _p_pretty_print_
 Permutation.table         = _p_str_ 
@@ -496,7 +560,7 @@ Permutation.__str__       = _p_str_
 Permutation.__repr__      = _p_str_ 
 
 # =============================================================================
-# True LinearAlgebra stuff
+# True Linear Algebra stuff
 # =============================================================================
 
 # =============================================================================
@@ -509,7 +573,7 @@ Permutation.__repr__      = _p_str_
 #  P, L, U = A.PLU() 
 #  @endcode
 def _m_PLU_ ( A ) : 
-    """ Get (P)LU decomposition of matrix into P,L,U , sch  as \f$  PA = LU \f$, where 
+    """ Get (P)LU decomposition of matrix into P,L,U , such  as \f$  PA = LU \f$, where 
       - P is permutation
       - L is lower triangular matrix
     - U is upper triangular matrix with all diagonal elements equal to 1  
@@ -578,12 +642,12 @@ def _m_PQRr_ ( A ) :
     return P, Q , R, r.value 
 
 # ===============================================================================
-## Get LQ decompositionn with column piviting such as  \f$ A = LQ\f$
+## Get LQ decomposition such as  \f$ A = LQ\f$
 #  - A is input MxN matrix 
 #  - L is lower trapezoidal  MxN matrix
 #  - Q is orthogonal NxN matrix
 def _m_LQ_ ( A ) :
-    """ Get LQ decomposition with column piviting such as  A = LQ
+    """ Get LQ decomposition such as  A = LQ
     - A is input MxN matrix 
     - L is lower trapezoidal  MxN matrix
     - Q is orthogonal NxN matrix    
@@ -598,7 +662,7 @@ def _m_LQ_ ( A ) :
     return L , Q 
 
 # ===============================================================================
-## Get QL decompositionn with column piviting such as  \f$ A = QL \f$
+## Get QL decomposition such as  \f$ A = QL \f$
 #  - A is input MxN matrix 
 #  - Q is orthogonal MxM matrix
 #  - L is lower trapezoidal  MxN matrix
@@ -758,7 +822,7 @@ def _m_D3_ ( A ) :
     return Q , D 
 
 # ================================================================================
-## Hessenberg decomposition of square matrix \f$ A = U H Q^T \f$, where
+## Hessenberg decomposition of square matrix \f$ A = U H U^T \f$, where
 #  - \f$ U \f$ is orthogonal 
 #  - \f$ H \f$ is Hessenberg' matrix: \f$ H(i,i)=0 \f$ for \f$ i > j + 1 \f$
 #  @param A (INPUT) input matrix A
@@ -783,11 +847,13 @@ def _m_UHUT_ ( A ) :
     return U , H 
     
 # ================================================================================
-## Bidiagonalization of of general matrix \f$ A = U B V^T \f$ , where
+## Bidiagonalization of of general matrix \f$ A = U B_2 V^T \f$ , where
 # - \f$ A \f$ is \f$ M \times N \f$ matrix
-# - \f$ U \f$ is \f$ M\times N \f$ orthogonal matrix 
-# - \f$ B \f$ is \f$ N\times N\f$  square biadiagonal matrix : \f$ B_{i,j} = 0\f$ if \f$ j \ne i,i+1\f$
-#  \f$ V \f$ is \f$ N\times N \f$ orthogonal matrix 
+# - \f$ U \f$ is \f$ M \times K \f$ orthogonal matrix 
+# - \f$ B \f$ is \f$ K \times K \f$ square biadiagonal matrix 
+# - \f$ V \f$ is \f$ N \times K \f$ orthogonal matrix
+# - K = min ( M , N )
+# 
 #  @param A (INPUT) input matrix A
 #  @param U (OUTPUT/UPDATE) orthogonal matrix U
 #  @param B (OUTPUT/UPDATE) bidiagonal matrix B
@@ -795,23 +861,27 @@ def _m_UHUT_ ( A ) :
 def _m_UBVT_  ( A ) :
     """ Bidiagonalization of of general matrix: A = U B V^T , where
     - A  is  M times N  matrix
-    - U  is  M times N  orthogonal matrix
-    - B  is  N times N  square biadiagonal matrix : B_{i,j} = 0 if  j != i,i+1 
-    - V  is  N times N  orthogonal matrix 
+    - U  is  M times K  orthogonal matrix
+    - B  is  K times K  square biadiagonal matrix 
+    - V  is  N times K  orthogonal matrix
+    - K = min ( M , N ) 
     >>> A = ...
-    >>> U, B, V = A.UBVT()
+    >>> U , B , V = A.UBVT()
     """
+    
     M, N = A.nRows() , A.nCols ()
-    assert 2 <=  min ( M , N )  , "Bidiagonalization is defined for 2x2 or larger matrices!" 
-    U  = Matrix  ( M , N )
-    B  = Matrix  ( N , N )
-    V  = Matrix  ( N , N )
+    assert 2 <=  min ( M , N )  , "Bidiagonalization is defined for 2x2 or larger matrices!"
+
+    K = min ( M , N )
+    
+    U = Matrix ( M , K )
+    B = Matrix ( K , K )
+    V = Matrix ( N , K )
+    
     sc = Ostap.Math.GSL.UBVT ( A , U , B , V ) 
     if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::UBVT" % sc )
     ## 
     return U , B , V 
-
-
 
 # ===============================================================================
 ## Polar decompositon of the square matrix A: \f$ A = UP \f$
@@ -836,13 +906,16 @@ def _m_POLAR_ ( A ) :
 # ===============================================================================
 ## Schur decompositon of the square matrix A: \f$ A = Z T z^t \f$
 #  - Z is orthogonal 
-#  - T is a Schur form  
+#  - T is a Schur form
+#  @see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems
 def _m_SCHUR_ ( A ) :
     """ Schur decomposition of the square matrix A: A = Z T Z^T
     - Z is orthogonal 
     - T is a Schur forms  
     >>> A = ...,
-    >>> Z , T = A.SCHUR () 
+    >>> Z , T = A.SCHUR ()
+    
+    see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems    
     """
     M, N = A.nRows() , A.nCols ()
     assert M == N , "Schur decomposition is defined only for square matrices!"
@@ -851,7 +924,6 @@ def _m_SCHUR_ ( A ) :
     sc = Ostap.Math.GSL.SCHUR ( A , Z , T )
     if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::SCHUR" % sc )    
     return Z , T  
-
 
 Matrix.PLU       = _m_PLU_
 Matrix.PQR       = _m_PQR_ 
@@ -866,8 +938,9 @@ Matrix.D3        = _m_D3_
 Matrix.UHUT      = _m_UHUT_
 Matrix.UBVT      = _m_UBVT_
 
-Matrix.SCHUR     = _m_SCHUR_  
 Matrix.POLAR     = _m_POLAR_ 
+Matrix.SCHUR     = _m_SCHUR_  
+
 Matrix.t         = Matrix.T
 Matrix.transpose = Matrix.T
 

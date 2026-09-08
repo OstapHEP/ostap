@@ -8,6 +8,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Constants.h"
 #include "Ostap/LinAlg.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/Buffer.h"
@@ -2472,7 +2473,7 @@ double Ostap::Math::norm_spectral
   Ostap::Math::GSL::Matrix V ( N , K ) ;
   //
   const Ostap::StatusCode sc = Ostap::Math::GSL::SVD ( m, s, U, V ) ;
-  if ( sc.isFailure() ) { return INVALID_NORM_v ; }
+  if ( sc.isFailure() ) { return Ostap::v_INVALID_NORM ; }
   //
   return Ostap::Math::max_element ( s ) ;
 }
@@ -2496,7 +2497,7 @@ double Ostap::Math::norm_nuclear
   Ostap::Math::GSL::Matrix V ( N , K ) ;
   //
   const Ostap::StatusCode sc = Ostap::Math::GSL::SVD ( m, s, U, V ) ;
-  if ( sc.isFailure() ) { return INVALID_NORM_v ; }
+  if ( sc.isFailure() ) { return Ostap::v_INVALID_NORM ; }
   //
   return sum ( s ) ;
 }
@@ -2530,7 +2531,7 @@ double Ostap::Math::norm_schatten
   Ostap::Math::GSL::Matrix V ( N , K ) ;
   //
   const Ostap::StatusCode sc = Ostap::Math::GSL::SVD ( m, s, U, V ) ;
-  if ( sc.isFailure() ) { return INVALID_NORM_v ; }
+  if ( sc.isFailure() ) { return Ostap::v_INVALID_NORM ; }
   //
   double sump = sum_pow ( s , p ) ;
   //
@@ -3601,8 +3602,8 @@ Ostap::StatusCode Ostap::Math::GSL::UBVT
   Vector tau_V { N - 1 } ;
   
   int status = gsl_linalg_bidiag_decomp ( a    .matrix () ,
-                                        tau_U.vector () , 
-                                        tau_V.vector () ) ;
+                                          tau_U.vector () , 
+                                          tau_V.vector () ) ;
   if ( status )
   {
     gsl_error ( "UBVT: error from gsl_linalg_bidiag_decomp" , __FILE__ , __LINE__ , status ) ;
@@ -3702,7 +3703,7 @@ Ostap::StatusCode Ostap::Math::GSL::UBVT
 // ============================================================================
 /*  Polar decompositon of the square matrix A: \f$ A = UP \f$
  *  - U is orthogonal 
- *  - P is positibe semi-definitive 
+ *  - P is positive semi-definitive 
  */
 // ============================================================================
 Ostap::StatusCode Ostap::Math::GSL::POLAR
@@ -3788,7 +3789,10 @@ namespace Ostap
 /* Schur decomposition of square matrix \f$ A = Z S Z^T\f$, where 
  *  - A is input MxM (square) matrix
  *  - S is Schur' form of matix  
- *  - Z is orthogonal matrix 
+ *  - Z is orthogonal matrix
+ *  Eigen value decomposition for non-symmetric real matrices 
+ *  @see https://www.gnu.org/software/gsl/doc/html/eigen.html#real-generalized-nonsymmetric-eigensystems
+ *  @see gsl_eigen_nonsymm_Z 
  */
 // ==============================================================================
 Ostap::StatusCode Ostap::Math::GSL::SCHUR 
@@ -3827,7 +3831,7 @@ Ostap::StatusCode Ostap::Math::GSL::SCHUR
   }
   //
   
-  // remove the garbage below first subdiagonal 
+  // Remove all the garbage below the first subdiagonal 
   gsl_matrix* s = S.matrix() ; 
   for ( std::size_t i = 2 ; i < N ; ++i )
   { for ( std::size_t j = 0 ; j < i - 1 ; ++j )

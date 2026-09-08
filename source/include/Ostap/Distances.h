@@ -10,6 +10,7 @@
 // ==========================================================================
 // Ostap::
 // ==========================================================================
+#include "Ostap/Constants.h"
 #include "Ostap/MatrixUtils.h"
 #include "Ostap/EigenSystem.h"
 // ==========================================================================
@@ -30,7 +31,7 @@ namespace Ostap
      *  @param c1 the first  covariance matrix 
      *  @param v2 the second data vector 
      *  @param c2 the second covariance matrix 
-     *  @return (asymmetric) Kullback-Leibler divergency, or -999 
+     *  @return (asymmetric) Kullback-Leibler divergency, or Ostap::v_INVALID_DISTANCE
      */
     template <unsigned int N, typename SCALAR>
     inline double 
@@ -43,14 +44,12 @@ namespace Ostap
       /// the actual type of covariance matrix
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
       ///
-      static const double s_bad = -999 ;
-      ///
       // Specialization for N = 1 to avoid Cling warnings and overhead
       if constexpr ( N == 1 ) 
       {
         const double var1 = c1 ( 0 , 0 ) ;
         const double var2 = c2 ( 0 , 0 ) ;
-        if ( var1 <= 0 || var2 <= 0 ) { return s_bad ; }
+        if ( var1 <= 0 || var2 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
 
         const double diff     = v2 [ 0 ] - v1 [ 0 ];
         const double inv_var2 = 1.0 / var2;
@@ -60,13 +59,13 @@ namespace Ostap
       }
       //
       SCALAR det1 = 1 ;
-      if ( !c1.Det2 ( det1 ) || det1 <= 0 ) { return s_bad ; }
+      if ( !c1.Det2 ( det1 ) || det1 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
       SCALAR det2 = 1 ;
-      if ( !c2.Det2 ( det2 ) || det2 <= 0 ) { return s_bad ; }
+      if ( !c2.Det2 ( det2 ) || det2 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
       //
       /// try to invert matrices 
       COV g2 { c2 } ;
-      if  ( !g2.InvertChol () ) { return s_bad ; }
+      if  ( !g2.InvertChol () ) { return Ostap::v_INVALID_DISTANCE ; }
       //
       return 0.5 * ( Ostap::Math::trace     ( g2 * c1      ) - N  + 
                      ROOT::Math::Similarity ( g2 , v2 - v1 ) + 
@@ -84,7 +83,7 @@ namespace Ostap
      *  @param c1 the first  covariance matrix 
      *  @param v2 the second data vector 
      *  @param c2 the second covariance matrix 
-     *  @return Symmetrised Kullback-Leibler/Jeffrey divergency, or -999 
+     *  @return Symmetrised Kullback-Leibler/Jeffrey divergency, or Ostap::v_INVALID_DISTANCE 
      */
     template <unsigned int N, typename SCALAR>
     inline double jeffrey 
@@ -96,12 +95,11 @@ namespace Ostap
       /// the actual type of covariance matrix
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
       ///
-      static const double s_bad = -999 ;
       /// try to invert matrices 
       COV g1 { c1 } ;
-      if  ( !g1.InvertChol () ) { return s_bad ; }
+      if  ( !g1.InvertChol () ) { return Ostap::v_INVALID_DISTANCE ; }
       COV g2 { c2 } ;
-      if  ( !g2.InvertChol () ) { return s_bad ; }
+      if  ( !g2.InvertChol () ) { return Ostap::v_INVALID_DISTANCE ; }
       ///
       return 0.5 * ( ROOT::Math::Similarity ( g1 + g2   , v2 - v1   ) + 
                      Ostap::Math::trace     ( g2 * c1 ) +
@@ -122,7 +120,7 @@ namespace Ostap
      *  @param v2 (INPUT) the second data vector
      *  @param c2 (INPUT) the covariance matrix for the second data vector
      *  @param n2 (INPUT) sum of weights (sample size) for the second dataset 
-     *  @return Jensen-Shannon divergence, or -999 on failure (invalid matrices or n1, n2 <= 1.0)
+     *  @return Jensen-Shannon divergence, or Ostap::v_INVALID_DISTANCE on failure (invalid matrices or n1, n2 <= 1.0)
      *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2023-03-07
@@ -137,9 +135,7 @@ namespace Ostap
       const double                                                            n2 ) 
     {
       //
-      static const double s_bad = -999 ;
-      //
-      if ( n1 <= 1.0 || n2 <= 1.0 ) { return s_bad ; }
+      if ( n1 <= 1.0 || n2 <= 1.0 ) { return Ostap::v_INVALID_DISTANCE ; }
       //
       const double w1 = ( n1 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
       const double w2 = ( n2 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
@@ -163,9 +159,12 @@ namespace Ostap
       }
       ///
       const double kl1 = kullback_leibler ( v1 , c1 , v , c ) ;
-      const double kl2 = kullback_leibler ( v2 , c2 , v , c ) ;
+      if ( Ostap::v_INVALID_DISTANCE == kl1 ) { return Ostap::v_INVALID_DISTANCE ; }
       //
-      return ( s_bad == kl1 || s_bad == kl2 ) ? s_bad : w1 * kl1 + w2 * kl2 ;
+      const double kl2 = kullback_leibler ( v2 , c2 , v , c ) ;
+      if ( Ostap::v_INVALID_DISTANCE == kl2 ) { return Ostap::v_INVALID_DISTANCE ; }
+      //
+      return w1 * kl1 + w2 * kl2 ;
     }
     // ========================================================================
     /** Get the symmetric Jensen-Shannon divergence between two multivariate Gaussians (equal weights w1 = w2 = 0.5)
@@ -177,7 +176,7 @@ namespace Ostap
      *  @param c1 (INPUT) the covariance matrix for the first data vector
      *  @param v2 (INPUT) the second data vector
      *  @param c2 (INPUT) the covariance matrix for the second data vector
-     *  @return Symmetric Jensen-Shannon divergence, or -999 on failure
+     *  @return Symmetric Jensen-Shannon divergence, or Ostap::v_INVALID_DISTANCE on failure
      */
     template <unsigned int N, typename SCALAR>
     inline double jensen_shannon
@@ -211,9 +210,7 @@ namespace Ostap
       const double                                                            n2 ) 
     {
       //
-      static const double s_bad = -999 ;
-      //
-      if ( n1 <= 1.0 || n2 <= 1.0 ) { return s_bad ; } 
+      if ( n1 <= 1.0 || n2 <= 1.0 ) { return Ostap::v_INVALID_DISTANCE ; } 
       /// the actual type of covariance matrix
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
       //
@@ -224,19 +221,19 @@ namespace Ostap
       if constexpr ( N == 1 ) 
       {
         const double si_val = w1 * c1 ( 0 , 0 ) + w2 * c2 ( 0 , 0 );
-        if ( si_val <= 0 ) { return s_bad ; }
+        if ( si_val <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
 
         const double diff   = v1 [ 0 ] - v2 [ 0 ];
         const double result = ( diff * diff ) / si_val;
-        return 0 <= result ? std::sqrt ( result ) : s_bad ;
+        return 0 <= result ? std::sqrt ( result ) : Ostap::v_INVALID_DISTANCE ;
       }
       //      
       // pooled covariace matrix 
       COV si { w1 * c1 + w2 * c2 } ;
-      if ( !si.InvertChol () ) { return s_bad ; }      
+      if ( !si.InvertChol () ) { return Ostap::v_INVALID_DISTANCE ; }      
       //
       const double result = ROOT::Math::Similarity ( si , v1 - v2 ) ;
-      return 0 <= result ? std::sqrt ( result ) : s_bad ;
+      return 0 <= result ? std::sqrt ( result ) : Ostap::v_INVALID_DISTANCE ;
     }
     // ========================================================================
     /** get Mahalanobis' distance
@@ -284,9 +281,7 @@ namespace Ostap
       const double                                                            n2 ) 
     {
       //
-      static const double s_bad = -999 ;
-      //
-      if ( n1 <= 1.0 || n2 <= 1.0 ) { return s_bad ; } 
+      if ( n1 <= 1.0 || n2 <= 1.0 ) { return Ostap::v_INVALID_DISTANCE ; } 
       /// the actual type of covariance matrix
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> > COV ;
       //
@@ -297,7 +292,7 @@ namespace Ostap
       if constexpr ( N == 1 ) 
       {
         const double si_val = w1 * c1 ( 0 , 0 ) + w2 * c2 ( 0 , 0 ) ;
-        if ( si_val <= 0 ) { return s_bad ; }
+        if ( si_val <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
 
         const double diff = v1 [ 0 ] - v2 [ 0 ];
         const double quad = ( diff * diff ) / si_val;
@@ -306,7 +301,7 @@ namespace Ostap
       //
       // pooled covariace matrix 
       COV si { w1 * c1 + w2 * c2 } ;
-      if ( !si.InvertChol () ) { return s_bad ; }      
+      if ( !si.InvertChol () ) { return Ostap::v_INVALID_DISTANCE ; }      
       //
       return n1 * n2 / ( n1 + n2 ) * ROOT::Math::Similarity ( si , v1 - v2 ) ;
     }
@@ -338,9 +333,7 @@ namespace Ostap
       const double                                                            n2 )
     {
       //
-      static const double s_bad = -999 ;
-      //
-      if ( n1 <= 1.0 || n2 <= 1.0 ) { return s_bad ; } 
+      if ( n1 <= 1.0 || n2 <= 1.0 ) { return Ostap::v_INVALID_DISTANCE ; } 
       //
       const double w1 = ( n1 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
       const double w2 = ( n2 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
@@ -352,7 +345,7 @@ namespace Ostap
         const double c200   = c2 ( 0 , 0 ) ;
         
         const double si_val = w1 * c100 + w2 * c200 ;
-        if ( si_val <= 0 || c100 <= 0 || c200 <= 0 ) { return s_bad ; }
+        if ( si_val <= 0 || c100 <= 0 || c200 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
 
         const double quad = ( diff * diff ) / si_val;
         
@@ -368,14 +361,14 @@ namespace Ostap
       //
       // (1) calculate the determinant of pooled matrix
       SCALAR det  = 1 ;
-      if ( !si.Det2 ( det ) || det <= 0 ) { return s_bad ; }
+      if ( !si.Det2 ( det ) || det <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
       // (2) invert it for quadratic form
-      if ( !si.InvertChol ()            ) { return s_bad ; }      
+      if ( !si.InvertChol ()            ) { return Ostap::v_INVALID_DISTANCE ; }      
       //
       SCALAR det1 = 1 ;
-      if ( !c1.Det2 ( det1 ) || det1 <= 0 ) { return s_bad ; }
+      if ( !c1.Det2 ( det1 ) || det1 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
       SCALAR det2 = 1 ;
-      if ( !c2.Det2 ( det2 ) || det2 <= 0 ) { return s_bad ; }
+      if ( !c2.Det2 ( det2 ) || det2 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
       //
       const double quad = ROOT::Math::Similarity ( si , v2 - v1 ) ;
 
@@ -431,9 +424,7 @@ namespace Ostap
       const double                                                            n2 ) 
     {
       //
-      static const double s_bad = -999 ;
-      //
-      if ( n1 <= 1.0 || n2 <= 1.0 ) { return s_bad ; } 
+      if ( n1 <= 1.0 || n2 <= 1.0 ) { return Ostap::v_INVALID_DISTANCE ; } 
       /// the actual type of covariance matrix
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >   COV ;
       /// the actual type of cholesky matrix 
@@ -452,7 +443,7 @@ namespace Ostap
         const double c200   = c2 ( 0 , 0 ) ;
         //
         const double si      = w1 * c100 + w2 * c200 ;
-        if ( si <= 0 ) { return s_bad ; }
+        if ( si <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
         //
         const double result1 = ( diff * diff ) / si ;
         const double cross   = std::sqrt ( c100 * c200 ) ;
@@ -463,19 +454,19 @@ namespace Ostap
       //      
       // pooled covariace matrix 
       COV si { w1 * c1 + w2 * c2 } ;
-      if ( !si.InvertChol () ) { return s_bad ; }      
+      if ( !si.InvertChol () ) { return Ostap::v_INVALID_DISTANCE ; }      
       //
       /// the first term 
       const double result1 = ROOT::Math::Similarity ( si , v1 - v2 ) ;
       ///
       CHOL L {} ;
-      if ( !cholesky ( c1 , L ) ) { return s_bad ; }
+      if ( !cholesky ( c1 , L ) ) { return Ostap::v_INVALID_DISTANCE ; }
       /// helper matrix M 
       const COV M { ROOT::Math::Similarity ( L , c2 ) } ;
       ///
       EVCT V {} ;
       const Ostap::Math::GSL::EigenSystem eigen {} ;
-      if ( !eigen.eigenValues ( M , V ).isSuccess() ) { return s_bad ; }
+      if ( !eigen.eigenValues ( M , V ).isSuccess() ) { return Ostap::v_INVALID_DISTANCE ; }
       //
       double result2 = 0 ;
       for ( unsigned int i = 0 ; i < N ; ++i )
@@ -541,9 +532,7 @@ namespace Ostap
       const double                                                            n2 ) 
     {
       //
-      static const double s_bad = -999 ;
-      //
-      if ( n1 <= 1.0 || n2 <= 1.0 ) { return s_bad ; } 
+      if ( n1 <= 1.0 || n2 <= 1.0 ) { return Ostap::v_INVALID_DISTANCE ; } 
       //
       const double w1 = ( n1 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
       const double w2 = ( n2 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
@@ -556,7 +545,7 @@ namespace Ostap
         const double c200   = c2 ( 0 , 0 ) ;
         
         const double si_val = w1 * c100 + w2 * c200 ;
-        if ( si_val <= 0 || c100 <= 0 || c200 <= 0 ) { return s_bad ; }
+        if ( si_val <= 0 || c100 <= 0 || c200 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
 
         const double quad      = ( diff * diff ) / si_val;
         const double exp_term  = std::exp ( -0.5 * w1 * w2 * quad );
@@ -578,14 +567,14 @@ namespace Ostap
       //
       // (1) calculate the determinant of pooled matrix
       SCALAR det  = 1 ;
-      if ( !si.Det2 ( det ) || det <= 0 ) { return s_bad ; }
+      if ( !si.Det2 ( det ) || det <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
       // (2) invert it for quadratic form
-      if ( !si.InvertChol ()            ) { return s_bad ; }      
+      if ( !si.InvertChol ()            ) { return Ostap::v_INVALID_DISTANCE ; }      
       //
       SCALAR det1 = 1 ;
-      if ( !c1.Det2 ( det1 ) || det1 <= 0 ) { return s_bad ; }
+      if ( !c1.Det2 ( det1 ) || det1 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
       SCALAR det2 = 1 ;
-      if ( !c2.Det2 ( det2 ) || det2 <= 0 ) { return s_bad ; }
+      if ( !c2.Det2 ( det2 ) || det2 <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
       //
       // Calculate weighted exponential term via quadratic form
       const double quad      = ROOT::Math::Similarity ( si , v2 - v1 ) ;
