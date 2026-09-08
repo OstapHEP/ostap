@@ -100,7 +100,8 @@ class DataReweighter(Config) :
         conf [ 'original-variables' ] = self.__ovars
         if self.__tweight : conf [ 'target-weight'   ] = self.__tweight 
         if self.__oweight : conf [ 'original-weight' ] = self.__oweight 
-                   
+        return conf
+    
     @property
     def progress ( self ) : 
         """`progress` : show progress bar?

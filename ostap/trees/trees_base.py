@@ -30,7 +30,7 @@ __all__     = (
 from   ostap.core.ostap_types import string_types, sequence_types  
 from   ostap.core.core_base   import valid_pointer
 import ostap.io.root_file      
-import ROOT 
+import ROOT, re 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -183,25 +183,37 @@ def tree_branches ( tree , pattern = '' , *args ) :
     if not valid_pointer ( tree )              : raise ValueError ( "TTree* points to null"           ) 
     ##
     vlst = tuple ( sorted ( set ( b.GetName() for b in tree.GetListOfBranches() ) ) ) 
-    if not vlst or not pattern : return vlst 
+    if not vlst or not pattern : return vlst
 
-    # =========================================================================
-    if pattern and isinstance ( pattern , string_types ) : # ==================
-        # =====================================================================
-        import re        
-        # =====================================================================
-        try : # ===============================================================
-            # =================================================================
-            c    = re.compile ( pattern , *args )
-            lst  = sorted ( v for v in vlst if c.match ( v ) ) 
-            return tuple ( lst )
-            # =================================================================
-        except : # ============================================================
-            # =================================================================
-            logger.error ( 'branches: exception is caught, skip it' , exc_info = True ) 
-            # =================================================================
-            
-    return vlst 
+    if isinstance ( pattern , string_types   ) : pattern = pattern ,
+
+    if not isinstance ( pattern , sequence_types ) :
+        raise TypeError  ( "Invalid type of `pattern` argument:  %s" % typename ( pattern ) ) 
+    if not all ( p and isinstance ( p , string_types ) for p in pattern ) :
+        raise ValueError ( "Invalid value of `pattern` argument:  [%s]" %  ( ','.join ( str ( p ) for p in pattern ) ) ) 
+
+    vset     = frozenset ( vlst )    
+    selected = set () 
+    # ==========================================================================
+    for pat in pattern :
+        # ======================================================================
+        if pat in vset :
+            selected.add ( pat )
+            continue
+        # ======================================================================
+        try : # ================================================================
+            # ==================================================================
+            c =  re.compile ( pat , *args )
+            for v in vlst :
+                if c.match ( v ) : selected.add ( v )
+            # ==================================================================
+        except re.error : # ====================================================
+            # ==================================================================
+            pass
+        
+    ## get selected branches 
+    return tuple ( sorted ( selected ) )
+
 
 ROOT.TTree.branches = tree_branches
 
@@ -249,6 +261,37 @@ def tree_leaves ( tree , pattern = '' , *args ) :
     return tuple ( sorted ( lst ) ) 
 
 ROOT.TTree.leaves   = tree_leaves
+
+# ==============================================================================
+## Get all leaves as <code>Branch.Leaf</code> names
+#  @code
+#  tree = ...
+#  brleaves = tree.branch_leaves()
+#  @endcode
+# ==============================================================================
+def tree_branch_leaves ( tree ) :
+    """ Get all leaves as <code>Branch.Leaf</code> names
+    >>> tree = ...
+    >>> brleaves = tree.branch_leaves()
+    """
+    if not isinstance    ( tree , ROOT.TTree ) : raise TypeError  ( "Invalid type of `tree` argument" )
+    if not valid_pointer ( tree )              : raise ValueError ( "TTree* points to null"           ) 
+
+    names = set()
+
+    blist = tree.GetListOfBranches()
+    if not valid_pointer ( blist ) : return ()    
+    for b in blist :
+        llist = b.GetListOfLeaves()
+        if not valid_pointer ( llist ) : continue
+        bname = b.GetName()        
+        for l in llist :
+            lname = l.GetName()
+            names.add ( '%s.%s' % ( bname , lname ) ) 
+            
+    return tuple ( sorted ( names ) ) 
+
+ROOT.TTree.branch_leaves = tree_branch_leaves
 
 # ==============================================================================
 ## get active branches
@@ -431,7 +474,6 @@ def _rc_getitem_ ( self , index ) :
 
 ROOT.TChain.__getitem__ = _rc_getitem_
 
-
 # ===============================================================================
 ## "copy" TTree
 #  Fake copy of TTree object
@@ -518,6 +560,8 @@ _new_methods_ = (
     ## 
     ROOT.TTree.branches        ,
     ROOT.TTree.leaves          ,
+    ROOT.TTree.branch_leaves   , 
+
     ROOT.TTree.branch          ,
     ROOT.TTree.leaf            ,
     ROOT.TTree.active_branches , 

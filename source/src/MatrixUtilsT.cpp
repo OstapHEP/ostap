@@ -544,43 +544,50 @@ namespace
  * @return status code 
  */
 // ========================================================================
+/* Bunch-Kaufman decomposition of symmetric matrices 
+ * @param[in]  A Input symmetric matrix to decompose.
+ * @param[out] U factor matrix U (includes permutations, so it may not be strictly triangular).
+ * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+ * @return status code 
+ */
+// ========================================================================
 Ostap::StatusCode Ostap::Math::BunchKaufman
 ( const TMatrixTSym<double>& A ,
   TMatrixT<double>&          U ,
   TMatrixTSym<double>&       D ) 
 {
-  if ( !A.IsValid () || A.GetNrows() < 1 || A.GetNrows () != A.GetNcols () ) { return INVALID_TMATRIX ; }
-    
+  //
+  if ( !A.IsValid () || A.GetNrows() < 1 || A.GetNrows () != A.GetNcols () ) { return INVALID_TMATRIX ; } 
+  //
   ::TDecompBKSpy bk ( A ) ;
-  if ( !bk.Decompose () ) { return INVALID_BK_DECOMPOSITION ; }
-
+  if ( !bk.Decompose () ) { return INVALID_BK_DECOMPOSITION ; } 
+  //
   const TMatrixD& rawU = bk.GetU();
-  
   const Int_t*    ipiv = bk.GetIpiv();
   if ( !ipiv ) { return INVALID_BK_DECOMPOSITION ; }
-  
+  //
   const Int_t n = A.GetNrows();
   //
-  // Инициализируем U как единичную матрицу
+  // Initialize U as an identity matrix
   U.ResizeTo   ( n , n ) ;
   U.UnitMatrix (       ) ;  
   D.ResizeTo   ( n , n ) ;
   D.Zero       (       ) ;
   //
-  // Идем вперед (от 0 до n-1), чтобы правильно собрать матрицу U 
-  // с учетом всех LAPACK перестановок.
+  // Traverse forward (from 0 to n-1) to correctly assemble matrix U 
+  // taking into account all LAPACK permutations (pivoting).
   Int_t k = 0;
   while ( k < n )
   {
     if ( ipiv[k] > 0 )
     {
-      // --- 1x1 блок ---
+      // --- 1x1 block ---
       D ( k , k ) = rawU ( k , k );
       //
-      // В LAPACK индексы ipiv 1-based, переводим в 0-based
+      // LAPACK ipiv indices are 1-based; convert to 0-based
       Int_t kp = ipiv[k] - 1; 
       //
-      // 1. Применяем верхние множители к текущей матрице U
+      // 1. Apply upper multipliers to the current U matrix
       for ( Int_t i = 0; i < k; ++i )
       {
         double mult = rawU ( i , k );
@@ -588,8 +595,8 @@ Ostap::StatusCode Ostap::Math::BunchKaufman
           U ( i , c ) += mult * U ( k , c );
         }
       }
-      // 
-      // 2. Применяем перестановку строк (pivoting)
+      //
+      // 2. Apply row permutation (pivoting)
       if ( kp != k )
       {
         for ( Int_t c = 0; c < n; ++c )
@@ -604,16 +611,16 @@ Ostap::StatusCode Ostap::Math::BunchKaufman
     }
     else
     {
-      // --- 2x2 блок ---
+      // --- 2x2 block ---
       D ( k     , k     ) = rawU ( k     , k     ) ;
       D ( k     , k + 1 ) = rawU ( k     , k + 1 ) ;
-      D ( k + 1 , k     ) = rawU ( k     , k + 1 ) ; // Симметрия
+      D ( k + 1 , k     ) = rawU ( k     , k + 1 ) ; // Explicit symmetry assignment
       D ( k + 1 , k + 1 ) = rawU ( k + 1 , k + 1 ) ;
       //
-      // Индекс перестановки для 2x2 блока
+      // Permutation index for the 2x2 block (negative in LAPACK to indicate 2x2)
       Int_t kp = -ipiv[k] - 1; 
       //
-      // 1. Применяем верхние множители сразу от двух колонок
+      // 1. Apply upper multipliers from both columns simultaneously
       for ( Int_t i = 0; i < k; ++i )
       {
         double mult1 = rawU ( i , k     );
@@ -623,7 +630,7 @@ Ostap::StatusCode Ostap::Math::BunchKaufman
         }
       }
       //
-      // 2. Применяем перестановку (для 2x2 блока LAPACK меняет строку k и kp)
+      // 2. Apply permutation (for a 2x2 block, LAPACK swaps rows k and kp)
       if ( kp != k )
       {
         for ( Int_t c = 0; c < n; ++c )
@@ -637,7 +644,7 @@ Ostap::StatusCode Ostap::Math::BunchKaufman
       k += 2;
     }
   }
-  // 
+  //
   return Ostap::StatusCode::SUCCESS;
 }
 // ============================================================================

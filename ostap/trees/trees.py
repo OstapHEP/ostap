@@ -807,9 +807,10 @@ def _rt_table0_ ( tree                    ,
                   style     = ''          ) :
     """ Print tree as table 
     """
+
     ## get list of branches/leaves  
     brs   = tree.branches ( pattern )
-
+    
     ## (0) total number of entries 
     total = len ( tree )
     first , last = evt_range ( total , first , last )
@@ -834,6 +835,9 @@ def _rt_table0_ ( tree                    ,
         b_list = tree.GetListOfBranches ()
         if valid_pointer ( b_list ) : 
             for b in b_list :
+                bname = b.GetName()
+                ## only interesitng branches 
+                if not bname in brs : continue 
                 l_list = b.GetListOfLeaves ()
                 if valid_pointer ( l_list ) :
                     bname = b.GetName()                    
@@ -861,8 +865,11 @@ def _rt_table0_ ( tree                    ,
         b_list = tree.GetListOfBranches ()        
         if valid_pointer ( b_list ) : 
             for b in b_list :
-                bname = b.GetName()                    
-                if bname in bdone : continue
+                bname = b.GetName()
+                ## only interesting branches 
+                if not bname in brs : continue
+                ## only unprocessed branches 
+                if bname in bdone   : continue
                 bdone.add ( bname ) 
                 l_list = b.GetListOfLeaves ()
                 if valid_pointer ( l_list ) :
@@ -963,8 +970,9 @@ def _rt_table_ ( tree                    ,
 
     ## decode variables 
     variables , cuts , _ = vars_and_cuts ( variables , cuts , allow_empty = True )
-    if not variables or all ( v in branches for v in variables ) :
+    if all ( v in branches for v in variables ) :
         return _rt_table0_ ( tree      ,
+                             pattern   = variables , 
                              cuts      = cuts      ,
                              first     = first     ,
                              width     = width     ,

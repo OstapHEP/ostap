@@ -466,6 +466,16 @@ else
     printf "%s [7/8] SUCCESS: third pass of cmake&%s&install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
 fi
 
+if command -v tree >/dev/null 2>&1; then
+    tree -d -L 3 --charset UTF-8 "${OSTAP_INSTALL}"
+else
+    ls "${OSTAP_INSTALL}"
+fi
+
+if command -v pip >/dev/null 2>&1; then
+    python -m pip list --user
+fi
+
 OSTAP_BUILDER="${make_command}"
 printf "%s PROJECT BUILDER : %s\n" "${prefix1}" "${OSTAP_BUILDER}"
 printf "%s ROOTSYS         : %s\n" "${prefix1}" "${ROOTSYS}"
@@ -482,15 +492,6 @@ printf "%s python version  : %s\n" "${prefix1}" "$(python --version | grep -Eo '
 printf "%s ostap           : %s\n" "${prefix1}" "$(command -v ostap)"
 printf "%s ostap version   : %s\n" "${prefix1}" "$(ostap --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')"
 
-if command -v tree >/dev/null 2>&1; then
-    tree -d -L 3 --charset UTF-8 "${OSTAP_INSTALL}"
-else
-    ls "${OSTAP_INSTALL}"
-fi
-
-if command -v pip >/dev/null 2>&1; then
-    python -m pip list --user
-fi
 
 export OSTAP_BUILDER
 export OSTAP_SOURCE

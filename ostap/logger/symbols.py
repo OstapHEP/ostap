@@ -36,6 +36,7 @@ __all__     = (
     'chisq'               , ## 𝛘²
     'clock'               , ## 🕐  (wide)
     'clock_ticks'         , ## 🕜 2-колон...
+    'concurrency'         , ## 🔀    
     'delta_symbol'        , ## Δ
     'descartes_product'   , ## ⨂
     'difference'          , ## ⊻
@@ -333,6 +334,8 @@ asymmetry        = '⌿'   if show else 'asym'
 
 enough           = '∃'   if show else 'enough'
 mountain         = '⛰ '  if show else 'peak'
+
+concurrency      = '🔀'  if show  else '||'    
 
 ## Lowercase Greek letters 
 greek_lower_alpha     = 'α' if show else 'alpha'

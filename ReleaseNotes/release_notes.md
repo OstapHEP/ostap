@@ -16,13 +16,16 @@
    1. add `rank` functions for T-matrices 
    1. complete norms (including sepctral, nuclear an Schatten), ranks and Moore-Penrouse pseudoinverses 
    1. add `VIF` methods to get the variance inflation factors for badly-defined covariance matrices 
-   1. re-factor some function from `Ostap/Math.h` allowing the separate access to them without heavy `Math.h`
-   1. add "transpose" constructor to GSL =matrix
+   1. re-factor some functions from `Ostap/Math.h` allowing the separate access to them without heavy `Math.h`
+   1. add "transpose" constructor to GSL-matrix
    1. add "diagonal matrix expressions" for SMatrix
    1. vaildate `linalgg`-tests
    1. add Bunch-Kaufman decomposition 
-
+   1. change configurations for `XGBoostDensityReweighter`
+   
 ## Bug fixes
+
+   1. fix inaccuracy in branch/leaf selection for `TTree.table` methods
 
 ## Backward incompatible
 
@@ -42,9 +45,8 @@
    1. Fix a funny typo in `Ostap::Math::bhattacharyya` 
    1. Fix a bug in computation of `Ostap::Math::hellinger` 
    1. Fix a recently introduced bug in `ActiveBranches` 
-   
+  
 ## Backward incompatible
-
 
 # v3.8.4.0
 

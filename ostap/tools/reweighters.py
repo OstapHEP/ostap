@@ -799,8 +799,8 @@ class XGBoostDensityReweighter ( DensityReweighter ):
             'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
             'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
             'max_depth'             : 4                   , ## Default depth for rich phase space
-            'min_child_weight'      : 5.0                 , ## Minimum sum of hessians per leaf
-            'gamma'                 : 0.05                , ## Minimum loss reduction to force split
+            'min_child_weight'      : 0.1                 , ## Minimum sum of hessians per leaf
+            'gamma'                 : 0.001               , ## Minimum loss reduction to force split
             'reg_alpha'             : 0.1                 ,
             'reg_lambda'            : 2.0                 , ## Moderate L2 penalty on leaf values
             'subsample'             : 0.8                 ,
@@ -833,11 +833,15 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         params [ 'learning_rate'         ] = 0.1
         params [ 'max_depth'             ] = 5
         
-        # Soft dynamic min_child_weight scaling with neff, keeping a low lower bound
-        params [ 'min_child_weight'      ] = max ( 1e-4, float ( n_samples * 0.0001 ) )
+        # Ensure min_child_weight doesn't blow up for large samples, 
+        # while staying permissive enough for sparse 11D space
+        params [ 'min_child_weight'      ] = max ( 1e-4, min ( 1.0, float ( n_samples * 0.00001 ) ) )
         
-        params [ 'alpha'                 ] = 0.0
-        params [ 'lambda'                ] = 0.0
+         # Zero out gamma so it doesn't block splits
+        params [ 'gamma'                 ] = 0.0
+        
+        params [ 'reg_alpha'             ] = 0.0
+        params [ 'reg_lambda'            ] = 0.0
         params [ 'subsample'             ] = 1.0
         params [ 'colsample_bytree'      ] = 1.0
         params [ 'early_stopping_rounds' ] = None
@@ -909,17 +913,18 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         p = model.predict ( dmat , **kwargs )
         return p.astype ( numpy.float32, copy = False )
         
-# =================================================================
+# =============================================================================
 ## @class CatBoostDensityReweighter
 #   Density-ratio reweighter implementation using CatBoost as the underlying classifier.
 #   Inherits from BaseDensityReweighter. Automatically handles 1-, 2-, and 4-stream
 #   decompositions for positive and negative sample weights.
-class CatBoostDensityReweighter ( DensityReweighter ): 
+# =============================================================================
+class CatBoostDensityReweighter ( DensityReweighter ) : 
     """ Density-ratio reweighter implementation using CatBoost as the underlying classifier.
     Inherits from BaseDensityReweighter. Automatically handles 1-, 2-, and 4-stream
     decompositions for positive and negative sample weights.
     """    
-    def __init__(  self , * , 
+    def __init__( self , * , 
                    original               ,
                    target                 ,
                    original_weight        = None ,
@@ -940,13 +945,18 @@ class CatBoostDensityReweighter ( DensityReweighter ):
             'random_strength'       : 1.0                 , ## Adds randomness to split scoring
             'early_stopping_rounds' : None                ,
             'verbose'               : False               ,
-            'thread_count'          : -1                  ,
+            'thread_count'          : 1                   , ## Strict single thread to avoid C++ hangs
+            'boosting_type'         : 'Plain'             , ## Plain boosting avoids deadlocks in density ratio
         }
         config.update ( params )
         
-         # CatBoost uses 'thread_count' instead of 'n_jobs'
-        if 'n_jobs'     in config : config [ 'thread_count' ] = config.pop ( 'n_jobs' )  
+        # CatBoost uses 'thread_count' instead of 'n_jobs'
+        if 'n_jobs'     in config : config [ 'thread_count' ] = config.pop ( 'n_jobs'     )  
         if 'iterations' in config : config [ 'n_estimators' ] = config.pop ( 'iterations' ) 
+
+        # Force execution limits to guarantee safety
+        config [ 'thread_count'  ] = 1
+        config [ 'boosting_type' ] = config.get ( 'boosting_type' , 'Plain' )
         
         # Delegate execution to BaseDensityReweighter __init__
         super().__init__ ( original               = original               ,
@@ -973,9 +983,11 @@ class CatBoostDensityReweighter ( DensityReweighter ):
         # Soft dynamic min_child_samples scaling with neff
         params [ 'min_child_samples'    ] = max ( 2, min ( 30, int ( n_samples * 0.0001 ) ) )
         
-        params [ 'l2_leaf_reg'           ] = 1.0
-        params [ 'subsample'             ] = 1.0
+        params [ 'l2_leaf_reg'          ] = 1.0
+        params [ 'subsample'            ] = 1.0
         params [ 'early_stopping_rounds' ] = None
+        params [ 'thread_count'         ] = 1
+        params [ 'boosting_type'        ] = 'Plain'
         
         return params
 
@@ -997,11 +1009,24 @@ class CatBoostDensityReweighter ( DensityReweighter ):
 
         import catboost as CatBoost
 
-        trn_pool = CatBoost.Pool ( X_train , label = y_train , weight = w_train )
-        val_pool = CatBoost.Pool ( X_val   , label = y_val   , weight = w_val   )
+        # Ensure contiguous memory layout for C++ core to prevent memory access hangs
+        X_tr = numpy.ascontiguousarray ( X_train , dtype = numpy.float32 )
+        y_tr = numpy.ascontiguousarray ( y_train )
+        w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if not w_train is None else None
+
+        X_v  = numpy.ascontiguousarray ( X_val   , dtype = numpy.float32 )
+        y_v  = numpy.ascontiguousarray ( y_val   )
+        w_v  = numpy.ascontiguousarray ( w_val   , dtype = numpy.float32 ) if not w_val   is None else None
+
+        trn_pool = CatBoost.Pool ( X_tr , label = y_tr , weight = w_tr )
+        val_pool = CatBoost.Pool ( X_v  , label = y_v  , weight = w_v  )
 
         params = {}
         params.update ( self.params )
+
+        # Force stability configuration
+        params [ 'thread_count'  ] = 1
+        params [ 'boosting_type' ] = params.get ( 'boosting_type' , 'Plain' )
 
         # --- Determine number of iterations
         iterations = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' , None ) or 500
@@ -1011,12 +1036,12 @@ class CatBoostDensityReweighter ( DensityReweighter ):
         # --- Extract early_stopping_rounds, defaulting to None for unbiased OOF estimation
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , None )
         if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < iterations : pass
-        else                                                                                      : early_stopping_rounds = None
+        else                                                                                     : early_stopping_rounds = None
 
         params [ 'iterations' ] = iterations
 
         fit_kwargs = {}
-        if early_stopping_rounds is not None :
+        if not early_stopping_rounds is None :
             params [ 'early_stopping_rounds' ] = early_stopping_rounds
             params [ 'use_best_model'        ] = True
             fit_kwargs [ 'eval_set'          ] = val_pool
@@ -1031,15 +1056,15 @@ class CatBoostDensityReweighter ( DensityReweighter ):
         val_preds = model.predict_proba ( val_pool ) [ : , 1 ]
         return model , val_preds.astype ( numpy.float32 , copy = False )
 
-    def _predict_single_model( self, model, X ):
-        best_iter = getattr( model, 'best_iteration_', None ) or getattr( model, 'best_iteration', None )
+    def _predict_single_model ( self , model , X ) :
+        X_clean   = numpy.ascontiguousarray ( X , dtype = numpy.float32 )
+        best_iter = getattr ( model , 'best_iteration_' , None ) or getattr ( model , 'best_iteration' , None )
         kwargs    = {}
-        if best_iter is not None and best_iter > 0 :
-            kwargs[ 'ntree_end' ] = best_iter            
-        p = model.predict_proba( X, **kwargs )[:, 1]
-        return p.astype( numpy.float32, copy = False )
-
-
+        if not best_iter is None and best_iter > 0 :
+            kwargs [ 'ntree_end' ] = best_iter            
+        p = model.predict_proba ( X_clean , **kwargs ) [ : , 1 ]
+        return p.astype ( numpy.float32 , copy = False )
+    
 # ==============================================================================
 ## @class GBReweighter
 #  Helper class for reweighting using <code>GBReweighter</code> from hep_ml by Alex Rogozhnikov 

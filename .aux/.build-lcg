@@ -80,7 +80,6 @@ canonical_path() {
 fi
 # =========================================================================
 
-
 # ==========================================================================
 ## Color output setup
 # ==========================================================================
@@ -103,7 +102,6 @@ if [ "$COLORS" -gt 2 ]; then
 fi
 
 printf "%s LCG version=%s PLATFORM=%s\n" "${prefix}" "${LCG}" "${PLATFORM}"
-
 
 # ================================================================================
 ## Wake up the cvmfs fuse mount (on Windows WSL or dormant CVMFS mounts)
@@ -440,6 +438,7 @@ prefix_error="${old_prefix_error}"
 printf "%s LCG VERSION        : %s\n" "${prefix}" "${LCG}"
 printf "%s LCG PLATFORM       : %s\n" "${prefix}" "${PLATFORM}"
 printf "%s LCG BUILD          : %s\n" "${prefix}" "${LCG_BUILD}"
+printf "%s LCG_SETUP          : %s\n" "${prefix}" "${LCG_SETUP}"
 
 if [ "$result" -eq 0 ]; then
     printf "%s RESULT             : SUCCESS\n" "${prefix}"
