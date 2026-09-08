@@ -536,73 +536,61 @@ namespace
   };
   // ==========================================================================
 } 
-
-#include <vector>
-#include <numeric>
-#include <algorithm>
-
-// ROOT headers
-#include <TMatrixTSym.h>
-#include <TMatrixT.h>
-#include <TVectorT.h>
-
-namespace Ostap 
+// ========================================================================
+/** @brief Convert a permutation vector $p$ into an explicit permutation matrix $P$.
+ *
+ *  Constructs an $N \times N$ matrix $P$ where $P(i, p(i)) = 1.0$ and all other 
+ *  entries are $0.0$.
+ *
+ *  @param[in]  p Input permutation vector of size $N$.
+ *  @param[out] P Output $N \times N$ orthogonal permutation matrix.
+ *  @return Ostap::StatusCode status code.
+*/
+// ========================================================================
+Ostap::StatusCode Ostap::Math::PermutationMatrix
+( const TVectorT<double>& p ,
+  TMatrixT<double>&       P )
 {
-  namespace Math 
+  if ( !p.IsValid()  ) { return INVALID_TVECTOR ; }
+
+  const Int_t n = p.GetNrows() ;
+  if ( n < 1          ) { return INVALID_TVECTOR ; }
+
+  P.ResizeTo ( n , n ) ;
+  P.Zero     (       ) ;
+
+  for ( Int_t i = 0 ; i < n ; ++i )
   {
-    // ========================================================================
-    /** @brief Convert a permutation vector $p$ into an explicit permutation matrix $P$.
-     *
-     *  Constructs an $N \times N$ matrix $P$ where $P(i, p(i)) = 1.0$ and all other 
-     *  entries are $0.0$.
-     *
-     *  @param[in]  p Input permutation vector of size $N$.
-     *  @param[out] P Output $N \times N$ orthogonal permutation matrix.
-     *  @return Ostap::StatusCode status code.
-     */
-    // ========================================================================
-    inline Ostap::StatusCode PermutationMatrix
-    ( const TVectorT<double>& p ,
-      TMatrixT<double>&       P )
-    {
-      const Int_t n = p.GetNrows() ;
-      if ( n < 1 ) { return INVALID_TMATRIX ; }
-
-      P.ResizeTo ( n , n ) ;
-      P.Zero     (       ) ;
-
-      for ( Int_t i = 0 ; i < n ; ++i )
-      {
-        const Int_t idx = static_cast<Int_t>( p(i) ) ;
-        if ( idx < 0 || idx >= n ) { return INVALID_PERMUTATION_INDEX ; }
+    const Int_t idx = static_cast<Int_t>( p(i) ) ;
+    if ( idx < 0 || idx >= n ) { return INVALID_PERMUTATION_INDEX ; }
         
-        P ( i , idx ) = 1.0 ;
-      }
-      //
-      return Ostap::StatusCode::SUCCESS ;
-    }
-    // ========================================================================
-    /** @brief Bunch-Kaufman decomposition with explicit Permutation Vector $p$.
-     *
-     *  Decomposes a symmetric matrix $A$ into:
-     *  \f[ P A P^T = U D U^T \implies A = P^T U D U^T P \f]
-     *  where $U$ is strictly unit upper triangular ($U_{ii} = 1, U_{ij} = 0$ for $i > j$),
-     *  $D$ is symmetric block-diagonal ($1 \times 1$ and $2 \times 2$ blocks), and 
-     *  $p$ is a permutation vector where $p(i)$ indicates the original element index.
-     *
-     *  @param[in]  A Input real symmetric matrix.
-     *  @param[out] U Strictly unit upper triangular factor matrix $U$.
-     *  @param[out] D Symmetric block-diagonal matrix $D$.
-     *  @param[out] p Output permutation vector $p$ of size $N$.
-     *  @return Ostap::StatusCode status code (SUCCESS if factorization succeeded).
-     */
-    // ========================================================================
-    Ostap::StatusCode Ostap::Math::BunchKaufman
-    ( const TMatrixTSym<double>& A ,
-      TMatrixT<double>&          U ,
-      TMatrixTSym<double>&       D ,
-      TVectorD&                  p ) 
-    {
+    P ( i , idx ) = 1.0 ;
+  }
+  //
+  return Ostap::StatusCode::SUCCESS ;
+}
+// ========================================================================
+/** @brief Bunch-Kaufman decomposition with explicit Permutation Vector $p$.
+ *
+ *  Decomposes a symmetric matrix $A$ into:
+ *  \f[ P A P^T = U D U^T \implies A = P^T U D U^T P \f]
+ *  where $U$ is strictly unit upper triangular ($U_{ii} = 1, U_{ij} = 0$ for $i > j$),
+ *  $D$ is symmetric block-diagonal ($1 \times 1$ and $2 \times 2$ blocks), and 
+ *  $p$ is a permutation vector where $p(i)$ indicates the original element index.
+ *
+ *  @param[in]  A Input real symmetric matrix.
+ *  @param[out] U Strictly unit upper triangular factor matrix $U$.
+ *  @param[out] D Symmetric block-diagonal matrix $D$.
+ *  @param[out] p Output permutation vector $p$ of size $N$.
+ *  @return Ostap::StatusCode status code (SUCCESS if factorization succeeded).
+ */
+// ========================================================================
+Ostap::StatusCode Ostap::Math::BunchKaufman
+( const TMatrixTSym<double>& A ,
+  TMatrixT<double>&          U ,
+  TMatrixTSym<double>&       D ,
+  TVectorD&                  p ) 
+{
       if ( !A.IsValid () || A.GetNrows() < 1 || A.GetNrows () != A.GetNcols () ) { return INVALID_TMATRIX ; } 
 
       ::TDecompBKSpy bk ( A ) ;
@@ -666,31 +654,31 @@ namespace Ostap
       }
       //
       return Ostap::StatusCode::SUCCESS ;
-    }
-    // ========================================================================
-    /** @brief Bunch-Kaufman decomposition of a real symmetric matrix $A = U D U^T$.
-     *
-     *  Decomposes a symmetric matrix $A$ into a factor matrix $U$ and a 
-     *  block-diagonal matrix $D$ containing $1 \times 1$ and $2 \times 2$ blocks.
-     *  In this 3-argument variant, pivoting permutations are directly folded 
-     *  into $U$, which means $U$ may not be strictly unit upper triangular.
-     *
-     *  @note This function calls BunchKaufman(A, U, D, p) internally and applies 
-     *        the resulting permutations $p$ directly to the rows of $U$.
-     *
-     *  @param[in]  A Input real symmetric matrix.
-     *  @param[out] U Output factor matrix $U$ containing accumulated permutations.
-     *  @param[out] D Output symmetric block-diagonal matrix $D$.
-     *  @return Ostap::StatusCode status code (SUCCESS if factorization succeeded).
-     *
-     *  @see Ostap::Math::BunchKaufman(const TMatrixTSym<double>&, TMatrixT<double>&, TMatrixTSym<double>&, TVectorT<double>&)
-     */
-    // ========================================================================
-    Ostap::StatusCode Ostap::Math::BunchKaufman
-    ( const TMatrixTSym<double>& A ,
-      TMatrixT<double>&          U ,
-      TMatrixTSym<double>&       D ) 
-    {
+}
+// ========================================================================
+/** @brief Bunch-Kaufman decomposition of a real symmetric matrix $A = U D U^T$.
+ *
+ *  Decomposes a symmetric matrix $A$ into a factor matrix $U$ and a 
+ *  block-diagonal matrix $D$ containing $1 \times 1$ and $2 \times 2$ blocks.
+ *  In this 3-argument variant, pivoting permutations are directly folded 
+ *  into $U$, which means $U$ may not be strictly unit upper triangular.
+ *
+ *  @note This function calls BunchKaufman(A, U, D, p) internally and applies 
+ *        the resulting permutations $p$ directly to the rows of $U$.
+ *
+ *  @param[in]  A Input real symmetric matrix.
+ *  @param[out] U Output factor matrix $U$ containing accumulated permutations.
+ *  @param[out] D Output symmetric block-diagonal matrix $D$.
+ *  @return Ostap::StatusCode status code (SUCCESS if factorization succeeded).
+ *
+ *  @see Ostap::Math::BunchKaufman(const TMatrixTSym<double>&, TMatrixT<double>&, TMatrixTSym<double>&, TVectorT<double>&)
+ */
+// ========================================================================
+Ostap::StatusCode Ostap::Math::BunchKaufman
+( const TMatrixTSym<double>& A ,
+  TMatrixT<double>&          U ,
+  TMatrixTSym<double>&       D ) 
+{
       TVectorD p ;
       
       // 1. Call the base 4-argument implementation
@@ -710,7 +698,7 @@ namespace Ostap
       }
       //
       return Ostap::StatusCode::SUCCESS ;
-    }
+}
 // ============================================================================
 /* Bunch-Kaufman decomposition of symmetric matrices 
  * @param[in]  A Input symmetric matrix to decompose.
@@ -793,7 +781,6 @@ Ostap::StatusCode Ostap::Math::GSL::BK
   //
   return Ostap::StatusCode::SUCCESS ; 
 }
-
 
 // ============================================================================
 //                                                                      The END 

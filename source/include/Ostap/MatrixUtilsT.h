@@ -1137,7 +1137,6 @@ namespace Ostap
       TMatrixTSym<double>&       a_pinv ,
       const double               tol    = std::numeric_limits<float>::epsilon()  ) ;
     
-
     // ========================================================================
     /** @brief Compute Variance Inflation Factors (VIF) for a TMatrixTSym covariance matrix.
      *
@@ -1230,6 +1229,20 @@ namespace Ostap
       TVectorT<double>&          vif ,
       const double               eps = epsilon_v<double> ) ;
     
+    // ========================================================================
+    /** @brief Convert a permutation vector $p$ into an explicit permutation matrix $P$.
+     *
+     *  Constructs an $N \times N$ matrix $P$ where $P(i, p(i)) = 1.0$ and all other 
+     *  entries are $0.0$.
+     *
+     *  @param[in]  p Input permutation vector of size $N$.
+     *  @param[out] P Output $N \times N$ orthogonal permutation matrix.
+     *  @return Ostap::StatusCode status code.
+     */
+     Ostap::StatusCode PermutationMatrix
+    ( const TVectorT<double>& p ,
+      TMatrixT<double>&       P ) ; 
+
     // ========================================================================
     /** @brief Bunch-Kaufman decomposition with explicit Permutation Vector $p$.
      *
