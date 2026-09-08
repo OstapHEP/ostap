@@ -536,117 +536,181 @@ namespace
   };
   // ==========================================================================
 } 
-// ========================================================================
-/* Bunch-Kaufman decomposition of symmetric matrices 
- * @param[in]  A Input symmetric matrix to decompose.
- * @param[out] U triangular factor matrix U.
- * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
- * @return status code 
- */
-// ========================================================================
-/* Bunch-Kaufman decomposition of symmetric matrices 
- * @param[in]  A Input symmetric matrix to decompose.
- * @param[out] U factor matrix U (includes permutations, so it may not be strictly triangular).
- * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
- * @return status code 
- */
-// ========================================================================
-Ostap::StatusCode Ostap::Math::BunchKaufman
-( const TMatrixTSym<double>& A ,
-  TMatrixT<double>&          U ,
-  TMatrixTSym<double>&       D ) 
-{
-  //
-  if ( !A.IsValid () || A.GetNrows() < 1 || A.GetNrows () != A.GetNcols () ) { return INVALID_TMATRIX ; } 
-  //
-  ::TDecompBKSpy bk ( A ) ;
-  if ( !bk.Decompose () ) { return INVALID_BK_DECOMPOSITION ; } 
-  //
-  const TMatrixD& rawU = bk.GetU();
-  const Int_t*    ipiv = bk.GetIpiv();
-  if ( !ipiv ) { return INVALID_BK_DECOMPOSITION ; }
-  //
-  const Int_t n = A.GetNrows();
-  //
-  // Initialize U as an identity matrix
-  U.ResizeTo   ( n , n ) ;
-  U.UnitMatrix (       ) ;  
-  D.ResizeTo   ( n , n ) ;
-  D.Zero       (       ) ;
-  //
-  // Traverse forward (from 0 to n-1) to correctly assemble matrix U 
-  // taking into account all LAPACK permutations (pivoting).
-  Int_t k = 0;
-  while ( k < n )
-  {
-    if ( ipiv[k] > 0 )
-    {
-      // --- 1x1 block ---
-      D ( k , k ) = rawU ( k , k );
-      //
-      // LAPACK ipiv indices are 1-based; convert to 0-based
-      Int_t kp = ipiv[k] - 1; 
-      //
-      // 1. Apply upper multipliers to the current U matrix
-      for ( Int_t i = 0; i < k; ++i )
-      {
-        double mult = rawU ( i , k );
-        for ( Int_t c = 0; c < n; ++c ) {
-          U ( i , c ) += mult * U ( k , c );
-        }
-      }
-      //
-      // 2. Apply row permutation (pivoting)
-      if ( kp != k )
-      {
-        for ( Int_t c = 0; c < n; ++c )
-        {
-          double tmp = U ( k , c );
-          U ( k  , c ) = U ( kp , c );
-          U ( kp , c ) = tmp;
-        }
-      }
-      //
-      k += 1;
-    }
-    else
-    {
-      // --- 2x2 block ---
-      D ( k     , k     ) = rawU ( k     , k     ) ;
-      D ( k     , k + 1 ) = rawU ( k     , k + 1 ) ;
-      D ( k + 1 , k     ) = rawU ( k     , k + 1 ) ; // Explicit symmetry assignment
-      D ( k + 1 , k + 1 ) = rawU ( k + 1 , k + 1 ) ;
-      //
-      // Permutation index for the 2x2 block (negative in LAPACK to indicate 2x2)
-      Int_t kp = -ipiv[k] - 1; 
-      //
-      // 1. Apply upper multipliers from both columns simultaneously
-      for ( Int_t i = 0; i < k; ++i )
-      {
-        double mult1 = rawU ( i , k     );
-        double mult2 = rawU ( i , k + 1 );
-        for ( Int_t c = 0; c < n; ++c ) {
-          U ( i , c ) += mult1 * U ( k , c ) + mult2 * U ( k + 1 , c );
-        }
-      }
-      //
-      // 2. Apply permutation (for a 2x2 block, LAPACK swaps rows k and kp)
-      if ( kp != k )
-      {
-        for ( Int_t c = 0; c < n; ++c )
-        {
-          double tmp = U ( k , c );
-          U ( k  , c ) = U ( kp , c );
-          U ( kp , c ) = tmp;
-        }
-      }
 
-      k += 2;
+#include <vector>
+#include <numeric>
+#include <algorithm>
+
+// ROOT headers
+#include <TMatrixTSym.h>
+#include <TMatrixT.h>
+#include <TVectorT.h>
+
+namespace Ostap 
+{
+  namespace Math 
+  {
+    // ========================================================================
+    /** @brief Convert a permutation vector $p$ into an explicit permutation matrix $P$.
+     *
+     *  Constructs an $N \times N$ matrix $P$ where $P(i, p(i)) = 1.0$ and all other 
+     *  entries are $0.0$.
+     *
+     *  @param[in]  p Input permutation vector of size $N$.
+     *  @param[out] P Output $N \times N$ orthogonal permutation matrix.
+     *  @return Ostap::StatusCode status code.
+     */
+    // ========================================================================
+    inline Ostap::StatusCode PermutationMatrix
+    ( const TVectorT<double>& p ,
+      TMatrixT<double>&       P )
+    {
+      const Int_t n = p.GetNrows() ;
+      if ( n < 1 ) { return INVALID_TMATRIX ; }
+
+      P.ResizeTo ( n , n ) ;
+      P.Zero     (       ) ;
+
+      for ( Int_t i = 0 ; i < n ; ++i )
+      {
+        const Int_t idx = static_cast<Int_t>( p(i) ) ;
+        if ( idx < 0 || idx >= n ) { return INVALID_PERMUTATION_INDEX ; }
+        
+        P ( i , idx ) = 1.0 ;
+      }
+      //
+      return Ostap::StatusCode::SUCCESS ;
     }
-  }
-  //
-  return Ostap::StatusCode::SUCCESS;
-}
+    // ========================================================================
+    /** @brief Bunch-Kaufman decomposition with explicit Permutation Vector $p$.
+     *
+     *  Decomposes a symmetric matrix $A$ into:
+     *  \f[ P A P^T = U D U^T \implies A = P^T U D U^T P \f]
+     *  where $U$ is strictly unit upper triangular ($U_{ii} = 1, U_{ij} = 0$ for $i > j$),
+     *  $D$ is symmetric block-diagonal ($1 \times 1$ and $2 \times 2$ blocks), and 
+     *  $p$ is a permutation vector where $p(i)$ indicates the original element index.
+     *
+     *  @param[in]  A Input real symmetric matrix.
+     *  @param[out] U Strictly unit upper triangular factor matrix $U$.
+     *  @param[out] D Symmetric block-diagonal matrix $D$.
+     *  @param[out] p Output permutation vector $p$ of size $N$.
+     *  @return Ostap::StatusCode status code (SUCCESS if factorization succeeded).
+     */
+    // ========================================================================
+    Ostap::StatusCode Ostap::Math::BunchKaufman
+    ( const TMatrixTSym<double>& A ,
+      TMatrixT<double>&          U ,
+      TMatrixTSym<double>&       D ,
+      TVectorD&                  p ) 
+    {
+      if ( !A.IsValid () || A.GetNrows() < 1 || A.GetNrows () != A.GetNcols () ) { return INVALID_TMATRIX ; } 
+
+      ::TDecompBKSpy bk ( A ) ;
+      if ( !bk.Decompose () ) { return INVALID_BK_DECOMPOSITION ; } 
+
+      const TMatrixD& rawU = bk.GetU() ;
+      const Int_t*    ipiv = bk.GetIpiv() ;
+      if ( !ipiv ) { return INVALID_BK_DECOMPOSITION ; }
+      //
+      const Int_t n = A.GetNrows() ;
+      //
+      // 1. Initialize matrices U, D and vector p = [0, 1, 2, ..., n-1]
+      U.ResizeTo   ( n , n ) ;
+      U.UnitMatrix (       ) ; 
+      //
+      D.ResizeTo   ( n , n ) ;
+      D.Zero       (       ) ;
+      //
+      p.ResizeTo   ( n ) ;
+      for ( Int_t i = 0 ; i < n ; ++i ) { p(i) = static_cast<double>(i) ; }
+      //
+      // 2. Extract 1x1 and 2x2 blocks for D and upper multipliers for U
+      Int_t k = 0 ;
+      while ( k < n )
+      {
+        if ( ipiv[k] > 0 ) // 1x1 block
+        {
+          D ( k , k ) = rawU ( k , k ) ;
+          for ( Int_t i = 0 ; i < k ; ++i ) {
+            U ( i , k ) = rawU ( i , k ) ;
+          }
+          k += 1 ;
+        }
+        else // 2x2 block
+        {
+          D ( k     , k     ) = rawU ( k     , k     ) ;
+          D ( k     , k + 1 ) = rawU ( k     , k + 1 ) ;
+          D ( k + 1 , k     ) = rawU ( k     , k + 1 ) ; // Enforce symmetry
+          D ( k + 1 , k + 1 ) = rawU ( k + 1 , k + 1 ) ;
+
+          for ( Int_t i = 0 ; i < k ; ++i ) {
+            U ( i , k     ) = rawU ( i , k     ) ;
+            U ( i , k + 1 ) = rawU ( i , k + 1 ) ;
+          }
+          k += 2 ;
+        }
+      }
+      //
+      // 3. Process LAPACK pivoting sequence to build the final permutation vector p
+      k = 0 ;
+      while ( k < n )
+      {
+        Int_t kp   = ( ipiv[k] > 0 ) ? ( ipiv[k] - 1 ) : ( -ipiv[k] - 1 ) ;
+        Int_t step = ( ipiv[k] > 0 ) ? 1 : 2 ;
+
+        if ( kp != k ) {
+          std::swap( p(k) , p(kp) ) ;
+        }
+        //
+        k += step ;
+      }
+      //
+      return Ostap::StatusCode::SUCCESS ;
+    }
+    // ========================================================================
+    /** @brief Bunch-Kaufman decomposition of a real symmetric matrix $A = U D U^T$.
+     *
+     *  Decomposes a symmetric matrix $A$ into a factor matrix $U$ and a 
+     *  block-diagonal matrix $D$ containing $1 \times 1$ and $2 \times 2$ blocks.
+     *  In this 3-argument variant, pivoting permutations are directly folded 
+     *  into $U$, which means $U$ may not be strictly unit upper triangular.
+     *
+     *  @note This function calls BunchKaufman(A, U, D, p) internally and applies 
+     *        the resulting permutations $p$ directly to the rows of $U$.
+     *
+     *  @param[in]  A Input real symmetric matrix.
+     *  @param[out] U Output factor matrix $U$ containing accumulated permutations.
+     *  @param[out] D Output symmetric block-diagonal matrix $D$.
+     *  @return Ostap::StatusCode status code (SUCCESS if factorization succeeded).
+     *
+     *  @see Ostap::Math::BunchKaufman(const TMatrixTSym<double>&, TMatrixT<double>&, TMatrixTSym<double>&, TVectorT<double>&)
+     */
+    // ========================================================================
+    Ostap::StatusCode Ostap::Math::BunchKaufman
+    ( const TMatrixTSym<double>& A ,
+      TMatrixT<double>&          U ,
+      TMatrixTSym<double>&       D ) 
+    {
+      TVectorD p ;
+      
+      // 1. Call the base 4-argument implementation
+      Ostap::StatusCode sc = BunchKaufman ( A , U , D , p ) ;
+      if ( sc.isFailure() ) { return sc ; }
+
+      // 2. Fold permutation vector p into matrix U
+      const Int_t n = A.GetNrows() ;
+      TMatrixT<double> U_tri = U ; // Temporary copy of strictly triangular U
+
+      for ( Int_t i = 0 ; i < n ; ++i )
+      {
+        const Int_t pi = static_cast<Int_t>( p(i) ) ;
+        for ( Int_t c = 0 ; c < n ; ++c ) {
+          U ( i , c ) = U_tri ( pi , c ) ;
+        }
+      }
+      //
+      return Ostap::StatusCode::SUCCESS ;
+    }
 // ============================================================================
 /* Bunch-Kaufman decomposition of symmetric matrices 
  * @param[in]  A Input symmetric matrix to decompose.
@@ -681,7 +745,6 @@ Ostap::StatusCode Ostap::Math::BunchKaufman
   return Ostap::StatusCode::SUCCESS ;
 }
 // ======================================================================
-
 
 // ======================================================================
 /* Bunch-Kaufman decomposition of symmetric matrices 

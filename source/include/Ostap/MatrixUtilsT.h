@@ -1230,6 +1230,28 @@ namespace Ostap
       TVectorT<double>&          vif ,
       const double               eps = epsilon_v<double> ) ;
     
+    // ========================================================================
+    /** @brief Bunch-Kaufman decomposition with explicit Permutation Vector $p$.
+     *
+     *  Decomposes a symmetric matrix $A$ into:
+     *  \f[ P A P^T = U D U^T \implies A = P^T U D U^T P \f]
+     *  where $U$ is strictly unit upper triangular ($U_{ii} = 1, U_{ij} = 0$ for $i > j$),
+     *  $D$ is symmetric block-diagonal ($1 \times 1$ and $2 \times 2$ blocks), and 
+     *  $p$ is a permutation vector where $p(i)$ indicates the original element index.
+     *
+     *  @param[in]  A Input real symmetric matrix.
+     *  @param[out] U Strictly unit upper triangular factor matrix $U$.
+     *  @param[out] D Symmetric block-diagonal matrix $D$.
+     *  @param[out] p Output permutation vector $p$ of size $N$.
+     *  @return Ostap::StatusCode status code (SUCCESS if factorization succeeded).
+     */
+    // ========================================================================
+    Ostap::StatusCode BunchKaufman
+    ( const TMatrixTSym<double>& A ,
+      TMatrixT<double>&          U ,
+      TMatrixTSym<double>&       D ,
+      TVectorD&                  p ) ;
+
     // ========================================================================    
     /** Bunch-Kaufman decompositon of symmetric matrices 
      * @tparam Element The numeric type of the matrix elements (e.g., double, float).

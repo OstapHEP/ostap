@@ -143,8 +143,9 @@ namespace
     INVALID_MATRIX_SIZE            = 926 ,
     INVALID_VECTOR_SIZE            = 927 ,
     INVALID_MATRIX_SLICE           = 928 , 
-    INVALID_VECTOR_SLICE           = 929 ,  
-    GSL_VERSION_IS_TOO_OLD         = 930 ,
+    INVALID_VECTOR_SLICE           = 929 ,
+    INVAID_PERMUTATION_INDEX       = 930 ,  
+    GSL_VERSION_IS_TOO_OLD         = 931 ,
     // =========================================================================    
     INVALID_SVD_DECOMPOSITION      = 935 ,
     INVALID_BK_DECOMPOSITION       = 936 ,

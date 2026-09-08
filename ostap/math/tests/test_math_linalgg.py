@@ -251,7 +251,7 @@ def test_linalg_LLT ( N = 5 ) :
         for j in range ( i + 1  ) :
             a = random.gauss ( 1 , 1 )
             if i == j : 
-                A.set ( i , i , a + 5  )
+                A.set ( i , i , a + 25 )
             else : 
                 A.set ( j , i , a )
                 A.set ( i , j , a )
