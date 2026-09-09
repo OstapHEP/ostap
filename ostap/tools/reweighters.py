@@ -1143,7 +1143,7 @@ class GBReweighter(Reweighter) :
             pass
 
         if not hasattr ( numpy , 'float' ) :
-            logger.warning ( 'No `numpy.float` ... add it!')
+            logger.info ( 'No `numpy.float` ... add `numpy.float64` as `numpy.float`!')
             numpy.float = numpy.float64
             
         # =====================================================================

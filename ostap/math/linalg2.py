@@ -1505,7 +1505,7 @@ class LinAlg(object) :
             zeros.append ( f % ( -0 ) )
         zeros = tuple ( zeros )
         
-        top_cell = attstr ( '[%s]' % format_po10 ( expo ) ) if expo else '\\'
+        top_cell = attstr ( '[%s]' % format_pow10 ( expo ) ) if expo else '\\'
         
         ## table = [ tuple ( [ top_cell ] + [ '%d' % i for i in range ( cols ) ] ) ]        
         table = [ tuple ( [ top_cell ] + [ l for l in labels ( cols ) ] ) ] 
