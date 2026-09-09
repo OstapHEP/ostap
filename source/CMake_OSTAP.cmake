@@ -15,6 +15,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Bernulli.cpp
                          src/Binomial.cpp
                          src/BreitWigner.cpp
+                         src/BunchKaufman.cpp
                          src/ChebyshevApproximation.cpp
                          src/Choose.cpp
                          src/Chi2Fit.cpp

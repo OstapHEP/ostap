@@ -938,11 +938,11 @@ def test_linalgt_BK ( M = 4 ) :
     
     assert delta1 < tolerance1 , 'BK: result are inconsistent delta1=%.3g' % delta1    
     if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %.3g" % delta1 )
-    
 
 # =============================================================================
 if '__main__' == __name__ :
 
+    """
     test_linalgt_vct   () 
     test_linalgt_mtrx  () 
     test_linalgt_old   ()
@@ -978,10 +978,12 @@ if '__main__' == __name__ :
     
     test_linalgt_POLAR ( 3 )
     test_linalgt_POLAR ( 6 )
-
+    """
+    
     test_linalgt_BK    (  3 )
     test_linalgt_BK    (  6 )
-    test_linalgt_BK    ( 15 )
+    test_linalgt_BK    ( 15 )    
+    test_linalgt_BK    ( 16 )
 
 # =============================================================================
 ##                                                                      The END 

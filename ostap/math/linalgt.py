@@ -421,7 +421,7 @@ class LinAlgT(LA.LinAlg) :
 
     # ===============================================================================
     ## BK : Bunch-Kaufman  decomposition  of symmetric matrix \f$ A = U D U^T \f$
-    #  - U - triangular matrix
+    #  - U - (almost) triangular matrix
     #  - D - symmetric block matrix with diagional 1x1 and 2x2 blocks
     #  @see TDecompBK 
     def TS_BK ( mtrx ) :
@@ -433,11 +433,8 @@ class LinAlgT(LA.LinAlg) :
         """
         assert mtrx.IsValid () , 'Matrix is not valid!'
         M , N = mtrx.GetNrows() , mtrx.GetNcols()
-        print( 'BK' , type(mtrx) , M , N , M == N ) 
         assert 2 <= M and M == N , "Bunch-Kaufman decomposition is defined only for symmetric matrices!"
 
-        ## if isinstance ( mtrx , Ostap.TMatrixSymD ) : a = mtrx
-        ## else                                       : a = Ostap.TMatrixSymD ( mtrx ) 
         A  = mtrx
 
         U  = Ostap.TMatrixD    ( M , M )
@@ -445,7 +442,7 @@ class LinAlgT(LA.LinAlg) :
         sc = Ostap.Math.BunchKaufman ( A , U , D )
         if sc.isFailure() : raise ValueError ( "Error code %s from Ostap::Math:BunchKaufman" % sc )        
         return U , D
-    
+
     # ==========================================================================
     
     # =========================================================================

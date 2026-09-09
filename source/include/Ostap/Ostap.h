@@ -21,6 +21,7 @@
 #include "Ostap/Bit.h"
 #include "Ostap/BreitWigner.h"
 #include "Ostap/Buffer.h"
+#include "Ostap/BunchKaufman.h"
 #include "Ostap/COWs.h"
 #include "Ostap/Cesaro.h"
 #include "Ostap/ChebyshevApproximation.h"

@@ -508,10 +508,11 @@ def test_linalg_BK ( M = 4 ) :
     assert delta1 < tolerance1 , 'BK: result are inconsistent delta1=%s' % nice_print ( delta1 )
     
     if not delta1 < tolerance2 : logger.error ( "delta1 is too large: %s"   % nice_print ( delta1 ) )
-    
+
 # =============================================================================
 if '__main__' == __name__ :
 
+    """
     test_linalg_PLU   ( 3, 6 )
     test_linalg_PLU   ( 3, 3 )
     test_linalg_PLU   ( 6, 3 )
@@ -565,12 +566,14 @@ if '__main__' == __name__ :
     test_linalg_POLAR ( 6 )
     test_linalg_POLAR ( 8 )
 
+    """
+    
     test_linalg_BK    (  3 )
     test_linalg_BK    (  6 )
     test_linalg_BK    ( 10 )
     test_linalg_BK    ( 15 )
-
-
+    test_linalg_BK    ( 16 )
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

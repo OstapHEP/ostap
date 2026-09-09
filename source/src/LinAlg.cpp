@@ -1991,26 +1991,54 @@ Ostap::Math::GSL::Vector::multiply
 // ============================================================================
 Ostap::Math::GSL::Permutation::Permutation
 ( const std::size_t N ) 
-  : m_permutation ( gsl_permutation_calloc ( N ) ) 
+  : m_permutation ( nullptr ) 
 {
+  Ostap::Assert ( 1 <= N ,
+                  "(GSL)Permutation size must be at least one!"  , 
+                  "Ostap::Math::GSL::Permutation"                ,
+                  INVALID_PERMUTATION_SIZE , __FILE__ , __LINE__ ) ;
+  m_permutation = gsl_permutation_calloc ( N ) ;
   Ostap::Assert ( m_permutation                         ,
                   "(GSL)Permutation allocation failure" ,
                   "Ostap::Math::GSL::Permutation"       ,
                   PERMUTATION_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
-// copy constructor 
+// constructor from vector of indices
 // ============================================================================
-Ostap::Math::GSL::Permutation::Permutation 
-( const Ostap::Math::GSL::Permutation&  right ) 
-  : m_permutation  ( gsl_permutation_alloc ( right.m_permutation->size ) )
+Ostap::Math::GSL::Permutation::Permutation
+( const std::vector<std::size_t>& indices )
+  : m_permutation ( nullptr ) 
 {
-  //
+  Ostap::Assert ( 1 <= indices.size() , 
+                  "(GSL)Permutation size must be at least one!"  , 
+                  "Ostap::Math::GSL::Permutation"                ,
+                  INVALID_PERMUTATION_SIZE , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( Ostap::Math::valid_permutation ( indices ) , 
+                  "(GSL)Permutation is invaild "  , 
+                  "Ostap::Math::GSL::Permutation"                ,
+                  INVALID_PERMUTATION , __FILE__ , __LINE__ ) ;
+  
+  const std::size_t N = indices.size() ;
+  m_permutation = gsl_permutation_alloc ( N ) ;
   Ostap::Assert ( m_permutation                         ,
                   "(GSL)Permutation allocation failure" ,
                   "Ostap::Math::GSL::Permutation"       ,
                   PERMUTATION_ALLOCATION_FAILURE        , __FILE__ , __LINE__ ) ;
   //
+  std::copy ( indices.begin () ,
+              indices.end   () ,
+              m_permutation->data ) ;  
+}  
+// ========================================================================
+
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Math::GSL::Permutation::Permutation 
+( const Ostap::Math::GSL::Permutation&  right )
+  : Permutation ( right.m_permutation->size ) 
+{
   gsl_permutation_memcpy ( m_permutation , right.m_permutation ) ;
 }
 // ============================================================================
@@ -2083,6 +2111,18 @@ Ostap::Math::GSL::Permutation::resize
                   PERMUTATION_ALLOCATION_FAILURE          , __FILE__ , __LINE__ ) ;
   //      
   return *this ;
+}
+// ============================================================================
+// Permutations are equal ?
+// ============================================================================
+bool Ostap::Math::GSL::Permutation::equal 
+( const Ostap::Math::GSL::Permutation& right ) const
+{
+  return &right == this ||
+    ( right.size () == this -> size () &&
+      std::equal ( m_permutation       -> data           ,
+                   m_permutation       -> data + size () ,
+                   right.m_permutation -> data           ) ) ;
 }
 // ============================================================================
 // swap two permutation 
@@ -3840,6 +3880,9 @@ Ostap::StatusCode Ostap::Math::GSL::SCHUR
 
   return Ostap::StatusCode::SUCCESS ;
 }
+// ============================================================================
+
+  
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

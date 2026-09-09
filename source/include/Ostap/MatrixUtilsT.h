@@ -23,6 +23,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/Norms.h"
 #include "Ostap/MatrixUtils2.h"
+#include "Ostap/BunchKaufman.h"
 // ============================================================================
 /** @file Ostap/MatrixUtils2.h
  *  The collection of functions for manipulation with matrices and vectors.
@@ -1229,68 +1230,7 @@ namespace Ostap
       TVectorT<double>&          vif ,
       const double               eps = epsilon_v<double> ) ;
     
-    // ========================================================================
-    /** @brief Convert a permutation vector $p$ into an explicit permutation matrix $P$.
-     *
-     *  Constructs an $N \times N$ matrix $P$ where $P(i, p(i)) = 1.0$ and all other 
-     *  entries are $0.0$.
-     *
-     *  @param[in]  p Input permutation vector of size $N$.
-     *  @param[out] P Output $N \times N$ orthogonal permutation matrix.
-     *  @return Ostap::StatusCode status code.
-     */
-     Ostap::StatusCode PermutationMatrix
-    ( const TVectorT<double>& p ,
-      TMatrixT<double>&       P ) ; 
 
-    // ========================================================================
-    /** @brief Bunch-Kaufman decomposition with explicit Permutation Vector $p$.
-     *
-     *  Decomposes a symmetric matrix $A$ into:
-     *  \f[ P A P^T = U D U^T \implies A = P^T U D U^T P \f]
-     *  where $U$ is strictly unit upper triangular ($U_{ii} = 1, U_{ij} = 0$ for $i > j$),
-     *  $D$ is symmetric block-diagonal ($1 \times 1$ and $2 \times 2$ blocks), and 
-     *  $p$ is a permutation vector where $p(i)$ indicates the original element index.
-     *
-     *  @param[in]  A Input real symmetric matrix.
-     *  @param[out] U Strictly unit upper triangular factor matrix $U$.
-     *  @param[out] D Symmetric block-diagonal matrix $D$.
-     *  @param[out] p Output permutation vector $p$ of size $N$.
-     *  @return Ostap::StatusCode status code (SUCCESS if factorization succeeded).
-     */
-    // ========================================================================
-    Ostap::StatusCode BunchKaufman
-    ( const TMatrixTSym<double>& A ,
-      TMatrixT<double>&          U ,
-      TMatrixTSym<double>&       D ,
-      TVectorD&                  p ) ;
-
-    // ========================================================================    
-    /** Bunch-Kaufman decompositon of symmetric matrices 
-     * @tparam Element The numeric type of the matrix elements (e.g., double, float).
-     * @param[in]  A Input symmetric matrix to decompose.
-     * @param[out] U triangular factor matrix U.
-     * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
-     * @return status code 
-     */
-    Ostap::StatusCode BunchKaufman
-    ( const TMatrixTSym<double>& A ,
-      TMatrixT<double>&          U ,
-      TMatrixTSym<double>&       D ) ;
-
-    // ========================================================================    
-    /** Bunch-Kaufman decompositon of symmetric matrices 
-     * @tparam Element The numeric type of the matrix elements (e.g., double, float).
-     * @param[in]  A Input symmetric matrix to decompose.
-     * @param[out] U triangular factor matrix U.
-     * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
-     * @return status code 
-     */
-    Ostap::StatusCode BunchKaufman
-    ( const TMatrixTSym<float>& A ,
-      TMatrixT<float>&          U ,
-      TMatrixTSym<float>&       D ) ;
-    
     // ========================================================================    
     namespace  Ops
     {      
@@ -4041,9 +3981,6 @@ namespace Ostap
         { return O::operation ( C::operation ( m1 ) , m2 ) ; }
       } ;
       
-      
-      
-      
       // ======================================================================
       template <class T>
       struct Sym<TMatrixT<T> >
@@ -4073,8 +4010,7 @@ namespace Ostap
           return r ;
         }
       } ;
-      
-      
+            
       // ======================================================================
       template <class T>
       struct Sym<TMatrixTSym<T> >
@@ -4169,13 +4105,14 @@ namespace Ostap
     } //                                  The end of namespace Ostap::Math::Ops
     // ========================================================================
 
-    
     // ========================================================================
     /// Is this matrix symmetric ?
     template <class T> 
     inline bool symmetric
     ( const TMatrixT<T>& mtrx )
-    { return mtrx.IsValid() && mtrx.IsSymmetric() ; }
+    { return mtrx.IsValid() && 1 <= mtrx.GetNrows ()
+        && mtrx.GetNrows() == mtrx.GetNcols()
+        && ( 1 == mtrx.GetNrows() || mtrx.IsSymmetric () ) ; }
     // ========================================================================
     /// Is this matrix symmetric ?
     template <class T> 

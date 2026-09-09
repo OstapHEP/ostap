@@ -736,5 +736,24 @@ double Ostap::Math::nball_volume
 // ============================================================================
 
 // ============================================================================
+// valid permutation of indices?
+// ============================================================================
+bool Ostap::Math::is_valid_permutation
+( const std::vector<std::size_t>& indices )
+{
+  //
+  const size_t      N  = indices.size();
+  std::vector<bool> seen ( N , false ) ; 
+  //
+  for ( std::size_t x : indices  )
+  {
+    if ( N <= x || seen [ x ] ) { return false ; }
+    seen [ x ] = true ;
+  }
+  //
+  return true;
+}
+
+// ============================================================================
 //                                                                      The END 
 // ============================================================================

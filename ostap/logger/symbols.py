@@ -36,6 +36,7 @@ __all__     = (
     'chisq'               , ## 𝛘²
     'clock'               , ## 🕐  (wide)
     'clock_ticks'         , ## 🕜 2-колон...
+    'column'              , ## ⋮   
     'concurrency'         , ## 🔀    
     'delta_symbol'        , ## Δ
     'descartes_product'   , ## ⨂
@@ -128,6 +129,7 @@ __all__     = (
     'less_or_equal'       , ## ≤
     'light_bulb'          , ## 💡  (wide)
     'likelihood'          , ## ℒ  (wide)
+    'matrix'              , ## ▦
     'minus_plus'          , ## ∓
     'mountain'            , ## ⛰️  (wide)
     'much_greater'        , ## ≫
@@ -137,6 +139,7 @@ __all__     = (
     'oil_drum'            , ## 🛢️  (wide)
     'palette'             , ## 🎨  (wide)
     'permille'            , ## ‰
+    'permutation'         , ## ⤭
     'plus_minus'          , ## ±
     'quadratic_sum'       , ## ⨁ 
     'question_mark'       , ## ❓  (wide)
@@ -279,7 +282,7 @@ similar          = '∼'   if show else '~'
 approximate      = '≈'   if show else '~='
 not_equal        = '≠'   if show else '!='
 weight_lifter    = '🏋'  if show else ''
-weight_scale     = '⚖' if show else '' 
+weight_scale     = '⚖'   if show else '' 
 
 scissors         = '✂'  if show else '' 
 oil_drum         = '🛢 ' if show else '' 
@@ -336,6 +339,9 @@ enough           = '∃'   if show else 'enough'
 mountain         = '⛰ '  if show else 'peak'
 
 concurrency      = '🔀'  if show  else '||'    
+matrix           = '▦'  if show  else ''
+permutation      = '⤭'   if show  else ''
+column           = '⋮'    if show  else '' 
 
 ## Lowercase Greek letters 
 greek_lower_alpha     = 'α' if show else 'alpha'

@@ -1012,6 +1012,16 @@ namespace Ostap
       return std::make_pair ( x - N * L , N )   ;
     }
     // ========================================================================
+    
+    // ========================================================================
+    /// valid permutation of indices? 
+    bool        is_valid_permutation ( const std::vector<std::size_t>& indices ) ;      
+    /// valid permutation of indices? 
+    inline bool valid_permutation    ( const std::vector<std::size_t>& indices )
+    { return is_valid_permutation ( indices ) ; } 
+    // ========================================================================
+    
+    // ========================================================================
     template <class T>
     inline const T& min ( const T& a ) { return a ; }
     template <class T>
@@ -1060,9 +1070,7 @@ namespace Ostap
     
     // ========================================================================
     // some vector sums 
-    // ========================================================================
-
-    
+    // ========================================================================    
     
     // ========================================================================
     /// Nolume of N-ball 

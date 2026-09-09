@@ -142,13 +142,15 @@ namespace
     MATRIX_IS_NOT_SQUARE           = 925 , 
     INVALID_MATRIX_SIZE            = 926 ,
     INVALID_VECTOR_SIZE            = 927 ,
-    INVALID_MATRIX_SLICE           = 928 , 
-    INVALID_VECTOR_SLICE           = 929 ,
-    INVALID_PERMUTATION_INDEX      = 930 ,  
-    GSL_VERSION_IS_TOO_OLD         = 931 ,
+    INVALID_PERMUTATION_SIZE       = 928 ,  
+    INVALID_MATRIX_SLICE           = 929 , 
+    INVALID_VECTOR_SLICE           = 930 ,
+    INVALID_PERMUTATION_INDEX      = 931 ,  
     // =========================================================================    
-    INVALID_SVD_DECOMPOSITION      = 935 ,
-    INVALID_BK_DECOMPOSITION       = 936 ,
+    GSL_VERSION_IS_TOO_OLD         = 935 ,
+    // =========================================================================    
+    INVALID_SVD_DECOMPOSITION      = 940 ,
+    INVALID_BK_DECOMPOSITION       = 941 ,
     // =========================================================================
     NOT_IMPLEMENTED                = 995 ,
     NOT_IMPLEMENTED_YET            = 996 , 

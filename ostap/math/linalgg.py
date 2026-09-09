@@ -566,6 +566,38 @@ Permutation.__str__       = _p_str_
 Permutation.__repr__      = _p_str_ 
 
 # =============================================================================
+## Equality
+#  @code
+#  a , b = ...
+#  if  a == b : print ( 'a==b' ) 
+#  @endcode 
+def _la_eq_ ( a , b ) :
+    """ Equality
+    >>> a , b = ...
+    >>> if  a == b : print ( 'a==b' )
+    """
+    if type ( a ) is not type ( b ) : return NotImplemented
+    return a.equal ( b )
+
+# =============================================================================
+## Non-equality
+#  @code
+#  a , b = ...
+#  if  a != b : print ( 'a!=b' ) 
+#  @endcode 
+def _la_ne_ ( a , b ) :
+    """ Non-equality
+    >>> a , b = ...
+    >>> if  a != b : print ( 'a!=b' )
+    """
+    if type ( a ) is not type ( b ) : return NotImplemented
+    return not a.equal ( b )
+
+for t in ( Matrix , Vector , Permutation ) :
+    t.__eq__ = _la_eq_
+    t.__ne__ = _la_ne_
+    
+# =============================================================================
 # True Linear Algebra stuff
 # =============================================================================
 
@@ -762,7 +794,6 @@ def _m_LLT_ ( A ) :
     if sc.isFailure () : raise ValueError ( "Error code %s from Ostap::Math::GSL::LLT" % sc )
     ##
     return L
-
 
 # ===============================================================================
 ##  LDLT: Cholesky decomposition of the square matrix A: \f$ PSASP^T = L D L^T \f$

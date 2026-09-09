@@ -1579,6 +1579,9 @@ namespace Ostap
     inline bool  symmetric
     ( const ROOT::Math::SMatrix<T,D,D,R>& mtrx) 
     {
+      // 1x1 matrix is symmetric! 
+      if constexpr ( 1 == D ) { return true ; }
+      //
       const Ostap::Math::Equal_To<T> equal {} ;
       for ( unsigned i = 0 ; i < D ; ++i )
       { for ( unsigned j = 0 ; j < i ; ++j )

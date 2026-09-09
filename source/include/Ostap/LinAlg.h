@@ -764,11 +764,15 @@ namespace Ostap
         Permutation
         ( const std::size_t N ) ;
         /// destructor: free permutation 
-        ~Permutation() ;
+        ~Permutation () ;
         // ========================================================================
-        Permutation () = delete ;
-        Permutation ( const Permutation&  ) ;
-        Permutation (       Permutation&& ) ;
+        /// constructor from vector of indices
+        Permutation
+        ( const std::vector<std::size_t>& indices ) ;        
+        // ========================================================================
+        Permutation  () = delete ;
+        Permutation  ( const Permutation&  ) ;
+        Permutation  (       Permutation&& ) ;
         /// copy assignement! 
         Permutation& operator= ( const Permutation&  ) ;
         /// move assignement! 
@@ -792,6 +796,11 @@ namespace Ostap
         // ========================================================================
         /// valid permutation ? 
         bool valid () const ; 
+        // ========================================================================
+      public : 
+        // ========================================================================
+        /// Permutations are equal ?
+        bool equal  ( const Permutation& right ) const ;
         // ========================================================================
       public:
         // ========================================================================
@@ -836,10 +845,13 @@ namespace Ostap
       
       // =========================================================================
       /// equality of two matrices 
-      inline bool operator==( const Matrix& a , const Matrix& b )
+      inline bool operator==( const Matrix&      a , const Matrix&       b )
       { return &a == &b || ( a.nRows() == b.nRows() && a.nCols() == b.nCols() && a.equal ( b ) ) ; }
       /// equality of two vectors 
-      inline bool operator==( const Vector& a , const Vector& b )
+      inline bool operator==( const Vector&      a , const Vector&       b )
+      { return &a == &b || ( a.size() == b.size() && a.equal ( b ) ) ; }
+      /// equality of two Permutations 
+      inline bool operator==( const Permutation& a , const Permutation & b )
       { return &a == &b || ( a.size() == b.size() && a.equal ( b ) ) ; }
       
       /// non-equality of two matrices 
@@ -1079,7 +1091,7 @@ namespace Ostap
        *  @param r [out] Resulting permuted matrix (N x N)
        *  @return Status code (Ostap::StatusCode::SUCCESS on success)
        *
-       *  @note Safe against argument aliasing (e.g., PMPt(p, m, m))
+       *  @note Safe against argument aliasing (e.g., PMP(p, m, m))
        */
       Ostap::StatusCode PMP 
       ( const Permutation& P ,
@@ -1582,9 +1594,9 @@ namespace Ostap
       // ======================================================================
 
       // ======================================================================
-      /** Bunch-Kaufman decompositon of symmetric matrices 
+      /** Bunch-Kaufman decompositon of symmetric matrices \f$ A = U D U^T \f$ 
        * @param[in]  A Input symmetric matrix to decompose.
-       * @param[out] U triangular factor matrix U.
+       * @param[out] U (almost triangular) factor matrix U.
        * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
        * @return status code
        * @attention  here we use TDecompBK from ROOT 
@@ -1594,6 +1606,23 @@ namespace Ostap
       ( const Matrix&  A ,  
         Matrix&        U , 
         Matrix&        D ) ; 
+      // ======================================================================
+      
+      // ======================================================================
+      /** Bunch-Kaufman decompositon of symmetric matrices \f$ P A P^T = U D U^T \f$ 
+       * @param[in]  A Input symmetric matrix to decompose.
+       * @param[out] U triangular factor matrix U.
+       * @param[out] D block-diagonal symmetric matrix D containing 1x1 and 2x2 blocks.
+       * @param[out] P permutation 
+       * @return status code
+       * @attention  here we use TDecompBK from ROOT 
+       * @see  TDecompBK 
+       */
+      Ostap::StatusCode BK 
+      ( const Matrix&  A ,
+        Matrix&        U , 
+        Matrix&        D , 
+        Permutation&   P ) ;
       // ======================================================================
 
       // ======================================================================
