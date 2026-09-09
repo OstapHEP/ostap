@@ -1,3 +1,5 @@
+# v3.8.6.0
+
 ## New features
 
    1. improve the content of the `Ostap/LinAlg.h` file 
@@ -22,6 +24,7 @@
    1. vaildate `linalgg`-tests
    1. add Bunch-Kaufman decomposition 
    1. change configurations for `XGBoostDensityReweighter`
+   1. moderize `Lomont.cpp`
    
 ## Bug fixes
 
