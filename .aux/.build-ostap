@@ -416,10 +416,12 @@ fi
 ## Second Pass
 # ==========================================================================
 printf "%s [5/8] Second pass of cmake&%s&install %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
+## ( cd "${OSTAP_BUILD}" && \
+##  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
+##  "${make_command}" -j"${NCPU}" && \
+##  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
 ( cd "${OSTAP_BUILD}" && \
-  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
-  "${make_command}" -j"${NCPU}" && \
-  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
+  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" )
 
 sc=$?
 if [ "${sc}" -ne 0 ]; then
@@ -448,23 +450,22 @@ else
     printf "%s [6/8] SUCCESS: '. %s' (code %d)\n" "${prefix}" "${OSTAP_INSTALL}/thisostap.sh" "${sc}"
 fi
 
-
 # =========================================================================
 ## Third Pass
 # ==========================================================================
 printf "%s [7/8] Third  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
-( cd "${OSTAP_BUILD}" && \
-  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
-  "${make_command}" -j"${NCPU}" && \
-  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
+## ( cd "${OSTAP_BUILD}" && \
+##   cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
+##  "${make_command}" -j"${NCPU}" && \
+##  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
 
-sc=$?
-if [ "${sc}" -ne 0 ]; then
-    printf "%s [7/8] FAILURE: third pass of cmake&%s&install (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
-    return ${sc} 2>/dev/null || exit ${sc}
-else
-    printf "%s [7/8] SUCCESS: third pass of cmake&%s&install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
-fi
+## sc=$?
+## if [ "${sc}" -ne 0 ]; then
+##     printf "%s [7/8] FAILURE: third pass of cmake&%s&install (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+##    return ${sc} 2>/dev/null || exit ${sc}
+## else
+##    printf "%s [7/8] SUCCESS: third pass of cmake&%s&install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+## fi
 
 if command -v tree >/dev/null 2>&1; then
     tree -d -L 3 --charset UTF-8 "${OSTAP_INSTALL}"
