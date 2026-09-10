@@ -21,6 +21,8 @@ __all__     = (
     'make_axis'         , ## make axis from description 
     'axis_same_binning' , ## same binning for two axes ?
     'h1_axis'           , ## create histogram from axis 
+    'h2_ax2s'           , ## create histogram from axis 
+    'h3_axis'           , ## create histogram from axis 
 )
 #
 # =============================================================================

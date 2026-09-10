@@ -152,7 +152,6 @@ def test_GOF () :
     tconf = { 'nToys' : nToys , 'parallel' : True , 'silent' : True }
 
     gof_list = [
-        GnD.Chi2              ( **tconf ) ,
         GnD.KullbackLeibler   ( **tconf ) ,
         GnD.Jeffrey           ( **tconf ) ,
         GnD.JensenShannon     ( **tconf ) ,

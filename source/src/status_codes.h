@@ -90,6 +90,7 @@ namespace
     INVALID_ECDF                   = 836 , 
     INVALID_WECDF                  = 837 , 
     INVALID_SMOOTH                 = 838 ,
+    INVALID_VALUES_WEIGHTS_MATCH   = 839 ,    
     // 
     INVALID_QUANTILE               = 840 ,
     INVALID_QUANTILE_INDEX         = 841 ,
@@ -151,6 +152,7 @@ namespace
     // =========================================================================    
     INVALID_SVD_DECOMPOSITION      = 940 ,
     INVALID_BK_DECOMPOSITION       = 941 ,
+    INVALID_EIGEN_DECOMPOSITION    = 942 ,
     // =========================================================================
     NOT_IMPLEMENTED                = 995 ,
     NOT_IMPLEMENTED_YET            = 996 , 

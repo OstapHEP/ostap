@@ -360,21 +360,21 @@ namespace Ostap
      *  \f[
      *      v_i = \Sigma_{ii} \cdot (\Sigma^+)_{ii}
      *  \f]
-     *  where \f$ \Sigma_{ii} \f$ is the variance of variable $i$, and 
+     *  where \f$ \Sigma_{ii} \f$ is the variance of variable \f$i\f$, and 
      *  \f$ (\Sigma^+)_{ii} \f$ is the corresponding diagonal element of the 
      *  Moore-Penrose pseudoinverse matrix \f$ \Sigma^+ \f$.
      *
      *  @par Connection to Global Correlation Coefficient:
-     *  In classical linear regression, the VIF of variable $i$ measures how much 
+     *  In classical linear regression, the VIF of variable \f$i\f$ measures how much 
      *  the variance of the estimated regression coefficient is inflated due to 
      *  multicollinearity. It is strictly related to the **Global Correlation 
      *  Coefficient** \f$ R_i \f$ (the coefficient of determination when regressing 
-     *  variable $i$ against all other $D-1$ variables):
+     *  variable \f$i\f$ against all other \f$D-1\f$ variables):
      *  \f[
      *      v_i = \frac{1}{1 - R_i^2} \quad \Longleftrightarrow \quad R_i = \sqrt{1 - \frac{1}{v_i}}
      *  \f]
-     *  - \f$ R_i = 0 \implies v_i = 1 \f$: Variable $i$ is orthogonal (uncorrelated) to all others.
-     *  - \f$ R_i \to 1 \implies v_i \to \infty \f$: Variable $i$ is a linear combination of other variables.
+     *  - \f$ R_i = 0 \implies v_i = 1 \f$: Variable \f$i\f$ is orthogonal (uncorrelated) to all others.
+     *  - \f$ R_i \to 1 \implies v_i \to \infty \f$: Variable \f$i\f$ is a linear combination of other variables.
      *
      *  @par Numerical Robustness & Fallback Architecture:
      *  1. **Fast Path**: Attempts in-place Cholesky decomposition (\f$ \Sigma = L L^T \f$). 
@@ -429,7 +429,6 @@ namespace Ostap
       }
       return Ostap::StatusCode::SUCCESS ;
     }
-
 
     // ========================================================================
     // helper functions to allow proper operations in PyROOT

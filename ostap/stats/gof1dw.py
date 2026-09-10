@@ -18,19 +18,18 @@ __all__     = (
     'AndersonDarling'    , ## Anderson-Darling  GoF estimator 
     'CramerVonMises'     , ## Cramer-von Mises  GoF estimator 
     'BerkJones'          , ## Berk-Jones        GoF estimator     
-    'ZK'                 , ## ZK               GoF estimator
-    'ZA'                 , ## ZA               GoF estimator
-    'ZC'                 , ## ZC               GoF estimator
+    'ZK'                 , ## ZK                GoF estimator
+    'ZA'                 , ## ZA                GoF estimator
+    'ZC'                 , ## ZC                GoF estimator
 )
 # =============================================================================
 from   ostap.stats.gof_np      import GoFnp
-from   ostap.stats.gofnd       import GoF
 import ostap.stats.twosamples2 as     TS2 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.twosamples2' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof1dw' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Two-sample & GoF 1D-weighted tests' )
@@ -73,7 +72,7 @@ class BootstrapGoF ( GoFnp ) :
     ## Are weights supported by this GoF estimator?
     @property 
     def weights_supported ( self ) :
-        """`weghts_supported`: Are weights supported by this estimator?
+        """`weights_supported`: Are weights supported by this estimator?
         """
         return True 
 
@@ -87,7 +86,7 @@ class BootstrapGoF ( GoFnp ) :
         return True 
        
     # =========================================================================
-    ## Calculate T-value for Goodness-of-Git
+    ## Calculate T-value for Goodness-of-Fit
     #  @code
     #  data1   = ...
     #  data2   = ...
@@ -112,64 +111,7 @@ class BootstrapGoF ( GoFnp ) :
                                 data2   = data2   ,
                                 weight1 = weight1 ,
                                 weight2 = weight2 )
-    
-    # =========================================================================
-    ## Calculate the t & p-values
-    #  @code
-    #  gof = ...
-    #  data1 , data2 = ...
-    #  t , p = gof.pvalue ( data1 , data2 , normalize = False ) 
-    #  @endcode 
-    def pvalue ( self           , 
-                 data1          ,
-                 data2          , * ,
-                 tvalue  = None , 
-                 weight1 = None ,
-                 weight2 = None ) : 
-                
-        """ Calculate the t & p-values
-        >>> gof  = ...
-        >>> data1 , data2 = ...
-        >>> t   , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
-        """
 
-        ## transform ?
-        uds1 , uds2 = self.unpack ( data1 , data2 ) 
-        
-        ## normalize ? 
-        if self.normalize :
-            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
-
-        ## calculate t-value if not specified 
-        t_value    = tvalue if not tvalue is None else self.tvalue ( uds1      ,
-                                                                     uds2      ,
-                                                                     weight1   = weight1 ,
-                                                                     weight2   = weight2 ,
-                                                                     normalize = False   )        
-        ## use bootstrapping to get the p-value
-        ## from ostap.stats.pvalue import BOOTSTRAPPER as RESAMPLER 
-        from ostap.stats.pvalue import PERMUTATOR as RESAMPLER 
-        resampler = RESAMPLER ( self                   ,
-                                t_value                , 
-                                uds1                   ,
-                                uds2                   ,
-                                weight1 = weight1      ,
-                                weight2 = weight2      ) ;
-        
-        if self.parallel and resampler.run : counter , _ = resampler.run ( self.nToys , progress = self.progress , silent = self.silent )            
-        else                               : counter , _ = resampler     ( self.nToys , progress = self.progress , silent = self.silent )
-        
-        ## get the efficiency/p-value from the counter
-        p_value      = counter.eff
-
-        self.ecdf    = resampler.ecdf
-        self.counter = counter
-        
-        self.t_value = t_value 
-        self.p_value = p_value 
-        
-        return self.t_value , self.p_value
-    
 # =============================================================================
 ## @class KolmogorovSmirnov
 #  Two (weighted) sample test using Kolmogorov-Smirnov statistics
@@ -268,6 +210,33 @@ class ZK(BootstrapGoF) :
         
 # =============================================================================
 
+       
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Fit
+    #  @code
+    #  data1   = ...
+    #  data2   = ...
+    #  weight1 = ...
+    #  weight2 = ...
+    #  tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
+    #  @endcode
+    def tvalue ( self      ,
+                 data1     ,
+                 data2     ,
+                 weight1   = None  ,
+                 weight2   = None  ,
+                 normalize = False ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> data1   = ...
+        >>> data2   = ...
+        >>> weight1 = ...
+        >>> weight2 = ...
+        >>>> tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
+        """
+        
+
+
+    
 # =============================================================================
 if '__main__' == __name__ :
     

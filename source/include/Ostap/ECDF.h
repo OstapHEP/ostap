@@ -81,8 +81,7 @@ namespace Ostap
         /// (1) adjust the content 
         this -> cleanup () ;
         /// (2) sort it if needed 
-        if ( !std::is_sorted ( m_data.begin () , m_data.end () ) )
-          { std::sort ( m_data.begin () , m_data.end () ) ; }
+        std::sort ( m_data.begin () , m_data.end () ) ;
         /// (3) update counters 
         for ( auto v : m_data ) { m_counter.add ( v ) ; }
       }
@@ -491,38 +490,31 @@ namespace Ostap
       // ======================================================================
     public: 
       // ======================================================================
-      /** Constructor from  data
-       *  data must be non-empty!
-       */ 
+      /// Constructor from  data
       WECDF
-      ( const Data&  data                  ,
-        const bool   complementary = false ) ;
+      ( const Data&         data                  ,
+        const bool          complementary = false ) ;
       // ======================================================================
-      /** Constructor from data
-       *  data must be non-empty!
-       */ 
+      /// Constructor from data
       WECDF
-      ( const ECDF::Data&  data                  ,
-        const ECDF::Data&  weights               ,
-        const bool         complementary = false ) ;
+      ( const ECDF::Data&   data                  ,
+        const ECDF::Data&   weights               ,
+        const bool          complementary = false ) ;
       // =======================================================================
-      /** Constructor from  data
-       *  data must be non-empty!
-       */ 
+      /// Constructor from data
       WECDF
-      ( const ECDF::Data&  data                  ,
-        const bool         complementary = false ) ;      
+      ( const ECDF::Data&   data                  ,
+        const double        weights       = 1     ,
+        const bool          complementary = false ) ;
       // =======================================================================
       WECDF
-      ( const WECDF&  right         ,
-        const bool    complementary ) ;
+      ( const WECDF&        right         ,
+        const bool          complementary ) ;
       // ======================================================================
       WECDF
-      ( const ECDF&   right         ,
-        const bool    complementary ) ;
-      // ======================================================================
-      WECDF
-      ( const ECDF&   right         ) ;
+      ( const ECDF&         right                 ,
+        const double        weight        = 1     ,
+        const bool          complementary = false ) ;
       // ======================================================================
       /// copy constructor
       WECDF ( const WECDF&  right ) = default ;
@@ -560,15 +552,20 @@ namespace Ostap
       ( const double value        ,
         const double weight = 1.0 ) { return add ( Entry ( value , weight ) ) ; }
       /// add a value to data container  
-      WECDF& add ( const Entry&       entry  ) ;      
+      WECDF& add ( const Entry&       entry   ) ;      
       /// add more values to data container 
-      WECDF& add ( const WECDF&       values ) ;
+      WECDF& add ( const WECDF&       values  ) ;
       /// add more values to data container       
-      WECDF& add ( const WECDF::Data& values ) ;
+      WECDF& add ( const WECDF::Data& values  ) ;
       /// add more values to data container 
-      WECDF& add ( const ECDF&        values ) ;
+      WECDF& add ( const ECDF&        values  , 
+                   const double       weight  = 1.0 ) ;
       /// add more values to data container 
-      WECDF& add ( const ECDF::Data&  values ) ;
+      WECDF& add ( const ECDF::Data&  values  ,
+                   const double       weight  = 1.0 ) ;
+      /// add more values to data container 
+      WECDF& add ( const ECDF::Data&  values  ,
+                   const ECDF::Data&  weights ) ;
       // ======================================================================
     public:
       // ======================================================================

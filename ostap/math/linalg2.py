@@ -28,7 +28,10 @@ from   ostap.logger.pretty    import fmt_pretty_float, fmt_pretty_error, format_
 from   ostap.math.math_base   import pretty_array
 from   ostap.logger.colorized import infostr, attstr, warning_info 
 from   ostap.utils.gsl        import gsl_info
-from   ostap.logger.symbols   import ditto, times, labels 
+from   ostap.logger.symbols   import ( ditto , times , labels  ,
+                                       column      as column_symbol      ,
+                                       permutation as permutation_symbol ,
+                                       matrix      as matrix_symbol      )                                         
 from   ostap.logger.colorized import colored_string  
 import ostap.logger.table     as     T
 import ROOT, math, re, ctypes, array, random 
@@ -43,12 +46,14 @@ revct = re.compile ( r'SVector<(?P<TYPE>[^,>]+)' )
 remtx = re.compile ( r'SMatrix<(?P<TYPE>[^,>]+)' )
 NaN   = float('nan')
 # =============================================================================
+## colorilze  diagonal elements 
 def diag ( what ) : 
+    """ Colorilze  diagonal elements """
     return colored_string ( what             ,  
-                           foreground = 0    , 
-                           background = 7    ,
-                           fg_bright  = True , 
-                           underline  = True )
+                            foreground = 0    , 
+                            background = 7    ,
+                            fg_bright  = True , 
+                            underline  = True )
 # =============================================================================
 ## Helper method: get  i,j element from matrix-like object
 #  @code
@@ -282,8 +287,6 @@ class LinAlg(object) :
         """
         oa = '__old_attributes__' 
         if not hasattr  ( klass , oa ) : setattr ( klass , oa , {} )
-
-
 
         oatts = getattr ( klass , oa ) 
         
@@ -1380,7 +1383,7 @@ class LinAlg(object) :
         
         N = len ( vct )
 
-        if not title : title = typename ( vct )
+        if not title : title = '%s %s' % ( column_symbol , typename ( vct ) )
         
         ## the maximal element 
         maev = abs ( Ostap.Math.maxabs_element  ( vct ) )
@@ -1426,7 +1429,7 @@ class LinAlg(object) :
 
 
     # =============================================================================
-    ## self-printout of S-vectors
+    ## self-printout of permutations 
     #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
     #  @date 2009-09-12
     @staticmethod
@@ -1438,7 +1441,7 @@ class LinAlg(object) :
         
         N = len ( vct )
 
-        if not title : title = typename ( vct )
+        if not title : title = '%s %s' % ( permutation_symbol , typename ( vct ) )
 
         row  = [ ( '%d' % v ) for v in vct ]
             
@@ -1462,8 +1465,8 @@ class LinAlg(object) :
         values = vct.value      ()    
         cov2   = vct.covariance ()
 
-        if not title : title = typename ( vct )
-        
+        if not title : title = '%s %s' % ( column_symbol , typename ( vct ) )
+
         N    = len ( values )
         cols = N
         rows = N
@@ -1569,7 +1572,7 @@ class LinAlg(object) :
         >>> print ( vct ) 
         """
         N = len ( vct ) 
-        if 15 < N  : return '[ ' + ( ', '.join ( fmt % v for v in vct ) ) + ' ]'
+        if 19 < N  : return '[ ' + ( ', '.join ( fmt % v for v in vct ) ) + ' ]'
 
         result, _ = vct.pretty_print ( title     = title     ,
                                        prefix    = prefix    ,
@@ -1625,7 +1628,7 @@ class LinAlg(object) :
         >>> print ( vct ) 
         """
         N = len ( vct ) 
-        if 15 < N  : return '[ ' + ( ', '.join ( fmt % v for v in vct ) ) + ' ]'
+        if 19 < N  : return '[ ' + ( ', '.join ( fmt % v for v in vct ) ) + ' ]'
 
         result, _ = vct.pretty_print ( title     = title     ,
                                        prefix    = prefix    ,
@@ -1813,7 +1816,7 @@ class LinAlg(object) :
         rows = mtrx.kRows
         cols = mtrx.kCols
 
-        if not title : title = typename ( mtrx )
+        if not title : title = '%s %s' % ( matrix_symbol , typename ( vct ) )
 
         mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
         fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )
@@ -1976,7 +1979,7 @@ class LinAlg(object) :
         rows = mtrx.kRows
         cols = mtrx.kCols
         
-        if not title : title = typename ( mtrx )
+        if not title : title = '%s %s' % ( matrix_symbol , typename ( vct ) )
 
         mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
         fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )

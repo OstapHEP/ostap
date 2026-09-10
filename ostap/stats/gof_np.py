@@ -26,7 +26,6 @@ __all__     = (
     'PPDnp'           , ## Point-to-Point Dissimilarity  Goodness-of-Fit method 
     'DNNnp'           , ## Distance-to-Nearest-Neighbor  Goodness-of-Fit method
     ##
-    'Chi2'            , ## Very crude estimator based on chi2 distance
     'KullbackLeibler' , ## Very crude estimator based on Kullback-Leibler's divergency 
     'Jeffrey'         , ## Very crude estimator based on Jeffrey's divergency 
     'JensenShannon'   , ## Very crude estimator based on Jensen-Shannon divergency 
@@ -49,14 +48,15 @@ from   ostap.stats.utils        import ( weight_trivial     ,
                                          check_all          , 
                                          valid_data_shape   ,
                                          num_features       ,
-                                         num_samples        ) 
+                                         num_samples        ,
+                                         np2vct             ) 
 from   ostap.stats.gof_utils    import ( run_parallel       ,
                                          num_jobs           , 
                                          normalize_pooled   ,
                                          pairwise_distances ,
                                          nearest_neighbors  , 
                                          nearest_distances  , 
-                                         draw_ecdf          , s2u , np2vct ) 
+                                         draw_ecdf          , s2u ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf
 from   ostap.logger.symbols     import ( symmetry  as symmetry_symbol  ,
@@ -244,8 +244,8 @@ class GoFnp (AGoFnp,Config) :
         """
         
         if not self.weights_supported :
-            assert weight_trivial ( weight1 ) , "weight1 must be *trivial*"
-            assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
+            if not weight_trivial ( weight1 ) : raise ValueError ( "weight1 must be *trivial*" ) 
+            if not weight_trivial ( weight2 ) : raise ValueError ( "weight2 must be *trivial*" )
             weight1 = None
             weight2 = None
 
@@ -563,7 +563,7 @@ class MIXnp(GoFnp) :
         ## normalize
         if normalize and self.normalize : uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
 
-        ## check validity and consitency of input parameters 
+        ## check validity and consitency of ALL input parameters 
         check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) )
         
         ## 
@@ -1129,44 +1129,6 @@ class DistanceTest(GoFnp) :
                 logger.warning ( '%s: data-vector is not valid #%d' % ( typename ( self ) , self.__invalid_data ) ) 
         return vct 
                                     
-# =============================================================================
-## @class Chi2
-#  Use Chi2 distance to discriminiate the dataset
-#  @attention it is *VERY* crude "estimator"
-class Chi2(DistanceTest) :
-    """ Use Chi2 distance to discriminiate the dataset
-    - attention it is *VERY* crude "estimator"
-    """    
-    def __init__ ( self  , **params ) :         
-        
-        ## initialize the base 
-        super().__init__ (  method = 'Chi2' , **params )
-
-    # =========================================================================
-    # calculate t-value for (non-structured) 2D arrays
-    def tvalue ( self      , 
-                 data1     , 
-                 data2     , *    , 
-                 weight1   = None , 
-                 weight2   = None ,
-                 normalize = True ) :
-        """ Calculate t-value for (non-structured) 2D arrays
-        """
-        ## transform ?
-        uds1 , uds2 = self.unpack ( data1 , data2 )
-
-        ## check everything
-        check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) ) 
-        
-        ## normalize
-        if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
-            
-        v1 = self.np2vstat ( uds1 , weight1 )
-        v2 = self.np2vstat ( uds2 , weight2 )
-        
-        return v1.chi2 ( v2 )
-        
 # ============================================================================
 ## @class KullbackLeibler 
 #  Use (asymmetric) KullbackLeibler divergency to discriminiate the dataset

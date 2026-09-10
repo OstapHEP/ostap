@@ -1,3 +1,19 @@
+# v3.8.6.2
+
+## New features
+
+  1. add new implementation of `Chi2` Two-Samples/GoF test based in comparison if binned 1,2&3 histograms 
+  1. add new function `data_VIFs` to get the variance inflation factors
+  1. improve `Ostap::Math::WECDF` 
+  
+## Bug fixes
+
+  1. fix `norm_schatter` function (Mac OS)
+
+## Backward incompatible
+
+  1. remove "old" cfusing `Chi2` Two-samples/GoF estiamator
+  
 # v3.8.6.0
 
 ## New features
@@ -8,7 +24,7 @@
    1. add variable check for `TTre.slice` and `TTree.table`
    1. couple of tweaks in `TTree.table`
    1. large improvements for Linear Algebra
-   1. make use of `sdt::byte` and `std::span`
+   1. make use of `std::byte` and `std::span`
    1. completely rewrite `EigenSystem`
    1. cmake : locate optimized BLAS if/when available and make use of it! 
    1. more improvements for Linear Algebra
@@ -16,15 +32,15 @@
    1. add spectral norms for GSL world
    1. more polishing for Linar Algebra
    1. add `rank` functions for T-matrices 
-   1. complete norms (including sepctral, nuclear an Schatten), ranks and Moore-Penrouse pseudoinverses 
-   1. add `VIF` methods to get the variance inflation factors for badly-defined covariance matrices 
+   1. complete norms (including spectral, nuclear and Schatten norms), ranks and Moore-Penrouse pseudoinverses 
+   1. add `VIF` methods to get the variance inflation factors for potentially badly-defined covariance matrices 
    1. re-factor some functions from `Ostap/Math.h` allowing the separate access to them without heavy `Math.h`
    1. add "transpose" constructor to GSL-matrix
    1. add "diagonal matrix expressions" for SMatrix
-   1. vaildate `linalgg`-tests
+   1. validate `linalgg`-tests
    1. add Bunch-Kaufman decomposition 
    1. change configurations for `XGBoostDensityReweighter`
-   1. moderize `Lomont.cpp`
+   1. modernize `Lomont.cpp`
    
 ## Bug fixes
 

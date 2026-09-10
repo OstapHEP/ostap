@@ -53,7 +53,6 @@ __all__     = (
     'ZC'                 , ## ZC                GoF estimator
     ## 
     ## some simble but crude estimators
-    'Chi2'               , ## Very crude estimator based on chi2 distance
     'KullbackLeibler'    , ## Very crude estimator based on Kullback-Leibler's divergency 
     'Jeffrey'            , ## Very crude estimator based on Jeffrey's divergency 
     'JensenShannon'      , ## Very crude estimator based on Jensen-Shannon divergency 
@@ -62,7 +61,8 @@ __all__     = (
     'Bhattacharyya'      , ## Very crude estimator based on Bhattacharyya's divergency 
     'Wasserstein'        , ## Very crude estimator based on Wasserstein's divergency 
     'Hellinger'          , ## Very crude estimator based on Hellinger's divergency 
-    ## 
+    ##
+    'Chi2'               , ## Use binned chi2 as an estimator (1,2&3D) 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
@@ -1741,48 +1741,6 @@ class ZK ( KolmogorovSmirnov ) :
         
 
 # =============================================================================
-## @class Chi2
-#  Use "Chi2" method to estimate the Goodness-of-Fit
-#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
-class Chi2(GoF) : 
-    """ Implementation of concrete method for probing of Goodness-Of-Fit
-    -   t-value is defined as Chi2' distance 
-    -   p-value if defined via permutations 
-    Important parameters:
-    
-    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
-    - nToys    : (int)   number of permutations/toys 
-    
-    """
-    # =========================================================================
-    ## create the estimator
-    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
-    #  @param nToys    : (int)  number of permutations/toys 
-    def __init__ ( self               , * , 
-                   nToys      = 400   ,
-                   parallel   = False ,
-                   silent     = False ,
-                   progress   = True  ,
-                   mcFactor   = 20    , **params ) : 
-    
-        """ Create the Chi2' estimator 
-
-        Parameters
-
-        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
-        - nToys    : (int) number of permutations/toys 
-        """
-        
-        from ostap.stats.gof_np import Chi2 as GOF
-        GoF.__init__ ( self      ,
-                       mcFactor  = mcFactor , 
-                       estimator = GOF ( nToys    = nToys    ,
-                                         parallel = parallel ,
-                                         silent   = silent   ,
-                                         progress = progress , **params ) )
-        
-
-# =============================================================================
 ## @class KullbackLeibler 
 #  Use "Kullback-Leibler" method to estimate the Goodness-of-Fit
 #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
@@ -2114,6 +2072,50 @@ class Hellinger(GoF) :
         GoF.__init__ ( self      ,
                        mcFactor  = mcFactor , 
                        estimator = GOF ( nToys    = nToys    ,
+                                         parallel = parallel ,
+                                         silent   = silent   ,
+                                         progress = progress , **params ) ) 
+
+
+# =============================================================================
+## @class Chi2
+#  Use binned chi2-method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class Chi2(GoF) : 
+    """ Implementation of concrete method for probing of Goodness-Of-Fit
+    -   t-value is defined as binned chi2
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               , * ,
+                   binning            , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   progress   = True  ,
+                   mcFactor   = 20    , **params ) : 
+    
+        """ Create the Chi2 estimator 
+
+        Parameters
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        
+        from ostap.stats.gofchi2 import Chi2 as GOF
+        GoF.__init__ ( self      ,
+                       mcFactor  = mcFactor , 
+                       estimator = GOF ( nToys    = nToys    ,
+                                         binning   = binning  ,
                                          parallel = parallel ,
                                          silent   = silent   ,
                                          progress = progress , **params ) ) 

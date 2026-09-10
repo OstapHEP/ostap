@@ -464,17 +464,14 @@ double Ostap::Math::ECDF::high_edge () const
 Ostap::Math::WECDF&
 Ostap::Math::WECDF::cleanup ()
 {
-  //
   Data::iterator remove = std::remove_if
-    ( m_data.begin () ,
-      m_data.end   () ,
-      [] ( const Data::value_type& item ) -> bool
-      { return
-          !std::isfinite ( item.first  ) ||
-          !std::isfinite ( item.second ) || !item.second ; } ) ;
-  // 
+  ( m_data.begin () ,
+    m_data.end   () ,
+    [] ( const Data::value_type& item ) -> bool
+    { return
+        !std::isfinite ( item.first  ) ||
+        !std::isfinite ( item.second ) || !item.second ; } ) ;
   m_data.erase ( remove , m_data.end() ) ; 
-  //
   return *this ;
 }
 // ============================================================================
@@ -489,12 +486,10 @@ Ostap::Math::WECDF::WECDF
   , m_complementary ( complementary ) 
   , m_counter       ( ) 
 {
-  //
   // (1) remove bad elements 
   cleanup () ;
-  // (2) sort it if needed 
-  if ( !std::is_sorted ( m_data.begin() , m_data.end () , COMPARE () ) )
-    { std::sort ( m_data.begin() , m_data.end() , COMPARE () ) ; }
+  // (2) sort it
+  std::sort ( m_data.begin() , m_data.end() , COMPARE () ) ;  
   // (3) update counter
   for ( const auto& v : m_data ) { m_counter.add ( v.first , v.second ) ; } 
 }
@@ -512,37 +507,21 @@ Ostap::Math::WECDF::WECDF
   , m_counter       () 
 {
   //
-  const std::size_t nd = data   .size() ;
-  const std::size_t nw = weights.size() ;
-  //
-  Ostap::Assert ( nw <= nd                               ,
-                  "Mismatch wth data/weigth structures!" ,
-                  "Ostap::Math::WECDF"                   ,
-                  INVALID_DATA , __FILE__ , __LINE__     ) ;
-  //
-  m_data.reserve ( nd ) ;
-  for ( std::size_t i = 0 ; i < nd ; ++i )
-    {
-      const double value = data [ i ] ;
-      const double weight = ( i < nw ) ? weights [ i ] : 1.0 ;
-      if ( !std::isfinite ( value ) || !std::isfinite ( weight ) || !weight ) { continue ; } 
-      m_data.emplace_back ( value , weight ) ;
-    }
-  // (1) here there is  no need to filter data... doe above 
-  // (2) sort if needed 
-  if ( !std::is_sorted ( m_data.begin() , m_data.end() , COMPARE () ) ) 
-    { std::sort ( m_data.begin() , m_data.end () , COMPARE () ) ; }
-  // (3) update counter
-  for ( const auto& v : m_data ) { m_counter.add ( v.first , v.second ) ; } 
+  add ( data , weights ) ;
 }
 // ============================================================================
 // Standard constructor from  data
 // ============================================================================
 Ostap::Math::WECDF::WECDF
 ( const Ostap::Math::ECDF::Data&  data          ,
+  const double                    weight        , 
   const bool                      complementary )
-  :  WECDF ( data , Ostap::Math::ECDF::Data() , complementary )
-{}
+  : m_data          () 
+  , m_complementary ( complementary )
+  , m_counter       () 
+{
+  add ( data , weight ) ;
+}
 // ============================================================================
 Ostap::Math::WECDF::WECDF
 ( const Ostap::Math::WECDF& right         ,
@@ -554,24 +533,13 @@ Ostap::Math::WECDF::WECDF
 // ============================================================================
 Ostap::Math::WECDF::WECDF
 ( const Ostap::Math::ECDF& right         ,
+  const double             weight        , 
   const bool               complementary )
-  : WECDF ( right )
-{
-  m_complementary = complementary ;
-}
-// ============================================================================
-Ostap::Math::WECDF::WECDF
-( const Ostap::Math::ECDF& right            )
-  : m_data          ()
-  , m_complementary ( right.complementary() ) 
+  : m_data          () 
+  , m_complementary ( complementary )
   , m_counter       () 
 {
-  m_data.reserve ( right.size() ) ;
-  for ( auto d : right.data() )
-  {
-    m_data.emplace_back ( d , 1.0 ) ;
-    m_counter.add       ( d , 1.0 ) ; 
-  }
+  add ( right , weight ) ;
 }
 // ============================================================================
 // merge two objects 
@@ -607,7 +575,7 @@ Ostap::Math::WECDF::add
   const double value  = entry.first ;
   const double weight = entry.second ;
   //
-  if ( !std::isfinite ( value ) || !std::isfinite ( weight ) || !weight) { return *this ; }  
+  if ( !std::isfinite ( value ) || !std::isfinite ( weight ) || !weight ) { return *this ; }  
   //
   auto where = std::upper_bound ( m_data.begin () , m_data.end () , entry , COMPARE () ) ;
   m_data.insert ( where , entry  ) ;
@@ -641,10 +609,13 @@ Ostap::Math::WECDF::add
 // ============================================================================
 Ostap::Math::WECDF&
 Ostap::Math::WECDF::add
-( const Ostap::Math::ECDF& values ) 
+( const Ostap::Math::ECDF& values , 
+  const double             weight )  
 {
+  if ( !std::isfinite ( weight ) || !weight ) { return *this ; } 
+  //  
   Data aux {} ; aux.reserve ( values.size() ) ; 
-  for ( auto d : values.data() ) { aux.emplace_back ( d , 1.0 ) ; }
+  for ( auto d : values.data() ) { aux.emplace_back ( d , weight ) ; }
   //
   Data tmp   ( m_data.size() + aux.size() ) ;
   /// merge two sorted containers 
@@ -664,10 +635,13 @@ Ostap::Math::WECDF::add
 // ============================================================================
 Ostap::Math::WECDF&
 Ostap::Math::WECDF::add
-( const Ostap::Math::ECDF::Data& values ) 
+( const Ostap::Math::ECDF::Data& values ,
+  const double                   weight ) 
 {
+  if ( !std::isfinite ( weight ) || !weight ) { return *this ; }
+  //
   Data aux {} ; aux.reserve ( values.size() ) ; 
-  for ( auto d : values ) { aux.emplace_back ( d , 1.0 ) ; }
+  for ( auto d : values ) { aux.emplace_back ( d , weight ) ; }
   return this->add ( aux ) ;
 }  
 // ============================================================================
@@ -677,44 +651,60 @@ Ostap::Math::WECDF&
 Ostap::Math::WECDF::add
 ( const Ostap::Math::WECDF::Data& values ) 
 {
-  const Data* input = &values ;
-  //
-  Data values2 ;  
-  if ( !std::is_sorted ( values.begin() , values.end() , COMPARE () ) ) 
-    {
-      values2 = values ;
-      /// remove bad elements 
-      Data::iterator remove = std::remove_if
-        ( values2.begin () ,
-          values2.end   () ,
-          [] ( const Data::value_type& item ) -> bool
-          { return
-              !std::isfinite ( item.first  ) ||
-              !std::isfinite ( item.second ) || !item.second ; } ) ;
-      if ( values2.end() != remove ) { values2.erase ( remove , values2.end() ) ; } 
-      /// sort it 
-      std::sort ( values2.begin() , values2.end  () , COMPARE () ) ;      
-      input = &values2 ;
-    }
-  /// temporary  dataset 
-  Data tmp   ( m_data.size() + input -> size() ) ;  
-  /// merge two sorted containers 
+  /// (1) make local copy 
+  Data values2 { values } ; 
+  /// (2) remove bad elements 
+  Data::iterator remove = std::remove_if
+  ( values2.begin () ,
+    values2.end   () ,
+    [] ( const Data::value_type& item ) -> bool
+    { return
+        !std::isfinite ( item.first  ) ||
+        !std::isfinite ( item.second ) || !item.second ; } ) ;
+  if ( values2.end() != remove ) { values2.erase ( remove , values2.end() ) ; } 
+  /// (3) sort it 
+  std::sort ( values2.begin() , values2.end  () , COMPARE () ) ;      
+  ///
+  /// (4) temporary  dataset 
+  Data tmp   ( m_data.size() + values2.size() ) ;  
+  /// (5) merge two sorted containers 
   std::merge ( m_data.begin  () ,
                m_data.end    () ,
-               input->begin  () ,
-               input->end    () ,
+               values2.begin () ,
+               values2.end   () ,
                tmp.begin     () ,
                COMPARE       () ) ;
-  /// 
+  /// (6) swap containers 
   std::swap ( m_data , tmp ) ;
-  /// (1) adjust the content 
-  if ( &values2 != input ) { this -> cleanup () ; }
-  /// (2) update counters 
-  for ( const auto& v : *input ) { m_counter.add ( v.first , v.second ) ; }
+  /// (7) update counters 
+  for ( const auto& v : values2 ) { m_counter.add ( v.first , v.second ) ; }
   return *this ;
 }
 // ============================================================================
-
+// add values to data container  
+// ============================================================================
+Ostap::Math::WECDF&
+Ostap::Math::WECDF::add
+( const Ostap::Math::ECDF::Data& values  ,
+  const Ostap::Math::ECDF::Data& weights )
+{
+  //
+  Ostap::Assert ( values.size() == weights.size() , 
+                  "Mismatch values/weights size"  , 
+                  "Ostap::Math::WECDF::add"       ,
+                  INVALID_VALUES_WEIGHTS_MATCH    , __FILE__ , __LINE__ ) ;
+  //
+  /// (1)  merge/zip two containers 
+  Data tmp ( values.size () ) ;
+  std::transform ( values .begin () ,
+                   values .end   () ,
+                   weights.begin () ,
+                   tmp    .begin () ,
+                   [] ( const double v , const double w )
+                   { return std::make_pair ( v , w ) ; } ) ;
+  /// (2) add them togather 
+  return add ( tmp ) ;
+}
 // ============================================================================
 // the main method 
 // ============================================================================

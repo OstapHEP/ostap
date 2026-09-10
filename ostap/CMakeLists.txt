@@ -527,14 +527,15 @@ if ( NOT ${PY_snakeviz_FOUND} )
   message ( "----> warning                   snakeviz is NOT found!" ) 
 endif()
 
-
-
-
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
    message ( "----> Full pathos (pathos+dill+multiprocess+ppft) is found" )
 else()
    message ( "----> warning                     pathos is NOT found!" )  
 endif()
+
+# ========================================================================================
+## report 
+# ========================================================================================
 
 if ( ${PY_numpy_FOUND} )
   find_python_module_version ( numpy ) 

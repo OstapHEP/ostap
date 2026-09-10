@@ -733,6 +733,89 @@ namespace Ostap
     // =========================================================================
   } ; //                                         The end f class Ostap::Project     
   // ==========================================================================
+  /** Fill 1D histogram from arrays
+   *  @param h  (INPUT/UPDATE) histogram
+   *  @param n  (INPUT) number of elements
+   *  @param x  (INPUT) input data array
+   *  @param w  (INPUT) input array of weights
+   */   
+  Ostap::StatusCode fill_TH1
+  ( TH1&              h ,
+    const std::size_t n ,
+    const double*     x ,
+    const double*     w ) ;
+  // ==========================================================================
+  /** Fill 1D histogram from arrays
+   *  @param h  (INPUT/UPDATE) histogram
+   *  @param n  (INPUT) number of elements
+   *  @param x  (INPUT) input data array
+   *  @param w  (INPUT) weight
+   */   
+  Ostap::StatusCode fill_TH1 
+  ( TH1&        h,
+    const std::size_t n     ,
+    const double*     x     ,
+    const double      w = 1 ) ;
+  // ==========================================================================
+  /** Fill 2D histogram from arrays
+   *  @param h  (INPUT/UPDATE) histogram
+   *  @param n  (INPUT) number of elements
+   *  @param x  (INPUT) input data array
+   *  @param y  (INPUT) input data array
+   *  @param w  (INPUT) input array of weights
+   */   
+  Ostap::StatusCode fill_TH2
+  ( TH2&              h ,
+    const std::size_t n ,
+    const double*     x ,
+    const double*     y ,
+    const double*     w ) ;
+  // ==========================================================================
+  /** Fill 1D histogram from arrays
+   *  @param h  (INPUT/UPDATE) histogram
+   *  @param n  (INPUT) number of elements
+   *  @param x  (INPUT) input data array
+   *  @param w  (INPUT) weight
+   */   
+  Ostap::StatusCode fill_TH2
+  ( TH2&              h     ,
+    const std::size_t n     ,
+    const double*     x     ,
+    const double*     y     ,
+    const double      w = 1 ) ;
+  // ==========================================================================
+  /** Fill 3D histogram from arrays
+   *  @param h  (INPUT/UPDATE) histogram
+   *  @param n  (INPUT) number of elements
+   *  @param x  (INPUT) input data array
+   *  @param y  (INPUT) input data array
+   *  @param z  (INPUT) input data array
+   *  @param w  (INPUT) input array of weights
+   */   
+  Ostap::StatusCode fill_TH3
+  ( TH3&              h ,
+    const std::size_t n ,
+    const double*     x ,
+    const double*     y ,
+    const double*     z ,
+    const double*     w ) ;
+  // ==========================================================================
+  /** Fill 3D histogram from arrays
+   *  @param h  (INPUT/UPDATE) histogram
+   *  @param n  (INPUT) number of elements
+   *  @param x  (INPUT) input data array
+   *  @param y  (INPUT) input data array
+   *  @param z  (INPUT) input data array
+   *  @param w  (INPUT) weight
+   */   
+  Ostap::StatusCode fill_TH3 
+  ( TH3&              h     ,
+    const std::size_t n     ,
+    const double*     x     ,
+    const double*     y     ,
+    const double*     z     ,
+    const double      w = 1 ) ;  
+  // ==========================================================================
 } // The end of namespace Ostap 
 // =============================================================================
 #endif // OSTAP_PROJECT_H

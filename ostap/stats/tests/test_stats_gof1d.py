@@ -38,8 +38,8 @@ xvar  = ROOT.RooRealVar ( 'x', '' ,  0 , 20 )
 gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 10 , sigma = 1 )
 model = M.Fit1D         ( signal = gauss , background = 'flat' , fix_norm = True )
 
-ND1   = 200
-ND2   = 200
+ND1   = 300
+ND2   = 300
 
 # =============================================================================
 ## data_g: pure gaussian
@@ -147,6 +147,27 @@ def run_DNN  ( pdf , data , result , label , logger = logger ) :
     logger.info ( '%s:\n%s' % ( title , table ) )
 
 # ==============================================================================
+## Run Chi2 Goodness-of-Fit test
+def run_CHI2 ( pdf , data , result , label , logger = logger ) :
+    """ Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
+    """
+
+    nToys = 100 ## 00 if small else 1000
+    
+    with timing ( 'CHI2-test %s' % label , logger = logger ) :
+        
+        gof            = GnD.Chi2   ( nToys = nToys , binning = 8 )        
+        pdf.load_params ( result , silent = True )        
+        tvalue         = gof          ( pdf , data )
+        tvalue, pvalue = gof.pvalue   ( pdf , data , tvalue = tvalue )
+
+    with use_canvas ( 'CHI2-toys %s'  % label ) : gof.draw ( tvalue = tvalue ) 
+
+    title  = 'Goodness-of-Fit CHI2-test %s' % label     
+    table  = gof.report ( title = title , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
+# ==============================================================================
 ## Run USTAT Goodness-of-Fit test
 def run_USTAT  ( pdf , data, result , label , logger = logger ) :
     """ Run USTAT Goodness-of-Fit test
@@ -235,10 +256,11 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
     
     ## Try to use multidimensional methods:
     
-    ## run_MIX   ( pdf , dataset , r , label , logger )    
-    ## run_PPD   ( pdf , dataset , r , label , logger )    
-    ## run_DNN   ( pdf , dataset , r , label , logger )
+    run_MIX   ( pdf , dataset , r , label , logger )    
+    run_PPD   ( pdf , dataset , r , label , logger )    
+    run_DNN   ( pdf , dataset , r , label , logger )
     run_USTAT ( pdf , dataset , r , label , logger )
+    run_CHI2  ( pdf , dataset , r , label , logger )
 
 # =====================================================================================
 def test_good_fit_1 ( ) :

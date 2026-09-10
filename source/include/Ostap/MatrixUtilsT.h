@@ -1040,7 +1040,7 @@ namespace Ostap
     double norm_schatten 
     ( const TMatrixT<float>&    matrix , 
       const double              p      = 2 ) ;
-    
+
     // ========================================================================
     /** @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
      *  @param m (INPUT) Input general matrix
@@ -1049,7 +1049,7 @@ namespace Ostap
     double norm_schatten 
     ( const TMatrixTSym<float>& matrix , 
       const double              p      = 2 ) ;
-        
+    
     // ========================================================================
     /** @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
      *  @param m (INPUT) Input general matrix

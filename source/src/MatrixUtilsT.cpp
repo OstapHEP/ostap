@@ -242,7 +242,7 @@ double Ostap::Math::norm_schatten
   TMatrixTSym<double> m { matrix } ;
   return norm_schatten ( m , p ) ;
 }
-// ============================================================================
+// ========== ==================================================================
 /*  @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
  *  @param m (INPUT) Input general matrix
  *  @return Schatten's norm value
@@ -266,9 +266,36 @@ double Ostap::Math::norm_schatten
   TDecompSVD svd ( matrix );
   if ( !svd.Decompose () ) { return Ostap::v_INVALID_NORM ; }  
   //
-  return std::pow ( sum_pow ( svd.GetSig() , p ) , 1 / p ) ;
+  // Schatten norm for matrix is Lp-norm for singular values 
+  return norm_Lp ( svd.GetSig() , p ) ;
 }
-
+// =============================================================================
+/*  @brief Compute Schatten' norm \f$ \left(\Sum \left|\sigma_i\right|^p\right)^{1/p}\f$
+ *  @param m (INPUT) Input symmetric matrix
+ *  @return Schatten's norm value
+ */
+// ============================================================================
+double Ostap::Math::norm_schatten 
+( const TMatrixTSym<double>& matrix , 
+  const double               p      )
+{
+  if ( !matrix.IsValid () || matrix.GetNcols() < 1 || matrix.GetNrows () < 1 ) { return Ostap::v_INVALID_NORM ; } 
+  ///
+  static const Ostap::Math::Equal_To<double> s_equal {} ;
+  static const Ostap::Math::Zero    <double> s_zero  {} ;
+  //  
+  if      ( std::isinf ( p )            ) { return norm_spectral ( matrix ) ; }
+  else if ( 1 == p || s_equal ( 1 , p ) ) { return norm_nuclear  ( matrix ) ; }
+  else if ( 2 == p || s_equal ( 2 , p ) ) { return norm_L2       ( matrix ) ; }
+  else if ( 0 >= p || s_zero  (     p ) ) { return rank          ( matrix ) ; }
+  //
+  TMatrixDSymEigen eigen ( matrix ) ; 
+  const TVectorD& eigenValues = eigen.GetEigenValues(); 
+  if ( !eigenValues.IsValid() ) { return Ostap::v_INVALID_NORM ; } 
+  //
+  // Schatten norm for matrix is Lp-norm for eivenvalues 
+  return norm_Lp ( eigenValues , p ) ;
+}
 // ============================================================================
 /* Compute Moore-Penrose Pseudoinverse using SVD: A^+ = V * Sigma^+ * U^T
  *  @param a     (INPUT)  Input matrix A (m x n)

@@ -1885,7 +1885,54 @@ namespace Ostap
     ( const Ostap::Math::GSL::Matrix& a       ,
       Ostap::Math::GSL::Matrix&       a_pinv  ,
       double                          tol     = -1 ) ;    
-    
+
+    // ============================================================================
+    /** @brief Compute Variance Inflation Factors (VIF) for a covariance matrix.
+     *
+     *  Calculates the Variance Inflation Factor (VIF) vector \f$ \vec{v} \f$ 
+     *  for a symmetric $D \times D$ covariance matrix \f$ \Sigma \f$:
+     *  \f[
+     *      v_i = \Sigma_{ii} \cdot (\Sigma^+)_{ii}
+     *  \f]
+     *  where \f$ \Sigma_{ii} \f$ is the variance of variable \f$i\f$, and 
+     *  \f$ (\Sigma^+)_{ii} \f$ is the corresponding diagonal element of the 
+     *  Moore-Penrose pseudoinverse matrix \f$ \Sigma^+ \f$.
+     *
+     *  @par Connection to Global Correlation Coefficient:
+     *  In classical linear regression, the VIF of variable \f$i\f$ measures how much 
+     *  the variance of the estimated regression coefficient is inflated due to 
+     *  multicollinearity. It is strictly related to the **Global Correlation 
+     *  Coefficient** \f$ R_i \f$ (the coefficient of determination when regressing 
+     *  variable \f$i\f$ against all other \f$D-1\f$ variables):
+     *  \f[
+     *      v_i = \frac{1}{1 - R_i^2} \quad \Longleftrightarrow \quad R_i = \sqrt{1 - \frac{1}{v_i}}
+     *  \f]
+     *  - \f$ R_i = 0 \implies v_i = 1 \f$: Variable \f$i\f$ is orthogonal (uncorrelated) to all others.
+     *  - \f$ R_i \to 1 \implies v_i \to \infty \f$: Variable \f$i\f$ is a linear combination of other variables.
+     *
+     *  @par Numerical Robustness & Fallback Architecture:
+     *  3. **Non-positive Variances**: Variables with \f$ \Sigma_{ii} \le 0 \f$ (constants or 
+     *     severe \f$sPlot\f$ noise) are explicitly assigned `std::numeric_limits<T>::infinity()`, 
+     *     marking them as primary targets for elimination.
+     *
+     *  @par Interpretation Thresholds:
+     *  - \f$ v_i \approx 1 \f$: No collinearity.
+     *  - \f$ 1 < v_i < 5 \f$: Moderate, acceptable correlation.
+     *  - \f$ v_i > 10 \f$: High collinearity (\f$ R_i > 0.95 \f$), feature removal recommended.
+     *  - \f$ v_i > 10^4 \text{ or } \infty \f$: Critical geometric degeneracy or constant feature.
+     *
+     *  @tparam T Data type (`double`, `float`).
+     *  @tparam D Dimension of the covariance matrix.
+     *  @param[in]  cov Input $D \times D$ symmetric covariance matrix \f$ \Sigma \f$.
+     *  @param[out] vif Output $D$-dimensional vector containing VIF values.
+     *  @param[in]  eps Numerical tolerance ratio for truncating small eigenvalues in `PINV`.
+     *  @return `Ostap::StatusCode::SUCCESS` if computation completed successfully.
+     */
+    Ostap::StatusCode VIF 
+    ( const Ostap::Math::GSL::Matrix& cov  ,
+      Ostap::Math::GSL::Vector&       vif  ,
+      const double                    tol  = epsilon_v<double> ) ;    
+         
     // =======================================================================
     /// numerical equality of two matrices 
     template <> 

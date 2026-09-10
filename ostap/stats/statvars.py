@@ -40,6 +40,7 @@
 - data_deciles         - get the deciles  
 - data_ventiles        - get the ventiles  
 - data_percentiles     - get the percentiles  
+- data_VIFs            - get the variance inflation factors 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -53,7 +54,8 @@ __all__     = (
     'data_minmax'          , ## get min/max 
     'data_range'           , ## get suitable rangess for drawing 
     'data_covariance'      , ## get the covariaces
-    'data_statvector'      , ## get the covariaces
+    'data_statvector'      , ## get the stat-vector 
+    'data_statvct'         , ## get the stat-vector 
     'data_moment'          , ## get the moment  (with uncertainty)     
     'data_sum'             , ## get the sum 
     'data_nEff'            , ## get umber of effective entries 
@@ -79,6 +81,7 @@ __all__     = (
     'data_deciles'         , ## get the deciles  
     'data_ventiles'        , ## get the ventiles  
     'data_percentiles'     , ## get the percentiles  
+    'data_VIFs'            , ## get the variance inflation factors 
     ##
     'data_decorate'        , ## technical function to decorate the classes
     'expression_types'     , ## valid types for expressions/cuts/weights
@@ -946,8 +949,8 @@ def data_statvector ( data        ,
     ## decode expressions & cuts
     var_lst , cuts, input_string = vars_and_cuts ( expressions , cuts )
     N = len ( var_lst )
-    
-    assert 2 <= N , "At least two variables are needed!"
+
+    if N < 2 : raise ValueError ( "data_statvector: at least two variables are required!" )
         
     covs = data_covariance ( data                    ,
                              expressions = var_lst   ,
@@ -978,6 +981,8 @@ def data_statvector ( data        ,
     for i in range ( N ) : vct.setValue ( i , covs.counters()[i].mean() )
 
     return vct
+
+data_statvct = data_statvector
 
 # ==============================================================================
 ## Get the (weighted) sum over the variable(s)
@@ -2315,7 +2320,7 @@ def data_project ( data                ,
         return target
 
 # =============================================================================
-## Get slice of dat s in form of Numpy array
+## Get slice of data in form of Numpy array
 #  @code
 #  data = ...
 #  arr , weight = data_slice ( data , "x,y,x" , "pt>1" ) 
@@ -2401,11 +2406,131 @@ def data_slice ( data        ,
                         parallel    = False      )
 
 # =============================================================================
-## Produce  "efficiency" histogram for boolean <code>criteriaon</c>
-#  as function of valiabed listed as <code>expressions</code>
+## get the vector of VIFs (Variance Inflation Factors)
+#
+#  Calculates the Variance Inflation Factor (VIF) vector \f$ \vec{v} \f$ 
+#  @see https://en.wikipedia.org/wiki/Variance_inflation_factor
+#  \f[
+#      v_i = \Sigma_{ii} \cdot (\Sigma^+)_{ii}
+#  \f]
+#  where \f$ \Sigma_{ii} \f$ is the variance of variable \f$i\f$, and 
+#  \f$ (\Sigma^+)_{ii} \f$ is the corresponding diagonal element of the 
+#  Moore-Penrose pseudoinverse matrix \f$ \Sigma^+ \f$.
+#
+#  @par Connection to Global Correlation Coefficient:
+#  In classical linear regression, the VIF of variable \f$i\f$ measures how much 
+#   the variance of the estimated regression coefficient is inflated due to 
+#   multicollinearity. It is strictly related to the **Global Correlation 
+#  Coefficient** \f$ R_i \f$ (the coefficient of determination when regressing 
+#   variable $i$ against all other \f$D-1\f$ variables):
+#  \f$ v_i = \frac{1}{1 - R_i^2} \quad \Longleftrightarrow \quad R_i = \sqrt{1 - \frac{1}{v_i}} \f]
+#  - \f$ R_i = 0 \implies v_i = 1 \f$: Variable \f$i\f$ is orthogonal (uncorrelated) to all others.
+#  - \f$ R_i \to 1 \implies v_i \to \infty \f$: Variable \f$i\f$ is a linear combination of other variables.
+#
+#  Interpretation Thresholds:
+#  - \f$ v_i \approx 1 \f$: No collinearity.
+#  - \f$ 1 < v_i < 5 \f$: Moderate, acceptable correlation.
+#  - \f$ v_i > 10 \f$: High collinearity (\f$ R_i > 0.95 \f$), feature removal recommended.
+#  - \f$ v_i > 10^4 \text{ or } \infty \f$: Critical geometric degeneracy or constant feature.
+#
+#  @code
+#  vifs = data_VIFs  ( ... , threshold = 10 , silent = False ) 
+#  @endcode
+def data_VIFs ( data        ,
+                expressions ,
+                cuts        = '' , *  ,
+                first       = FIRST_ENTRY ,
+                last        =  LAST_ENTRY ,                       
+                cut_range   = ''     ,
+                as_weight   = True   ,  
+                progress    = False  , 
+                use_frame   = False  ,
+                parallel    = False  , 
+                threshold   = 10     , 
+                silent      = False  ,
+                title       = ''     ,
+                precision   = 4      ,
+                width       = 6      ,                
+                logger      = logger ) :
+    """ Get the vector of VIFs (Variance Inflation Factors)
+
+    Calculates the Variance Inflation Factor (VIF) vector \f$ \vec{v} \f$ 
+    - see https://en.wikipedia.org/wiki/Variance_inflation_factor
+    
+    v_i = Sigma_{ii} Sigma^+_{ii} , where 
+    
+    - Sigma_{ii}   is the variance of variable `i` (diagonal element of covariance matrix Sigma
+    - Sigma^+_{ii} is the corresponding diagonal element of the Moore-Penrose pseudoinverse matrix Sigma^+ 
+    
+    Connection to Global Correlation Coefficient:
+    
+    In classical linear regression, the VIF of variable `i` measures how much 
+    the variance of the estimated regression coefficient is inflated due to 
+    multicollinearity.
+    It is strictly related to the **Global Correlation Coefficient**  R_i
+    (the coefficient of determination when regressing variable `i` against all other `D-1` variables):
+
+    v_i = 1/(1-R^2_i)   <==>  R_i = sqrt{1 - 1/v_i}
+
+    - R_i --> 0 implies v_i = 1            : Variable `i` is orthogonal (uncorrelated) to all others.
+    - R_i --> 1 implies v_i ---> +infinity : Variable `i` is a linear combination of other variables.
+
+     Interpretation Thresholds:
+     -  v_i --> 1                   : No collinearity.
+     -  1 < v_i < 5                 : Moderate, acceptable correlation.
+     -  v_i > 10                    : High collinearity ( R_i > 0.95 ), feature removal recommended.
+     -  v_i > 10^4 or --> +infinity : Critical geometric degeneracy or constant feature.
+
+    
+    >>> vifs = data_VIFs  ( ... , threshold = 10 )    
+    """
+    
+    ## decode expressions & cuts
+    var_lst , cuts , _ = vars_and_cuts ( expressions , cuts )
+    N = len ( var_lst )
+
+    if N < 2 : raise ValueError ( "data_VIFs: at least two variables are required!" )
+
+    ## get the vector 
+    vct = data_statvct ( data ,
+                         expressions = var_lst   ,
+                         cuts        = cuts      ,
+                         first       = first     ,
+                         last        = last      ,
+                         cut_range   = cut_range , 
+                         as_weight   = as_weight ,
+                         progress    = progress  ,
+                         use_frame   = use_frame ,
+                         parallel    = parallel  )
+    
+    ## empty vif vector
+    vifs = type(vct).Value() 
+    sc   = Ostap.Math.VIF ( vct.cov2() , vifs )
+    if sc.isFailure() : raise ValueError ( "Unable to get VIFs from data-vector  %s" % sc )
+    
+    if not silent :
+        
+        from   ostap.logger.pretty    import pretty_float, format_pow10
+        from   ostap.logger.colorized import attstr
+        rows =  [ ( 'Variable' , 'VIF' , 'Unit' ) ] 
+        for var , vif in zip ( var_lst , vifs ) :
+            v , expo = pretty_float ( vif , precision = precision , width = width )
+            if vif < threshold : row = var ,          v   ,          format_pow10 ( expo )   if expo else ''
+            else               : row = var , attstr ( v ) , attstr ( format_pow10 ( expo ) ) if expo else ''            
+            rows.append ( row )
+            
+        title = title if title else 'VIFs for variables'
+        rows  = T.remove_empty_columns ( rows )
+        logger.info ('%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' ) ) )
+        
+    return tuple ( vifs )
+
+# =============================================================================
+## Produce  "efficiency" histogram for boolean <code>criterion</c>
+#  as function of valiable listed as <code>expressions</code>
 #  internally it creatd two histogram
 #  - "accepted" for events accepted by (boolean) criterion
-#  - "rejected" for events rekected by (boolean) criterion
+#  - "rejected" for events rejected by (boolean) criterion
 #
 #  @code
 #  histo_1D = ...
@@ -2442,7 +2567,7 @@ def data_slice ( data        ,
 #
 #  @param tree       (INPUT)  input data
 #  @param criterion  (INPUT)  (boolean) criterion
-#  @param histo      (UPDATE) outptu efficiency histogram 
+#  @param histo      (UPDATE) output efficiency histogram 
 #  @param exressions (INPUT)  expressions for the histiogram axes
 #  @param cuts       (INPUT)  (boolean) selection criteria to be applied 
 #  @param weight     (INPUT)  expression to be used as weight 
@@ -2464,15 +2589,15 @@ def data_efficiency ( data        ,
                       parallel    = False       , 
                       progress    = False       ) : 
     """ Produce  "efficiency" histogram for boolean <code>criterion</c>
-    as function of valiabed listed as <code>expressions</code>
-    internally it creatd two histogram
-    - "acepted" for events accepted by (boolean) criterion
-    - "rejected" for events rekected by (boolean) criterion 
+    as function of variables listed as <code>expressions</code>
+    internally it creates two histograms
+    - "acepted"  for events accepted by (boolean) criterion
+    - "rejected" for events rejected by (boolean) criterion 
     
     tree:       (INPUT)  input tree 
     criterion:  (INPUT)  (boolean) criterion
-    histo:      (UPDATE) outptu efficiency histogram 
-    exressions: (INPUT)  expressions for the histiogram axes
+    histo:      (UPDATE) output efficiency histogram 
+    exressions: (INPUT)  expressions for the histogram axes
     cuts:       (INPUT)  (boolean) selection criteria to be applied 
     weight:     (INPUT)  expression to be used as weight 
 

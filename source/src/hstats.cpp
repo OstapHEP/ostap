@@ -30,54 +30,54 @@ Ostap::Utils::H1::H1 ( TH1* histo )
   : m_histo ( histo )
 {
   Ostap::Assert ( m_histo && 1 == m_histo->GetDimension () , 
-		  "Invalid TH1"                              ,
-		  "Ostap::Utils::H1"                         ,
-		  INVALID_TH1 , __FILE__ , __LINE__          ) ;
+                  "Invalid TH1"                              ,
+                  "Ostap::Utils::H1"                         ,
+                  INVALID_TH1 , __FILE__ , __LINE__          ) ;
 }
 // ==============================================================================
 Ostap::Utils::H2::H2 ( TH2* histo )
 : m_histo ( histo )
 {
   Ostap::Assert ( m_histo && 2 == m_histo->GetDimension () , 
-		  "Invalid TH2"                              ,
-		  "Ostap::Utils::H2"                         ,
-		  INVALID_TH2 , __FILE__ , __LINE__          ) ;
+                  "Invalid TH2"                              ,
+                  "Ostap::Utils::H2"                         ,
+                  INVALID_TH2 , __FILE__ , __LINE__          ) ;
 }
 // ==============================================================================
 Ostap::Utils::H3::H3 ( TH3* histo )
 :  m_histo ( histo )
 {
   Ostap::Assert ( m_histo && 3 == m_histo->GetDimension () , 
-		  "Invalid TH3"                              ,
-		  "Ostap::Utils::H3"                         ,
-		  INVALID_TH3 , __FILE__ , __LINE__          ) ;
+                  "Invalid TH3"                              ,
+                  "Ostap::Utils::H3"                         ,
+                  INVALID_TH3 , __FILE__ , __LINE__          ) ;
 }
 // =============================================================================
 Ostap::Utils::P1::P1 ( TProfile* histo )
 :  m_histo ( histo )
 {
   Ostap::Assert ( m_histo && 1 == m_histo->GetDimension () , 
-		  "Invalid TProfile"                       ,
-		  "Ostap::Utils::P1"                       ,
-		  INVALID_TPROFILE , __FILE__ , __LINE__   ) ;
+                  "Invalid TProfile"                       ,
+                  "Ostap::Utils::P1"                       ,
+                  INVALID_TPROFILE , __FILE__ , __LINE__   ) ;
 }
 // =============================================================================
 Ostap::Utils::P2::P2 ( TProfile2D* histo )
   :  m_histo ( histo )
 {
   Ostap::Assert ( m_histo && 2 == m_histo->GetDimension ()   , 
-		  "Invalid TProfile2D"                       ,
-		  "Ostap::Utils::P2"                         ,
-		  INVALID_TPROFILE2D , __FILE__ , __LINE__   ) ;
+                  "Invalid TProfile2D"                       ,
+                  "Ostap::Utils::P2"                         ,
+                  INVALID_TPROFILE2D , __FILE__ , __LINE__   ) ;
 }
 // =============================================================================
 Ostap::Utils::P3::P3 ( TProfile3D* histo )
   :  m_histo ( histo )
 {
   Ostap::Assert ( m_histo && 3 == m_histo->GetDimension ()   , 
-		  "Invalid TProfile3D"                       ,
-		  "Ostap::Utils::P3"                         ,
-		  INVALID_TPROFILE3D , __FILE__ , __LINE__   ) ;
+                  "Invalid TProfile3D"                       ,
+                  "Ostap::Utils::P3"                         ,
+                  INVALID_TPROFILE3D , __FILE__ , __LINE__   ) ;
 }
 // =============================================================================
 

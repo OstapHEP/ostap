@@ -62,7 +62,7 @@ namespace
 // ============================================================================
 // construtctor with the progress flag
 // ============================================================================
-Ostap::Project::Project					
+Ostap::Project::Project                                         
 ( const Ostap::Utils::ProgressConf& progress )
   : Ostap::StatVar ( progress )
 {}
@@ -99,13 +99,13 @@ Ostap::Project::project1
   if ( !xaxis ) { return INVALID_XAXIS ; }
   //
   return get_stat ( data                ,
-		    h1                  ,
-		    expression          ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ) ;
+                    h1                  ,
+                    expression          ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ) ;
 }
 // ============================================================================
 /*  Project data in the 1D-ihstogram
@@ -161,40 +161,40 @@ Ostap::Project::project1
       const bool                with_cuts   = cuts && cuts->ok () ;
       //
       Ostap::Utils::ProgressBar bar { the_last - first , progress () } ; 
-      for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )	
-	{
-	  const RooArgSet* vars = data -> get ( entry ) ;
-	  if ( nullptr == vars )                             { break    ; } // BREAK 
-	  //
-	  if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
-	  //
-	  // data weight?
-	  const double wd  = data-> weight() ;
-	  if ( !wd ) { continue ; }                                       // CONTINUE
-	  //
-	  // apply cuts:
-	  const double wc = with_cuts ? cuts -> getVal () : 1.0 ;
-	  if ( !wc ) { continue ; }                                        // CONTINUE  
-	  //
-	  // total weight
-	  const double wt = wd * wc ;
-	  if ( !wt ) { continue ; } 
-	  //
-	  const double value = expr -> getVal () ;
-	  if ( !in_range ( value , xmin , xmax ) ) { continue ; }          // CONTINUE
-	  //
-	  histo->Fill ( value , wt ) ;
-	  //
-	  // correct the errors 
-	  const double we  = data -> weightError() * wc ;
-	  if ( we )
-	    {
-	      const int    bin = histo->FindBin     ( value ) ;
-	      const double he  = histo->GetBinError ( bin   ) ;
-	      const double e2  = he * he - wt * wt + we * we ;
-	      histo->SetBinError ( bin , std::sqrt ( std::abs ( e2 ) ) ) ;
-	    }
-	}
+      for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )      
+        {
+          const RooArgSet* vars = data -> get ( entry ) ;
+          if ( nullptr == vars )                             { break    ; } // BREAK 
+          //
+          if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
+          //
+          // data weight?
+          const double wd  = data-> weight() ;
+          if ( !wd ) { continue ; }                                       // CONTINUE
+          //
+          // apply cuts:
+          const double wc = with_cuts ? cuts -> getVal () : 1.0 ;
+          if ( !wc ) { continue ; }                                        // CONTINUE  
+          //
+          // total weight
+          const double wt = wd * wc ;
+          if ( !wt ) { continue ; } 
+          //
+          const double value = expr -> getVal () ;
+          if ( !in_range ( value , xmin , xmax ) ) { continue ; }          // CONTINUE
+          //
+          histo->Fill ( value , wt ) ;
+          //
+          // correct the errors 
+          const double we  = data -> weightError() * wc ;
+          if ( we )
+            {
+              const int    bin = histo->FindBin     ( value ) ;
+              const double he  = histo->GetBinError ( bin   ) ;
+              const double e2  = he * he - wt * wt + we * we ;
+              histo->SetBinError ( bin , std::sqrt ( std::abs ( e2 ) ) ) ;
+            }
+        }
       return Ostap::StatusCode::SUCCESS ;
     }
   //
@@ -203,14 +203,14 @@ Ostap::Project::project1
   Ostap::Utils::H1 h1 ( histo )    ;
   //
   return get_stat ( data       ,
-		    h1         ,
-		    expression ,
-		    selection  ,
-		    cut_range  , 
-		    first      ,
-		    last       ,
-		    xmin       ,
-		    xmax       ) ;
+                    h1         ,
+                    expression ,
+                    selection  ,
+                    cut_range  , 
+                    first      ,
+                    last       ,
+                    xmin       ,
+                    xmax       ) ;
 }
 // ============================================================================
 
@@ -250,16 +250,16 @@ Ostap::Project::project2
   if ( !yaxis ) { return INVALID_YAXIS ; }
   //
   return get_stat ( data                ,
-		    h2                  ,
-		    expression1         ,
-		    expression2         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ,
-		    yaxis -> GetXmin () ,
-		    yaxis -> GetXmax () ) ;
+                    h2                  ,
+                    expression1         ,
+                    expression2         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ,
+                    yaxis -> GetXmin () ,
+                    yaxis -> GetXmax () ) ;
 }
 // ============================================================================
 /*  Project data in the 2D-ihstoram
@@ -327,44 +327,44 @@ Ostap::Project::project2
       const bool                with_cuts   = cuts && cuts->ok () ;
       //
       Ostap::Utils::ProgressBar bar { the_last - first , progress () } ; 
-      for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )	
-	{
-	  const RooArgSet* vars = data -> get ( entry ) ;
-	  if ( nullptr == vars )                             { break    ; } // BREAK 
-	  //
-	  if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
-	  //
-	  // data weight?
-	  const double wd  = data-> weight() ;
-	  if ( !wd ) { continue ; }                                       // CONTINUE
-	  //
-	  // apply cuts:
-	  const double wc = with_cuts ? cuts -> getVal () : 1.0 ;
-	  if ( !wc ) { continue ; }                                        // CONTINUE  
-	  //
-	  // total weight
-	  const double wt = wd * wc ;
-	  if ( !wt ) { continue ; } 
-	  //
-	  const double xvalue = xexpr -> getVal () ;
-	  if ( !in_range ( xvalue , xmin , xmax ) ) { continue ; }          // CONTINUE
-	  //
-	  const double yvalue = yexpr -> getVal () ;
-	  if ( !in_range ( yvalue , ymin , ymax ) ) { continue ; }          // CONTINUE
-	  //
-	  histo->Fill ( xvalue , yvalue , wt ) ;
-	  //
-	  // correct the errors 
-	  const double we  = data -> weightError() * wc ;
-	  if ( we )
-	    {
-	      const int    xbin = xaxis->FindBin    ( xvalue ) ;
-	      const int    ybin = yaxis->FindBin    ( yvalue ) ;
-	      const double he  = histo->GetBinError ( xbin , ybin  ) ;
-	      const double e2  = he * he - wt * wt + we * we ;
-	      histo->SetBinError ( xbin , ybin , std::sqrt ( std::abs ( e2 ) ) ) ;
-	    }
-	}
+      for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )      
+        {
+          const RooArgSet* vars = data -> get ( entry ) ;
+          if ( nullptr == vars )                             { break    ; } // BREAK 
+          //
+          if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
+          //
+          // data weight?
+          const double wd  = data-> weight() ;
+          if ( !wd ) { continue ; }                                       // CONTINUE
+          //
+          // apply cuts:
+          const double wc = with_cuts ? cuts -> getVal () : 1.0 ;
+          if ( !wc ) { continue ; }                                        // CONTINUE  
+          //
+          // total weight
+          const double wt = wd * wc ;
+          if ( !wt ) { continue ; } 
+          //
+          const double xvalue = xexpr -> getVal () ;
+          if ( !in_range ( xvalue , xmin , xmax ) ) { continue ; }          // CONTINUE
+          //
+          const double yvalue = yexpr -> getVal () ;
+          if ( !in_range ( yvalue , ymin , ymax ) ) { continue ; }          // CONTINUE
+          //
+          histo->Fill ( xvalue , yvalue , wt ) ;
+          //
+          // correct the errors 
+          const double we  = data -> weightError() * wc ;
+          if ( we )
+            {
+              const int    xbin = xaxis->FindBin    ( xvalue ) ;
+              const int    ybin = yaxis->FindBin    ( yvalue ) ;
+              const double he  = histo->GetBinError ( xbin , ybin  ) ;
+              const double e2  = he * he - wt * wt + we * we ;
+              histo->SetBinError ( xbin , ybin , std::sqrt ( std::abs ( e2 ) ) ) ;
+            }
+        }
       return Ostap::StatusCode::SUCCESS ;
     }
   // 
@@ -373,17 +373,17 @@ Ostap::Project::project2
   Ostap::Utils::H2 h2 ( histo ) ;
   //
   return get_stat ( data        ,
-		    h2          ,
-		    expression1 ,
-		    expression2 ,
-		    selection   ,
-		    cut_range   , 
-		    first       ,
-		    last        ,
-		    xmin        ,
-		    xmax        ,
-		    ymin        ,
-		    ymax        ) ; 
+                    h2          ,
+                    expression1 ,
+                    expression2 ,
+                    selection   ,
+                    cut_range   , 
+                    first       ,
+                    last        ,
+                    xmin        ,
+                    xmax        ,
+                    ymin        ,
+                    ymax        ) ; 
 }
 // ============================================================================
 
@@ -420,14 +420,14 @@ Ostap::Project::project2
   if ( !xaxis ) { return INVALID_XAXIS ; }
   //
   return get_stat ( data                ,
-		    p1                  ,
-		    expression1         ,
-		    expression2         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ) ;
+                    p1                  ,
+                    expression1         ,
+                    expression2         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ) ;
 }
 // ============================================================================
 /*  Project data in the 1D-profile 
@@ -461,15 +461,15 @@ Ostap::Project::project2
   if ( !xaxis ) { return INVALID_XAXIS ; }
   //
   return get_stat ( data                ,
-		    p1                  ,
-		    expression1         ,
-		    expression2         ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ) ;
+                    p1                  ,
+                    expression1         ,
+                    expression2         ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ) ;
 }
 // ============================================================================
 
@@ -514,19 +514,19 @@ Ostap::Project::project3
   if ( !zaxis ) { return INVALID_ZAXIS ; }
   //
   return get_stat ( data                ,
-		    h3                  ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ,
-		    yaxis -> GetXmin () ,
-		    yaxis -> GetXmax () ,
-		    zaxis -> GetXmin () ,
-		    zaxis -> GetXmax () ) ;
+                    h3                  ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ,
+                    yaxis -> GetXmin () ,
+                    yaxis -> GetXmax () ,
+                    zaxis -> GetXmin () ,
+                    zaxis -> GetXmax () ) ;
 } 
 // ============================================================================
 /* Project data in the 2D-ihstoram
@@ -606,68 +606,68 @@ Ostap::Project::project3
       const bool                with_cuts   = cuts && cuts->ok () ;
       //
       Ostap::Utils::ProgressBar bar { the_last - first , progress () } ; 
-      for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )	
-	{
-	  const RooArgSet* vars = data -> get ( entry ) ;
-	  if ( nullptr == vars )                             { break    ; } // BREAK 
-	  //
-	  if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
-	  //
-	  // data weight?
-	  const double wd  = data-> weight() ;
-	  if ( !wd ) { continue ; }                                       // CONTINUE
-	  //
-	  // apply cuts:
-	  const double wc = with_cuts ? cuts -> getVal () : 1.0 ;
-	  if ( !wc ) { continue ; }                                        // CONTINUE  
-	  //
-	  // total weight
-	  const double wt = wd * wc ;
-	  if ( !wt ) { continue ; } 
-	  //
-	  const double xvalue = xexpr -> getVal () ;
-	  if ( !in_range ( xvalue , xmin , xmax ) ) { continue ; }          // CONTINUE
-	  //
-	  const double yvalue = yexpr -> getVal () ;
-	  if ( !in_range ( yvalue , ymin , ymax ) ) { continue ; }          // CONTINUE
-	  //
-	  const double zvalue = zexpr -> getVal () ;
-	  if ( !in_range ( zvalue , zmin , zmax ) ) { continue ; }          // CONTINUE
-	  //
-	  histo->Fill ( xvalue , yvalue , zvalue , wt ) ;
-	  //
-	  // correct the errors 
-	  const double we  = data -> weightError() * wc ;
-	  if ( we )
-	    {
-	      const int    xbin = xaxis->FindBin    ( xvalue ) ;
-	      const int    ybin = yaxis->FindBin    ( yvalue ) ;
-	      const int    zbin = yaxis->FindBin    ( zvalue ) ;
-	      const double he  = histo->GetBinError ( xbin , ybin , zbin ) ;
-	      const double e2  = he * he - wt * wt + we * we ;
-	      histo->SetBinError ( xbin , ybin , zbin , std::sqrt ( std::abs ( e2 ) ) ) ;
-	    }
-	}
+      for ( Ostap::EventIndex entry = first ; entry < the_last ; ++entry , ++bar )      
+        {
+          const RooArgSet* vars = data -> get ( entry ) ;
+          if ( nullptr == vars )                             { break    ; } // BREAK 
+          //
+          if ( cutrange && !vars->allInRange ( cutrange ) )  { continue ; } // CONTINUE
+          //
+          // data weight?
+          const double wd  = data-> weight() ;
+          if ( !wd ) { continue ; }                                       // CONTINUE
+          //
+          // apply cuts:
+          const double wc = with_cuts ? cuts -> getVal () : 1.0 ;
+          if ( !wc ) { continue ; }                                        // CONTINUE  
+          //
+          // total weight
+          const double wt = wd * wc ;
+          if ( !wt ) { continue ; } 
+          //
+          const double xvalue = xexpr -> getVal () ;
+          if ( !in_range ( xvalue , xmin , xmax ) ) { continue ; }          // CONTINUE
+          //
+          const double yvalue = yexpr -> getVal () ;
+          if ( !in_range ( yvalue , ymin , ymax ) ) { continue ; }          // CONTINUE
+          //
+          const double zvalue = zexpr -> getVal () ;
+          if ( !in_range ( zvalue , zmin , zmax ) ) { continue ; }          // CONTINUE
+          //
+          histo->Fill ( xvalue , yvalue , zvalue , wt ) ;
+          //
+          // correct the errors 
+          const double we  = data -> weightError() * wc ;
+          if ( we )
+            {
+              const int    xbin = xaxis->FindBin    ( xvalue ) ;
+              const int    ybin = yaxis->FindBin    ( yvalue ) ;
+              const int    zbin = yaxis->FindBin    ( zvalue ) ;
+              const double he  = histo->GetBinError ( xbin , ybin , zbin ) ;
+              const double e2  = he * he - wt * wt + we * we ;
+              histo->SetBinError ( xbin , ybin , zbin , std::sqrt ( std::abs ( e2 ) ) ) ;
+            }
+        }
       return Ostap::StatusCode::SUCCESS ;
     }
   // 
   Ostap::Utils::H3 h3 ( histo ) ;
   //
   return get_stat ( data        ,
-		    h3          ,
-		    expression1 ,
-		    expression2 ,
-		    expression3 ,
-		    selection   ,
-		    cut_range   , 
-		    first       ,		    
-		    last        ,
-		    xmin        ,
-		    xmax        , 
-		    ymin        ,
-		    ymax        ,
-		    zmin        ,
-		    zmax        ) ;
+                    h3          ,
+                    expression1 ,
+                    expression2 ,
+                    expression3 ,
+                    selection   ,
+                    cut_range   , 
+                    first       ,                   
+                    last        ,
+                    xmin        ,
+                    xmax        , 
+                    ymin        ,
+                    ymax        ,
+                    zmin        ,
+                    zmax        ) ;
 }
 // ============================================================================
 
@@ -709,17 +709,17 @@ Ostap::Project::project3
   if ( !yaxis ) { return INVALID_YAXIS ; }
   //
   return get_stat ( data                ,
-		    p2                  ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ,
-		    yaxis -> GetXmin () ,
-		    yaxis -> GetXmax () ) ;
+                    p2                  ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ,
+                    yaxis -> GetXmin () ,
+                    yaxis -> GetXmax () ) ;
 } 
 // ============================================================================
 /* Project data in the 2D-ihstoram
@@ -758,18 +758,18 @@ Ostap::Project::project3
   if ( !yaxis ) { return INVALID_YAXIS ; }
   //
   return get_stat ( data                ,
-		    p2                  ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ,
-		    yaxis -> GetXmin () ,
-		    yaxis -> GetXmax () ) ;
+                    p2                  ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ,
+                    yaxis -> GetXmin () ,
+                    yaxis -> GetXmax () ) ;
 }
 // ============================================================================
 
@@ -818,20 +818,20 @@ Ostap::Project::project4
   if ( !zaxis ) { return INVALID_ZAXIS ; }
   //
   return get_stat ( data                ,
-		    p3                  ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    expression4         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ,
-		    yaxis -> GetXmin () ,
-		    yaxis -> GetXmax () , 
-		    zaxis -> GetXmin () ,
-		    zaxis -> GetXmax () ) ;
+                    p3                  ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    expression4         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ,
+                    yaxis -> GetXmin () ,
+                    yaxis -> GetXmax () , 
+                    zaxis -> GetXmin () ,
+                    zaxis -> GetXmax () ) ;
 } 
 // ============================================================================
 /* Project data in the 3D-profile 
@@ -875,21 +875,21 @@ Ostap::Project::project4
   if ( !zaxis ) { return INVALID_ZAXIS ; }
   //
   return get_stat ( data                ,
-		    p3                  ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    expression4         ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    xaxis -> GetXmin () ,
-		    xaxis -> GetXmax () ,
-		    yaxis -> GetXmin () ,
-		    yaxis -> GetXmax () , 
-		    zaxis -> GetXmin () ,
-		    zaxis -> GetXmax () ) ;
+                    p3                  ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    expression4         ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    xaxis -> GetXmin () ,
+                    xaxis -> GetXmax () ,
+                    yaxis -> GetXmin () ,
+                    yaxis -> GetXmax () , 
+                    zaxis -> GetXmin () ,
+                    zaxis -> GetXmax () ) ;
 }
 // ============================================================================
 
@@ -919,13 +919,13 @@ Ostap::Project::project1
   const Ostap::DataType     xmax       ) const
 {
   return get_stat ( data                ,
-		    ecdf                ,
-		    expression          ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    xmin                ,
-		    xmax                ) ;
+                    ecdf                ,
+                    expression          ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    xmin                ,
+                    xmax                ) ;
 }
 // ============================================================================
 /*  Project data in ECDS/WECDF 
@@ -950,13 +950,13 @@ Ostap::Project::project1
   const Ostap::DataType     xmax       ) const
 {
   return get_stat ( data                ,
-		    ecdf                ,
-		    expression          ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    xmin                ,
-		    xmax                ) ;
+                    ecdf                ,
+                    expression          ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    xmin                ,
+                    xmax                ) ;
 }
 // ============================================================================
 /*  Project data in ECDS/WECDF 
@@ -982,14 +982,14 @@ Ostap::Project::project1
   const Ostap::DataType     xmax       ) const 
 {
   return get_stat ( data                ,
-		    ecdf                ,
-		    expression          ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    xmin                ,
-		    xmax                ) ;
+                    ecdf                ,
+                    expression          ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    xmin                ,
+                    xmax                ) ;
 }
 // ============================================================================
 
@@ -1018,13 +1018,13 @@ Ostap::Project::project1
   const Ostap::EventIndex    last       ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression          ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        ) ;
+                    poly                ,
+                    expression          ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        ) ;
 }
 // =========================================================================
 /*  Project data in 1D-polyom=ominal: on-flight parameterisation 
@@ -1048,14 +1048,14 @@ Ostap::Project::project1
   const Ostap::EventIndex    last       ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression          ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        ) ;
+                    poly                ,
+                    expression          ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        ) ;
 }
 // =========================================================================
   
@@ -1085,13 +1085,13 @@ Ostap::Project::project1
   const Ostap::EventIndex    last       ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression          ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        ) ;
+                    poly                ,
+                    expression          ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        ) ;
 }
 // =========================================================================
 /*  Project data in 1D-polyom=ominal: on-flight parameterisation 
@@ -1115,14 +1115,14 @@ Ostap::Project::project1
   const Ostap::EventIndex    last       ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression          ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        ) ;
+                    poly                ,
+                    expression          ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        ) ;
 }
 // ============================================================================
 
@@ -1151,13 +1151,13 @@ Ostap::Project::project1
   const Ostap::EventIndex    last       ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression          ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        ) ;
+                    poly                ,
+                    expression          ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        ) ;
 }
 // =========================================================================
 /*  Project data in 1D-polyom=ominal: on-flight parameterisation 
@@ -1181,14 +1181,14 @@ Ostap::Project::project1
   const Ostap::EventIndex    last       ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression          ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        ) ;
+                    poly                ,
+                    expression          ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        ) ;
 }
 // =========================================================================
 
@@ -1218,16 +1218,16 @@ Ostap::Project::project2
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        ) ;
 }
 // =========================================================================
 /*  Project data in 2D-polyoominal: on-flight parameterisation 
@@ -1253,17 +1253,17 @@ Ostap::Project::project2
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        ) ;
 }
 // =========================================================================
 
@@ -1293,16 +1293,16 @@ Ostap::Project::project2
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        ) ;
 }
 // =========================================================================
 /*  Project data in 2D-polyoominal: on-flight parameterisation 
@@ -1328,17 +1328,17 @@ Ostap::Project::project2
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        ) ;
 }
 // ============================================================================
 
@@ -1370,19 +1370,19 @@ Ostap::Project::project3
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        , 
-		    poly.zmin ()        ,
-		    poly.zmax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        , 
+                    poly.zmin ()        ,
+                    poly.zmax ()        ) ;
 }
 // =========================================================================
 /*  Project data in 2D-polyoominal: on-flight parameterisation 
@@ -1409,20 +1409,20 @@ Ostap::Project::project3
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        ,
-		    poly.zmin ()        ,
-		    poly.zmax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        ,
+                    poly.zmin ()        ,
+                    poly.zmax ()        ) ;
 }
 // ============================================================================
 
@@ -1453,19 +1453,19 @@ Ostap::Project::project3
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        , 
-		    poly.zmin ()        ,
-		    poly.zmax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        , 
+                    poly.zmin ()        ,
+                    poly.zmax ()        ) ;
 }
 // =========================================================================
 /*  Project data in 2D-polyoominal: on-flight parameterisation 
@@ -1492,20 +1492,20 @@ Ostap::Project::project3
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        ,
-		    poly.zmin ()        ,
-		    poly.zmax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        ,
+                    poly.zmin ()        ,
+                    poly.zmax ()        ) ;
 }
 // ============================================================================
 
@@ -1538,22 +1538,22 @@ Ostap::Project::project4
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    expression4         ,
-		    selection           ,
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        , 
-		    poly.zmin ()        ,
-		    poly.zmax ()        , 
-		    poly.umin ()        ,
-		    poly.umax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    expression4         ,
+                    selection           ,
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        , 
+                    poly.zmin ()        ,
+                    poly.zmax ()        , 
+                    poly.umin ()        ,
+                    poly.umax ()        ) ;
 }
 // =========================================================================
 /*  Project data in 2D-polyoominal: on-flight parameterisation 
@@ -1581,28 +1581,176 @@ Ostap::Project::project4
   const Ostap::EventIndex    last        ) const
 {
   return get_stat ( data                ,
-		    poly                ,
-		    expression1         ,
-		    expression2         ,
-		    expression3         ,
-		    expression4         ,
-		    selection           ,
-		    cut_range           , 
-		    first               ,
-		    last                ,
-		    poly.xmin ()        ,
-		    poly.xmax ()        , 
-		    poly.ymin ()        ,
-		    poly.ymax ()        ,
-		    poly.zmin ()        ,
-		    poly.zmax ()        , 
-		    poly.umin ()        ,
-		    poly.umax ()        ) ;
+                    poly                ,
+                    expression1         ,
+                    expression2         ,
+                    expression3         ,
+                    expression4         ,
+                    selection           ,
+                    cut_range           , 
+                    first               ,
+                    last                ,
+                    poly.xmin ()        ,
+                    poly.xmax ()        , 
+                    poly.ymin ()        ,
+                    poly.ymax ()        ,
+                    poly.zmin ()        ,
+                    poly.zmax ()        , 
+                    poly.umin ()        ,
+                    poly.umax ()        ) ;
 }
 // ============================================================================
 
-
-
+// ============================================================================
+/* Fill 1D histogram from arrays
+ *  @param h  (INPUT/UPDATE) histogram
+ *  @param n  (INPUT) number of elements
+ *  @param x  (INPUT) input data array
+ *  @param w  (INPUT) input array of weights
+ */   
+// ============================================================================
+Ostap::StatusCode Ostap::fill_TH1
+( TH1&              h ,
+  const std::size_t n ,
+  const double*     x ,
+  const double*     w )
+{
+  //
+  if ( !w ) { return fill_TH1 ( h , n , x ) ; }
+  //
+  if      ( 1 != h.GetDimension() ) { return INVALID_TH1  ; }
+  else if ( !x || !w              ) { return INVALID_DATA ; } 
+  if      ( !h.GetSumw2()         ) { h.Sumw2() ; }
+  //
+  h.FillN ( static_cast<Int_t> ( n ) , x , w ) ;
+  return Ostap::StatusCode::SUCCESS ;
+}
+// ============================================================================
+/** Fill 1D histogram from arrays
+ *  @param h  (INPUT/UPDATE) histogram
+ *  @param n  (INPUT) number of elements
+ *  @param x  (INPUT) input data array
+ *  @param w  (INPUT) weight
+ */   
+// ============================================================================
+Ostap::StatusCode Ostap::fill_TH1 
+( TH1&              h ,
+  const std::size_t n ,
+  const double*     x ,
+  const double      w )
+{
+  //
+  if      ( 1 != h.GetDimension() ) { return INVALID_TH1  ; }
+  else if ( !x                    ) { return INVALID_DATA ; } 
+  else if ( !h.GetSumw2()         ) { h.Sumw2() ; }
+  //
+  for ( std::size_t i = 0 ; i < n ; ++i ) { h.Fill ( *(x+i) , w ) ; }
+  return Ostap::StatusCode::SUCCESS ;  
+}
+// ============================================================================
+/** Fill 2D histogram from arrays
+ *  @param h  (INPUT/UPDATE) histogram
+ *  @param n  (INPUT) number of elements
+ *  @param x  (INPUT) input data array
+ *  @param y  (INPUT) input data array
+ *  @param w  (INPUT) input array of weights
+ */   
+// ============================================================================
+Ostap::StatusCode Ostap::fill_TH2
+( TH2&              h ,
+  const std::size_t n ,
+  const double*     x ,
+  const double*     y ,
+  const double*     w )
+{
+  //
+  if ( !w ) { return fill_TH2 ( h , n , x , y ) ; } 
+  //
+  if      ( 2 != h.GetDimension() ) { return INVALID_TH2  ; }
+  else if ( !x || !y || !w        ) { return INVALID_DATA ; } 
+  else if ( !h.GetSumw2()         ) { h.Sumw2() ; }
+  //
+  h.FillN ( static_cast<Int_t> ( n ) , x , y , w ) ;
+  return Ostap::StatusCode::SUCCESS ;    
+} 
+// ============================================================================
+/** Fill 1D histogram from arrays
+ *  @param h  (INPUT/UPDATE) histogram
+ *  @param n  (INPUT) number of elements
+ *  @param x  (INPUT) input data array
+ *  @param w  (INPUT) weight
+ */   
+// ============================================================================
+Ostap::StatusCode Ostap::fill_TH2
+( TH2&              h ,
+  const std::size_t n ,
+  const double*     x ,
+  const double*     y ,
+  const double      w )
+{
+  //
+  if      ( 2 != h.GetDimension() ) { return INVALID_TH2  ; }
+  else if ( !x || !y              ) { return INVALID_DATA ; } 
+  else if ( !h.GetSumw2()         ) { h.Sumw2() ; }
+  //
+  for ( std::size_t i = 0 ; i < n ; ++i ) { h.Fill ( *(x+i) , *(y+i) , w ) ; }
+  return Ostap::StatusCode::SUCCESS ;  
+} 
+// ============================================================================
+/** Fill 3D histogram from arrays
+ *  @param h  (INPUT/UPDATE) histogram
+ *  @param n  (INPUT) number of elements
+ *  @param x  (INPUT) input data array
+ *  @param y  (INPUT) input data array
+ *  @param z  (INPUT) input data array
+ *  @param w  (INPUT) input array of weights
+ */   
+// ============================================================================
+Ostap::StatusCode Ostap::fill_TH3 
+( TH3&              h ,
+  const std::size_t n ,
+  const double*     x ,
+  const double*     y ,
+  const double*     z ,
+  const double*     w )
+{
+  //
+  if ( !w ) { return fill_TH3 ( h , n , x , y , z ) ; } 
+  //
+  if      ( 3 != h.GetDimension() ) { return INVALID_TH3  ; }
+  else if ( !x || !y || !z || !w  ) { return INVALID_DATA ; } 
+  else if ( !h.GetSumw2()         ) { h.Sumw2() ; }
+  //
+  for ( std::size_t i = 0 ; i < n ; ++i ) { h.Fill ( *(x+i) , *(y+i) , *(z+i) , *(w+i) ) ; }
+  return Ostap::StatusCode::SUCCESS ; 
+}
+// ============================================================================
+/** Fill 3D histogram from arrays
+ *  @param h  (INPUT/UPDATE) histogram
+ *  @param n  (INPUT) number of elements
+ *  @param x  (INPUT) input data array
+ *  @param y  (INPUT) input data array
+ *  @param z  (INPUT) input data array
+ *  @param w  (INPUT) weight
+ */   
+// ============================================================================
+Ostap::StatusCode Ostap::fill_TH3 
+( TH3&              h ,
+  const std::size_t n ,
+  const double*     x ,
+  const double*     y ,
+  const double*     z ,
+  const double      w ) 
+{
+  //
+  if      ( 3 != h.GetDimension() ) { return INVALID_TH3  ; }
+  else if ( !x || !y || !z        ) { return INVALID_DATA ; } 
+  else if ( !h.GetSumw2()         ) { h.Sumw2() ; }
+  //
+  for ( std::size_t i = 0 ; i < n ; ++i ) { h.Fill ( *(x+i) , *(y+i) , *(z+i) , w ) ; }
+  return Ostap::StatusCode::SUCCESS ; 
+}
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END 

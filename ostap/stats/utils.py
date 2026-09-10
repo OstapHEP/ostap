@@ -23,6 +23,7 @@ __all__     = (
     'compatible_weights'  , ## Check for data and weights compatibility
     'check_all'           , ## check ALL
     'nEff'                , ## Compute effective sample size (Kish's design effect formula)
+    'np2vct'              , ## numpy arrays into SVectorWithError
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
@@ -248,7 +249,51 @@ def check_all ( data1   ,
     if not compatible_weights ( data1 , weight1 ) : raise TypeError ( "%s: incompatible `data1/weight1`"  % where ) 
     if not compatible_weights ( data2 , weight2 ) : raise TypeError ( "%s: incompatible `data2/weight2`"  % where ) 
     return True 
+
+# ==============================================================================
+## Convert numpy-array statistics into Ostap::SVectorWithError
+#  @see Ostap::Math::SVectorWithError
+def np2vct ( data , weight = None ) :
+    """ Convert numpy-array statistics into `Ostap.Math.SVectorWithError`
+    - see `Ostap.Math.SVectorWithError`
+    """
+
+    shape     = data.shape
+    n , N     = shape
     
+    w         = None if weight_trivial ( weight ) else weight
+
+    ## 
+    from statsmodels.stats.weightstats import DescrStatsW as DSW 
+    dsw       = DSW  ( data , weights = w )
+    mean      = dsw.mean
+    covmtrx   = dsw.cov
+
+    
+    ## load corresponding linear-algebra tricks:
+    import ostap.math.linalg
+    from   ostap.core.core   import Ostap
+    
+    MN        = Ostap.Math.SymMatrix ( N )
+    
+    ## prepare output 
+    RT        = Ostap.Math.SVectorWithError [ N ]
+    values    = RT.Value      () 
+    covs      = RT.Covariance () 
+    
+    for i in range ( N  ) :
+        values [ i     ] = float ( mean    [ i ]       )
+        covs   [ i , i ] = float ( covmtrx [ i ] [ i ] )
+        for j in range (  0 , i  ) :
+            cij = float ( covmtrx [ i ] [ j ]  )
+            cji = float ( covmtrx [ j ] [ i ]  )                
+            cc  = 0.5 * ( cij + cji ) 
+            covs [ i , j ] = cc
+            covs [ j , i ] = cc  
+        
+    return RT ( values ,  covs ) 
+        
+
 # ============================================================================
 if '__main__' == __name__ :
         
