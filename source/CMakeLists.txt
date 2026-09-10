@@ -176,14 +176,7 @@ else()
   message ( SEND_ERROR "----> No GSL libraries are found!" )
 endif() 
 
-## Just for curiocity 
-find_package(LAPACK)
-if(LAPACK_FOUND)
-  message ( "----> LAPACK          libraries  : " ${LAPACK_LIBRARIES} )
-endif()
-
 set(CMAKE_CXX_FLAGS ${ROOT_CXX_FLAGS} )
-
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
@@ -197,6 +190,11 @@ configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap/Config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h"
   )
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/build.config.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/.ostap.build"
+)
 
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})

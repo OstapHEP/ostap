@@ -1816,7 +1816,7 @@ class LinAlg(object) :
         rows = mtrx.kRows
         cols = mtrx.kCols
 
-        if not title : title = '%s %s' % ( matrix_symbol , typename ( vct ) )
+        if not title : title = '%s %s' % ( matrix_symbol , typename ( mtrx ) )
 
         mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
         fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )
@@ -1979,7 +1979,7 @@ class LinAlg(object) :
         rows = mtrx.kRows
         cols = mtrx.kCols
         
-        if not title : title = '%s %s' % ( matrix_symbol , typename ( vct ) )
+        if not title : title = '%s %s' % ( matrix_symbol , typename ( mtrx ) )
 
         mae = abs ( Ostap.Math.maxabs_element ( mtrx ) )
         fmtv , expo = fmt_pretty_float ( mae , width = width , precision = precision )
