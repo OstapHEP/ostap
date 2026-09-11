@@ -46,6 +46,7 @@ from   ostap.stats.utils      import ( weight_trivial , nEff         ,
 from   ostap.utils.basic      import numcpu, num_jobs, run_parallel 
 from   ostap.stats.gof_np     import GoFnp 
 from   sklearn.metrics        import mean_squared_error
+import ostap.logger.symbols   as     S 
 import ROOT, numpy, abc, os   
 # =============================================================================
 # Logging setup 
@@ -59,6 +60,17 @@ logger.debug ( 'Implement Adversarial Validation (Regression mode)' )
 DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
 # =============================================================================
+method_LGBM  = S.light_bulb            if S.light_bulb else 'LightGBM'
+method_XGB   = S.rocket                if S.rocket     else 'XGBoost'
+method_CATB  = S.cat_face              if S.cat_face   else 'CatBoost'
+method_HGBC  = S.to_script ( 'HGBC ' ) if S.show       else 'HGBC'
+method_GBC   = S.to_script ( 'GBC '  ) if S.show       else 'GBC'
+method_RF    = S.to_script ( 'RF '   ) if S.show       else 'RF'
+method_TORCH = S.flashlight            if S.flashlight else 'TORCH'
+method_KERAS = S.brickwall             if S.brickwall  else 'KERAS'
+
+# =============================================================================
+
 ## Need strong regualrization: BDT-type  
 def BDT_needs_regularization ( X , W = None ) :
     """ Use strong regularization: BDT-type
@@ -355,7 +367,8 @@ class ADVAL_base (GoFnp):
                                                            alignment   = 'rcw'  , 
                                                            prefix      = "# "   ,
                                                            title       = title  ) ) ) 
-        
+
+
 # =======================================================================================
 ## @class ADVAL_LGBM (Regression)
 class ADVAL_LGBM (ADVAL_base) : 
@@ -384,7 +397,7 @@ class ADVAL_LGBM (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/LightGBM" , **config   ) 
+                              method    = "ADVAL/%s" % method_LGBM , **config   ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -498,7 +511,7 @@ class ADVAL_XGB (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/XGBoost" , **config ) 
+                              method    = "ADVAL/%s" % method_XGB , **config   ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -620,7 +633,7 @@ class ADVAL_CATB (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/CatBoost" , **config   )
+                              method    = "ADVAL/%s" % method_CATB , **config   ) 
 
         ## 
         if 'n_jobs' in self.params :
@@ -732,8 +745,8 @@ class ADVAL_HGBC (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/HGBC" , **config   )
-        
+                              method    = "ADVAL/%s" % method_HGBC , **config   ) 
+
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
 
@@ -826,7 +839,7 @@ class ADVAL_GBC (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/GBC" , **config   ) 
+                              method    = "ADVAL/%s" % method_GBC , **config   ) 
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
@@ -918,7 +931,7 @@ class ADVAL_RF (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,                              
-                              method    = "ADVAL/RandomForest" , **config  )
+                              method    = "ADVAL/%s" % method_RF, **config   ) 
         
     # =========================================================================
     ## Parameters for strong regularization
@@ -1010,7 +1023,7 @@ class ADVAL_TORCH (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = True     , 
-                              method    = "ADVAL/PyTorch" , **config  ) 
+                              method    = "ADVAL/%s" % method_TORCH, **config   ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -1174,7 +1187,7 @@ class ADVAL_KERAS (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = True     , 
-                              method    = "ADVAL/Keras" , **config  )
+                              method    = "ADVAL/%s" % method_KERAS, **config   ) 
         
     # =========================================================================
     ## Parameters for strong regularization

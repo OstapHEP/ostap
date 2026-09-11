@@ -26,7 +26,9 @@ __all__     = (
     'axe'                 , ## 🪓  (wide)
     'brain'               , ## 🧠  (wide)
     'branch'              , ## ⸙
+    'brickwall'           , ## 🧱
     'bulls_eye'           , ## 🎯
+    'cat_face'            , ## 🐱
     'cabinet'             , ## 🗄️  (wide)
     'chain'               , ## ⛓️
     'checked_no'          , ## ❌  (wide)
@@ -50,6 +52,7 @@ __all__     = (
     'equivalent'          , ## ≡
     'exclusive_or'        , ## ⊻
     'finish'              , ## 🏁  (wide)
+    'flashlight'          , ## 🔦
     'folder'              , ## 📂  (wide)
     'frame'               , ## 🖼️  (wide)
     'gear'                , ## ⚙️
@@ -146,6 +149,7 @@ __all__     = (
     'ram'                 , ## 🐏  (wide)
     'rangle'              , ## 〉
     'rms_symbol'          , ## σ
+    'rocket'              , ## 🚀 
     'runner'              , ## 🏃  (wide)
     'same'                , ## ≡
     'scissors'            , ## ✂️
@@ -194,14 +198,17 @@ __all__     = (
     'triangular_flag'     , ## 🚩
     'toys'                , ## 🧸  (wide)
     'tree'                , ## 🌴  (wide)
-    'trophy'              , ## 🏆 
-    ## 
+    'trophy'              , ## 🏆
+    ##
     'union'               , ## ⋃
     'variance_sym'        , ## σ²
     'weight_lifter'       , ## 🏋️  (wide)
     'weight_scale'        , ## ⚖️  (wide)
     'weierstrass_p'       , ##  ℘
     'wrench'              , ## 🔧  (wide)
+    ## 
+    'T2'                  , ## 𝒯²  
+    'W2'                  , ## 𝒲² 
     # -------------------------------------------------------------------------
     # functions & generators
     # -------------------------------------------------------------------------
@@ -512,6 +519,16 @@ trophy          = '🏆'  if show else ''
 sparkles        = '✨'  if show else ''
 bulls_eye       = '🎯'  if show else '' 
 triangular_flag = '🚩'  if show else ''
+
+cat_face        = '🐱 ' if show else ''
+rocket          = '🚀 ' if show else ''
+flashlight      = '🔦 ' if show else '' 
+brickwall       = '🧱 ' if show else '' 
+
+## Hotelling T2 
+T2              = '𝒯² ' if show else 'T2'
+## Wasserstein W2
+W2              = '𝒲² ' if show else 'W2'
 # =============================================================================
 if '__main__' == __name__ :
 

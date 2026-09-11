@@ -58,7 +58,7 @@ from   ostap.stats.gof_utils    import ( normalize_pooled   ,
                                          nearest_neighbors  , 
                                          nearest_distances  , 
                                          draw_ecdf          , s2u )
-from   ostap.logger.symbols    import to_script 
+import ostap.logger.symbols    as      S
 import ostap.math.math_base           
 import ROOT, numpy
 # =============================================================================
@@ -70,7 +70,19 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
-        
+method_MIX = ( S.to_script ( 'MIX' ) + ' ' ) if S.show else 'MIX'
+method_PPD = ( S.to_script ( 'PPD' ) + ' ' ) if S.show else 'PPD'
+method_DNN = ( S.to_script ( 'DNN' ) + ' ' ) if S.show else 'DNN'
+method_DNN = ( S.to_script ( 'DNN' ) + ' ' ) if S.show else 'DNN'
+method_KL  = ( S.to_script ( 'KL'  ) + ' ' ) if S.show else 'Kullback-Leibler'
+method_J   = ( S.to_script ( 'J'   ) + ' ' ) if S.show else 'Jeffrey'
+method_JS  = ( S.to_script ( 'JS'  ) + ' ' ) if S.show else 'Jensen-Shannon'
+method_M   = ( S.to_script ( 'M'   ) + ' ' ) if S.show else 'Mahalanobis'
+method_T2  =   S.T2                          if S.show else 'Hotelling' 
+method_B   = ( S.to_script ( 'B'   ) + ' ' ) if S.show else 'Bhattacharyya'
+method_W2  =   S.W2                          if S.show else 'Wasserstein' 
+method_H   = ( S.to_script ( 'H'   ) + ' ' ) if S.show else 'Hellinger'
+
 # ============================================================================
 ## define configuration for psi-function for PPD method
 #   - distance type of <code>cdist</code>
@@ -149,12 +161,12 @@ class MIXnp(GoFnp) :
         params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )
 
         ## initialize the base 
-        GoFnp.__init__ ( self                                , 
-                         nToys        = nToys                ,
-                         parallel     = parallel             , 
-                         method       = to_script ( 'MIX ' ) ,
-                         normalize    = True                 , 
-                         n_neighbors  = self.k_max           , **params )
+        GoFnp.__init__ ( self                      , 
+                         nToys        = nToys      ,
+                         parallel     = parallel   , 
+                         method       = method_MIX ,
+                         normalize    = True       , 
+                         n_neighbors  = self.k_max , **params )
 
     # =========================================================================
     ## Are weights supported by this estimator?
@@ -299,11 +311,11 @@ class PPDnp(GoFnp) :
         scale = -0.5 / ( self.sigma ** 2 ) 
         self.__distance_type , _ , _ = psi_conf ( psi , scale )
 
-        GoFnp.__init__ ( self                 ,
-                         nToys     = nToys    ,
-                         parallel  = parallel , 
-                         normalize = True     ,
-                         method    = to_script ( 'PPD ' ) , **params )
+        GoFnp.__init__ ( self                   ,
+                         nToys     = nToys      ,
+                         parallel  = parallel   , 
+                         normalize = True       ,
+                         method    = method_PPD , **params )
                 
     # ==================================================================================
     @property
@@ -524,10 +536,10 @@ class DNNnp(GoFnp) :
         elif isinstance ( histo , int      ) and 1 < histo :
             self.__histo = ROOT.TH1D ( hID () , 'U-values' , histo , -0.05 , 1.05 ) 
 
-        GoFnp.__init__ ( self                    ,
-                         nToys       = nToys     ,
-                         parallel    = parallel  , 
-                         method      = to_script ( 'DNN ' ) , **params )
+        GoFnp.__init__ ( self                     ,
+                         nToys       = nToys      ,
+                         parallel    = parallel   , 
+                         method      = method_DNN , **params )
         
     # ==================================================================================
     @property
@@ -787,7 +799,7 @@ class KullbackLeibler(DistanceTest) :
     def __init__ ( self  , **params ) :         
         
         ## initialize the base 
-        super() .__init__ ( method = to_script ( 'KL ' ) , **params )
+        super() .__init__ ( method = method_KL , **params )
 
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -825,7 +837,7 @@ class Jeffrey(DistanceTest) :
     def __init__ ( self , **params ) :         
         
         ## initialize the base 
-        super() .__init__ ( method = to_script ( 'J ' ) , **params )
+        super() .__init__ ( method = method_J , **params )
 
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -863,7 +875,7 @@ class JensenShannon(DistanceTest) :
     def __init__ ( self , **params ) :         
         
         ## initialize the base 
-        super() .__init__ ( method = to_script ( 'JS ' ) , **params )
+        super() .__init__ ( method = method_JS , **params )
 
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -904,7 +916,7 @@ class Mahalanobis(DistanceTest) :
     def __init__ ( self , **params ) :         
         
         ## initialize the base 
-        super().__init__ ( method = to_script ( 'M ' ) , **params )
+        super().__init__ ( method = method_M , **params )
 
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -945,7 +957,7 @@ class Hotelling(DistanceTest) :
     def __init__ ( self        , **params ) : 
 
         ## initialize the base 
-        super() .__init__ ( method = to_script ( 'T ' ) , **params )
+        super() .__init__ ( method = method_T2 , **params )
         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -986,7 +998,7 @@ class Bhattacharyya(DistanceTest) :
     """    
     def __init__ ( self        , **params ) :
         ## initialize the base 
-        super() .__init__ ( method = to_script ( 'B ' ) , **params )
+        super() .__init__ ( method = method_B  , **params )
         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -1027,7 +1039,7 @@ class Wasserstein(DistanceTest) :
     """    
     def __init__ ( self        , **params ) :
         ## initialize the base 
-        super() .__init__ ( method = to_script ( 'W ' ) , **params )
+        super() .__init__ ( method = method_W2 , **params )
         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
@@ -1069,7 +1081,7 @@ class Hellinger(DistanceTest) :
     """    
     def __init__ ( self        , **params ) :
         ## initialize the base 
-        super() .__init__ ( method = to_script ( 'H ' ) , **params )
+        super() .__init__ ( method = method_H , **params )
         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
