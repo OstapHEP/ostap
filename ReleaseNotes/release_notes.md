@@ -1,6 +1,9 @@
+# v3.8.6.2
+
 ## New features
 
    1. small tweaks
+   1. speed-up the build system
    
 ## Bug fixes
 

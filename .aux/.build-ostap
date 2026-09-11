@@ -13,7 +13,6 @@ export LC_ALL=C
 export LC_CTYPE=C
 # =========================================================================
 
-
 prefix1='<<BUILD OSTAP>>'
 prefix1_error='<<BUILD OSTAP *ERROR*>>'
 prefix='<<BUILD OSTAP>>'
@@ -305,16 +304,16 @@ fi
 if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTALL}" ]; then
     ## OSTAP_INSTALL=$(canonical_path "${OSTAP_INSTALL}")
 
-    printf "%s [1/8] Clean OSTAP_INSTALL directory %s\n" "${prefix1}" "${OSTAP_INSTALL}"
+    printf "%s [1/7] Clean OSTAP_INSTALL directory %s\n" "${prefix1}" "${OSTAP_INSTALL}"
     
     ( cd "${OSTAP_INSTALL}" && \
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
 
     sc=$?
     if [ "${sc}" -ne 0 ]; then
-        printf "%s [1/8] FAILURE: Cannot clean OSTAP_INSTALL (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
+        printf "%s [1/7] FAILURE: Cannot clean OSTAP_INSTALL (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
     else
-        printf "%s [1/8] SUCCESS: OSTAP_INSTALL is cleaned (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_INSTALL}"
+        printf "%s [1/7] SUCCESS: OSTAP_INSTALL is cleaned (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_INSTALL}"
     fi
 fi
 
@@ -328,9 +327,9 @@ if [ -f "${OSTAP_BUILD}/build.ninja" ] && [ "${make_command}" = "ninja" ]; then
     
     sc=$?
     if [ "${sc}" -ne 0 ]; then
-        printf "%s [2/8] FAILURE: Cannot clean OSTAP_BUILD (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
+        printf "%s [2/7] FAILURE: Cannot clean OSTAP_BUILD (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
     else
-        printf "%s [2/8] SUCCESS: OSTAP_BUILD is cleaned (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_INSTALL}"
+        printf "%s [2/7] SUCCESS: OSTAP_BUILD is cleaned (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_INSTALL}"
     fi
 
 elif [ -f "${OSTAP_BUILD}/Makefile" ] && [ "${make_command}" != "ninja" ]; then
@@ -340,24 +339,24 @@ elif [ -f "${OSTAP_BUILD}/Makefile" ] && [ "${make_command}" != "ninja" ]; then
 
     sc=$?
     if [ "${sc}" -ne 0 ]; then
-        printf "%s [2/8] FAILURE: Cannot clean OSTAP_BUILD (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
+        printf "%s [2/7] FAILURE: Cannot clean OSTAP_BUILD (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
     else
-        printf "%s [2/8] SUCCESS: OSTAP_BUILD is cleaned (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_INSTALL}"
+        printf "%s [2/7] SUCCESS: OSTAP_BUILD is cleaned (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_INSTALL}"
     fi
 fi
 
 # =========================================================================
 ## Clean build directory (2)
 # ==========================================================================
-printf "%s [3/8] Remove OSTAP_BUILD   remnants&garbage %s\n" "${prefix1}" "${OSTAP_BUILD}"
+printf "%s [3/7] Remove OSTAP_BUILD   remnants&garbage %s\n" "${prefix1}" "${OSTAP_BUILD}"
 ( cd "${OSTAP_BUILD}" && \
   rm -rf -- CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
 
 sc=$?
 if [ "${sc}" -ne 0 ]; then
-    printf "%s [3/8] FAILURE: Cannot remove OSTAP_BUILD remnants&garbage (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [3/7] FAILURE: Cannot remove OSTAP_BUILD remnants&garbage (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_BUILD}"
 else
-    printf "%s [3/8] SUCCESS: OSTAP_BUILD remnants&garbage is removed (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [3/7] SUCCESS: OSTAP_BUILD remnants&garbage is removed (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_BUILD}"
 fi
 
 # ==========================================================================
@@ -384,11 +383,10 @@ fi
 # Retrieve the number of available CPU cores
 NCPU=$(get_cpu_count)
 
-
 # =========================================================================
 ## (FRESH) build
 # ==========================================================================
-printf "%s [4/8] First  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
+printf "%s [4/7] First  pass of cmake&%s install    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
 ( cd "${OSTAP_BUILD}" && \
   cmake ${fresh} "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
   "${make_command}" -j"${NCPU}" && \
@@ -396,9 +394,9 @@ printf "%s [4/8] First  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_c
 
 sc=$?
 if [ "${sc}" -ne 0 ]; then
-    printf "%s [4/8] FAILURE: first pass of cmake&%s&install (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [4/7] FAILURE: first pass of cmake&%s install (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
 else
-    printf "%s [4/8] SUCCESS: first pass of cmake&%s&install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [4/7] SUCCESS: first pass of cmake&%s install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
 fi
 
 # ==========================================================================
@@ -415,57 +413,52 @@ fi
 # =========================================================================
 ## Second Pass
 # ==========================================================================
-printf "%s [5/8] Second pass of cmake&%s&install %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
-## ( cd "${OSTAP_BUILD}" && \
-##  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
-##  "${make_command}" -j"${NCPU}" && \
-##  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
+printf "%s [5/7] Second pass of cmake %s\n" "${prefix1}" "${OSTAP_BUILD}"
 ( cd "${OSTAP_BUILD}" && \
   cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" )
 
 sc=$?
 if [ "${sc}" -ne 0 ]; then
-    printf "%s [5/8] FAILURE: second pass of cmake&%s&install (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [5/7] FAILURE: second pass of cmake (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_BUILD}"
 else
-    printf "%s [5/8] SUCCESS: second pass of cmake&%s&install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    printf "%s [5/7] SUCCESS: second pass of cmake (code %d) %s\n" "${prefix}" "${sc}" "${OSTAP_BUILD}"
 fi
 
-# =========================================================================
+# ==========================================================================
 ## Source setup script
 # ==========================================================================
 if [ -f "${OSTAP_INSTALL}/thisostap.sh" ] && [ -r "${OSTAP_INSTALL}/thisostap.sh" ]; then
-    printf "%s [6/8] 'thisostap.sh' is sourced %s\n" "${prefix1}" "${OSTAP_INSTALL}/thisostap.sh"
+    printf "%s [6/7] 'thisostap.sh' is sourced %s\n" "${prefix1}" "${OSTAP_INSTALL}/thisostap.sh"
     . "${OSTAP_INSTALL}/thisostap.sh"
 else
-    printf "%s [6/8] FAILURE: no thisostap.sh is found %s\n" "${prefix1_error}" "${OSTAP_INSTALL}/thisostap.sh"
+    printf "%s [6/7] FAILURE: no thisostap.sh is found %s\n" "${prefix1_error}" "${OSTAP_INSTALL}/thisostap.sh"
     unset OSTAP_BUILD OSTAP_INSTALL
     return 220  2>/dev/null || exit 220
 fi
 
 sc=$?
 if [ "${sc}" -ne 0 ]; then
-    printf "%s [6/8] FAILURE: '. %s' (code %d)\n" "${prefix1_error}" "${OSTAP_INSTALL}/thisostap.sh" "${sc}"
+    printf "%s [6/7] FAILURE: '. %s' (code %d)\n" "${prefix1_error}" "${OSTAP_INSTALL}/thisostap.sh" "${sc}"
     return ${sc} 2>/dev/null || exit ${sc}
 else
-    printf "%s [6/8] SUCCESS: '. %s' (code %d)\n" "${prefix}" "${OSTAP_INSTALL}/thisostap.sh" "${sc}"
+    printf "%s [6/7] SUCCESS: '. %s' (code %d)\n" "${prefix}" "${OSTAP_INSTALL}/thisostap.sh" "${sc}"
 fi
 
 # =========================================================================
 ## Third Pass
 # ==========================================================================
-printf "%s [7/8] Third  pass of cmake&%s&install    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
-## ( cd "${OSTAP_BUILD}" && \
-##   cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
-##  "${make_command}" -j"${NCPU}" && \
-##  "${make_command}" install | grep -v Up-to-date | grep -v Installing )
+printf "%s [7/7] Third  pass of cmake&%s package    %s\n" "${prefix1}" "${make_command}" "${OSTAP_BUILD}"
+( cd "${OSTAP_BUILD}" && \
+  cmake "${OSTAP_SOURCE}" -DCMAKE_INSTALL_PREFIX="${OSTAP_INSTALL}" -G "${make_generator}" && \
+  "${make_command}" package )
 
-## sc=$?
-## if [ "${sc}" -ne 0 ]; then
-##     printf "%s [7/8] FAILURE: third pass of cmake&%s&install (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
-##    return ${sc} 2>/dev/null || exit ${sc}
-## else
-##    printf "%s [7/8] SUCCESS: third pass of cmake&%s&install (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
-## fi
+sc=$?
+if [ "${sc}" -ne 0 ]; then
+    printf "%s [7/7] FAILURE: third pass of cmake&%s packaage (code %d) %s\n" "${prefix1_error}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    return ${sc} 2>/dev/null || exit ${sc}
+else
+    printf "%s [7/7] SUCCESS: third pass of cmake&%s package (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+fi
 
 if command -v tree >/dev/null 2>&1; then
     tree -d -L 3 --charset UTF-8 "${OSTAP_INSTALL}"
