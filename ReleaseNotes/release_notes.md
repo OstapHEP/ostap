@@ -5,6 +5,7 @@
   1. add new implementation of `Chi2` Two-Samples/GoF test based in comparison if binned 1,2&3 histograms 
   1. add new function `data_VIFs` to get the variance inflation factors
   1. improve `Ostap::Math::WECDF` 
+  1. slight reshuffle for `gofnp`
   
 ## Bug fixes
 

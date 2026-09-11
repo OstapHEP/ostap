@@ -176,6 +176,11 @@ else()
   message ( SEND_ERROR "----> No GSL libraries are found!" )
 endif() 
 
+
+## Just for curiocity and migth be some actions in future 
+find_package(LAPACK)
+
+
 set(CMAKE_CXX_FLAGS ${ROOT_CXX_FLAGS} )
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")

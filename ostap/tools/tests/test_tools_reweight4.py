@@ -346,8 +346,8 @@ logger.info ( '%s:\n%s' % ( title , datatree.table ( variables = vars  ,
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
-import ostap.stats.gof_np as GnP
-cconf       = { 'parallel' : True , 'nToys' : 20 , 'silent' : True , 'progress' : True } 
+import ostap.stats.gof_np  as     GnP
+cconf       = { 'parallel' : True , 'nToys' : 50 , 'silent' : True , 'progress' : True } 
 comparators = (
     GnP.Chi2            ( **cconf ) ,
     GnP.KullbackLeibler ( **cconf ) ,
@@ -576,7 +576,7 @@ with timing ( 'Compare DATA & final weighted MC-tree:' , logger = logger ) :
                               importance  = False , 
                               silent      = True  )
     
-    n_eff = mctree.nEff () 
+    n_eff = mctree.nEff ( weight_name ) 
     trow  = [ final_symbol , '%.1f' % n_eff ] 
     for r in results :
         pv100 = VE ( r.pvalue ) * 100            

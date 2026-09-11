@@ -294,7 +294,7 @@ else            :  logger.warning   ( 'HepML    is not available!' )
 ## Compare datasets using several methods 
 # ==============================================================================
 import ostap.stats.gof_np as GnP
-cconf       = { 'parallel' : True , 'nToys' : 20 , 'silent' : True , 'progress' : True } 
+cconf       = { 'parallel' : True , 'nToys' : 50 , 'silent' : True , 'progress' : True } 
 comparators = (
     GnP.Chi2            ( **cconf ) ,
     GnP.KullbackLeibler ( **cconf ) ,
@@ -533,7 +533,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             results  = data_compare ( comparators ,
                                       datatree    ,
                                       mcds        ,
-                                      expressions =  ( 'x' , 'y' ) ,
+                                      expressions =  ( 'x' , 'y' , 'z' ) ,
                                       importance  = True , 
                                       silent      = True )
             
@@ -562,7 +562,6 @@ else :
     del mcds_init 
     converged = False 
     logger.error ( "No convergency!" )
-
 
 # =============================================================================
 logger.attention ( 'Memory:%+.2f[MB]' % ( memory_usage () - memory_init ) )                            
@@ -697,7 +696,7 @@ for weight in weights :
                               silent      = True   )
     
     n_eff = mctree.nEff ( weight ) 
-    trow  = [ final_symbol , '%.1f' % n_eff ] 
+    trow  = [ weight , '%.1f' % n_eff ] 
     for r in results :
         pv100 = VE ( r.pvalue ) * 100            
         trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )

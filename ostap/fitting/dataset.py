@@ -1924,11 +1924,14 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
         """        
         store = self.store()
         if store :
-            store.reset        ()
-            store.resetBuffers ()
-            store.resetCache   ()
-        
-        self.resetBuffers  ()
+            if hasattr ( store , 'reset'        ) : store.reset        ()
+            if hasattr ( store , 'resetBuffers' ) : store.resetBuffers ()
+            if hasattr ( store , 'resetCache'   ) : store.resetCache   ()
+            
+        if hasattr ( self , 'resetBuffers' ) : self.resetBuffers ()
+        if hasattr ( self , 'resetCache'   ) : self.resetCache   ()
+        ## 
+        ## call "OLD" RESET 
         self._old_reset_   ()
         ## 
         return len ( self )

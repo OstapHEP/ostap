@@ -19,14 +19,14 @@ __all__     = (
 from   ostap.core.ostap_types import sequence_types 
 from   ostap.core.core        import Ostap
 from   ostap.utils.core       import typename 
-from   ostap.stats.gof_np     import GoFnp
+from   ostap.stats.gofnp      import GoFnp
 from   ostap.stats.utils      import ( weight_trivial ,
                                        check_all      , 
                                        num_features   ,
-                                       num_samples    ) 
+                                       num_samples    , nEff ) 
 from   ostap.histos.axes      import axis_from_edges, h1_axis, h2_axes, h3_axes
 from   ostap.logger.symbols   import chi2 as chi2_symbol
-import ROOT, numpy  
+import ROOT, numpy, math   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -39,14 +39,10 @@ logger.debug ( 'Two-sample & GoF (binned) Chi2 test' )
 ## @class Chi2
 #  Binned Chi2 for Two-Sample/Goodness-of-Fit Test
 #  - it works for 1,2&3 dimensions
-#  - for 1D smart self-binning scheme is implemented
-#  - for 2&3D binning schemes must be provided externally 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 class Chi2 ( GoFnp ) :
     """ Binned Chi2 for Two-Sample/Goodness-of-Fit Test 
     - it works for 1,2&3 dimensions
-    - for 1D    smart self-binning scheme is implemented
-    - for 2&3D  binning schemes must be provided externally 
     """
     def __init__ ( self             , * , 
                    binning   = ()   , 
@@ -76,7 +72,7 @@ class Chi2 ( GoFnp ) :
         GoFnp.__init__ ( self ,
                          method = chi2_symbol ,
                          nToys  = nToys       , **kwargs )
-
+        
     @property
     def dimension ( self ) :
         """`dimension` : actual chi2-dimension 
@@ -136,7 +132,7 @@ class Chi2 ( GoFnp ) :
         >>> data2   = ...
         >>> weight1 = ...
         >>> weight2 = ...
-        >>>> tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
+        >>> tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
         """
         
         ## transform ?
@@ -151,12 +147,27 @@ class Chi2 ( GoFnp ) :
         dim = self.dimension 
         
         if not dim :
-            if   1 == nf : self.__axes = 40 ,
-            elif 2 == nf : self.__axes = 10 , 10
-            elif 3 == nf : self.__axes =  5 ,  5 ,  5
+            
+            n1  = nEff ( uds1 , weight1 )
+            n2  = nEff ( uds2 , weight2 )
+            nt  = min  ( n1   , n2      )
+            
+            ## indicative number of events per bin 
+            ne  = 16
+            nn  = math.ceil ( nt ** ( 1 / nf ) ) 
+
+            if   1 == nf :
+                nb  = max ( 20 , nn ) 
+                self.__axes = nb ,                
+            elif 2 == nf :
+                nb  = max ( 10 , nn ) 
+                self.__axes = nb , nb 
+            elif 3 == nf :
+                nb  = max (  5 , nn ) 
+                self.__axes = nb , nb , nb 
             
         dim = self.dimension                                  
-        if nf != dim : raise ValueError ( "Mismatch in #num_features=%s & dimension=%d" % ( nf1 , dim ) ) 
+        if nf != dim : raise ValueError ( "Mismatch in #num_features=%s & #dimension=%d" % ( nf , dim ) ) 
         
         w1_trivial = weight_trivial ( weight1 )
         w2_trivial = weight_trivial ( weight2 )
@@ -164,7 +175,7 @@ class Chi2 ( GoFnp ) :
         w1 = 1.0 if w1_trivial else numpy.ascontiguousarray ( weight1.ravel () , dtype = numpy.float64 )
         w2 = 1.0 if w2_trivial else numpy.ascontiguousarray ( weight2.ravel () , dtype = numpy.float64 )
 
-        ## loop over known binings/axes 
+        ## loop over known binnings/axes 
         for i, axis in enumerate ( self.axes ) :
 
             if isinstance ( axis , int ) :
@@ -182,23 +193,20 @@ class Chi2 ( GoFnp ) :
                 wsum2  = num_samples ( uds2 ) if w2_trivial else numpy.sum ( weight2 )
                 wscale = wsum1 / wsum2 
                 
-                if w2_trivial : wecdf.add ( data2vct ( d2 )  ,                 wscale   )
-                else          : wecfd.add ( data2vct ( d2  ) , data2vct ( w2 * wscale ) )
+                if w2_trivial : wecdf.add ( data2vct ( d2 ) ,                 wscale   )
+                else          : wecfd.add ( data2vct ( d2 ) , data2vct ( w2 * wscale ) )
                 
-
                 N  = axis
                 quantiles   = wecdf.quantiles_[N-1] ()                
                 axis        = axis_from_edges ( quantiles )
-                if not self.silent : 
-                    logger.info ( '%s: choose the bining scheme: #%d %s' % ( typename ( self ) , i , axis ) ) 
+                if not self.silent : logger.info ( '%s: choose the binning scheme: #%d/%d %s' % ( typename ( self ) , i , nf , axis ) ) 
 
                 del wecdf
                 
                 axes = list ( self.axes )
                 axes [ i ]  = axis 
                 self.__axes = axes 
-  
-            
+              
         if   3 == dim : histo1 = h3_axes  ( *self.axes , double = ROOT.TH3D )
         elif 2 == dim : histo1 = h2_axes  ( *self.axes , double = ROOT.TH2D )
         elif 1 == dim : histo1 = h1_axis  ( *self.axes , double = ROOT.TH1D )
@@ -226,8 +234,8 @@ class Chi2 ( GoFnp ) :
             d1 = [ numpy.ascontiguousarray ( uds1 [:, i] , dtype = numpy.float64 ) for i in range ( dim ) ]
             d2 = [ numpy.ascontiguousarray ( uds2 [:, i] , dtype = numpy.float64 ) for i in range ( dim ) ]
             
-            self.fill_3D ( histo1 , *d1  , weight = w1 )
-            self.fill_3D ( histo2 , *d2  , weight = w2 )
+            self.fill_3D ( histo1 , *d1 , weight = w1 )
+            self.fill_3D ( histo2 , *d2 , weight = w2 )
 
         ## now we can calculate chi2
         h1 = histo1.density ()
@@ -249,7 +257,7 @@ class Chi2 ( GoFnp ) :
     
     ## fill 1D histogram 
     def fill_1D ( self  , h1 , x , weight = 1.0 ) :
-        n = len ( x  )  
+        n  = len ( x  )  
         sc = Ostap.fill_TH1 ( h1 , n , x , weight )
         if sc.isFailure() : raise ValueError ( "Error from Ostap.fill_TH1 %s" % sc ) 
     

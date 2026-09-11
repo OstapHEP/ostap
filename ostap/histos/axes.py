@@ -17,14 +17,15 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 # =============================================================================
 __all__     = (
+    # =========================================================================
     'axis_from_edges'   , ## Create the axis from sequence of bins
     'make_axis'         , ## make axis from description 
     'axis_same_binning' , ## same binning for two axes ?
     'h1_axis'           , ## create histogram from axis 
-    'h2_ax2s'           , ## create histogram from axis 
-    'h3_axis'           , ## create histogram from axis 
+    'h2_axes'           , ## create histogram from axes 
+    'h3_axes'           , ## create histogram from axes
+    # =========================================================================
 )
-#
 # =============================================================================
 from   ostap.core.meta_info           import root_info 
 from   ostap.core.ostap_types         import ( sequence_types  , sized_types   ,
