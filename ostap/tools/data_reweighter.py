@@ -37,17 +37,17 @@ else                       : logger = getLogger( __name__ )
 class DataReweighter(Config) : 
     """ Helper class to perform (GB)reweighting using tree/source-interface
     """
-    def __init__ ( self                      , 
-                   reweighter_type           , * , 
-                   original                  ,     
-                   target                    ,  
-                   target_variables          ,
-                   original_variables = None , 
-                   target_weight      = ''   , 
-                   original_weight    = ''   , 
-                   silent             = True , 
-                   progress           = True , **params ) :
-        
+    def __init__ ( self                               , 
+                   reweighter_type                    , * , 
+                   original                           ,     
+                   target                             ,  
+                   target_variables                   ,
+                   original_variables = None          , 
+                   target_weight      = ''            , 
+                   original_weight    = ''            , 
+                   silent             = True          , 
+                   progress           = True          ,
+                   description        = 'reweighting' , **params ) :        
         ##
         if not issubclass ( reweighter_type , Reweighter ) :
             raise TypeError ( "Reweighet type %s is not subclass of %s" % ( typename ( reweighter_type ) , 
@@ -59,12 +59,12 @@ class DataReweighter(Config) :
         ovars = original_variables if original_variables else tvars
         ovars, oweight, _ = vars_and_cuts ( ovars            , original_weight )
             
-        self.__progress = True if progress else False   
-        self.__tvars    = tuple ( tvars )  
-        self.__ovars    = tuple ( ovars )
-        self.__tweight  = tweight
-        self.__oweight  = oweight 
-    
+        self.__progress    = True if progress else False   
+        self.__tvars       = tuple ( tvars )  
+        self.__ovars       = tuple ( ovars )
+        self.__tweight     = tweight
+        self.__oweight     = oweight 
+        self.__description = description 
         ## 
         tdata, tw = data_slice ( target  , tvars, tweight , structured = False , progress = self.progress )
         odata, ow = data_slice ( original, ovars, oweight , structured = False , progress = self.progress ) 
@@ -98,6 +98,7 @@ class DataReweighter(Config) :
         conf [ 'Reweighter'         ] = str ( self.__rw  ) 
         conf [ 'target-variables'   ] = self.__tvars
         conf [ 'original-variables' ] = self.__ovars
+        conf [ 'description'        ] = self.__description
         if self.__tweight : conf [ 'target-weight'   ] = self.__tweight 
         if self.__oweight : conf [ 'original-weight' ] = self.__oweight 
         return conf
@@ -108,11 +109,17 @@ class DataReweighter(Config) :
         """
         return self.__progress 
 
+    @property
+    def description ( self ) :
+        """`description` : short description of new variable"""
+        return self.__description
+    
     # =======================================================================================
     ## Get the weights for original, and add the weight back to original           
     def reweight ( self      ,
                    original  , * ,
                    name      = 'weight' ,
+                   title     = ''       , ## variable title (e.g. for RooFit)
                    variables = None     ) :
         """ Get the weights for original, and add the weight back to original
         """
@@ -169,18 +176,26 @@ class DataReweighter(Config) :
         ## ATTENTION: no weight here!
         odata, _ = data_slice ( original , ovars, '' , structured = False , progress = self.progress ) 
             
-        the_weight = self.__rw ( odata ) 
+        the_weight = self.__rw ( odata )
+        ## variable title 
+        title      = title if title else self.description  
         return original.add_new_buffer ( the_weight                 ,
                                          name     = name            ,
-                                         report   = not self.silent , 
+                                         title    = title           , 
+                                         report   = not self.silent ,                                         
                                          progress = self.progress and not self.silent ) 
 
     # ===============================================================================================
     ## Calculate the weights for "original" to add them to the tree/source
-    def __call__  ( self , original , name = 'weight' )  : 
+    def __call__  ( self     ,
+                    original ,
+                    name     = 'weight' ,
+                    title    = ''       )  : 
         """ Calculate weights for `original' add add tem to the tree/source
         """
-        return self.reweight ( original , name = name  )
+        return self.reweight ( original ,
+                               name     = name  ,
+                               title    = title )
     
 # ============================================================================
 if '__main__' == __name__ :

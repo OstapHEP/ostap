@@ -408,9 +408,9 @@ def _rad_add_ ( ds1 , ds2 ) :
     return NotImplemented
 
 # =============================================================================
-# merge/append two datasets into a single one 
+# merge two datasets into a single one 
 def _rad_imul_ ( ds1 , ds2 ) :
-    """ Merge/append two datasets into a single one
+    """ Merge two datasets into a single one
     - two datasets must have the  same number of entries!
     >>> dset1  = ...
     >>> dset2  = ...
@@ -3934,6 +3934,49 @@ _new_methods_ += [
     ROOT.RooAbsData.__deepcopy__ ,
 ]
 
+# ===============================================================================
+## Add new buffer to RooDataSet 
+# ===============================================================================
+def add_new_buffer ( dataset , buffer , * , name , title = '' , **kwargs ) :
+    """ Add new buffer to RooDataSet 
+    """
+
+    if not isinstance ( dataset , ROOT.RooDataSet ) : raise TypeError ( "Invalid dataset type: %s" % typename ( dataset ) )    
+    if not isinstance ( name    ,  string_types   ) : raise TypeError ( "Invalid `name' type  %s"  % typename ( name    ) )
+
+    if name and name in dataset :
+        logger.error ( "The branch/leaf/column `%s' already exists, skip it!!" % name )
+        return dataset 
+    
+    if not name or not Ostap.Trees.valid_name_for_branch ( name ) :
+        raise ValueError ( "Specified name `%s' is not a proper name!" % name ) 
+
+    if not isinstance ( buffer , numpy.ndarray ) : raise TypeError ( "Invalid `buffer` type: %s"  %  typename ( buffer ) )
+    elif 1 != len ( buffer.shape )               : raise TypeError ( "Invalid `buffer` shape: %s" % str ( buffer.shape ) )
+    elif buffer.dtype.names                      : raise TypeError ( "Invalid `buffer` dtype: %s" % str ( buffer.dtype ) )
+
+    dsize = len ( dataset )
+    bsize = len ( buffer  ) 
+    if   dsize < bsize : raise IndexError ( "Buffer size %d is larger than %d"  % ( bsize , dsize ) )
+    elif dsize > bsize : raise IndexError ( "Buffer size %d is smaller than %d" % ( bsize , dsize ) )
+
+    data      = { name : buffer }
+    title     = title if title else '%s variable from buffer' % name 
+    variables = [ ROOT.RooRealVar ( name , title , 0 ) ] 
+    new_dset  = ROOT.RooDataSet.from_numpy ( data = data  , variables = variables , name = dsID() )
+    ROOT.SetOwnership ( new_dset, True )
+
+    dataset *= new_dset 
+
+    del new_dset
+    return dataset 
+
+ROOT.RooDataSet.add_new_buffer = add_new_buffer 
+
+_new_methods_ += [
+    ROOT.RooDataSet.add_new_buffer , 
+]    
+                          
 # ===============================================================================
 ## "copy" RooAbsData
 #  Fake copy of RooAbsData object

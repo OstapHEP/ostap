@@ -2118,7 +2118,7 @@ def push_2chain ( chain , *config , progress = True , report = True ) :
 # ============================================================================
 ## Add new buffer to TTree
 #  @see Ostap::AddBuffer::add_buffer 
-def add_new_buffer ( tree , buffer , * , name = '' , **kwargs ) :
+def add_new_buffer ( tree , buffer , * , name = '' , title = '' , **kwargs ) :
     """ Add new buffer to TTree
     - see `Ostap.AddBuffer.add_buffer` 
     """
@@ -2229,7 +2229,7 @@ def add_new_buffer ( tree , buffer , * , name = '' , **kwargs ) :
 
     elif name and isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
 
-        ## construct arra from raw  buffer 
+        ## construct array from raw  buffer 
         the_array = array.array ( 'b' , buffer )
         
         keep.append ( the_array )                

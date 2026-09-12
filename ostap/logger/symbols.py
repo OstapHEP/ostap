@@ -526,9 +526,9 @@ flashlight      = '🔦 ' if show else ''
 brickwall       = '🧱 ' if show else '' 
 
 ## Hotelling T2 
-T2              = '𝒯² ' if show else 'T2'
+T2              = '𝒯 ²' if show else 'T2'
 ## Wasserstein W2
-W2              = '𝒲² ' if show else 'W2'
+W2              = '𝒲 ²' if show else 'W2'
 # =============================================================================
 if '__main__' == __name__ :
 

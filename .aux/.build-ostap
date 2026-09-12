@@ -458,6 +458,7 @@ if [ "${sc}" -ne 0 ]; then
     return ${sc} 2>/dev/null || exit ${sc}
 else
     printf "%s [7/7] SUCCESS: third pass of cmake&%s package (code %d) %s\n" "${prefix}" "${make_command}" "${sc}" "${OSTAP_BUILD}"
+    ( cd "${OSTAP_BUILD}" && rm -rf _CPack* )
 fi
 
 if command -v tree >/dev/null 2>&1; then

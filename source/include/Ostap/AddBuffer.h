@@ -149,13 +149,13 @@ namespace Ostap
     // ========================================================================
   public: 
     // ========================================================================
-    /// congfiguration of the progress bar 
+    /// configuration of the progress bar 
     inline const Ostap::Utils::ProgressConf& progress () const
     { return m_progress ; }
     // ========================================================================
   private :
     // ========================================================================
-    /// congfiguration of the progress bar 
+    /// configuration of the progress bar 
     Ostap::Utils::ProgressConf m_progress { false } ; 
     // ========================================================================
   } ; //                                      The end of class Ostap::AddBuffer 

@@ -306,9 +306,9 @@ def ecdf_compare ( ecdf1   ,
     if not isinstance ( ecdf2 , ecdf_types ) : raise TypeError  ( "Invalid `ecdf2` type: %s" % typename ( ecdf2 ) )
     if not ecdf1 . ok ()                     : raise ValueError ( "Invalid `ecdf1`!" )
     if not ecdf2 . ok ()                     : raise ValueError ( "Invalid `ecdf2`!" )
-    
-    if   isinstance   ( ecdf1 , WECDF ) : pooled = ecdf1.merge ( ecdf2 )
-    else                                : pooled = ecdf2.merge ( ecdf1 )
+
+    if   isinstance   ( ecdf1 , WECDF )      : pooled = ecdf1.merge ( ecdf2 )
+    else                                     : pooled = ecdf2.merge ( ecdf1 )
 
     quantiles = pooled.quantiles_[N-1] ()
     
@@ -370,7 +370,7 @@ def ecdf_compare ( ecdf1   ,
     nDoF = ( n - 1 ) if density else n
     
     if 0 <= 0 and 1 <= nDoF :        
-        pvalue = chi2_prob    ( chi2 , nDoF )
+        pvalue = chi2_prob    ( chi2   , nDoF )
         nsigma = significance ( pvalue )
     else :
         pvalue , nsigma = float ( 'NaN' ) , float ( 'NaN' )
@@ -513,7 +513,7 @@ def compare_variable ( what        ,
     if not silent :
         
         ## chi2-row 
-        chi2ndf = '%.2f/%s'  % ( histos.chi2 , histos.nDoF) 
+        chi2ndf = '%.2f/%s'  % ( histos.chi2   , histos.nDoF) 
         pvalue  = '%6.2f'    % ( histos.pvalue * 100 )
         
         nsigma  = histos.nsigma 

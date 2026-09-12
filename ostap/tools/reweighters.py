@@ -19,18 +19,19 @@ __all__     = (
     'GBReweighter'              , ## Reweighter based on GBReweighter from hep_ml 
 ) 
 # =============================================================================
-from   ostap.core.ostap_types import num_types 
-from   ostap.utils.core       import typename
-from   ostap.utils.basic      import numcpu, num_jobs, NoContext 
-from   ostap.tools.reweighter import Reweighter
-from   ostap.stats.utils      import ( weight_trivial     ,
-                                       valid_weight       ,
-                                       valid_data_shape   ,
-                                       compatible_weights , 
-                                       num_features       ,
-                                       num_samples        ,
-                                       check_all          ,
-                                       nEff               ) 
+from   ostap.core.ostap_types   import num_types 
+from   ostap.utils.core         import typename
+from   ostap.utils.basic        import numcpu, num_jobs, NoContext
+from   ostap.utils.progress_bar import progress_bar 
+from   ostap.tools.reweighter   import Reweighter
+from   ostap.stats.utils        import ( weight_trivial     ,
+                                         valid_weight       ,
+                                         valid_data_shape   ,
+                                         compatible_weights , 
+                                         num_features       ,
+                                         num_samples        ,
+                                         check_all          ,
+                                         nEff               ) 
 import numpy, abc, warnings
 # =============================================================================
 # logging 
@@ -107,15 +108,16 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     (if store_original_weights=True).
     """
 
-    def __init__( self                          , * ,
-                 original                       ,
-                 target                         ,
-                 original_weight        = None  , 
-                 target_weight          = None  ,
-                 clip_threshold         = 1.e+4 ,
-                 n_splits               = 5     , ## n-fold!
-                 random_state           = 42    ,
-                 store_original_weights = True  , **params ) :
+    def __init__( self                           , * ,
+                  original                       ,
+                  target                         ,
+                  original_weight        = None  , 
+                  target_weight          = None  ,
+                  clip_threshold         = 1.e+4 ,
+                  n_splits               = 5     , ## n-fold!
+                  random_state           = 42    ,
+                  store_original_weights = True  ,
+                  progress               = True  , **params ) :
 
         if not isinstance ( n_splits, int ) : raise TypeError  ( "Invalid `n_splits' type %s" % typename( n_splits ) )
         if not 0 <= n_splits <= 1000        : raise ValueError ( "Invalid `n_splits' value %s" % n_splits )
@@ -123,7 +125,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             raise TypeError ( "Invalid `clip_threshold' type %s" % typename( clip_threshold ) )
         if not 0 < clip_threshold :
             raise ValueError ( "Invalid `clip_threshold' value %s" % clip_threshold )
-        
+
+        self.__progress       = True if progress else False 
         self.__clip_threshold = float ( clip_threshold )
         self.__n_splits       = n_splits
         self.__random_state   = random_state
@@ -242,15 +245,21 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
     @property
     def mode ( self ) :
-        """Active stream decomposition scheme ('1-stream', '2-stream_orig', '2-stream_targ', or '4-stream')."""
+        """`mode`: active stream decomposition scheme ('1-stream', '2-stream_orig', '2-stream_targ', or '4-stream')."""
         return self.__mode
 
+    @property
+    def progress ( self ) :
+        """`progress`: show progress-bar for split-loop?"""
+        return self.__progress
+    
     @property
     def config ( self ) :
         """`config` : Reweighter configuration"""
         conf = {}
         conf.update( super().config if hasattr( super(), "config" ) else {} )
-        conf [ "mode" ]                        = self.__mode
+        conf [ "progress" ]                    = self.progress
+        conf [ "mode" ]                        = self.mode
         conf [ "clip_threshold" ]              = self.__clip_threshold
         conf [ "n_splits" ]                    = self.__n_splits
         conf [ "original_ratios" ]             = self.__original_ratios             is not None
@@ -261,13 +270,13 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     # Abstract Methods (Must be implemented by child framework wrappers)
     # =========================================================================
     @abc.abstractmethod
-    def _train_single_model( self    ,
-                             X_train ,
-                             y_train ,
-                             w_train ,
-                             X_val   ,
-                             y_val   ,
-                             w_val   ) :
+    def _train_single_model ( self    ,
+                              X_train ,
+                              y_train ,
+                              w_train ,
+                              X_val   ,
+                              y_val   ,
+                              w_val   ) :
         """ Train a single base classifier fold and return (model, val_predictions)."""
         raise NotImplementedError
 
@@ -484,12 +493,17 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                 random_state = self.random_state )
 
         stream_models = []
-        for train_idx, val_idx in skf.split( X_comb, y_comb ) :
-            X_tr, y_tr = X_comb[ train_idx ], y_comb[ train_idx ]
-            X_va, y_va = X_comb[ val_idx ], y_comb[ val_idx ]
+        
+        for train_idx, val_idx in progress_bar ( skf.split( X_comb, y_comb )  ,
+                                                 max_value   = self.n_splits  ,
+                                                 description = 'Folds:'       , 
+                                                 silent      = not self.progress or self.silent or not self.n_splits ) :
+            
+            X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
+            X_va, y_va = X_comb [ val_idx   ] , y_comb [ val_idx ]
 
-            w_tr = w_comb[ train_idx ] if w_comb is not None else None
-            w_va = w_comb[ val_idx ] if w_comb is not None else None
+            w_tr = w_comb [ train_idx ] if w_comb is not None else None
+            w_va = w_comb [ val_idx   ] if w_comb is not None else None
 
             model, _ = self._train_single_model ( X_tr, y_tr, w_tr, X_va, y_va, w_va )
             stream_models.append( model )

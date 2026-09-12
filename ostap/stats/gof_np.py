@@ -70,18 +70,17 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
-method_MIX = ( S.to_script ( 'MIX' ) + ' ' ) if S.show else 'MIX'
-method_PPD = ( S.to_script ( 'PPD' ) + ' ' ) if S.show else 'PPD'
-method_DNN = ( S.to_script ( 'DNN' ) + ' ' ) if S.show else 'DNN'
-method_DNN = ( S.to_script ( 'DNN' ) + ' ' ) if S.show else 'DNN'
-method_KL  = ( S.to_script ( 'KL'  ) + ' ' ) if S.show else 'Kullback-Leibler'
-method_J   = ( S.to_script ( 'J'   ) + ' ' ) if S.show else 'Jeffrey'
-method_JS  = ( S.to_script ( 'JS'  ) + ' ' ) if S.show else 'Jensen-Shannon'
-method_M   = ( S.to_script ( 'M'   ) + ' ' ) if S.show else 'Mahalanobis'
-method_T2  =   S.T2                          if S.show else 'Hotelling' 
-method_B   = ( S.to_script ( 'B'   ) + ' ' ) if S.show else 'Bhattacharyya'
-method_W2  =   S.W2                          if S.show else 'Wasserstein' 
-method_H   = ( S.to_script ( 'H'   ) + ' ' ) if S.show else 'Hellinger'
+method_MIX = S.to_script ( 'M I X ' ) if S.show else 'MIX'
+method_PPD = S.to_script ( 'P P D ' ) if S.show else 'PPD'
+method_DNN = S.to_script ( 'D N N ' ) if S.show else 'DNN'
+method_KL  = S.to_script ( 'K -L '  ) if S.show else 'Kullback-Leibler'
+method_J   = S.to_script ( 'J '     ) if S.show else 'Jeffrey'
+method_JS  = S.to_script ( 'J - S ' ) if S.show else 'Jensen-Shannon'
+method_M   = S.to_script ( 'M '     ) if S.show else 'Mahalanobis'
+method_T2  = S.T2                     if S.show else 'Hotelling' 
+method_B   = S.to_script ( 'B '     ) if S.show else 'Bhattacharyya'
+method_W2  = S.W2                     if S.show else 'Wasserstein' 
+method_H   = S.to_script ( 'H '     ) if S.show else 'Hellinger'
 
 # ============================================================================
 ## define configuration for psi-function for PPD method
