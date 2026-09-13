@@ -55,10 +55,10 @@ __all__     = (
     ) 
 # =============================================================================
 from   collections          import namedtuple
-from   ostap.math.math_base import Ostap, iszero , isequal
+from   ostap.math.math_base import Ostap, iszero , next_double, prev_double
 from   ostap.math.ve        import VE
 from   ostap.utils.utils    import classprop, memoize 
-import ROOT, math, abc, array, sys, bisect   
+import math, abc, array, sys, bisect   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -76,14 +76,11 @@ def eps ( D , N ) :
     """
     return pow ( epsilon , 1.0 / ( D + N ) )
 # =============================================================================
-_next_double_ = Ostap.Math.Lomont.next_double
-# =============================================================================
 ##  get "small" interval around x 
 def delta ( x , ulps = 1000  ) :
     """Get `small' interval around x"""
-    if abs ( x ) < epsilon : x = math.copysign ( 2*epsilon , x ) 
-    n1 = _next_double_ ( x ,  ulps )
-    n2 = _next_double_ ( x , -ulps )
+    if abs ( x ) < epsilon : x = math.copysign ( 2*epsilon , x )  
+    n1 , n2 = next_double ( x , ulps ) , prev_double ( x , ulps ) 
     return max ( abs ( n1 - x ) , abs ( n2 - x ) )
 
 # =============================================================================

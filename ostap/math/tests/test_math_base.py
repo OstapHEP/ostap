@@ -30,7 +30,10 @@ def test_lomont () :
     
     logger = getLogger ( 'test_lomont' )
 
-    
+    def next_double ( x , u ) : 
+        if 0 <= u : MB.Ostap.Math.Lomont.next_double  (  v , u  )
+        return MB.Ostap.Math.Lomont.prev_double  (  v , abs ( u ) )
+        
     values = 0 , 1.e-6 , 1.e-3 , 1 , 10 , 100 , 1000 , 1e+6 , 1.e+9 , 1.e+100 , 1.e+200
     ulps   = 1 , 10 , 100 , 1000 , 1000 , 10000 , 32000 
 
@@ -38,12 +41,12 @@ def test_lomont () :
         for k in range ( 1000 ) : 
             u = random.randrange ( -32000 , +32000 )
             
-            vl = MB.Ostap.Math.Lomont.next_double          (  v , u  )
+            vl = next_double          (  v , u  )
             dd = MB.Ostap.Math.Lomont.ulps_distance_double (  v , vl )
             if u != dd : logger.error ( "Invalid distances %+.9g %+d %+d" % (  v , u ,dd ) )
 
             vv = -v 
-            vl = MB.Ostap.Math.Lomont.next_double          ( vv , u  )
+            vl = next_double          ( vv , u  )
             dd = MB.Ostap.Math.Lomont.ulps_distance_double ( vv , vl )
             if u != dd : logger.error ( "Invalid distances %+.9g %+d %+d" % ( dd , u ,dd ) ) 
 

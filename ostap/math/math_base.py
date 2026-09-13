@@ -120,6 +120,9 @@ __all__     = (
     'MAX_VALUE'      , ## maxinam float/double 
     'epsilon'        , ## float/double-epsilon
     ##
+    'next_double'    , ## get next double at distance of 'ulps'
+    'prev_double'    , ## get prev double at distance of 'ulps'
+    ##
     'np2raw'         , ## numpy array to raw C++ buffer
     'product'        , ## Make a product over iterable `data`
     ) 
@@ -979,6 +982,21 @@ def round_N ( value , N ) :
     N -= math.ceil ( math.log10 ( abs ( value ) ) )    
     return round ( value , N )
     
+_next_double_ = Ostap.Math.Lomont.next_double
+_prev_double_ = Ostap.Math.Lomont.prev_double
+
+## get next double at the distance ef <code>ulps</code> 
+def next_double ( x , ulps ) :
+    """ Get next double at distance `ulps'
+    """
+    return _next_double_ ( x , ulps ) if 0 <= ulps else _prev_double_ ( x , abs ( ulps ) )
+
+## get  previous doubble at distance of <code>ulps</code>
+def prev_double ( x , ulps ) :
+    """ Get previous double at distance `ulps'
+    """
+    return _prev_double_ ( x , ulps ) if 0 <= ulps else _next_double_ ( x , abs ( ulps ) )
+
 # ============================================================================
 ## The first entry for event loops
 FIRST_ENTRY = Ostap.FirstEvent 
