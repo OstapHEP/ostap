@@ -3149,9 +3149,9 @@ def ds_slice ( data                       ,
     >>> varr , weights = data.slice ( 'a , b , c' , 'd>0' )
     >>> varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
     """
-    
-    ## input data type 
-    assert isinstance ( data , ROOT.RooAbsData ) , "Invalid `data` type: %s" % typename ( data )
+
+    ## input data type
+    if not isinstance ( data , ROOT.RooAbsData ) : raise TypeError (  "Invalid `data` type: %s" % typename ( data ) )
     
     ## adjust first/last indices 
     first , last = evt_range ( data , first , last ) 
@@ -3193,14 +3193,16 @@ def ds_slice ( data                       ,
                         weight_total , 
                         first        ,
                         last         )        
-    assert sc.isSuccess    () , "Error code from Ostap::StatVar::get_table %s" % sc
+    if sc.isFailure    () : raise RunTimeErro ( "Error code from Ostap::StatVar::get_table %s" % sc )
     
     missing    = sorted ( v for v in varlst if not v in table  )    
     assert not missing , "Variables are not in the table: %s" % ','.join ( missing )
     
     nEvents = 0    
-    result  = ordered_dict () 
+    result  = ordered_dict ()
+
     for var in varlst :
+
         column         = table [ var ]
         
         result [ var ] = copy2np ( column )
@@ -3227,11 +3229,13 @@ def ds_slice ( data                       ,
         logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
     
     wname    = '' if not weighted else str ( data.wname () )
-    if weighted :
-        assert 1 == table.size()  , "Here table *MUST* have size equal to 1!"
-        column  = table [ wname ]
 
-        ## weights = numpy.asarray ( column , dtype = float , **kwcopy )
+    weights = None
+    
+    if 1 == table.size() :
+        
+        column = table [ wname ]
+        
         weights = copy2np ( column ) 
 
         if numpy.all ( weights == 1 ) : weights = None
@@ -3239,6 +3243,7 @@ def ds_slice ( data                       ,
         column.clear ()        
         table.erase ( wname )
 
+        
     assert table.empty() , "At this moment the table *MUST* be empty!"
     
     del table

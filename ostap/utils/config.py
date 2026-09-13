@@ -80,13 +80,13 @@ class Config ( object ) :
     def table (  self , title = '' , prefix = '# ') : 
         """ print configuration """
         from ostap.logger.utils import map2table_ex
-        title = title if title else "%s configuration" % typename ( self )        
+        title = title if title else "%s configuration" % typename ( self )         
         return map2table_ex ( self.config , 
                               header      = ( 'Parameter' , 'type' , 'value' ) ,
                               alignment   = 'rcw'  , 
                               prefix      = prefix ,
                               title       = title  )
-        
+       
     def __str__  ( self ) : return self.table ( prefix = '' )
     def __repr__ ( self ) : return self.__str__ () 
     

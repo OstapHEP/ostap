@@ -22,6 +22,7 @@ __all__     = (
 from   ostap.core.ostap_types   import num_types 
 from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu, num_jobs, NoContext
+from   ostap.logger.utils       import map2table_ex
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.reweighter   import Reweighter
 from   ostap.stats.utils        import ( weight_trivial     ,
@@ -155,8 +156,15 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             ESR = params.get ( 'early_stopping_rounds' ,  15 )
             if  ESR is None : params [ 'early_stopping_rounds' ] = None 
             else            : params [ 'early_stopping_rounds' ] = min ( 15 , ESR )
+
+            title = '%s strong regularization' % typename ( self ) 
+            table = map2table_ex ( params    , 
+                                   header    = ( 'Parameter' , 'type' , 'value' ) ,
+                                   alignment = 'rcw'  , 
+                                   prefix    = '# '   ,
+                                   title     = title  )                
+            logger.info ( "%s is applied:\n%s" % ( title , table ) )
             
-            logger.attention ( "%s: strong regularization is applied" % typename ( self ) ) 
 
         self.__original_ratios             = None
         self.__original_reweighted_weights = None
@@ -684,7 +692,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             'metric'                : 'binary_logloss'    ,
             'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
             'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
-            'max_depth'             : 4                   , ## Default depth for rich phase space
+            'max_depth'             : 5                   , ## Default depth for rich phase space
             'num_leaves'            : 15                  ,
             'min_child_samples'     : 30                  ,
             'min_child_weight'      : 1e-3                ,
@@ -812,7 +820,7 @@ class XGBoostDensityReweighter ( DensityReweighter ):
             'eval_metric'           : 'logloss'           ,
             'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
             'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
-            'max_depth'             : 4                   , ## Default depth for rich phase space
+            'max_depth'             : 5                   , ## Default depth for rich phase space
             'min_child_weight'      : 0.1                 , ## Minimum sum of hessians per leaf
             'gamma'                 : 0.001               , ## Minimum loss reduction to force split
             'reg_alpha'             : 0.1                 ,
@@ -952,7 +960,7 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
             'eval_metric'           : 'Logloss'           ,
             'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
             'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
-            'depth'                 : 4                   , ## Default depth for rich phase space
+            'depth'                 : 5                   , ## Default depth for rich phase space
             'l2_leaf_reg'           : 2.0                 , ## Moderate L2 penalty on leaf values
             'min_child_samples'     : 30                  ,
             'subsample'             : 0.8                 ,
@@ -988,20 +996,20 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
     def regularization ( self , params , n_features , n_samples ) :
         """ Dynamic regularization tuned for CatBoost to allow high density ratios."""
         
-        params [ 'n_estimators'         ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'        ] = 0.1
-        params [ 'depth'                ] = 6
+        params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
+        params [ 'learning_rate'         ] = 0.1
+        params [ 'depth'                 ] = 5
         
         if 'min_data_in_leaf' in params :  params.pop ( 'min_data_in_leaf' , None )
         
         # Soft dynamic min_child_samples scaling with neff
-        params [ 'min_child_samples'    ] = max ( 2, min ( 30, int ( n_samples * 0.0001 ) ) )
+        params [ 'min_child_samples'     ] = max ( 2, min ( 30, int ( n_samples * 0.0001 ) ) )
         
-        params [ 'l2_leaf_reg'          ] = 1.0
-        params [ 'subsample'            ] = 1.0
+        params [ 'l2_leaf_reg'           ] = 1.0
+        params [ 'subsample'             ] = 1.0
         params [ 'early_stopping_rounds' ] = None
-        params [ 'thread_count'         ] = 1
-        params [ 'boosting_type'        ] = 'Plain'
+        params [ 'thread_count'          ] = 1
+        params [ 'boosting_type'         ] = 'Plain'
         
         return params
 
@@ -1130,8 +1138,15 @@ class GBReweighter(Reweighter) :
             neff       = min  ( neff_orig , neff_targ       )
             
             config.update ( self.regularization ( config , n_features , neff ) )
-            logger.attention ( "%s: strong regularization is applied" % typename ( self ) ) 
             
+            title = '%s strong regularization' % typename ( self ) 
+            table = map2table_ex ( config    , 
+                                   header    = ( 'Parameter' , 'type' , 'value' ) ,
+                                   alignment = 'rcw'  , 
+                                   prefix    = '# '   ,
+                                   title     = title  )                
+            logger.info ( "%s is applied:\n%s" % ( title , table ) )
+
         # =====================================================================
         ## Initialize the base: check input data & print config 
         # =====================================================================
@@ -1220,7 +1235,7 @@ class GBReweighter(Reweighter) :
         N = n_samples
         params [ 'n_estimators'     ] = 100
         params [ 'learning_rate'    ] = 0.05
-        params [ 'max_depth'        ] = 3
+        params [ 'max_depth'        ] = 5
         params [ 'min_samples_leaf' ] = max ( 100, int ( N * 0.005 ) )
         
         gb_args = params.get ( 'gb_args', {} ).copy ()

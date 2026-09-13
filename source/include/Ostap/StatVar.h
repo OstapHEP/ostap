@@ -1004,6 +1004,11 @@ namespace Ostap
     inline const Ostap::Utils::ProgressConf& progress () const
     { return m_progress ; }
     // ========================================================================
+  public: 
+    // ========================================================================
+    /// get the column names from the table
+    static Ostap::Strings columns ( const Table& table ) ;
+    // ========================================================================
   private :
     // ========================================================================
     /// congfiguration of the progress bar 

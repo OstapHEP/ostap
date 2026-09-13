@@ -1,7 +1,11 @@
 ## New features
 
+  1. improve&optimize constructord & add-methods for `Ostap::Math::WECDF`
+  
 ## Bug fixes
 
+  1. fix `ds_slice`
+  
 ## Backward incompatible
 
 # v3.8.6.4

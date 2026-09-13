@@ -48,7 +48,7 @@ namespace
   // Safe C++17 bit_cast replacement (avoids undefined behavior from unions)
   // ==========================================================================
   template <typename To, typename From>
-  inline To bit_cast( const From& src ) noexcept
+  inline To bit_cast ( const From& src ) noexcept
   {
     static_assert( sizeof( To ) == sizeof( From ), "Sizes must match" );
     static_assert( std::is_trivially_copyable_v<To> && std::is_trivially_copyable_v<From>,
@@ -66,25 +66,29 @@ namespace
   // Unified template for ULP distance calculation (C++17)
   // ==========================================================================
   template <typename T>
-  inline std::intmax_t _distance_impl_( const T a, const T b ) noexcept 
+  inline std::intmax_t _distance_impl_ ( const T a, const T b ) noexcept 
   {
-    static_assert( std::numeric_limits<T>::is_iec559, "Type must conform to IEEE 754 (IEC 559)" );
+    static_assert ( std::numeric_limits<T>::is_iec559, "Type must conform to IEEE 754 (IEC 559)" );
 
-    if ( a == b ) { return 0; }
-    if ( !std::isfinite( a ) || !std::isfinite( b ) ) {
-      return std::numeric_limits<std::intmax_t>::max();
-    }
-    if ( a > b ) { return -_distance_impl_( b, a ); }
-    if ( !b ) { return _distance_impl_( static_cast<T>( 0 ), -a ); }
-    if ( b < 0 ) { return _distance_impl_( -b, -a ); }
-    if ( a < 0 && 0 < b ) {
-      return -_distance_impl_( static_cast<T>( 0 ), a ) +
-             _distance_impl_( static_cast<T>( 0 ), b );
+    if  ( a == b ) { return 0; }
+    else if ( !std::isfinite( a ) || !std::isfinite( b ) )
+    { return std::numeric_limits<std::intmax_t>::max (); }
+    //
+    if      ( a > b          ) { return - _distance_impl_( b, a   ) ; }
+    else if ( !b             ) { return   _distance_impl_( static_cast<T>( 0 ), -a ); }
+    else if ( b < 0          ) { return   _distance_impl_( -b, -a ) ; }
+    else if ( a < 0 && 0 < b )
+    {
+      return
+        _distance_impl_ ( static_cast<T> ( 0 ) , b ) -
+        _distance_impl_ ( static_cast<T> ( 0 ) , a ) ;
     }
 
     using IntT = int_type_t<T>;
+    //
     const auto ai = bit_cast<IntT>( a );
     const auto bi = bit_cast<IntT>( b );
+    //
     return static_cast<std::intmax_t>( bi ) - static_cast<std::intmax_t>( ai );
   }
 
@@ -98,7 +102,7 @@ namespace
   // Unified template for ULP stepping (C++17)
   // ==========================================================================
   template <typename T>
-  inline T _next_impl_( const T a, const int_type_t<T> ulps ) noexcept 
+  inline T _next_impl_ ( const T a, const int_type_t<T> ulps ) noexcept 
   {
     static_assert( std::numeric_limits<T>::is_iec559, "Type must conform to IEEE 754 (IEC 559)" );
 
@@ -147,38 +151,43 @@ namespace
 // ============================================================================
 // Implementation of public functions declared in Ostap/Lomont.h
 // ============================================================================
+// ============================================================================
+// Implementation of public functions declared in Ostap/Lomont.h
+// ============================================================================
+
 
 bool Ostap::Math::Lomont::compare_float
-( const float a, 
-  const float b, 
+( const float          a, 
+  const float          b, 
   const unsigned short maxULPs ) 
 { return a == b || _compare_float_( a, b, maxULPs ); }
 
 float Ostap::Math::Lomont::next_float
-( const float a, 
-  const short ulps ) 
-{ return _next_float_( a, ulps ); }
+( const float          a, 
+  const unsigned short ulps ) 
+{ return _next_float_( a, static_cast<std::int32_t>( ulps ) ); }
 
 float Ostap::Math::Lomont::prev_float
-( const float a, 
-  const short ulps )
-{ return next_float( a, -ulps ); }
+( const float          a, 
+  const unsigned short ulps )
+{ return _next_float_( a, -static_cast<std::int32_t>( ulps ) ); }
 
 bool Ostap::Math::Lomont::compare_double
-( const double a, 
-  const double b, 
+( const double       a, 
+  const double       b, 
   const unsigned int maxULPs ) 
 { return a == b || _compare_double_( a, b, maxULPs ); }
 
 double Ostap::Math::Lomont::next_double
-( const double a, 
-  const short ulps ) 
-{ return _next_double_( a, ulps ); }
+( const double       a, 
+  const unsigned int ulps ) 
+{ return _next_double_( a, static_cast<std::int64_t>( ulps ) ); }
 
 double Ostap::Math::Lomont::prev_double
-( const double a, 
-  const short ulps ) 
-{ return next_double( a, -ulps ); }
+( const double       a, 
+  const unsigned int ulps ) 
+{ return _next_double_( a, -static_cast<std::int64_t>( ulps ) ); }
+
 
 std::intmax_t Ostap::Math::Lomont::ulps_distance_float
 ( const float a, 
@@ -207,5 +216,75 @@ double Ostap::Math::Lomont::int2double
 { return bit_cast<double>( i ); }
 
 // ============================================================================
-// The END
+//  Low & High edges 
+// ============================================================================
+
+// ============================================================================
+/* Compute the lower edge value by shifting down by a given number of ULPs.
+ *  Safely handles IEEE 754 boundaries, preventing underflow below 
+ *  -std::numeric_limits<double>::max() using Lomont utilities[cite: 2, 3].
+ *  
+ *  @param x      The input reference value (e.g., xmin)
+ *  @param ulps   The number of Units in the Last Place to shift down
+ *  @return       The computed lower edge value
+ *  @see          Ostap::Math::Lomont::prev_double
+ *  @see          Ostap::Math::Lomont::ulps_distance_double
+ */
+// ============================================================================
+double Ostap::Math::low_edge
+( const double       x    , 
+  const unsigned int ulps ) 
+{
+  //
+  constexpr double min_limit = -std::numeric_limits<double>::max() ;
+  
+  // Check for non-finite inputs or values already at/beyond the limit
+  if ( !std::isfinite ( x ) || x <= min_limit ) { return min_limit ; }
+  
+  // Calculate the exact distance in ULPs from the lower limit to x
+  const std::intmax_t dist = Ostap::Math::Lomont::ulps_distance_double ( min_limit , x ) ;
+  
+  if ( dist <= 0 ) { return min_limit ; }
+  
+  // Clamp the requested ULPs to the actual available distance
+  const unsigned int safe_ulps = static_cast<unsigned int> ( std::min<std::intmax_t> ( ulps , dist )  ) ;
+  
+  // Perform a safe downward ULP step
+  return Ostap::Math::Lomont::prev_double ( x , safe_ulps ) ;
+}
+// ============================================================================
+/*  Compute the upper edge value by shifting up by a given number of ULPs.
+ *  Safely handles IEEE 754 boundaries, preventing overflow above 
+ *  std::numeric_limits<double>::max() using Lomont utilities[cite: 2, 3].
+ *  
+ *  @param x      The input reference value (e.g., xmax)
+ *  @param ulps   The number of Units in the Last Place to shift up
+ *  @return       The computed upper edge value
+ *  @see          Ostap::Math::Lomont::next_double
+ *  @see          Ostap::Math::Lomont::ulps_distance_double
+ */
+// ============================================================================
+double Ostap::Math::high_edge
+( const double       x   , 
+  const unsigned int ulps) 
+{
+  constexpr double max_limit = std::numeric_limits<double>::max() ;
+  
+  // Check for non-finite inputs or values already at/beyond the limit
+  if ( !std::isfinite ( x ) || x >= max_limit ) { return max_limit ; }
+  
+  // Calculate the exact distance in ULPs from x to the upper limit
+  const std::intmax_t dist = Ostap::Math::Lomont::ulps_distance_double ( x , max_limit ) ;
+  
+  if ( dist <= 0 ) { return max_limit ; }
+  
+  // Clamp the requested ULPs to the actual available distance
+  const unsigned int safe_ulps = static_cast<unsigned int> ( std::min<std::intmax_t> ( ulps , dist ) ) ;
+  
+  // Perform a safe upward ULP step
+  return Ostap::Math::Lomont::next_double ( x , safe_ulps ) ;
+}
+
+// ============================================================================
+//                                                                      The END
 // ============================================================================

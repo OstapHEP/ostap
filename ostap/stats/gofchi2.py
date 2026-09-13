@@ -185,23 +185,26 @@ class Chi2 ( GoFnp ) :
                 
                 from   ostap.stats.counters import WECDF
                 from   ostap.math.math_base import data2vct
+
+
+                pooled = WECDF ( False )
                 
-                if w1_trivial : wecdf = WECDF ( data2vct ( d1 ) , 1.0             , False ) 
-                else          : wecdf = WECDF ( data2vct ( d1 ) , data2vct ( w1 ) , False )
+                if w1_trivial : pooled.add ( data2vct ( d1 )                   , 1.0 )
+                else          : pooled.add ( data2vct ( d1 ) , data2vct ( w1 ) , 1.0 )
                 
                 wsum1  = num_samples ( uds1 ) if w1_trivial else numpy.sum ( weight1 )
                 wsum2  = num_samples ( uds2 ) if w2_trivial else numpy.sum ( weight2 )
                 wscale = wsum1 / wsum2 
                 
-                if w2_trivial : wecdf.add ( data2vct ( d2 ) ,                 wscale   )
-                else          : wecfd.add ( data2vct ( d2 ) , data2vct ( w2 * wscale ) )
+                if w2_trivial : pooled.add ( data2vct ( d2 ) ,                   wscale )
+                else          : pooled.add ( data2vct ( d2 ) , data2vct ( w2 ) , wscale )
                 
                 N  = axis
-                quantiles   = wecdf.quantiles_[N-1] ()                
+                quantiles   = pooled.quantiles_[N-1] ()                
                 axis        = axis_from_edges ( quantiles )
                 if not self.silent : logger.info ( '%s: choose the binning scheme: #%d/%d %s' % ( typename ( self ) , i , nf , axis ) ) 
 
-                del wecdf
+                del pooled
                 
                 axes = list ( self.axes )
                 axes [ i ]  = axis 

@@ -1,3 +1,4 @@
+// ============================================================================
 #ifndef OSTAP_LOMONT_H 
 #define OSTAP_LOMONT_H 1
 // ============================================================================
@@ -30,7 +31,7 @@ namespace Ostap
      *  with respect to classical Knuth's algorithm for comparison of
      *  the floating number using the relative precision.
      *
-     *  @attention Only the specializations of this class has sense!
+     *  @attention Only the specializations of this class have sense!
      *
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2009-10-22
@@ -89,8 +90,8 @@ namespace Ostap
        */
       bool compare_float
       ( const float          af      , 
-	      const float          bf      , 
-	      const unsigned short maxULPs = mULPS<float> ) ;
+        const float          bf      , 
+        const unsigned short maxULPs = mULPS<float> ) ;
       // ========================================================================
       /** equality comparison of double numbers using as the metric the maximal 
        *  number of Units in the Last Place (ULP).
@@ -129,8 +130,8 @@ namespace Ostap
        */
       bool compare_double
       ( const double         af      , 
-	      const double         bf      , 
-	      const unsigned int   maxULPs = mULPS<double> ) ;
+        const double         bf      , 
+        const unsigned int   maxULPs = mULPS<double> ) ;
       // ======================================================================
       /** Get the floating number that representation 
        *  is different with respect  to the argument for 
@@ -148,8 +149,8 @@ namespace Ostap
        *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
        *  @date 2008-11-08
        */  
-      float next_float ( const float af , const short ulps ) ;
-      float prev_float ( const float af , const short ulps ) ; 
+      float next_float ( const float af , const unsigned short ulps ) ;
+      float prev_float ( const float af , const unsigned short ulps ) ; 
       // =======================================================================
       /** Get the floating number that representation 
        *  is different with respect  to the argument for 
@@ -167,8 +168,8 @@ namespace Ostap
        *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
        *  @date 2008-11-08
        */  
-      double next_double ( const double  af , const short ulps ) ;
-      double prev_double ( const double  af , const short ulps ) ;
+      double next_double ( const double  af , const unsigned int ulps ) ;
+      double prev_double ( const double  af , const unsigned int ulps ) ;
       // =======================================================================
       /** "distance" in ULPS between two float values 
        *   @param a (INPUT) the first  number 
@@ -221,8 +222,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from ULPS:
-      constexpr Lomont_ ( const unsigned short ulps = mULPS<float> ) 
-      : m_ulps ( ulps ) {}
+      constexpr Lomont_
+      ( const unsigned short ulps = mULPS<float> ) 
+        : m_ulps ( ulps )
+      {}
       // ======================================================================
     public:
       // ======================================================================
@@ -263,7 +266,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from ULPS:
-      constexpr Lomont_ ( const unsigned int ulps = mULPS<double> ) : m_ulps ( ulps ) {}
+      constexpr Lomont_
+      ( const unsigned int ulps = mULPS<double> )
+        : m_ulps ( ulps )
+      {}
       // ======================================================================
     public:
       // ======================================================================
@@ -277,6 +283,42 @@ namespace Ostap
       unsigned int m_ulps ;           // the precision in "units in last place"
       // ======================================================================      
     };
+    // ========================================================================
+    
+    // ========================================================================
+    //  Low & High edges 
+    // ========================================================================
+    
+    // ========================================================================
+    /** Compute the lower edge value by shifting down by a given number of ULPs.
+     *  Safely handles IEEE 754 boundaries, preventing underflow below 
+     *  -std::numeric_limits<double>::max() using Lomont utilities
+     *  
+     *  @param x      The input reference value (e.g., xmin)
+     *  @param ulps   The number of Units in the Last Place to shift down
+     *  @return       The computed lower edge value
+     *  @see          Ostap::Math::Lomont::prev_double
+     *  @see          Ostap::Math::Lomont::ulps_distance_double
+     */
+    double low_edge
+    ( const double       x    , 
+      const unsigned int ulps = mULPS<double> ) ; 
+    
+    // ========================================================================
+    /**  Compute the upper edge value by shifting up by a given number of ULPs.
+     *  Safely handles IEEE 754 boundaries, preventing overflow above 
+     *  std::numeric_limits<double>::max() using Lomont utilities
+     *  
+     *  @param x      The input reference value (e.g., xmax)
+     *  @param ulps   The number of Units in the Last Place to shift up
+     *  @return       The computed upper edge value
+     *  @see          Ostap::Math::Lomont::next_double
+     *  @see          Ostap::Math::Lomont::ulps_distance_double
+     */
+    double high_edge
+    ( const double       x    , 
+      const unsigned int ulps = mULPS<double> ) ; 
+
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

@@ -307,9 +307,14 @@ def ecdf_compare ( ecdf1   ,
     if not ecdf1 . ok ()                     : raise ValueError ( "Invalid `ecdf1`!" )
     if not ecdf2 . ok ()                     : raise ValueError ( "Invalid `ecdf2`!" )
 
-    if   isinstance   ( ecdf1 , WECDF )      : pooled = ecdf1.merge ( ecdf2 )
-    else                                     : pooled = ecdf2.merge ( ecdf1 )
-
+    
+    pooled = WECDF ( False )
+    sumw1  = ecdf1.sumw ()
+    sumw2  = ecdf2.sumw ()
+    
+    pooled.add ( ecdf1 )
+    pooled.add ( ecdf2 , sumw1 / sumw2 ) ## normalize to the same sum 
+    
     quantiles = pooled.quantiles_[N-1] ()
     
     import ostap.histos.axes      as     AXES

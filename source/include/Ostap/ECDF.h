@@ -99,9 +99,9 @@ namespace Ostap
     public: 
       // ======================================================================
       /// copy assignement 
-      ECDF& operator=( const ECDF&  right ) ;
+      ECDF& operator=( const ECDF&  right ) = default ;
       /// move assignement 
-      ECDF& operator=(       ECDF&& right ) ;
+      ECDF& operator=(       ECDF&& right ) = default ;
       // ======================================================================
     public: // the main method 
       // ======================================================================
@@ -474,62 +474,103 @@ namespace Ostap
       /// the actual type of indices 
       typedef ECDF::Indices               Indices  ;
       // ======================================================================
-      /// ordering criteria - order by the first component/abscissas  
+      /// ordering criteria - order by the first component/abscissas *ONLY*
       struct COMPARE
       {
-        /// comparison criteria: compare abscissas 
+        /// comparison criteria: compare abscissas *ONLY*  
         inline bool operator () ( const Entry& a , const Entry& b ) const
         { return a.first < b.first ; }
-        /// comparison criteria: compare abscissas 
+        /// comparison criteria: compare abscissas *ONLY*
         inline bool operator () ( const Entry& a , const double b ) const
         { return a.first < b ; }
-        /// comparison criteria: compare abscissas
+        /// comparison criteria: compare abscissas *ONLY 
         inline bool operator () ( const double a , const Entry& b ) const
         { return a < b.first ; }
       } ;
       // ======================================================================
     public: 
       // ======================================================================
-      /// Constructor from  data
+      /** Constructor from  data
+       *  @param data          (INPUT) input data-array
+       *  @param complementary (INPUT) compelementary WECDF ?
+       */
       WECDF
       ( const Data&         data                  ,
         const bool          complementary = false ) ;
       // ======================================================================
-      /// Constructor from data
+      /** Constructor from  data
+       *  @param data          (INPUT) input array of values 
+       *  @param weights       (INPUT) input array of weight 
+       *  @param weight        (INPUT) additional multiplicative weight 
+       *  @param complementary (INPUT) compelementary WECDF ?
+       */
       WECDF
       ( const ECDF::Data&   data                  ,
         const ECDF::Data&   weights               ,
+        const double        weight        = 1     ,
         const bool          complementary = false ) ;
       // =======================================================================
-      /// Constructor from data
+      /** Constructor from  data
+       *  @param data          (INPUT) input array of values 
+       *  @param weight        (INPUT) common weight for all values 
+       *  @param complementary (INPUT) compelementary WECDF ?
+       */
       WECDF
       ( const ECDF::Data&   data                  ,
-        const double        weights       = 1     ,
+        const double        weight        = 1     ,
         const bool          complementary = false ) ;
       // =======================================================================
-      WECDF
-      ( const WECDF&        right         ,
-        const bool          complementary ) ;
-      // ======================================================================
-      WECDF
+      /** Constructor from input ECDF of values
+       *  @param data          (INPUT) input ECDF of values  
+       *  @param weight        (INPUT) common weight for all values 
+       *  @param complementary (INPUT) compelementary WECDF ?
+       */      
+      explicit WECDF
       ( const ECDF&         right                 ,
         const double        weight        = 1     ,
         const bool          complementary = false ) ;
+      // ======================================================================
+      /** Constructor from input WECDF
+       *  @param data          (INPUT) input WECDF 
+       *  @param weight        (INPUT) additional multiplicative weight 
+       *  @param complementary (INPUT) compelementary WECDF ?
+       */            
+      WECDF
+      ( const WECDF&        right                 ,
+        const double        weight                ,
+        const bool          complementary = false ) ;
+      // ======================================================================
+      WECDF ( const bool complementary = false ) ;
+      // ======================================================================
+      template <typename U>
+      static constexpr bool is_valid_data_v = 
+        std::is_same_v<std::decay_t<U>, ECDF>        ||
+        std::is_same_v<std::decay_t<U>, WECDF>       ||
+        std::is_same_v<std::decay_t<U>, ECDF::Data>  ||
+        std::is_same_v<std::decay_t<U>, WECDF::Data>  ;      
+      /// Variadic constructor with strict type constraints on T
+      template <typename T,
+                typename... Args,
+                typename = std::enable_if_t<is_valid_data_v<T> >>
+      explicit WECDF ( const T& data, const double weight, Args&&... args) 
+        : WECDF ( std::forward<Args> ( args )... ) 
+      {
+        this -> add ( data , weight);
+      } ;
+      // =======================================================================      
+    public :
       // ======================================================================
       /// copy constructor
       WECDF ( const WECDF&  right ) = default ;
       /// move constructor 
       WECDF (       WECDF&& right ) = default ;
       // ======================================================================
-      /// default constructor
-      WECDF () = default ;
-      // ======================================================================
     public:
       // ======================================================================
       /// copy assignement 
-      WECDF& operator=( const WECDF&  right ) ;
+      WECDF& operator=( const WECDF&  right ) = default ;
       /// move assignement 
-      WECDF& operator=(       WECDF&& right ) ;
+      WECDF& operator=(       WECDF&& right ) = default ;
       // ======================================================================
     public: // the main method 
       // ======================================================================
@@ -550,22 +591,32 @@ namespace Ostap
       inline WECDF&
       add
       ( const double value        ,
-        const double weight = 1.0 ) { return add ( Entry ( value , weight ) ) ; }
+        const double weight = 1.0 )
+      { return add ( Entry ( value , weight ) ) ; }
       /// add a value to data container  
-      WECDF& add ( const Entry&       entry   ) ;      
-      /// add more values to data container 
-      WECDF& add ( const WECDF&       values  ) ;
+      WECDF& add
+      ( const Entry&       entry   ) ;
+      /// add more values to data container
+      WECDF& add
+      ( const WECDF&       values  , 
+        const double       weight  = 1.0 ) ;      
       /// add more values to data container       
-      WECDF& add ( const WECDF::Data& values  ) ;
+      WECDF& add
+      ( const ECDF&        values  , 
+        const double       weight  = 1.0 ) ;
+      /// add more values to data container       
+      WECDF& add
+      ( const ECDF::Data&  values  ,
+        const double       weight  = 1.0 ) ;
+      /// add more values to data container       
+      WECDF& add
+      ( const WECDF::Data& values  , 
+        const double       weight  = 1.0 ) ;      
       /// add more values to data container 
-      WECDF& add ( const ECDF&        values  , 
-                   const double       weight  = 1.0 ) ;
-      /// add more values to data container 
-      WECDF& add ( const ECDF::Data&  values  ,
-                   const double       weight  = 1.0 ) ;
-      /// add more values to data container 
-      WECDF& add ( const ECDF::Data&  values  ,
-                   const ECDF::Data&  weights ) ;
+      WECDF& add
+      ( const ECDF::Data&  values  ,
+        const ECDF::Data&  weights , 
+        const double       weight  = 1.0 ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -633,9 +684,14 @@ namespace Ostap
       /// maximal x-value
       inline double          xmax          () const { return m_counter.max () ; } 
       // ======================================================================
-      /// get the abscissa value with the given index 
+      /// get the entry with the given index 
       inline const Entry& operator[] ( const unsigned int index ) const
-      { return index < m_data.size() ? m_data [ index ] : m_data.back() ; }
+      {
+        static const Entry s_empty { std::numeric_limits<double>::infinity()  , 0 } ;
+        return
+          m_data.empty()        ? s_empty :
+          index < m_data.size() ? m_data [ index ] : m_data.back() ;
+      }
       // ======================================================================      
       /// expose the data: begin iterator 
       inline iterator begin () const { return m_data.begin () ; }
@@ -739,8 +795,23 @@ namespace Ostap
       WECDF merge ( const  ECDF& right ) const ;
       // ======================================================================
       /// swap two objects 
-      void swap ( WECDF& right ) ;
-      // ======================================================================
+      void swap   ( WECDF& right ) ;
+    // ======================================================================
+    public:
+      //=======================================================================
+      /** scale all weights by a factor s
+       *  - no action if s if not finie
+       *  - no action if s is one 
+       *  - reset if s is zero
+       */
+      WECDF& scale ( const double s ) ;
+      /** scale all weights by a factor s
+       *  - no action if s if not finie
+       *  - no action if s is one 
+       *  - reset if s is zero
+       */
+      WECDF& operator*= ( const double s ) { return scale ( s ) ; } 
+      // ======================================================================      
     public: 
       // ======================================================================
       /// calculate \f$ \sum_i^{n} w_i \f$
@@ -770,9 +841,9 @@ namespace Ostap
                                   COMPARE      ()   ) - m_data.begin() ; }
       // ======================================================================
       /// get ranks for all elements from another sample 
-      ECDF::Indices ranks ( const  ECDF& sample ) const ;
+      Indices ranks ( const  ECDF& sample ) const ;
       /// get ranks for all elements from another sample 
-      ECDF::Indices ranks ( const WECDF& sample ) const ;
+      Indices ranks ( const WECDF& sample ) const ;
       // ======================================================================
     private:
       // ======================================================================

@@ -73,7 +73,7 @@ namespace Ostap
   /// Dictionary type with string keys 
   template <typename Value>
   using Dict       = std::map<Key,Value>  ;
-  /// the dictorinnaty 
+  /// the dictionary  
   using Dictionary = Dict<std::string> ; 
   /// vector of strings/keys  
   using Strings    = std::vector<Key>     ;
@@ -84,7 +84,7 @@ namespace Ostap
   /// vector of doubles 
   using Doubles    = std::vector<double>  ;  
   // =========================================================================
-  
+
   // =========================================================================
   /// Numeric Type ? 
   template <typename T>

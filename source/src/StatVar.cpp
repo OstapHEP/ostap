@@ -2388,5 +2388,20 @@ Ostap::StatusCode Ostap::StatVar::get_table
   return Ostap::StatusCode::SUCCESS ;
 }
 // ============================================================================
+// get the column names from the table
+// ============================================================================
+Ostap::Strings Ostap::StatVar::columns
+( const Ostap::StatVar::Table& table )
+{
+  Ostap::Strings names {} ;
+  names.reserve ( table.size() ) ; 
+  for ( const auto entry : table ) { names.push_back ( entry.first ) ; }
+  return names ;
+}
+// ============================================================================
+
+// ========================================================================
+
+// ============================================================================
 //                                                                      The END
 // ============================================================================
