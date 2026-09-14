@@ -107,11 +107,13 @@ class BootstrapGoF ( GoFnp ) :
         >>> weight2 = ...
         >>>> tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
         """
-        return self.estimator ( data1   = data1   ,
-                                data2   = data2   ,
-                                weight1 = weight1 ,
-                                weight2 = weight2 )
-
+        result = self.estimator ( data1   = data1   ,
+                                  data2   = data2   ,
+                                  weight1 = weight1 ,
+                                  weight2 = weight2 )
+        print ( 'T_VALUE' , typename ( self ) , results ,typename ( result ) )
+        return result 
+                        
 # =============================================================================
 ## @class KolmogorovSmirnov
 #  Two (weighted) sample test using Kolmogorov-Smirnov statistics

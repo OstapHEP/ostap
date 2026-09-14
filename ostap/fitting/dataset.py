@@ -2234,7 +2234,6 @@ def add_new_var ( dataset  ,
             
             raise TypeError ( "Invalid category `what` %s/%s" % ( typename ( what ) , what )) 
             
-      
     progress = progress_conf ( progress )
     adder    = Ostap.AddVars ( progress ) 
     
@@ -3942,7 +3941,7 @@ _new_methods_ += [
 # ===============================================================================
 ## Add new buffer to RooDataSet 
 # ===============================================================================
-def add_new_buffer ( dataset , buffer , * , name , title = '' , **kwargs ) :
+def add_new_buffer ( dataset , buffer , * , name , title = '' , report = False , **kwargs ) :
     """ Add new buffer to RooDataSet 
     """
 
@@ -3955,16 +3954,20 @@ def add_new_buffer ( dataset , buffer , * , name , title = '' , **kwargs ) :
     
     if not name or not Ostap.Trees.valid_name_for_branch ( name ) :
         raise ValueError ( "Specified name `%s' is not a proper name!" % name ) 
-
+    
+    if not isinstance ( buffer , numpy.ndarray ) :
+        buffer = numpy.asarray ( buffer , dtype = numpy.float64 )
+    
     if not isinstance ( buffer , numpy.ndarray ) : raise TypeError ( "Invalid `buffer` type: %s"  %  typename ( buffer ) )
     elif 1 != len ( buffer.shape )               : raise TypeError ( "Invalid `buffer` shape: %s" % str ( buffer.shape ) )
     elif buffer.dtype.names                      : raise TypeError ( "Invalid `buffer` dtype: %s" % str ( buffer.dtype ) )
 
     dsize = len ( dataset )
     bsize = len ( buffer  ) 
-    if   dsize < bsize : raise IndexError ( "Buffer size %d is larger than %d"  % ( bsize , dsize ) )
-    elif dsize > bsize : raise IndexError ( "Buffer size %d is smaller than %d" % ( bsize , dsize ) )
-
+    if dsize != bsize : raise IndexError ( "Buffer size %d is different from dataset size %d"  % ( bsize , dsize ) )
+    
+    branches  = set ( dataset.branches() ) if report else set() 
+    
     data      = { name : buffer }
     title     = title if title else '%s variable from buffer' % name 
     variables = [ ROOT.RooRealVar ( name , title , 0 ) ] 
@@ -3974,6 +3977,18 @@ def add_new_buffer ( dataset , buffer , * , name , title = '' , **kwargs ) :
     dataset *= new_dset 
 
     del new_dset
+
+    if report :
+        new_branches = sorted ( set ( dataset.branches() ) - branches ) 
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = "Added %s variable to RooDataSet(%s)"  % ( n , dataset.GetName () ) 
+            else      : title = "Added %s variables to RooDataSet(%s)" % ( n , dataset.GetName () )            
+            table = dataset.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) )
+        else :                                
+            logger.warning ( "No variables are added to RooDataSet(%s)" %  dataset.GetName () )
+      
     return dataset 
 
 ROOT.RooDataSet.add_new_buffer = add_new_buffer 

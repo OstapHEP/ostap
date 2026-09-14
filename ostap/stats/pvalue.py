@@ -357,6 +357,7 @@ class PERMUTATOR (PVALUE) :
                                          weight1   = weight1 ,
                                          weight2   = weight2 ,
                                          normalize = False   )
+            print ( 'RUN-TOYS' , typename ( self.gof ) , tv , typename ( tv ) ) 
             tv       = float ( tv )
             tvalues.append   ( tv  )
             counter += bool  ( self.t_value <= tv  )

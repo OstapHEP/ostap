@@ -242,7 +242,7 @@ def cnt_row ( counter , key = '' ) :
     vsum        = counter.sum    ()    
     nEff        = counter.nEff   ()
 
-    from ostap.logger.pretty  import pretty_float, fmt_pretty_values
+    from ostap.logger.pretty  import pretty_float, fmt_pretty_values, format_pow10 
 
     if isinstance ( nEff , integer_types ) : nEff , expo0 = '%d' % nEff , 0 
     else                                   : nEff , expo0 = pretty_float ( nEff )
@@ -260,11 +260,11 @@ def cnt_row ( counter , key = '' ) :
     from   ostap.logger.symbols   import times
     
     return '%s' % key , \
-        nEff  , '%s10^%+d' % ( times , expo0 ) if expo0 else ''  , \
-        vsum  , '%s10^%+d' % ( times , expo1 ) if expo1 else ''  , \
-        mean  , '%s10^%+d' % ( times , expo2 ) if expo2 else ''  , \
-        rms   , '%s10^%+d' % ( times , expo3 ) if expo3 else ''  , \
-        mnmx  , '%s10^%+d' % ( times , expo4 ) if expo4 else '' 
+        nEff  , ( '%s' % format_pow10 ( expo0 ) ) if expo0 else ''  , \
+        vsum  , ( '%s' % format_pow10 ( expo1 ) ) if expo1 else ''  , \
+        mean  , ( '%s' % format_pow10 ( expo2 ) ) if expo2 else ''  , \
+        rms   , ( '%s' % format_pow10 ( expo3 ) ) if expo3 else ''  , \
+        mnmx  , ( '%s' % format_pow10 ( expo4 ) ) if expo4 else '' 
 
 # =============================================================================
 ## Build 1 or 3 rows in the table for the counter :
@@ -341,20 +341,20 @@ def table_counters ( counters , prefix = '' , title = '' , style = None ) :
         raise TypeError ( "counter_table: Invalid type for 'counters' %s" % typename ( counters ) )
 
     from   ostap.logger.symbols  import sum_symbol, rms_symbol  
-    rows = [ ( ''          ,    \
-               '#'        , '' , 
-               sum_symbol , '' , 
-               'mean'     , '' ,
-               rms_symbol , '' , 
-               'min/max'  , '' ) ]
+    rows = [ ( 'Counter'  ,        \
+               '#'        , 'unit' , 
+               sum_symbol , 'unit' , 
+               'mean'     , 'unit' ,
+               rms_symbol , 'unit' , 
+               'min/max'  , 'unit' ) ]
     
     for key in counters :
         cnt = counters [ key ]        
         for row in cnt_rows ( cnt , key ) : rows.append ( row )
         
     import ostap.logger.table as T
-    rows = T.remove_empty_columns ( rows ) 
-    if not title : title = 'Table of %d counters' 
+    rows  = T.remove_empty_columns ( rows ) 
+    title = title if title else 'Table of %d counters' % len ( counters ) 
     table = T.table ( rows , prefix = prefix , title = title , alignment = "lcccccccccccc" , style = style )
     #
     return table 

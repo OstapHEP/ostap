@@ -59,6 +59,7 @@ logger.debug ( 'Implement Adversarial Validation (Regression mode)' )
 # =============================================================================
 DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
+MAX_DEPTH                  =   5
 # =============================================================================
 method_LGBM  = S.light_bulb            if S.light_bulb else 'LightGBM'
 method_XGB   = S.rocket                if S.rocket     else 'XGBoost'
@@ -70,8 +71,7 @@ method_TORCH = S.flashlight            if S.flashlight else 'TORCH'
 method_KERAS = S.brickwall             if S.brickwall  else 'KERAS'
 
 # =============================================================================
-
-## Need strong regualrization: BDT-type  
+## Need strong regularization: BDT-type  
 def BDT_needs_regularization ( X , W = None ) :
     """ Use strong regularization: BDT-type
     """
@@ -236,9 +236,9 @@ class ADVAL_base (GoFnp):
 
 
     # =========================================================================
-    ## use strong regualrization: BDT-type  
+    ## use strong regularization: BDT-type  
     def use_strong_regularization ( self , X ) :
-        """ Use strong regualrization: BDT-type
+        """ Use strong regularization: BDT-type
         """
         ns = num_samples  ( X )
         nf = num_features ( X )
@@ -380,7 +380,7 @@ class ADVAL_LGBM (ADVAL_base) :
             'metric'            : 'rmse',
             'learning_rate'     :  0.03,
             'n_estimators'      : DEFAULT_ESTIMATORS ,
-            'max_depth'         :  5   ,
+            'max_depth'         : MAX_DEPTH ,
             'num_leaves'        : 24   ,
             'min_child_samples' : 50   ,
             'subsample'         :  0.8 ,
@@ -415,7 +415,7 @@ class ADVAL_LGBM (ADVAL_base) :
         # --- Depth = 2 allows clean non-zero leaves under sPlot weights ---
         
         max_depth  = 1 if 1 == n_features else min ( 2 , params.get ( 'max_depth' , 5 ) )
-        num_leaves = 2 if max_depth == 1 else 3
+        num_leaves = 2 if max_depth == 1  else 3
         
         params [ 'max_depth'         ] = max_depth
         params [ 'num_leaves'        ] = num_leaves
@@ -496,7 +496,7 @@ class ADVAL_XGB (ADVAL_base) :
                     'tree_method'      : 'hist',
                     'learning_rate'    : 0.03  ,
                     'n_estimators'     : DEFAULT_ESTIMATORS ,
-                    'max_depth'        :  5    ,
+                    'max_depth'        : MAX_DEPTH ,
                     'max_leaves'       : 15    ,
                     'min_child_weight' :  1.0  ,
                     'subsample'        :  0.8  ,
@@ -616,7 +616,7 @@ class ADVAL_CATB (ADVAL_base) :
                     'learning_rate'         : 0.03,
                     'n_estimators'          : DEFAULT_ESTIMATORS ,
                     'early_stopping_rounds' :  20   ,
-                    'depth'                 :   5   ,
+                    'depth'                 :  MAX_DEPTH ,
                     'min_data_in_leaf'      :  20   ,
                     'l2_leaf_reg'           :   3.0 ,
                     'subsample'             :   0.8 ,
@@ -677,6 +677,7 @@ class ADVAL_CATB (ADVAL_base) :
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
+        
         import catboost as CatBoost
         
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
@@ -732,7 +733,7 @@ class ADVAL_HGBC (ADVAL_base) :
         config = {  'loss'              : 'squared_error',
                     'learning_rate'     : 0.03   ,
                     'max_iter'          : DEFAULT_ESTIMATORS ,
-                    'max_depth'         :  5    ,
+                    'max_depth'         : MAX_DEPTH ,
                     'max_leaf_nodes'    : 31    ,
                     'min_samples_leaf'  : 20    ,
                     'l2_regularization' :  0.1  ,
@@ -827,7 +828,7 @@ class ADVAL_GBC (ADVAL_base) :
         config = {  'loss'              : 'squared_error',
                     'learning_rate'     : 0.05  ,
                     'n_estimators'      : DEFAULT_ESTIMATORS ,
-                    'max_depth'         :   5   ,
+                    'max_depth'         : MAX_DEPTH ,
                     'min_samples_split' :  10   ,
                     'min_samples_leaf'  :   5   ,
                     'subsample'         :   1.0 ,
@@ -919,7 +920,7 @@ class ADVAL_RF (ADVAL_base) :
         config = {  'n_estimators'      : DEFAULT_ESTIMATORS ,
                     'n_jobs'            : -1    ,
                     'criterion'         : 'squared_error',
-                    'max_depth'         :  5    ,
+                    'max_depth'         : MAX_DEPTH ,
                     'min_samples_split' : 10    ,
                     'min_samples_leaf'  :  5    ,
                     'max_features'      :  1.0  ,

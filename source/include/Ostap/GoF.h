@@ -32,7 +32,9 @@ namespace Ostap
      *  @param end   end-iterator for input sorted arrat of CDF( x(i) ) 
      *  @return value of Kolmogorov-Smirnov estimator 
      */
-    template <class ITERATOR>
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     kolmogorov_smirnov
     ( ITERATOR begin , 
@@ -55,7 +57,9 @@ namespace Ostap
      *  @param end   end-iterator for input sorted arrat of CDF( x(i) ) 
      *  @return value of Kuiper estimator 
      */
-    template <class ITERATOR>
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     kuiper
     ( ITERATOR begin , 
@@ -80,7 +84,9 @@ namespace Ostap
      *  @param end   end-iterator for input sorted arrat of CDF( x(i) ) 
      *  @return value of Andersen-Darling estimator 
      */
-    template <class ITERATOR>
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     anderson_darling
     ( ITERATOR begin , 
@@ -103,7 +109,9 @@ namespace Ostap
      *  @param end   end-iterator for input sorted arrat of CDF( x(i) ) 
      *  @return value of Cramer-von Mises estimator 
      */
-    template <class ITERATOR>
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     cramer_von_mises
     ( ITERATOR begin , 
@@ -126,7 +134,9 @@ namespace Ostap
      *  @param end   end-iterator for input sorted arrat of CDF( x(i) ) 
      *  @return value of Zhang's Z_K estimator 
      */
-    template <class ITERATOR>
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     ZK 
     ( ITERATOR begin , 
@@ -153,7 +163,9 @@ namespace Ostap
      *  @param end   end-iterator for input sorted array of CDF( x(i) ) 
      *  @return value of Zhang's Z_A estimator 
      */
-    template <class ITERATOR>
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     ZA 
     ( ITERATOR begin , 
@@ -178,7 +190,9 @@ namespace Ostap
      *  @param end   end-iterator for input sorted array of CDF( x(i) ) 
      *  @return value of Zhang's Z_C estimator
      */
-    template <class ITERATOR>
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     ZC 
     ( ITERATOR begin , 
@@ -215,7 +229,9 @@ namespace Ostap
      *  supremum-type statistics but also incorporates information-theoretic properties,
      *  specifically the Kullback-Leibler divergence     
      */
-    template <class ITERATOR>
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     berk_jones
     ( ITERATOR begin , 

@@ -53,7 +53,8 @@ def data2ecdf ( data , weight = None ) :
     ##
     if isinstance ( data , ecdf_types ) : return data
     ## 
-    data      = numpy.asarray ( data , dtype = float ).ravel() 
+    data      = numpy.asarray ( data , dtype = float ).ravel()
+    ##
     if 1 != num_features      ( data   )          : raise TypeError  ( "Invalid `data` type!"                   )
     if not valid_weight       ( weight )          : raise ValueError ( "Invalid `weight` type/value!"           )
     if not compatible_weights ( data   , weight ) : raise TypeError  ( "Incompatible `data/weight` structures!" )
@@ -160,7 +161,6 @@ def ZA ( data1           ,
     ## 
     return Ostap.Math.ZA ( ecdf1 , ecdf2 , eps )
 
-
 # =============================================================================
 ## Calculates the two-sample Zhang's Z_C statistic for 1D datasets with weights.
 def ZC ( data1           ,
@@ -191,7 +191,7 @@ def ZK ( data1           ,
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
     ## 
-    return Ostap.Math.ZC ( ecdf1 , ecdf2 , eps )
+    return Ostap.Math.ZK ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
 if '__main__' == __name__ :

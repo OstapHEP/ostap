@@ -23,8 +23,11 @@ from   ostap.core.ostap_types   import num_types
 from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu, num_jobs, NoContext
 from   ostap.logger.utils       import map2table_ex
+from   ostap.logger.pretty      import nice_print 
+from   ostap.logger.symbols     import arrow_right  
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.reweighter   import Reweighter
+from   ostap.stats.counters     import SE, table_counters  
 from   ostap.stats.utils        import ( weight_trivial     ,
                                          valid_weight       ,
                                          valid_data_shape   ,
@@ -43,8 +46,8 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 DEFAULT_ESTIMATORS     = 500
 REGULARIZED_ESTIMATORS = 400
-EPS1                   = 1.e-3
-EPS2                   = 1.e-3
+MAX_DEPTH              =   5 
+REG_DEPTH              =   5 
 # =============================================================================
 ## Check if strong regularization is needed considering BOTH original and target samples.
 #  Evaluates sample dimensionality, Kish's effective sample size (nEff),
@@ -62,7 +65,6 @@ def RW_needs_regularization ( original                       ,
                 weight1 = original_weight           ,
                 weight2 = target_weight             ,
                 where   = "RW_needs_regularization" )   
-
 
     nf = num_features ( original )
     
@@ -120,7 +122,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                   store_original_weights = True  ,
                   progress               = True  , **params ) :
 
-        if not isinstance ( n_splits, int ) : raise TypeError  ( "Invalid `n_splits' type %s" % typename( n_splits ) )
+        if not isinstance ( n_splits, int ) : raise TypeError  ( "Invalid `n_splits' type %s"  % typename( n_splits ) )
         if not 0 <= n_splits <= 1000        : raise ValueError ( "Invalid `n_splits' value %s" % n_splits )
         if not isinstance( clip_threshold, num_types ) :
             raise TypeError ( "Invalid `clip_threshold' type %s" % typename( clip_threshold ) )
@@ -198,6 +200,53 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             )
         )
 
+        # =====================================================================
+        ## Cross-check the ratios and weights 
+        # =====================================================================
+        if original_ratios is not None and 0 < len ( original_ratios ) : 
+            
+            if not numpy.all ( numpy.isfinite ( original_ratios ) ) :
+                logger.error ( "%s: NaN/Inf are found in original_ratios"      % typename ( self ) )
+            if     numpy.any ( original_ratios < 0 ):
+                logger.error ( "%s: Negativeve values are found for ratios(x)" % typename ( self ) )
+
+            # 2. Constant weights? 
+            r_min = float ( numpy.min ( original_ratios ) )
+            r_max = float ( numpy.max ( original_ratios ) )
+            r_std = float ( numpy.std ( original_ratios ) )
+
+            if numpy.isclose ( r_min, r_max, atol = 1e-5 ) or r_std < 1e-6 :
+                r1 = nice_print ( r_min )
+                r2 = nice_rpint ( r_std ) 
+                logger.warning( "%s: All ratios are constant r(x) = %s (std=%s)" % ( typename ( self ), r1 , r2 ) ) 
+                
+            # 3. nEff degradation 
+            neff_before = nEff ( original , original_weight             )
+            neff_after  = nEff ( original , original_reweighted_weights )
+            
+            if neff_after < 0.10 * neff_before :
+                n1 = nice_print ( neff_before )
+                n2 = nice_print ( neff_after  )                
+                logger.warning ( "%s: Large degradation of nEff %s %s %s" % ( typename ( self ) , arrow_right , n1 , n2 ) ) 
+
+            # 4. check clipping 
+            clipped_count = numpy.sum ( original_ratios >=  ( self.__clip_threshold * 0.99 ) )
+            if 0 < clipped_count : 
+                frac = 100.0 * clipped_count / len ( original_ratios ) 
+                if 1 < frac : logger.warning ( "%s: Too many clipped events %.1f[%%]" % ( typename ( self ) , frac ) )
+                                 
+        cnt1 = SE()
+        cnt2 = SE()
+        for r in original_ratios             : cnt1.add ( r )
+        for w in original_reweighted_weights : cnt2.add ( w )
+        
+        if True or not self.silent :
+            
+            counters = { 'Ratios' : cnt1 , 'Weights' : cnt2 }
+            title    = '%s weight info' % typename ( self ) 
+            table    = table_counters ( counters , prefix = '# ' , title = title )
+            logger.info ( '%s:\n%s' % ( title , table ) )  
+                                                
         # =====================================================================
         ## Optionally store original sample reweighting results
         # =====================================================================
@@ -495,17 +544,35 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         oof_raw = numpy.zeros( len( X_comb ), dtype = numpy.float32 )
 
+
+        
         from sklearn.model_selection import StratifiedKFold
         skf = StratifiedKFold ( n_splits     = self.n_splits     ,
                                 shuffle      = True              ,
                                 random_state = self.random_state )
 
         stream_models = []
-        
-        for train_idx, val_idx in progress_bar ( skf.split( X_comb, y_comb )  ,
-                                                 max_value   = self.n_splits  ,
-                                                 description = 'Folds:'       , 
-                                                 silent      = not self.progress or self.silent or not self.n_splits ) :
+
+        # 1. generator of splits 
+        if 1 < self.n_splits :
+            
+            from sklearn.model_selection import StratifiedKFold
+            skf     = StratifiedKFold ( n_splits     = self.n_splits     , 
+                                        shuffle      = True              , 
+                                        random_state = self.random_state )
+            splits  = skf.split(X_comb, y_comb)
+            n_folds = self.n_splits
+        else:
+            # for n_splits=1 ue the whole sample 
+            indices = numpy.arange ( len ( X_comb ) )
+            splits  = [ ( indices , indices ) ]
+            n_folds = 1
+
+            
+        for train_idx, val_idx in progress_bar ( splits      ,
+                                                 max_value   = n_folds        ,
+                                                description = 'Folds:'       , 
+                                                 silent      = not self.progress or self.silent or 1 >= self.n_splits ) :
             
             X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
             X_va, y_va = X_comb [ val_idx   ] , y_comb [ val_idx ]
@@ -692,7 +759,8 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             'metric'                : 'binary_logloss'    ,
             'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
             'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
-            'max_depth'             : 5                   , ## Default depth for rich phase space
+            'max_depth'             : MAX_DEPTH           , ## Default depth for rich phase space
+            'max_bin'               : 1024                , ## fine binings 
             'num_leaves'            : 15                  ,
             'min_child_samples'     : 30                  ,
             'min_child_weight'      : 1e-3                ,
@@ -733,20 +801,25 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
 
 
         params [ 'n_estimators'      ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'     ] = 0.1     
-        params [ 'max_depth'         ] = 5       
+        params [ 'learning_rate'     ] = 0.05
+        
+        params [ 'max_depth'         ] = REG_DEPTH       
         params [ 'num_leaves'        ] = 31      
         
         # Soft dynamic limits for leaves to allow deep splits in rare tails
         leaf_samples = max ( 2, min ( 30, int ( n_samples  * 0.0001 ) ) )
-        params [ 'min_child_samples' ] = leaf_samples      
-        params [ 'min_child_weight'  ] = max ( 1e-4, float ( n_samples * 0.00005 ) )  
+        params [ 'min_child_samples' ] = leaf_samples
+        
+        ## params [ 'min_child_weight'  ] = max ( 1e-5, float ( n_samples * 1.e-5 ) )  
+        params [ 'min_child_weight'  ] = 1.e-7 
         
         params [ 'reg_alpha'         ] = 0.0    
         params [ 'reg_lambda'        ] = 0.0 
         params [ 'subsample'         ] = 1.0    
         params [ 'colsample_bytree'  ] = 1.0  
         params [ 'early_stopping_rounds' ] = None
+
+        params [ 'min_data_in_bin'   ] = 1      
         
         if 'path_smooth' in params : 
             params.pop ( 'path_smooth' )
@@ -820,7 +893,7 @@ class XGBoostDensityReweighter ( DensityReweighter ):
             'eval_metric'           : 'logloss'           ,
             'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
             'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
-            'max_depth'             : 5                   , ## Default depth for rich phase space
+            'max_depth'             : MAX_DEPTH           , ## Default depth for rich phase space
             'min_child_weight'      : 0.1                 , ## Minimum sum of hessians per leaf
             'gamma'                 : 0.001               , ## Minimum loss reduction to force split
             'reg_alpha'             : 0.1                 ,
@@ -852,12 +925,14 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         """ Dynamic regularization tuned for XGBoost to match LightGBM performance."""
         
         params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'         ] = 0.1
-        params [ 'max_depth'             ] = 5
+        params [ 'learning_rate'         ] = 0.05
+        params [ 'max_depth'             ] = REG_DEPTH
+
         
         # Ensure min_child_weight doesn't blow up for large samples, 
         # while staying permissive enough for sparse 11D space
-        params [ 'min_child_weight'      ] = max ( 1e-4, min ( 1.0, float ( n_samples * 0.00001 ) ) )
+        ## params [ 'min_child_weight'      ] = max ( 1e-5, float ( n_samples * 1.e-5 ) )  
+        params [ 'min_child_weight'      ] = 1.e-7 
         
          # Zero out gamma so it doesn't block splits
         params [ 'gamma'                 ] = 0.0
@@ -867,7 +942,9 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         params [ 'subsample'             ] = 1.0
         params [ 'colsample_bytree'      ] = 1.0
         params [ 'early_stopping_rounds' ] = None
-    
+
+        params [ 'tree_method'           ] = 'exact'
+        
         return params
 
     # =============================================================
@@ -960,7 +1037,7 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
             'eval_metric'           : 'Logloss'           ,
             'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
             'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
-            'depth'                 : 5                   , ## Default depth for rich phase space
+            'depth'                 : MAX_DEPTH           , ## Default depth for rich phase space
             'l2_leaf_reg'           : 2.0                 , ## Moderate L2 penalty on leaf values
             'min_child_samples'     : 30                  ,
             'subsample'             : 0.8                 ,
@@ -998,7 +1075,7 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         
         params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
         params [ 'learning_rate'         ] = 0.1
-        params [ 'depth'                 ] = 5
+        params [ 'depth'                 ] = REG_DEPTH
         
         if 'min_data_in_leaf' in params :  params.pop ( 'min_data_in_leaf' , None )
         
@@ -1114,10 +1191,10 @@ class GBReweighter(Reweighter) :
         
         # Baseline GBReweighter configuration (already achieving good p-value)
         config = {            
-            "n_estimators"      : 150    , 
-            "learning_rate"     :   0.03 ,
-            "max_depth"         :   5    ,
-            "min_samples_leaf"  :  30    ,            
+            "n_estimators"      : 150       , 
+            "learning_rate"     :   0.03    ,
+            "max_depth"         : MAX_DEPTH ,
+            "min_samples_leaf"  :  30       ,            
             # Advanced Scikit-Learn GradientBoosting/GBReweighter arguments
             "gb_args"           : {
                 "subsample"     : 0.8    ,
@@ -1235,7 +1312,7 @@ class GBReweighter(Reweighter) :
         N = n_samples
         params [ 'n_estimators'     ] = 100
         params [ 'learning_rate'    ] = 0.05
-        params [ 'max_depth'        ] = 5
+        params [ 'max_depth'        ] = REG_DEPTH 
         params [ 'min_samples_leaf' ] = max ( 100, int ( N * 0.005 ) )
         
         gb_args = params.get ( 'gb_args', {} ).copy ()
