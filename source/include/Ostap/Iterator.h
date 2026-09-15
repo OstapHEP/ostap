@@ -1,6 +1,6 @@
 // ============================================================================
-#ifndef ANALYSIS_ITERATOR_H 
-#define ANALYSIS_ITERATOR_H 1
+#ifndef OSTAP_ITERATOR_H 
+#define OSTAP_ITERATOR_H 1
 // ============================================================================
 // Include files
 // ============================================================================
@@ -18,7 +18,11 @@ class RooAbsCollection ;  // RooFit
 // ============================================================================
 // ROOT
 // ============================================================================
+#if   __has_include("ROOT/RVersion.hxx")
+#include "ROOT/RVersion.hxx"
+#elif __has_include("RVersion.h")
 #include "RVersion.h"
+#endif
 // ============================================================================
 namespace Ostap
 {
@@ -37,12 +41,12 @@ namespace Ostap
     public: 
       // ======================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,31,0)
-      /// standard constructor: create and keep the ietrator 
+      /// standard constructor: create and keep the iterator 
       Iterator  ( const RooAbsCollection& collection ) ; // only for ROOT < 6.31    
 #endif 
-      /// standard constructor: create and keep the ietrator 
+      /// standard constructor: create and keep the iterator 
       Iterator  ( const TCollection&      collection ) ;    
-      /// standard constructor: create and keep the ietrator 
+      /// standard constructor: create and keep the iterator 
       Iterator  ( const RooLinkedList&    collection ) ;    
       /// standard constructor: create from existing iterator  
       Iterator  (       TIterator*        iterator   ) ;    
@@ -111,6 +115,6 @@ namespace Ostap
 }
 // ============================================================================
 //                                                                      The END 
-// ===========================================================================
-#endif // ANALYSIS_ITERATOR_H
+// ============================================================================
+#endif // OSTAP_ITERATOR_H
 // ============================================================================

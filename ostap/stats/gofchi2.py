@@ -241,8 +241,8 @@ class Chi2 ( GoFnp ) :
             self.fill_3D ( histo2 , *d2 , weight = w2 )
 
         ## now we can calculate chi2
-        h1 = histo1.density ()
-        h2 = histo2.density ()
+        h1 = histo1.density ( silent = True )
+        h2 = histo2.density ( silent = True )
         
         ## loop over histogram bins and calculate chi2
         chi2 = 0 

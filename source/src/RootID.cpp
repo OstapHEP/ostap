@@ -6,9 +6,16 @@
 #include <string>
 #include <limits>
 // ============================================================================
+// ROOT
+// ============================================================================
+#if   __has_include("ROOT/RVersion.hxx")
+#include "ROOT/RVersion.hxx"
+#elif __has_include("RVersion.h")
+#include "RVersion.h"
+#endif
+// ============================================================================
 // ROOT 
 // ============================================================================
-#include "RVersion.h"
 #include "TROOT.h"
 #include "TObject.h"
 #include "TNamed.h"

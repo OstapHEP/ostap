@@ -10,7 +10,14 @@
 // ============================================================================
 // ROOT/RooFit 
 // ============================================================================
+#if   __has_include("ROOT/RVersion.hxx")
+#include "ROOT/RVersion.hxx"
+#elif __has_include("RVersion.h")
 #include "RVersion.h"
+#endif
+// ============================================================================
+// RooFit 
+// ============================================================================
 #include "RooAddition.h"
 #include "RooProduct.h"
 #include "RooRealConstant.h"

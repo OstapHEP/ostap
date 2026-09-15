@@ -107,12 +107,10 @@ class BootstrapGoF ( GoFnp ) :
         >>> weight2 = ...
         >>>> tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
         """
-        result = self.estimator ( data1   = data1   ,
-                                  data2   = data2   ,
-                                  weight1 = weight1 ,
-                                  weight2 = weight2 )
-        print ( 'T_VALUE' , typename ( self ) , results ,typename ( result ) )
-        return result 
+        return self.estimator ( data1   = data1   ,
+                                data2   = data2   ,
+                                weight1 = weight1 ,
+                                weight2 = weight2 )
                         
 # =============================================================================
 ## @class KolmogorovSmirnov
@@ -209,36 +207,7 @@ class ZK(BootstrapGoF) :
         BootstrapGoF.__init__ ( self ,
                                 method    = "Zhang' ZK" ,
                                 estimator = TS2.ZK      , **kwargs )
-        
-# =============================================================================
-
-       
-    # =========================================================================
-    ## Calculate T-value for Goodness-of-Fit
-    #  @code
-    #  data1   = ...
-    #  data2   = ...
-    #  weight1 = ...
-    #  weight2 = ...
-    #  tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
-    #  @endcode
-    def tvalue ( self      ,
-                 data1     ,
-                 data2     ,
-                 weight1   = None  ,
-                 weight2   = None  ,
-                 normalize = False ) :
-        """ Calculate T-value for Goodness-of-Fit
-        >>> data1   = ...
-        >>> data2   = ...
-        >>> weight1 = ...
-        >>> weight2 = ...
-        >>>> tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
-        """
-        
-
-
-    
+            
 # =============================================================================
 if '__main__' == __name__ :
     

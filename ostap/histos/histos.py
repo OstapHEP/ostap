@@ -7694,13 +7694,13 @@ ROOT.TH1F . equal_edges = _equal_edges_
 ROOT.TH1D . equal_edges = _equal_edges_                         
 
 # =============================================================================
-## Get the estimate for quantile for the hitogram
+## Get the estimate for quantile for the histogram
 #  @code
 #  histo = ...
 #  q = histo.quantile ( 0.2 ) 
 #  @endcode
 def h1_quantile ( h1 , quantile , * , density = True , **kwargs ):
-    """ Get the estimate for quantile for the hitogram
+    """ Get the estimate for quantile for the histogram
     
     >>> histo = ...
     >>> q = histo.quantile ( 0.2 )  
@@ -7712,10 +7712,10 @@ def h1_quantile ( h1 , quantile , * , density = True , **kwargs ):
     if    0 == quantile or isequal ( quantile + 1 , 1 ) or iszero ( quantile ) : return h1.xmin()
     elif  1 == quantile or isequal ( quantile     , 1 )                        : return h1.xmax() 
 
-    if density and not h1.is_density () : hh = h1.density()
-    else                                : hh = h1 
+    if density and not h1.is_density ( silent = True ) : hh = h1.density ( silent = True )
+    else                                               : hh = h1 
 
-    assert hh.is_density() , "Histogram cannot be converted to density!"
+    assert hh.is_density ( silent = True ) , "Histogram cannot be converted to density!"
     
     ## get the estimator
     q = Quantile ( quantile , h1.xmin() , h1.xmax() )
@@ -7724,7 +7724,7 @@ def h1_quantile ( h1 , quantile , * , density = True , **kwargs ):
     return q ( hh )
     
 # =============================================================================
-## Get the estimate for quantiles for the hitogram
+## Get the estimate for quantiles for the histogram
 #  @code
 #  histo = ...
 #  q = histo.quantils ( [ 0.1, 0.2 , 0.5]  )
@@ -7732,7 +7732,7 @@ def h1_quantile ( h1 , quantile , * , density = True , **kwargs ):
 #  @endcode
 #  @attention actual quantiles are etimated for density distribution
 def h1_quantiles ( h1 , quantiles , * , density = True , **kwargs ):
-    """ Get the estimate for quantiles for the hitogram
+    """ Get the estimate for quantiles for the histogram
     
     >>> histo = ...
     >>> q = histo.quantiles ( [ 0.2 , 0.4] )

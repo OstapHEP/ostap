@@ -19,10 +19,6 @@
 #include "Ostap/Dalitz.h"
 #include "Ostap/Models.h"
 // ============================================================================
-// ROOT
-// ============================================================================
-#include "RVersion.h"
-// ============================================================================
 /** @file Ostap/BreitWigner.h
  *
  * Set of useful models for describing signal peaks with the natural width:

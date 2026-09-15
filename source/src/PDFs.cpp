@@ -6,9 +6,16 @@
 #include <limits>
 #include <cmath>
 // ============================================================================
+// ROOT
+// ============================================================================
+#if   __has_include("ROOT/RVersion.hxx")
+#include "ROOT/RVersion.hxx"
+#elif __has_include("RVersion.h")
+#include "RVersion.h"
+#endif
+// ============================================================================
 // ROOT 
 // ============================================================================
-#include "RVersion.h"
 #include "RooArgSet.h"
 #include "RooFitResult.h"
 #include "RooRealVar.h"

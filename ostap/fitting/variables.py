@@ -71,11 +71,12 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
-from   ostap.math.math_base     import doubles, iszero, isequal 
+from   ostap.math.math_base     import doubles, iszero, isequal, isfinite  
 from   ostap.core.core          import VE, hID, Ostap, valid_pointer
 from   ostap.core.ostap_types   import ( num_types      , list_types     ,
                                          integer_types  , string_types   ,
                                          dictlike_types , sequence_types )
+from   ostap.logger.pretty      import nice_print 
 from   ostap.utils.core         import typename
 import ostap.math.math_ve       as     mve 
 import ROOT, array
@@ -769,10 +770,27 @@ def _rav_setvalc_  ( self , value ) :
     >>> var = ...
     >>> var.value = 10 
     """
-    value = float ( value )
-    mn , mx  = self.getMin(), self.getMax() 
-    if not mn <= value <= mx :
-        logger.warning('Value %s is out the range [%s,%s]' %  ( value  , mn , mx ) ) 
+    value   = float ( value )
+    
+    if not isfinite ( value ) :
+        w = '%s/%s' % ( typename ( self ) , self.GetName() ) 
+        logger.warning ( '%s: proposed value is not finite, skip!' % a )
+        return self.getVal ()
+    
+    if self.hasMin () :
+        mn = self.getMin()
+        if value < mn :
+            w = '%s/%s' % ( typename ( self ) , self.GetName() ) 
+            logger.warning ( '%s: proposed value %s < min=%s, clip!' % ( w  , nice_print ( value ) , nice_print ( mn ) ) )
+            value = mn
+
+    if self.hasMax () :
+        mx = self.getMax()
+        if mx < value :
+            w = '%s/%s' % ( typename ( self ) , self.GetName() )             
+            logger.warning ( '%s: proposed value %s > max=%s, clip!' % ( w , nice_print ( value ) , nice_print ( mx ) ) )
+            value = mx
+
     self.setVal ( value ) 
     return self.getVal()
 
