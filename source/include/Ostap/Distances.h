@@ -398,21 +398,37 @@ namespace Ostap
      { return bhattacharyya  ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }    
     // ========================================================================     
 
-    // ========================================================================     
-    /** get Wasserstein' distance
-     *  \f[ W^2 = (v_2-v_1)^T \Sigma ^{-1} (v_2-v1) } 
-     *          + tr \left( \Sigma_1 + \Sigma_2
-     *          - 2  \left( \Sigma_2^{1/2}\Sigma_1 \Sigma_2^{1/2}\right)^{1/2} \right) \f]
+    // ========================================================================
+    /** Get the standardized (dimensionless & scale-invariant) Wasserstein distance
+     *  squared between two multivariate Gaussians.
+     *
+     *  Unlike the classical Wasserstein-2 distance which depends on physical units
+     *  of variables (making it unsuitable for combining heterogeneous parameters),
+     *  this standardized variant whitens the space using the pooled covariance 
+     *  matrix \f$ \Sigma_{\text{pooled}} = w_1 \Sigma_1 + w_2 \Sigma_2 \f$.
+     *
+     *  The metric decomposes into two dimensionless parts:
+     *  \f[ W_{\text{std}}^2 = D_M^2(v_1, v_2) 
+     *      + \text{tr}\left( \tilde{\Sigma}_1 + \tilde{\Sigma}_2 
+     *      - 2 \left( \tilde{\Sigma}_2^{1/2} \tilde{\Sigma}_1 \tilde{\Sigma}_2^{1/2} \right)^{1/2} \right) \f]
+     *  where:
+     *  - \f$ D_M^2 = (v_1 - v_2)^T \Sigma_{\text{pooled}}^{-1} (v_1 - v_2) \f$ is the squared Mahalanobis distance,
+     *  - \f$ \tilde{\Sigma}_i = \Sigma_{\text{pooled}}^{-1/2} \Sigma_i \Sigma_{\text{pooled}}^{-1/2} \f$ are normalized covariance matrices.
+     *
+     *  For 1D distributions, the formula reduces to:
+     *  \f[ W_{\text{std}}^2 = \frac{(v_1 - v_2)^2}{\sigma_{\text{pooled}}^2} 
+     *                       + \frac{(\sigma_1 - \sigma_2)^2}{\sigma_{\text{pooled}}^2} \f]
      *
      *  @param v1 (INPUT) the first data vector
-     *  @param c1 (INPUT) the covariance matrix for the first data vector
-     *  @param n1 (INPUT) sum of weights fot the first data vector 
+     *  @param c1 (INPUT) the covariance matrix for the first dataset
+     *  @param n1 (INPUT) sum of weights (sample size) for the first dataset
      *  @param v2 (INPUT) the second data vector
-     *  @param c2 (INPUT) the covariance matrix for the second data vector
-     *  @param n2 (INPUT) sum of weights fot the second data vector 
+     *  @param c2 (INPUT) the covariance matrix for the second dataset
+     *  @param n2 (INPUT) sum of weights (sample size) for the second dataset
+     *  @return Standardized Wasserstein distance squared, or Ostap::v_INVALID_DISTANCE on failure
      *
-     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
-     *  @date 2023-03-07
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     *  @date 2026-06-06
      */
     template <unsigned int N, typename SCALAR>
     inline double wasserstein 
@@ -423,79 +439,82 @@ namespace Ostap
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 , 
       const double                                                            n2 ) 
     {
-      //
+      // Validate sample sizes / sum of weights
       if ( n1 <= 1.0 || n2 <= 1.0 ) { return Ostap::v_INVALID_DISTANCE ; } 
-      /// the actual type of covariance matrix
+
+      /// Typedefs for ROOT SMatrix / SVector
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >   COV ;
-      /// the actual type of cholesky matrix 
       typedef typename ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepStd<SCALAR,N,N> > CHOL ;
-      /// Vector of eigenvalues 
       typedef typename ROOT::Math::SVector<SCALAR,N> EVCT ;      
-      //
+
+      // Calculate relative dataset weights
       const double w1 = ( n1 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
       const double w2 = ( n2 - 1.0 ) / ( n1 + n2 - 2.0 ) ;
-      //
+
+      // Specialization for N = 1 (fast path without matrix algebra)
       if constexpr ( N == 1 ) 
       {
-        const double diff = v1 [ 0 ] - v2 [ 0 ];
-        //
-        const double c100   = c1 ( 0 , 0 ) ;
-        const double c200   = c2 ( 0 , 0 ) ;
-        //
-        const double si      = w1 * c100 + w2 * c200 ;
-        if ( si <= 0 ) { return Ostap::v_INVALID_DISTANCE ; }
-        //
-        const double result1 = ( diff * diff ) / si ;
-        const double cross   = std::sqrt ( c100 * c200 ) ;
-        //
-        const double wsq = result1 - 2.0 * cross + c100 + c200 ;
-        return 0 <= wsq ? wsq : 0.0 ;
+        const double c100 = c1 ( 0 , 0 ) ;
+        const double c200 = c2 ( 0 , 0 ) ;
+        const double si   = w1 * c100 + w2 * c200 ;
+        if ( si <= 0 || c100 < 0 || c200 < 0 ) { return Ostap::v_INVALID_DISTANCE ; }
+
+        // Mahalanobis distance term for means
+        const double diff    = v1 [ 0 ] - v2 [ 0 ] ;
+        const double result1 = ( diff * diff ) / si ; 
+
+        // Standardized variance difference term
+        const double diff_std = std::sqrt ( c100 ) - std::sqrt ( c200 ) ;
+        const double result2  = ( diff_std * diff_std ) / si ; 
+
+        return result1 + result2 ;
       }
-      //      
-      // pooled covariace matrix 
+
+      // 1. Compute pooled covariance matrix and its inverse
       COV si { w1 * c1 + w2 * c2 } ;
-      if ( !si.InvertChol () ) { return Ostap::v_INVALID_DISTANCE ; }      
-      //
-      /// the first term 
-      const double result1 = ROOT::Math::Similarity ( si , v1 - v2 ) ;
-      ///
+      COV si_inv { si } ;
+      if ( !si_inv.InvertChol () ) { return Ostap::v_INVALID_DISTANCE ; }      
+
+      // First term: Squared Mahalanobis distance for means
+      const double result1 = ROOT::Math::Similarity ( si_inv , v1 - v2 ) ;
+
+      // 2. Compute whitened covariance matrices: C_tilde = S^{-1/2} * C * S^{-1/2}
       CHOL L {} ;
-      if ( !cholesky ( c1 , L ) ) { return Ostap::v_INVALID_DISTANCE ; }
-      /// helper matrix M 
-      const COV M { ROOT::Math::Similarity ( L , c2 ) } ;
-      ///
+      if ( !cholesky ( si , L ) ) { return Ostap::v_INVALID_DISTANCE ; } // L * L^T = S
+      CHOL L_inv { L } ;
+      if ( !L_inv.Invert ()     ) { return Ostap::v_INVALID_DISTANCE ; }
+
+      const COV c1_tilde { ROOT::Math::Similarity ( L_inv , c1 ) } ;
+      const COV c2_tilde { ROOT::Math::Similarity ( L_inv , c2 ) } ;
+
+      // 3. Compute cross term eigenvalues via Cholesky decomposition
+      CHOL L1 {} ;
+      if ( !cholesky ( c1_tilde , L1 ) ) { return Ostap::v_INVALID_DISTANCE ; }
+      const COV M { ROOT::Math::Similarity ( L1 , c2_tilde ) } ;
+
       EVCT V {} ;
       const Ostap::Math::GSL::EigenSystem eigen {} ;
-      if ( !eigen.eigenValues ( M , V ).isSuccess() ) { return Ostap::v_INVALID_DISTANCE ; }
-      //
-      double result2 = 0 ;
+      if ( !eigen.eigenValues ( M , V ).isSuccess () ) { return Ostap::v_INVALID_DISTANCE ; }
+
+      double tr_cross = 0 ;
       for ( unsigned int i = 0 ; i < N ; ++i )
-      {
-        const double ev = V [ i ] ;
-        if ( 0 < ev ) { result2 += std::sqrt ( ev ) ; }
-      }
-      //
-      const double wsq = result1 - 2 * result2 +
-        Ostap::Math::trace ( c1 ) +
-        Ostap::Math::trace ( c2 ) ;
-      //
-      return 0 <= wsq ? wsq : 0.0 ;
+      { if ( V [ i ] > 0 ) { tr_cross += std::sqrt ( V [ i ] ) ; } }
+
+      // Second term: Standardized covariance matrix trace difference
+      const double result2 = Ostap::Math::trace ( c1_tilde ) + 
+                             Ostap::Math::trace ( c2_tilde ) - 2.0 * tr_cross ;
+
+      const double wsq = result1 + result2 ;
+      return ( 0 <= wsq ) ? wsq : 0.0 ;
     }
+
     // ========================================================================
-    /** get Wasserstain' distance
-     *  \f[ W^2 = (v_2-v_1)^T \Sigma ^{-1} (v_2-v1) } 
-     *          + tr \left( \Sigma_1 + \Sigma_2
-     *          - 2  \left( \Sigma_2^{1/2}\Sigma_1 \Sigma_2^{1/2}\right)^{1/2} \right) \f]
-     *
+    /** Get the standardized Wasserstein distance squared (equal weights w1 = w2 = 0.5)
      *  @param v1 (INPUT) the first data vector
-     *  @param c1 (INPUT) the covariance matrix for the first data vector
-     *  @param n1 (INPUT) sum of weights fot the first data vector 
+     *  @param c1 (INPUT) the covariance matrix for the first dataset
      *  @param v2 (INPUT) the second data vector
-     *  @param c2 (INPUT) the covariance matrix for the second data vector
-     *  @param n2 (INPUT) sum of weights fot the second data vector 
-     *
-     *  @author Vanya BELYUAEV Ivan.Belyaev@itep.ru
-     *  @date 2023-03-07
+     *  @param c2 (INPUT) the covariance matrix for the second dataset
+     *  @return Standardized Wasserstein distance squared, or Ostap::v_INVALID_DISTANCE on failure
      */
     template <unsigned int N, typename SCALAR>
     inline double wasserstein 
@@ -503,7 +522,7 @@ namespace Ostap
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c1 , 
       const ROOT::Math::SVector<SCALAR,N>&                                    v2 , 
       const ROOT::Math::SMatrix<SCALAR,N,N,ROOT::Math::MatRepSym<SCALAR,N> >& c2 )
-      { return wasserstein ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }       
+    { return wasserstein ( v1 , c1 , 2.0 , v2 , c2 , 2.0 ) ; }
     // ========================================================================
     
     // ========================================================================

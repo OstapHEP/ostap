@@ -761,7 +761,7 @@ ECDF  = Ostap.Math. ECDF
 WECDF = Ostap.Math.WECDF 
 
 # =============================================================================
-## projet (W)ECDF into 1D histogram 
+## project (W)ECDF into 1D histogram 
 #  @code
 #  ecdf = ...
 #  histo = ... 

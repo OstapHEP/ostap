@@ -54,7 +54,7 @@ from   ostap.logger.symbols      import ( script_v ,
                                           sub_min  , sub_max ,
                                           tree           as tree_symbol   ,
                                           branch         as branch_symbol ,
-                                          label          as type_symbol   , 
+                                          tag            as type_symbol   , 
                                           leaf           as leaf_symbol   ,
                                           leaves         as leaves_symbol ,
                                           tape_cartridge as files_symbol  )
@@ -775,7 +775,7 @@ def _in_types ( t ) :
 col_v_name   = 'Variable'
 col_v_branch = '%sbranch' % branch_symbol 
 col_v_leaf   = '%sleaf'   % leaf_symbol
-col_v_type   = '%s type'  % type_symbol
+col_v_type   = '%stype'   % type_symbol
 col_v_mean   = 'mean'
 col_v_rms    = 'rms'
 col_v_min    = 'min'

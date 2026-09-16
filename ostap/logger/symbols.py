@@ -38,6 +38,7 @@ __all__     = (
     'chisq'               , ## 𝛘²
     'clock'               , ## 🕐  (wide)
     'clock_ticks'         , ## 🕜 2-колон...
+    'clubs'               , ## ♣
     'column'              , ## ⋮   
     'concurrency'         , ## 🔀    
     'delta_symbol'        , ## Δ
@@ -137,13 +138,16 @@ __all__     = (
     'mountain'            , ## ⛰️  (wide)
     'much_greater'        , ## ≫
     'much_less'           , ## ≪
+    'nabla'               , ## ∇
     'not_equal'           , ## ≠
     'number'              , ## №
     'oil_drum'            , ## 🛢️  (wide)
     'palette'             , ## 🎨  (wide)
     'permille'            , ## ‰
     'permutation'         , ## ⤭
+    'postal_horn'         , ## 📯
     'plus_minus'          , ## ±
+    'proportion'          , ## ∷
     'quadratic_sum'       , ## ⨁ 
     'question_mark'       , ## ❓  (wide)
     'ram'                 , ## 🐏  (wide)
@@ -189,6 +193,7 @@ __all__     = (
     'sum_symbol'          , ## ∑    
     'superscript_map'     , ## mapping dict
     'symmetry'            , ## ⌯
+    'tag'                 , ## ❖
     'tape'                , ## ➿
     'tape_cartridge'      , ## 🖭️
     'tensor_product'      , ## ⨂
@@ -337,6 +342,11 @@ chisq            = chi2
 ## chi2/ndf 
 chi2ndf          = '%s/ndf' % chi2 
 
+nabla            = '∇'    if show else ''
+proportion       = '∷'    if show else ''
+clubs            = '♣'  if show else ''
+postal_horn      = '📯 ' if show else '' 
+
 ## symmetric
 
 symmetry         = '⌯'   if show else 'sym'
@@ -481,8 +491,9 @@ def labels ( N , labs = () )  :
     for k in range ( q , N ) : yield '%d' % k
 
     
-label = '🏷️' if show else 'label'
-    
+label = '🏷️ ' if show else ''
+tag   = '❖'  if show else '' 
+
 # ============================================================================
 # Mapping tables
 superscript_map = str.maketrans({

@@ -61,15 +61,14 @@ DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
 MAX_DEPTH                  =   5
 # =============================================================================
-method_LGBM  = S.light_bulb            if S.light_bulb else 'LightGBM'
-method_XGB   = S.rocket                if S.rocket     else 'XGBoost'
-method_CATB  = S.cat_face              if S.cat_face   else 'CatBoost'
-method_HGBC  = S.to_script ( 'HGBC ' ) if S.show       else 'HGBC'
-method_GBC   = S.to_script ( 'GBC '  ) if S.show       else 'GBC'
-method_RF    = S.to_script ( 'RF '   ) if S.show       else 'RF'
-method_TORCH = S.flashlight            if S.flashlight else 'TORCH'
-method_KERAS = S.brickwall             if S.brickwall  else 'KERAS'
-
+method_LGBM  = S.light_bulb           if S.light_bulb  else 'LightGBM'
+method_XGB   = S.rocket               if S.rocket      else 'XGBoost'
+method_CATB  = S.cat_face             if S.cat_face    else 'CatBoost'
+method_HGBC  = S.proportion + S.nabla if S.show        else 'HGBC'
+method_GBC   = S.nabla                if S.show        else 'GBC'
+method_RF    = S.tree                 if S.show        else 'RF'
+method_TORCH = S.flashlight           if S.flashlight  else 'TORCH'
+method_KERAS = S.postal_horn          if S.postal_horn else 'KERAS'
 # =============================================================================
 ## Need strong regularization: BDT-type  
 def BDT_needs_regularization ( X , W = None ) :
@@ -176,7 +175,7 @@ class ADVAL_base (GoFnp):
             parallel = False
             
         ## (re)define n_jobs     
-        params [ 'n_jobs'    ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )        
+        params [ 'n_jobs'    ] = 1 if parallel else num_jobs ( params )        
         params [ 'parallel'  ] = parallel
         params [ 'normalize' ] = True if normalize else False 
 
@@ -263,8 +262,7 @@ class ADVAL_base (GoFnp):
         >>> params = gof.regularization ( params , n_features , n_samples ) 
         """
         return NotImplemented
-    
-    
+        
     def tvalue ( self               ,
                  data1              ,
                  data2              ,  * , 
@@ -279,7 +277,7 @@ class ADVAL_base (GoFnp):
         check_all ( data1 , data2 , weight1 , weight2 , typename ( self ) )
         
         if self.normalize and normalize :
-            uds1 , uds2 = normalize_pooled ( data1 , data2 )
+            uds1 , uds2 = self.normalize_pooled ( data1 , data2 )
             return self.tvalue ( uds1       , uds2       ,
                                  weight1    = weight1    ,
                                  weight2    = weight2    ,
@@ -344,7 +342,8 @@ class ADVAL_base (GoFnp):
 
 
         Y_eval, eval_weights = transform_weights_and_targets ( Y , W )
-        mse_score = mean_squared_error ( Y , oof_preds , sample_weight = eval_weights )
+        ## mse_score = mean_squared_error ( Y , oof_preds , sample_weight = eval_weights )
+        mse_score = mean_squared_error ( Y_eval , oof_preds , sample_weight = eval_weights )
 
         return tvalue_from_MSE ( mse_score )
 
@@ -367,7 +366,6 @@ class ADVAL_base (GoFnp):
                                                            alignment   = 'rcw'  , 
                                                            prefix      = "# "   ,
                                                            title       = title  ) ) ) 
-
 
 # =======================================================================================
 ## @class ADVAL_LGBM (Regression)
@@ -414,7 +412,7 @@ class ADVAL_LGBM (ADVAL_base) :
         """
         # --- Depth = 2 allows clean non-zero leaves under sPlot weights ---
         
-        max_depth  = 1 if 1 == n_features else min ( 2 , params.get ( 'max_depth' , 5 ) )
+        max_depth  = 1 if 1 == n_features else min ( 2 , params.get ( 'max_depth' , MAX_DEPTH ) )
         num_leaves = 2 if max_depth == 1  else 3
         
         params [ 'max_depth'         ] = max_depth
@@ -1014,7 +1012,7 @@ class ADVAL_TORCH (ADVAL_base) :
 
         config =  { 'epochs'                : 100   ,
                     'batch_size'            : 256   ,
-                    'lr'                    : 1.e-3 ,
+                    'learning_rate'         : 1.e-3 ,
                     'weight_decay'          : 1.e-4 ,
                     'early_stopping_rounds' :  15   , 
                     'dropout'               : 0.1   }
@@ -1028,33 +1026,20 @@ class ADVAL_TORCH (ADVAL_base) :
 
     # =========================================================================
     ## Parameters for strong regularization
-    #  @code
-    #  params = gof.regularization ( params , n_features , n_samples ) 
-    #  @endcode
     def regularization ( self       ,
                          params     ,
                          n_features , 
                          n_samples  ) :
-        
         """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples ) 
         """
-
         nf = n_features
         ns = n_samples
         
-        # --- Dynamic batch size scaling with increased Asimov dataset size ---
-        params [ 'batch_size'     ] = max ( int ( 0.02 * ns ) , 256 )
-        
-        # --- Moderate Weight Decay (L2) to prevent [10⁻⁶] response collapse ---
-        params [ 'weight_decay'   ] = 1e-3
-        
-        # --- Shallow architecture capacity: prevent overfitting to sPlot weight fluctuations ---
-        params [ 'hidden_units'   ] = 8 if 1 == nf else 16
-        params [ 'num_layers'     ] = 1
-        
-        params [ 'learning_rate'  ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) )
-        params [ 'early_stopping' ] = False
+        params [ 'batch_size'            ] = max ( int ( 0.02 * ns ) , 256 )
+        params [ 'weight_decay'          ] = 1e-3
+        params [ 'hidden_dim'            ] = 8 if 1 == nf else 16
+        params [ 'learning_rate'         ] = min ( 0.005 , params.get ( 'learning_rate' , params.get ( 'lr' , 1e-3 ) ) )
+        params [ 'early_stopping_rounds' ] = 0
         
         return params 
     
@@ -1071,32 +1056,22 @@ class ADVAL_TORCH (ADVAL_base) :
 
         params = {}
         params.update ( self.params )
-        epochs = params.pop ( 'epochs' , None ) or 200
+        epochs = params.pop ( 'epochs' , None ) or 100
 
         nf = num_features ( X_train )
         ns = num_samples  ( X_train )
         
         if NN_needs_regularization ( X_train , W_train ) :
-            
-            ## update parameters 
             params.update ( self.regularization ( params , nf , ns ) )
-
-            epochs = min ( 30 if 1 == nf else 50 , params.get ( 'epochs' , 100 ) ) 
-            ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params                ,
-                                         num_features = nf     , 
-                                         num_samples  = ns     ,
-                                         epochs       = epochs )
+            epochs = min ( 30 if 1 == nf else 50 , epochs ) 
+            self.report_regularization ( params , num_features = nf , num_samples = ns , epochs = epochs )
             
-        epochs       = params.get ( 'epochs'                , epochs )
-        batch_size   = params.get ( 'batch_size'            , 256    )
-        lr           = params.get ( 'lr'                    ,   1e-3 )
-        weight_decay = params.get ( 'weight_decay'          ,   1e-4 )
-        patience     = params.get ( 'early_stopping_rounds' ,  15    )        
-        dropout_rate = params.get ( 'dropout'               ,   0.1  )
-
-        n_features   = nf 
-        hidden_dim   = params.get ( 'hidden_dim' , 64 if 16 < n_features else 16 )
+        batch_size   = params.get ( 'batch_size'            , 256  )
+        lr           = params.get ( 'learning_rate'         , params.get ( 'lr' , 1e-3 ) )
+        weight_decay = params.get ( 'weight_decay'          , 1e-4 )
+        patience     = params.get ( 'early_stopping_rounds' ,  15  )        
+        dropout_rate = params.get ( 'dropout'               , 0.1  )
+        hidden_dim   = params.get ( 'hidden_dim'            , 64 if 15 < nf else 16 )
 
         n_jobs = params.get ( 'n_jobs', -1 )
         if 0 < n_jobs : Torch.set_num_threads ( n_jobs )
@@ -1123,10 +1098,10 @@ class ADVAL_TORCH (ADVAL_base) :
         val_y_tensor = Torch.from_numpy ( Y_va_arr ).to ( device )
         val_w_tensor = Torch.from_numpy ( W_va_arr ).to ( device )
 
-        model = NN.Sequential ( NN.Linear ( n_features , hidden_dim ) ,
-                                NN.ReLU   ()                         ,
-                                NN.Dropout( dropout_rate )           ,
-                                NN.Linear ( hidden_dim , 1 )         ).to ( device )
+        model = NN.Sequential ( NN.Linear ( nf , hidden_dim ) ,
+                                NN.ReLU   ()                   ,
+                                NN.Dropout( dropout_rate )     ,
+                                NN.Linear ( hidden_dim , 1 )   ).to ( device )
             
         optimizer = Torch.optim.AdamW ( model.parameters() , lr = lr , weight_decay = weight_decay )
         
@@ -1159,7 +1134,7 @@ class ADVAL_TORCH (ADVAL_base) :
                 patience_counter   = 0
             else:
                 patience_counter += 1
-                if patience_counter >= patience:
+                if patience and patience_counter >= patience:
                     break
 
         if best_model_weights is not None:
@@ -1169,7 +1144,8 @@ class ADVAL_TORCH (ADVAL_base) :
         with Torch.no_grad():
             predictions = model ( val_x_tensor ) .cpu().numpy().ravel()
 
-        return predictions, None 
+        return predictions, None
+
 
 # =============================================================================
 ## @class ADVAL_KERAS (Regression)
@@ -1177,14 +1153,13 @@ class ADVAL_KERAS (ADVAL_base) :
     def __init__ ( self             ,
                    nToys    = 100   , **params   ) :
 
-        config =  { 'epochs'                : 100    ,
+        config =  { 'epochs'                :  50    ,
                     'batch_size'            : 256    ,
-                    'lr'                    :   0.01 ,
+                    'learning_rate'         :   0.01 ,
                     'weight_decay'          :   1e-4 , 
                     'early_stopping_rounds' :  15    , 
                     'dropout'               :   0.1  }
 
-        # ======================================================================
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = True     , 
@@ -1192,40 +1167,23 @@ class ADVAL_KERAS (ADVAL_base) :
         
     # =========================================================================
     ## Parameters for strong regularization
-    #  @code
-    #  params = gof.regularization ( params , n_features , n_samples , n_eff ) 
-    #  @endcode
     def regularization ( self       ,
                          params     ,
                          n_features , 
-                         n_samples  ,
-                         n_eff      ) :
-        
+                         n_samples  ) :
         """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples , n_eff ) 
         """
-        
         nf = n_features
         ns = n_samples
         
-        # --- Dynamic batch size scaling with increased Asimov dataset size ---
-        params [ 'batch_size'     ] = max ( int ( 0.02 * ns ) , 256 )
-        
-        # --- L2 kernel regularization matching PyTorch weight_decay to maintain [10⁻³] response magnitude ---
-        params [ 'l2_reg'         ] = 1e-3
-        
-        # --- Shallow architecture capacity: prevent overfitting to sPlot weight fluctuations ---
-        params [ 'hidden_units'   ] = 8 if 1 == nf else 16
-        params [ 'num_layers'     ] = 1
-        
-        params [ 'learning_rate'  ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) )
-        
-        # --- Disable early stopping callback to allow complete gradient convergence ---
-        params [ 'callbacks'      ] = [ ]
+        params [ 'weight_decay'          ] = 1e-3
+        params [ 'hidden_dim'            ] = 8 if 1 == nf else 16
+        params [ 'learning_rate'         ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) ) 
+        params [ 'early_stopping_rounds' ] = 0
 
         return params 
         
-    def work ( self ,
+    def work ( self    ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
         
@@ -1237,53 +1195,34 @@ class ADVAL_KERAS (ADVAL_base) :
 
         params = {}
         params.update ( self.params )
-        epochs = params.pop ( 'epochs' , None ) or 200
-
-        nf = num_features ( X_train )
-        ns = num_samples  ( X_train )
+        
+        nf     = num_features ( X_train )
+        ns     = num_samples  ( X_train )
+        epochs = params.pop ( 'epochs' , None ) or 100
         
         if NN_needs_regularization ( X_train , W_train ) :
-            
-            ## update parameters 
             params.update ( self.regularization ( params , nf , ns ) )
-         
-            # --- Dynamic batch size scaling with increased Asimov dataset size ---
-            params [ 'batch_size'     ] = max ( int ( 0.02 * ns ) , 256 )
-            
-            # --- L2 kernel regularization matching PyTorch weight_decay to maintain [10⁻³] response magnitude ---
-            params [ 'l2_reg'         ] = 1e-3
-            
-            # --- Shallow architecture capacity: prevent overfitting to sPlot weight fluctuations ---
-            params [ 'hidden_units'   ] = 8 if 1 == nf else 16
-            params [ 'num_layers'     ] = 1
-            
-            params [ 'learning_rate'  ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) )
-            
-            # --- Disable early stopping callback to allow complete gradient convergence ---
-            params [ 'callbacks'      ] = [ ]
-            
-            epochs = min ( 30 if 1 == nf else 50 , epochs  )
+            epochs = min ( 30 if 1 == nf else 50 , epochs )
             self.report_regularization ( params , num_features = nf , num_samples = ns , epochs = epochs )
 
-
         n_features   = nf 
-        hidden_dim   = params.get ( 'hidden_dim' , 64 if 15 < n_features else 16 )
-        
-        epochs       = params.get ( 'epochs'               , epochs )
-        batch_size   = params.get ( 'batch_size'           , 256    )
-        patience     = params.get ( 'early_stopping_rounds',  15    )
-        dropout_rate = params.get ( 'dropout'              ,   0.1  )
-        lr           = params.get ( 'lr'                   ,   2e-3 )
-        
-        X_tr_arr = numpy.nan_to_num ( numpy.asarray ( X_train , dtype=numpy.float32 ).reshape(-1, n_features ), nan = 0.0 )
-        Y_tr_arr = numpy.asarray ( Y_train_mod, dtype = numpy.float32 ) . reshape ( -1 , 1 )
-        W_tr_arr = ( numpy.ones_like ( Y_tr_arr ) if W_train_mod is None 
-                     else numpy.asarray( W_train_mod , dtype = numpy.float32 ) . reshape ( -1 , 1 ) )
+        hidden_dim   = params.get ( 'hidden_dim'           , 64 if 15 < n_features else 16 )
+        batch_size   = params.get ( 'batch_size'           , max ( int ( 0.02 * ns ) , 256 ) ) 
 
-        X_va_arr = numpy.nan_to_num ( numpy.asarray ( X_val , dtype = numpy.float32 ) . reshape ( -1 , n_features ), nan = 0.0 )
-        Y_va_arr = numpy.asarray ( Y_val_mod, dtype = numpy.float32 ) . reshape ( -1 , 1 )
-        W_va_arr = ( numpy.ones_like  ( Y_va_arr ) if W_val_mod is None 
-                     else numpy.asarray ( W_val_mod, dtype = numpy.float32 ) . reshape (-1, 1 ) )
+        patience     = params.get ( 'early_stopping_rounds',  15   )
+        dropout_rate = params.get ( 'dropout'              ,   0.1 )
+        lr           = params.get ( 'learning_rate'        , params.get ( 'lr' , 0.01 ) )
+        weight_decay = params.get ( 'weight_decay'         , 1e-4  )
+        
+        X_tr_arr = numpy.nan_to_num ( numpy.asarray ( X_train , dtype = numpy.float32 ).reshape ( -1 , n_features ) , nan = 0.0 )
+        Y_tr_arr = numpy.asarray ( Y_train_mod , dtype = numpy.float32 ).reshape ( -1 , 1 )
+        W_tr_arr = ( numpy.ones_like ( Y_tr_arr ) if W_train_mod is None 
+                     else numpy.asarray ( W_train_mod , dtype = numpy.float32 ).reshape ( -1 , 1 ) )
+
+        X_va_arr = numpy.nan_to_num ( numpy.asarray ( X_val , dtype = numpy.float32 ).reshape ( -1 , n_features ) , nan = 0.0 )
+        Y_va_arr = numpy.asarray ( Y_val_mod , dtype = numpy.float32 ).reshape ( -1 , 1 )
+        W_va_arr = ( numpy.ones_like ( Y_va_arr ) if W_val_mod is None 
+                     else numpy.asarray ( W_val_mod , dtype = numpy.float32 ).reshape ( -1 , 1 ) )
         
         inputs = Keras.Input ( shape = ( n_features , ) )
         x      = Layers.Dense ( hidden_dim , activation = 'relu' )( inputs )
@@ -1293,27 +1232,36 @@ class ADVAL_KERAS (ADVAL_base) :
 
         model = Keras.Model ( inputs = inputs , outputs = outputs )
 
-        optimizer = Keras.optimizers.AdamW ( learning_rate = lr )
-        model.compile ( optimizer        = optimizer,
-                        loss             = Keras.losses.MeanSquaredError(),
+        optimizer = Keras.optimizers.AdamW ( learning_rate = lr , weight_decay = weight_decay )
+        model.compile ( optimizer        = optimizer ,
+                        loss             = Keras.losses.MeanSquaredError() ,
                         weighted_metrics = [] )
+
+        verbose = 0 if self.silent else 1
         
-        early_stopping = Keras.callbacks.EarlyStopping ( monitor              = 'val_loss' ,
-                                                         patience             = patience   ,
-                                                         restore_best_weights = True       ,
-                                                         verbose              = 0          )
+        callbacks = []
+        if patience and 0 < patience:
+            callbacks.append (
+                Keras.callbacks.EarlyStopping ( monitor              = 'val_loss' ,
+                                                 patience             = patience  ,
+                                                 restore_best_weights = True      ,
+                                                 verbose              = verbose   )
+            )
         
         model.fit ( X_tr_arr        ,
                     Y_tr_arr        ,
                     sample_weight   = W_tr_arr.ravel() ,
-                    validation_data = ( X_va_arr, Y_va_arr , W_va_arr.ravel() ),
+                    validation_data = ( X_va_arr , Y_va_arr , W_va_arr.ravel() ) ,
                     epochs          = epochs             ,
                     batch_size      = batch_size         ,
-                    callbacks       = [ early_stopping ] ,
-                    verbose         = 0 )
+                    callbacks       = callbacks          ,
+                    verbose         = verbose            )
 
         predictions = model.predict ( X_va_arr , batch_size = batch_size , verbose = 0 ).ravel()
-        return predictions, None 
+
+        Keras.backend.clear_session()
+        
+        return predictions, None
     
 # =============================================================================
 if '__main__' == __name__ :

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -27,6 +28,7 @@ from   ostap.logger.colorized   import allright
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
+from   ostap.utils.env          import get_env
 from   ostap.logger.symbols     import ( iteration , plus_minus ,
                                          script_p  , sup_eff    , 
                                          triangular_flag as start_symbol , 
@@ -37,6 +39,7 @@ from   ostap.utils.basic        import numcpu
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
+                                         hasPyTorch  , hasKeras   , 
                                          hasHepML    ) 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
@@ -267,29 +270,7 @@ if not os.path.exists ( testdata ) :
     with timing ( "Prepare input data" , logger = logger ) :
         prepare_data ()
 
-has_lightgbm  = hasLightGBM  ()
-if has_lightgbm :  logger.attention ( 'USE LightGBM!'              )
-else            :  logger.warning   ( 'LightGBM is not available!' )
-            
-has_xgboost   = hasXGBoost  ()
-if has_xgboost  :  logger.attention ( 'USE XGBoost!'               )
-else            :  logger.warning   ( 'XGBoost is not available!'  )
 
-has_catboost  = hasCatBoost  ()
-if has_catboost :  logger.attention ( 'USE CatBoost!'              )
-else            :  logger.warning   ( 'CatBoost is not available!' )
-
-has_sklearn   = hasSkLearn  ()
-if has_sklearn  :  logger.attention ( 'USE SkLearn!'              )
-else            :  logger.warning   ( 'SkLearn  is not available!' )
-
-has_hepml     = hasHepML  ()
-if has_hepml    :  logger.attention ( 'USE HepML!'                 )
-else            :  logger.warning   ( 'HepML    is not available!' )
-
-# ==============================================================================
-## Compare datasets using several methods 
-# ==============================================================================
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
@@ -307,49 +288,59 @@ comparators = (
     GnP.Hellinger       ( **cconf ) )
 
 # =========================================================================
-has_lightgbm  = hasLightGBM  ()
-if has_lightgbm :  logger.attention ( 'USE LightGBM!'              )
-else            :  logger.warning   ( 'LightGBM is not available!' )
-            
-has_xgboost   = hasXGBoost  ()
-if has_xgboost  :  logger.attention ( 'USE XGBoost!'               )
-else            :  logger.warning   ( 'XGBoost is not available!'  )
-
-has_catboost  = hasCatBoost  ()
-if has_catboost :  logger.attention ( 'USE CatBoost!'              )
-else            :  logger.warning   ( 'CatBoost is not available!' )
-
-has_sklearn   = hasSkLearn  ()
-if has_sklearn  :  logger.attention ( 'USE SkLearn!'              )
-else            :  logger.warning   ( 'SkLearn  is not available!' )
-
-if has_lightgbm :  
+if hasLightGBM() :
+    logger.info ( 'Use LightGBM      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_LGBM  as CMP 
     comparators += ( CMP ( **cconf ) , ) 
-
-if has_xgboost:  
+    
+if hasXGBoost() :
+    logger.info ( 'Use XGBoost       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_XGB  as CMP
     comparators += ( CMP ( **cconf ) , ) 
 
-if has_catboost:  
+if hasCatBoost () :
+    logger.info ( 'Use CatBoost      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_CATB  as CMP 
     comparators += ( CMP ( **cconf ) , ) 
 
-if False and has_sklearn:
-    
+if hasSkLearn () :
+
+    cconf ['nToys'] = 20 
+
+    logger.info ( 'Use SkLearn/HGBC  for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_HGBC  as CMP1 
     comparators += ( CMP1 ( **cconf ) , )
     
+    logger.info ( 'Use SkLearn/GBC   for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_GBC   as CMP2
     comparators += ( CMP2 ( **cconf ) , ) 
 
+    logger.info ( 'Use SkLearn/RF    for dataset comparison' ) 
+    from ostap.stats.adval        import ADVAL_RF    as CMP3    
+    comparators += ( CMP3 ( **cconf ) , )
+    
+if hasPyTorch () :
+    
+    logger.info ( 'Use PyTorch       for dataset comparison' ) 
+    from ostap.stats.adval        import ADVAL_TORCH  as CMP
+    cconf ['nToys'] = 10 
+    comparators += ( CMP ( **cconf ) , )
+
+if hasKeras () and 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent = True ) : 
+    
+    logger.info ( 'Use Keras         for dataset comparison' ) 
+    from ostap.stats.adval        import ADVAL_KERAS  as CMP
+    cconf [ 'nToys'    ] = 5 
+    cconf [ 'parallel' ] = False 
+    cconf [ 'silent'   ] = False 
+    comparators += ( CMP ( **cconf ) , )
+ 
 comparators = comparators
 # ============================================================================
 ## The table of global comparison statistics 
 header    = ( '#%s' % iteration , '#%s' % sup_eff ) + tuple ( c.method for c in comparators ) 
 glob_stat = [ header ]
 alignment = 'lc' + 'c' * len ( comparators )           
-
 
 # =============================================================================
 ## Read data from DB
@@ -607,8 +598,9 @@ if weighter : weights.append ( weight_name )
 # =============================================================================
 ## (1) GBReweighter by Alex Rogozhnikov from hep_ml 
 # =============================================================================
-if has_hepml : # ============================================================
+if hasHepML () : # ============================================================
     # ========================================================================
+    logger.info ( 'Use HepML    for control reweighting' ) 
     from ostap.tools.reweighters     import GBReweighter   as GBRW 
     rw1 = DataReweighter ( GBRW                        , ## reweighter type 
                            original         = mctree   ,
@@ -623,8 +615,9 @@ if has_hepml : # ============================================================
 # =============================================================================
 ## (2) home-made reweighter based on LightGBM
 # =============================================================================
-if has_lightgbm : # ==========================================================
+if hasLightGBM()  : # =========================================================
     # =========================================================================
+    logger.info ( 'Use LightBGM for control reweighting' ) 
     from ostap.tools.reweighters     import LightGBMDensityReweighter as  LGBM
     rw2 = DataReweighter ( LGBM                        , ## reweighter type 
                            original         = mctree   ,
@@ -639,8 +632,9 @@ if has_lightgbm : # ==========================================================
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-if has_xgboost : # ============================================================
+if hasXGBoost () : # ============================================================
     # =========================================================================
+    logger.info ( 'Use XGBoost  for control reweighting' ) 
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
     rw3 = DataReweighter ( XGB                         , ## reweighter type 
                            original         = mctree   ,
@@ -654,8 +648,9 @@ if has_xgboost : # ============================================================
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
 # =============================================================================
-if has_catboost : # ===========================================================
+if hasCatBoost (): # ==========================================================
     # =========================================================================
+    logger.info ( 'Use CatBoost for control reweighting' ) 
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
     rw3 = DataReweighter ( CATB                        , ## reweighter type 
                            original         = mctree   ,

@@ -487,7 +487,6 @@ printf "%s python version  : %s\n" "${prefix1}" "$(python --version | grep -Eo '
 printf "%s ostap           : %s\n" "${prefix1}" "$(command -v ostap)"
 printf "%s ostap version   : %s\n" "${prefix1}" "$(ostap --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')"
 
-
 export OSTAP_BUILDER
 export OSTAP_SOURCE
 export OSTAP_BUILD

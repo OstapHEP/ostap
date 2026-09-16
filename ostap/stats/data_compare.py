@@ -21,7 +21,7 @@ __all__     = (
 )
 # =============================================================================
 from   collections            import namedtuple 
-from   ostap.core.ostap_types import sequence_types, sized_types 
+from   ostap.core.ostap_types import sequence_types, sized_types, dictlike_types  
 from   ostap.utils.core       import typename 
 from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
 from   ostap.stats.utils      import weight_trivial, check_all 
@@ -50,7 +50,7 @@ ComparisonResult     = namedtuple ( 'ComparisonResult'  ,
                                       'nsigma'     ,
                                       'importance' ,
                                       'table_row'  ) ,
-                                    defaults = ( '<UNKNOWN>' , -1e+9 , -1 , -1 , None , '' ) )
+                                    defaults = ( '<UNKNOWN>' , -1e+9 , -1 , -1 , {} , '' ) )
 # =============================================================================
 ## 1D-histogram comparison result  
 HistoComparisonResult = namedtuple ( 'HistoComparisonResult'  ,
@@ -247,6 +247,39 @@ def data_compare ( comparator   ,
         cc = comparator ,
         
     else : raise TypeError ( "Inconsistent type for `results` and `comparator`"  )
+
+
+    # =====================================================================================
+    for r in rr : # =======================================================================
+        # =================================================================================
+        if r.importance and isinstance ( r.importance , dictlike_types ) :            
+            importance     = r.importance
+            new_importance = {}
+            for key, value in importance.items () :
+                ## add it into new dictionary: 
+                new_importance [ key ] = float ( value )
+                if key.startswith ( 'f' ) :
+                    # =====================================================================
+                    try : # ===============================================================
+                        # =================================================================
+                        index = int ( key [ 1: ] )
+                        if 0 <= index < len ( varlst1 ) :
+                            name = varlst1 [ index ]
+                            ## add proper name into dictionary 
+                            new_importance [ name ] = float ( value )
+                            ## remove old name 
+                            del new_importance [ key ]
+                        # =================================================================
+                    except : # ============================================================
+                        # =================================================================
+                        pass
+            ## replace 
+            r.importance.clear()
+            r.importance.update ( new_importance )
+            
+            
+    
+
     
     ## summary  table 
     if not silent :

@@ -1,3 +1,13 @@
+## New features
+
+  1. replace Wasserstein's distance  with Standartized Wasserstein's distance 
+  
+## Bug fixes
+
+  1. fix an importnt bug in `Adversatial Validation`
+  
+## Backward incompatible
+
 # v3.8.6.6
 
 ## New features

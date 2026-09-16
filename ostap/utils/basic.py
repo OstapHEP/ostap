@@ -32,6 +32,7 @@ __all__     = (
     'NoContext'            , ## empty context manager
     ##
     'numcpu'               , ## number of cores/CPUs
+    'run_parallel'         , ## allow parallel run?  
     ##
     'prntrf'               , ## very specific printer of functions 
     ##
@@ -235,6 +236,17 @@ def numcpu () :
     return max ( 1 , nn  ) 
 
 # =============================================================================
+## number of cores/threads to be used for parallel processing
+#  @code
+#  n_jobs = numjobs ( -1 ) 
+#  @endcode 
+def numjobs ( njobs = -1 ) :
+    """ Number of cores/threads to be used for parallel processing
+    >>> n_jobs = numjobs ( -1 )
+    """
+    if not njobs : return  1 
+    ncpus   = max ( 1 , numcpu () - 1 )
+    return ncpus if njobs < 0 else min ( njobs , ncpus ) 
 
 # =============================================================================
 ## create 'counted' function to know number of function calls
@@ -313,12 +325,16 @@ njobs_kwords = ( 'num_threads'  , 'num_thread'  ,
                  'thread_count' , 'threadcount' )
 # ==============================================================================
 ## get the value of "n_jobs/num_threads/thread_count" parameter 
-def num_jobs ( params , defval = -2 ) :
+def num_jobs ( params , defval = -1 ) :
     """ Get the value of "n_jobs/num_threads/thread_count" parameter
     """
-    nj = params.pop ( njobs_kwords [ 0 ] , defval   )
-    for kw in njobs_kwords[1:] : nj = params.pop ( kw , nj )
-    return nj
+    nj = defval 
+    for kw in njobs_kwords : nj = params.pop ( kw , nj )
+    ## 
+    if not nj : return 1
+    ## 
+    ncpus = max ( 1 , numcpu () - 1 )
+    return ncpus if nj < 0 else min ( nj , ncpus ) 
 
 # ==============================================================================
 ## allow parallel run ? 

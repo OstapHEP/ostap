@@ -76,8 +76,8 @@ def RW_needs_regularization ( original                       ,
     nraw_targ = num_samples ( target   )
     
     # 3. Calculate effective statistics (nEff)
-    neff_orig = nEff ( original , original_weight )
-    neff_targ = nEff ( target   , target_weight   )
+    neff_orig = nEff ( original  , original_weight )
+    neff_targ = nEff ( target    , target_weight   )
     neff      = min  ( neff_orig , neff_targ       )
     
     # 4. Non-linear density threshold (phase space growth)
@@ -142,6 +142,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__mode                = None
         self.__scale_factors       = {}
 
+        ## adjust/redefine number of jobs 
+        params [ 'n_jobs' ] = num_jobs ( params )
+
         ## perform regularization!! 
         if self.needs_regularization ( original        = original        ,
                                        target          = target          ,
@@ -170,7 +173,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         self.__original_ratios             = None
         self.__original_reweighted_weights = None
-            
+
+        
         # =====================================================================
         ## Initialize the base: check input data & print config
         # =====================================================================
@@ -804,7 +808,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         params [ 'learning_rate'     ] = 0.05
         
         params [ 'max_depth'         ] = REG_DEPTH       
-        params [ 'num_leaves'        ] = 31      
+        params [ 'num_leaves'        ] = 2**REG_DEPTH - 1       
         
         # Soft dynamic limits for leaves to allow deep splits in rare tails
         leaf_samples = max ( 2, min ( 30, int ( n_samples  * 0.0001 ) ) )
@@ -1054,7 +1058,7 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         if 'iterations' in config : config [ 'n_estimators' ] = config.pop ( 'iterations' ) 
 
         # Force execution limits to guarantee safety
-        config [ 'thread_count'  ] = 1
+        ## config [ 'thread_count'  ] = 1
         config [ 'boosting_type' ] = config.get ( 'boosting_type' , 'Plain' )
         
         # Delegate execution to BaseDensityReweighter __init__
@@ -1124,7 +1128,7 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         params.update ( self.params )
 
         # Force stability configuration
-        params [ 'thread_count'  ] = 1
+        params [ 'thread_count'  ] = params.pop ( 'n_jobs'        , 1       ) 
         params [ 'boosting_type' ] = params.get ( 'boosting_type' , 'Plain' )
 
         # --- Determine number of iterations
@@ -1141,9 +1145,9 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
 
         fit_kwargs = {}
         if not early_stopping_rounds is None :
-            params [ 'early_stopping_rounds' ] = early_stopping_rounds
-            params [ 'use_best_model'        ] = True
-            fit_kwargs [ 'eval_set'          ] = val_pool
+            params     [ 'early_stopping_rounds' ] = early_stopping_rounds
+            params     [ 'use_best_model'        ] = True
+            fit_kwargs [ 'eval_set'              ] = val_pool
 
         model = CatBoost.CatBoostClassifier ( **params )
 

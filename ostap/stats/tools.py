@@ -46,10 +46,10 @@ def hasLightGBM ( silent = True ) :
     try : # ====================================================================
         # ======================================================================
         import lightgbm
-        if not silent : logger.info ( 'LightGBM version: %s' % lightgbm.__version__ ) 
+        if not silent : logger.info ( 'LightGBM   version: %s' % lightgbm.__version__ ) 
         if Version ( lightgbm.__version__ ) <  Version ( "4.7.0"  ) : return True
         import narwhals
-        if not silent : logger.info ( 'Narwhals version: %s' % narwhals.__version__ ) 
+        if not silent : logger.info ( 'Narwhals   version: %s' % narwhals.__version__ ) 
         return Version ( "2.0" ) <= Version ( narwhals.__version__ )
         # ======================================================================
     except ImportError : # =====================================================
@@ -67,7 +67,7 @@ def hasXGBoost ( silent = True ) :
     try : # ====================================================================
         # ======================================================================
         import xgboost        
-        if not silent : logger.info ( 'XGBoost  version: %s' % xgboost .__version__ )
+        if not silent : logger.info ( 'XGBoost    version: %s' % xgboost .__version__ )
         return Version ( "1.0" ) <= Version ( xgboost.__version__ )
         # ======================================================================
     except ImportError : # =====================================================
@@ -87,7 +87,7 @@ def hasCatBoost ( silent = True ) :
     try : # ====================================================================
         # ======================================================================
         import catboost
-        if not silent : logger.info ( 'CatBoost version: %s' % catboost .__version__ )
+        if not silent : logger.info ( 'CatBoost  version: %s' % catboost .__version__ )
         return True 
         # ======================================================================
     except ImportError : # =====================================================
@@ -109,7 +109,7 @@ def hasSkLearn ( silent = True ) :
         from   sklearn.ensemble import     GradientBoostingClassifier as _GBC        
         from   sklearn.ensemble import         RandomForestClassifier as _RFC
         # ====================================================================
-        if not silent : logger.info ( 'sklearn  version: %s' %  sklearn.__version__ )
+        if not silent : logger.info ( 'sklearn    version: %s' %  sklearn.__version__ )
         ## 
         import warnings
         warnings.filterwarnings ( "ignore", category = UserWarning , module = "sklearn.utils.parallel" )
@@ -125,7 +125,7 @@ def hasSkLearn ( silent = True ) :
 #  Are (Py)Torch library and claffificators available?
 def hasPyTorch ( silent = True ) :
     """ Use PyTorch ?
-    - Are (Py)Torch library and claffificators available?
+    - Are (Py)Torch library and classificators available?
     """
     # ==========================================================================
     from ostap.core.cpu_info import HAS_AVX2
@@ -134,7 +134,7 @@ def hasPyTorch ( silent = True ) :
     try : # ====================================================================
         # ======================================================================
         import torch
-        if not silent : logger.info ( 'PyTorch  version: %s' %    torch .__version__ )
+        if not silent : logger.info ( 'PyTorch    version: %s' %    torch .__version__ )
         return Version ( "2.1.0" ) <= Version ( torch.__version__ )
         # ======================================================================
     except ImportError : # =====================================================
@@ -180,13 +180,13 @@ def hasKeras ( silent = True ) :
     from ostap.core.cpu_info import HAS_AVX2
     if not HAS_AVX2 : return  False 
     # ========================================================================
-    logger.warning ( 'Keras is temporarily(?) disabled!' )
-    return False
+    ## logger.warning ( 'Keras is temporarily(?) disabled!' )
+    ## return False
     # ========================================================================
     try : # ==================================================================
         # ====================================================================
         import keras 
-        if not silent : logger.info ( 'Keras    version: %s' %    keras .__version__ )
+        if not silent : logger.info ( 'Keras      version: %s' %    keras .__version__ )
         return Version ( "3.0" ) <= Version ( keras.__version__ ) 
         # ====================================================================
     except ImportError : # ===================================================
