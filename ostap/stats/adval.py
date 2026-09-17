@@ -38,15 +38,18 @@ __all__     = (
     'ADVAL_KERAS' , 
 )
 # =============================================================================
+from   collections            import defaultdict 
 from   ostap.core.ostap_types import string_types
 from   ostap.utils.core       import typename
 from   ostap.stats.utils      import ( weight_trivial , nEff         , 
                                        num_samples    , num_features , 
                                        check_all      )
 from   ostap.utils.basic      import numcpu, num_jobs, run_parallel 
-from   ostap.stats.gof_np     import GoFnp 
+from   ostap.stats.gof_np     import GoFnp
+from   ostap.stats.counters   import EffCounter
+from   ostap.logger.pretty    import nice_print 
 from   sklearn.metrics        import mean_squared_error
-import ostap.logger.symbols   as     S 
+import ostap.logger.symbols   as     S
 import ROOT, numpy, abc, os   
 # =============================================================================
 # Logging setup 
@@ -70,59 +73,91 @@ method_RF    = S.tree                 if S.show        else 'RF'
 method_TORCH = S.flashlight           if S.flashlight  else 'TORCH'
 method_KERAS = S.postal_horn          if S.postal_horn else 'KERAS'
 # =============================================================================
-## Need strong regularization: BDT-type  
-def BDT_needs_regularization ( X , W = None ) :
-    """ Use strong regularization: BDT-type
-    """
-    nf        = num_features ( X )
-    low_dim   = ( nf <= 3 )
-    if low_dim : return True 
-    
-    neff      = nEff ( X , W )    
-    low_stats = ( neff < 500.0 * nf )
-    
-    return low_stats
-
+## Evaluate whether strong regularization is required for BDT-based models.
+#  Evaluates feature dimension, Kish's effective sample size, and sPlot weight noise.
+#
+#  @param X Array-like feature matrix (n_samples, n_features).
+#  @param W Optional sample weights (supports negative sPlot weights).
+#  @return bool True if strong regularization should be applied, False otherwise.
 # =============================================================================
-## Determine whether strong regularization is required specifically for Neural Networks 
-#  (PyTorch / Keras) when handling weighted or sPlot datasets.
-def NN_needs_regularization ( X , W = None ):
-    """ Determines whether strong regularization is required specifically for Neural Networks 
-    (PyTorch / Keras) when handling weighted or sPlot datasets.
-    
-    Evaluates effective sample size (Kish's formula), weight variance/outliers, 
-    and event density per feature.
-    
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        Input feature matrix.
-    W : array-like or None
-        Sample weights (supports negative sPlot weights).
-        
-    Returns
-    -------
-    bool 
-    Flag indicating if strong regularization should be applied.
+def BDT_needs_regularization ( X , W = None ) :
+    """ Determines whether strong regularization is necessary for tree-based 
+        Adversarial Validation models.
     """
     nf   = num_features ( X )
-    neff = nEff ( X , W )
+    nraw = num_samples  ( X )
+    neff = nEff         ( X , W )
+    
+    # 1. Check weight efficiency (nEff / nRaw)
+    #    Efficiency < 65% indicates significant sPlot negative weight fluctuations
+    eff = neff / float ( nraw ) if 0 < nraw else 0.0
+    if eff < 0.65 : return 'eff<65%'
 
-    low_neff         = ( neff < 1000.0        )
-    if low_neff      : return True
+    # 2. Low dimensionality (<= 3) requires regularization only under limited statistics
+    threshold = 50000.0 
+    if nf <= 3 and neff < threshold :
+        th = nice_print ( threshold )
+        return "nf<=3&neff<%s" % th 
 
-    low_density      = ( neff < 200.0 * nf    )
-    if low_density   : return True 
-    
-    if weight_trivial ( W ) : return False
-    
-    w_arr        = numpy.asarray ( W     , dtype = numpy.float32 )
-    mean_w       = numpy.mean    ( w_arr , dtype = numpy.float64 )
-    w_dispersion = ( numpy.std   ( w_arr , dtype = numpy.float64 ) / mean_w ) if 0.0 < mean_w else 0.0
-    
-    high_dispersion  = ( 2.0  < w_dispersion  )
-    
-    return high_dispersion
+    # 3. Dimensionality-dependent minimum statistical threshold
+    required_stats = 1000.0 * ( nf ** 1.5 )
+    if neff < required_stats :
+        rs = nice_print ( required_stats ) 
+        return "neff<%s" % rs 
+
+    return ''
+
+# =============================================================================
+## Determine whether strong regularization is required specifically for Neural Networks
+#  (PyTorch / Keras) when handling weighted or sPlot datasets.
+#
+#  Neural networks require significantly higher effective statistics and stricter 
+#  bounds on weight dispersion to prevent overfitting on tabular sPlot data.
+#
+#  @param X Array-like feature matrix (n_samples, n_features).
+#  @param W Optional sample weights (supports negative sPlot weights).
+#  @return bool True if strong regularization should be applied, False otherwise.
+# =============================================================================
+def NN_needs_regularization ( X , W = None ):
+    """ Determines whether strong regularization (e.g., dropout, weight decay) 
+        is required specifically for Neural Networks handling weighted datasets.
+    """
+    nf   = num_features ( X )
+    nraw = num_samples  ( X )
+    neff = nEff         ( X , W )
+
+    # 1. Strict absolute statistic threshold for Neural Networks
+    threshold1 = 10000.0 
+    if neff < threshold1 :
+        th1 = nice_print ( threshold1 )
+        return 'neff<%s' % th1 
+
+    # 2. Higher statistical coverage required for low-dimensional spaces to ensure smooth boundaries
+    threshold2 = 100000.0     
+    if nf <= 3 and neff < threshold2 :
+        th2 = nice_print ( threshold2 )
+        return 'nf<=3&neff<%s' % th2 
+
+    # 3. Non-linear event density threshold per feature
+    required_stats = 3000.0 * ( nf ** 1.5 )
+    if neff < required_stats :
+        rs = nice_print ( required_stats )        
+        return 'neff<%s'% rs 
+
+    # 4. Weight efficiency and dispersion checks for non-trivial weights
+    if not weight_trivial ( W ) :
+        
+        eff = neff / float ( nraw ) if 0 < nraw else 0.0
+        if eff < 0.65 : return 'eff<65%'
+
+        w_arr        = numpy.asarray ( W     , dtype = numpy.float32 )
+        mean_w       = numpy.mean    ( w_arr , dtype = numpy.float64 )
+        w_dispersion = ( numpy.std   ( w_arr , dtype = numpy.float64 ) / mean_w ) if 0.0 < mean_w else 0.0
+        
+        # Enforce strict weight dispersion limit (> 1.5) for network convergence stability
+        if w_dispersion > 1.5 : return 'w_dispersion>1.5'
+
+    return '' 
 
 # =============================================================================
 ## convert MSE to t-value 
@@ -181,6 +216,9 @@ class ADVAL_base (GoFnp):
 
         self.__n_splits            = n_splits 
         self.__importance_features = {}
+
+        ## how often the regularization applied?
+        self.__regularized         = defaultdict(int)
         
         GoFnp.__init__ ( self            ,
                          nToys  = nToys  ,
@@ -198,9 +236,14 @@ class ADVAL_base (GoFnp):
         """`config`: Get all configuration parameters"""
         conf = {}
         conf.update ( super().config ) 
-        conf [ 'n_splits' ] = self.n_splits
+        conf [ 'n_splits'    ] = self.n_splits
+        if self.regularized : conf [ 'regularized' ] = self.regularized
         return conf
     
+    @property 
+    def regularized ( self ) :
+        return self.__regularized 
+
     @property 
     def weights_supported ( self ) :
         return True 
@@ -212,13 +255,17 @@ class ADVAL_base (GoFnp):
     @property 
     def importance_features ( self ) :
         return self.__importance_features
-    
+
+    ## prepare the table of importance features 
     def importance_table  ( self ,
                             title  = '' ,
                             prefix = '' ,
-                            style  = '' ) : 
+                            style  = '' ) :
+        """ Prepare the table of importance features
+        """
+        
         rows  = [ ( 'Feature/#' , 'Importance [%]' ) ]
-        rows += [ ( str ( feature ) , '%.1f' % gain ) for feature, gain in self.importance_features.items () ] 
+        rows += [ ( str ( feature ) , '%.2f' % float ( gain ) ) for feature, gain in self.importance_features.items () ] 
         title = title if title else "%s importance" % typename ( self )
         import ostap.logger.table as T
         return T.table ( rows               ,
@@ -227,25 +274,12 @@ class ADVAL_base (GoFnp):
                          alignment = 'cc'   ,  
                          style     = style  )
     
+
     @abc.abstractmethod 
     def work ( self    ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
         return NotImplemented
-
-
-    # =========================================================================
-    ## use strong regularization: BDT-type  
-    def use_strong_regularization ( self , X ) :
-        """ Use strong regularization: BDT-type
-        """
-        ns = num_samples  ( X )
-        nf = num_features ( X )
-        
-        low_dim   = nf <= 3 
-        low_stats = ns <  500 * nf 
-        
-        return low_dim or low_stats
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -352,8 +386,7 @@ class ADVAL_base (GoFnp):
     def report_regularization ( self , params = {} , **kwargs ) :
         """ print regularized paramters in "no-silent" regime
         """
-        return
-    
+        
         if self.silent               : return
         if not params and not kwargs : return
         
@@ -449,7 +482,9 @@ class ADVAL_LGBM (ADVAL_base) :
         num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' ,  10 )
 
-        if BDT_needs_regularization ( X_train , W_train ) :
+        reg_case = BDT_needs_regularization ( X_train , W_train )        
+        if reg_case :
+            self.regularized [ reg_case ] += 1
             
             ## update parameters 
             params.update ( self.regularization ( params , nf , ns ) )
@@ -459,6 +494,7 @@ class ADVAL_LGBM (ADVAL_base) :
             
             ## print regularized parameters in "no-silent" regime
             self.report_regularization ( params                ,
+                                         reg_case              = reg_case              , 
                                          num_features          = nf                    , 
                                          num_samples           = ns                    , 
                                          num_boost_round       = num_boost_round       ,
@@ -566,7 +602,9 @@ class ADVAL_XGB (ADVAL_base) :
         nf = num_features ( X_train )
         ns = num_samples  ( X_train )
         
-        if BDT_needs_regularization ( X_train , W_train ) :
+        reg_case = BDT_needs_regularization ( X_train , W_train )        
+        if reg_case :
+            self.regularized [ reg_case ] += 1
             
             ## update parameters 
             params.update ( self.regularization ( params , nf , ns ) ) 
@@ -576,6 +614,7 @@ class ADVAL_XGB (ADVAL_base) :
 
             ## print regularized parameters in "no-silent" regime
             self.report_regularization ( params                ,
+                                         reg_case              = reg_case              ,                                          
                                          num_features          = nf                    , 
                                          num_samples           = ns                    , 
                                          num_boost_round       = num_boost_round       ,
@@ -693,7 +732,10 @@ class ADVAL_CATB (ADVAL_base) :
         nf =  num_features ( X_train )
         ns =  num_samples  ( X_train )
 
-        if BDT_needs_regularization ( X_train , W_train ) :
+        reg_case = BDT_needs_regularization ( X_train , W_train )
+        if reg_case : 
+
+            self.regularized [ reg_case ] += 1
             
             ## update parameters 
             params.update ( self.regularization ( params , nf , ns ) )
@@ -705,6 +747,7 @@ class ADVAL_CATB (ADVAL_base) :
 
             ## print regularized parameters in "no-silent" regime
             self.report_regularization ( params                ,
+                                         reg_case              = reg_case              ,
                                          num_features          = nf                    , 
                                          num_samples           = ns                    , 
                                          iterations            = iterations            ,
@@ -712,8 +755,8 @@ class ADVAL_CATB (ADVAL_base) :
 
         params [ 'iterations'            ] = iterations
         params [ 'early_stopping_rounds' ] = early_stopping_rounds  
-        params [ 'use_best_model'        ] = True
-                
+        params [ 'use_best_model'        ] = True if early_stopping_rounds else False
+            
         model = CatBoost.CatBoostRegressor ( **params ) 
         model.fit ( train_pool , eval_set = val_pool )
 
@@ -796,7 +839,10 @@ class ADVAL_HGBC (ADVAL_base) :
         params.update ( self.params )
         max_iter = params.pop ( 'max_iter' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         
-        if BDT_needs_regularization ( X_train , W_train ) :
+        reg_case = BDT_needs_regularization ( X_train , W_train )
+        if reg_case : 
+
+            self.regularized [ reg_case ] += 1
             
             ## update parameters 
             params.update ( self.regularization ( params , nf , ns ) )
@@ -805,7 +851,8 @@ class ADVAL_HGBC (ADVAL_base) :
             
             ## print regularized parameters in "no-silent" regime
             self.report_regularization ( params                  ,
-                                         num_features  = nf      , 
+                                         reg_case     = reg_case , 
+                                         num_features = nf       , 
                                          num_samples  = ns       , 
                                          max_iter     = max_iter )
             
@@ -886,7 +933,10 @@ class ADVAL_GBC (ADVAL_base) :
         params.update ( self.params )
         n_estimators = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         
-        if BDT_needs_regularization ( X_train , W_train ) :
+        reg_case = BDT_needs_regularization ( X_train , W_train )
+        if reg_case : 
+
+            self.regularized [ reg_case ] += 1
 
             ## update parameters 
             params.update ( self.regularization ( params , nf , ns ) )
@@ -894,9 +944,10 @@ class ADVAL_GBC (ADVAL_base) :
             n_estimators = min ( 20 if 1 == nf else 50 , n_estimators , DEFAULT_ESTIMATORS )
             
             ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params            ,
-                                         num_features = nf , 
-                                         num_samples  = ns ,
+            self.report_regularization ( params                      ,
+                                         reg_case     = reg_case     ,  
+                                         num_features = nf           , 
+                                         num_samples  = ns           ,
                                          n_estimators = n_estimators )
                                                      
         params [ 'n_estimators' ] = n_estimators
@@ -980,7 +1031,11 @@ class ADVAL_RF (ADVAL_base) :
         nf =  num_features ( X_train )
         ns =  num_samples  ( X_train )
         
-        if BDT_needs_regularization ( X_train , W_train ) :
+        reg_case = BDT_needs_regularization ( X_train , W_train )
+        if reg_case : 
+
+            self.regularized [ reg_case ] += 1
+
             
             ## update parameters 
             params.update ( self.regularization ( params , nf , ns ) )
@@ -988,9 +1043,10 @@ class ADVAL_RF (ADVAL_base) :
             n_estimators = min ( 20 if 1 == nf else 50 , n_estimators , MAX_REGULARIZED_ESTIMATORS ) 
                                  
             ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params            ,
-                                         num_features = nf , 
-                                         num_samples  = ns ,
+            self.report_regularization ( params                      ,
+                                         reg_case     = reg_case     ,  
+                                         num_features = nf           , 
+                                         num_samples  = ns           ,
                                          n_estimators = n_estimators )
 
             
@@ -1061,10 +1117,17 @@ class ADVAL_TORCH (ADVAL_base) :
         nf = num_features ( X_train )
         ns = num_samples  ( X_train )
         
-        if NN_needs_regularization ( X_train , W_train ) :
+        reg_case = NN_needs_regularization ( X_train , W_train )
+        if reg_case : 
+            self.regularized [ reg_case ] += 1
+            
             params.update ( self.regularization ( params , nf , ns ) )
             epochs = min ( 30 if 1 == nf else 50 , epochs ) 
-            self.report_regularization ( params , num_features = nf , num_samples = ns , epochs = epochs )
+            self.report_regularization ( params       ,
+                                         reg_case     = reg_case ,         
+                                         num_features = nf       ,
+                                         num_samples  = ns       ,
+                                         epochs       = epochs   )
             
         batch_size   = params.get ( 'batch_size'            , 256  )
         lr           = params.get ( 'learning_rate'         , params.get ( 'lr' , 1e-3 ) )
@@ -1175,7 +1238,8 @@ class ADVAL_KERAS (ADVAL_base) :
         """
         nf = n_features
         ns = n_samples
-        
+
+        params [ 'batch_size'            ] = max ( int ( 0.02 * ns ) , 256 )                
         params [ 'weight_decay'          ] = 1e-3
         params [ 'hidden_dim'            ] = 8 if 1 == nf else 16
         params [ 'learning_rate'         ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) ) 
@@ -1200,10 +1264,16 @@ class ADVAL_KERAS (ADVAL_base) :
         ns     = num_samples  ( X_train )
         epochs = params.pop ( 'epochs' , None ) or 100
         
-        if NN_needs_regularization ( X_train , W_train ) :
+        reg_case = NN_needs_regularization ( X_train , W_train )
+        if reg_case : 
+            self.regularized [ reg_case ] += 1
             params.update ( self.regularization ( params , nf , ns ) )
             epochs = min ( 30 if 1 == nf else 50 , epochs )
-            self.report_regularization ( params , num_features = nf , num_samples = ns , epochs = epochs )
+            self.report_regularization ( params       ,
+                                         reg_case     = reg_case ,                                                  
+                                         num_features = nf       ,
+                                         num_samples  = ns       ,
+                                         epochs       = epochs   )
 
         n_features   = nf 
         hidden_dim   = params.get ( 'hidden_dim'           , 64 if 15 < n_features else 16 )

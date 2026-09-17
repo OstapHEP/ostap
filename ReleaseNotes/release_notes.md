@@ -1,6 +1,7 @@
 ## New features
 
   1. replace Wasserstein's distance  with Standartized Wasserstein's distance 
+  1. add `prescale` & `prescale2` arguments to `data_compare`
   
 ## Bug fixes
 

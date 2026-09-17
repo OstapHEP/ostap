@@ -326,7 +326,7 @@ if hasPyTorch () :
     cconf ['nToys'] = 10 
     comparators += ( CMP ( **cconf ) , )
 
-if hasKeras () and 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent = True ) : 
+if False and hasKeras () and 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent = True ) : 
     
     logger.info ( 'Use Keras         for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_KERAS  as CMP

@@ -60,38 +60,40 @@ def RW_needs_regularization ( original                       ,
         Evaluates the limiting effective statistics between original and target samples,
         phase space dimensionality, and background subtraction weight fluctuations.
     """
-    check_all ( data1   = original                  ,
-                data2   = target                    ,
-                weight1 = original_weight           ,
-                weight2 = target_weight             ,
-                where   = "RW_needs_regularization" )   
 
     nf = num_features ( original )
     
-    # 1. Low dimensionality (<= 4 features) ALWAYS needs strong regularization
-    if nf <= 4 : return True 
-    
-    # 2. Raw sample sizes (nRaw)
+    # 1. Raw sample sizes (nRaw)
     nraw_orig = num_samples ( original )
     nraw_targ = num_samples ( target   )
     
-    # 3. Calculate effective statistics (nEff)
+    # 2. Calculate effective statistics (nEff)
     neff_orig = nEff ( original  , original_weight )
     neff_targ = nEff ( target    , target_weight   )
     neff      = min  ( neff_orig , neff_targ       )
     
-    # 4. Non-linear density threshold (phase space growth)
-    required_stats = 1500.0 * ( nf ** 1.8 )
-    if neff < required_stats : return True
-    
-    # 5. Check weight efficiency ratios (nEff / nRaw)
+    # 3. Check weight efficiency ratios (nEff / nRaw)
     #    An efficiency below 65% corresponds to >10% negative sPlot weight noise or high weight variance
     eff_orig = neff_orig / float ( nraw_orig ) if 0 < nraw_orig else 0.0
     eff_targ = neff_targ / float ( nraw_targ ) if 0 < nraw_targ else 0.0
     
-    if eff_orig < 0.65 or eff_targ < 0.65 : return True
+    if eff_orig < 0.65 : return 'eff_orig<65%'
+    if eff_targ < 0.65 : return 'eff_targ<65%'
 
-    return False
+    # 4. Low dimensionality (<= 4 features) needs regularization ONLY under limited statistics
+    #    Prevents coarse/staircase BDT density steps when neff is small (< 50k events)
+    threshold = 50000.0 
+    if nf <= 4 and neff < threshold :
+        th = nice_print ( threshold  ) 
+        return 'nf<=4&neff<%s' % th  
+    
+    # 5. Non-linear density threshold for multidimensional phase space growth
+    required_stats = 1500.0 * ( nf ** 1.8 )
+    if neff < required_stats :
+        rs = nice_print ( required_stats ) 
+        return 'neff<%s' % rs 
+
+    return ''
 
 # =============================================================================
 ## @class DensityReweighter
@@ -128,7 +130,13 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             raise TypeError ( "Invalid `clip_threshold' type %s" % typename( clip_threshold ) )
         if not 0 < clip_threshold :
             raise ValueError ( "Invalid `clip_threshold' value %s" % clip_threshold )
-
+        
+        check_all ( data1   = original          ,
+                    data2   = target            ,
+                    weight1 = original_weight   ,
+                    weight2 = target_weight     ,
+                    where   = typename ( self ) )   
+        
         self.__progress       = True if progress else False 
         self.__clip_threshold = float ( clip_threshold )
         self.__n_splits       = n_splits
@@ -146,10 +154,12 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         params [ 'n_jobs' ] = num_jobs ( params )
 
         ## perform regularization!! 
-        if self.needs_regularization ( original        = original        ,
-                                       target          = target          ,
-                                       original_weight = original_weight ,
-                                       target_weight   = target_weight   ) :
+        reg_case = self.needs_regularization ( original        = original        ,
+                                               target          = target          ,
+                                               original_weight = original_weight ,
+                                               target_weight   = target_weight   ) 
+        
+        if reg_case :
             
             n_features = num_features ( original )
             neff_orig  = nEff ( original  , original_weight )
@@ -167,8 +177,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                    header    = ( 'Parameter' , 'type' , 'value' ) ,
                                    alignment = 'rcw'  , 
                                    prefix    = '# '   ,
-                                   title     = title  )                
-            logger.info ( "%s is applied:\n%s" % ( title , table ) )
+                                   title     = title  )
+            
+            logger.info ( "%s is applied, case %s:\n%s" % ( title , reg_case , table ) )
             
 
         self.__original_ratios             = None
@@ -285,7 +296,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                          target          = target          ,
                                          original_weight = original_weight ,
                                          target_weight   = target_weight   )
-    
+            
     # =========================================================================
     # Public Read-Only Properties
     # =========================================================================
@@ -486,27 +497,15 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             self.__target_weights_info = { "W_pos": w_pos_sum, "W_neg": w_neg_sum }
             w_total                    = w_pos_sum + w_neg_sum
 
-            r_pos_pos = self.__fit_eval_stream(
-                "pos_pos", X_orig_pos, w_orig_pos, X_targ_pos, w_targ_pos
-            )
-            r_pos_neg = self.__fit_eval_stream(
-                "pos_neg", X_orig_pos, w_orig_pos, X_targ_neg, w_targ_neg
-            )
-            r_neg_pos = self.__fit_eval_stream(
-                "neg_pos", X_orig_neg, w_orig_neg, X_targ_pos, w_targ_pos
-            )
-            r_neg_neg = self.__fit_eval_stream(
-                "neg_neg", X_orig_neg, w_orig_neg, X_targ_neg, w_targ_neg
-            )
+            r_pos_pos = self.__fit_eval_stream ( "pos_pos", X_orig_pos, w_orig_pos, X_targ_pos, w_targ_pos )
+            r_pos_neg = self.__fit_eval_stream ( "pos_neg", X_orig_pos, w_orig_pos, X_targ_neg, w_targ_neg )
+            r_neg_pos = self.__fit_eval_stream ( "neg_pos", X_orig_neg, w_orig_neg, X_targ_pos, w_targ_pos )
+            r_neg_neg = self.__fit_eval_stream ( "neg_neg", X_orig_neg, w_orig_neg, X_targ_neg, w_targ_neg )
 
             ratios_valid = numpy.zeros ( len ( X_orig_valid ) , dtype = numpy.float32 )
             denom                         = w_total + numpy.float32( 1e-12 )
-            ratios_valid[ mask_orig_pos ] = (
-                r_pos_pos * w_pos_sum - r_pos_neg * w_neg_sum
-            ) / denom
-            ratios_valid[ mask_orig_neg ] = (
-                r_neg_pos * w_pos_sum - r_neg_neg * w_neg_sum
-            ) / denom
+            ratios_valid[ mask_orig_pos ] = ( r_pos_pos * w_pos_sum - r_pos_neg * w_neg_sum ) / denom
+            ratios_valid[ mask_orig_neg ] = ( r_neg_pos * w_pos_sum - r_neg_neg * w_neg_sum ) / denom
 
         # 3. Clip, normalize, and construct final arrays
         ratios_valid_norm = self.__normalize_and_clip ( ratios_valid, w_orig_valid )
@@ -764,7 +763,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             'n_estimators'          : DEFAULT_ESTIMATORS  , ## Default 400 trees budget
             'learning_rate'         : 0.03                , ## Smooth updates for KDE-like density ratio
             'max_depth'             : MAX_DEPTH           , ## Default depth for rich phase space
-            'max_bin'               : 1024                , ## fine binings 
+            'max_bin'               : 2048                , ## fine binings 
             'num_leaves'            : 15                  ,
             'min_child_samples'     : 30                  ,
             'min_child_weight'      : 1e-3                ,
@@ -1176,7 +1175,7 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
 class GBReweighter(Reweighter) :
     """ Helper class for reweighting using `GBReweighter` from hep_ml by Alex Rogozhnikov
     - see hep_ml.reweight.GBReweighter
-        """
+    """
     def __init__ ( self                   , * , 
                    original               ,
                    target                 ,
@@ -1206,11 +1205,19 @@ class GBReweighter(Reweighter) :
         }
         
         config.update ( params ) 
+
+        check_all ( data1   = original          ,
+                    data2   = target            ,
+                    weight1 = original_weight   ,
+                    weight2 = target_weight     ,
+                    where   = typename ( self ) )   
         
-        if self.needs_regularization ( original        = original        ,
-                                       target          = target          ,
-                                       original_weight = original_weight ,
-                                       target_weight   = target_weight   ) :
+        reg_case = self.needs_regularization ( original        = original        ,
+                                               target          = target          ,
+                                               original_weight = original_weight ,
+                                               target_weight   = target_weight   )
+
+        if reg_case :
             
             n_features = num_features ( original )
             
@@ -1225,8 +1232,9 @@ class GBReweighter(Reweighter) :
                                    header    = ( 'Parameter' , 'type' , 'value' ) ,
                                    alignment = 'rcw'  , 
                                    prefix    = '# '   ,
-                                   title     = title  )                
-            logger.info ( "%s is applied:\n%s" % ( title , table ) )
+                                   title     = title  )
+            
+            logger.info ( "%s is applied, case %s:\n%s" % ( title , reg_case , table ) )
 
         # =====================================================================
         ## Initialize the base: check input data & print config 
