@@ -652,15 +652,32 @@ if hasCatBoost (): # ==========================================================
     # =========================================================================
     logger.info ( 'Use CatBoost for control reweighting' ) 
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
-    rw3 = DataReweighter ( CATB                        , ## reweighter type 
+    rw4 = DataReweighter ( CATB                        , ## reweighter type 
                            original         = mctree   ,
                            target           = datatree ,
                            target_variables = 'x,y,z'  ) 
     
     weight_CATB = 'weight_CATB'
     with timing ( "CatBoost reweight" , logger = logger ) :    
-        rw3.reweight ( mctree , name = weight_CATB ) 
+        rw4.reweight ( mctree , name = weight_CATB ) 
         weights.append ( weight_CATB )
+
+# =============================================================================
+## (5) home-made reweighter based on PyTorch
+# =============================================================================
+if hasPyTorch(): # ============================================================
+    # =========================================================================
+    logger.info ( 'Use PyTorch  for control reweighting' ) 
+    from ostap.tools.reweighters     import PyTorchDensityReweighter   as TORCH
+    rw5 = DataReweighter ( TORCH                       , ## reweighter type 
+                           original         = mctree   ,
+                           target           = datatree ,
+                           target_variables = 'x,y,z'  ) 
+    
+    weight_TORCH = 'weight_TORCH'
+    with timing ( "PyTorch  reweight" , logger = logger ) :    
+        rw5.reweight ( mctree , name = weight_TORCH ) 
+        weights.append ( weight_TORCH )
 
 # ============================================================================
 ## Compare the quality of all reweighters 

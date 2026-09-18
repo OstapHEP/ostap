@@ -48,7 +48,7 @@ from   ostap.utils.basic      import numcpu, num_jobs, run_parallel
 from   ostap.stats.gof_np     import GoFnp
 from   ostap.stats.counters   import EffCounter
 from   ostap.logger.pretty    import nice_print 
-from   sklearn.metrics        import mean_squared_error
+from   sklearn.metrics        import mean_squared_error, r2_score 
 import ostap.logger.symbols   as     S
 import ROOT, numpy, abc, os   
 # =============================================================================
@@ -64,14 +64,14 @@ DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
 MAX_DEPTH                  =   5
 # =============================================================================
-method_LGBM  = S.light_bulb           if S.light_bulb  else 'LightGBM'
-method_XGB   = S.rocket               if S.rocket      else 'XGBoost'
-method_CATB  = S.cat_face             if S.cat_face    else 'CatBoost'
-method_HGBC  = S.proportion + S.nabla if S.show        else 'HGBC'
-method_GBC   = S.nabla                if S.show        else 'GBC'
-method_RF    = S.tree                 if S.show        else 'RF'
-method_TORCH = S.flashlight           if S.flashlight  else 'TORCH'
-method_KERAS = S.postal_horn          if S.postal_horn else 'KERAS'
+method_LGBM  = 'AdVal/%s' % ( S.light_bulb           if S.light_bulb  else 'LightGBM' ) 
+method_XGB   = 'AdVal/%s' % ( S.rocket               if S.rocket      else 'XGBoost'  ) 
+method_CATB  = 'AdVal/%s' % ( S.cat_face             if S.cat_face    else 'CatBoost' ) 
+method_HGBC  = 'AdVal/%s' % ( S.proportion + S.nabla if S.show        else 'HGBC'     ) 
+method_GBC   = 'AdVal/%s' % ( S.nabla                if S.show        else 'GBC'      )
+method_RF    = 'AdVal/%s' % ( S.tree                 if S.show        else 'RF'       ) 
+method_TORCH = 'AdVal/%s' % ( S.flashlight           if S.flashlight  else 'TORCH'    ) 
+method_KERAS = 'AdVal/%s' % ( S.postal_horn          if S.postal_horn else 'KERAS'    ) 
 # =============================================================================
 ## Evaluate whether strong regularization is required for BDT-based models.
 #  Evaluates feature dimension, Kish's effective sample size, and sPlot weight noise.
@@ -88,6 +88,11 @@ def BDT_needs_regularization ( X , W = None ) :
     nraw = num_samples  ( X )
     neff = nEff         ( X , W )
     
+    # Since W is class-balanced (sumw1 == sumw2), this global nEff 
+    # mathematically equals the two-sample harmonic effective size:
+    # 4 * (N_eff1 * N_eff2) / (N_eff1 + N_eff2).
+    # It correctly bottlenecks capacity by the weaker sample.
+    # 
     # 1. Check weight efficiency (nEff / nRaw)
     #    Efficiency < 65% indicates significant sPlot negative weight fluctuations
     eff = neff / float ( nraw ) if 0 < nraw else 0.0
@@ -219,7 +224,7 @@ class ADVAL_base (GoFnp):
 
         ## how often the regularization applied?
         self.__regularized         = defaultdict(int)
-        
+
         GoFnp.__init__ ( self            ,
                          nToys  = nToys  ,
                          method = method , **params )
@@ -237,7 +242,7 @@ class ADVAL_base (GoFnp):
         conf = {}
         conf.update ( super().config ) 
         conf [ 'n_splits'    ] = self.n_splits
-        if self.regularized : conf [ 'regularized' ] = self.regularized
+        if self.regularized  : conf [ 'regularized' ] = self.regularized
         return conf
     
     @property 
@@ -250,7 +255,7 @@ class ADVAL_base (GoFnp):
 
     @property 
     def two_samples ( self ) :
-        return True 
+        return True
 
     @property 
     def importance_features ( self ) :
@@ -382,7 +387,7 @@ class ADVAL_base (GoFnp):
         return tvalue_from_MSE ( mse_score )
 
     # ===================================================================================
-    ## print regularized paramters in "no-silent" regime
+    ## print regularized parameters in "no-silent" regime
     def report_regularization ( self , params = {} , **kwargs ) :
         """ print regularized paramters in "no-silent" regime
         """
@@ -428,7 +433,7 @@ class ADVAL_LGBM (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/%s" % method_LGBM , **config   ) 
+                              method    = method_LGBM , **config   ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -545,7 +550,7 @@ class ADVAL_XGB (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/%s" % method_XGB , **config   ) 
+                              method    = method_XGB , **config   ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -670,7 +675,7 @@ class ADVAL_CATB (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/%s" % method_CATB , **config   ) 
+                              method    = method_CATB , **config   ) 
 
         ## 
         if 'n_jobs' in self.params :
@@ -787,7 +792,7 @@ class ADVAL_HGBC (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/%s" % method_HGBC , **config   ) 
+                              method    = method_HGBC , **config   ) 
 
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
@@ -885,7 +890,7 @@ class ADVAL_GBC (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
-                              method    = "ADVAL/%s" % method_GBC , **config   ) 
+                              method    = method_GBC , **config   ) 
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
@@ -981,7 +986,7 @@ class ADVAL_RF (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,                              
-                              method    = "ADVAL/%s" % method_RF, **config   ) 
+                              method    = method_RF, **config   ) 
         
     # =========================================================================
     ## Parameters for strong regularization
@@ -1078,7 +1083,7 @@ class ADVAL_TORCH (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = True     , 
-                              method    = "ADVAL/%s" % method_TORCH, **config   ) 
+                              method    = method_TORCH, **config   ) 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -1226,7 +1231,7 @@ class ADVAL_KERAS (ADVAL_base) :
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = True     , 
-                              method    = "ADVAL/%s" % method_KERAS, **config   ) 
+                              method    = method_KERAS, **config   ) 
         
     # =========================================================================
     ## Parameters for strong regularization

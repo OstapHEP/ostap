@@ -24,6 +24,7 @@ __all__     = (
     'check_all'           , ## check ALL
     'nEff'                , ## Compute effective sample size (Kish's design effect formula)
     'np2vct'              , ## numpy arrays into SVectorWithError
+    'eff_size'            , ## effective size of two samples 
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
@@ -70,6 +71,20 @@ def nEff ( X , W = None ) :
     
     return ( sum_w** 2 ) / sum_w2 if 0 < sum_w2 else float ( ns )
 
+# =============================================================================
+## Compute the effective size of two samples
+#  \f$ N = \frac{N^{eff}_1N^{eff}_2}{N^{eff}_1+N^{eff}_2}\f$
+def eff_size ( data1   , 
+               data2   , 
+               weight1 = None ,
+               weigth2 = None ) :
+    """ Compute the effective size of two samples
+    N = Neff_1 * Neff_2 / ( Neff_1 + Neff_2 )
+    """
+    n1 = nEff ( data1 , weight1 )
+    n2 = nEff ( data2 , weight2 )
+    return n1 * n2 / ( n1 + n2 ) 
+    
 # =============================================================================
 ## Check if weights array has a valid 1D/column vector shape
 # - Supports NumPy arrays, lists, tuples, and custom containers.

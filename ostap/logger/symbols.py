@@ -210,6 +210,7 @@ __all__     = (
     'weight_lifter'       , ## 🏋️  (wide)
     'weight_scale'        , ## ⚖️  (wide)
     'weierstrass_p'       , ##  ℘
+    'wood'                , ## 🪵
     'wrench'              , ## 🔧  (wide)
     ## 
     'T2'                  , ## 𝒯²  
@@ -535,6 +536,7 @@ cat_face        = '🐱 ' if show else ''
 rocket          = '🚀 ' if show else ''
 flashlight      = '🔦 ' if show else '' 
 brickwall       = '🧱 ' if show else '' 
+wood            = '🪵 ' if show else '' 
 
 ## Hotelling T2 
 T2              = '𝒯 ²' if show else 'T2'

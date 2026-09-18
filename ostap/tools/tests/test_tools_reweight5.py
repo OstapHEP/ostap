@@ -26,11 +26,13 @@ from   ostap.logger.colorized   import allright
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.logger.symbols     import script_p, script_w 
 from   ostap.utils.memory       import memory_usage, delta_ram
-from   ostap.utils.basic        import numcpu 
+from   ostap.utils.basic        import numcpu
+from   ostap.logger.pretty      import nice_print
+from   ostap.stats.utils        import nEff 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
-                                         hasHepML    ) 
+                                         hasPyTorch  , hasHepML   ) 
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
 import ostap.parallel.kisa
@@ -69,7 +71,7 @@ def make_datasets ( n_samples = 5000 ,
         
     if n_dim > 2 :
         target [ : , 2 ] = target [ : , 2 ] - 0.2 * target [ : , 0 ]
-        
+
     return target , original
 
 
@@ -129,35 +131,14 @@ def make_datasets2 ( n_samples = 5000 ,
     else :
         target = target_filtered
         
-    # Add a small uniform background component (3%) to eliminate exact zero-density pockets
-    n_bg = int ( 0.03 * len ( target ) )
+    # Add a small uniform background component (50%) to eliminate exact zero-density pockets
+    n_bg = int ( 0.50 * len ( target ) )
     if n_bg > 0 and len ( target ) > n_bg :
         bg_data = numpy.random.uniform ( low = low_bound , high = high_bound , size = ( n_bg , n_dim ) )
         target [ : n_bg ] = bg_data
         
     return target , original
 
-
-# =========================================================================
-has_lightgbm  = hasLightGBM  ()
-if has_lightgbm :  logger.attention ( 'USE LightGBM!'              )
-else            :  logger.warning   ( 'LightGBM is not available!' )
-            
-has_xgboost   = hasXGBoost  ()
-if has_xgboost  :  logger.attention ( 'USE XGBoost!'               )
-else            :  logger.warning   ( 'XGBoost is not available!'  )
-
-has_catboost  = hasCatBoost  ()
-if has_catboost :  logger.attention ( 'USE CatBoost!'              )
-else            :  logger.warning   ( 'CatBoost is not available!' )
-
-has_sklearn   = hasSkLearn  ()
-if has_sklearn  :  logger.attention ( 'USE SkLearn!'              )
-else            :  logger.warning   ( 'SkLearn  is not available!' )
-
-has_hepml     = hasHepML  ()
-if has_hepml    :  logger.attention ( 'USE HepML!'                 )
-else            :  logger.warning   ( 'HepML    is not available!' )
 
 # ==============================================================================
 ## Compare datasets using several methods 
@@ -171,19 +152,19 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR2 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR3 ( parallel = True , nToys = 100 ) ) 
 
-if has_lightgbm :  
+if hasLightGBM () :
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
     comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) , ) 
 
-if has_xgboost :  
+if hasXGBoost  () :  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) , ) 
 
-if has_catboost:  
+if hasCatBoost () :  
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
     comparators += ( COMPARATOR7 ( parallel = True , nToys = 100 ) , ) 
 
-if False and has_sklearn:    
+if False and hasSkLearn (): 
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
     comparators += ( COMPARATOR8 ( parallel = True , nToys = 100 ) , )
     
@@ -192,33 +173,38 @@ if False and has_sklearn:
 
 
 # ============================
-def run_reweight (  n_dim     = 3     ,
-                    n_samples = 10000 ) : 
+def run_reweight ( n_dim     = 3     ,
+                   n_samples = 10000 ) : 
     
     ## generate samples 
     target , original = make_datasets ( n_dim = n_dim , n_samples = n_samples) 
     
     reweighters = [ None ]
     
-    if has_hepml :         
+    if hasHepML    () :         
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw1 = GBRW ( target = target , original = original )
         reweighters.append ( rw1 )
         
-    if has_lightgbm : 
+    if hasLightGBM () : 
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         rw2 = LGBM ( target = target , original = original )
         reweighters.append ( rw2 )
 
-    if has_xgboost : 
+    if hasXGBoost  () : 
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         rw3 = XGB  ( target = target , original = original )
         reweighters.append ( rw3 )
 
-    if has_catboost : 
+    if hasCatBoost () : 
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
         rw4 = CATB ( target = target , original = original )
         reweighters.append ( rw4 )
+        
+    if hasPyTorch () : 
+        from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
+        rw5 = TORCH ( target = target , original = original , n_splits = 1 )
+        reweighters.append ( rw5 )
 
     header = []
     rows   = []     
@@ -236,18 +222,19 @@ def run_reweight (  n_dim     = 3     ,
                    
         for c in comparators :
             
-            tv , pv = c.pvalue ( data1 = target            ,
-                                 data2 = original          , 
+            tv , pv = c.pvalue ( data1   = target          ,
+                                 data2   = original        , 
                                  weight2 = original_weight ) 
             
             header , row = c.the_row ()
 
-            rw_type = '' if rw is None else typename ( rw  ) 
-            row     = ( rw_type , c.method ) + tuple ( row ) + ( wmin , wmax )             
+            neff    = nEff ( original , original_weight ) 
+            rw_type = '' if rw is None else rw.method            
+            neff    = nice_print ( neff , precision = 3 ) 
+            row     = ( rw_type , c.method , neff ) + tuple ( row ) + ( wmin , wmax )             
             rows.append ( row )
-            
-            
-    header =  ( 'Reweighter' , 'Comparator' ) + header + ( 'w-min' , 'w-max' ) 
+                        
+    header =  ( 'Reweighter' , 'Comparator' , '#eff' ) + header + ( 'w-min' , 'w-max' ) 
     rows   = [ header ] + rows 
     title = 'Test results : %s-values [%%]' % script_p
     table = T.table ( rows , title = title , prefix = '# ' )
@@ -256,7 +243,7 @@ def run_reweight (  n_dim     = 3     ,
 # =============================================================================
 if '__main__' == __name__ :
 
-    run_reweight ( 3 , 5000 ) 
+    run_reweight ( 2 , 3000 ) 
     
 # =============================================================================
 
