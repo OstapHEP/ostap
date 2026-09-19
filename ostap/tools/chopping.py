@@ -105,9 +105,9 @@ from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.root_utils    import ImplicitMT 
 from   ostap.utils.timing        import timing 
+from   ostap.utils.basic         import numjobs 
 import ostap.trees.trees 
 import ostap.trees.cuts
-import ostap.utils.utils         as     Utils 
 import ROOT, os, math, shutil, tarfile  
 # =============================================================================
 from ostap.logger.logger      import getLogger
@@ -295,8 +295,9 @@ class Trainer(object) :
                 self.logger.attention  ("Disable parallel chopping due to old `dill` version ")
                 self.__parallel = False
                 
-        self.__parallel_conf   = {}
-        self.__parallel_conf.update ( parallel_conf )
+        self.__parallel_conf = {}
+        self.__parallel_conf .update ( parallel_conf )
+        self.__parallel_conf [ 'ncpus' ] = numjobs ( self.__parallel_conf.get ( 'ncpus' , -1 ) ) 
         
         assert  self.__chop_signal or self.__chop_background, "Neither signal nor background chopping"         
         self.__category  = category 

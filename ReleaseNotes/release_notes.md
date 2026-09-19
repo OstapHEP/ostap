@@ -1,3 +1,11 @@
+## New features
+
+  1. `chopping`: make use of the soft limit for ncpus
+
+## Bug fixes
+
+## Backward incompatible
+
 # v3.8.6.8
 
 ## New features
