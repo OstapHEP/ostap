@@ -615,7 +615,7 @@ if hasHepML () : # ============================================================
 # =============================================================================
 ## (2) home-made reweighter based on LightGBM
 # =============================================================================
-if hasLightGBM()  : # =========================================================
+if False and hasLightGBM()  : # =========================================================
     # =========================================================================
     logger.info ( 'Use LightBGM for control reweighting' ) 
     from ostap.tools.reweighters     import LightGBMDensityReweighter as  LGBM
@@ -632,7 +632,7 @@ if hasLightGBM()  : # =========================================================
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-if hasXGBoost () : # ============================================================
+if False and hasXGBoost () : # ============================================================
     # =========================================================================
     logger.info ( 'Use XGBoost  for control reweighting' ) 
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
@@ -648,7 +648,7 @@ if hasXGBoost () : # ===========================================================
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
 # =============================================================================
-if hasCatBoost (): # ==========================================================
+if False and hasCatBoost (): # ==========================================================
     # =========================================================================
     logger.info ( 'Use CatBoost for control reweighting' ) 
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
@@ -665,7 +665,7 @@ if hasCatBoost (): # ==========================================================
 # =============================================================================
 ## (5) home-made reweighter based on PyTorch
 # =============================================================================
-if hasPyTorch(): # ============================================================
+if False and hasPyTorch(): # ============================================================
     # =========================================================================
     logger.info ( 'Use PyTorch  for control reweighting' ) 
     from ostap.tools.reweighters     import PyTorchDensityReweighter   as TORCH
@@ -678,6 +678,25 @@ if hasPyTorch(): # ============================================================
     with timing ( "PyTorch  reweight" , logger = logger ) :    
         rw5.reweight ( mctree , name = weight_TORCH ) 
         weights.append ( weight_TORCH )
+
+# =============================================================================
+## (6) home-made reweighter based on Logistic Regression 
+# =============================================================================
+if hasSkLearn : # =============================================================
+    # =========================================================================
+    logger.info ( 'Use LogRegression for control reweighting' ) 
+    from ostap.tools.reweighters     import LogRegressionDensityReweighter   as LOGREG
+    
+    rw6 = DataReweighter ( LOGREG                      , ## reweighter type 
+                           original         = mctree   ,
+                           target           = datatree ,
+                           polynomials      = 4        , 
+                           target_variables = 'x,y,z'  ) 
+    
+    weight_LOGREG = 'weight_LOGREG'
+    with timing ( "LogRegression reweight" , logger = logger ) :    
+        rw6.reweight ( mctree , name = weight_LOGREG) 
+        weights.append ( weight_LOGREG )
 
 # ============================================================================
 ## Compare the quality of all reweighters 

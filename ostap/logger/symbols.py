@@ -153,7 +153,8 @@ __all__     = (
     'ram'                 , ## 🐏  (wide)
     'rangle'              , ## 〉
     'rms_symbol'          , ## σ
-    'rocket'              , ## 🚀 
+    'rocket'              , ## 🚀
+    'ruler'               , ## 📏
     'runner'              , ## 🏃  (wide)
     'same'                , ## ≡
     'scissors'            , ## ✂️
@@ -537,6 +538,7 @@ rocket          = '🚀 ' if show else ''
 flashlight      = '🔦 ' if show else '' 
 brickwall       = '🧱 ' if show else '' 
 wood            = '🪵 ' if show else '' 
+ruler           = '📏 ' if show else '' 
 
 ## Hotelling T2 
 T2              = '𝒯 ²' if show else 'T2'

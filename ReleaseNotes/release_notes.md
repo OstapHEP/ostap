@@ -1,7 +1,10 @@
 ## New features
 
   1. `chopping`: make use of the soft limit for ncpus
-
+  1. add (mainly for completeness) densitty reweighter class based on Logistical regression.
+     It is very fast but it is expected to be good only for linear dedendencies 
+  1. tune hyperparameters for reweighters 
+  
 ## Bug fixes
 
 ## Backward incompatible

@@ -13,11 +13,12 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
-    'LightGBMDensityReweighter' , # LightGBM-based density reweighter
-    'XGBoostDensityReweighter'  , # XGBoost-based density reweighter
-    'CatBoostDensityReweighter' , # CatBoost-based density reweighter
-    'PyTorchDensityReweighter'  , # PyTorch-based density reweighter 
-    'GBReweighter'              , # Reweighter based on GBReweighter from hep_ml 
+    'LightGBMDensityReweighter'      , # LightGBM-based density reweighter
+    'XGBoostDensityReweighter'       , # XGBoost-based density reweighter
+    'CatBoostDensityReweighter'      , # CatBoost-based density reweighter
+    'PyTorchDensityReweighter'       , # PyTorch-based density reweighter
+    'LogRegressionDensityReweighter' , # Density reweighter based on Logistic Regression
+    'GBReweighter'                   , # Reweighter based on GBReweighter from hep_ml    
 ) 
 # =============================================================================
 from   ostap.core.ostap_types   import num_types 
@@ -53,11 +54,12 @@ REGULARIZED_ESTIMATORS = 250
 MAX_DEPTH              =   5 
 REG_DEPTH              =   3 
 # =============================================================================
-method_LGBM  = 'DRW/%s'   % ( S.light_bulb           if S.light_bulb  else 'LightGBM' ) 
-method_XGB   = 'DRW/%s'   % ( S.rocket               if S.rocket      else 'XGBoost'  ) 
-method_CATB  = 'DRW/%s'   % ( S.cat_face             if S.cat_face    else 'CatBoost' ) 
-method_TORCH = 'DRW/%s'   % ( S.flashlight           if S.flashlight  else 'TORCH'    ) 
-method_GBRW  = 'HepML/%s' % ( S.wood                 if S.wood        else 'GBRW'     ) 
+method_LGBM  = 'DRW/%s'   % ( S.light_bulb if S.light_bulb  else 'LightGBM' ) 
+method_XGB   = 'DRW/%s'   % ( S.rocket     if S.rocket      else 'XGBoost'  ) 
+method_CATB  = 'DRW/%s'   % ( S.cat_face   if S.cat_face    else 'CatBoost' ) 
+method_TORCH = 'DRW/%s'   % ( S.flashlight if S.flashlight  else 'TORCH'    ) 
+method_LR    = 'DRW/%s'   % ( S.ruler      if S.ruler       else 'LOGREG'   ) 
+method_GBRW  = 'HepML/%s' % ( S.wood       if S.wood        else 'GBRW'     )
 # =============================================================================
 ## @brief Check if strong regularization is needed for BDT-based reweighting.
 #  @param original Features array for the original sample.
@@ -98,20 +100,20 @@ def RW_needs_regularization ( original                       ,
     eff_orig = neff_orig / float ( nraw_orig ) if 0 < nraw_orig else 0.0
     eff_targ = neff_targ / float ( nraw_targ ) if 0 < nraw_targ else 0.0
     
-    if eff_orig < 0.65 : return 'eff_orig<65%'
-    if eff_targ < 0.65 : return 'eff_targ<65%'
+    if eff_orig < 0.65 and neff_orig < 5000 : return 'eff_orig<65%&neff_orig<5000'    
+    if eff_targ < 0.65 and neff_targ < 5000 : return 'eff_targ<65%&neff_targ<5000'
 
     # 4. Low dimensionality (<= 4 features) needs regularization under limited statistics
     threshold = 50000.0 
     if nf <= 4 and neff < threshold :
         th = nice_print ( threshold ) 
-        return 'nf<=4&neff_pooled<%s' % th 
+        return 'nf<=4&neff<%s' % th 
     
     # 5. Non-linear density threshold for multidimensional phase space growth
     required_stats = 1500.0 * ( nf ** 1.8 )
     if neff < required_stats :
         rs = nice_print ( required_stats ) 
-        return 'neff_pooled<%s' % rs       
+        return 'neff<%s' % rs       
 
     return ''
 
@@ -126,7 +128,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     Implements 1-, 2-, and 4-stream signed-measure density estimations.
     Executes training immediately upon instantiation and seals resulting weights.
     """
-
     # ==========================================================================
     ## @brief Initialize and fit the density ratio reweighter ensemble.
     #  @param original Features array for original dataset.
@@ -213,7 +214,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                    prefix    = '# '   ,
                                    title     = title  )
             
-            logger.info ( "%s is applied, case %s:\n%s" % ( title , reg_case , table ) )
+            logger.info ( "%s is applied, case '%s':\n%s" % ( title , reg_case , table ) )
 
         self.__original_ratios             = None
         self.__original_reweighted_weights = None
@@ -243,7 +244,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         if original_ratios is not None and 0 < len ( original_ratios ) : 
             if not numpy.all ( numpy.isfinite ( original_ratios ) ) :
-                logger.error ( "%s: NaN/Inf found in original_ratios" % typename ( self ) )
+                logger.error ( "%s: NaN/Inf found in original_ratios"     % typename ( self ) )
             if numpy.any ( original_ratios < 0 ):
                 logger.error ( "%s: Negative values found for ratio r(x)" % typename ( self ) )
 
@@ -543,9 +544,11 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                  numpy.ones  ( len( X_targ_sub ) , dtype = numpy.float32 ) ] )
 
         if w_orig_sub is None and w_targ_sub is None :
+            
             scale_factor = numpy.float32 ( len ( X_targ_sub ) / len ( X_orig_sub ) )
             w_orig_scaled_for_tr = numpy.full(len(X_orig_sub), scale_factor, dtype=numpy.float32)
             w_comb = numpy.hstack([w_orig_scaled_for_tr, numpy.ones(len(X_targ_sub), dtype=numpy.float32)])
+            
         else :
             w_orig_abs = numpy.abs ( w_orig_sub ) if w_orig_sub is not None else numpy.ones ( len ( X_orig_sub ), dtype = numpy.float32 )
             w_targ_abs = numpy.abs ( w_targ_sub ) if w_targ_sub is not None else numpy.ones ( len ( X_targ_sub ), dtype = numpy.float32 )
@@ -557,7 +560,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             
             w_orig_scaled = w_orig_abs * scale_factor
             w_comb        = numpy.hstack ( [ w_orig_scaled , w_targ_abs ] )
-
+            w_comb        = w_comb * ( len ( X_comb ) / ( numpy.sum ( w_comb ) + 1e-12 ) )
+                        
         oof_raw = numpy.zeros( len( X_comb ), dtype = numpy.float32 )
 
         if 1 < self.n_splits :
@@ -609,23 +613,21 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     #  @param X Feature matrix to evaluate.
     #  @return Array of calculated stream density ratios.
     def __predict_stream_ratios( self, stream_key, X ):
-        """ Calculate average stream density ratios for unseen features.
+        """ Calculate average stream density ratios r(x) for unseen sample features.
         """
+        
         models = self.__fitted_models[ stream_key ]
-
-        ratios_list = []
+        ratios_sum = numpy.zeros(len(X), dtype=numpy.float32)
+        
+        eps = 1.e-4 
         for model in models :
             p = self._predict_single_model ( model, X )
-            if p.ndim > 1 :
-                p = p[:, 1]
-                
-            eps = 1e-4
-            p_clipped = numpy.clip ( p, numpy.float32 ( eps ), numpy.float32 ( 1.0 - eps ) )
+            if p.ndim > 1 :p = p[:, 1]
             
-            stream_ratios = p_clipped / ( numpy.float32( 1.0 ) - p_clipped )
-            ratios_list.append( stream_ratios )
-            
-        return numpy.mean ( ratios_list, axis = 0, dtype = numpy.float32 )
+            p_clipped   = numpy.clip ( p, numpy.float32 ( eps ), numpy.float32 ( 1.0 - eps ) )
+            ratios_sum += p_clipped / ( numpy.float32 ( 1.0 ) - p_clipped )
+
+        return ratios_sum / len(models)
 
     # =================================================================================
     ## Default implementation to predict class probabilities from a single model.
@@ -680,7 +682,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         if self.n_features != num_features ( X_new_f32 )          : raise TypeError ( "Invalid #features!!")
 
         if original_weight is None and self.__mode == "1-stream" :
-            ratios  = self.__predict_stream_ratios( "base", X_new_f32 )
+            ratios  = self.__predict_stream_ratios ( "base", X_new_f32 )
             clipped = numpy.clip ( ratios,
                                    numpy.float32 ( 0.0 ) ,
                                    numpy.float32 ( self.__clip_threshold ) )
@@ -702,9 +704,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         elif self.__mode == "2-stream_orig" :
             if numpy.any( mask_pos ) :
-                ratios_valid[ mask_pos ] = self.__predict_stream_ratios( "orig_pos", X_valid[ mask_pos ] )
+                ratios_valid[ mask_pos ] = self.__predict_stream_ratios ( "orig_pos", X_valid[ mask_pos ] )
             if numpy.any( mask_neg ) :
-                ratios_valid[ mask_neg ] = self.__predict_stream_ratios( "orig_neg", X_valid[ mask_neg ] )
+                ratios_valid[ mask_neg ] = self.__predict_stream_ratios ( "orig_neg", X_valid[ mask_neg ] )
 
         elif self.__mode == "2-stream_targ" :
             w_pos   = self.__target_weights_info[ "W_pos" ]
@@ -722,14 +724,14 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
             if numpy.any( mask_pos ) :
                 X_p                      = X_valid[ mask_pos ]
-                r_pos_pos                = self.__predict_stream_ratios( "pos_pos", X_p )
-                r_pos_neg                = self.__predict_stream_ratios( "pos_neg", X_p )
+                r_pos_pos                = self.__predict_stream_ratios ( "pos_pos", X_p )
+                r_pos_neg                = self.__predict_stream_ratios ( "pos_neg", X_p )
                 ratios_valid[ mask_pos ] = ( r_pos_pos * w_pos - r_pos_neg * w_neg ) / w_total
 
             if numpy.any( mask_neg ) :
                 X_n                      = X_valid[ mask_neg ]
-                r_neg_pos                = self.__predict_stream_ratios( "neg_pos", X_n )
-                r_neg_neg                = self.__predict_stream_ratios( "neg_neg", X_n )
+                r_neg_pos                = self.__predict_stream_ratios ( "neg_pos", X_n )
+                r_neg_neg                = self.__predict_stream_ratios ( "neg_neg", X_n )
                 ratios_valid[ mask_neg ] = ( r_neg_pos * w_pos - r_neg_neg * w_neg ) / w_total
 
         clipped                = numpy.clip ( ratios_valid,
@@ -770,10 +772,10 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             'max_depth'             : MAX_DEPTH           ,
             'max_bin'               : 2048                ,
             'num_leaves'            : 31                  ,
-            'min_child_samples'     : 30                  ,
+            'min_child_samples'     : 10                  ,
             'min_child_weight'      : 1e-3                ,
             'reg_alpha'             : 0.1                 ,
-            'reg_lambda'            : 2.0                 ,
+            'reg_lambda'            : 0.01                ,
             'subsample'             : 0.8                 ,
             'subsample_freq'        : 1                   ,
             'colsample_bytree'      : 0.8                 ,
@@ -814,18 +816,22 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
                          n_samples  ) :
         """ Apply soft regularization rules for low statistics or low dimensions.
         """
-        params [ 'n_estimators'      ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'     ] = 0.05
-        params [ 'max_depth'         ] = REG_DEPTH       
-        params [ 'num_leaves'        ] = 2**REG_DEPTH - 1       
-        params [ 'min_child_samples' ] = max ( 50 , int ( n_samples  * 0.01 ) )
-        params [ 'min_child_weight'  ] = 1.e-7 
-        params [ 'reg_alpha'         ] = 1.0    
-        params [ 'reg_lambda'        ] = 5.0 
-        params [ 'subsample'         ] = 1.0    
-        params [ 'colsample_bytree'  ] = 1.0  
+
+        params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
+        params [ 'learning_rate'         ] = 0.05
+        params [ 'max_depth'             ] = REG_DEPTH       
+        params [ 'num_leaves'            ] = 2**REG_DEPTH - 1       
+        params [ 'min_child_samples'     ] = max ( 10 , int ( n_samples  * 0.001 ) )
+        params [ 'min_child_weight'      ] = 1.e-7 
+        params [ 'reg_alpha'             ] = 0.0    
+        params [ 'reg_lambda'            ] = 0.0 
+        params [ 'subsample'             ] = 1.0    
+        params [ 'colsample_bytree'      ] = 1.0  
         params [ 'early_stopping_rounds' ] = None
-        params [ 'min_data_in_bin'   ] = 1      
+        params [ 'min_data_in_bin'       ] = 1      
+
+        current_max_bin      = params.get ( 'max_bin', 2048 )
+        params [ 'max_bin' ] = min ( current_max_bin, max ( 31, int ( n_samples / 15 ) ) )
         
         if 'path_smooth' in params : 
             params.pop ( 'path_smooth' )
@@ -913,10 +919,10 @@ class XGBoostDensityReweighter ( DensityReweighter ):
             'n_estimators'          : DEFAULT_ESTIMATORS  ,
             'learning_rate'         : 0.03                ,
             'max_depth'             : MAX_DEPTH           ,
-            'min_child_weight'      : 0.1                 ,
-            'gamma'                 : 0.001               ,
+            'min_child_weight'      : 1.e-3               ,
+            'gamma'                 : 0.0                 ,
             'reg_alpha'             : 0.1                 ,
-            'reg_lambda'            : 2.0                 ,
+            'reg_lambda'            : 0.01                ,
             'subsample'             : 0.8                 ,
             'colsample_bytree'      : 0.8                 ,
             'tree_method'           : 'hist'              ,
@@ -962,8 +968,9 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         params [ 'subsample'             ] = 1.0
         params [ 'colsample_bytree'      ] = 1.0
         params [ 'early_stopping_rounds' ] = None
-        params [ 'tree_method'           ] = 'exact'
-        
+
+        params [ 'tree_method'           ] = 'exact' if n_samples < 20000 else 'hist'
+
         return params
 
     # =========================================================================
@@ -1066,7 +1073,6 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
             'random_strength'       : 1.0                 ,
             'early_stopping_rounds' : None                ,
             'verbose'               : False               ,
-            'thread_count'          : 1                   ,
             'boosting_type'         : 'Plain'             ,
         }
         config.update ( params )
@@ -1108,9 +1114,12 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         
         params [ 'min_child_samples'     ] = max ( 2, min ( 30, int ( n_samples * 0.0001 ) ) )
         params [ 'l2_leaf_reg'           ] = 1.0
-        params [ 'subsample'             ] = 1.0
+
+        params.pop ( 'subsample', None )
+        params [ 'bootstrap_type'        ] = 'Bayesian'
+        params [ 'bagging_temperature'   ] = 3.0
+        
         params [ 'early_stopping_rounds' ] = None
-        params [ 'thread_count'          ] = 1
         params [ 'boosting_type'         ] = 'Plain'
         
         return params
@@ -1145,7 +1154,7 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         params = {}
         params.update ( self.params )
 
-        params [ 'thread_count'  ] = params.pop ( 'n_jobs'        , 1       ) 
+        params [ 'thread_count'  ] = params.get ( 'thread_count'  , params.pop ( 'n_jobs' , 1  ) ) 
         params [ 'boosting_type' ] = params.get ( 'boosting_type' , 'Plain' )
 
         iterations = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' , None ) or 500
@@ -1213,13 +1222,14 @@ class PyTorchDensityReweighter(DensityReweighter):
         import torch
 
         config = { 'hidden_dims'   : (128, 64, 32),
-                   'dropout'       : 0.1,
-                   'learning_rate' : 1e-3,
-                   'weight_decay'  : 1e-4,
-                   'batch_size'    : 1024,
-                   'epochs'        : 150,
-                   'patience'      : 15,
+                   'dropout'       : 0.1  ,
+                   'learning_rate' : 1e-2 ,
+                   'weight_decay'  : 1e-4 ,
+                   'epochs'        : 150  ,
+                   'patience'      : 25   ,
+                   'foreach'       : True , 
                    'device'        : 'cuda' if torch.cuda.is_available() else 'cpu',
+                   'n_jobs'        : 2    , 
                   }
         config.update(kwargs)
 
@@ -1258,26 +1268,36 @@ class PyTorchDensityReweighter(DensityReweighter):
         params [ 'patience'     ] = 10
         return params
 
-    # =========================================================================
-    ## Factory method to create a DensityMLP instance with lazy torch.nn import.
-    #  @param in_features Number of input features.
-    #  @return Instantiated PyTorch DensityMLP module.
-    def _create_model ( self , in_features ):
-        """ Factory method to create a DensityMLP instance with lazy torch.nn import.
-        """
-        import torch.nn as nn
+    
+    def _train_single_model(self, X_train, y_train, w_train, X_val, y_val, w_val):
+        """ Trains a single PyTorch Multilayer Perceptron (MLP) on a specific data fold.
 
-        # =====================================================================
-        ## @class DentiyMLP
-        #  Multilayer Perceptron for binary classification and density ratio estimation.
+        Args:
+            X_train (np.ndarray): Training features.
+            y_train (np.ndarray): Training target labels (0 or 1).
+            w_train (np.ndarray): Sample weights for training data.
+            X_val (np.ndarray): Validation features.
+            y_val (np.ndarray): Validation target labels.
+            w_val (np.ndarray): Sample weights for validation data.
+
+        Returns:
+            tuple: A tuple containing the trained PyTorch model and its predictions on the validation set.
+        """
+        import torch
+        import torch.nn as nn
+        from sklearn.preprocessing import StandardScaler
+
         class DensityMLP(nn.Module):
-            """ Multilayer Perceptron for binary classification and density ratio estimation.
             """
-            # =================================================================
+            Inner MLP model architecture for density estimation.
+            Hidden inside the method to prevent module namespace pollution.
+            """
             def __init__(self, in_features, hidden_dims=(128, 64, 32), dropout=0.1):
                 super().__init__()
                 layers = []
                 curr_dim = in_features
+                
+                # Build hidden layers with BatchNorm, SiLU activation, and Dropout
                 for h_dim in hidden_dims:
                     layers.extend([
                         nn.Linear(curr_dim, h_dim),
@@ -1286,160 +1306,286 @@ class PyTorchDensityReweighter(DensityReweighter):
                         nn.Dropout(dropout)
                     ])
                     curr_dim = h_dim
+                    
+                # Final output layer (logits)
                 layers.append(nn.Linear(curr_dim, 1))
                 self.net = nn.Sequential(*layers)
                 
-            # =================================================================
             def forward(self, x):
-                return self.net(x).squeeze(-1)  # Return raw logits
+                return self.net(x).squeeze(-1)
 
-        return DensityMLP ( in_features = in_features                 ,
-                            hidden_dims = self.params ['hidden_dims'] ,
-                            dropout     = self.params [ 'dropout'   ] )
+        # Determine execution device (CPU or GPU)
+        device = self.params.get ( 'device' , 'cuda' if torch.cuda.is_available() else 'cpu' )
+        if not torch.cuda.is_available() : device = 'cpu'                                   
+        device = torch.device ( device ) 
 
-    # =========================================================================
-    ## Train single PyTorch model on fold data with Early Stopping.
-    #  @param X_train Training features array.
-    #  @param y_train Training binary labels.
-    #  @param w_train Training event weights or None.
-    #  @param X_val Validation features array.
-    #  @param y_val Validation binary labels.
-    #  @param w_val Validation event weights or None.
-    #  @return Tuple of (trained_pytorch_model, val_predictions).
-    def _train_single_model(self, X_train, y_train, w_train, X_val, y_val, w_val):
-        """ Train single PyTorch model on fold data with Early Stopping.
-        """
-        import torch
-        import torch.nn as nn
-        from   torch.utils.data      import DataLoader, TensorDataset
-        from   sklearn.preprocessing import StandardScaler
-
-        device     = torch.device(self.params.get('device', 'cpu'))
-        batch_size = self.params['batch_size']
-
-        # 1. Mandatory feature scaling (fit on train set only to prevent data leakage)
+        # Standardize features (crucial for neural network stability and convergence)
         scaler = StandardScaler()
         X_tr_scaled = scaler.fit_transform(X_train)
         X_va_scaled = scaler.transform(X_val)
 
-        # 2. Prepare weights and ensure 1D shape using numpy.ravel()
-        w_tr = w_train if w_train is not None else numpy.ones(len(y_train), dtype=numpy.float32)
-        w_va = w_val   if w_val   is not None else numpy.ones(len(y_val),   dtype=numpy.float32)
+        # Handle optional weights (default to 1.0 if not provided)
+        w_tr = w_train if w_train is not None else numpy.ones ( len ( y_train ) , dtype = numpy.float32 )
+        w_va = w_val   if w_val   is not None else numpy.ones ( len ( y_val   ) , dtype = numpy.float32 )
 
-        y_tr_flat = numpy.ravel ( y_train )
-        w_tr_flat = numpy.ravel ( w_tr    )
-        y_va_flat = numpy.ravel ( y_val   )
-        w_va_flat = numpy.ravel ( w_va    )
+        # Convert Numpy arrays to PyTorch tensors and move them to the target device
+        X_tr_t = torch.as_tensor ( numpy.ascontiguousarray ( X_tr_scaled , dtype = numpy.float32 ) , device = device )
+        y_tr_t = torch.as_tensor ( numpy.ascontiguousarray ( y_train     , dtype = numpy.float32 ) , device = device )
+        w_tr_t = torch.as_tensor ( numpy.ascontiguousarray ( w_tr        , dtype = numpy.float32 ) , device = device )
 
-        # 3. Create datasets and loaders
-        ds_tr = TensorDataset  ( torch.tensor ( X_tr_scaled , dtype = torch.float32 ) ,
-                                 torch.tensor ( y_tr_flat   , dtype = torch.float32 ) ,
-                                 torch.tensor ( w_tr_flat   , dtype = torch.float32 )  )
-        loader_tr = DataLoader ( ds_tr , batch_size = batch_size , shuffle = True, drop_last = True )
+        X_va_t = torch.as_tensor ( numpy.ascontiguousarray ( X_va_scaled , dtype = numpy.float32 ) , device = device )
+        y_va_t = torch.as_tensor ( numpy.ascontiguousarray ( y_val       , dtype = numpy.float32 ) , device = device )
+        w_va_t = torch.as_tensor ( numpy.ascontiguousarray ( w_va        , dtype = numpy.float32 ) , device = device )
+
+        # Initialize the nested MLP model
+        model = DensityMLP ( in_features = X_train.shape[1] ,
+                             hidden_dims = self.params.get ( 'hidden_dims', ( 128 , 64 , 32 ) ) ,
+                             dropout     = self.params.get ( 'dropout'    ,  0.1 ) ).to(device)
         
-        ds_va = TensorDataset  ( torch.tensor ( X_va_scaled , dtype = torch.float32 ) ,
-                                 torch.tensor ( y_va_flat   , dtype = torch.float32 ) ,
-                                 torch.tensor ( w_va_flat   , dtype = torch.float32 ) )
-        loader_va = DataLoader ( ds_va , batch_size = batch_size , shuffle = False  )
-
-        # 4. Instantiate network via lazy factory method
-        model = self._create_model ( in_features = X_train.shape [ 1 ] ) .to( device )
-
+        # Setup optimizer with weight decay (L2 regularization)
         optimizer = torch.optim.AdamW ( model.parameters(),
-                                        lr          = self.params [ 'learning_rate' ] ,
-                                        weight_decay= self.params [ 'weight_decay'  ] )
-        criterion = nn.BCEWithLogitsLoss ( reduction = 'none' )
+                                        lr           = self.params.get ( 'learning_rate' , 1e-2 ) ,
+                                        weight_decay = self.params.get ( 'weight_decay'  , 1e-4 ) ,
+                                        foreach      = self.params.get ( 'foreach'       , True ) )
+        
+        # Binary Cross Entropy with logits (incorporating sample weights)
+        criterion_train = nn.BCEWithLogitsLoss ( weight = w_tr_t , reduction = 'mean' )
+        criterion_val   = nn.BCEWithLogitsLoss ( weight = w_va_t , reduction = 'sum'  )
 
-        # 5. Training loop with early stopping
+        # Early stopping and progress tracking variables
         best_loss        = float('inf')
         best_state       = None
         patience_counter = 0
+        patience         = self.params.get ( 'patience' ,  20 ) 
+        nepochs          = self.params.get ( 'epochs'   , 150 ) 
+        no_pbar          = self.silent or self.progress or not self.__progress_epochs
 
-        patience         = self.params [ 'patience' ]
-        
-        nepochs = self.params [ 'epochs' ]
-        no_pbar = self.silent or self.progress or not self.__progress_epochs
+        # Pre-calculate invariant sum of validation weights to avoid recomputing in the loop
+        w_va_sum = w_va_t.sum() 
 
-        with ProgressBar ( max_value = nepochs , silent = no_pbar , description = 'Epochs:' ) as pbar : 
-        
-            for epoch in range ( nepochs )  :
+        with ProgressBar ( max_value   = nepochs   ,
+                           silent      = no_pbar   ,
+                           description = 'Epochs:' ) as pbar:
+            
+            for epoch in range ( nepochs ):
                 
+                # --- Training phase ---
                 model.train()
+                optimizer.zero_grad()
                 
-                for bx, by, bw in loader_tr:
-                    bx, by, bw = bx.to(device), by.to(device), bw.to(device)
-                    optimizer.zero_grad()
-                    logits = model(bx)
-                    loss   = (criterion(logits, by) * bw).mean()
-                    loss.backward()
-                    optimizer.step()
+                logits = model(X_tr_t)
+                loss   = criterion_train(logits, y_tr_t)
+                
+                loss.backward()
+                optimizer.step()
 
-                # Validation step
+                # --- Validation phase ---
                 model.eval()
-                val_loss_sum   = 0.0
-                val_weight_sum = 0.0
-                
                 with torch.no_grad():
-                    for bx, by, bw in loader_va:
-                        bx, by, bw      = bx.to(device), by.to(device), bw.to(device)
-                        val_logits      = model(bx)
-                        batch_loss      = (criterion(val_logits, by) * bw).sum()
-                        val_loss_sum   += batch_loss.item()
-                        val_weight_sum += bw.sum().item()
-                        
-                val_loss = val_loss_sum / val_weight_sum if val_weight_sum > 0 else float('inf')
+                    val_logits   = model(X_va_t)
+                    val_loss_sum = criterion_val(val_logits, y_va_t)
+                    val_loss     = (val_loss_sum / w_va_sum).item()
 
                 pbar += 1                                
                 
+                # --- Early stopping logic ---
                 if val_loss < best_loss:
                     best_loss        = val_loss
-                    best_state       = copy.deepcopy ( model.state_dict() )
+                    # Fast clone of model state dict to CPU memory (prevents slow deepcopy)
+                    best_state       = { k: v.cpu().clone() for k, v in model.state_dict().items() } 
                     patience_counter = 0
                 else:
                     patience_counter += 1
-                    if patience <= patience_counter : break
+                    if patience <= patience_counter: 
+                        break
 
+        # Restore the best weights found during training
         if best_state is not None:
             model.load_state_dict(best_state)
 
+        # Finalize model for inference
         model.eval()
+        
+        # Attach scaler to the model object to dynamically scale data during prediction
         model.scaler = scaler
 
+        # Generate predictions for the validation set using the best model state
         val_preds = self._predict_single_model(model, X_val)
+        
         return model, val_preds
-
+        
     # =========================================================================
     ## Predict target probabilities using a trained PyTorch model.
     #  @param model Trained PyTorch DensityMLP instance.
     #  @param X Input features matrix.
     #  @return Array of predicted target probabilities p(y=1|x).
     def _predict_single_model(self, model, X):
-        """ Predict target probabilities using a trained PyTorch model.
+        """ Predict target probabilities using a trained PyTorch model (Full-Batch).
         """
         import torch
-        from torch.utils.data import DataLoader, TensorDataset
 
         device = next(model.parameters()).device
         model.eval()
 
-        X_scaled = model.scaler.transform(X)
-        X_t = torch.tensor(X_scaled, dtype=torch.float32)
+        # Scale features using the fitted scaler from training
+        X_scaled = model.scaler.transform ( X )
+        
+        # Zero-copy tensor creation
+        X_t = torch.as_tensor ( numpy.ascontiguousarray ( X_scaled , dtype = numpy.float32 ), device = device )
 
-        dataset = TensorDataset(X_t)
-        loader = DataLoader(dataset, batch_size=self.params['batch_size'], shuffle=False)
-
-        probs = []
         with torch.no_grad():
-            for (bx,) in loader:
-                bx = bx.to(device)
-                logits = model(bx)
-                batch_probs = torch.sigmoid(logits).cpu().numpy()
-                probs.append(batch_probs)
+            logits = model(X_t)
+            probs  = torch.sigmoid( logits ).cpu().numpy()
 
-        probs = numpy.concatenate(probs, axis=0)
-        return probs.astype(numpy.float32, copy=False)
+        return numpy.ravel ( probs ).astype ( numpy.float32 , copy = False )
+    
+# =============================================================================
+# Filter parameters to keep only those accepted by scikit-learn LogisticRegression
+valid_LR_params = (
+    'penalty'           ,
+    'dual'              ,
+    'tol'               ,
+    'C'                 ,
+    'fit_intercept'     ,
+    'intercept_scaling' ,
+    'class_weight'      ,
+    'random_state'      ,
+    'solver'            ,
+    'max_iter'          ,
+    'multi_class'       ,
+    'verbose'           ,
+    'warm_start'        ,
+    'l1_ratio'
+)
+# =============================================================================
+## @class LogRegressionDensityReweighter
+#  Density ratio reweighter using Logistic Regression as the underlying classifier.
+class LogRegressionDensityReweighter ( DensityReweighter ) :
+    """ Density ratio reweighter using Logistic Regression as the underlying classifier.
+    """
+    # =========================================================================
+    ## Initialize Logistic Regression density reweighter.
+    #  @param original Features array for original sample.
+    #  @param target Features array for target sample.
+    #  @param original_weight Initial weights for original sample (optional).
+    #  @param target_weight Initial weights for target sample (optional).
+    #  @param store_original_weights If True, store computed results for original sample.
+    #  @param params Additional Logistic Regression parameters.
+    def __init__( self , * , 
+                   original               ,
+                   target                 ,
+                   original_weight        = None ,
+                   target_weight          = None ,
+                   store_original_weights = True , **params ) :        
+        """ Initialize Logistic Regression density reweighter.
+        """
+        config = {
+            'C'             : 1.0     ,
+            'solver'        : 'lbfgs' ,
+            'max_iter'      : 1000    ,
+            'random_state'  : None    ,
+            'polynomials'   : 0       , 
+        }
+        config.update ( params )
+        
+        from sklearn.linear_model import LogisticRegression
+        
+        super().__init__ ( original               = original               ,
+                           target                 = target                 ,
+                           original_weight        = original_weight        ,
+                           target_weight          = target_weight          ,
+                           store_original_weights = store_original_weights , **config )
+        
+    # =========================================================================
+    ## Return the method identifier name.
+    #  @return Method string identifier.
+    @property
+    def method ( self ) :
+        """ Return the method identifier name.
+        """
+        return method_LR 
 
+    # =========================================================================
+    ## Dynamic regularization rules for Logistic Regression.
+    #  @param params Current parameters dictionary.
+    #  @param n_features Number of features.
+    #  @param n_samples Effective sample size.
+    #  @return Updated parameters dictionary.
+    def regularization ( self , params , n_features , n_samples ) :
+        """ Dynamic regularization rules for Logistic Regression.
+        """
+        # Increase L2 regularization (decrease C) under limited statistics
+        current_c = params.get ( 'C', 1.0 )
+        params [ 'C' ] = min ( current_c, 0.01 )
+        return params
 
+    # =========================================================================
+    ## Train single Logistic Regression model on fold data.
+    #  @param X_train Training features array.
+    #  @param y_train Training binary labels.
+    #  @param w_train Training event weights or None.
+    #  @param X_val Validation features array.
+    #  @param y_val Validation binary labels.
+    #  @param w_val Validation event weights or None.
+    #  @return Tuple of (fitted_logistic_regression, val_predictions).
+    def _train_single_model ( self    ,
+                              X_train , y_train , w_train ,
+                              X_val   , y_val   , w_val   ) :
+        """ Train single Logistic Regression model on fold data.
+        """
+        from sklearn.linear_model  import LogisticRegression
+        from sklearn.pipeline      import Pipeline        
+        from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+        
+        params = {}
+        params.update ( self.params    )
+        params.pop    ( 'n_jobs', None ) 
+
+        # Filter parameters to keep only those accepted by scikit-learn LogisticRegression
+        lr_kwargs = { k: v for k, v in params.items() if k in valid_LR_params }
+
+        ## construct the pipeline
+        #  (1) the first, mandatory, scaler 
+        pipeline = [ ( 'scaler1' , StandardScaler () ) ] 
+
+        poly  = self.params.get ( 'polynomials' , 0 )
+        if poly and isinstance ( poly , int ) and 0 < poly <= 5 :
+            # (2) add polynomial features & secondary scaler  
+            pipeline += [ ( 'poly'    , PolynomialFeatures ( degree=2 , include_bias = False ) ) ]
+            # (3) add secondary scaler  
+            pipeline += [ ( 'scaler2' , StandardScaler () ) ]
+            
+        # (4) the majon compohnent - logistic regression  
+        lr_model = LogisticRegression ( **lr_kwargs )
+        pipeline += [ ( 'logistic', lr_model ) ]
+        
+        ## (5) get the final modele 
+        model = Pipeline( pipeline )
+
+            
+        model = Pipeline ( [ ('scaler'   , StandardScaler() ) ,
+                             ('logistic' , lr_model           ) ] )
+
+        w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else None
+
+        if w_tr is not None : model.fit ( X_train , y_train , logistic__sample_weight = w_tr )
+        else                : model.fit ( X_train , y_train )
+
+        val_preds = self._predict_single_model ( model , X_val )
+        return model , val_preds.astype ( numpy.float32 , copy = False )
+
+    # =========================================================================
+    ## Predict probabilities using a Logistic Regression model.
+    #  @param model Trained LogisticRegression instance.
+    #  @param X Input features array.
+    #  @return Array of predicted probabilities.
+    def _predict_single_model ( self , model , X ) :
+        """ Predict probabilities using a Logistic Regression model.
+        """
+        X_clean = numpy.ascontiguousarray ( X , dtype = numpy.float64 )
+        p = model.predict_proba ( X_clean ) [ : , 1 ]
+        return p.astype ( numpy.float32 , copy = False )
+    
 # ==============================================================================
 ## @class GBReweighter
 #  Helper wrapper class for reweighting using <code>hep_ml.reweight.GBReweighter</code>
@@ -1448,7 +1594,6 @@ class GBReweighter(Reweighter) :
     """ Helper wrapper class for reweighting using
     `hep_ml.reweight.GBReweighter` by Alex  Rogozhnikov 
     """
-
     # =========================================================================
     ## Initialize hep_ml GBReweighter wrapper.
     #  @param original Features array for original sample.
@@ -1509,7 +1654,7 @@ class GBReweighter(Reweighter) :
                                    prefix    = '# '   ,
                                    title     = title  )
             
-            logger.info ( "%s is applied, case %s:\n%s" % ( title , reg_case , table ) )
+            logger.info ( "%s is applied, case '%s':\n%s" % ( title , reg_case , table ) )
 
         Reweighter.__init__ ( self            ,
                               original        = original        ,
@@ -1708,7 +1853,7 @@ if '__main__' == __name__ :
     if not hasXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
     if not hasCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
     if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch  available!" ) 
-    if not hasHepML    ( False ) : logger.warning  ( "No HepMC    available!" ) 
+    if not hasHepML    ( False ) : logger.warning  ( "No HepML    available!" ) 
 
 # =============================================================================
 #                                                                       The END 
