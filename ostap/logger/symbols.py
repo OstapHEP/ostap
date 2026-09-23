@@ -56,6 +56,8 @@ __all__     = (
     'flashlight'          , ## 🔦
     'folder'              , ## 📂  (wide)
     'frame'               , ## 🖼️  (wide)
+    ##
+    'game_die'            , ## 🎲 
     'gear'                , ## ⚙️
     'graph'               , ## 📈  (wide)
     ##
@@ -117,6 +119,7 @@ __all__     = (
     'hebrew_dalet'        , ## ד
     'hebrew_gimel'        , ## ג
     #
+    'hiking_boot'         , ## 🥾
     'histogram'           , ## 📊  (wide)
     'infinity'            , ## ∞
     'infinity_pos'        , ## +∞   
@@ -176,6 +179,7 @@ __all__     = (
     'script_w'            , ## 𝓉
     'script_map'          , ## mapping dict
     'show'                , ## bool
+    'shuffle'             , ## 🔀    
     'similar'             , ## ∼
     'size'                , ## ⌀
     'squared_ok'          , ## 🆗  (wide)
@@ -360,7 +364,11 @@ mountain         = '⛰ '  if show else 'peak'
 concurrency      = '🔀'  if show  else '||'    
 matrix           = '▦'  if show  else ''
 permutation      = '⤭'   if show  else ''
-column           = '⋮'    if show  else '' 
+column           = '⋮'    if show  else ''
+
+hiking_boot      = '🥾 ' if show  else 'bootstrap'
+game_die         = '🎲 ' if show  else ''
+shuffle          = '🔀 ' if show  else '' 
 
 ## Lowercase Greek letters 
 greek_lower_alpha     = 'α' if show else 'alpha'

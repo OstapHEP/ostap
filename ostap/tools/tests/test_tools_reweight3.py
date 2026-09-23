@@ -275,7 +275,7 @@ if not os.path.exists ( testdata ) :
 ## Compare datasets using several methods 
 # ==============================================================================
 import ostap.stats.gof_np as GnP
-cconf       = { 'parallel' : True , 'nToys' : 50 , 'silent' : True , 'progress' : True } 
+cconf       = { 'parallel' : False , 'nToys' : 25 , 'silent' : True , 'progress' : True } 
 comparators = (
     GnP.Chi2            ( **cconf ) ,
     GnP.KullbackLeibler ( **cconf ) ,
@@ -615,7 +615,7 @@ if hasHepML () : # ============================================================
 # =============================================================================
 ## (2) home-made reweighter based on LightGBM
 # =============================================================================
-if False and hasLightGBM()  : # =========================================================
+if hasLightGBM()  : # =========================================================
     # =========================================================================
     logger.info ( 'Use LightBGM for control reweighting' ) 
     from ostap.tools.reweighters     import LightGBMDensityReweighter as  LGBM
@@ -632,7 +632,7 @@ if False and hasLightGBM()  : # ================================================
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-if False and hasXGBoost () : # ============================================================
+if hasXGBoost () : # ============================================================
     # =========================================================================
     logger.info ( 'Use XGBoost  for control reweighting' ) 
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
@@ -648,7 +648,7 @@ if False and hasXGBoost () : # =================================================
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
 # =============================================================================
-if False and hasCatBoost (): # ==========================================================
+if hasCatBoost (): # ==========================================================
     # =========================================================================
     logger.info ( 'Use CatBoost for control reweighting' ) 
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
@@ -665,7 +665,7 @@ if False and hasCatBoost (): # =================================================
 # =============================================================================
 ## (5) home-made reweighter based on PyTorch
 # =============================================================================
-if False and hasPyTorch(): # ============================================================
+if hasPyTorch(): # ============================================================
     # =========================================================================
     logger.info ( 'Use PyTorch  for control reweighting' ) 
     from ostap.tools.reweighters     import PyTorchDensityReweighter   as TORCH

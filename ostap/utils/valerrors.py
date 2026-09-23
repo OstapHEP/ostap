@@ -37,7 +37,7 @@ from   ostap.core.core        import VE
 from   ostap.utils.core       import typename
 from   ostap.math.math_base   import iszero, isequal
 from   ostap.logger.symbols   import times, plus_minus  
-from   ostap.logger.pretty    import pretty_float 
+from   ostap.logger.pretty    import pretty_float, format_pow10 
 import math, copy
 # =============================================================================
 # logging 
@@ -306,7 +306,8 @@ class AsymErrors (object) :
                       precision   = 4     ,
                       with_sign   = True  , 
                       parentheses = True  ,
-                      latex       = False ) : 
+                      latex       = False ,
+                      strip       = False ) : 
         """ Nice print
         >>> errors = ...
         >>> result = calue.nice_print () 
@@ -318,9 +319,10 @@ class AsymErrors (object) :
                                             latex       = latex       )
         ##
         if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-        elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
+        elif expo           : result = '%s %s %s'       % ( result ,    times  , format_pow10 ( expo ) ) 
         ##
-        return result.replace ( '  ' , ' ' ) 
+        result = result.replace ( '  ' , ' ' )
+        return result.strip() if strip else result 
 
     def __str__   ( self ) : return self.nice_print ( precision = 3 , width = 4 )
     def __repr__  ( self ) : return self.nice_print ( precision = 3 , width = 4 )
@@ -752,7 +754,8 @@ class ValWithErrors(object) :
                       with_sign   = True  , 
                       parentheses = True  ,
                       latex       = False ,
-                      PDG         = ''    ) : 
+                      PDG         = ''    ,
+                      strip       = False ) : 
         """ Nice print
         >>> value  = ...
         >>> result = value.nice_print () 
@@ -765,9 +768,10 @@ class ValWithErrors(object) :
                                             PDG         = PDG         )
         ## 
         if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-        elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
+        elif expo           : result = '%s %s %s'       % ( result ,    times  , format_pow10 ( expo ) ) 
         ##
-        return result.replace ( '  ' , ' ' ) 
+        result = result.replace ( '  ' , ' ' )
+        return result.strip() if strip else result 
     
     def __str__   ( self ) : return self.nice_print ( precision = 3 , width = 4 )
     def __repr__  ( self ) : return self.nice_print ( precision = 3 , width = 4 )
@@ -1127,7 +1131,8 @@ class ValWithMultiErrors(object) :
                       with_sign   = True  , 
                       parentheses = True  ,
                       latex       = False ,
-                      PDG         = False ) : 
+                      PDG         = False ,
+                      strip       = False ) : 
         """ Nice print
         >>> value  = ...
         >>> result = value.nice_print () 
@@ -1140,9 +1145,10 @@ class ValWithMultiErrors(object) :
                                             PDG         = PDG         )
         ## 
         if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-        elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
+        elif expo           : result = '%s %s %s'       % ( result ,    times  , format_pow10 ( expo ) ) 
         ##
-        return result.replace ( '  ' , ' ' ) 
+        result = result.replace ( '  ' , ' ' )
+        return result.strip() if strip else result 
 
     def __str__   ( self ) : return self.nice_print ( precision = 3 , width = 4 )
     def __repr__  ( self ) : return self.nice_print ( precision = 3 , width = 4 )

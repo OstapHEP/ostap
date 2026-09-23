@@ -276,9 +276,8 @@ class RootFiles(Files) :
 
             pargs  = [ ( c.files , None , tmpdir , opts ) for c in chunks ] 
             
-            wm     = WorkManager ( silent = True , progress = not self.silent )
-            
-            merged = [ o for o in wm.iexecute ( hadd_ , pargs , progress = not self.silent ) ]
+            wm     = WorkManager ( silent = True , progress = not self.silent )            
+            merged = [ o for o in wm.execute ( hadd_ , pargs , progress = not self.silent ) ]
 
             return self.clone ( files = merged ) 
             

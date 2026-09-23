@@ -79,6 +79,7 @@ from   ostap.utils.env           import ( get_env              ,
                                           OSTAP_WEB_DISPLAY    ,
                                           ##
                                           OSTAP_PARALLEL       ,                                          
+                                          OSTAP_SEQUENTIAL     ,                                          
                                           OSTAP_NCPUS          ,
                                           OSTAP_IMPLICITMT     ,                                          
                                           OSTAP_PROFILE        ,                                          
@@ -141,6 +142,7 @@ config [ 'General' ] = {
     'WebDisplay'  : str ( default_config.webdisplay    ) , 
     ## 
     'Parallel'    : str ( default_config.parallel      ) ,
+    'Sequential'  : str ( default_config.sequential    ) ,
     'NCPus'       : str ( default_config.ncpus         ) ,
     'ImplicitMT'  : str ( default_config.implicitMT    ) ,
     'Profile'     : str ( default_config.profile       ) ,
@@ -371,32 +373,33 @@ if has_env ( OSTAP_PROTOCOL ) :
     
 # =============================================================================
 ## Some explicit & important elements from the `General` section:
-arg_parse    = general.getboolean ( 'ArgParse'    , fallback = default_config.arg_parse    )
-batch        = general.getboolean ( 'Batch'       , fallback = default_config.batch        )
+arg_parse     = general.getboolean ( 'ArgParse'    , fallback = default_config.arg_parse    )
+batch         = general.getboolean ( 'Batch'       , fallback = default_config.batch        )
 ##
-silent       = general.getboolean ( 'Silent'      , fallback = default_config.silent       )
-quiet        = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
-debug        = general.getboolean ( 'Debug'       , fallback = default_config.debug        )
-verbose      = general.getboolean ( 'Verbose'     , fallback = default_config.verbose      )
-log2stdout   = general.getboolean ( 'Log2stdout'  , fallback = default_config.log2stdout   )
-level        = general.getint     ( 'Level'       , fallback = default_config.level        )
-color        = general.getboolean ( 'Color'       , fallback = default_config.color        )
-show_unicode = general.getboolean ( 'Unicode'     , fallback = default_config.show_unicode )
+silent        = general.getboolean ( 'Silent'      , fallback = default_config.silent       )
+quiet         = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
+debug         = general.getboolean ( 'Debug'       , fallback = default_config.debug        )
+verbose       = general.getboolean ( 'Verbose'     , fallback = default_config.verbose      )
+log2stdout    = general.getboolean ( 'Log2stdout'  , fallback = default_config.log2stdout   )
+level         = general.getint     ( 'Level'       , fallback = default_config.level        )
+color         = general.getboolean ( 'Color'       , fallback = default_config.color        )
+show_unicode  = general.getboolean ( 'Unicode'     , fallback = default_config.show_unicode )
 ##
-dump_config  = general.get        ( 'DumpConfig'  , fallback = default_config.dump_config  )
+dump_config   = general.get        ( 'DumpConfig'  , fallback = default_config.dump_config  )
 ##
-build_dir    = general.get        ( 'BuildDir'    , fallback = default_config.build_dir    )
-cache_dir    = general.get        ( 'CacheDir'    , fallback = default_config.cache_dir    )
-tmp_dir      = general.get        ( 'TmpDir'      , fallback = default_config.tmp_dir      )
+build_dir     = general.get        ( 'BuildDir'    , fallback = default_config.build_dir    )
+cache_dir     = general.get        ( 'CacheDir'    , fallback = default_config.cache_dir    )
+tmp_dir       = general.get        ( 'TmpDir'      , fallback = default_config.tmp_dir      )
 ##
-webdisplay   = general.get        ( 'WebDisplay'  , fallback = default_config.webdisplay   )
+webdisplay    = general.get        ( 'WebDisplay'  , fallback = default_config.webdisplay   )
 ##
-ncpus        = general.getint     ( 'NCPUs'       , fallback = default_config.ncpus        )
-parallel     = general.get        ( 'Parallel'    , fallback = default_config.parallel     )
-implicitMT   = general.getboolean ( 'ImplicitMT'  , fallback = default_config.implicitMT   )
-profile      = general.getboolean ( 'Profile'     , fallback = default_config.profile      )
+ncpus         = general.getint     ( 'NCPUs'       , fallback = default_config.ncpus        )
+parallel      = general.get        ( 'Parallel'    , fallback = default_config.parallel     )
+sequential    = general.getboolean ( 'Sequential'  , fallback = default_config.sequential   )
+implicitMT    = general.getboolean ( 'ImplicitMT'  , fallback = default_config.implicitMT   )
+profile       = general.getboolean ( 'Profile'     , fallback = default_config.profile      )
 
-protocol     = general.getint     ( 'Protocol'    , fallback = default_config.protocol     )
+protocol      = general.getint     ( 'Protocol'    , fallback = default_config.protocol     )
 
 startup_files = general.getlist   ( 'StartUp'    , fallback = [ v for v in default_config.startup_files ] ) 
 load_macros   = general.getlist   ( 'LoadMacros' , fallback = [ v for v in default_config.load_macros   ] ) 
@@ -423,7 +426,11 @@ tables   = config [ 'Tables'   ]
 if has_env ( OSTAP_TABLE ) :
     value_ = get_env ( OSTAP_TABLE , '' , silent = True  )        
     if value_ : tables [ 'Style' ] = value_
-    
+
+if has_env ( OSTAP_SEQUENTIAL ) :
+    value_ = get_env ( OSTAP_SEQUENTIAL , '' , silent = True  )        
+    if value_ and boolean_true ( value_ ) : sequential = True
+        
 # ================================================================================
 ## Print config parser as table
 def _cp_table_ ( parser , files = files_read , title = '' , prefix = '' ) :
@@ -645,7 +652,8 @@ def __parse_args ( args  = [] ) :
         help    = "ROOT & python files to be processed one by one [default: %(default)s]" ,
         default = []      )
     ##
-    group3  = parser.add_argument_group ( 'CPU/processes/parallelism' , 'Options for parallel processing') 
+    group3  = parser.add_argument_group ( 'CPU/processes/parallelism' , 'Options for parallel processing')    
+    egroup3 = group3.add_mutually_exclusive_group()
     group3.add_argument (
         '-n' , '--ncpus'          , 
         metavar = "NCPUS"         ,
@@ -653,13 +661,6 @@ def __parse_args ( args  = [] ) :
         type    = int             ,
         help    = 'Maximal number of CPUs [default: %(default)s]' , 
         default = ncpus           )
-    ## 
-    group3.add_argument (
-        '--parallel'              , 
-        metavar = "PARALELL"      ,
-        dest    = 'Parallel'      ,
-        help    = 'Machinery for parallel processing [default: %(default)s]' , 
-        default = parallel        )
     ##
     group3.add_argument ( 
         '--no-mt'                ,        
@@ -667,6 +668,20 @@ def __parse_args ( args  = [] ) :
         action  = 'store_false'  , 
         help    = "EnableImplicitMT? [default: %(default)s" , 
         default = implicitMT     )
+    egroup3.add_argument (
+        '--parallel'              , 
+        metavar = "PARALLEL"      ,
+        dest    = 'Parallel'      ,
+        help    = 'Machinery for parallel processing [default: %(default)s]' , 
+        default = parallel        )
+    
+    egroup3.add_argument (
+        '--sequential'           , 
+        dest    = 'Sequential'   ,
+        action  = 'store_true'   ,
+        help    = 'Force sequential processing? [default: %(default)s]' , 
+        default = sequential     )
+    
     ## 
     ## 4nd exclusive group
     group4  = parser.add_argument_group ( 'Web Display' , 'Use Web/ROOT display, see ROOT.TROOT.(Set/Get)WebDisplay') 

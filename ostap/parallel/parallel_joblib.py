@@ -80,9 +80,11 @@ class WorkManager(TaskManager) :
     #  - no statistics
     #  - no summary printout 
     #  - no merging of results  
-    def iexecute ( self , job , jobs_args , * ,
-                   ordered  = False ,
-                   progress = False , **kwargs ) :
+    def iexecute ( self      ,
+                   job       ,
+                   jobs_args , *     ,
+                   ordered   = False ,
+                   progress  = False , **kwargs ) :
         """ Process the bare `executor` function
         >>> mgr  = WorkManager  ( .... )
         >>> job  = ...
@@ -94,8 +96,7 @@ class WorkManager(TaskManager) :
         - no statistics
         - no summary print
         - no merging of results  
-        """
-        
+        """        
         if not joblib:
             logger.error ( "No joblib module is available, processing is disabled" )
             return

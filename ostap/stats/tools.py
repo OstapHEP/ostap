@@ -87,7 +87,7 @@ def hasCatBoost ( silent = True ) :
     try : # ====================================================================
         # ======================================================================
         import catboost
-        if not silent : logger.info ( 'CatBoost  version: %s' % catboost .__version__ )
+        if not silent : logger.info ( 'CatBoost   version: %s' % catboost .__version__ )
         return True 
         # ======================================================================
     except ImportError : # =====================================================
@@ -207,7 +207,7 @@ def hasHepML ( silent = True ) :
         from hep_ml.reweight import      GBReweighter as _GBRW
         from hep_ml.reweight import FoldingReweighter as _FRW
         # ====================================================================
-        if not silent : logger.info ( 'hep_ml   version: %s' % hep_ml.__version__ )
+        if not silent : logger.info ( 'hep_ml     version: %s' % hep_ml.__version__ )
         return True 
         # ====================================================================
     except ImportError : # ===================================================

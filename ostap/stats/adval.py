@@ -96,20 +96,26 @@ def BDT_needs_regularization ( X , W = None ) :
     # 1. Check weight efficiency (nEff / nRaw)
     #    Efficiency < 65% indicates significant sPlot negative weight fluctuations
     eff = neff / float ( nraw ) if 0 < nraw else 0.0
-    if eff < 0.65 : return 'eff<65%'
+    if eff < 0.65 :
+        effp = 100 * eff 
+        return 'eff[%.1f%%]<65%%' % effp 
 
     # 2. Low dimensionality (<= 3) requires regularization only under limited statistics
     threshold = 50000.0 
     if nf <= 3 and neff < threshold :
-        th = nice_print ( threshold )
-        return "nf<=3&neff<%s" % th 
+        th     = nice_print ( threshold , precision = 1 , width = 2 , with_sign = False )
+        vv     = nice_print ( neff      , precision = 1 , width = 2 , with_sign = False ) 
+        result = "nf[%d]<=3&neff[%s]<%s" % ( nf , vv , th )
+        return result.replace ( ' ' , '' ) 
 
     # 3. Dimensionality-dependent minimum statistical threshold
     required_stats = 1000.0 * ( nf ** 1.5 )
     if neff < required_stats :
-        rs = nice_print ( required_stats ) 
-        return "neff<%s" % rs 
-
+        rs     = nice_print ( required_stats , precision = 1 , width = 2 , with_sign = False )
+        vv     = nice_print ( neff           , precision = 1 , width = 2 , with_sign = False ) 
+        result = "neff[%s]<%s" % ( vv ,rs )
+        return result.replace ( ' ' , '' ) 
+        
     return ''
 
 # =============================================================================
@@ -134,33 +140,42 @@ def NN_needs_regularization ( X , W = None ):
     # 1. Strict absolute statistic threshold for Neural Networks
     threshold1 = 10000.0 
     if neff < threshold1 :
-        th1 = nice_print ( threshold1 )
-        return 'neff<%s' % th1 
-
+        th1    = nice_print ( threshold1 , precision = 1 , width = 2 , with_sign = False )
+        vv     = nice_print ( neff       , precision = 1 , width = 2 , with_sign = False )         
+        result ='neff[%s]<%s' % ( vv , th1 )
+        return result.replace ( ' ' , '' ) 
+        
+    
     # 2. Higher statistical coverage required for low-dimensional spaces to ensure smooth boundaries
     threshold2 = 100000.0     
     if nf <= 3 and neff < threshold2 :
-        th2 = nice_print ( threshold2 )
-        return 'nf<=3&neff<%s' % th2 
-
+        th2    = nice_print ( threshold2 )
+        vv     = nice_print ( neff           , precision = 1 , width = 2 , with_sign = False )                 
+        result = 'nf[%d]<=3&neffp[%s]<%s' % ( nf , vv , th2 )
+        return result.replace ( ' ' , '' ) 
+        
     # 3. Non-linear event density threshold per feature
     required_stats = 3000.0 * ( nf ** 1.5 )
     if neff < required_stats :
-        rs = nice_print ( required_stats )        
-        return 'neff<%s'% rs 
-
+        rs     = nice_print ( required_stats , precision = 1 , width = 2 , with_sign = False )
+        vv     = nice_print ( neff           , precision = 1 , width = 2 , with_sign = False )         
+        result = 'neff[%s]<%s'% ( vv , rs )
+        return result.replace ( ' ' , '' ) 
+        
     # 4. Weight efficiency and dispersion checks for non-trivial weights
     if not weight_trivial ( W ) :
         
         eff = neff / float ( nraw ) if 0 < nraw else 0.0
-        if eff < 0.65 : return 'eff<65%'
+        if eff < 0.65 :
+            effp = 100 * eff 
+            return 'eff[%.1f%%]<65%%' % effp 
 
         w_arr        = numpy.asarray ( W     , dtype = numpy.float32 )
         mean_w       = numpy.mean    ( w_arr , dtype = numpy.float64 )
         w_dispersion = ( numpy.std   ( w_arr , dtype = numpy.float64 ) / mean_w ) if 0.0 < mean_w else 0.0
         
         # Enforce strict weight dispersion limit (> 1.5) for network convergence stability
-        if w_dispersion > 1.5 : return 'w_dispersion>1.5'
+        if w_dispersion > 1.5 : return 'w_dispersion[%.1f]>1.5'
 
     return '' 
 
@@ -242,7 +257,10 @@ class ADVAL_base (GoFnp):
         conf = {}
         conf.update ( super().config ) 
         conf [ 'n_splits'    ] = self.n_splits
-        if self.regularized  : conf [ 'regularized' ] = self.regularized
+        if self.regularized  :
+            regs = {}
+            regs.update ( self.regularized )
+            conf [ 'regularized' ] = regs 
         return conf
     
     @property 
@@ -469,8 +487,31 @@ class ADVAL_LGBM (ADVAL_base) :
         params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
         
         return params
+
+    
+    def regularization ( self, params, n_features, n_samples ) :
         
+        # ADAPTIVE DEPTH    
+        max_depth  = min ( 6 , max ( 1 , n_features ) )
         
+        # SAFE NUMBER OF LEAVES 
+        num_leaves = max ( 2 , int ( 2 ** ( max_depth * 0.8 ) ) ) 
+        
+        params [ 'max_depth'         ] = max_depth
+        params [ 'num_leaves'        ] = num_leaves
+        
+        # DYNAMIC LEAF MASS 
+        params [ 'min_child_samples' ] = max ( 20 , int ( n_samples * 0.001 ) )
+        params [ 'min_child_weight'  ] = 1e-3
+        
+        params [ 'colsample_bytree'  ] = 1.0
+        params [ 'subsample'         ] = 1.0
+        params [ 'reg_alpha'         ] = 0.0
+        params [ 'reg_lambda'        ] = 0.0
+        
+        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+        return params
+    
     def work ( self    ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -495,7 +536,7 @@ class ADVAL_LGBM (ADVAL_base) :
             params.update ( self.regularization ( params , nf , ns ) )
             
             num_boost_round        = min ( 20 if 1 == nf else 50 , num_boost_round )
-            early_stopping_rounds  = 0
+            early_stopping_rounds  = max ( 10 , early_stopping_rounds )
             
             ## print regularized parameters in "no-silent" regime
             self.report_regularization ( params                ,
@@ -565,25 +606,19 @@ class ADVAL_XGB (ADVAL_base) :
         """ Parameters for strong regularization
         >>> params = gof.regularization ( params , n_features , n_samples ) 
         """
-        nf = n_features
-        
-        max_depth = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
-        
+
+        max_depth = min ( 6 , max ( 1 , n_features ) )
         params [ 'max_depth'         ] = max_depth
         
-        # --- Low min_child_weight to prevent gradient truncation ---
         params [ 'min_child_weight'  ] = 1e-3
         
         params [ 'colsample_bytree'  ] = 1.0
         params [ 'subsample'         ] = 1.0
-        
         params [ 'alpha'             ] = 0.0
         params [ 'lambda'            ] = 0.0
-        
         params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
         
         return params
-    
     
     def work ( self ,
                X_train , Y_train , W_train ,
@@ -615,7 +650,7 @@ class ADVAL_XGB (ADVAL_base) :
             params.update ( self.regularization ( params , nf , ns ) ) 
 
             num_boost_round        = min ( 20 if 1 == nf else 50 , num_boost_round )
-            early_stopping_rounds  = 0
+            early_stopping_rounds  = max ( 10 , early_stopping_rounds )
 
             ## print regularized parameters in "no-silent" regime
             self.report_regularization ( params                ,
@@ -694,27 +729,19 @@ class ADVAL_CATB (ADVAL_base) :
         """ Parameters for strong regularization
         >>> params = gof.regularization ( params , n_features , n_samples ) 
         """
-        
-        nf = n_features
-        ns = n_samples
-        
-        depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'depth' , 5 ) )
-        
+    
+        depth = min ( 6 , max ( 1 , n_features ) )
         params [ 'depth'             ] = depth
         
-        # --- Minimum data in leaf bounds ---
-        params [ 'min_data_in_leaf'  ] = max ( 5 , params.get ( 'min_data_in_leaf' , 5 ) )
+        # 
+        params [ 'min_data_in_leaf'  ] = max ( 20 , int ( n_samples * 0.001 ) )
         
         params [ 'rsm'               ] = 1.0
         params [ 'subsample'         ] = 1.0
-        
-        # --- Standard L2 leaf regularization ---
         params [ 'l2_leaf_reg'       ] = 1.0
-        
         params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
-
+        
         return params
-
     
     def work ( self ,
                X_train , Y_train , W_train ,

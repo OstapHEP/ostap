@@ -4,6 +4,8 @@
   1. add (mainly for completeness) densitty reweighter class based on Logistical regression.
      It is very fast but it is expected to be good only for linear dedendencies 
   1. tune hyperparameters for reweighters 
+  1. add possibility to disable parallelisation either via `--sequential` command-line argument or via `OSTAP_SEQUENTIAL` environment variable`
+  1. add `forkserver` hook
   
 ## Bug fixes
 

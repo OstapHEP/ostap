@@ -181,7 +181,7 @@ class WorkManager(TaskManager) :
         - no statistics
         - no summary print
         - no merging of results  
-        """
+        """        
         from ostap.utils.cidict import cidict, cidict_fun 
         myargs = cidict ( self.params , transform = cidict_fun )
         myargs.update   ( kwargs      )

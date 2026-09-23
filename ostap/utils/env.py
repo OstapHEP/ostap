@@ -42,6 +42,7 @@ __all__     = (
     'OSTAP_WEB_DISPLAY'  , ## Ostap display 
     ## 
     'OSTAP_PARALLEL'     , ## Ostap parallel worker 
+    'OSTAP_SEQUENTIAL'   , ## Force sequential processing? 
     'OSTAP_NCPUS'        , ## max number of paralell workers 
     'OSTAP_IMPLICITMT'   , ## Enable Implicit MT?
     'OSTAP_PROFILE'      , ## Profiel the processing? 
@@ -79,6 +80,7 @@ OSTAP_TMP_DIR       = 'OSTAP_TMP_DIR'      ## Ostap TMP   dir
 OSTAP_WEB_DISPLAY   = 'OSTAP_WEB_DISPLAY'
 #
 OSTAP_PARALLEL      = 'OSTAP_PARALLEL'     ## Ostap parallel worker 
+OSTAP_SEQUENTIAL    = 'OSTAP_SEQUENTIAL'   ## force sequential processing? 
 OSTAP_NCPUS         = 'OSTAP_NCPUS'        ## Max number of parallel workers
 OSTAP_IMPLICITMT    = 'OSTAP_IMPLICITMT'   ## Enable  ImplicitMT ?
 OSTAP_PROFILE       = 'OSTAP_PROFILE'      ## Profile the execution ? 
@@ -111,12 +113,12 @@ transform = lambda v : v.replace(' ','').replace('_','').replace('-','').lower()
 #  - in lst  of "true"  values
 #  - not in lst of "false" values and True  
 def boolean_true ( value )  :
-    """ Can the value be interprted as "boolean true"?
+    """ Can the value be interpreted as "boolean true"?
     - bool 
     - in lst  of "true"  values
     - not in lst of "false" values and True  
     """
-    if isinstance ( value , bool )  : return True if value else False
+    if isinstance ( value , bool )      : return True if value else False
     value_ = transform ( value ) 
     if   value_ in boolean_true_values  : return True 
     elif value_ in boolean_false_values : return False
@@ -132,7 +134,7 @@ def boolean_false ( value )  :
     - in lst  of "false" values
     - not in lst of "true" values or False
     """
-    if isinstance ( value , bool )   : return True if not value else False 
+    if isinstance ( value , bool )       : return True if not value else False 
     value_ = transform ( value )
     if value_    in boolean_false_values : return True  
     elif value_  in boolean_true_values  : return False 

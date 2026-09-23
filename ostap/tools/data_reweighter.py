@@ -88,6 +88,11 @@ class DataReweighter(Config) :
         """
         return self.__rw
     
+    @property
+    def method ( self ) :
+        """`method` : underlying method/engine"""
+        return self.reweighter.method 
+    
     @property 
     def config ( self ) :
         """`config` : Reweighter configuration"""

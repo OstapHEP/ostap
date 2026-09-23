@@ -45,12 +45,13 @@ __all__     = (
     'func_executor' , ## helper function to execute callable
     )
 # =============================================================================
-from   ostap.core.ostap_types import sized_types
-from   ostap.utils.core       import typename 
-from   ostap.utils.basic      import numcpu 
-from   ostap.logger.colorized import attention
-from   itertools              import repeat , count
-import ostap.io.zipshelve     as     DBASE 
+from   ostap.core.ostap_types   import sized_types
+from   ostap.utils.core         import typename 
+from   ostap.utils.basic        import numcpu 
+from   ostap.logger.colorized   import attention
+from   ostap.utils.progress_bar import progress_bar 
+from   itertools                import repeat , count
+import ostap.io.zipshelve       as     DBASE 
 import sys, os, operator, abc, signal   
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -900,17 +901,19 @@ class TaskManager(ManagerBase) :
     """ Abstract base class for the work manager for parallel data processing 
     """
     def __init__  ( self             ,
-                    ncpus            , * , 
+                    ncpus            , *     , 
                     silent           = True  ,
                     progress         = True  ,
                     block_size       = -1    , 
-                    hyper_block_size = -1    , 
+                    hyper_block_size = -1    ,
+                    force_sequential = False , 
                     dump_dbase       = None  ,
                     dump_jobs        = 0     ,
                     dump_freq        = 0     , **kwargs ) :
 
         self.__ncpus      = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else max ( 1 , numcpu() - 1 ) 
-
+        self.__ncpus      = max ( 1 , min ( self.__ncpus , numcpu () - 1 ) ) 
+        
         ## block& hyperblock sizes  
         self.__block_size       =       block_size if isinstance (       block_size , int ) \
             and                   1 <       block_size else   2 * self.ncpus 
@@ -919,7 +922,11 @@ class TaskManager(ManagerBase) :
         
         self.__silent     = True if silent   else False  
         self.__progress   = True if progress else False
-
+        
+        ## purely sequential processing?
+        import ostap.core.config as OCC
+        self.__force_sequential = force_sequential or self.ncpus <= 1 or OCC.sequential 
+        
         assert isinstance ( dump_freq , int ) and 0 <= dump_freq , \
             "Invalid `dump_freq' argument: %s" % dumpfreq
         assert isinstance ( dump_jobs , int ) , \
@@ -1071,7 +1078,9 @@ class TaskManager(ManagerBase) :
                 jobs_args = zip ( repeat ( task ) , count ( index ) , hyper_block )
 
                 ## call for the actual jobs handling method 
-                for jobid , result , stat in self.iexecute ( func_executor , jobs_args , njobs = len ( hyper_block ) , **myargs ) :
+                for jobid , result , stat in self.execute ( func_executor ,
+                                                            jobs_args     ,
+                                                            njobs         = len ( hyper_block ) , **myargs ) :
                     
                     merged_stat += stat
                                         
@@ -1171,8 +1180,10 @@ class TaskManager(ManagerBase) :
                 
                 jobs_args = zip ( repeat ( task ) , count ( index ) , hyper_block )
                 
-                for jobid , result , stat in self.iexecute ( task_executor , jobs_args , njobs = len ( hyper_block ) , **myargs ) : 
-
+                for jobid , result , stat in self.execute ( task_executor ,
+                                                            jobs_args     ,
+                                                            njobs         = len ( hyper_block ) , **myargs ) : 
+                    
                     ## merge statistics 
                     merged_stat += stat
 
@@ -1213,20 +1224,32 @@ class TaskManager(ManagerBase) :
         ## 
         return task.results ()
 
+    # ==========================================================================
+    ## purely sequention processing
+    @property
+    def force_sequenctial ( self ) :
+        """`force_sequential` : force sequential processing ?"""
+        return self.__force_sequential 
+        
     @property
     def config ( self ) :
         """`config`: full configuration """
         conf = {}
-        conf.update ( self.params ) 
+        conf.update ( self.params )
+        ## 
+        conf [ 'ncpus'            ] = self.ncpus
+        conf [ 'force_sequential' ] = self.force_sequential 
+        ## 
         conf [ 'silent'           ] = self.silent
         conf [ 'progress'         ] = self.progress
-        conf [ 'ncpus'            ] = self.ncpus
+        ## 
         conf [ 'hyper_block_size' ] = self.hyper_block_size
         conf [ 'block_size'       ] = self.block_size
-        #
+        ##
         conf [ 'dump_dbase'       ] = self.dump_dbase 
         conf [ 'dump_jobs'        ] = self.dump_jobs
         conf [ 'dump_freq'        ] = self.dump_freq
+        ## 
         return conf
     
     # =========================================================================
@@ -1258,6 +1281,11 @@ class TaskManager(ManagerBase) :
     def ncpus ( self ) :
         """`ncpus' : number of CPUs"""
         return self.__ncpus
+
+    @property
+    def force_sequential ( self ) :
+        """`force_sequential' : force sequential processing?"""
+        return self.__force_sequential 
 
     @property
     def hyper_block_size ( self ) :
@@ -1314,6 +1342,43 @@ class TaskManager(ManagerBase) :
     #  mgr  = WorManager  ( .... )
     #  job  = ...
     #  args = ...
+    #  for result in mgr.execute ( func , args ) :
+    #  ...
+    #  ... 
+    #  @endcode
+    #  It is a "bare minimal" interface
+    #  - no statistics
+    #  - no summary printout 
+    #  - no merging of results   
+    def execute ( self , job , jobs_args , progress = False , **kwargs ) :
+        """ Process the bare `executor` function
+        >>> mgr  = WorkManager  ( .... )
+        >>> job  = ...
+        >>> args = ...
+        >>> for result in mgr.iexecute ( job , args ) :
+        ...
+        ...
+        It is a `bare minimal' interface
+        - no statistics
+        - no summary printout
+        - no merging of results  
+        """
+        ## choose the actual executor: sequential versus paralell 
+        executor = self.sequential if self.force_sequential else self.iexecute  
+
+        ## explicit loop
+        for result in executor ( job , jobs_args, progress = progress , **kwargs ) :
+            yield result 
+
+    # =========================================================================
+    ## process the bare <code>executor</code> function
+    #  @param job   function to be executed
+    #  @param jobs_args the arguments, one entry per job 
+    #  @return iterator to results 
+    #  @code
+    #  mgr  = WorManager  ( .... )
+    #  job  = ...
+    #  args = ...
     #  for result in mgr.iexecute ( func , args ) :
     #  ...
     #  ... 
@@ -1338,6 +1403,83 @@ class TaskManager(ManagerBase) :
         """
         return None
     
+    # ==========================================================================
+    ## Purely sequention processing with the same interface as <code>iexecute</code>
+    #
+    #  Process the input data purely sequentially without parallelization machinery 
+    #  @param job   function to be executed
+    #  @param jobs_args the arguments, one entry per job 
+    #  @return iterator to results 
+    #  @code
+    #  mgr  = WorManager  ( .... )
+    #  job  = ...
+    #  args = ...
+    #  for result in mgr.requential ( func , args ) :
+    #  ...
+    #  ... 
+    #  @endcode
+    #  It is a "bare minimal" interface
+    #  - no statistics
+    #  - no summary printout 
+    #  - no merging of results   
+    def sequential ( self      ,
+                     job       ,
+                     jobs_args , *     , 
+                     progress  = False , **kwargs ) :
+        """ Purely sequention processing with the same interface as `iexecute`
+
+        Process the input data purely sequentially without parallelization machinery 
+
+        >>> mgr  = WorkManager  ( .... )
+        >>> job  = ...
+        >>> args = ...
+        >>> for result in mgr.sequential ( job , args ) :
+        ...
+        ...
+        It is a `bare minimal' interface
+        - no statistics
+        - no summary printout
+        - no merging of results  
+        """
+        
+        from ostap.utils.cidict import cidict, cidict_fun 
+        myargs = cidict ( self.params , transform = cidict_fun )
+        myargs.update   ( kwargs      )
+        
+        ## number of jobs 
+        njobs = ( myargs.pop ( 'njobs'     , None ) or 
+                  myargs.pop ( 'max_value' , None ) or
+                  ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+        
+        ## progress-bar description
+        description = myargs.pop ( 'description' , "Jobs:" )
+       
+        ## regular map function 
+        results = map(job, jobs_args)
+
+        done = 0
+        # =========================================================================
+        try : # ===================================================================
+            # =====================================================================
+            ## explicit loop
+            for result in progress_bar ( results,
+                                         max_value   = njobs        ,
+                                         description = description  ,
+                                         хsilent      = not progress ) :
+                yield result
+                done += 1
+            # =====================================================================
+        except KeyboardInterrupt : # ==============================================
+            # =====================================================================
+            logger.attention ( "%s only #%d jobs are processed" %  ( keyboard_interrupt , done ) )
+            # =====================================================================
+            return
+            # =====================================================================
+        except Exception : # ======================================================
+            # =====================================================================
+            logger.error ( 'Exception caught after #%d jobs processed' % done, exc_info = True )
+            raise
+        
     # =========================================================================
     ## print the job execution statistics 
     def print_statistics ( self , stat_pp , stat_loc , cputime = None ) :

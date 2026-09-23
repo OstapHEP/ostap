@@ -642,6 +642,7 @@ def nice_print ( what              , * ,
                  width     = 6     ,
                  precision = 4     ,
                  latex     = False ,
+                 strip     = False , 
                  **kwargs          ) :
     """ Nice print for the object
     >>> obj = ...
@@ -650,7 +651,8 @@ def nice_print ( what              , * ,
     if  hasattr ( what , 'nice_print' ) :
         return what.nice_print ( width     = width     ,
                                  precision = precision ,
-                                 latex     = latex     , **kwargs )
+                                 latex     = latex     ,
+                                 strip     = strip     , **kwargs )
 
     result , expo = pretty_print ( what                  ,
                                    width     = width     ,
@@ -661,7 +663,7 @@ def nice_print ( what              , * ,
     ## elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo ) 
     elif expo           : result = '%s%s%s'         % ( result , times , format_pow10 ( expo ) ) 
     ##
-    return result
+    return result.strip() if strip else result 
 
 # =======================================================================
 ## Pretty LaTeX print for the object

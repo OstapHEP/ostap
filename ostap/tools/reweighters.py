@@ -49,10 +49,12 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================
-DEFAULT_ESTIMATORS     = 500
-REGULARIZED_ESTIMATORS = 250
-MAX_DEPTH              =   5 
-REG_DEPTH              =   3 
+DEFAULT_ESTIMATORS        = 600
+REGULARIZED_ESTIMATORS    = 250
+MAX_DEPTH                 =   7 
+REGULARIZED_DEPTH         =   3
+LEARNING_RATE             = 0.03
+REGULARIZED_LEARNING_RATE = 0.05
 # =============================================================================
 method_LGBM  = 'DRW/%s'   % ( S.light_bulb if S.light_bulb  else 'LightGBM' ) 
 method_XGB   = 'DRW/%s'   % ( S.rocket     if S.rocket      else 'XGBoost'  ) 
@@ -99,22 +101,38 @@ def RW_needs_regularization ( original                       ,
     # 3. Check weight efficiency ratios (nEff / nRaw)
     eff_orig = neff_orig / float ( nraw_orig ) if 0 < nraw_orig else 0.0
     eff_targ = neff_targ / float ( nraw_targ ) if 0 < nraw_targ else 0.0
+
+    threshold0 = 5000.0  
+    if eff_orig < 0.65 and neff_orig < threshold0 :
+        effp   = eff_orig * 100
+        v1     = nice_print ( neff_orig  , precision = 1 , width = 2 , with_sign = False )
+        v2     = nice_print ( threhsold0 , precision = 1 , width = 2 , with_sign = False )        
+        result = 'eff_orig[%.1f%%]<65%%&neff_orig<5000' ( effp , v1 , v2 )
+        return result.replace ( ' ' , '' )
     
-    if eff_orig < 0.65 and neff_orig < 5000 : return 'eff_orig<65%&neff_orig<5000'    
-    if eff_targ < 0.65 and neff_targ < 5000 : return 'eff_targ<65%&neff_targ<5000'
+    if eff_targ < 0.65 and neff_targ < threshold0 :
+        effp   = eff_targ * 100
+        v1     = nice_print ( neff_targ  , precision = 1 , width = 2 , with_sign = False )
+        v2     = nice_print ( threhsold0 , precision = 1 , width = 2 , with_sign = False )        
+        result = 'eff_targ[%.1f%%]<65%%&neff_targ<5000' ( effp , v1 , v2 )
+        return result.replace ( ' ' , '' )
 
     # 4. Low dimensionality (<= 4 features) needs regularization under limited statistics
     threshold = 50000.0 
     if nf <= 4 and neff < threshold :
-        th = nice_print ( threshold ) 
-        return 'nf<=4&neff<%s' % th 
+        th     = nice_print ( threshold , precision = 1 , width = 2 , with_sign = False )        
+        vv     = nice_print ( neff      , precision = 1 , width = 2 , with_sign = False )        
+        result = 'nf[%d]<=4&neff[%s]<%s' % ( nf , vv , th ) 
+        return result.replace ( ' ' , '' )
     
     # 5. Non-linear density threshold for multidimensional phase space growth
     required_stats = 1500.0 * ( nf ** 1.8 )
     if neff < required_stats :
-        rs = nice_print ( required_stats ) 
-        return 'neff<%s' % rs       
-
+        rs     = nice_print ( required_stats , precision = 1 , width = 2 , with_sign = False )
+        vv     = nice_print ( neff          , precision = 1 , width = 2 , with_sign = False )        
+        result = 'neff[%s]<%s' % ( vv , rs )
+        return result.replace ( ' ' , '' )
+        
     return ''
 
 # =============================================================================
@@ -768,20 +786,20 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             'objective'             : 'binary'            ,
             'metric'                : 'binary_logloss'    ,
             'n_estimators'          : DEFAULT_ESTIMATORS  ,
-            'learning_rate'         : 0.03                ,
+            'learning_rate'         : LEARNING_RATE       ,
             'max_depth'             : MAX_DEPTH           ,
             'max_bin'               : 2048                ,
             'num_leaves'            : 31                  ,
             'min_child_samples'     : 10                  ,
-            'min_child_weight'      : 1e-3                ,
+            'min_child_weight'      : 1e-4                ,
             'reg_alpha'             : 0.1                 ,
             'reg_lambda'            : 0.01                ,
             'subsample'             : 0.8                 ,
             'subsample_freq'        : 1                   ,
-            'colsample_bytree'      : 0.8                 ,
+            'colsample_bytree'      : 1.0                 ,
             'path_smooth'           : 1.0                 ,
             'boost_from_average'    : True                ,
-            'early_stopping_rounds' : None                ,
+            'early_stopping_rounds' : 50                  ,
             'verbosity'             : -1                  ,
             'n_jobs'                : -1                  ,
         }
@@ -818,10 +836,10 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         """
 
         params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'         ] = 0.05
-        params [ 'max_depth'             ] = REG_DEPTH       
-        params [ 'num_leaves'            ] = 2**REG_DEPTH - 1       
-        params [ 'min_child_samples'     ] = max ( 10 , int ( n_samples  * 0.001 ) )
+        params [ 'learning_rate'         ] = REGULARIZED_LEARNING_RATE
+        params [ 'max_depth'             ] = REGULARIZED_DEPTH       
+        params [ 'num_leaves'            ] = 2**REGULARIZED_DEPTH - 1       
+        params [ 'min_child_samples'     ] = max ( 10 , int ( n_samples  * 1.e-4 ) )
         params [ 'min_child_weight'      ] = 1.e-7 
         params [ 'reg_alpha'             ] = 0.0    
         params [ 'reg_lambda'            ] = 0.0 
@@ -917,7 +935,7 @@ class XGBoostDensityReweighter ( DensityReweighter ):
             'objective'             : 'binary:logistic'   ,
             'eval_metric'           : 'logloss'           ,
             'n_estimators'          : DEFAULT_ESTIMATORS  ,
-            'learning_rate'         : 0.03                ,
+            'learning_rate'         : LEARNING_RATE       ,
             'max_depth'             : MAX_DEPTH           ,
             'min_child_weight'      : 1.e-3               ,
             'gamma'                 : 0.0                 ,
@@ -926,8 +944,8 @@ class XGBoostDensityReweighter ( DensityReweighter ):
             'subsample'             : 0.8                 ,
             'colsample_bytree'      : 0.8                 ,
             'tree_method'           : 'hist'              ,
-            'early_stopping_rounds' : None                ,
-            'verbosity'             : 0                   ,
+            'early_stopping_rounds' : 50                  ,
+            'verbosity'             :  0                  ,
             'n_jobs'                : -1                  ,
         }
         
@@ -959,8 +977,8 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         """ Dynamic regularization rules for XGBoost.
         """
         params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'         ] = 0.05
-        params [ 'max_depth'             ] = REG_DEPTH
+        params [ 'learning_rate'         ] = REGULARIZED_LEARNING_RATE
+        params [ 'max_depth'             ] = REGULARIZED_DEPTH
         params [ 'min_child_weight'      ] = 1.e-7 
         params [ 'gamma'                 ] = 0.0
         params [ 'reg_alpha'             ] = 0.0
@@ -1065,10 +1083,10 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
             'loss_function'         : 'Logloss'           ,
             'eval_metric'           : 'Logloss'           ,
             'n_estimators'          : DEFAULT_ESTIMATORS  ,
-            'learning_rate'         : 0.03                ,
+            'learning_rate'         : LEARNING_RATE       ,
             'depth'                 : MAX_DEPTH           ,
             'l2_leaf_reg'           : 2.0                 ,
-            'min_child_samples'     : 30                  ,
+            'min_child_samples'     : 10                  ,
             'subsample'             : 0.8                 ,
             'random_strength'       : 1.0                 ,
             'early_stopping_rounds' : None                ,
@@ -1107,12 +1125,12 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         """ Dynamic regularization rules for CatBoost.
         """
         params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'         ] = 0.1
-        params [ 'depth'                 ] = REG_DEPTH
+        params [ 'learning_rate'         ] = REGULARIZED_LEARNING_RATE
+        params [ 'depth'                 ] = REGULARIZED_DEPTH
         
         if 'min_data_in_leaf' in params : params.pop ( 'min_data_in_leaf' , None )
         
-        params [ 'min_child_samples'     ] = max ( 2, min ( 30, int ( n_samples * 0.0001 ) ) )
+        params [ 'min_child_samples'     ] = max ( 2, min ( 30, int ( n_samples * 1.e-4 ) ) )
         params [ 'l2_leaf_reg'           ] = 1.0
 
         params.pop ( 'subsample', None )
@@ -1221,16 +1239,18 @@ class PyTorchDensityReweighter(DensityReweighter):
         """
         import torch
 
+        # Update default configuration for mini-batching efficiency
         config = { 'hidden_dims'   : (128, 64, 32),
                    'dropout'       : 0.1  ,
-                   'learning_rate' : 1e-2 ,
+                   'learning_rate' : 1e-3 , # Lower LR is preferred for mini-batch updates
                    'weight_decay'  : 1e-4 ,
-                   'epochs'        : 150  ,
-                   'patience'      : 25   ,
+                   'epochs'        : 40   , # Fewer epochs required due to frequent batch updates
+                   'patience'      : 5    ,
                    'foreach'       : True , 
                    'device'        : 'cuda' if torch.cuda.is_available() else 'cpu',
-                   'n_jobs'        : 2    , 
+                   'n_jobs'        : 2    , # Explicitly allocate core count
                   }
+
         config.update(kwargs)
 
         self.__progress_epochs = True if progress else False 
@@ -1287,133 +1307,143 @@ class PyTorchDensityReweighter(DensityReweighter):
         import torch.nn as nn
         from sklearn.preprocessing import StandardScaler
 
+        # Enforce CPU thread limits to prevent context-switching overhead
+        n_jobs = max ( 2 , self.params.get ( 'n_jobs' , 2 ) ) 
+        if torch.get_num_threads() != n_jobs:
+            torch.set_num_threads ( n_jobs )
+
         class DensityMLP(nn.Module):
-            """
-            Inner MLP model architecture for density estimation.
-            Hidden inside the method to prevent module namespace pollution.
-            """
             def __init__(self, in_features, hidden_dims=(128, 64, 32), dropout=0.1):
                 super().__init__()
                 layers = []
                 curr_dim = in_features
                 
-                # Build hidden layers with BatchNorm, SiLU activation, and Dropout
+                # Switch to LayerNorm: faster on CPU and independent of batch size variance
                 for h_dim in hidden_dims:
-                    layers.extend([
-                        nn.Linear(curr_dim, h_dim),
-                        nn.BatchNorm1d(h_dim),
-                        nn.SiLU(),
-                        nn.Dropout(dropout)
-                    ])
+                    layers.extend ( [ nn.Linear     ( curr_dim , h_dim ) ,
+                                      nn.LayerNorm  (            h_dim ) ,
+                                      nn.SiLU       ()                   ,
+                                      nn.Dropout    ( dropout )          ] )
                     curr_dim = h_dim
                     
-                # Final output layer (logits)
                 layers.append(nn.Linear(curr_dim, 1))
                 self.net = nn.Sequential(*layers)
                 
             def forward(self, x):
                 return self.net(x).squeeze(-1)
 
-        # Determine execution device (CPU or GPU)
-        device = self.params.get ( 'device' , 'cuda' if torch.cuda.is_available() else 'cpu' )
-        if not torch.cuda.is_available() : device = 'cpu'                                   
-        device = torch.device ( device ) 
+        device = self.params.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
+        if not torch.cuda.is_available(): device = 'cpu'                                   
+        device = torch.device(device) 
 
-        # Standardize features (crucial for neural network stability and convergence)
         scaler = StandardScaler()
         X_tr_scaled = scaler.fit_transform(X_train)
         X_va_scaled = scaler.transform(X_val)
 
-        # Handle optional weights (default to 1.0 if not provided)
-        w_tr = w_train if w_train is not None else numpy.ones ( len ( y_train ) , dtype = numpy.float32 )
-        w_va = w_val   if w_val   is not None else numpy.ones ( len ( y_val   ) , dtype = numpy.float32 )
+        w_tr = w_train if w_train is not None else numpy.ones(len(y_train), dtype=numpy.float32)
+        w_va = w_val   if w_val   is not None else numpy.ones(len(y_val), dtype=numpy.float32)
 
-        # Convert Numpy arrays to PyTorch tensors and move them to the target device
-        X_tr_t = torch.as_tensor ( numpy.ascontiguousarray ( X_tr_scaled , dtype = numpy.float32 ) , device = device )
-        y_tr_t = torch.as_tensor ( numpy.ascontiguousarray ( y_train     , dtype = numpy.float32 ) , device = device )
-        w_tr_t = torch.as_tensor ( numpy.ascontiguousarray ( w_tr        , dtype = numpy.float32 ) , device = device )
+        # Allocate contiguous tensors directly to the target device
+        X_tr_t = torch.as_tensor(numpy.ascontiguousarray(X_tr_scaled, dtype=numpy.float32), device=device)
+        y_tr_t = torch.as_tensor(numpy.ascontiguousarray(y_train, dtype=numpy.float32), device=device)
+        w_tr_t = torch.as_tensor(numpy.ascontiguousarray(w_tr, dtype=numpy.float32), device=device)
 
-        X_va_t = torch.as_tensor ( numpy.ascontiguousarray ( X_va_scaled , dtype = numpy.float32 ) , device = device )
-        y_va_t = torch.as_tensor ( numpy.ascontiguousarray ( y_val       , dtype = numpy.float32 ) , device = device )
-        w_va_t = torch.as_tensor ( numpy.ascontiguousarray ( w_va        , dtype = numpy.float32 ) , device = device )
+        X_va_t = torch.as_tensor(numpy.ascontiguousarray(X_va_scaled, dtype=numpy.float32), device=device)
+        y_va_t = torch.as_tensor(numpy.ascontiguousarray(y_val, dtype=numpy.float32), device=device)
+        w_va_t = torch.as_tensor(numpy.ascontiguousarray(w_va, dtype=numpy.float32), device=device)
 
-        # Initialize the nested MLP model
+        
+        hidden_dims = self.params.get ( 'hidden_dims'  , ( 128, 64, 32) ) 
+        dropout     = self.params.get ( 'dropout', 0.1 )
+
         model = DensityMLP ( in_features = X_train.shape[1] ,
-                             hidden_dims = self.params.get ( 'hidden_dims', ( 128 , 64 , 32 ) ) ,
-                             dropout     = self.params.get ( 'dropout'    ,  0.1 ) ).to(device)
+                             hidden_dims = hidden_dims      ,
+                             dropout     = dropout          ).to ( device )  
         
-        # Setup optimizer with weight decay (L2 regularization)
-        optimizer = torch.optim.AdamW ( model.parameters(),
-                                        lr           = self.params.get ( 'learning_rate' , 1e-2 ) ,
-                                        weight_decay = self.params.get ( 'weight_decay'  , 1e-4 ) ,
-                                        foreach      = self.params.get ( 'foreach'       , True ) )
-        
-        # Binary Cross Entropy with logits (incorporating sample weights)
-        criterion_train = nn.BCEWithLogitsLoss ( weight = w_tr_t , reduction = 'mean' )
-        criterion_val   = nn.BCEWithLogitsLoss ( weight = w_va_t , reduction = 'sum'  )
 
-        # Early stopping and progress tracking variables
+        learning_rate = self.params.get ( 'learning_rate', 1.e-3 ) 
+        weight_decay  = self.params.get ( 'weight_decay' , 1.e-4 ) 
+        foreach       = self.params.get ( 'foreach'      , True  ) 
+
+        optimizer = torch.optim.AdamW(model.parameters(),
+                                      lr           = learning_rate ,
+                                      weight_decay = weight_decay  ,
+                                      foreach      = foreach       )
+        
+        # Use unreduced BCE to manually apply sample weights per mini-batch
+        criterion_base = nn.BCEWithLogitsLoss(reduction='none')
+
         best_loss        = float('inf')
         best_state       = None
         patience_counter = 0
-        patience         = self.params.get ( 'patience' ,  20 ) 
-        nepochs          = self.params.get ( 'epochs'   , 150 ) 
-        no_pbar          = self.silent or self.progress or not self.__progress_epochs
 
-        # Pre-calculate invariant sum of validation weights to avoid recomputing in the loop
-        w_va_sum = w_va_t.sum() 
+        ## 
+        n_samples, n_features = X_tr_t.shape 
+        target_batch_elements = 500_000  
+
+        calculated_batch_size = target_batch_elements // max ( n_features, 1 )
+        
+        batch_size = self.params.get ( 'batch_size' , calculated_batch_size )               
+        batch_size = max ( 1024 , min ( 8192 , batch_size , n_samples ) )
+        
+        patience   =       self.params.get ( 'patience'   ,    5 ) 
+        nepochs    =       self.params.get ( 'epochs'     ,   50 )
+        
+        no_pbar    = self.silent or self.progress or not self.__progress_epochs
+
+        n_samples = X_tr_t.size(0)
+        w_va_sum  = w_va_t.sum() 
 
         with ProgressBar ( max_value   = nepochs   ,
                            silent      = no_pbar   ,
                            description = 'Epochs:' ) as pbar:
-            
-            for epoch in range ( nepochs ):
+            for epoch in range(nepochs):
                 
-                # --- Training phase ---
+                # --- Training phase (Mini-batch manual slicing) ---
                 model.train()
-                optimizer.zero_grad()
                 
-                logits = model(X_tr_t)
-                loss   = criterion_train(logits, y_tr_t)
+                # Shuffle indices for stochasticity
+                permutation = torch.randperm(n_samples, device=device)
                 
-                loss.backward()
-                optimizer.step()
+                for i in range(0, n_samples, batch_size):
+                    indices = permutation[i : i + batch_size]
+                    b_x, b_y, b_w = X_tr_t[indices], y_tr_t[indices], w_tr_t[indices]
+
+                    optimizer.zero_grad()
+                    b_logits = model(b_x)
+                    
+                    # Compute weighted loss for the current mini-batch
+                    b_loss = (criterion_base(b_logits, b_y) * b_w).sum() / b_w.sum()
+                    b_loss.backward()
+                    optimizer.step()
 
                 # --- Validation phase ---
                 model.eval()
                 with torch.no_grad():
-                    val_logits   = model(X_va_t)
-                    val_loss_sum = criterion_val(val_logits, y_va_t)
-                    val_loss     = (val_loss_sum / w_va_sum).item()
+                    val_logits = model(X_va_t)
+                    val_loss_sum = (criterion_base(val_logits, y_va_t) * w_va_t).sum()
+                    val_loss = (val_loss_sum / w_va_sum).item()
 
                 pbar += 1                                
                 
-                # --- Early stopping logic ---
                 if val_loss < best_loss:
-                    best_loss        = val_loss
-                    # Fast clone of model state dict to CPU memory (prevents slow deepcopy)
-                    best_state       = { k: v.cpu().clone() for k, v in model.state_dict().items() } 
+                    best_loss = val_loss
+                    best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()} 
                     patience_counter = 0
                 else:
                     patience_counter += 1
                     if patience <= patience_counter: 
                         break
 
-        # Restore the best weights found during training
         if best_state is not None:
             model.load_state_dict(best_state)
 
-        # Finalize model for inference
         model.eval()
-        
-        # Attach scaler to the model object to dynamically scale data during prediction
         model.scaler = scaler
 
-        # Generate predictions for the validation set using the best model state
         val_preds = self._predict_single_model(model, X_val)
-        
         return model, val_preds
-        
+    
     # =========================================================================
     ## Predict target probabilities using a trained PyTorch model.
     #  @param model Trained PyTorch DensityMLP instance.
@@ -1618,9 +1648,9 @@ class GBReweighter(Reweighter) :
         self.__n_splits = n_splits
         
         config = {            
-            "n_estimators"      : 150       , 
-            "learning_rate"     : 0.03      ,
-            "max_depth"         : MAX_DEPTH ,
+            "n_estimators"      : 150           , 
+            "learning_rate"     : LEARNING_RATE ,
+            "max_depth"         : MAX_DEPTH     ,
             "min_samples_leaf"  : 30        ,            
             "gb_args"           : {
                 "subsample"     : 0.8    ,
@@ -1743,8 +1773,8 @@ class GBReweighter(Reweighter) :
         """
         N = n_samples
         params [ 'n_estimators'     ] = 100
-        params [ 'learning_rate'    ] = 0.05
-        params [ 'max_depth'        ] = REG_DEPTH 
+        params [ 'learning_rate'    ] = REGULARIZED_LEARNING_RATE
+        params [ 'max_depth'        ] = REGULARIZED_DEPTH 
         params [ 'min_samples_leaf' ] = max ( 100, int ( N * 0.005 ) )
         
         gb_args = params.get ( 'gb_args', {} ).copy ()

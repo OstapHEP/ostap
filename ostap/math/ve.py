@@ -599,7 +599,8 @@ def nice_ve ( value               , * ,
               with_sign   = True  , 
               parentheses = True  ,
               latex       = False ,
-              PDG         = False ) :
+              PDG         = False ,
+              strip       = False ) :
     """ Nice ready-to-use printout of the ValueWithError object  ( string + exponent)
     >>> result =  nice_ve ( number ) 
     """
@@ -615,7 +616,7 @@ def nice_ve ( value               , * ,
     if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo                  )
     elif expo           : result = '%s %s %s'       % ( result , times     , format_pow10 ( expo ) )
     ##
-    return result
+    return result.strip() if strip else result 
 
 # ==============================================================================
 Ostap.Math.ValueWithError.pretty_print = pretty_ve 

@@ -28,6 +28,7 @@ from   ostap.stats.utils        import weight_trivial , check_all
 from   ostap.stats.counters     import EffCounter, ECDF 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import script_p 
+import ostap.logger.symbols     as     S 
 import numpy, math, abc 
 # =============================================================================
 # logging 
@@ -37,6 +38,10 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.pvalue' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Utilities to get p-values for Two-Samples & Goodness-of-Fit tests' ) 
+# =============================================================================
+permutation_symbol = ( '%s:' % S.shuffle     ) if S.show else 'Permutations:'
+bootstrap_symbol   = ( '%s:' % S.hiking_boot ) if S.show else 'Bootstrapping:'
+toys_symbol        = ( '%s:' % S.toys        ) if S.show else 'Toys:'
 # =============================================================================
 ## Sampling without replacement (Permutations)
 def _permutations ( rng , n1 , n2  ) :
@@ -276,19 +281,19 @@ class PVALUE (abc.ABC) :
 
         if not silent :
             goftype = typename ( self.gof ) 
-            logger.info ( 'GoF %s-value [%s]: #%d parallel subjobs to run' % ( script_p , goftype , njobs ) )
+            logger.info ( 'GoF %s-value [%s]: #%d parallel subjobs to run' % ( S.script_p , goftype , njobs ) )
             
         counter = EffCounter()
         tvalues = () 
         
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager : 
-            for result in manager.iexecute ( self.run_toys ,
-                                             the_list      ,
-                                             block_size    = min ( me , 2 * numcpu() ) , 
-                                             progress      = progress         ,
-                                             njobs         = njobs            ,
-                                             description   = self.description ) :
+            for result in manager.execute ( self.run_toys ,
+                                            the_list      ,
+                                            block_size    = min ( me , 2 * numcpu() ) , 
+                                            progress      = progress         ,
+                                            njobs         = njobs            ,
+                                            description   = self.description ) :
                 cnt , tvals = result 
                 counter += cnt
                 tvalues += tuple ( float ( t ) for t in tvals )
@@ -322,9 +327,11 @@ class PERMUTATOR (PVALUE) :
                    weight1     = None ,
                    weight2     = None ,
                    random_seed = None , 
-                   description = 'Permutations:' ) :
-        
+                   description = permutation_symbol ) :
+            
         check_all ( ds1 , ds2, weight1 , weight2 , typename  ( self ) )
+
+        print ( 'I AM PERMUTATOR!' , typename ( gof ) , '\n%s' % gof )
         
         super().__init__ ( gof         = gof         ,
                            t_value     = t_value     ,
@@ -377,8 +384,8 @@ class BOOTSTRAPPER (PERMUTATOR) :
                    weight1     = None ,
                    weight2     = None ,
                    random_seed = None ,                    
-                   description = 'Bootstrapping:' ) :
-
+                   description = bootstrap_symbol ) :
+        
         super().__init__ ( gof         = gof         ,
                            t_value     = t_value     ,
                            ds1         = ds1         ,
@@ -430,12 +437,12 @@ class TOYS (PVALUE) :
                    Ndata               , 
                    sample      = False ,
                    parameters  = {}    ,
-                   random_seed = None  ) :
-        
+                   random_seed = None  ,
+                   descriptio  = toys_symbol ) :
+    
         from ostap.fitting.pdfbasic import APDF1
         if not isinstance ( pdf , APDF1 ) : raise TypeError ( "%s: invaild `pdf` type:%s" % ( typename ( self ) , typename ( pdf ) ) )
-        
-        
+                
         self.pdf        = pdf
         self.Ndata      = Ndata 
         self.sample     = gof.sample 
@@ -448,7 +455,7 @@ class TOYS (PVALUE) :
                            ds1         = None        ,
                            ds2         = None        ,
                            random_seed = random_seed ,                                                       
-                           description = 'Toys:'     )
+                           description = description )
         
     # =========================================================================
     ## serialize the object 

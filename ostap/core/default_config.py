@@ -46,7 +46,8 @@ tmp_dir      = ''                    ## TMP directory
 
 webdisplay   = 'off'                 ## Use web-display? 
 
-parallel     = 'PATHOS'              ## parallel engine 
+parallel     = 'PATHOS'              ## parallel engine
+sequential   = False                 ## forced sequential processing?
 ncpus        = -1                    ## use all CPUs 
 implicitMT   = True                  ## implicit multithreading 
 profile      = False                 ## profile the execution? 
