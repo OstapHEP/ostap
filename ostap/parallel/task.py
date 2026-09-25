@@ -880,8 +880,7 @@ def func_executor ( item ) :
     from ostap.utils.root_utils import batch 
     from ostap.utils.basic      import NoContext
 
-    main_process    = the_pid == os.getpid() 
-    cleanup_context = NoContext () if main_proecss() else CleanUpPID() 
+    cleanup_context = NoContext () if main_process() else CleanUpPID() 
 
     with cleanup_context , batch ( True ) :        
         with Statistics ()  as stat :

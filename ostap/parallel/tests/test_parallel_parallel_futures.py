@@ -82,7 +82,7 @@ class HTask(Task) :
 def test_parallel_futures_bare ( ) :
     """ Test parallel processnig with parallel_futures (bare interface) 
     """
-    logger  = getLogger ("test_parallel_futured_bare")
+    logger  = getLogger ("test_parallel_futures_bare")
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
     
