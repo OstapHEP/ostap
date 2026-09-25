@@ -29,26 +29,22 @@ __all__     = (
 from   ostap.core.core          import Ostap, VE, SE 
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.core.ostap_types   import string_types, num_types, numpy_floats  
-from   ostap.math.math_base     import doubles, axis_range
+from   ostap.math.math_base     import axis_range
 from   ostap.math.math_ve       import significance
-from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.stats.utils        import weight_trivial
 from   ostap.stats.counters     import SE, WSE, ECDF
-from   ostap.utils.basic        import ( numcpu   , num_jobs     , 
-                                         typename , run_parallel ) 
-from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import ( plus_minus  , greek_lower_sigma ,
                                          subscript_A , subscript_K , subscript_C , 
                                          likelihood  , script_t    , script_p    ,
                                          sub_min     , sub_max     ,
                                          sub_mean    , sub_rms     , 
                                          infinity_pos as pos_infinity_symbol     )                                         
-from   ostap.logger.pretty      import pretty_float, pretty_row 
+from   ostap.logger.pretty      import pretty_row 
 from   ostap.plotting.color     import Orange, Green, Blue
 from   packaging.version        import Version
 import ostap.math.linalg 
 import ostap.logger.table       as     T 
-import ROOT, os, sys, math, numpy, scipy, abc    
+import ROOT, numpy, scipy    
 # =============================================================================
 # logging 
 # =============================================================================

@@ -53,11 +53,10 @@ __all__     = (
     'DataAndLumi' , ## collect files and create two TChain objects (one for Lumi)
     )
 # =============================================================================
-from copy                     import deepcopy
 from ostap.core.core          import rootError
 from ostap.trees.data_utils   import Data
 from ostap.contribs.lhcb.lumi import getLumi
-from ostap.utils.basic        import typename
+from ostap.utils.core         import typename
 from ostap.logger.symbols     import light_bulb as lumi_symbol 
 from ostap.logger.symbols     import folder     as folder_symbol 
 # =============================================================================
