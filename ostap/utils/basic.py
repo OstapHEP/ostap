@@ -24,7 +24,8 @@ __all__     = (
     'with_ipython'         , ## do we run IPython ?
     'interactive'          , ## interactive processing?
     'isatty'               , ## is the stream ``isatty'' ?
-    'is_ci'                , ## 
+    'is_ci'                , ##
+    'main_process'         , ## is the current process main?
     ##
     'terminal_size'        , ## get the size of terminal cosole
     'whoami'               , ## who am I?
@@ -87,6 +88,22 @@ def isatty ( stream = None ) :
         except : pass
     ## 
     return False
+
+# ===============================================================================
+def _make_main_checker ( main_pid = os.getpid () ):
+    def is_main (): return os.getpid() == main_pid
+    return is_main
+
+# ===============================================================================
+## is the current process main ? 
+main_process = _make_main_checker()
+
+# =============================================================================
+## get the parent process (or None) 
+def parent_process ( ) :
+    """ Get the parent process (or None)
+    """
+    return mp_.parent_process()
 
 # =============================================================================
 ## Check if the execution context is inside a CI/CD pipeline

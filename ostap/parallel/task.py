@@ -47,7 +47,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import sized_types
 from   ostap.utils.core         import typename 
-from   ostap.utils.basic        import numcpu 
+from   ostap.utils.basic        import numcpu, main_process 
 from   ostap.logger.colorized   import attention
 from   ostap.utils.progress_bar import progress_bar 
 from   itertools                import repeat , count
@@ -299,7 +299,7 @@ class Task(TaskBase) :
     @cleanup.setter
     def cleanup ( self , value ) :
         self.__cleanup     = True if value else False
-        
+
 # =============================================================================
 ## @class GenericTask
 #  Generic `templated' task for Parallel processing  
@@ -839,8 +839,9 @@ def task_executor ( item ) :
     batch_context      =      Batch  ( task.batch      ) if task.batch_set      else NoContext() 
     build_context      = UseBuildDir ( task.build      ) if task.build_set      else NoContext()
     implicitMT_context = ImplicitMT  ( task.implicitMT ) if task.implicitMT_set else NoContext()
-    cleanup_context    = CleanUpPID () 
-    
+    ## 
+    cleanup_context    = NoContext   () if main_process () else CleanUpPID () 
+
     ## use clean, build & batch context 
     with cleanup_context , implicitMT_context , build_context , batch_context :         
         ## perform remote  initialization (if needed) 
@@ -875,9 +876,14 @@ def func_executor ( item ) :
     jobid = item [ 1  ] 
     args  = item [ 2: ]    
     ##
-    from ostap.utils.cleanup    import CleanUpPID as cleanup_context
+    from ostap.utils.cleanup    import CleanUpPID
     from ostap.utils.root_utils import batch 
-    with cleanup_context () , batch ( True ) :        
+    from ostap.utils.basic      import NoContext
+
+    main_process    = the_pid == os.getpid() 
+    cleanup_context = NoContext () if main_proecss() else CleanUpPID() 
+
+    with cleanup_context , batch ( True ) :        
         with Statistics ()  as stat :
             # ================================================================
             signal_sigint () 
@@ -925,7 +931,8 @@ class TaskManager(ManagerBase) :
         
         ## purely sequential processing?
         import ostap.core.config as OCC
-        self.__force_sequential = force_sequential or self.ncpus <= 1 or OCC.sequential 
+        self.__force_sequential = force_sequential or OCC.sequential or self.ncpus <= 1 
+        if self.force_sequential : self.__ncpus = 1
         
         assert isinstance ( dump_freq , int ) and 0 <= dump_freq , \
             "Invalid `dump_freq' argument: %s" % dumpfreq
@@ -1227,7 +1234,7 @@ class TaskManager(ManagerBase) :
     # ==========================================================================
     ## purely sequention processing
     @property
-    def force_sequenctial ( self ) :
+    def force_sequential ( self ) :
         """`force_sequential` : force sequential processing ?"""
         return self.__force_sequential 
         
@@ -1449,23 +1456,23 @@ class TaskManager(ManagerBase) :
         ## number of jobs 
         njobs = ( myargs.pop ( 'njobs'     , None ) or 
                   myargs.pop ( 'max_value' , None ) or
-                  ( len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+                  ( len ( the_args ) if isinstance ( the_args , sized_types ) else None ) )
         
         ## progress-bar description
         description = myargs.pop ( 'description' , "Jobs:" )
-       
+
         ## regular map function 
-        results = map(job, jobs_args)
+        results     = map ( job , jobs_args )
 
         done = 0
         # =========================================================================
         try : # ===================================================================
             # =====================================================================
             ## explicit loop
-            for result in progress_bar ( results,
+            for result in progress_bar ( results     ,
                                          max_value   = njobs        ,
                                          description = description  ,
-                                         хsilent      = not progress ) :
+                                         silent      = not progress ) :
                 yield result
                 done += 1
             # =====================================================================
@@ -1487,10 +1494,8 @@ class TaskManager(ManagerBase) :
         """        
         if self.silent : return
 
-        if stat_pp.njobs == stat_loc.njobs : 
-            stat_pp .print_stats ( 'pp-' , cputime )
-        else : 
-            stat_loc.print_stats ( 'qq-' , cputime )
+        if stat_pp.njobs == stat_loc.njobs : stat_pp .print_stats ( 'pp-' , cputime )
+        else                               : stat_loc.print_stats ( 'qq-' , cputime )
 
     # =========================================================================
     ## report extra/unused arguments 

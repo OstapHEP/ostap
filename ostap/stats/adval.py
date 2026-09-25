@@ -98,7 +98,7 @@ def BDT_needs_regularization ( X , W = None ) :
     eff = neff / float ( nraw ) if 0 < nraw else 0.0
     if eff < 0.65 :
         effp = 100 * eff 
-        return 'eff[%.1f%%]<65%%' % effp 
+        return 'eff[%.0f%%]<65%%' % effp 
 
     # 2. Low dimensionality (<= 3) requires regularization only under limited statistics
     threshold = 50000.0 
@@ -428,7 +428,7 @@ class ADVAL_base (GoFnp):
 class ADVAL_LGBM (ADVAL_base) : 
     def __init__ ( self             ,
                    nToys    = 400   , **params ) :
-            
+        
         config = {
             'objective'         : 'regression',
             'metric'            : 'rmse',
@@ -442,16 +442,25 @@ class ADVAL_LGBM (ADVAL_base) :
             'colsample_bytree'  :  0.8 ,
             'reg_alpha'         :  0.1 ,
             'reg_lambda'        :  1.0 ,
-            'n_jobs'            : -1   ,
-            'verbosity'         : -1
+            'force_col_wise'    : True ,
+            'max_bin'           :  127 , 
+            'n_jobs'            : -11  ,  
+            'verbosity'         : -1   ,
+            'verbose'           : -1   ,
         }
-        
+            
         config.update ( params ) 
         
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
                               method    = method_LGBM , **config   ) 
+
+        if 'n_jobs' in self.params :
+            self.params [ 'num_thread' ] = self.params.pop ( 'n_jobs' , 1 )
+        if self.silent :
+            self.params [ 'verbosity' ] = -1 
+            self.params [ 'verbose'   ] = -1 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -466,30 +475,6 @@ class ADVAL_LGBM (ADVAL_base) :
         """ Parameters for strong regularization
         >>> params = gof.regularization ( params , n_features , n_samples ) 
         """
-        # --- Depth = 2 allows clean non-zero leaves under sPlot weights ---
-        
-        max_depth  = 1 if 1 == n_features else min ( 2 , params.get ( 'max_depth' , MAX_DEPTH ) )
-        num_leaves = 2 if max_depth == 1  else 3
-        
-        params [ 'max_depth'         ] = max_depth
-        params [ 'num_leaves'        ] = num_leaves
-        
-        # --- Minimal child sample threshold to capture sPlot gradients ---
-        params [ 'min_child_samples' ] = 5
-        params [ 'min_child_weight'  ] = 1e-3
-        
-        params [ 'colsample_bytree'  ] = 1.0
-        params [ 'subsample'         ] = 1.0
-        
-        params [ 'reg_alpha'         ] = 0.0
-        params [ 'reg_lambda'        ] = 0.0
-        
-        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
-        
-        return params
-
-    
-    def regularization ( self, params, n_features, n_samples ) :
         
         # ADAPTIVE DEPTH    
         max_depth  = min ( 6 , max ( 1 , n_features ) )
@@ -509,7 +494,9 @@ class ADVAL_LGBM (ADVAL_base) :
         params [ 'reg_alpha'         ] = 0.0
         params [ 'reg_lambda'        ] = 0.0
         
-        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
+        params [ 'learning_rate'     ] = min (  0.05 , params.get ( 'learning_rate' ,   0.05 ) )
+        params [ 'max_bins'          ] = min ( 63    , params.get ( 'mas_bin'       , 127    ) )
+        
         return params
     
     def work ( self    ,
@@ -551,7 +538,7 @@ class ADVAL_LGBM (ADVAL_base) :
         if 0 < early_stopping_rounds :
             callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
 
-        train_data = LightGBM.Dataset ( X_train , label = Y_train_mod , weight = W_train_mod , free_raw_data = False )
+        train_data = LightGBM.Dataset ( X_train , label = Y_train_mod , weight = W_train_mod , free_raw_data = False , params    = params     )
         val_data   = LightGBM.Dataset ( X_val   , label = Y_val_mod   , weight = W_val_mod   , free_raw_data = False , reference = train_data )
 
         model = LightGBM.train ( params          = params          ,
@@ -593,6 +580,12 @@ class ADVAL_XGB (ADVAL_base) :
                               normalize = False    ,
                               method    = method_XGB , **config   ) 
 
+        if 'n_jobs' in self.params :
+            self.params [ 'nthread' ] = self.params.pop ( 'n_jobs' , 1 )
+            
+        if self.silent : self.params [ 'verbosity' ] = 0
+            
+            
     # =========================================================================
     ## Parameters for strong regularization
     #  @code
@@ -634,8 +627,9 @@ class ADVAL_XGB (ADVAL_base) :
         evals  = [ ( dtrain , 'train' ) , ( dval , 'val' ) ]
 
         params = {}
-        params.update ( self.params )
         
+        params.update ( self.params )
+
         num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 10 )
         

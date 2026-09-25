@@ -129,22 +129,22 @@ Ostap::Exception::fillStream
   const static std::string s_tag       = " ---   TAG : " ;
   const static std::string s_code      = " ---  CODE : " ;
   const static std::string s_file      = " ---  FILE : " ;
-  const static std::string s_line      = " ---  line : " ;
+  const static std::string s_line      = " ---  LINE : " ;
   //
   os << s_exception << m_message ; 
   //
   const std::string newline = "\n" ; 
-  const int ind = index() ;
+  const int ind = index () ;
   if ( ind    ) { os << newline << s_index  << ind ; }  
   if ( !m_tag.empty() ) { os << newline << s_tag << m_tag   ; }
   // 
   switch ( m_code.code () )
-    {
-    case Ostap::StatusCode::SUCCESS     : os << newline << s_code << "SUCCESS"     ;  break ;
-    case Ostap::StatusCode::FAILURE     : os << newline << s_code << "FAILURE"     ;  break ;
-    case Ostap::StatusCode::RECOVERABLE : os << newline << s_code << "RECOVERABLE" ;  break ;
-    default                             : os << newline << s_code << m_code        ;  break ;
-    }
+  {
+  case Ostap::StatusCode::SUCCESS     : os << newline << s_code << "SUCCESS"     ;  break ;
+  case Ostap::StatusCode::FAILURE     : os << newline << s_code << "FAILURE"     ;  break ;
+  case Ostap::StatusCode::RECOVERABLE : os << newline << s_code << "RECOVERABLE" ;  break ;
+  default                             : os << newline << s_code << m_code        ;  break ;
+  }
   //
   if ( !m_file.empty() ) { os << newline << s_file << m_file ; } 
   if (  m_line         ) { os << newline << s_line << m_line ; }

@@ -20,9 +20,9 @@ Ostap::operator<<
 {
   if      ( sc.isSuccess     ()                     ) { return os << "SUCCESS"     ; }
   else if ( sc.isRecoverable ()                     ) { return os << "RECOVERABLE" ; }
-  else if ( Ostap::StatusCode::FAILURE == sc.code() ) { return os << "FAILRUE"     ; }
+  else if ( Ostap::StatusCode::FAILURE == sc.code() ) { return os << "FAILURE"     ; }
   //
-  return os << "FAILURE(" << sc.code() << ")" ;
+  return os << "FAILURE[" << sc.code() << "]" ;
 }
 // ============================================================================
 //                                                                      The END  

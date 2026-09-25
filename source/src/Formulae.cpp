@@ -32,7 +32,7 @@ Ostap::Formulae::Formulae
   {
     auto f = std::make_unique<Ostap::Formula> ( expr , tree ) ;
     Ostap::Assert ( f && f->ok ()                         ,
-                    "Invalid expression:" + expr          ,
+                    "Invalid expression:'" + expr + "'"   ,
                     "Ostap::Formulae"                     ,
                     INVALID_FORMULA , __FILE__ , __LINE__ ) ;
     //
@@ -99,7 +99,7 @@ void Ostap::FormulaVars::make_vars
   {
     auto f = makeFormula ( expr , vars ) ;
     Ostap::Assert ( f && f->ok ()                         ,
-                    "Invalid expression:" + expr          ,
+                    "Invalid expression:'" + expr + "'"   ,
                     "Ostap::FormulaVars"                  ,
                     INVALID_FORMULA , __FILE__ , __LINE__ ) ;
     //

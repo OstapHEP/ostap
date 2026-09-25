@@ -107,14 +107,14 @@ def RW_needs_regularization ( original                       ,
         effp   = eff_orig * 100
         v1     = nice_print ( neff_orig  , precision = 1 , width = 2 , with_sign = False )
         v2     = nice_print ( threhsold0 , precision = 1 , width = 2 , with_sign = False )        
-        result = 'eff_orig[%.1f%%]<65%%&neff_orig<5000' ( effp , v1 , v2 )
+        result = 'eff_orig[%.0f%%]<65%%&neff_orig<5000' % ( effp , v1 , v2 )
         return result.replace ( ' ' , '' )
     
     if eff_targ < 0.65 and neff_targ < threshold0 :
         effp   = eff_targ * 100
         v1     = nice_print ( neff_targ  , precision = 1 , width = 2 , with_sign = False )
         v2     = nice_print ( threhsold0 , precision = 1 , width = 2 , with_sign = False )        
-        result = 'eff_targ[%.1f%%]<65%%&neff_targ<5000' ( effp , v1 , v2 )
+        result = 'eff_targ[%.0f%%]<65%%&neff_targ<5000' % ( effp , v1 , v2 )
         return result.replace ( ' ' , '' )
 
     # 4. Low dimensionality (<= 4 features) needs regularization under limited statistics
@@ -129,7 +129,7 @@ def RW_needs_regularization ( original                       ,
     required_stats = 1500.0 * ( nf ** 1.8 )
     if neff < required_stats :
         rs     = nice_print ( required_stats , precision = 1 , width = 2 , with_sign = False )
-        vv     = nice_print ( neff          , precision = 1 , width = 2 , with_sign = False )        
+        vv     = nice_print ( neff           , precision = 1 , width = 2 , with_sign = False )        
         result = 'neff[%s]<%s' % ( vv , rs )
         return result.replace ( ' ' , '' )
         
@@ -788,7 +788,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             'n_estimators'          : DEFAULT_ESTIMATORS  ,
             'learning_rate'         : LEARNING_RATE       ,
             'max_depth'             : MAX_DEPTH           ,
-            'max_bin'               : 2048                ,
+            'max_bin'               : 2047                ,
             'num_leaves'            : 31                  ,
             'min_child_samples'     : 10                  ,
             'min_child_weight'      : 1e-4                ,
@@ -848,7 +848,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         params [ 'early_stopping_rounds' ] = None
         params [ 'min_data_in_bin'       ] = 1      
 
-        current_max_bin      = params.get ( 'max_bin', 2048 )
+        current_max_bin      = params.get ( 'max_bin', 2047 )
         params [ 'max_bin' ] = min ( current_max_bin, max ( 31, int ( n_samples / 15 ) ) )
         
         if 'path_smooth' in params : 

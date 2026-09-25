@@ -1072,7 +1072,7 @@ def all_entries ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
     return 0 == first and size <= last 
 
 # =============================================================================
-## Converrt numpy array into raw C++ buffer
+## Convert numpy array into raw C++ buffer
 #  @code
 #  data = ...
 #  raw , size = np2raw ( data ) 

@@ -119,10 +119,10 @@ Ostap::Trees::Getter::make_formulae () const // make formulae
   for ( SIT it = m_map.begin() ; m_map.end() != it ; ++it  )
     {
       auto formula = std::make_unique<Ostap::Formula> ( it->first , it->second , m_tree  ) ; 
-      Ostap::Assert ( formula && formula->ok ()       ,
-                      "Invalid Formula:" + it->second ,
-                      "Ostap::Trees::Getter::make_formulae" , 
-                      INVALID_FORMULA , __FILE__ , __LINE__ ) ;
+      Ostap::Assert ( formula && formula->ok ()               ,
+                      "Invalid formula:'" + it->second  + "," ,
+                      "Ostap::Trees::Getter::make_formulae"   , 
+                      INVALID_FORMULA , __FILE__ , __LINE__   ) ;
       
       formula->Notify() ;
       m_formulae [ it->first ].reset ( formula.release() ) ;
@@ -162,7 +162,7 @@ Ostap::Trees::Getter::ok ( const TTree* tree  ) const
                   INVALID_TREE     , __FILE__ , __LINE__ ) ;
   //
   Ostap::Assert ( !m_formulae.empty()         ,
-                  "Invalid Formulae/3"        ,
+                  "Invalid/empty formulae"    ,
                   "Ostap::Trees::Getter::ok"  , 
                   INVALID_FORMULAE  , __FILE__ , __LINE__ ) ;
   //

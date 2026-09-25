@@ -38,7 +38,10 @@ else :
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-      
+
+import faulthandler
+faulthandler.enable() #
+
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
@@ -49,17 +52,18 @@ def create_tree ( fname , nentries = 1000 ) :
     import ROOT, random 
     import ostap.io.root_file
     
-    from array import array 
+    from array import array
+    
     var0   = array ( 'i', [ 0 ] )
     var1   = array ( 'd', [ 0 ] )
     var2   = array ( 'd', [ 0 ] )
     var3   = array ( 'd', [ 0 ] )
 
-    NV     = 200
-    evars  = [ array ( 'd' , [0]   ) for i in range ( NV )  ]
+    NV     = 19 
+    evars  = [ array ( 'd' ,     [ 0.0 ] ) for i in range ( NV )  ]
     
-    NM     = 100
-    mvars  = [ array ( 'd' , 4*[0] ) for i in range ( NM )  ]
+    NM     = 19
+    mvars  = [ array ( 'd' , 4 * [ 0.0 ] ) for i in range ( NM )  ]
     
     from ostap.io.root_file import ROOTCWD
 
@@ -67,17 +71,20 @@ def create_tree ( fname , nentries = 1000 ) :
         
         root_file.cd () 
         tree = ROOT.TTree ( 'S','tree' )
-        tree.SetDirectory ( root_file  ) 
+        tree.SetDirectory ( root_file  )
+        
         tree.Branch ( 'evt'   , var0 , 'evt/I'   )
         tree.Branch ( 'mass'  , var1 , 'mass/D'  )
         tree.Branch ( 'pt'    , var2 , 'pt/D'    )
         tree.Branch ( 'eta'   , var3 , 'eta/D'   )
 
-        for i in range ( 1 , NV ) :
-            tree.Branch ( "sv%d" % i , evars[i] , 'sv%d/D'    % i )
+        for i in range ( NV ) :
+            ii = i + 1 
+            tree.Branch ( "sv%d" % ii , evars [ i ] , 'sv%d/D'    % ii )
             
-        for i in range ( 1 , NM ) :
-            tree.Branch ( "vv%d" % i , mvars[i] , 'vv%d[4]/D' % i )
+        for i in range ( NM ) :
+            ii = i + 1             
+            tree.Branch ( "vv%d" % ii , mvars [ i ] , 'vv%d[4]/D' % ii )
                                       
         for i in range ( nentries ) : 
             
@@ -90,10 +97,9 @@ def create_tree ( fname , nentries = 1000 ) :
             var2 [ 0 ] = pt
             var3 [ 0 ] = eta
 
-            for j in range ( NV )  : evars[j] = j 
+            for j in range ( NV )  : evars [ j ][ 0 ] = i * NV + j   
             for j in range ( NM )  :
-                for k in range(4) :
-                    mvars[j][k] = 4 * j + k 
+                for k in range ( 4 ) : mvars [ j ] [ k ] = 4.0 * j + k 
 
             tree.Fill()
             
@@ -114,26 +120,25 @@ def prepare_data ( nfiles = 50 ,  nentries = 500  ) :
 GeV = 1.0
 MeV = GeV/1000
 
-
+# =============================================================================
+## prepare data
+with timing ( "Prepare test data" , logger = logger ) : 
+    files = prepare_data ( 4 , 1000 )
+    data  = Data ( files , 'S' )
+    logger.info ( 'Input data:\n%s' % data.chain.table ( prefix = '# ' ) )
+    
 def ptcut ( s ) : return 3 < s.pt
 def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta 
 
+mJPsi = ROOT.RooRealVar ( 'mJPsi' , 'mass(J/Psi) [GeV]' , 3.0 * GeV , 3.2 * GeV )
+
 
 # =============================================================================
-def test_fitting_fill () :
+def test_fitting_fill_1 () :
 
     logger = getLogger ('test_fitting_fill_1' ) 
 
-    ## prepare data
-    with timing ( "Prepare test data" , logger = logger ) : 
-        files = prepare_data ( 4 , 5000 )
-        data  = Data ( files , 'S' )
-
-    chain = data.chain
-
-    ## return 
-    
-    mJPsi = ROOT.RooRealVar ( 'mJPsi' , 'mass(J/Psi) [GeV]' , 3.0 * GeV , 3.2 * GeV )
+    chain  = data.chain
 
     # =========================================================================
     logger.info ( attention ( 'All trivial variables' ) ) 
@@ -179,7 +184,6 @@ def test_fitting_fill () :
         logger.info ( attention ( t5.name ) )        
         ds1_5 , _ = chain.make_dataset ( silent = False , **config )
 
-
     table = [ ('Configuration' , 'CPU' ) ] 
 
     table.append ( ( t1.name , '%.3fs' % t1.delta ) )
@@ -191,8 +195,7 @@ def test_fitting_fill () :
     title1 = "All trivial variables"
     table1 = T.table ( table , title = title1 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title1 , table1 ) ) 
-
-
+    
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -229,10 +232,17 @@ def test_fitting_fill () :
     logger.info ( '%s\n%s' % ( title1p , table1p ) ) 
 
 
+# =============================================================================
+def test_fitting_fill_2 () :
+
+    logger = getLogger ('test_fitting_fill_2' ) 
+
+    chain  = data.chain
+
     # =========================================================================
     logger.info ( attention( 'Trivial variables + CUT' ) ) 
     # =========================================================================
- 
+    
     variables = [
         Variable ( mJPsi     , accessor = 'mass' ) ,
         Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200 , 'mass*1000'   ) , 
@@ -269,8 +279,8 @@ def test_fitting_fill () :
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = True  , use_frame = True  )
-        ds2_4 = selector.data 
-
+        ds2_4 = selector.data
+            
     table = [ ('Configuration' , 'CPU' ) ] 
 
     table.append ( ( t1.name , '%.3fs' % t1.delta ) )
@@ -306,6 +316,7 @@ def test_fitting_fill () :
         chain.parallel_fill ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
         ds2p_4 = selector.data 
 
+        
     table = [ ('Configuration' , 'CPU' ) ] 
 
     table.append ( ( t1.name , '%.3fs' % t1.delta ) )
@@ -316,6 +327,14 @@ def test_fitting_fill () :
     title2p = "Trivial variables + CUT (parallel)"
     table2p = T.table ( table , title = title2p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title2p , table2p ) ) 
+
+
+# =============================================================================
+def test_fitting_fill_3 () :
+
+    logger = getLogger ('test_fitting_fill_3' ) 
+
+    chain  = data.chain
 
     # =========================================================================
     logger.info ( attention ( 'Non-trivial variables' ) ) 
@@ -403,6 +422,14 @@ def test_fitting_fill () :
     title3p = "Non-trivial variables (parallel)"
     table3p = T.table ( table , title = title3p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title3p , table3p ) ) 
+
+    
+# =============================================================================
+def test_fitting_fill_4 () :
+
+    logger = getLogger ('test_fitting_fill_4' ) 
+
+    chain = data.chain
 
     # =========================================================================
     logger.info ( attention ( 'Non-trivial variables + CUT' ) ) 
@@ -493,6 +520,8 @@ def test_fitting_fill () :
     table4p = T.table ( table , title = title4p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
+
+"""
     logger.info ( '%s\n%s' % ( title1  , table1  ) )
     logger.info ( '%s\n%s' % ( title1p , table1p ) )
     
@@ -504,11 +533,17 @@ def test_fitting_fill () :
     
     logger.info ( '%s\n%s' % ( title4  , table4  ) ) 
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
+"""
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_fitting_fill ()
+    ## pass
+
+    test_fitting_fill_1 ()
+    test_fitting_fill_2 ()
+    test_fitting_fill_3 ()
+    test_fitting_fill_4 ()
     
 # =============================================================================
 ##                                                                      The END 

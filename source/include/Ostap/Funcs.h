@@ -79,7 +79,7 @@ namespace Ostap
       /// get the expressoon
       const std::string& expression () const { return m_expression ; }
       /// function name 
-      const std::string& fun_name   () const { return m_name ; }
+      const std::string& fun_name   () const { return m_name       ; }
       // ======================================================================
     public:
       // ======================================================================

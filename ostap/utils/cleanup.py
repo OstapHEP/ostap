@@ -302,7 +302,7 @@ class  CleanUp(object) :
     @staticmethod
     def remove_file ( fname ) :
         """ Remove the (temporary) file
-        """
+        """    
         if os.path.exists ( fname ) and os.path.isfile ( fname ) :
 
             if fname in CleanUp._protected :
@@ -334,16 +334,23 @@ class  CleanUp(object) :
                 for dd in subdirs :
                     dd = os.path.join ( root , dd )
                     logger.verbose ( 'remove subdirectory %s in the directory %s ' % ( dd , fdir ) )
-                    try    : os.rmdir   ( dd  )
-                    except : pass
+                    # ========================================================
+                    try    : os.rmdir   ( dd  ) # ============================
+                    except : pass # ==========================================
+                    # ========================================================
                     if os.path.exists ( dd ) and os.path.isdir ( dd )   :
                         CleanUp._failed.add ( dd  ) 
-                        logger.error ( 'failed to remove %s in the directory %s ' % ( dd , fdir ) )                        
+                        logger.error ( 'failed to remove %s in the directory %s ' % ( dd , fdir ) )
+            # ================================================================
             ## 4: finally remove the root
-            try    :
+            # ================================================================
+            try    : # =======================================================
+                # ============================================================
                 os.rmdir ( fdir )
-                return True 
-            except :
+                return True
+                # ============================================================
+            except : # =======================================================
+                # ============================================================
                 pass
         if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
             CleanUp._failed.add ( fdir ) 
@@ -433,7 +440,8 @@ class CleanUpPID(object) :
             
     @property
     def piddir ( self ) :
-        """`piddir' : PID-dependent temporary directory"""
+        """`piddir' : PID-dependent temporary directory
+        """
         return self.__piddir
     
 # =============================================================================

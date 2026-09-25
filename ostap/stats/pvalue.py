@@ -438,7 +438,7 @@ class TOYS (PVALUE) :
                    sample      = False ,
                    parameters  = {}    ,
                    random_seed = None  ,
-                   descriptio  = toys_symbol ) :
+                   description = toys_symbol ) :
     
         from ostap.fitting.pdfbasic import APDF1
         if not isinstance ( pdf , APDF1 ) : raise TypeError ( "%s: invaild `pdf` type:%s" % ( typename ( self ) , typename ( pdf ) ) )

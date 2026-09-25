@@ -185,27 +185,6 @@ bool Ostap::Selector::process_entry ()
  * 
  *  @param tree      root-tree 
  *  @param selector  the selector 
- *  
- *  @see TTree 
- *  @see TTree::Process 
- *  @see TSelector 
- *
- *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
- *  @date   2011-01-21
- */
-// ============================================================================
-long Ostap::Utils::process
-( TTree*             tree     ,
-  TSelector*         selector )
-{
-  if ( !tree || !selector ) { return -1 ; }
-  return tree->Process ( selector ) ;
-}
-// ============================================================================
-/*  helper function to use TTree::Process in python 
- * 
- *  @param tree      root-tree 
- *  @param selector  the selector 
  *  @param events    events to be processed 
  *  
  *  @see TTree 
@@ -217,59 +196,22 @@ long Ostap::Utils::process
  */
 // ============================================================================
 long Ostap::Utils::process
-( TTree*              tree      ,
-  TSelector*          selector  , 
-  const unsigned long events    , 
-  const unsigned long first     ) 
-{
+( TTree*                  tree     ,
+  TSelector*              selector ,
+  const Ostap::EventIndex first    ,  
+  const Ostap::EventIndex last     ) 
+{  
   if ( !tree || !selector ) { return -1 ; }
-  return tree->Process ( selector , "" , events , first ) ;
+  if ( last <= first      ) { return  0 ; }
+  //
+  const Long64_t size = tree -> GetEntries () ;
+  if ( size <= first      ) { return  0 ; }
+  //
+  const Long64_t LAST  = last <= size ? static_cast<Long64_t> ( last  ) : size ;
+  const Long64_t FIRST =                static_cast<Long64_t> ( first )        ; 
+  //
+  return tree -> Process ( selector , "" , LAST - FIRST , FIRST  ) ;
 } 
-// ============================================================================
-/* helper function to use TChain::Process in python 
- * 
- *  @param chain     root-chain
- *  @param selector  the selector 
- *  
- *  @see TTree 
- *  @see TTree::Process 
- *  @see TSelector 
- *
- *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
- *  @date   2011-01-21
- */
-// ============================================================================
-long Ostap::Utils::process
-( TChain*            chain    ,
-  TSelector*         selector )
-{
-  if ( !chain || !selector ) { return -1 ; }
-  return chain -> Process ( selector ) ;
-}
-// ============================================================================
-/* helper function to use TChain::Process in python 
- * 
- *  @param chain     root-chain
- *  @param selector  the selector 
- *  @param events    events to be processed 
- *  
- *  @see TTree 
- *  @see TTree::Process 
- *  @see TSelector 
- *
- *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
- *  @date   2011-01-21
- */
-// ============================================================================
-long Ostap::Utils::process
-( TChain*             chain    ,
-  TSelector*          selector ,
-  const unsigned long events   ,
-  const unsigned long first    ) 
-{
-  if ( !chain || !selector ) { return -1 ; }
-  return chain -> Process ( selector , "" , events , first ) ;
-}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

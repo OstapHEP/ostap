@@ -10,6 +10,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Types.h" 
 #include "Ostap/ProgressConf.h" 
 #include "Ostap/ProgressBar.h" 
 // ============================================================================
@@ -161,71 +162,20 @@ namespace Ostap
      * 
      *  @param tree      root-tree 
      *  @param selector  the selector 
-     *  
-     *  @see TTree 
-     *  @see TTree::Process 
-     *  @see TSelector 
-     *
-     *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
-     *  @date   2011-01-21
-     */
-    long process
-    ( TTree*             tree      ,
-      TSelector*         selector  ) ;
-    // ========================================================================
-    /** helper function to use TTree::Process in python 
-     * 
-     *  @param tree      root-tree 
-     *  @param selector  the selector 
      *  @param events    events to be processed 
      *  
-     *  @see TTree 
-     *  @see TTree::Process 
-     *  @see TSelector 
+     *  @see   TTree 
+     *  @see   TTree::Process 
+     *  @see   TSelector 
      *
      *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
      *  @date   2013-02-10
      */
     long process
-    ( TTree*              tree         ,
-      TSelector*          selector     , 
-      const unsigned long events       , 
-      const unsigned long first    = 0 ) ;
-    // ========================================================================
-    /** helper function to use TChain::Process in python 
-     * 
-     *  @param chain     root-tree/chain
-     *  @param selector  the selector 
-     *  
-     *  @see TTree 
-     *  @see TTree::Process 
-     *  @see TSelector 
-     *
-     *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
-     *  @date   2011-01-21
-     */
-    long process 
-    ( TChain*    chain     ,
-      TSelector* selector  ) ;
-    // ========================================================================
-    /** helper function to use TChain::Process in python 
-     * 
-     *  @param chain     root-tree/chain
-     *  @param selector  the selector 
-     *  @param events    events to be processed 
-     *  
-     *  @see TTree 
-     *  @see TTree::Process 
-     *  @see TSelector 
-     *
-     *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
-     *  @date   2013-02-10
-     */
-    long process 
-    ( TChain*             chain        ,
-      TSelector*          selector     ,
-      const unsigned long events       , 
-      const unsigned long first    = 0 ) ;
+    ( TTree*                  tree     ,
+      TSelector*              selector , 
+      const Ostap::EventIndex first    = Ostap::FirstEvent ,  
+      const Ostap::EventIndex last     = Ostap::LastEvent  ) ;
     // ========================================================================
   };  
   // ==========================================================================

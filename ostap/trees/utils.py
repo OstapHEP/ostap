@@ -26,11 +26,14 @@ __all__     = (
 from   collections            import namedtuple 
 from   itertools              import accumulate 
 from   ostap.core.ostap_types import string_types, integer_types, path_types  
+from   ostap.math.math_base   import ( evt_range   , all_entries ,
+                                       FIRST_ENTRY , LAST_ENTRY  )
 from   ostap.utils.cleanup    import CleanUp
+from   ostap.utils.core       import typename 
 from   ostap.core.core_base   import valid_pointer, rootException
 from   ostap.math.math_base   import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
 from   ostap.io.utils         import file_info
-from   ostap.utils.utils      import split_range 
+from   ostap.utils.utils      import split_range
 import ostap.trees.trees_base   
 import ROOT, os 
 # =============================================================================
@@ -48,6 +51,8 @@ file_item_types = path_types + ( FileItem , )
 # =============================================================================
 ## full file name 
 def fullfn ( f ) :
+    """ Get full file name
+    """
     if os.path.exists ( f ) and os.path.isfile ( f ) :
         ff = os.path.abspath ( f  )
         if os.path.samefile  ( ff , f ) : return ff
@@ -153,7 +158,6 @@ class Chain(CleanUp) :
     # ======================================================================================
     def __make_hash  ( self , tree_name , file_name , size ) :
         return hash ( ( self.name , file_name , size ) ) 
-
     
     ## of this is a good/valid entry? 
     def __good_item  ( self , item  ) :
@@ -201,7 +205,8 @@ class Chain(CleanUp) :
                 else : logger.warning ( "explicitly  specified list of `files` is ignored!" )
                 
             tfirst , tlast = evt_range  ( sum ( s for s in tree.sizes () ) , first , last )
-            if tfirst != tree.first or tlast != tree.last : logger.warning ( "explicitly specified `first/last` %s/%s are ignored!"  % ( first , last ) )
+            if tfirst != tree.first or tlast != tree.last :
+                logger.warning ( "explicitly specified `first/last` %s/%s are ignored!"  % ( first , last ) )
             
             self.__name  = tree.name
             self.__items = tree.items            
@@ -209,6 +214,9 @@ class Chain(CleanUp) :
             self.__last  = tree.last  
 
         elif isinstance ( tree , ROOT.TTree  ) and valid_pointer ( tree ) and 1 <= tree.nFiles : 
+
+            ## adjust first/last 
+            first , last = evt_range ( tree , first , last )
             
             self.__name  = tree.fullpath
             self.__items = tuple ( self.__make_item ( fname ) for fname in tree.files ) 
@@ -216,6 +224,9 @@ class Chain(CleanUp) :
             self.__last  = last 
             
         elif isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree ) : 
+
+            ## adjust first/last 
+            first , last = evt_range ( tree , first , last )
             
             self.__name  = tree.fullpath
             
@@ -248,7 +259,6 @@ class Chain(CleanUp) :
                                                                           typename ( name  ) ,
                                                                           typename ( files ) ) )        
 
-        
         asizes  = [ s for s in self.accumulated_sizes() ]
         nevents = asizes [ -1 ]
         
@@ -280,7 +290,12 @@ class Chain(CleanUp) :
             self.__items  = tuple ( items  )
             self.__first  = first
             self.__last   = last 
-            
+
+        # =====================================================================
+        ## trick...
+        ## state = self.__getstate__ ()
+        ## self.__setstate__ ( state )
+
     # =========================================================================
     ## Generator to get the sizes for all files
     #  @code
@@ -427,6 +442,13 @@ class Chain(CleanUp) :
         """ Delegate all other attributes to the underlying chain object"""
         return getattr  ( self.chain , attr )
 
+    # =========================================================================
+    def __str__ ( self ) :
+        rep = '%s' % typename ( self )
+        ch  = self.chain
+        return '%s:%s #%d #%d %s' % ( typename ( self ) , ch.name , len ( ch ) , self.nFiles , str ( self.files ) ) 
+    __repr__ = __str__
+    
 # =============================================================================
 ## @class Tree
 #  Simple class to make TTree suitable for multiprcessing: 

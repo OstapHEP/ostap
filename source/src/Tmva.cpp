@@ -100,7 +100,7 @@ namespace
           auto _v = std::make_unique<Ostap::FormulaVar>( formula , varlst , false ) ;
           // ========================================================================
           Ostap::Assert ( _v && _v -> ok ()                     , 
-                          "Invalid formula:" + formula          ,
+                          "Invalid formula:'" + formula  + "'"  ,
                           "Ostap::AddTMVA::READER"              ,
                           INVALID_FORMULA , __FILE__ , __LINE__ ) ;
           // ========================================================================
@@ -108,7 +108,7 @@ namespace
           m_vars.push_back ( std::move ( _v ) ) ;
           // ========================================================================
           Ostap::Assert ( var                                    , 
-                          "Invalid variable:" + name             ,
+                          "Invalid variable:'" + name  + "'"     ,
                           "Ostap::AddTMVA::READER"               ,
                           INVALID_VARIABLE , __FILE__ , __LINE__ ) ;
           // ========================================================================
@@ -124,10 +124,10 @@ namespace
           /// 
           auto _v = std::make_unique<Ostap::FormulaVar>( formula , varlst , false ) ;
           // ========================================================================
-          Ostap::Assert ( _v && _v -> ok ()                       , 
-                          "Invalid spectator formula:" + formula  ,
-                          "Ostap::AddTMVA::READER"                ,
-                          INVALID_FORMULA , __FILE__ , __LINE__   ) ;
+          Ostap::Assert ( _v && _v -> ok ()                             , 
+                          "Invalid spectator formula:'" + formula + "'" ,
+                          "Ostap::AddTMVA::READER"                      ,
+                          INVALID_FORMULA , __FILE__ , __LINE__         ) ;
           // ========================================================================
           var    = _v.get() ;
           m_vars.push_back ( std::move ( _v ) ) ;
@@ -358,7 +358,7 @@ namespace
         auto _v = std::make_unique<Ostap::Formula>( fname , formula , m_data ) ;        
         // ======================================================================
         Ostap::Assert ( _v && _v->ok  ()                      ,
-                        "Invalid formula:" +fname             ,
+                        "Invalid formula:'" + fname + "'"     ,
                         "Ostap::AddTMVA:READER2"              ,
                         INVALID_FORMULA , __FILE__ , __LINE__ ) ;                                              
         // ======================================================================
@@ -366,7 +366,7 @@ namespace
         _vars.push_back ( std::move ( _v ) ) ;        
         //
         Ostap::Assert ( var                                    , 
-                        "Invalid variable:" + name             ,
+                        "Invalid variable:'" + name + "'"      , 
                         "Ostap::AddTMVA::READER2"              ,
                         INVALID_VARIABLE , __FILE__ , __LINE__ ) ;
         // ========================================================================
@@ -382,10 +382,10 @@ namespace
         //
         auto _v = std::make_unique<Ostap::Formula>( formula , m_data ) ;        
         // ======================================================================
-        Ostap::Assert ( _v && _v->ok  ()                       ,
-                        "Invalid spectatir formula:" + formula ,
-                        "Ostap::AddTMVA:READER2"               ,
-                        INVALID_FORMULA , __FILE__ , __LINE__  ) ;                                              
+        Ostap::Assert ( _v && _v->ok  ()                              ,
+                        "Invalid spectator formula:'" + formula + "'" ,
+                        "Ostap::AddTMVA:READER2"                      ,
+                        INVALID_FORMULA , __FILE__ , __LINE__         ) ;                                              
         // ======================================================================
         Ostap::Formula* var = _v.get() ;
         _vars.push_back ( std::move ( _v ) ) ;        

@@ -104,10 +104,13 @@ __all__ = (
 # =============================================================================
 from   ostap.core.meta_info       import root_info 
 from   ostap.core.ostap_types     import num_types, string_types, integer_types
+from   ostap.math.math_base       import ( evt_range   , all_entries ,
+                                           FIRST_ENTRY , LAST_ENTRY  )
 from   ostap.core.core            import ( cpp  , Ostap ,
                                            dsID , valid_pointer , binomEff )
 from   ostap.fitting.variables    import make_formula
-from   ostap.utils.progress_conf  import progress_conf 
+from   ostap.utils.progress_conf  import progress_conf
+from   ostap.utils.core           import typename 
 from   ostap.math.reduce          import root_factory 
 from   ostap.trees.utils          import Chain 
 from   ostap.trees.cuts           import expression_types, vars_and_cuts 
@@ -187,7 +190,8 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         
         ## initialize the base
         self.__selection = str ( selection ).strip()
-        
+
+        ## 
         ## initialize the base
         super ( SelectorWithCuts , self ).__init__ ( self.selection ,
                                                      tree           ,
@@ -957,9 +961,7 @@ class SelectorWithVars(SelectorWithCuts) :
     def process_entry ( self ):
         """ Fill data set 
         """
-
         self.stat.processed += 1
-        
         #
         ## == for more convenience
         #
@@ -975,7 +977,6 @@ class SelectorWithVars(SelectorWithCuts) :
         One just needs to  ensure that:
         - 'accessor functions' for the variables and 'cuts' agree with the type of 'bamboo'
         """
-        
         ## apply cuts (if needed) 
         if self.__cuts and not self. __cuts ( bamboo )  : return 0 
 
@@ -1071,56 +1072,6 @@ class SelectorWithVars(SelectorWithCuts) :
                 cuts           ) )            
             
         if self.__data and not self.silence :
-            vars = []
-            for v in self.__variables :
-                s    = self.__data.statVar( v.name )
-                mnmx = s.minmax ()
-                mean = s.mean   ()
-                rms  = s.rms    ()
-                r    = ( v.name        ,                       ## 0 
-                         v.description ,                       ## 1 
-                         ('%+.5g' % mean.value() ).strip() ,   ## 2
-                         ('%.5g'  % rms          ).strip() ,   ## 3 
-                         ('%+.5g' % mnmx[0]      ).strip() ,   ## 4
-                         ('%+.5g' % mnmx[1]      ).strip() )   ## 5
-                s = self.__skip [ v.name] 
-                if s : skip = '%-d' % s
-                else : skip = '' 
-                r +=  skip,                                    ## 6 
-                vars.append ( r )
-
-            vars.sort()
-            
-            name_l  = len ( 'Variable'    ) + 2 
-            desc_l  = len ( 'Description' ) + 2 
-            mean_l  = len ( 'mean' ) + 2 
-            rms_l   = len ( 'rms'  ) + 2
-            min_l   = len ( 'min'  ) + 2 
-            max_l   = len ( 'max'  ) + 2 
-            skip_l  = len ( 'Skip' ) 
-            for v in vars :
-                name_l = max ( name_l , len ( v [ 0 ] ) )
-                desc_l = max ( desc_l , len ( v [ 1 ] ) )
-                mean_l = max ( mean_l , len ( v [ 2 ] ) )
-                rms_l  = max ( rms_l  , len ( v [ 3 ] ) )
-                min_l  = max ( min_l  , len ( v [ 4 ] ) )
-                max_l  = max ( max_l  , len ( v [ 5 ] ) )
-                skip_l = max ( skip_l , len ( v [ 6 ] ) )
-
-            sep      = '# -%s+%s+%s+%s+%s-' % ( ( name_l       + 2 ) * '-' ,
-                                                ( desc_l       + 2 ) * '-' ,
-                                                ( mean_l+rms_l + 5 ) * '-' ,
-                                                ( min_l +max_l + 5 ) * '-' ,
-                                                ( skip_l       + 2 ) * '-' )
-            fmt = '#   %%%ds | %%-%ds | %%%ds / %%-%ds | %%%ds / %%-%ds | %%-%ds   '  % (
-                name_l ,
-                desc_l ,
-                mean_l ,
-                rms_l  ,
-                min_l  ,
-                max_l  ,
-                skip_l
-                )
             
             report  = 'Dataset(%s) created:' % self.__name
             report += ' ' + allright ( '%s entries, %s variables' %  ( len ( self.__data ) , len ( self.variables ) ) )
@@ -1131,38 +1082,9 @@ class SelectorWithVars(SelectorWithCuts) :
             if not self.__cuts   : report += ' '      + allright  ( 'no py-cuts'   )  
             else                 : report += ' '      + attention ( 'with py-cuts' )
 
-            
-            fmt_name = '%%-%ds' % name_l 
-            fmt_desc = '%%-%ds' % desc_l
-            fmt_mean = '%%%ds'  % mean_l
-            fmt_rms  = '%%-%ds' % rms_l
-            fmt_min  = '%%%ds'  % min_l
-            fmt_max  = '%%-%ds' % max_l
-            fmt_skip = '%%-%ds' % skip_l
-            
-            header = ( ( '{:^%d}' % name_l ).format ( 'Variable'    ) ,
-                       ( '{:^%d}' % desc_l ).format ( 'Description' ) ,
-                       ( '{:^%d}' % mean_l ).format ( 'mean'        ) ,
-                       ( '{:^%d}' % rms_l  ).format ( 'rms'         ) ,
-                       ( '{:^%d}' % min_l  ).format ( 'min'         ) ,
-                       ( '{:^%d}' % max_l  ).format ( 'max'         ) ,
-                       ( '{:^%d}' % skip_l ).format ( 'skip'        ) )
-            
-            table_data = [  header ]
-            for v in vars :
-                table_data.append ( ( fmt_name % v [ 0 ] ,
-                                      fmt_desc % v [ 1 ] ,
-                                      fmt_mean % v [ 2 ] ,
-                                      fmt_rms  % v [ 3 ] ,
-                                      fmt_min  % v [ 4 ] ,
-                                      fmt_max  % v [ 5 ] ,
-                                      attention ( fmt_skip % v [ 6 ] ) if v[6]  else v[6] ) ) 
-            
-            import ostap.logger.table as T
             title = report 
-            t  = T.table ( table_data , title , '# ')
-            self.logger.info ( title + '\n' + t )
-            
+            table = self.__data.table ( title = title  , prefix = '# ' )
+            self.logger.info ( '%s:\n%s' % ( title  , table ) ) 
             
         if not self.__data or not len ( self.__data ) :
             skip = 0
@@ -1254,7 +1176,9 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__notifier = Ostap.Utils.Notifier( tree )
         for v in self.__variables :
             if isinstance ( v.accessor , ROOT.TObject ) :
-                self.__notifier.add  ( v.accessor ) 
+                self.__notifier.add  ( v.accessor )
+                
+        self.__notifier.Notify () 
         
     # =========================================================================
     ## Notify  (e.g. another TTree in the chain
@@ -1263,10 +1187,10 @@ class SelectorWithVars(SelectorWithCuts) :
         """ Notify  (e.g. another TTree in the chain
         - see Ostap::SelectorWithCuts::Notify
         """
-        #
+        ##
         result = True 
         if self.formula() : result = self.formula().Notify()
-        #         
+        ##         
         return result 
 
     # ========================================================================
@@ -1282,8 +1206,8 @@ class SelectorWithVars(SelectorWithCuts) :
             
         if self.__notifier :
             self.__notifier.exit()
-            self.__notifier = None  
-
+            self.__notifier = None
+            
     # =========================================================================
     ## reduce the object 
     def __reduce__ ( self ) :
@@ -1562,12 +1486,12 @@ ROOT.TTree.make_dataset = make_dataset
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
 def fill_dataset2 ( self              ,
-                    selector          ,
-                    nevents   = -1    ,
-                    first     =  0    ,
-                    shortcut  = True  , 
-                    silent    = False ,
-                    use_frame = 50000 ) :
+                    selector          , *   ,
+                    first     = FIRST_ENTRY ,
+                    last      = LAST_ENTRY  , 
+                    shortcut  = True        , 
+                    silent    = False       ,
+                    use_frame = 50000       ) :
     """ 'Process' the tree/chain with proper TPySelector :
     
     >>> from ostap.fitting.pyselectors import SelectorWithCVars     
@@ -1575,11 +1499,14 @@ def fill_dataset2 ( self              ,
     >>> chain    = ...
     >>> chain.fill_dataset2 ( selector )  ## NB: note lowercase 'process' here !!!    
     """
+
+    ## process range 
+    first, last = evt_range   ( self , first , last ) 
     
     ## process all events? 
-    all = ( 0 == first ) and ( nevents < 0 or len ( self ) <= nevents )
+    process_all = all_entries ( self , first , last ) 
 
-    if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
+    if process_all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
         
         if ( not selector.morecuts ) and  selector.trivial_vars : 
                 ## ( DataSet_NEW_FILL or selector.really_trivial ) :
@@ -1607,7 +1534,7 @@ def fill_dataset2 ( self              ,
     #  @see ROOT.RDataFrame.Filter
     #  @see ROOT.RDataFrame.Snapshot
     #  It can be very efficient is selection/filtering cuts are harsh enough.    
-    if all and 0 < use_frame and isinstance ( self , ROOT.TTree ) and use_frame <= len ( self ) :
+    if process_all and 0 < use_frame and isinstance ( self , ROOT.TTree ) and use_frame <= len ( self ) :
         
         if isinstance ( selector , SelectorWithVars ) and selector.selection :
 
@@ -1738,7 +1665,6 @@ def fill_dataset2 ( self              ,
                         logger.info ( 'Snapshot at %s %.3g[MB]' % ( filename , float ( s ) / 2**20 ) )  
                     else :
                         logger.info ( 'Snapshot at %s '         %   filename ) 
-
                             
                 import ostap.io.root_file
 
@@ -1770,13 +1696,11 @@ def fill_dataset2 ( self              ,
                     
                     if not silent : logger.info ( 'Redirect to (re)processing' )
                     
-                    result       = fill_dataset2 ( tree                 ,
-                                                   new_selector         ,
-                                                   nevents   = -1       ,
-                                                   first     =  0       ,
-                                                   shortcut  = True     ,
-                                                   silent    = silent   ,
-                                                   use_frame = -1       )
+                    result       = fill_dataset2 ( tree                    ,
+                                                   new_selector            ,
+                                                   shortcut  = True        ,
+                                                   silent    = silent      ,
+                                                   use_frame = -1          )
                     
                     selector.data           = new_selector.data
                     selector.stat.total     = total_0
@@ -1794,20 +1718,18 @@ def fill_dataset2 ( self              ,
     # =========================================================================
     
     import ostap.fitting.roofit
-
-    nevents = nevents if 0 <= nevents else ROOT.TChain.kMaxEntries
+    
     if isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
         if not silent : logger.info ( "No shortcuts&frame tricks possible: use plain Selector" )
-        args   =  () if all else ( nevents , first )
-        result = Ostap.Utils.process ( self , selector , *args )
+        result = Ostap.Utils.process ( self , selector , first , last  )        
         if result < 0   : logger.error ("TTree::Process: result is %s" % result )
-        elif not silent : logger.info  ("TTree::Process: result is %s" % result )  
+        elif not silent : logger.info  ("TTree::Process: result is %s" % result )
+        
         return selector.data, selector.stat
     
     if isinstance ( self , ROOT.TTree ) and isinstance ( selector , ROOT.TSelector ) :
         if not silent : logger.info ( "No shortcuts&frame tricks possible: use plain Selector" )
-        args =  () if all else ( nevents , first )
-        result = Ostap.Utils.process ( self , selector , *args )
+        result = Ostap.Utils.process ( self , selector , first , last  )
         if result < 0   : logger.error ("TTree::Process: result is %s" % result )
         elif not silent : logger.info  ("TTree::Process: result is %s" % result )  
         return result 
@@ -1823,8 +1745,8 @@ def fill_dataset2 ( self              ,
         tree = store.tree()
         return fill_dataset2 ( tree      ,
                                selector  ,
-                               nevents   = nevents   ,
                                first     = first     ,
+                               last      = last      , 
                                shortcut  = shortcut  ,
                                silent    = silent    ,
                                use_frame = use_frame )
@@ -1838,8 +1760,8 @@ def fill_dataset2 ( self              ,
         cloned = self.Clone ( dsID() )        
         result = fill_dataset2 ( cloned    ,
                                  selector  ,
-                                 nevents   = nevents   ,
                                  first     = first     ,
+                                 last      = last      , 
                                  shortcut  = shortcut  ,
                                  silent    = silent    ,
                                  use_frame = use_frame )
@@ -1884,8 +1806,13 @@ def fill_dataset1 ( tree                 ,
                                   name      = name      ,
                                   fullname  = title     , 
                                   progress  = progress  , 
-                                  silence   = silent    ) 
-    tree.fill_dataset2 ( selector , silent = silent , shortcut  = shortcut , use_frame = use_frame )
+                                  silence   = silent    )
+    
+    tree.fill_dataset2 ( selector  ,
+                         silent    = silent    ,
+                         shortcut  = shortcut  ,
+                         use_frame = use_frame )
+    
     data = selector.data
     stat = selector.stat
     del selector
@@ -1958,7 +1885,10 @@ ROOT.TTree.fill_dataset = fill_dataset
 # @see Ostap::Process 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
-def _process_ ( self , selector , nevents = -1 , first = 0 , **kwargs ) :
+def _process_ ( self                   ,
+                selector               , *  ,
+                first    = FIRST_ENTRY ,
+                last     = LAST_ENTRY  , **kwargs ) :
     """ 'Process' the tree/chain with proper TPySelector :
     
     >>> from ostap.fitting.pyselectors import Selector    
@@ -1970,31 +1900,30 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , **kwargs ) :
     """
 
     if isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
-        return fill_dataset2 ( self              ,
-                               selector          ,
-                               nevents = nevents ,
-                               first   = first   , **kwargs ) 
+        
+        return fill_dataset2 ( self            ,
+                               selector        ,
+                               first   = first ,
+                               last    = last  , **kwargs ) 
     
     # =========================================================================
     ## Standard processing: no tricks, no shortcuts, ...
     # =========================================================================
     
     import ostap.fitting.roofit
-    
-    nevents = nevents if 0 <= nevents else ROOT.TChain.kMaxEntries
-    args    =  () if all else ( nevents , first )
-    
-    return Ostap.Utils.process ( self , selector , *args ) 
 
+    ## adjust the event range 
+    first, last = evt_range   ( self , first , last )    
+    if all_entries ( self , first , last ) :
+        return Ostap.Utils.process ( self , selector ) 
+    
+    return Ostap.Utils.process ( self , selector , first , last  ) 
 
 _process_. __doc__ += '\n' + Ostap.Utils.process.__doc__
 
 # =============================================================================
 ## finally: decorate TTree/TChain
-for t in ( ROOT.TTree      ,
-           ROOT.TChain     ,
-           ROOT.RooAbsData ) : t.process  = _process_ 
-
+ROOT.TTree.process = _process_ 
 
 _new_methods_ = [
     ROOT.TTree.make_dataset  ,
@@ -2002,8 +1931,7 @@ _new_methods_ = [
     ROOT.TTree.fill_dataset1 ,
     ROOT.TTree.fill_dataset2 ,    
     ROOT.TTree.process       ,
-    ROOT.RooAbsData.process  , ## senseless :-( 
-    ]
+]
 
 _new_methods_ = tuple ( _new_methods_ ) 
 

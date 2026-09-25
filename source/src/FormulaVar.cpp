@@ -238,7 +238,7 @@ Ostap::makeFormula
   if ( allow_null && ( !result || !result->ok () ) ) { return nullptr ; } 
   //
   Ostap::Assert ( result && result->ok ()               ,  
-                  "Invalid formula: " + expression      , 
+                  "Invalid formula:'" + expression + "'", 
                   "Ostap::FormulaVar::makeFormula"      , 
                   INVALID_FORMULA , __FILE__ , __LINE__ ) ;
   //

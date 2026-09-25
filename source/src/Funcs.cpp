@@ -87,17 +87,17 @@ Ostap::Functions::FuncFormula::FuncFormula
 {
   //
   if ( nullptr != m_tree )
+  {
+    const TChain* chain = dynamic_cast<const TChain*>( m_tree ) ;
+    if ( chain )
     {
-      const TChain* chain = dynamic_cast<const TChain*>( m_tree ) ;
-      if ( chain )
-        {
-          const TTree* chain_tree = chain->GetTree() ;
-          if ( chain_tree ) { m_tree = chain_tree ; }
-        }
+      const TTree* chain_tree = chain->GetTree() ;
+      if ( chain_tree ) { m_tree = chain_tree ; }
     }
+  }
   //
   Ostap::Assert ( !m_tree || make_formula ()               , 
-                  "Invalid Formula '" + m_expression + "'" , 
+                  "Invalid formula:'" + m_expression + "'" , 
                   "Ostap::Function::FuncFormula"           ,
                   INVALID_FORMULA , __FILE__ , __LINE__    ) ;
   //
@@ -163,8 +163,8 @@ double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
     m_formula.reset( nullptr) ; 
   }
   //
-  if ( m_formula &&  m_formula->ok() &&  m_formula->GetTree() != m_tree  )
-  { m_formula.reset( nullptr) ; }
+  if ( m_formula &&  m_formula->ok() && m_formula->GetTree() != m_tree  )
+  { m_formula.reset ( nullptr) ; }
   //
   Ostap::Assert ( nullptr != m_tree                  ,
                   "Invalid Tree"                     ,
@@ -173,10 +173,13 @@ double Ostap::Functions::FuncFormula::operator() ( const TTree* tree ) const
   //
   if ( !m_formula || !m_formula->ok() ) { make_formula () ;}
   //
-  Ostap::Assert ( m_formula && m_formula->ok()    ,
-                  "Invalid Formula"               , 
-                  "Ostap::Function::FuncFormula"  , 
-                  INVALID_FORMULA  , __FILE__ , __LINE__) ;  
+  if ( m_formula && m_formula -> ok () )
+    { return m_formula -> evaluate () ; } 
+  //
+  Ostap::Assert ( m_formula && m_formula->ok ()            ,
+                  "Invalid formula:'" + m_expression + "'" , 
+                  "Ostap::Function::FuncFormula"           , 
+                  INVALID_FORMULA  , __FILE__ , __LINE__   ) ;  
   //
   return m_formula->evaluate() ;
 }
@@ -198,7 +201,7 @@ Ostap::Functions::FuncRooFormula::FuncRooFormula
   , m_name       ( !name.empty() ? name : Ostap::tmp_name ( "expr_" , expression ) ) 
 {
   Ostap::Assert ( !m_data || make_formula () ,
-                  "Invalid Formula '" + m_expression + "'" , 
+                  "Invalid Formula:'" + m_expression + "'" , 
                   "Ostap::Function::FuncRooFormula"        , 
                   INVALID_FORMULA , __FILE__ , __LINE__    ) ;
 }
@@ -264,10 +267,10 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
   //
   if ( !m_formula || !m_formula->ok() ) { make_formula () ; }
   //
-  Ostap::Assert  ( m_formula && m_formula->ok()           , 
-                   "Invalid RooFormula"                   , 
-                   "Ostap::Function::FuncRooFormula"      ,
-                   INVALID_FORMULA  , __FILE__ , __LINE__ ) ;
+  Ostap::Assert  ( m_formula && m_formula->ok()                , 
+                   "Invalid RooFormula:'" + expression() + "'" , 
+                   "Ostap::Function::FuncRooFormula"           ,
+                   INVALID_FORMULA  , __FILE__ , __LINE__      ) ;
   //
   return m_formula->getVal() ;
 }
@@ -537,13 +540,13 @@ double Ostap::Functions::Func2D::operator() ( const TTree* tree ) const
   // the  axis 
   if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
   Ostap::Assert ( m_xvar && m_xvar->ok()                 , 
-                  "Invalid Formula '" + m_xvar_exp + "'" , 
+                  "Invalid Formula:'" + m_xvar_exp + "'" , 
                   "Ostap::Function::Func2D"              ,
                   INVALID_FORMULA , __FILE__ , __LINE__  ) ;
   // the  axis 
   if ( !m_yvar || !m_yvar->ok() ) { make_yvar()  ; }
   Ostap::Assert ( m_yvar && m_yvar->ok()                 , 
-                  "Invalid Formula '" + m_yvar_exp + "'" , 
+                  "Invalid Formula:'" + m_yvar_exp + "'" , 
                   "Ostap::Function::Func2D"              ,
                   INVALID_FORMULA , __FILE__ , __LINE__  ) ;
   //
@@ -694,19 +697,19 @@ double Ostap::Functions::Func3D::operator() ( const TTree* tree ) const
   // the  axis 
   if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
   Ostap::Assert ( m_xvar && m_xvar->ok()                 , 
-                  "Invalid Formula '" + m_xvar_exp + "'" , 
+                  "Invalid formula:'" + m_xvar_exp + "'" , 
                   "Ostap::Function::Func2D"              , 
                   INVALID_FORMULA , __FILE__ , __LINE__  ) ;
   // the  axis 
   if ( !m_yvar || !m_yvar->ok() ) { make_yvar()  ; }
   Ostap::Assert ( m_yvar && m_yvar->ok()                 , 
-                  "Invalid Formula '" + m_yvar_exp + "'" , 
+                  "Invalid formula:'" + m_yvar_exp + "'" , 
                   "Ostap::Function::Func2D"              ,
                   INVALID_FORMULA , __FILE__ , __LINE__  ) ;
   // the  axis 
   if ( !m_zvar || !m_zvar->ok() ) { make_zvar()  ; }
   Ostap::Assert ( m_zvar && m_zvar->ok()                 , 
-                  "Invalid Formula '" + m_zvar_exp + "'" , 
+                  "Invalid formula:'" + m_zvar_exp + "'" , 
                   "Ostap::Function::Func3D"              , 
                   INVALID_FORMULA , __FILE__ , __LINE__  ) ;
   //
@@ -970,10 +973,10 @@ double Ostap::Functions::FuncRoo1D::operator()
   //
   if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
   //
-  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
-                   "Invalid RooFormula"          , 
-                   "Ostap::Function::FuncRoo1D"  ,
-                   INVALID_FORMULA , __FILE__ , __LINE__ ) ;
+  Ostap::Assert  ( m_xvar && m_xvar->ok()                    , 
+                   "Invalid RooFormula:'" + m_xvar_exp + "'" , 
+                   "Ostap::Function::FuncRoo1D"              ,
+                   INVALID_FORMULA , __FILE__ , __LINE__     ) ;
   //
   const double x = m_xvar->getVal() ;
   //
@@ -1065,13 +1068,13 @@ double Ostap::Functions::FuncRoo2D::operator()
   //
   if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
   Ostap::Assert  ( m_xvar && m_xvar->ok()                , 
-                   "Invalid RooFormula"                  , 
+                   "Invalid RooFormula:'" +  x () + "'"   , 
                    "Ostap::Function::FuncRoo2D"          ,
                    INVALID_FORMULA , __FILE__ , __LINE__ ) ; 
   //
   if ( !m_yvar || !m_yvar->ok() ) { make_yvar () ; }
   Ostap::Assert  ( m_yvar && m_yvar->ok()                , 
-                   "Invalid RooFormula"                  , 
+                   "Invalid RooFormula:'" + y () + "'"   , 
                    "Ostap::Function::FuncRoo2D"          , 
                    INVALID_FORMULA , __FILE__ , __LINE__ ) ; 
   //
@@ -1191,19 +1194,19 @@ double Ostap::Functions::FuncRoo3D::operator()
   //
   if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
   Ostap::Assert  ( m_xvar && m_xvar->ok()                , 
-                   "Invalid RooFormula"                  , 
+                   "Invalid RooFormula:'" + x() + ","    , 
                    "Ostap::Function::FuncRoo2D"          ,
                    INVALID_FORMULA , __FILE__ , __LINE__ ) ;
   //
   if ( !m_yvar || !m_yvar->ok() ) { make_yvar () ; }
   Ostap::Assert  ( m_yvar && m_yvar->ok()                , 
-                   "Invalid RooFormula"                  , 
+                   "Invalid RooFormula:'" + y () + "'"   , 
                    "Ostap::Function::FuncRoo2D"          , 
                    INVALID_FORMULA , __FILE__ , __LINE__ ) ;
   //
   if ( !m_zvar || !m_zvar->ok() ) { make_zvar () ; }
   Ostap::Assert  ( m_zvar && m_zvar->ok()                , 
-                   "Invalid RooFormula"                  , 
+                   "Invalid RooFormula:'"  + z () + "'"  , 
                    "Ostap::Function::FuncRoo2D"          , 
                    INVALID_FORMULA , __FILE__ , __LINE__ ) ;
   //
@@ -1213,12 +1216,6 @@ double Ostap::Functions::FuncRoo3D::operator()
   //
   return m_fun ( x , y , z ) ;
 }
-
-
-
- 
-
-
 
 // ======================================================================
 /*  constructor from the histogram 
@@ -1364,7 +1361,6 @@ Ostap::Functions::FuncRooTH3::clone ( const char* /* name */  ) const
 { return  new FuncRooTH3 ( *this ) ; }
 // ============================================================================
 
-
 // ============================================================================
 /*  constructor from the formula expression 
  *  @param expression the formula expression 
@@ -1419,27 +1415,21 @@ Ostap::Functions::Expression::Clone ( const char* /* newname */ ) const
 // evaluate the function from TTree
 // ============================================================================
 double Ostap::Functions::Expression::operator () 
-  ( const TTree* tree ) const 
-{
-  // const Ostap::Functions::FuncFormula& formula = *this ;
-  // return formula ( tree ) ; 
-  return Ostap::Functions::FuncFormula::operator() ( tree ) ;
-}
+ ( const TTree* tree ) const 
+{ return Ostap::Functions::FuncFormula::operator() ( tree ) ; }
 // ============================================================================
 // evaluate the function from RooAbsData 
 // ============================================================================
 double Ostap::Functions::Expression::operator () 
-  ( const RooAbsData* data ) const { return m_roofun ( data ) ; }
+( const RooAbsData* data ) const { return m_roofun ( data ) ; }
 // ============================================================================
-
-
 
 // ============================================================================
 /*  full constructor 
  *  @param fun the functon 
  *  @param observables observables 
  *  @param normalization nornalization 
- *  @Param mapping  RooFit varibale <-> TTree branch mapping 
+ *  @Param mapping  RooFit variable <-> TTree branch mapping 
  *  @param tree input tree 
  */
 // ============================================================================

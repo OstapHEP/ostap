@@ -152,7 +152,7 @@ bool Ostap::Trees::Branches::add
   // create formula and add it into the map
   const Ostap::Functions::FuncFormula formula { expression , tree } ;
   Ostap::Assert ( !tree || formula.ok()                 ,
-                  "Invalid formula: " + expression      , 
+                  "Invalid formula:'" + expression + "'", 
                   "Ostap::Trees::Branches::add"         ,                  
                   INVALID_FORMULA , __FILE__ , __LINE__ ) ;
   return add ( name , formula ) ;

@@ -18,6 +18,8 @@ __all__     = (
     'parallel_fill'         , ## flexible  function for parallel fill of dataset 
     ) 
 # =============================================================================
+from   ostap.math.math_base    import ( evt_range   , all_entries ,
+                                        FIRST_ENTRY , LAST_ENTRY  )
 from   ostap.parallel.parallel import Task, WorkManager
 import ROOT
 # =============================================================================
@@ -151,7 +153,9 @@ class  FillDSTask(MakeDSTask) :
             
         ## reconstruct chain from the item 
         chain    = item.chain
-                
+        first    = item.first
+        last     = item.last
+        
         ## use selector  
         selector = SelectorWithVars ( variables = self.variables ,
                                       selection = self.selection ,
@@ -161,12 +165,16 @@ class  FillDSTask(MakeDSTask) :
                                       fuillname = self.title     ,
                                       progress  = False          , 
                                       silence   = True           )
+
+        result = chain.fill_dataset2 ( selector  ,
+                                       first     = first           ,
+                                       last      = last            , 
+                                       silent    = True            , 
+                                       shortcut  = self.shortcut   ,
+                                       use_frame = self.use_frame  )
         
-        return chain.fill_dataset2 ( selector  ,
-                                     silent    = True            , 
-                                     shortcut  = self.shortcut   ,
-                                     use_frame = self.use_frame  )
-        
+        return result
+    
 # =================================================================================
 ## The simple task object for more efficient fill of RooDataSet from TChain 
 #  @see GaudiMP.Parallel
@@ -204,23 +212,26 @@ class  FillTask(MakeDSTask) :
     ## the actual processing 
     def process ( self , jobid , item ) :
 
-        import ROOT
+        import ROOT, os 
         from ostap.logger.logger import logWarning
-        with logWarning() :
+        with logWarning () :
             import ostap.core.pyrouts            
             import ostap.trees.trees
             import ostap.fitting.roofit 
+            from   ostap.trees.utils import Chain
         
-        ## reconstruct chain from the item 
-        chain    = item.chain
-        ll       = len ( chain )  
-        
-        first    = item.first
-        nevents  = item.nevents 
+        ## reconstruct chain from the item
+        arg_chain = Chain ( item  )
+        chain     = arg_chain.chain
+        ll        = len   ( chain )  
 
-        all = 0 == first and ( nevents < 0 or ll <= nevents )
+        first     = item.first
+        last      = item.last 
+
+        first , last = evt_range   ( chain , first , last )
+        process_all  = all_entries ( chain , first , last )
         
-        if self.trivial and all and not self.cuts : 
+        if process_all and self.trivial and not self.cuts and not self.roo_cuts : 
             import ostap.fitting.pyselectors
             return chain.make_dataset ( self.variables   ,
                                         self.selection   ,
@@ -237,15 +248,13 @@ class  FillTask(MakeDSTask) :
                                       progress  = False          , 
                                       silence   = True           )
         
-        args = ()  
-        if not all : args  = nevents , first 
-        
-        return chain.fill_dataset2 ( selector  ,
-                                     *args     ,
-                                     silent    = True                 , 
-                                     shortcut  = all and self.trivial ,
-                                     use_frame = self.use_frame       )
-
+        result = chain.fill_dataset2 ( selector  ,
+                                       first     = first ,
+                                       last      = last  , 
+                                       silent    = True                 , 
+                                       shortcut  = all and self.trivial ,
+                                       use_frame = self.use_frame       )
+        return result 
 
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
@@ -255,17 +264,17 @@ class  FillTask(MakeDSTask) :
 #  parallel_fill        ( chain , selector ) 
 #  chain.parallel_fill  ( selector         ) ## ditto 
 #  @endcode 
-def parallel_fill ( chain                  ,
-                    selector               ,
-                    nevents      = -1      ,
-                    first        = 0       ,
-                    shortcut     = True    ,   ## important 
-                    chunk_size   = 1000000 ,   ## important 
-                    max_files    = 5       ,
-                    use_frame    =  20000  ,   ## important 
-                    silent       = False   ,
-                    job_chunk    = -1      ,
-                    progress     = True    , **kwargs ) :
+def parallel_fill ( chain                    ,
+                    selector                 ,
+                    first      = FIRST_ENTRY ,
+                    last       = LAST_ENTRY  ,                    
+                    shortcut   = True        ,   ## important 
+                    chunk_size = 1000000     ,   ## important 
+                    max_files  = 5           ,
+                    use_frame  =  20000      ,   ## important 
+                    silent     = False       ,
+                    job_chunk  = -1          ,
+                    progress   = True        , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -274,12 +283,16 @@ def parallel_fill ( chain                  ,
     import ostap.fitting.roofit 
     from   ostap.fitting.pyselectors import SelectorWithVars 
     from   ostap.trees.trees         import Chain
-    
-    assert isinstance ( selector , SelectorWithVars ) , \
-           "Invalid type of ``selector'': %s" % type ( selector ) 
-    
-    ch = Chain ( chain ) 
 
+    first, last = evt_range   ( chain , first , last )
+    process_all = all_entries ( chain , first , last )  
+    
+    if not isinstance ( selector , SelectorWithVars ) : 
+        raise TypeError ( "Invalid type of `selector': %s" % typename ( selector ) )
+
+    
+    ch        = Chain ( chain , first = first , last = last ) 
+    
     selection = selector.selection
     variables = selector.variables
     roo_cuts  = selector.roo_cuts
@@ -287,10 +300,8 @@ def parallel_fill ( chain                  ,
     ## trivial   = selector.trivial_vars and not selector.morecuts
     
     trivial   = selector.really_trivial and not selector.morecuts 
-    
-    all = ( 0 == first ) and ( 0 > nevents or len ( chain ) <= nevents )
-    
-    if all and trivial and 1 < len ( ch.files ) :
+
+    if process_all and trivial and 1 < len ( ch.files ) :
         logger.info ("Configuration is `trivial': redefine `chunk-size' to -1")
         chunk_size = -1
         
@@ -302,10 +313,13 @@ def parallel_fill ( chain                  ,
                        use_frame = use_frame         ) 
     
     wmgr  = WorkManager ( silent     = silent  , progress = True , **kwargs )
-    trees = ch.split    ( chunk_size = chunk_size , max_files = max_files )
-    wmgr.process ( task , trees , chunk_size = job_chunk )
-    del trees
     
+    trees = ch.split    ( chunk_size = chunk_size , max_files = max_files )
+
+    trees = [ t for t in trees ]
+    
+    wmgr.process ( task , trees , chunk_size = job_chunk )
+
     dataset, stat = task.results()  
 
     selector.data = dataset
@@ -316,11 +330,11 @@ def parallel_fill ( chain                  ,
     skipped = '/' + attention ( skipped ) if stat.skipped else ''
     logger.info (
         'Selector(%s): Events Processed:%d/Total:%d%s CUTS: "%s"\n%s' % (
-        selector.name    ,
-        stat.processed   ,
-        stat.total       ,
-        skipped          ,
-        selector.cuts()  , dataset.table ( prefix = '# ' ) ) )             
+        selector.name   ,
+        stat.processed  ,
+        stat.total      ,
+        skipped         ,
+        selector.cuts() , dataset.table ( prefix = '# ' ) ) )             
     
     return dataset, stat  
 

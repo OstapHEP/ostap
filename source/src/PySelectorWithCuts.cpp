@@ -64,8 +64,8 @@ Ostap::SelectorWithCuts::SelectorWithCuts
   , m_good             ( 0              )            
 {
  Ostap:Assert ( !get_tree() || m_cuts.empty() || make_formula ( tree ) , 
-                "Invalid formula"        ,
-                "Ostap::SelectorWithCuts" ,
+                "Invalid formula:'" + m_cuts + "'"    ,
+                "Ostap::SelectorWithCuts"             ,
                 INVALID_FORMULA , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
@@ -118,7 +118,7 @@ Ostap::SelectorWithCuts::~SelectorWithCuts () {}
 // ============================================================================
 bool Ostap::SelectorWithCuts::make_formula ( TTree*   tree ) 
 {
-  if ( m_cuts.empty()  ) { return true ; }
+  if ( m_cuts.empty()  ) { return true  ; }
   m_formula.reset() ;
   if ( nullptr == tree ) { return false ; }
   m_formula = std::make_unique<Ostap::Formula> ( m_cuts , tree) ; 
@@ -133,9 +133,9 @@ void Ostap::SelectorWithCuts::reset_formula ( TTree* tree )
   m_formula.reset() ;
   //
  Ostap:Assert ( !get_tree() || m_cuts.empty() || make_formula ( tree ) , 
-                "Invalid formula "        ,
-                "Ostap::SelectorWithCuts" ,
-                INVALID_FORMULA , __FILE__ , __LINE__ ) ;
+                "Invalid formula:'" + m_cuts + "'"       ,
+                "Ostap::SelectorWithCuts::reset_formula" ,
+                INVALID_FORMULA , __FILE__ , __LINE__    ) ;
 }   
 // ============================================================================
 // notify 
@@ -185,8 +185,8 @@ bool Ostap::SelectorWithCuts::good_entry  ( Long64_t entry )
     return false ; 
   }
   //
-  if ( !m_cuts.empty() && m_formula && m_formula->GetNdim() && !m_formula ->evaluate() )
-    { return false ; }
+  if ( !m_cuts.empty () && m_formula && m_formula -> GetNdim () && !m_formula -> evaluate () )
+  { return false ; }
   //
   return true ;  
 }
