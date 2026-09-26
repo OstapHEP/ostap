@@ -44,13 +44,13 @@ from   ostap.utils.core       import typename
 from   ostap.stats.utils      import ( weight_trivial , nEff         , 
                                        num_samples    , num_features , 
                                        check_all      )
-from   ostap.utils.basic      import numcpu, num_jobs, run_parallel 
+from   ostap.utils.basic      import num_jobs, run_parallel 
 from   ostap.stats.gof_np     import GoFnp
-from   ostap.stats.counters   import EffCounter
 from   ostap.logger.pretty    import nice_print 
-from   sklearn.metrics        import mean_squared_error, r2_score 
+from   ostap.stats.tools      import hasSkLearn 
+
 import ostap.logger.symbols   as     S
-import ROOT, numpy, abc, os   
+import numpy, abc
 # =============================================================================
 # Logging setup 
 # =============================================================================
@@ -59,6 +59,9 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.adval' )
 else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Implement Adversarial Validation (Regression mode)' )
+# =============================================================================
+if hasSkLearn() : 
+    from   sklearn.metrics        import mean_squared_error
 # =============================================================================
 DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
@@ -145,7 +148,6 @@ def NN_needs_regularization ( X , W = None ):
         result ='neff[%s]<%s' % ( vv , th1 )
         return result.replace ( ' ' , '' ) 
         
-    
     # 2. Higher statistical coverage required for low-dimensional spaces to ensure smooth boundaries
     threshold2 = 100000.0     
     if nf <= 3 and neff < threshold2 :
@@ -853,7 +855,9 @@ class ADVAL_HGBC (ADVAL_base) :
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
         
+        
         from sklearn.ensemble import HistGradientBoostingRegressor
+        from threadpoolctl    import threadpool_limits
 
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
         w_tr_arr = W_train_mod.values if hasattr ( W_train_mod , 'values' ) else W_train_mod
@@ -884,10 +888,17 @@ class ADVAL_HGBC (ADVAL_base) :
             
         params [ 'max_iter' ] = max_iter
 
-        model = HistGradientBoostingRegressor ( **params )
-        model.fit ( X_train , Y_train_mod , sample_weight = w_tr_arr )
+        X_tr_c  = numpy.ascontiguousarray ( X_train     , dtype = numpy.float32 )
+        X_val_c = numpy.ascontiguousarray ( X_val       , dtype = numpy.float32 )
+        Y_tr_c  = numpy.ascontiguousarray ( Y_train_mod , dtype = numpy.float32 )
+        w_tr_c  = numpy.ascontiguousarray ( w_tr_arr    , dtype = numpy.float32 ) if w_tr_arr is not None else None
 
-        predictions = model.predict ( X_val )
+        with threadpool_limits ( limits = 1 ):
+    
+            model = HistGradientBoostingRegressor ( **params )
+            model.fit ( X_tr_c , Y_tr_c , sample_weight = w_tr_c )
+            predictions = model.predict ( X_val_c )
+            
         return predictions, None 
             
 # =============================================================================

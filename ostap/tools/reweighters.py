@@ -38,14 +38,17 @@ from   ostap.stats.utils        import ( weight_trivial     ,
                                          num_samples        ,
                                          check_all          ,
                                          nEff               )
+from   ostap.stats.tools      import hasSkLearn 
 import ostap.logger.symbols   as     S
-import numpy, abc, copy, warnings
+import numpy, abc
 # =============================================================================
 # Logging setup
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighters' )
 else                       : logger = getLogger( __name__ )
+# =============================================================================
+has_sklearn = hasSkLearn() 
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================

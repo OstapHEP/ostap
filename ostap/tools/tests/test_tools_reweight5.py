@@ -153,7 +153,7 @@ if hasLightGBM () :
 
 if hasXGBoost  () :  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
-    comparators += ( COMPARATOR6 ( parallel = True , nToys = 25 ) , ) 
+    comparators += ( COMPARATOR6 ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
 
 if hasCatBoost () :  
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7

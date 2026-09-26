@@ -20,11 +20,10 @@ os.environ [ "OMP_NUM_THREADS"      ]  = "1"
 os.environ [ "MKL_NUM_THREADS"      ]  = "1"
 os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
 # =============================================================================
-from   packaging.version        import Version
-from   ostap.core.core          import Ostap, VE  
+from   ostap.core.core          import VE  
 from   ostap.utils.timing       import timing
 from   ostap.utils.basic        import numcpu 
-from   ostap.logger.colorized   import attention, allright  
+from   ostap.logger.colorized   import allright  
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.root_utils   import batch_env

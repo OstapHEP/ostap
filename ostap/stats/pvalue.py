@@ -331,8 +331,6 @@ class PERMUTATOR (PVALUE) :
             
         check_all ( ds1 , ds2, weight1 , weight2 , typename  ( self ) )
 
-        print ( 'I AM PERMUTATOR!' , typename ( gof ) , '\n%s' % gof )
-        
         super().__init__ ( gof         = gof         ,
                            t_value     = t_value     ,
                            ds1         = ds1         ,

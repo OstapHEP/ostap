@@ -102,12 +102,21 @@ def hasSkLearn ( silent = True ) :
     - Are sklearn library & classificators available? 
     """
     # =========================================================================
+    os.environ [ 'KMP_DUPLICATE_LIB_OK' ] = "TRUE"
+    os.environ [ 'KMP_INIT_AT_FORK'     ] = "FALSE"
+    os.environ [ 'OMP_PROC_BIND'        ] = "false"
+    os.environ [ 'KMP_BLOCKTIME'        ] = "0" 
+    # =========================================================================
     try : # ===================================================================
         # =====================================================================
         import sklearn 
-        from   sklearn.ensemble import HistGradientBoostingClassifier as _HGBC 
-        from   sklearn.ensemble import     GradientBoostingClassifier as _GBC        
-        from   sklearn.ensemble import         RandomForestClassifier as _RFC
+        from   sklearn.ensemble      import HistGradientBoostingClassifier as _HGBC 
+        from   sklearn.ensemble      import     GradientBoostingClassifier as _GBC        
+        from   sklearn.ensemble      import         RandomForestClassifier as _RFC
+        from   sklearn.linear_model  import             LogisticRegression as _LR
+        from   sklearn.pipeline      import                       Pipeline as _PL 
+        from   sklearn.preprocessing import                 StandardScaler as _SS 
+        from   sklearn.preprocessing import             PolynomialFeatures as _PF 
         # ====================================================================
         if not silent : logger.info ( 'sklearn    version: %s' %  sklearn.__version__ )
         ## 
@@ -200,6 +209,8 @@ def hasHepML ( silent = True ) :
     """ Use HepML?
     - Are hep_ml tools available? 
     """
+    # =========================================================================
+    if not hasSkLearn ( silent = silent ) : return False 
     # =========================================================================
     try : # ===================================================================
         # =====================================================================

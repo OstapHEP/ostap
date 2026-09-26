@@ -34,7 +34,8 @@ And it is based on the LoKi project: ``C++ ToolKit for Smart and Friendly Physic
 import ostap.fixes.fixes 
 from   ostap.core.run_ostap   import *
 from   ostap.core.ostap_setup import imported
-from   ostap.utils.basic      import with_ipython, typename 
+from   ostap.utils.basic      import with_ipython
+from   ostap.utils.core       import typename 
 import ostap.core.config      as     config  
 # =============================================================================
 # logging 

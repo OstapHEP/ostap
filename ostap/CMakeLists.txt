@@ -1,5 +1,4 @@
 
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py) 
 
 # ==============================================================================
@@ -217,7 +216,20 @@ if ( NOT ${PY_joblib_FOUND} )
 endif() 
 
 # =======================================================================================
-## cloudpickle : serializatin for joblib & ipyparallel 
+## threadpoolctl 
+# =======================================================================================
+find_python_module ( threadpoolctl   QUIET )
+if ( NOT ${PY_threadpoolctl_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install threadpoolctl ${PIP_ARGS})
+   unset(PY_JOBLIB CACHE)
+endif()
+find_python_module ( threadpoolctl   QUIET )
+if ( NOT ${PY_threadpoolctl_FOUND} )
+  message ( "----> warning (optional)   threadpoolctl is NOT found!" ) 
+endif() 
+
+# =======================================================================================
+## cloudpickle : serialization for joblib & ipyparallel 
 # =======================================================================================
 find_python_module ( cloudpickle          QUIET )
 if ( NOT ${PY_cloudpickle_FOUND} )
@@ -675,6 +687,11 @@ endif()
 if ( ${PY_joblib_FOUND} )
   find_python_module_version ( joblib ) 
   message ( "----> joblib           version    : " ${PY_joblib_VERSION} " \t" ${PY_JOBLIB} )            
+endif() 
+##
+if ( ${PY_threadpoolctl_FOUND} )
+  find_python_module_version ( threadpoolctl )  
+  message ( "----> threadpoolctl    version    : " ${PY_threadpoolctl_VERSION} " \t" ${PY_THREADPOOLCTL} )          
 endif() 
 ##
 if ( ${PY_cloudpickle_FOUND} )

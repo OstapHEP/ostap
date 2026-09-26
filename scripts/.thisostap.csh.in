@@ -111,6 +111,11 @@ setenv LD_LIBRARY_PATH `python -c "import os,sys; path=os.environ.get('LD_LIBRAR
 if ( ! $?MANPATH ) setenv MANPATH ""
 setenv MANPATH `python -c "import os,sys; path=os.environ.get('MANPATH','').split(os.pathsep); item=sys.argv[1]; path.insert(0,item) if item else None; np=[]; [np.append(os.path.normpath(p)) for p in path if p and os.path.isdir(p) and os.path.normpath(p) not in np]; print(os.pathsep.join(np))" "${OSTAP_DIR}/doc/man"`
 
+setenv KMP_DUPLICATE_LIB_OK TRUE
+setenv KMP_INIT_AT_FORK FALSE
+setenv OMP_PROC_BIND false
+setenv KMP_BLOCKTIME 0
+
 # Очистка локальных переменных
 unset SCRIPT_PATH
 if ( $?ARGS ) unset ARGS
