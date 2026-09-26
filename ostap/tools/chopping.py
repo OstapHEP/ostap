@@ -1487,12 +1487,12 @@ class Trainer(object) :
         ##  train it!
         results = _training_ ( self , **self.parallel_conf )
         
-        assert self.N == len ( results [ 0 ] ) , 'Invalid number of weights files'
-        assert self.N == len ( results [ 1 ] ) , 'Invalid number of   class files'
-        assert self.N == len ( results [ 2 ] ) , 'Invalid number of  output files'
-        assert self.N == len ( results [ 3 ] ) , 'Invalid number of     tar files'
-        assert self.N == len ( results [ 4 ] ) , 'Invalid number of     dir files'
-        assert self.N == len ( results [ 5 ] ) , 'Invalid number of     log files'
+        if self.N != len ( results [ 0 ] ) : raise RuntimeError ( 'Invalid number of weights files: %d' % len ( results [ 0 ] ) ) 
+        if self.N != len ( results [ 1 ] ) : raise RuntimeError ( 'Invalid number of   class files: %s' % len ( results [ 1 ] ) )
+        if self.N != len ( results [ 2 ] ) : raise RuntimeError ( 'Invalid number of  output files: %d' % len ( results [ 2 ] ) ) 
+        if self.N != len ( results [ 3 ] ) : raise RuntimeError ( 'Invalid number of     tar files: %d' % len ( results [ 3 ] ) ) 
+        if self.N != len ( results [ 4 ] ) : raise RuntimeError ( 'Invalid number of     dir files: %s' % len ( results [ 4 ] ) ) 
+        if self.N != len ( results [ 5 ] ) : raise RuntimeError ( 'Invalid number of     log files: %s' % len ( results [ 5 ] ) ) 
         
         ## assert self.N == len ( results [ 6 ] ) , 'Invalid AUC results'
         

@@ -18,6 +18,7 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.timing       import timing
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
+from   ostap.utils.basic        import numcpu
 import ostap.core.core        
 import ostap.io.root_file
 import ostap.trees.trees
@@ -154,9 +155,8 @@ data_files = prepare_data ()
 
 # ===========================================================================
 ##   number of    categories 
-N  = 7
+N  = 3 if numcpu () <= 8 else 7 
 logger.info('Create and train TMVA')
-
 
 # ============================================================================
 ## Train TMVA

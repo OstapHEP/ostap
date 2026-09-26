@@ -15,33 +15,16 @@ __all__     = (
     'GoFnp'           , ## A base class for numpy-related family of methods to probe goodness-of-fit
 )
 # =============================================================================
-from   ostap.core.ostap_types   import string_types, num_types 
-from   ostap.core.core          import SE, VE, Ostap, hID  
+from   ostap.core.ostap_types   import num_types 
+from   ostap.core.core          import VE  
 from   ostap.stats.counters     import EffCounter, ECDF
-from   ostap.utils.utils        import split_n_range
-from   ostap.utils.core         import typename
-from   ostap.utils.basic        import numcpu, num_jobs, run_parallel 
+from   ostap.utils.core         import typename 
 from   ostap.utils.config       import Config
 from   ostap.stats.gof          import AGoFnp
-from   ostap.stats.utils        import ( weight_trivial     ,
-                                         check_all          , 
-                                         valid_data_shape   ,
-                                         num_features       ,
-                                         num_samples        ,
-                                         np2vct             ) 
-from   ostap.stats.gof_utils    import ( run_parallel       ,
-                                         num_jobs           , 
-                                         normalize_pooled   ,
-                                         pairwise_distances ,
-                                         nearest_neighbors  , 
-                                         nearest_distances  , 
-                                         draw_ecdf          , s2u ) 
-from   ostap.utils.memory       import memory, memory_enough
-from   ostap.math.math_ve       import gauss_cdf
-from   ostap.logger.symbols     import ( symmetry  as symmetry_symbol  ,
-                                         asymmetry as asymmetry_symbol )
-import ostap.math.math_base           
-import ROOT, os, abc, numpy, math 
+from   ostap.stats.utils        import weight_trivial   , check_all 
+from   ostap.stats.gof_utils    import normalize_pooled , draw_ecdf , s2u  
+from   ostap.utils.memory       import memory_enough
+import ostap.math.math_base    
 # =============================================================================
 # logging 
 # =============================================================================

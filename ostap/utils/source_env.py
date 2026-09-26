@@ -4,7 +4,7 @@
 ## @file ostap/utils/source_env.py
 #  'Source' the  environmen tfile
 #  @code
-#  from ostap.utuls.source_env import source_env
+#  from ostap.utils.source_env import source_env
 #  ## get the dict of all modified/new variables 
 #  variables =  source_env ( 'my_env_script.sh' )
 #  ## inspect the list and modify <code>os.environ</code>
@@ -17,7 +17,7 @@
 # =============================================================================
 """'Source' the environment file
 
->>> from ostap.utuls.source_env import source_env
+>>> from ostap.utils.source_env import source_env
 >>> # get the dict of all modified/new variables 
 >>> variables =  source_env ( 'my_env_script.sh' )
 >>> # inspect the list and modify os.environ
@@ -54,7 +54,7 @@ def clip ( text  , lmax = 55 ) :
 # ============================================================================
 #  'Source' the  environment file
 #  @code
-#  from ostap.utuls.source_env import source_env
+#  from ostap.utils.source_env import source_env
 #  ## get the dict of all modified/new variables 
 #  variables =  source_env ( 'my_env_script.sh' )
 #  ## inspect the list and modify <code>os.environ</code>
@@ -64,7 +64,7 @@ def clip ( text  , lmax = 55 ) :
 #  @endcode 
 def source_env ( scripts , silent = False , lmax1 = 65 , lmax2 = 55 ) :
     """'Source' the environment file
-    >>> from ostap.utuls.source_env import source_env
+    >>> from ostap.utils.source_env import source_env
     >>> get the dict of all modified/new variables 
     >>> variables =  source_env ( 'my_env_script.sh' )
     >>> # inspect the list and modify os.environ

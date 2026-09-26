@@ -15,6 +15,7 @@ __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 from   ostap.core.core          import hID 
+from   ostap.utils.basic        import numcpu 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.utils.timing       import timing
 from   ostap.utils.root_utils   import batch_env 
@@ -86,9 +87,9 @@ def prepare_data ( nB = 2000 , nS = 1000 , nF = 5 ) :
                 y = random.uniform ( -2.0 , 2.0 )
                 z = random.gauss   (   .0 , 0.5 )
                 
-                var1[0] =  x + 0.1 * y  
-                var2[0] =  x - 0.1 * y  
-                var3[0] = -x +       z
+                var1 [ 0 ] =  x + 0.1 * y  
+                var2 [ 0 ] =  x - 0.1 * y  
+                var3 [ 0 ] = -x +       z
             
                 ievt += 1
                 if 0 ==  ( ievt % b_evt_per_run ) :
@@ -112,9 +113,9 @@ def prepare_data ( nB = 2000 , nS = 1000 , nF = 5 ) :
                 y = random.gauss  (  0.0 , 0.2 )
                 z = random.gauss  (  0.5 , 0.5 )
             
-                var1[0] =  x
-                var2[0] =  y  
-                var3[0] =  z
+                var1 [ 0 ] =  x
+                var2 [ 0 ] =  y  
+                var3 [ 0 ] =  z
             
                 ievt += 1
                 if 0 == ( ievt % s_evt_per_run ) :
@@ -139,9 +140,9 @@ data_files = prepare_data ()
 
 # ===========================================================================
 ##   number of    categories 
-N  = 7
-logger.info ( 'Create and train TMVA' )
+N  = 3 if numcpu() <= 8 else 7 
 
+logger.info ( 'Create and train TMVA' )
 
 # ============================================================================
 ## Train TMVA

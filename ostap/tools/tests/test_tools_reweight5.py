@@ -20,23 +20,18 @@ os.environ [ "OMP_NUM_THREADS"      ]  = "1"
 os.environ [ "MKL_NUM_THREADS"      ]  = "1"
 os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
 # =============================================================================
-from   ostap.utils.core         import typename 
-from   ostap.utils.timing       import timing
-from   ostap.logger.colorized   import allright
 from   ostap.utils.root_utils   import batch_env 
-from   ostap.logger.symbols     import script_p, script_w 
-from   ostap.utils.memory       import memory_usage, delta_ram
+from   ostap.logger.symbols     import script_p
 from   ostap.utils.basic        import numcpu
 from   ostap.logger.pretty      import nice_print
 from   ostap.stats.utils        import nEff 
-from   ostap.utils.progress_bar import progress_bar 
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
                                          hasPyTorch  , hasHepML   ) 
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
 import ostap.parallel.kisa
-import ROOT, random, math, os, numpy 
+import os, numpy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -154,23 +149,22 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
 
 if hasLightGBM () :
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
-    comparators += ( COMPARATOR5 ( parallel = True , nToys = 100 ) , ) 
+    comparators += ( COMPARATOR5 ( parallel = True , nToys = 25 ) , ) 
 
 if hasXGBoost  () :  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
-    comparators += ( COMPARATOR6 ( parallel = True , nToys = 100 ) , ) 
+    comparators += ( COMPARATOR6 ( parallel = True , nToys = 25 ) , ) 
 
 if hasCatBoost () :  
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
-    comparators += ( COMPARATOR7 ( parallel = True , nToys = 100 ) , ) 
+    comparators += ( COMPARATOR7 ( parallel = True , nToys = 25 ) , ) 
 
-if False and hasSkLearn (): 
+if hasSkLearn (): 
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
-    comparators += ( COMPARATOR8 ( parallel = True , nToys = 100 ) , )
+    comparators += ( COMPARATOR8 ( parallel = True , nToys = 25 ) , )
     
     from ostap.stats.adval        import ADVAL_GBC   as COMPARATOR9
-    comparators += ( COMPARATOR9 ( parallel = True , nToys = 100 ) , ) 
-
+    comparators += ( COMPARATOR9 ( parallel = True , nToys = 25 ) , ) 
 
 # ============================
 def run_reweight ( n_dim     = 3     ,
@@ -218,8 +212,7 @@ def run_reweight ( n_dim     = 3     ,
             wmin = float ( numpy.min ( original_weight ) ) 
             wmax = float ( numpy.max ( original_weight ) )
             wmin , wmax = '%.4g' % wmin , '%.4g' % wmax 
-            
-                   
+                               
         for c in comparators :
             
             tv , pv = c.pvalue ( data1   = target          ,
@@ -243,7 +236,7 @@ def run_reweight ( n_dim     = 3     ,
 # =============================================================================
 if '__main__' == __name__ :
 
-    run_reweight ( 2 , 3000 ) 
+    run_reweight ( 3 , 3000 ) 
     
 # =============================================================================
 
