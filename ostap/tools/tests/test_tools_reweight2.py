@@ -442,7 +442,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     else             : power = lambda nactive : 1.1 / nactive if 1 < nactive else 1.05 
     
     # =============================================================================
-    ## make acual reweighting 
+    ## make actual reweighting 
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
         # =========================================================================

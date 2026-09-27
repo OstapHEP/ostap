@@ -40,9 +40,9 @@ def apply_hook():
     try: # =====================================================================
         # ======================================================================
         import multiprocess
-        multiprocess.set_start_method("spawn", force=True)
+        multiprocess.set_start_method ( METHOD , force = True )
         # ======================================================================        
-    except ( ImportError, RuntimeError ) : # ===================================
+    except ( ImportError , RuntimeError ) : # ==================================
         # ======================================================================
         pass
 

@@ -29,6 +29,7 @@ from   ostap.stats.gof_utils  import Labels, Keys, clip_pvalue
 from   ostap.math.math_ve     import significance
 from   ostap.math.ve          import fmt_pretty_ve
 from   ostap.stats.counters   import SE, ECDF
+from   ostap.stats.pvalue     import permutation_symbol
 from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma
 from   collections            import defaultdict, namedtuple 
 import ostap.logger.table     as     T
@@ -639,7 +640,7 @@ class TSToys(TSTest):
         counters = self.counters
         
         from ostap.utils.progress_bar import progress_bar 
-        for i in progress_bar ( nToys , silent = silent , description = 'Permutations:') :
+        for i in progress_bar ( nToys , silent = silent , description = permutation_symbol ) :
 
             numpy.random.shuffle ( data )
             data1 = data [    : n1 ]

@@ -1618,11 +1618,6 @@ def parallel_data_add_reweighting ( dataset          ,
     from ostap.utils.utils       import split_n_range
     chunks = ( dataset [ i : j ] for i , j in split_n_range ( 0 , len ( dataset ) , nchunks ) )
 
-    ll = [ len ( d ) for d in chunks ] 
-    print ( 'CHUNKS', ll )
-
-    chunks = ( dataset [ i : j ] for i , j in split_n_range ( 0 , len ( dataset ) , nchunks ) )
-
     ## Task to add new variable
     from ostap.parallel.parallel_add_branch import AddNewVar 
     task     = AddNewVar   ( name            ,  wfun    )

@@ -56,9 +56,7 @@ class AddChopping(Task) :
             for f in tree.files : files.add ( f )
             
         ## list of processed  files 
-        self.__output = list ( files )
-
-        return self.__output 
+        return tuple ( files )
 
     ## merge results/datasets 
     def merge_results ( self , result , jobid = -1 ) :
@@ -94,7 +92,7 @@ class ChopperTraining(Task) :
             trainer  = chopping.create_trainer ( category , False )
             trainer.train ()
         ## Full output from TMVA trainer 
-        self.__output = (
+        return  (
             [ ( category , trainer.weights_files ) ] ,
             [ ( category , trainer.  class_files ) ] ,
             [ ( category , trainer. output_file  ) ] ,
@@ -104,8 +102,6 @@ class ChopperTraining(Task) :
             [ ( category , trainer.         AUC  ) ] ,
             )
 
-        return self.__output
-    
     ## merge results/datasets 
     def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output =  result
