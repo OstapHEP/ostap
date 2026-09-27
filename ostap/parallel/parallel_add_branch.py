@@ -19,7 +19,7 @@ __all__     = (
 from   ostap.core.core                 import valid_pointer 
 from   ostap.parallel.parallel         import Task, WorkManager, Checker
 import ostap.trees.trees_base 
-import ROOT, array 
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================
@@ -38,7 +38,6 @@ class AddNewBranch(Task) :
         self.__output    = ()
     
     def initialize_local  ( self )                : self.__output = () 
-    def initialize_remote ( self , jobid = -1   ) : self.__output = () 
     def process           ( self , jobid , tree ) :
         
         from ostap.trees.trees    import push_2chain
@@ -55,10 +54,8 @@ class AddNewBranch(Task) :
             if not f in files : files.append ( f )
 
         ## list of processed  files
-        self.__output = tuple ( sorted ( files ) ) 
+        return tuple ( sorted ( files ) ) 
 
-        return self.__output 
-        
     ## merge results/datasets 
     def merge_results( self , result , jobid = -1 ) :
         
@@ -66,7 +63,7 @@ class AddNewBranch(Task) :
         else                 :
             processed = sorted ( self.__output + result ) 
             self.__output = tuple ( processed ) 
-            
+        
     ## get the results 
     def results ( self ) : return self.__output
     
@@ -107,7 +104,6 @@ class AddNewVar(Task) :
         self.__output = {} 
     
     def initialize_local  ( self )                : self.__output = {} 
-    def initialize_remote ( self , jobid = -1   ) : self.__output = {}
     def process           ( self , jobid , dset ) :
         
         import ostap.fitting.dataset        
@@ -116,12 +112,11 @@ class AddNewVar(Task) :
                                     progress = False        , 
                                     report   = False        )
         
-        self.__output = { jobid : result }
-        return self.__output 
-        
+        return { jobid : result }
+                
     ## merge results/datasets 
-    def merge_results( self , result , jobid ) :
-        
+    def merge_results ( self , result , jobid ) :
+         
         if not self.__output : self.__output = result
         else                 :            
             self.__output.update ( result )

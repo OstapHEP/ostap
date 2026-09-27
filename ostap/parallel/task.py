@@ -149,8 +149,9 @@ class Task(TaskBase) :
     ## Remote initialization: invoked for each secondary task on remote host
     def initialize_remote ( self , jobid = -1 )  :
         """ Remote initialization: invoked for each secondary task on remote host
-        - default: run `local initialization'
+        - default: run `local initialization' if subprocess, no action if main process 
         """
+        if main_process () : return 
         return self.initialize_local () 
     
     # =========================================================================

@@ -24,7 +24,7 @@ __all__     = (
 # =============================================================================
 from   ostap.parallel.parallel import Task, WorkManager
 from   ostap.core.ostap_types  import string_types, integer_types
-from   ostap.utils.basic       import numcpu 
+from   ostap.utils.basic       import numcpu, main_process 
 import ROOT
 # =============================================================================
 # logging 
@@ -96,7 +96,7 @@ class  TheBaseTask (Task) :
         import random, ROOT
         from ostap.parallel.utils import random_random
         random_random ( jobid )
-        
+        if main_process () : return 
         return self.initialize_local() 
         
     ## get the results 
