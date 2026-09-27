@@ -60,7 +60,6 @@ class  MakeDSTask(Task) :
     ## the actual processing 
     def process ( self , jobid , item ) :
 
-        import ROOT
         from ostap.logger.logger import logWarning
         with logWarning() :
             import ostap.core.pyrouts            
@@ -82,7 +81,8 @@ class  MakeDSTask(Task) :
     def merge_results ( self , result , jobid = -1 ) :
         """ Merge results/datasets
         """
-        from ostap.fitting.dataset import Ostap
+        import ostap.fitting.dataset
+        
         if result :
             ds , stat = result
             if not self.the_output or not self.the_output[0] :
@@ -94,10 +94,11 @@ class  MakeDSTask(Task) :
                 stat_.processed  += stat.processed ## procesed 
                 stat_.skipped    += stat.skipped   ## skipped                
                 self.the_output   = ds_ , stat_
-                if isinstance ( ds , ROOT.RooDataSet ) :
-                    ROOT.SetOwnership ( ds , True ) 
-                del ds 
-            del result            
+                ## print ( 'ID', id( ds_ )  , id ( ds ) ) 
+                ## if isinstance ( ds , ROOT.RooDataSet ) :
+                ##     ROOT.SetOwnership ( ds , True ) 
+                ## del ds 
+            ## del result            
             logger.debug ( 'Merging: %d entries ' % len( self.the_output[0] ) )
         else :
             logger.error ( "No valid results for merging" )
@@ -143,7 +144,6 @@ class  FillDSTask(MakeDSTask) :
     ## the actual processing 
     def process ( self , jobid , item ) :
 
-        import ROOT
         from ostap.logger.logger import logWarning
         with logWarning() :
             import ostap.core.pyrouts            
@@ -166,15 +166,13 @@ class  FillDSTask(MakeDSTask) :
                                       progress  = False          , 
                                       silence   = True           )
 
-        result = chain.fill_dataset2 ( selector  ,
-                                       first     = first           ,
-                                       last      = last            , 
-                                       silent    = True            , 
-                                       shortcut  = self.shortcut   ,
-                                       use_frame = self.use_frame  )
+        return chain.fill_dataset2 ( selector  ,
+                                     first     = first           ,
+                                     last      = last            , 
+                                     silent    = True            , 
+                                     shortcut  = self.shortcut   ,
+                                     use_frame = self.use_frame  )
         
-        return result
-    
 # =================================================================================
 ## The simple task object for more efficient fill of RooDataSet from TChain 
 #  @see GaudiMP.Parallel
@@ -212,7 +210,6 @@ class  FillTask(MakeDSTask) :
     ## the actual processing 
     def process ( self , jobid , item ) :
 
-        import ROOT, os 
         from ostap.logger.logger import logWarning
         with logWarning () :
             import ostap.core.pyrouts            
@@ -248,14 +245,13 @@ class  FillTask(MakeDSTask) :
                                       progress  = False          , 
                                       silence   = True           )
         
-        result = chain.fill_dataset2 ( selector  ,
-                                       first     = first ,
-                                       last      = last  , 
-                                       silent    = True                 , 
-                                       shortcut  = all and self.trivial ,
-                                       use_frame = self.use_frame       )
-        return result 
-
+        return chain.fill_dataset2 ( selector  ,
+                                     first     = first ,
+                                     last      = last  , 
+                                     silent    = True                 , 
+                                     shortcut  = all and self.trivial ,
+                                     use_frame = self.use_frame       )
+        
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
 #  @code
@@ -290,7 +286,6 @@ def parallel_fill ( chain                    ,
     if not isinstance ( selector , SelectorWithVars ) : 
         raise TypeError ( "Invalid type of `selector': %s" % typename ( selector ) )
 
-    
     ch        = Chain ( chain , first = first , last = last ) 
     
     selection = selector.selection

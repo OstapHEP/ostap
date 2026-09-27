@@ -838,6 +838,8 @@ class SelectorWithVars(SelectorWithCuts) :
             ##
             self.varset
             )
+        ## ROOT.SetOwnership ( self.__data , True )
+        
 
         ## selection using RooFit machinery 
         self.__roo_cuts    = ''
@@ -851,7 +853,7 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__roo_cuts    = roo_cuts 
 
         ## it is still very puzzling for me: should this line be here at all??
-        ROOT.SetOwnership ( self.__data  , False )
+        ## ROOT.SetOwnership ( self.__data  , False )
         
         from collections import defaultdict
         self.__skip     = defaultdict(int)
@@ -1141,6 +1143,7 @@ class SelectorWithVars(SelectorWithCuts) :
 
         ## take care on the (C++) progress-bar 
         if valid_pointer ( tree ) : self.reset ( len ( tree ) )
+        
     # =========================================================================
     ## Start slave processing
     #  @see Ostap::SelectorWithCuts::SlaveBegin
@@ -1205,7 +1208,8 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__roo_formula = None
             
         if self.__notifier :
-            self.__notifier.exit()
+            self.__notifier.Notify () 
+            self.__notifier.exit   ()
             self.__notifier = None
             
     # =========================================================================
@@ -1464,6 +1468,9 @@ def make_dataset ( tree              ,
         skipped   = 0 
         processed = total
                 
+    ## ATTENTION!  
+    ## ROOT.SetOwnership ( ds , True ) ## ATTENTION!  
+     
     return ds , SelStat ( total , processed , skipped ) 
 
 ROOT.TTree.make_dataset = make_dataset
