@@ -30,6 +30,12 @@ printf "LCG      : %s\n" "${LCG}"
 printf "PLATFORM : %s\n" "${PLATFORM}"
 printf "PWD      : %s\n" "${PWD}"
 
+nproc_val=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 2)
+ncpus=$(( nproc_val - 2 > 2 ? nproc_val - 2 : 2 ))
+
+printf "#NCPUS   : %s\n" "${ncpus}"
+
+
 source_dir="${PWD}"
 
 # =========================================================================
@@ -149,10 +155,6 @@ fi
 # =============================================================================
 # Run tests
 # =============================================================================
-nproc_val=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 2)
-ncpus=$(( nproc_val - 2 > 2 ? nproc_val - 2 : 2 ))
-
-printf "#NCPUS : %s\n" "${ncpus}"
 
 OSTAP_BATCH=True COLUMNS=200 ctest -j${ncpus} --output-on-failure --test-output-size-failed 5000000
 
