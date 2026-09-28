@@ -931,7 +931,7 @@ class TaskManager(ManagerBase) :
         
         ## purely sequential processing?
         import ostap.core.config as OCC
-        self.__force_sequential = force_sequential or OCC.sequential or self.ncpus <= 1 
+        self.__force_sequential = force_sequential or OCC.sequential ## or self.ncpus <= 1 
         if self.force_sequential : self.__ncpus = 1
         
         assert isinstance ( dump_freq , int ) and 0 <= dump_freq , \
