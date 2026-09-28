@@ -23,7 +23,7 @@ __all__     = (
 from   ostap.parallel.parallel         import Task, WorkManager
 from   ostap.utils.core                import typename 
 import ostap.parallel.parallel_statvar
-import ROOT
+import ROOT, copy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -250,7 +250,7 @@ def chopping_training ( chopper , **kwargs ) :
     task = ChopperTraining ()
     wmgr = WorkManager ( silent = False , **kwargs )
     
-    params = [ ( i , chopper ) for i in range ( chopper.N ) ]
+    params = [ ( i , copy.copy ( chopper ) ) for i in range ( chopper.N ) ]
     
     sys.stdout.flush()
     sys.stderr.flush()
