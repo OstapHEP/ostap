@@ -19,6 +19,7 @@ __all__     = (
     'arrow_left'          , ## ←
     'arrow_right'         , ## →
     'arrow_rightleft'     , ## ↔
+    'bold_arrow_right'    , ## ➔    
     'arrow_up'            , ## ↑
     'arrows_all'          , ## ←↖↑↗→↘↓↙
     'asterisk'            , ## ✶
@@ -259,6 +260,7 @@ arrow_right      = '→'  if show else '->'
 arrow_rightleft  = '↔'  if show else '<->'
 arrow_up         = '↑'  if show else '|'
 arrow_down       = '↓'  if show else '|'
+bold_arrow_right = '➔'  if show else '->'    
 
 arrows_all       = '←↖↑↗→↘↓↙' if show else ( '<-' , '\\' , '|' , '/' , '->' , '\\' , '|' , '/' )
 

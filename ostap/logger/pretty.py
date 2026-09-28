@@ -93,7 +93,7 @@ def format_pow10 ( value , show_sign = True ) :
 #  @code
 #  fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 )
 #  @endcode
-#  @return formats for nice string and the separate exponent 
+#  @return formats for nice string and the separate exponent
 def fmt_pretty_values ( *values             ,
                         width       = 6     ,
                         precision   = 4     ,
@@ -116,10 +116,11 @@ def fmt_pretty_values ( *values             ,
     from ostap.math.math_base import iszero, frexp10
     the_format =  '%%+%d.%df' if with_sign else '%%%d.%df'
     
-    if   100 <= av < 1000 and 2 <= precision : return the_format % ( width , precision - 2 ) , 0 
-    elif 10  <= av < 100  and 1 <= precision : return the_format % ( width , precision - 1 ) , 0 
-    elif 0.1 <= av < 10  : return the_format % ( width , precision     ) , 0 
-    elif iszero ( av )   : return the_format % ( width , precision     ) , 0 
+    # ИСПРАВЛЕНИЕ: Используем max(0, ...), чтобы убрать жёсткое требование `and 2 <= precision`
+    if   100 <= av < 1000 : return the_format % ( width , max ( 0 , precision - 2 ) ) , 0 
+    elif 10  <= av < 100  : return the_format % ( width , max ( 0 , precision - 1 ) ) , 0 
+    elif 0.1 <= av < 10   : return the_format % ( width , precision                 ) , 0 
+    elif iszero ( av )    : return the_format % ( width , precision                 ) , 0 
 
     ## here we scale input data and try to get formats for scaled data
     
@@ -130,9 +131,10 @@ def fmt_pretty_values ( *values             ,
     a , b     = v_a , v_e 
     scaled    = ldexp10 ( a , b + r - v_ee ) 
     
-    ## scale     = 10 **   ( r - v_ee  )    
-    ## scaled    = av * scale
-    
+    # ИСПРАВЛЕНИЕ: Страховка от бесконечной рекурсии, если scaled совпало с av
+    if scaled == av :
+        return the_format % ( width , precision ) , 0
+
     ## get formats for properly scaled data
     fmtv , expo = fmt_pretty_values ( scaled                ,
                                       width     = width     ,
@@ -140,7 +142,7 @@ def fmt_pretty_values ( *values             ,
                                       with_sign = with_sign ,
                                       latex     = latex     )
     
-    return fmtv , expo + 3 * n 
+    return fmtv , expo + 3 * n
 
 # ==================================================================================
 ## Get the effective exponent for the set of values :
@@ -660,7 +662,6 @@ def nice_print ( what              , * ,
                                    latex     = latex     , **kwargs )
     
     if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-    ## elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo ) 
     elif expo           : result = '%s%s%s'         % ( result , times , format_pow10 ( expo ) ) 
     ##
     return result.strip() if strip else result 

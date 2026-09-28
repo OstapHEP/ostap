@@ -40,7 +40,7 @@ from   ostap.stats.utils        import ( weight_trivial     ,
                                          nEff               )
 from   ostap.stats.tools      import hasSkLearn 
 import ostap.logger.symbols   as     S
-import numpy, abc
+import numpy, abc, math 
 # =============================================================================
 # Logging setup
 # =============================================================================
@@ -50,14 +50,7 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 has_sklearn = hasSkLearn() 
 # =============================================================================
-# Global Configuration Constants
-# =============================================================================
-DEFAULT_ESTIMATORS        = 600
-REGULARIZED_ESTIMATORS    = 250
-MAX_DEPTH                 =   7 
-REGULARIZED_DEPTH         =   3
-LEARNING_RATE             = 0.03
-REGULARIZED_LEARNING_RATE = 0.05
+## Decorations 
 # =============================================================================
 method_LGBM  = 'DRW/%s'   % ( S.light_bulb if S.light_bulb  else 'LightGBM' ) 
 method_XGB   = 'DRW/%s'   % ( S.rocket     if S.rocket      else 'XGBoost'  ) 
@@ -65,6 +58,35 @@ method_CATB  = 'DRW/%s'   % ( S.cat_face   if S.cat_face    else 'CatBoost' )
 method_TORCH = 'DRW/%s'   % ( S.flashlight if S.flashlight  else 'TORCH'    ) 
 method_LR    = 'DRW/%s'   % ( S.ruler      if S.ruler       else 'LOGREG'   ) 
 method_GBRW  = 'HepML/%s' % ( S.wood       if S.wood        else 'GBRW'     )
+# =============================================================================
+# Global Configuration Constants
+# =============================================================================
+DEFAULT_ESTIMATORS        = 1000  # High capacity: deep ensemble with low learning rate
+REGULARIZED_ESTIMATORS    =  500  # Strong regularization: constrained number of trees
+MAX_DEPTH                 =   10  # Deep tree capacity for high dimensions / large statistics
+REGULARIZED_DEPTH         =    5  # Shallow depth (8 leaves max) to enforce heavy smoothing
+LEARNING_RATE             =  0.02 # Small step for stable density ratio convergence
+REGULARIZED_LEARNING_RATE =  0.04 # Slightly larger step for shallow regularized trees
+
+LGBM_DEFAULT_ESTIMATORS        = 1600 # High capacity: deep ensemble with low learning rate
+LGBM_REGULARIZED_ESTIMATORS    = 1000 # Strong regularization: constrained number of trees
+LGBM_MAX_DEPTH                 =   10 # Deep tree capacity for high dimensions / large statistics
+LGBM_REGULARIZED_DEPTH         =   10 # Shallow depth (8 leaves max) to enforce heavy smoothing
+LGBM_LEARNING_RATE             = 0.01 # Small step for stable density ratio convergence
+LGBM_REGULARIZED_LEARNING_RATE = 0.02 # Slightly larger step for shallow regularized trees
+
+XGB_DEFAULT_ESTIMATORS         = 1600 # High capacity: deep ensemble with low learning rate
+XGB_REGULARIZED_ESTIMATORS     = 1000 # Strong regularization: constrained number of trees
+XGB_MAX_DEPTH                  =   10 # Deep tree capacity for high dimensions / large statistics
+XGB_REGULARIZED_DEPTH          =   10 # Shallow depth (8 leaves max) to enforce heavy smoothing
+XGB_LEARNING_RATE              = 0.01 # Small step for stable density ratio convergence
+XGB_REGULARIZED_LEARNING_RATE  = 0.02 # Slightly larger step for shallow regularized trees
+
+## DEFAULT_ESTIMATORS        = 1000  # High capacity: deep ensemble with low learning rate
+## REGULARIZED_ESTIMATORS    = 1000  # Strong regularization: constrained number of trees
+## MAX_DEPTH                 =   10  # Deep tree capacity for high dimensions / large statistics
+## REGULARIZED_DEPTH         =    5  # Shallow depth (8 leaves max) to enforce heavy smoothing
+
 # =============================================================================
 ## @brief Check if strong regularization is needed for BDT-based reweighting.
 #  @param original Features array for the original sample.
@@ -96,6 +118,9 @@ def RW_needs_regularization ( original                       ,
     # 2. Calculate effective statistics (nEff)
     neff_orig = nEff ( original  , original_weight )
     neff_targ = nEff ( target    , target_weight   ) 
+
+    neff_orig = float ( neff_orig )
+    neff_targ = float ( neff_targ )
     
     # Two-sample effective size: Harmonic pooled nEff
     if neff_orig <= 0 or neff_targ <= 0 : neff = 0.0
@@ -105,19 +130,26 @@ def RW_needs_regularization ( original                       ,
     eff_orig = neff_orig / float ( nraw_orig ) if 0 < nraw_orig else 0.0
     eff_targ = neff_targ / float ( nraw_targ ) if 0 < nraw_targ else 0.0
 
+    eff_orig = float ( eff_orig )
+    eff_targ = float ( eff_targ )
+
+    print ( 'RW_NEEDS/1' , neff_orig , neff_targ , eff_orig , eff_targ )
+    
     threshold0 = 5000.0  
     if eff_orig < 0.65 and neff_orig < threshold0 :
-        effp   = eff_orig * 100
+        effp   = eff_orig * 100.0
+        print ( 'RW_NEEDS/2' , neff_orig , neff_targ , eff_orig , eff_targ )        
         v1     = nice_print ( neff_orig  , precision = 1 , width = 2 , with_sign = False )
-        v2     = nice_print ( threhsold0 , precision = 1 , width = 2 , with_sign = False )        
-        result = 'eff_orig[%.0f%%]<65%%&neff_orig<5000' % ( effp , v1 , v2 )
+        v2     = nice_print ( threshold0 , precision = 1 , width = 2 , with_sign = False )        
+        result = 'eff_orig[%.0f%%]<65%%&neff_orig[%s]<%s' % ( effp , v1 , v2 )
         return result.replace ( ' ' , '' )
     
     if eff_targ < 0.65 and neff_targ < threshold0 :
-        effp   = eff_targ * 100
+        effp   = eff_targ * 100.0
+        print ( 'RW_NEEDS/3' , neff_orig , neff_targ , eff_orig , eff_targ )                
         v1     = nice_print ( neff_targ  , precision = 1 , width = 2 , with_sign = False )
-        v2     = nice_print ( threhsold0 , precision = 1 , width = 2 , with_sign = False )        
-        result = 'eff_targ[%.0f%%]<65%%&neff_targ<5000' % ( effp , v1 , v2 )
+        v2     = nice_print ( threshold0 , precision = 1 , width = 2 , with_sign = False )        
+        result = 'eff_targ[%.0f%%]<65%%&neff_targ[%s]<%s' % ( effp , v1 , v2 )
         return result.replace ( ' ' , '' )
 
     # 4. Low dimensionality (<= 4 features) needs regularization under limited statistics
@@ -168,7 +200,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                   target_weight          = None  ,
                   clip_threshold         = 1.e+4 ,
                   n_splits               = 5     ,
-                  random_state           = 42    ,
+                  random_state           = None  ,
                   store_original_weights = True  ,
                   progress               = True  , **params ) :
         """ Initialize and fit the density ratio reweighter ensemble.
@@ -184,6 +216,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         :param progress: Enable/disable progress bar.
         :param params: Model parameters.
         """
+        # ======================================================================
         if not isinstance ( n_splits, int ) : raise TypeError  ( "Invalid `n_splits' type %s"  % typename( n_splits ) )
         if not 0 <= n_splits <= 1000        : raise ValueError ( "Invalid `n_splits' value %s" % n_splits )
         if not isinstance( clip_threshold, num_types ) :
@@ -200,7 +233,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__progress       = True if progress else False 
         self.__clip_threshold = float ( clip_threshold )
         self.__n_splits       = n_splits
-        self.__random_state   = random_state
 
         self.__fitted_models       = {}
         self.__priors              = {}
@@ -217,6 +249,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                                target_weight   = target_weight   ) 
         
         if reg_case :
+            
             n_features = num_features ( original )
             neff_orig  = nEff ( original  , original_weight )
             neff_targ  = nEff ( target    , target_weight   ) 
@@ -240,12 +273,13 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__original_ratios             = None
         self.__original_reweighted_weights = None
 
-        Reweighter.__init__ ( self            ,
-                              original        = original        ,
-                              target          = target          , 
-                              original_weight = original_weight ,
-                              target_weight   = target_weight   , **params )
-
+        ## initialize the base 
+        super ().__init__ ( original        = original        ,
+                          target          = target          , 
+                          original_weight = original_weight ,
+                          target_weight   = target_weight   ,
+                          random_state    = random_state    , **params )
+        
         original_ratios, original_reweighted_weights = (
             self.__fit_and_compute(
                 original.astype( numpy.float32, copy = False ),
@@ -763,13 +797,13 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         return final_ratios if original_weight is None else final_ratios * w_new_f32
 
+
 # =============================================================================
 ## @class  LightGBMDensityReweighter
 #  Density ratio reweighter using LightGBM as the underlying classifier.
 class LightGBMDensityReweighter ( DensityReweighter ) :
     """ Density ratio reweighter using LightGBM as the underlying classifier.
     """
-
     # =========================================================================
     ## Initialize LightGBM density reweighter.
     #  @param original Features array for original sample.
@@ -783,32 +817,37 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        """ Initialize LightGBM density reweighter.
+        """ Initialize LightGBM density reweighter (High Capacity Mode Defaults).
         """
         config = {
-            'objective'             : 'binary'            ,
-            'metric'                : 'binary_logloss'    ,
-            'n_estimators'          : DEFAULT_ESTIMATORS  ,
-            'learning_rate'         : LEARNING_RATE       ,
-            'max_depth'             : MAX_DEPTH           ,
-            'max_bin'               : 2047                ,
-            'num_leaves'            : 31                  ,
-            'min_child_samples'     : 10                  ,
-            'min_child_weight'      : 1e-4                ,
-            'reg_alpha'             : 0.1                 ,
-            'reg_lambda'            : 0.01                ,
-            'subsample'             : 0.8                 ,
-            'subsample_freq'        : 1                   ,
-            'colsample_bytree'      : 1.0                 ,
-            'path_smooth'           : 1.0                 ,
-            'boost_from_average'    : True                ,
-            'early_stopping_rounds' : 50                  ,
-            'verbosity'             : -1                  ,
-            'n_jobs'                : -1                  ,
+            'objective'             : 'binary'                ,
+            'metric'                : 'binary_logloss'        ,
+            'n_estimators'          : LGBM_DEFAULT_ESTIMATORS ,
+            'learning_rate'         : LGBM_LEARNING_RATE      ,
+            'max_depth'             : LGBM_MAX_DEPTH          ,
+            'num_leaves'            : min ( 1023 , 2 ** LGBM_MAX_DEPTH - 1 ) , 
+            'max_bin'               : 2047                    , # Reduced from 2047 to prevent fine-grained noise fitting
+            'min_child_samples'     : 10                      , # Slightly increased from 10 to stabilize leaf estimation
+            'min_child_weight'      : 1e-3                    , # Increased from 1e-4 for numerical stability in ratios
+            'min_split_gain'        : 0.0                     , # 
+            'reg_alpha'             : 0.0                     , # L1 penalty to prune non-informative splits
+            'reg_lambda'            : 0.0                     , # Increased L2 penalty (was 0.01) for smoother probabilities
+            'subsample'             : 0.8                     , # Bagging fraction to reduce variance
+            'subsample_freq'        : 1                       ,
+            'colsample_bytree'      : 0.8                     , # Feature subsampling to increase ensemble diversity (was 1.0)
+            'path_smooth'           : 1.0                     , # LightGBM tree smoothing for density ratio stability
+            'boost_from_average'    : True                    ,
+            'early_stopping_rounds' : LGBM_DEFAULT_ESTIMATORS // 2 ,
+            'verbosity'             : -1                      ,
+            'n_jobs'                : -1                      ,
         }
+        
         config.update ( kwargs )
         
-        super ( LightGBMDensityReweighter , self ).__init__ (
+        if 'num_boost_round' in config :
+            config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , LGBM_DEFAULT_ESTIMATORS ) 
+            
+        super ().__init__ (
             original        = original        ,
             target          = target          ,
             original_weight = original_weight ,
@@ -835,28 +874,48 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
                          params     , 
                          n_features ,
                          n_samples  ) :
-        """ Apply soft regularization rules for low statistics or low dimensions.
+        """ Apply strong regularization rules for limited statistics or low dimensions.
         """
 
-        params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'         ] = REGULARIZED_LEARNING_RATE
-        params [ 'max_depth'             ] = REGULARIZED_DEPTH       
-        params [ 'num_leaves'            ] = 2**REGULARIZED_DEPTH - 1       
-        params [ 'min_child_samples'     ] = max ( 10 , int ( n_samples  * 1.e-4 ) )
-        params [ 'min_child_weight'      ] = 1.e-7 
-        params [ 'reg_alpha'             ] = 0.0    
-        params [ 'reg_lambda'            ] = 0.0 
-        params [ 'subsample'             ] = 1.0    
-        params [ 'colsample_bytree'      ] = 1.0  
-        params [ 'early_stopping_rounds' ] = None
-        params [ 'min_data_in_bin'       ] = 1      
+                
+        n_estimators = params.get ( 'n_estimators' , LGBM_REGULARIZED_ESTIMATORS )
+        n_estimators = min        (  n_estimators  , LGBM_REGULARIZED_ESTIMATORS , 1 + math.floor ( n_samples / 2 ) ) 
 
-        current_max_bin      = params.get ( 'max_bin', 2047 )
-        params [ 'max_bin' ] = min ( current_max_bin, max ( 31, int ( n_samples / 15 ) ) )
+        learning_rate                      = LGBM_REGULARIZED_LEARNING_RATE
+               
+        params [ 'n_estimators'          ] = n_estimators
+        params [ 'learning_rate'         ] = learning_rate 
+        params [ 'max_depth'             ] = LGBM_REGULARIZED_DEPTH
+
+        num_leaves = min ( 1023 , 2 ** LGBM_REGULARIZED_DEPTH - 1     ) # maximl number of leaves for the given depth
+        num_leaves = min ( num_leaves , 1 + math.floor ( n_samples ) )
         
-        if 'path_smooth' in params : 
-            params.pop ( 'path_smooth' )
+        params [ 'num_leaves'            ] = num_leaves 
 
+        params [ 'min_child_samples'     ] = max ( 10 , int ( n_samples * 0.001 ) ) # Scale with sample size (~0.5% min per leaf)
+        params [ 'min_child_weight'      ] = 1.e-3 # Substantially increased from 1e-7 to prevent unstable leaves
+        params [ 'min_split_gain'        ] = 0.0   # 
+        params [ 'reg_alpha'             ] = 0.0   # Active L1 regularization
+        params [ 'reg_lambda'            ] = 0.0   # Strong L2 regularization 
+        params [ 'subsample'             ] = 0.8   # Active row subsampling (was incorrectly set to 1.0)
+        params [ 'subsample_freq'        ] = 1
+        params [ 'colsample_bytree'      ] = 0.8   # Active feature subsampling
+        params [ 'min_data_in_bin'       ] = 1     # Increased from 1 to smooth out histogram binning
+        
+        raw_patience          = int ( 3   / learning_rate     )
+        max_limit             = min ( 200 , n_estimators // 5 )
+        early_stopping_rounds = max ( 15  , min ( raw_patience , max_limit ) )
+
+        params [ 'early_stopping_rounds' ] = None ## 250 ## None ##  100 ## early_stopping_rounds 
+        
+        ## current_max_bin      = params.get ( 'max_bin', 4095 )
+        ## params [ 'max_bin' ] = min ( current_max_bin , max ( 31 , 1 + math.floor ( n_samples / 5 ) ) ) 
+        
+        # Enforce tree-path smoothing parameter if supported by LightGBM
+        ## params [ 'path_smooth' ] = 2.0
+
+        print ( 'REGULARI..' )
+        
         return params
     
     # =========================================================================
@@ -882,7 +941,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         val_data = LightGBM.Dataset ( X_val   , label = y_val   , weight = w_va , reference = trn_data , free_raw_data = False )
 
         params = self.params.copy ()
-        num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , 400 )
+        num_boost_round       = params.pop ( 'num_boost_round'       , None ) or params.pop ( 'n_estimators' , LGBM_DEFAULT_ESTIMATORS )
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , None )
 
         callbacks = []
@@ -913,54 +972,57 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         p = model.predict( X, **kwargs )
         return p.astype( numpy.float32, copy = False )
 
+
 # =============================================================================
-## @class XGBoostDensityReweighter 
+## @class  XGBoostDensityReweighter
 #  Density ratio reweighter using XGBoost as the underlying classifier.
-class XGBoostDensityReweighter ( DensityReweighter ): 
+class XGBoostDensityReweighter ( DensityReweighter ) :
     """ Density ratio reweighter using XGBoost as the underlying classifier.
     """
 
-    ## @brief Initialize XGBoost density reweighter.
-    #  @param original Features array for original dataset.
-    #  @param target Features array for target dataset.
+    # =========================================================================
+    ## Initialize XGBoost density reweighter.
+    #  @param original Features array for original sample.
+    #  @param target Features array for target sample.
     #  @param original_weight Initial weights for original sample (optional).
     #  @param target_weight Initial weights for target sample (optional).
-    #  @param store_original_weights If True, store computed results for original sample.
-    #  @param params Additional XGBoost parameters.
-    def __init__(  self , * , 
-                   original               ,
-                   target                 ,
-                   original_weight        = None ,
-                   target_weight          = None ,
-                   store_original_weights = True , **params ) :
-        """Initialize XGBoost density reweighter."""
+    #  @param kwargs Additional XGBoost parameters.
+    def __init__ ( self            , 
+                   original        , 
+                   target          , 
+                   original_weight = None , 
+                   target_weight   = None , 
+                   **kwargs        ) :
+        """ Initialize XGBoost density reweighter (High Capacity Mode Defaults).
+        """
         config = {
             'objective'             : 'binary:logistic'   ,
             'eval_metric'           : 'logloss'           ,
-            'n_estimators'          : DEFAULT_ESTIMATORS  ,
-            'learning_rate'         : LEARNING_RATE       ,
-            'max_depth'             : MAX_DEPTH           ,
-            'min_child_weight'      : 1.e-3               ,
-            'gamma'                 : 0.0                 ,
-            'reg_alpha'             : 0.1                 ,
-            'reg_lambda'            : 0.01                ,
-            'subsample'             : 0.8                 ,
-            'colsample_bytree'      : 0.8                 ,
-            'tree_method'           : 'hist'              ,
-            'early_stopping_rounds' : 50                  ,
-            'verbosity'             :  0                  ,
-            'n_jobs'                : -1                  ,
+            'n_estimators'          : XGB_DEFAULT_ESTIMATORS  ,
+            'learning_rate'         : XGB_LEARNING_RATE       ,
+            'max_depth'             : XGB_MAX_DEPTH           ,
+            'tree_method'           : 'hist'                  , # Fast histogram-based algorithm (similar to LGBM)
+            'max_bin'               : 1023                    , # Limit binning to prevent noise fitting
+            'min_child_weight'      : 1                       , # Minimum sum of instance weight (hessian) in a child
+            'gamma'                 : 0.0                     , # Minimum loss reduction required for partition
+            'alpha'                 : 0.0                     , # L1 penalty on leaf weights
+            'lambda'                : 0.0                     , # L2 penalty on leaf weights
+            'subsample'             : 0.8                     , # Row subsampling to reduce variance
+            'colsample_bytree'      : 0.8                     , # Feature subsampling to increase ensemble diversity
+            'early_stopping_rounds' : 50                      ,
+            'verbosity'             : 0                       ,
+            'n_jobs'                : -1                      ,
         }
+        config.update ( kwargs )
         
-        config.update ( params )
-        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' )
+        super ().__init__ (
+            original        = original        ,
+            target          = target          ,
+            original_weight = original_weight ,
+            target_weight   = target_weight   ,
+            **config
+        )
 
-        super().__init__ ( original               = original               ,
-                           target                 = target                 ,
-                           original_weight        = original_weight        ,
-                           target_weight          = target_weight          ,
-                           store_original_weights = store_original_weights , **config )
-        
     # =========================================================================
     ## Return the method identifier name.
     #  @return Method string identifier.
@@ -969,28 +1031,44 @@ class XGBoostDensityReweighter ( DensityReweighter ):
         """ Return the method identifier name.
         """
         return method_XGB 
-    
-    # =========================================================================
-    ## Dynamic regularization rules for XGBoost.
-    #  @param params Current parameters dictionary.
-    #  @param n_features Number of features.
-    #  @param n_samples Effective sample statistics.
-    #  @return Updated parameters dictionary.
-    def regularization ( self , params , n_features , n_samples ) :
-        """ Dynamic regularization rules for XGBoost.
-        """
-        params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'         ] = REGULARIZED_LEARNING_RATE
-        params [ 'max_depth'             ] = REGULARIZED_DEPTH
-        params [ 'min_child_weight'      ] = 1.e-7 
-        params [ 'gamma'                 ] = 0.0
-        params [ 'reg_alpha'             ] = 0.0
-        params [ 'reg_lambda'            ] = 0.0
-        params [ 'subsample'             ] = 1.0
-        params [ 'colsample_bytree'      ] = 1.0
-        params [ 'early_stopping_rounds' ] = None
 
-        params [ 'tree_method'           ] = 'exact' if n_samples < 20000 else 'hist'
+    # =========================================================================
+    ## Apply strong regularization rules for low statistics or low dimensions.
+    #  @param params Current parameters dictionary.
+    #  @param n_features Number of phase space features.
+    #  @param n_samples Effective sample size.
+    #  @return Updated parameters dictionary.
+    def regularization ( self       ,
+                         params     , 
+                         n_features ,
+                         n_samples  ) :
+        """ Apply strong regularization rules for limited statistics or low dimensions.
+        """
+        
+        n_estimators = params.get ( 'n_estimators' , XGB_REGULARIZED_ESTIMATORS )
+        n_estimators = min        (  n_estimators  , XGB_REGULARIZED_ESTIMATORS , 1 + math.floor ( n_samples / 2 ) ) 
+
+        learning_rate                      = XGB_REGULARIZED_LEARNING_RATE
+
+        params [ 'max_depth'             ] = XGB_REGULARIZED_DEPTH       
+
+        params [ 'n_estimators'          ] = n_estimators         
+        params [ 'learning_rate'         ] = learning_rate
+        
+        # Scale min_child_weight (sum of hessian) with sample size to prevent isolated leaves
+        params [ 'min_child_weight'      ] = max ( 10 , int ( n_samples * 0.001 ) ) 
+        
+        params [ 'gamma'                 ] = 0.0    # More aggressive complexity control/pruning
+        params [ 'alpha'                 ] = 0.0    # Active L1 regularization to encourage sparsity
+        params [ 'lambda'                ] = 0.0    # Strong L2 regularization for smoother weights
+        params [ 'subsample'             ] = 0.8    # Active row subsampling 
+        params [ 'colsample_bytree'      ] = 0.0    # Active feature subsampling 
+        params [ 'early_stopping_rounds' ] = None   # Tighter early stopping
+        
+        # Dynamic binning adjustment, only applicable if using histogram-based tree method
+        ## if params.get ( 'tree_method' , 'hist' ) == 'hist' :
+        ## current_max_bin      = params.get ( 'max_bin' , 255 )
+        ## params [ 'max_bin' ] = min ( current_max_bin , max ( 31 , int ( n_samples / 20 ) ) )
 
         return params
 
@@ -1387,8 +1465,8 @@ class PyTorchDensityReweighter(DensityReweighter):
         calculated_batch_size = target_batch_elements // max ( n_features, 1 )
         
         batch_size = self.params.get ( 'batch_size' , calculated_batch_size )               
-        batch_size = max ( 1024 , min ( 8192 , batch_size , n_samples ) )
-        
+        batch_size = min ( n_samples , max ( 1024 , min ( 8192 , batch_size ) ) )
+
         patience   =       self.params.get ( 'patience'   ,    5 ) 
         nepochs    =       self.params.get ( 'epochs'     ,   50 )
         
@@ -1578,26 +1656,22 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         lr_kwargs = { k: v for k, v in params.items() if k in valid_LR_params }
 
         ## construct the pipeline
-        #  (1) the first, mandatory, scaler 
-        pipeline = [ ( 'scaler1' , StandardScaler () ) ] 
+        #  (1) the first, mandatory, scaler
+        steps = [ ( 'scaler1' , StandardScaler () ) ] 
 
         poly  = self.params.get ( 'polynomials' , 0 )
         if poly and isinstance ( poly , int ) and 0 < poly <= 5 :
             # (2) add polynomial features & secondary scaler  
-            pipeline += [ ( 'poly'    , PolynomialFeatures ( degree=2 , include_bias = False ) ) ]
+            steps += [ ( 'poly'    , PolynomialFeatures ( degree = poly  , include_bias = False ) ) ]
             # (3) add secondary scaler  
-            pipeline += [ ( 'scaler2' , StandardScaler () ) ]
+            steps += [ ( 'scaler2' , StandardScaler () ) ]
             
         # (4) the majon compohnent - logistic regression  
         lr_model = LogisticRegression ( **lr_kwargs )
-        pipeline += [ ( 'logistic', lr_model ) ]
+        steps += [ ( 'logistic', lr_model ) ]
         
-        ## (5) get the final modele 
-        model = Pipeline( pipeline )
-
-            
-        model = Pipeline ( [ ('scaler'   , StandardScaler() ) ,
-                             ('logistic' , lr_model           ) ] )
+        ## (5) get the final model
+        model = Pipeline ( steps  )
 
         w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else None
 
