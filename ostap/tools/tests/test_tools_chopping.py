@@ -274,6 +274,7 @@ if True :
     
     dsS1, _ = cSignal.fill_dataset ( variables , selection = 'var1<100' , use_frame = -1 )
     dsB1, _ = cBkg   .fill_dataset ( variables , selection = 'var1<100' , use_frame = -1 )
+    
 # =============================================================================
 ## B.2) add response 
 with timing ( "Add TMVA/Chopping response to (existing) RooDataSet " , logger = logger ) as time_B :
@@ -329,8 +330,8 @@ with timing ( "Add TMVA/Chopping response to (newly created) RooDataSet " , logg
 # =============================================================================
 ## Check TMVA results 
 # =============================================================================
-cSignal = ROOT.TChain ( 'S' , files = data_files )
-cBkg    = ROOT.TChain ( 'B' , files = data_files )
+cSignal   = ROOT.TChain ( 'S' , files = data_files )
+cBkg      = ROOT.TChain ( 'B' , files = data_files )
     
 s_stats   = cSignal.statVars ( decisions )
 b_stats   = cBkg   .statVars ( decisions )

@@ -22,6 +22,7 @@ __all__     = (
 # =============================================================================
 from   ostap.parallel.parallel         import Task, WorkManager
 from   ostap.utils.core                import typename 
+from   ostap.utils.basic               import main_process 
 import ostap.parallel.parallel_statvar
 import ROOT, copy 
 # =============================================================================
@@ -85,14 +86,17 @@ class ChopperTraining(Task) :
         
         import ostap.tools.tmva        
         from   ostap.utils.root_utils import batch
-        ## nupack arguments 
+        ## unpack arguments 
         category , chopping = params
+        
+        if main_process () : chopping = copy.deepcopy ( chopping )
+            
         ## process...
         with batch ( True ) : 
             trainer  = chopping.create_trainer ( category , False )
             trainer.train ()
         ## Full output from TMVA trainer 
-        return  (
+        result = (
             [ ( category , trainer.weights_files ) ] ,
             [ ( category , trainer.  class_files ) ] ,
             [ ( category , trainer. output_file  ) ] ,
@@ -100,8 +104,12 @@ class ChopperTraining(Task) :
             [ ( category , trainer.     dirname  ) ] ,
             [ ( category , trainer.    log_file  ) ] ,
             [ ( category , trainer.         AUC  ) ] ,
-            )
+        )
+        # 
+        del chopping, trainer
+        return result 
 
+    
     ## merge results/datasets 
     def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output =  result
@@ -250,13 +258,15 @@ def chopping_training ( chopper , **kwargs ) :
     task = ChopperTraining ()
     wmgr = WorkManager ( silent = False , **kwargs )
     
-    params = [ ( i , copy.copy ( chopper ) ) for i in range ( chopper.N ) ]
+    params = [ ( i , chopper ) for i in range ( chopper.N ) ]
     
     sys.stdout.flush()
     sys.stderr.flush()
     
     wmgr.process ( task , params )
     
+    while params : params.pop()
+       
     sys.stdout.flush()
     sys.stderr.flush()
     

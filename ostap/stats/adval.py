@@ -60,8 +60,8 @@ else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Implement Adversarial Validation (Regression mode)' )
 # =============================================================================
-if hasSkLearn() : 
-    from   sklearn.metrics        import mean_squared_error
+has_sklearn = hasSkLearn()
+from   sklearn.metrics        import mean_squared_error
 # =============================================================================
 DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100

@@ -109,7 +109,18 @@ def hasSkLearn ( silent = True ) :
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
-        import sklearn 
+        import sklearn
+        
+        # =====================================================================
+        try: # ================================================================
+            # =================================================================
+            from sklearn.experimental import enable_hist_gradient_boosting
+            # =================================================================
+        except ImportError: # =================================================
+            # =================================================================
+            pass
+        
+        # =====================================================================
         from   sklearn.ensemble      import HistGradientBoostingClassifier as _HGBC 
         from   sklearn.ensemble      import     GradientBoostingClassifier as _GBC        
         from   sklearn.ensemble      import         RandomForestClassifier as _RFC
@@ -119,17 +130,18 @@ def hasSkLearn ( silent = True ) :
         from   sklearn.preprocessing import             PolynomialFeatures as _PF 
         # ====================================================================
         if not silent : logger.info ( 'sklearn    version: %s' %  sklearn.__version__ )
-        ## 
-        import warnings
-        warnings.filterwarnings ( "ignore", category = UserWarning , module = "sklearn.utils.parallel" )
-        ## 
+        ##
+        if Version ( "1.3.0" ) <= Version ( sklearn.__version ) :
+            import warnings
+            warnings.filterwarnings ( "ignore", category = UserWarning , module = "sklearn.utils.parallel" )
+            
         return True 
-        # ====================================================================
-    except ImportError : # ===================================================
-        # ====================================================================
+        # =====================================================================
+    except ( ImportError , Exception ) : # ====================================
+        # =====================================================================
         return False 
                     
-# ==============================================================================
+# =============================================================================
 ## Has PyTorch ?
 #  Are (Py)Torch library and claffificators available?
 def hasPyTorch ( silent = True ) :

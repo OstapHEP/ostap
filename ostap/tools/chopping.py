@@ -105,7 +105,7 @@ from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.root_utils    import ImplicitMT 
 from   ostap.utils.timing        import timing 
-from   ostap.utils.basic         import numjobs 
+from   ostap.utils.basic         import numjobs, numcpu  
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ROOT, os, math, shutil, tarfile  
@@ -259,7 +259,6 @@ class Trainer(object) :
         
         """
 
-        
         assert isinstance ( N , integer_types ) and 1 < N , "Invalid number of categories"
 
         from ostap.utils.strings import rootify 
@@ -289,10 +288,20 @@ class Trainer(object) :
         self.__prescale_signal     = prescale_signal
         self.__prescale_background = prescale_background
         
+        if self.parallel and numcpu () <= 1 :
+            self.logger.info ( "Parallel chopping is switched-off" )
+            self.__parallel = False
+
+        if self.parallel :
+            import ostap.core.config as OCC
+            if OCC.sequential :                
+                self.logger.info ( "Parallel chopping is switched-off" )
+                self.__parallel = False
+                            
         if self.parallel :
             from ostap.parallel.parallel import has_dill 
             if not has_dill :
-                self.logger.attention  ("Disable parallel chopping due to old `dill` version ")
+                self.logger.attention  ("Disable parallel chopping due to old `dill` version")
                 self.__parallel = False
                 
         self.__parallel_conf = {}
@@ -1312,8 +1321,7 @@ class Trainer(object) :
             with tarfile.open ( self.log_file , 'r' ) as tar : tar.list ()
             
         return result 
-        
-            
+                    
     # =========================================================================
     ## The main method: training of all subsamples 
     #  - Use the trainer
@@ -1342,43 +1350,62 @@ class Trainer(object) :
         result = self.p_train () if self.parallel else self.s_train ()
 
         if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
-            try :
+            # =================================================================
+            try : # ===========================================================
+                # =============================================================
                 shutil.rmtree ( self.dirname )
-            except :
+                # =============================================================
+            except : # ========================================================
+                # =============================================================
                 pass
             
-        try :
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
             os.mkdir ( self.dirname )
-        except :
+            # =================================================================
+        except : # ============================================================
+            # =================================================================
             pass
 
         if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
             
-            if self.tar_file and tarfile.is_tarfile ( self.tar_file ) :            
-                try :
+            if self.tar_file and tarfile.is_tarfile ( self.tar_file ) :
+                # =============================================================                
+                try : # =======================================================
+                    # =========================================================
                     shutil.move ( self.tar_file , self.dirname )
                     ntf = os.path.join ( self.dirname , self.tar_file )
                     if os.path.exists ( ntf ) and tarfile.is_tarfile ( ntf ) :
                         self.__tar_file = os.path.abspath ( ntf )
-                except :
+                    # =========================================================
+                except : # ====================================================
+                    # =========================================================
                     pass
                 
             if self.log_file and tarfile.is_tarfile ( self.log_file ) :            
-                try :
+                # =============================================================
+                try : # =======================================================
+                    # =========================================================
                     shutil.move ( self.log_file , self.dirname )
                     ntf = os.path.join ( self.dirname , self.log_file )
                     if os.path.exists ( ntf ) and tarfile.is_tarfile ( ntf ) :
                         self.__log_file = os.path.abspath ( ntf )
-                except :
+                    # =========================================================                    
+                except : # ====================================================
+                    # =========================================================
                     pass
 
             for tdir in self.trainer_dirs :
                 if os.path.exists ( tdir ) and os.path.isdir ( tdir ) :
-                    try :
+                    # =========================================================
+                    try : # ===================================================
+                        # =====================================================
                         shutil.move ( tdir , self.dirname )
-                    except :
+                        # =====================================================
+                    except : # ================================================
+                        # =====================================================
                         pass
-
 
         if self.verbose and self.AUCs :
             title = 'ROC/AUC summary'
@@ -1403,7 +1430,7 @@ class Trainer(object) :
     # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
     # @endcode
     def s_train ( self ) :
-        """The main method: training of all subsamples sequentially 
+        """ The main method: training of all subsamples sequentially 
         - Use the trainer for   sequential training 
         >>> trainer.train()
         
@@ -1906,7 +1933,7 @@ class Reader(object) :
             """
             from ostap.stats.counters import SE
             se = SE()
-            for i in range(self.__N) : se += self.evaluate ( i , *args )
+            for i in range ( self.N ) : se += self.evaluate ( i , *args )
             return se 
                         
     ## =======================================================================
@@ -1932,7 +1959,7 @@ class Reader(object) :
         ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)   )
         """
         if not method in self.__methods :
-            return KeyError( 'No method %s is booked!' %  method )
+            return KeyError ( 'No method %s is booked!' %  method )
         return Reader.Method  ( self , method )
     
     ## =======================================================================

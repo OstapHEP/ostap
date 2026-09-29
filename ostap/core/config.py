@@ -668,13 +668,13 @@ def __parse_args ( args  = [] ) :
         action  = 'store_false'  , 
         help    = "EnableImplicitMT? [default: %(default)s" , 
         default = implicitMT     )
+    
     egroup3.add_argument (
         '--parallel'              , 
         metavar = "PARALLEL"      ,
         dest    = 'Parallel'      ,
         help    = 'Machinery for parallel processing [default: %(default)s]' , 
-        default = parallel        )
-    
+        default = parallel        )    
     egroup3.add_argument (
         '--sequential'           , 
         dest    = 'Sequential'   ,
@@ -826,6 +826,7 @@ general [ 'WebDisplay'  ] = str ( arguments.WebDisplay )
 ##
 general [ 'NCPUs'       ] = str ( arguments.NCPUs      )
 general [ 'Parallel'    ] = str ( arguments.Parallel   )
+general [ 'Sequential'  ] = str ( arguments.Sequential )
 general [ 'ImplicitMT'  ] = str ( arguments.ImplicitMT )
 general [ 'Profile'     ] = str ( arguments.Profile    )
 
@@ -855,6 +856,7 @@ tmp_dir       = arguments.TmpDir
 webdisplay    = arguments.WebDisplay
 ## 
 parallel      = arguments.Parallel
+sequential    = arguments.Sequential
 ncpus         = arguments.NCPUs
 implicitMT    = arguments.ImplicitMT
 profile       = arguments.Profile
