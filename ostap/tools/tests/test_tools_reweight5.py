@@ -135,7 +135,6 @@ def make_datasets2 ( n_samples = 5000 ,
         
     return target , original
 
-
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
@@ -176,22 +175,21 @@ def run_reweight ( n_dim     = 3     ,
     
     reweighters = [ None ]
     
-    if hasHepML    () :         
+    if hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw1 = GBRW ( target = target , original = original )
         reweighters.append ( rw1 )
         
-    if hasLightGBM () : 
+    if False and hasLightGBM () : 
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         rw2 = LGBM ( target = target , original = original )
         reweighters.append ( rw2 )
 
-        from ostap.tools.reweighter  import CascadeReweighter as  CASCADE
-        rwc = CASCADE ( classes = [ LGBM , LGBM ] , target = target , original = original )
-        reweighters.append ( rwc )
-
+        ## from ostap.tools.reweighter  import CascadeReweighter as  CASCADE
+        ## rwc = CASCADE ( classes = [ LGBM , LGBM ] , target = target , original = original )
+        ## reweighters.append ( rwc )
         
-    if hasXGBoost  () : 
+    if False and hasXGBoost  () : 
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         rw3 = XGB  ( target = target , original = original )
         reweighters.append ( rw3 )
@@ -201,7 +199,7 @@ def run_reweight ( n_dim     = 3     ,
         rw4 = CATB ( target = target , original = original )
         reweighters.append ( rw4 )
         
-    if False and hasPyTorch () : 
+    if hasPyTorch () : 
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
         rw5 = TORCH ( target = target , original = original , n_splits = 1 )
         reweighters.append ( rw5 )

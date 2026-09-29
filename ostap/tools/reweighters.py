@@ -82,6 +82,13 @@ XGB_REGULARIZED_DEPTH          =   10 # Shallow depth (8 leaves max) to enforce 
 XGB_LEARNING_RATE              = 0.01 # Small step for stable density ratio convergence
 XGB_REGULARIZED_LEARNING_RATE  = 0.02 # Slightly larger step for shallow regularized trees
 
+CATB_DEFAULT_ESTIMATORS        =  1600 # High capacity: deep ensemble with low learning rate
+CATB_REGULARIZED_ESTIMATORS    =  1000 # Strong regularization: constrained number of trees
+CATB_MAX_DEPTH                 =    10 # Deep tree capacity for high dimensions / large statistics
+CATB_REGULARIZED_DEPTH         =    10 # Shallow depth (8 leaves max) to enforce heavy smoothing
+CATB_LEARNING_RATE             = 0.005 # Small step for stable density ratio convergence
+CATB_REGULARIZED_LEARNING_RATE = 0.010 # Slightly larger step for shallow regularized trees
+
 ## DEFAULT_ESTIMATORS        = 1000  # High capacity: deep ensemble with low learning rate
 ## REGULARIZED_ESTIMATORS    = 1000  # Strong regularization: constrained number of trees
 ## MAX_DEPTH                 =   10  # Deep tree capacity for high dimensions / large statistics
@@ -133,12 +140,9 @@ def RW_needs_regularization ( original                       ,
     eff_orig = float ( eff_orig )
     eff_targ = float ( eff_targ )
 
-    print ( 'RW_NEEDS/1' , neff_orig , neff_targ , eff_orig , eff_targ )
-    
     threshold0 = 5000.0  
     if eff_orig < 0.65 and neff_orig < threshold0 :
         effp   = eff_orig * 100.0
-        print ( 'RW_NEEDS/2' , neff_orig , neff_targ , eff_orig , eff_targ )        
         v1     = nice_print ( neff_orig  , precision = 1 , width = 2 , with_sign = False )
         v2     = nice_print ( threshold0 , precision = 1 , width = 2 , with_sign = False )        
         result = 'eff_orig[%.0f%%]<65%%&neff_orig[%s]<%s' % ( effp , v1 , v2 )
@@ -146,7 +150,6 @@ def RW_needs_regularization ( original                       ,
     
     if eff_targ < 0.65 and neff_targ < threshold0 :
         effp   = eff_targ * 100.0
-        print ( 'RW_NEEDS/3' , neff_orig , neff_targ , eff_orig , eff_targ )                
         v1     = nice_print ( neff_targ  , precision = 1 , width = 2 , with_sign = False )
         v2     = nice_print ( threshold0 , precision = 1 , width = 2 , with_sign = False )        
         result = 'eff_targ[%.0f%%]<65%%&neff_targ[%s]<%s' % ( effp , v1 , v2 )
@@ -390,6 +393,14 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ Get final reweighted event weights (w * r) for original sample.
         """
         return self.__original_reweighted_weights
+    
+
+    @property 
+    def scale_factors ( self ) :
+        """`scale_factors` : scale factors for traing data(per stream)"""
+        return self.__scale_factors 
+        
+        
 
     # =================================================================================
     ## Get active stream decomposition scheme string.
@@ -843,7 +854,9 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         }
         
         config.update ( kwargs )
-        
+
+        if 'silent' in config and config.get ( 'silent' ) : config [ 'verbose' ] = -1 
+
         if 'num_boost_round' in config :
             config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , LGBM_DEFAULT_ESTIMATORS ) 
             
@@ -887,7 +900,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         params [ 'learning_rate'         ] = learning_rate 
         params [ 'max_depth'             ] = LGBM_REGULARIZED_DEPTH
 
-        num_leaves = min ( 1023 , 2 ** LGBM_REGULARIZED_DEPTH - 1     ) # maximl number of leaves for the given depth
+        num_leaves = min ( 1023 , 2 ** LGBM_REGULARIZED_DEPTH - 1    ) # maximl number of leaves for the given depth
         num_leaves = min ( num_leaves , 1 + math.floor ( n_samples ) )
         
         params [ 'num_leaves'            ] = num_leaves 
@@ -914,8 +927,6 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         # Enforce tree-path smoothing parameter if supported by LightGBM
         ## params [ 'path_smooth' ] = 2.0
 
-        print ( 'REGULARI..' )
-        
         return params
     
     # =========================================================================
@@ -972,7 +983,6 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         p = model.predict( X, **kwargs )
         return p.astype( numpy.float32, copy = False )
 
-
 # =============================================================================
 ## @class  XGBoostDensityReweighter
 #  Density ratio reweighter using XGBoost as the underlying classifier.
@@ -1003,17 +1013,19 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
             'max_depth'             : XGB_MAX_DEPTH           ,
             'tree_method'           : 'hist'                  , # Fast histogram-based algorithm (similar to LGBM)
             'max_bin'               : 1023                    , # Limit binning to prevent noise fitting
-            'min_child_weight'      : 1                       , # Minimum sum of instance weight (hessian) in a child
+            'min_child_weight'      : 1.e-3                   , # Minimum sum of instance weight (hessian) in a child
             'gamma'                 : 0.0                     , # Minimum loss reduction required for partition
             'alpha'                 : 0.0                     , # L1 penalty on leaf weights
             'lambda'                : 0.0                     , # L2 penalty on leaf weights
             'subsample'             : 0.8                     , # Row subsampling to reduce variance
             'colsample_bytree'      : 0.8                     , # Feature subsampling to increase ensemble diversity
-            'early_stopping_rounds' : 50                      ,
-            'verbosity'             : 0                       ,
+            'early_stopping_rounds' : XGB_DEFAULT_ESTIMATORS // 2 ,            
+            'verbosity'             :  0                      ,      
             'n_jobs'                : -1                      ,
         }
         config.update ( kwargs )
+        
+        if 'silent' in config and config.get ( 'silent' ) : config [ 'verbosity' ] = 0 
         
         super ().__init__ (
             original        = original        ,
@@ -1056,15 +1068,22 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
         params [ 'learning_rate'         ] = learning_rate
         
         # Scale min_child_weight (sum of hessian) with sample size to prevent isolated leaves
-        params [ 'min_child_weight'      ] = max ( 10 , int ( n_samples * 0.001 ) ) 
+        ## params [ 'min_child_weight'      ] = max ( 10 , int ( n_samples * 0.001 ) ) 
+        params [ 'min_child_weight'      ] = 1.e-3 
         
         params [ 'gamma'                 ] = 0.0    # More aggressive complexity control/pruning
         params [ 'alpha'                 ] = 0.0    # Active L1 regularization to encourage sparsity
         params [ 'lambda'                ] = 0.0    # Strong L2 regularization for smoother weights
         params [ 'subsample'             ] = 0.8    # Active row subsampling 
-        params [ 'colsample_bytree'      ] = 0.0    # Active feature subsampling 
+        params [ 'colsample_bytree'      ] = 0.8    # Active feature subsampling 
         params [ 'early_stopping_rounds' ] = None   # Tighter early stopping
-        
+
+        if n_samples <= 5000                                 :  params [ 'tree_method' ] = 'exact'
+        elif 'hist' == params.get ( 'tree_method' , 'hist' ) :
+            params [ 'tree_method' ] = 'hist '
+            current_max_bin          = params.get ( 'max_bin' , 1023 )
+            params [ 'max_bin'     ] = min ( current_max_bin , max ( 31 , int ( n_samples / 10 ) ) )
+                    
         # Dynamic binning adjustment, only applicable if using histogram-based tree method
         ## if params.get ( 'tree_method' , 'hist' ) == 'hist' :
         ## current_max_bin      = params.get ( 'max_bin' , 255 )
@@ -1141,198 +1160,209 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
 # =============================================================================
 ## @class CatBoostDensityReweighter
 #  Density ratio reweighter using CatBoost as the underlying classifier.
-class CatBoostDensityReweighter ( DensityReweighter ) : 
+class CatBoostDensityReweighter(DensityReweighter):
     """ Density ratio reweighter using CatBoost as the underlying classifier.
     """
+    
     # =========================================================================
-    ## Initialize CatBoost density reweighter.
-    #  @param original Features array for original dataset.
-    #  @param target Features array for target dataset.
-    #  @param original_weight Initial weights for original sample (optional).
-    #  @param target_weight Initial weights for target sample (optional).
-    #  @param store_original_weights If True, store computed results for original sample.
-    #  @param params Additional CatBoost parameters.
-    def __init__( self , * , 
+    def __init__ ( self                   , * , 
                    original               ,
                    target                 ,
                    original_weight        = None ,
                    target_weight          = None ,
-                   store_original_weights = True  , **params ) :        
+                   store_original_weights = True , **params ) :
         """ Initialize CatBoost density reweighter.
         """
-        config = {
-            'loss_function'         : 'Logloss'           ,
-            'eval_metric'           : 'Logloss'           ,
-            'n_estimators'          : DEFAULT_ESTIMATORS  ,
-            'learning_rate'         : LEARNING_RATE       ,
-            'depth'                 : MAX_DEPTH           ,
-            'l2_leaf_reg'           : 2.0                 ,
-            'min_child_samples'     : 10                  ,
-            'subsample'             : 0.8                 ,
-            'random_strength'       : 1.0                 ,
-            'early_stopping_rounds' : None                ,
-            'verbose'               : False               ,
-            'boosting_type'         : 'Plain'             ,
-        }
+        
+        from catboost.utils import get_gpu_device_count
+        gpu = get_gpu_device_count() 
+        self.__gpu = gpu 
+        
+        config = { 'loss_function'         : 'Logloss'                        ,
+                   'eval_metric'           : 'Logloss'                        ,
+                   'iterations'            : CATB_DEFAULT_ESTIMATORS          ,
+                   'learning_rate'         : CATB_LEARNING_RATE               ,
+                   'depth'                 : CATB_MAX_DEPTH                   ,
+                   'l2_leaf_reg'           : 0.5                              ,
+                   'min_data_in_leaf'      : 5                                ,
+                   'bootstrap_type'        : 'MVS'                            ,
+                   'mvs_reg'               : 2.0                              , 
+                   'subsample'             : 0.8                              ,
+                   'random_strength'       : 0.01                             ,
+                   'early_stopping_rounds' : CATB_DEFAULT_ESTIMATORS // 2     ,
+                   'boosting_type'         : 'Plain'                          ,
+                   'device'                : 'GPU' if 0 < self.gpu else 'CPU' , 
+                   'verbose'               : False                            }
+        
         config.update ( params )
         
-        if 'n_jobs'     in config : config [ 'thread_count' ] = config.pop ( 'n_jobs'     )  
-        if 'iterations' in config : config [ 'n_estimators' ] = config.pop ( 'iterations' ) 
-
-        config [ 'boosting_type' ] = config.get ( 'boosting_type' , 'Plain' )
+        # Alias mappings to native CatBoost parameters
+        if 'min_child_samples' in config : config [ 'min_data_in_leaf' ] = config.pop ( 'min_child_samples' )
+        if 'n_jobs'            in config : config [ 'thread_count'     ] = config.pop ( 'n_jobs'            )
+        if 'n_estimators'      in config : config [ 'iterations'       ] = config.pop ( 'n_estimators'      )
         
-        super().__init__ ( original               = original               ,
-                           target                 = target                 ,
-                           original_weight        = original_weight        ,
-                           target_weight          = target_weight          ,
-                           store_original_weights = store_original_weights , **config )
+        if 'silent' in config :
+            silent = config.get ( 'silent' , True ) 
+            config [ 'verbose' ] = not silent 
+
+        device = config.get ( 'device' , 'GPU' if 0 < self.gpu else 'CPU' )
+        if self.gpu <= 0 : config [ 'device' ] = 'CPU'
+        
+        super().__init__( original               = original               ,
+                          target                 = target                 ,
+                          original_weight        = original_weight        ,
+                          target_weight          = target_weight          ,
+                          store_original_weights = store_original_weights , **config ) 
         
     # =========================================================================
-    ## Return the method identifier name.
-    #  @return Method string identifier.
     @property
-    def method ( self ) :
-        """ Return the method identifier name.
-        """
-        return method_CATB 
-
+    def gpu ( self ) :
+        """`gpu` : result of `catboost.utils.get_gpu+_device_count"""
+        return self.__gpu
+    
     # =========================================================================
-    ## Dynamic regularization rules for CatBoost.
-    #  @param params Current parameters dictionary.
-    #  @param n_features Number of features.
-    #  @param n_samples Effective sample size.
-    #  @return Updated parameters dictionary.
-    def regularization ( self , params , n_features , n_samples ) :
+    @property
+    def method(self):
+        return method_CATB
+    
+    # =========================================================================
+    def regularization ( self , params , n_features , n_samples ):
         """ Dynamic regularization rules for CatBoost.
         """
-        params [ 'n_estimators'          ] = min ( REGULARIZED_ESTIMATORS , params.get ( 'n_estimators' , REGULARIZED_ESTIMATORS ) )
-        params [ 'learning_rate'         ] = REGULARIZED_LEARNING_RATE
-        params [ 'depth'                 ] = REGULARIZED_DEPTH
+        iterations = params.pop ( 'n_estimators' , params.pop ( 'iterations' , CATB_REGULARIZED_ESTIMATORS ) )         
+        ## iterations = min ( iterations , 1 + math.floor(n_samples / 2 ) ) 
         
-        if 'min_data_in_leaf' in params : params.pop ( 'min_data_in_leaf' , None )
-        
-        params [ 'min_child_samples'     ] = max ( 2, min ( 30, int ( n_samples * 1.e-4 ) ) )
-        params [ 'l2_leaf_reg'           ] = 1.0
+        params [ 'iterations'            ] = iterations
+        params [ 'learning_rate'         ] = CATB_REGULARIZED_LEARNING_RATE
+        params [ 'depth'                 ] = CATB_REGULARIZED_DEPTH
 
-        params.pop ( 'subsample', None )
-        params [ 'bootstrap_type'        ] = 'Bayesian'
-        params [ 'bagging_temperature'   ] = 3.0
+        # the penalty smoothly increases to prevent overfitting.
+        dynamic_l2 = max ( 3.0 , 10000.0 / ( n_samples + 1 ) ) 
+        min_data   = max ( 1, int ( n_samples * 0.001 ) )
+        
+        params [ 'l2_leaf_reg'           ] = 0 ## dynamic_l2 
+        params [ 'min_data_in_leaf'      ] = 1 ## min_data 
+        
+        ## params [ 'bootstrap_type'        ] = 'Bernoulli'
+        ## params [ 'subsample'             ] = 0.8
+        ## params [ 'random_strength'       ] = 0.001
         
         params [ 'early_stopping_rounds' ] = None
         params [ 'boosting_type'         ] = 'Plain'
-        
+
+        ## MVS - ОЧЕНЬ ХОРОЩО!!! 
+        params [ 'bootstrap_type' ] = 'MVS'
+        params [ 'mvs_reg'        ] =  1.0 
+
+        ## НЕПЛОХО!
+        ## params [ 'bootstrap_type' ] = 'Bernoulli'
+        ## params [ 'subsample'      ] =  0.9
+
         return params
 
     # =========================================================================
-    ## Train single CatBoost model on contiguous memory fold data.
-    #  @param X_train Training features array.
-    #  @param y_train Training binary labels.
-    #  @param w_train Training weights array or None.
-    #  @param X_val Validation features array.
-    #  @param y_val Validation binary labels.
-    #  @param w_val Validation weights array or None.
-    #  @return Tuple of (fitted_catboost_model, val_predictions).
     def _train_single_model ( self    ,
                               X_train , y_train , w_train ,
                               X_val   , y_val   , w_val   ) :
-        """ Train single CatBoost model on contiguous memory fold data.
+        """ Train single CatBoost model on memory fold data without forced contiguous copies.
         """
         import catboost as CatBoost
-
-        X_tr = numpy.ascontiguousarray ( X_train , dtype = numpy.float32 )
-        y_tr = numpy.ascontiguousarray ( y_train )
-        w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else None
-
-        X_v  = numpy.ascontiguousarray ( X_val   , dtype = numpy.float32 )
-        y_v  = numpy.ascontiguousarray ( y_val   )
-        w_v  = numpy.ascontiguousarray ( w_val   , dtype = numpy.float32 ) if w_val is not None else None
-
+        
+        X_tr = numpy.asarray ( X_train , dtype = numpy.float32 )
+        y_tr = numpy.asarray ( y_train , dtype = numpy.int32   )
+        w_tr = numpy.asarray ( w_train , dtype = numpy.float32 ) if w_train is not None else None
+        
+        X_v  = numpy.asarray ( X_val   , dtype = numpy.float32 )
+        y_v  = numpy.asarray ( y_val   , dtype = numpy.int32   )
+        w_v  = numpy.asarray ( w_val   , dtype = numpy.float32 ) if w_val is not None else None
+        
         trn_pool = CatBoost.Pool ( X_tr , label = y_tr , weight = w_tr )
         val_pool = CatBoost.Pool ( X_v  , label = y_v  , weight = w_v  )
+        
+        params = self.params.copy()
+        
+        params [ 'thread_count'  ] = params.get ( 'thread_count' , params.pop ( 'n_jobs' , -1 ) )
+        params [ 'boosting_type' ] = params.get ( 'boosting_type', 'Plain')
 
-        params = {}
-        params.update ( self.params )
-
-        params [ 'thread_count'  ] = params.get ( 'thread_count'  , params.pop ( 'n_jobs' , 1  ) ) 
-        params [ 'boosting_type' ] = params.get ( 'boosting_type' , 'Plain' )
-
-        iterations = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' , None ) or 500
-        if not isinstance ( iterations , int ) or iterations <= 10 or iterations >= 10000 :
-            iterations = 500
-
-        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , None )
-        if not isinstance ( early_stopping_rounds , int ) or early_stopping_rounds <= 1 or early_stopping_rounds >= iterations :
-            early_stopping_rounds = None
-
+        iterations = params.pop ( 'n_estimators' , params.pop ( 'iterations' , CATB_DEFAULT_ESTIMATORS ) )         
+        if not isinstance ( iterations, int ) or not 10 <= iterations <= 10000 :
+            iterations = CATB_DEFAULT_ESTIMATORS
+            
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' ,  None )
+        if isinstance ( early_stopping_rounds , int ) and 1 < early_stopping_rounds < iterations : pass
+        else : early_stopping_rounds = None 
+                
         params [ 'iterations' ] = iterations
-
+        
         fit_kwargs = {}
-        if early_stopping_rounds is not None :
+        if early_stopping_rounds is not None:
             params     [ 'early_stopping_rounds' ] = early_stopping_rounds
             params     [ 'use_best_model'        ] = True
             fit_kwargs [ 'eval_set'              ] = val_pool
 
+        task_type = params.get
+
+        ## CPU versus GPU 
+        params [ 'task_type' ] = params.pop ( 'device' , 'GPU' if 0 < self.gpu else 'CPU' )
+
         model = CatBoost.CatBoostClassifier ( **params )
-        model.fit ( trn_pool , verbose = False , **fit_kwargs )
-
-        val_preds = model.predict_proba ( val_pool ) [ : , 1 ]
-        return model , val_preds.astype ( numpy.float32 , copy = False )
-
+        
+        verbose_level = params.get ( 'verbose', False )
+        model.fit ( trn_pool , verbose = verbose_level , **fit_kwargs )
+        
+        val_preds = self._predict_single_model(model, X_val)
+        return model, val_preds
+    
     # =========================================================================
-    ## Predict probabilities using a CatBoost model.
-    #  @param model Fitted CatBoostClassifier instance.
-    #  @param X Input features array.
-    #  @return Array of predicted probabilities.
-    def _predict_single_model ( self , model , X ) :
+    def _predict_single_model(self, model, X):
         """ Predict probabilities using a CatBoost model.
         """
-        X_clean   = numpy.ascontiguousarray ( X , dtype = numpy.float32 )
-        best_iter = getattr ( model , 'best_iteration_' , None ) or getattr ( model , 'best_iteration' , None )
-        kwargs    = {}
-        if best_iter is not None and best_iter > 0 :
-            kwargs [ 'ntree_end' ] = best_iter            
-        p = model.predict_proba ( X_clean , **kwargs ) [ : , 1 ]
-        return p.astype ( numpy.float32 , copy = False )
+        X_clean   = numpy.asarray(X, dtype=numpy.float32)
+        best_iter = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration' , None )
+        
+        kwargs = {}
+        if best_iter is not None and 0 <= best_iter :
+            kwargs [ 'ntree_end' ] = best_iter + 1
 
-# ==============================================================================
+        p = model.predict_proba(X_clean, **kwargs)[:, 1]
+        
+        return p.astype (numpy.float32 , copy = False )
 
 # =============================================================================
 ## @class PyTorchDensityReweighter
-#  Density ratio reweighter using PyTorch MLP as the underlying classifier
+#  Density ratio reweighter using PyTorch MLP with ResNet blocks as the underlying classifier.
 class PyTorchDensityReweighter(DensityReweighter):
-    """ Density ratio reweighter using PyTorch MLP as the underlying classifier.
+    """ Density ratio reweighter using PyTorch MLP with ResNet blocks as the underlying classifier.
     """
 
     # =========================================================================
-    ## Initialize PyTorch density reweighter.
-    #  @param original Features array for original sample.
-    #  @param target Features array for target sample.
-    #  @param original_weight Initial weights for original sample (optional).
-    #  @param target_weight Initial weights for target sample (optional).
-    #  @param kwargs Additional training and architecture parameters.
     def __init__( self            , * ,
                   original        ,
                   target          ,
                   original_weight = None ,
                   target_weight   = None ,
                   progress        = True , **kwargs):
-        """ Initialize PyTorch density reweighter.
+        """ Initialize PyTorch density reweighter with high capacity and residual connections.
         """
         import torch
+        cuda = torch.cuda.is_available() 
 
-        # Update default configuration for mini-batching efficiency
-        config = { 'hidden_dims'   : (128, 64, 32),
-                   'dropout'       : 0.1  ,
-                   'learning_rate' : 1e-3 , # Lower LR is preferred for mini-batch updates
-                   'weight_decay'  : 1e-4 ,
-                   'epochs'        : 40   , # Fewer epochs required due to frequent batch updates
-                   'patience'      : 5    ,
+        # Конфигурация с упором на максимальную выразительность модели
+        config = { 'hidden_dims'   : (256, 256, 256, 128), 
+                   'dropout'       : 0.0 ,               
+                   'learning_rate' : 2e-3 ,              
+                   'weight_decay'  : 1e-5 ,              
+                   'epochs'        : 400  ,              
+                   'patience'      : 50   ,              
                    'foreach'       : True , 
-                   'device'        : 'cuda' if torch.cuda.is_available() else 'cpu',
-                   'n_jobs'        : 2    , # Explicitly allocate core count
+                   'device'        : 'cuda' if cuda else 'cpu',
+                   'n_jobs'        : 2    ,
                   }
 
         config.update(kwargs)
+
+        device = config.get ( 'device' , 'cuda' if cuda else 'cpu')
+        if not cuda : config [ 'device' ]  = 'cpu'   
 
         self.__progress_epochs = True if progress else False 
         
@@ -1343,107 +1373,120 @@ class PyTorchDensityReweighter(DensityReweighter):
                            progress        = False           , **config )
 
     # =========================================================================
-    ## Return method identifier name.
-    #  @return Method string identifier.
     @property
     def method(self):
-        """ Return method identifier name.
-        """
         return method_TORCH 
 
     # =========================================================================
-    ## Apply regularization rules for low statistics or low dimensions.
-    #  @param params Current parameters dictionary.
-    #  @param n_features Number of phase space features.
-    #  @param n_samples Effective sample size.
-    #  @return Updated parameters dictionary.
+    ## Regularization rules keeping high network capacity
     def regularization ( self       ,
                          params     ,
                          n_features ,
                          n_samples  ) :
-        """ Apply regularization rules for low statistics or low dimensions.
+        """ Apply mild regularization rules for low statistics or low dimensions.
         """
-        params [ 'hidden_dims'  ] = ( 64 , 32 )
-        params [ 'dropout'      ] = 0.2
-        params [ 'weight_decay' ] = 1e-2
-        params [ 'patience'     ] = 10
+        params [ 'hidden_dims'  ] = ( 128 , 128 , 128 )
+        params [ 'dropout'      ] = 0.0
+        params [ 'weight_decay' ] = 1e-5  
+        params [ 'patience'     ] = 50 
+        params [ 'epochs'       ] = 400
         return params
 
-    
-    def _train_single_model(self, X_train, y_train, w_train, X_val, y_val, w_val):
-        """ Trains a single PyTorch Multilayer Perceptron (MLP) on a specific data fold.
-
-        Args:
-            X_train (np.ndarray): Training features.
-            y_train (np.ndarray): Training target labels (0 or 1).
-            w_train (np.ndarray): Sample weights for training data.
-            X_val (np.ndarray): Validation features.
-            y_val (np.ndarray): Validation target labels.
-            w_val (np.ndarray): Sample weights for validation data.
-
-        Returns:
-            tuple: A tuple containing the trained PyTorch model and its predictions on the validation set.
+    # =========================================================================
+    def _train_single_model ( self    ,
+                              X_train ,
+                              y_train ,
+                              w_train ,
+                              X_val   ,
+                              y_val   ,
+                              w_val   ) :
+        """ Trains a single PyTorch Multilayer Perceptron with residual connections on a specific data fold.
         """
         import torch
         import torch.nn as nn
-        from sklearn.preprocessing import StandardScaler
+        from sklearn.preprocessing import RobustScaler
 
-        # Enforce CPU thread limits to prevent context-switching overhead
         n_jobs = max ( 2 , self.params.get ( 'n_jobs' , 2 ) ) 
-        if torch.get_num_threads() != n_jobs:
+        if torch.get_num_threads() != n_jobs :
             torch.set_num_threads ( n_jobs )
 
-        class DensityMLP(nn.Module):
-            def __init__(self, in_features, hidden_dims=(128, 64, 32), dropout=0.1):
+        # Архитектура с остаточными связями (Residual Blocks) для предотвращения затухания градиента и недообучения
+        class ResidualBlock(nn.Module):
+            def __init__(self, dim, dropout=0.0):
                 super().__init__()
-                layers = []
-                curr_dim = in_features
+                self.block = nn.Sequential(
+                    nn.Linear(dim, dim),
+                    nn.GELU(),
+                    nn.Dropout(dropout),
+                    nn.Linear(dim, dim),
+                    nn.GELU()
+                )
+            def forward(self, x):
+                return x + self.block(x)
+
+        class DensityResNet(nn.Module):
+            def __init__(self, in_features, hidden_dims=(256, 256, 256, 128), dropout=0.0):
+                super().__init__()
                 
-                # Switch to LayerNorm: faster on CPU and independent of batch size variance
+                # Начальный проекционный слой в скрытое пространство
+                first_dim = hidden_dims[0]
+                self.input_layer = nn.Sequential(
+                    nn.Linear(in_features, first_dim),
+                    nn.GELU()
+                )
+                
+                # Промежуточные блоки с выравниванием размерностей
+                self.blocks = nn.ModuleList()
+                curr_dim = first_dim
                 for h_dim in hidden_dims:
-                    layers.extend ( [ nn.Linear     ( curr_dim , h_dim ) ,
-                                      nn.LayerNorm  (            h_dim ) ,
-                                      nn.SiLU       ()                   ,
-                                      nn.Dropout    ( dropout )          ] )
-                    curr_dim = h_dim
-                    
-                layers.append(nn.Linear(curr_dim, 1))
-                self.net = nn.Sequential(*layers)
+                    if curr_dim != h_dim:
+                        self.blocks.append(nn.Sequential(nn.Linear(curr_dim, h_dim), nn.GELU()))
+                        curr_dim = h_dim
+                    self.blocks.append(ResidualBlock(curr_dim, dropout))
+                
+                # Выходной слой
+                self.output_layer = nn.Linear(curr_dim, 1)
+                nn.init.xavier_uniform_(self.output_layer.weight)
+                nn.init.zeros_(self.output_layer.bias)
                 
             def forward(self, x):
-                return self.net(x).squeeze(-1)
+                out = self.input_layer(x)
+                for blk in self.blocks:
+                    out = blk(out)
+                return self.output_layer(out).squeeze(-1)
 
         device = self.params.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
         if not torch.cuda.is_available(): device = 'cpu'                                   
         device = torch.device(device) 
 
-        scaler = StandardScaler()
+        patience   = self.params.get ( 'patience'   , 50  ) 
+        nepochs    = self.params.get ( 'epochs'     , 400 )
+
+        # Используем RobustScaler вместо StandardScaler для защиты от физических выбросов
+        scaler = RobustScaler()
         X_tr_scaled = scaler.fit_transform(X_train)
         X_va_scaled = scaler.transform(X_val)
 
         w_tr = w_train if w_train is not None else numpy.ones(len(y_train), dtype=numpy.float32)
         w_va = w_val   if w_val   is not None else numpy.ones(len(y_val), dtype=numpy.float32)
 
-        # Allocate contiguous tensors directly to the target device
-        X_tr_t = torch.as_tensor(numpy.ascontiguousarray(X_tr_scaled, dtype=numpy.float32), device=device)
-        y_tr_t = torch.as_tensor(numpy.ascontiguousarray(y_train, dtype=numpy.float32), device=device)
-        w_tr_t = torch.as_tensor(numpy.ascontiguousarray(w_tr, dtype=numpy.float32), device=device)
+        X_tr_t = torch.as_tensor(X_tr_scaled, dtype=torch.float32, device=device)
+        y_tr_t = torch.as_tensor(y_train, dtype=torch.float32, device=device)
+        w_tr_t = torch.as_tensor(w_tr, dtype=torch.float32, device=device)
 
-        X_va_t = torch.as_tensor(numpy.ascontiguousarray(X_va_scaled, dtype=numpy.float32), device=device)
-        y_va_t = torch.as_tensor(numpy.ascontiguousarray(y_val, dtype=numpy.float32), device=device)
-        w_va_t = torch.as_tensor(numpy.ascontiguousarray(w_va, dtype=numpy.float32), device=device)
+        X_va_t = torch.as_tensor(X_va_scaled, dtype=torch.float32, device=device)
+        y_va_t = torch.as_tensor(y_val, dtype=torch.float32, device=device)
+        w_va_t = torch.as_tensor(w_va, dtype=torch.float32, device=device)
 
-        
-        hidden_dims = self.params.get ( 'hidden_dims'  , ( 128, 64, 32) ) 
-        dropout     = self.params.get ( 'dropout', 0.1 )
+        hidden_dims = self.params.get ( 'hidden_dims'  , ( 256, 256, 256, 128) ) 
+        dropout     = self.params.get ( 'dropout', 0.0 )
 
-        model = DensityMLP ( in_features = X_train.shape[1] ,
-                             hidden_dims = hidden_dims      ,
-                             dropout     = dropout          ).to ( device )  
-        
+        model = DensityResNet ( in_features = X_train.shape[1] ,
+                              hidden_dims = hidden_dims      ,
+                              dropout     = dropout          ).to ( device )  
 
-        learning_rate = self.params.get ( 'learning_rate', 1.e-3 ) 
-        weight_decay  = self.params.get ( 'weight_decay' , 1.e-4 ) 
+        learning_rate = self.params.get ( 'learning_rate', 2.e-3 ) 
+        weight_decay  = self.params.get ( 'weight_decay' , 1e-5 ) 
         foreach       = self.params.get ( 'foreach'      , True  ) 
 
         optimizer = torch.optim.AdamW(model.parameters(),
@@ -1451,39 +1494,34 @@ class PyTorchDensityReweighter(DensityReweighter):
                                       weight_decay = weight_decay  ,
                                       foreach      = foreach       )
         
-        # Use unreduced BCE to manually apply sample weights per mini-batch
+        # Интегрирован адаптивный планировщик ReduceLROnPlateau
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, 
+            mode       = 'min', 
+            factor     = 0.5, 
+            patience   = max(5, patience // 3), 
+            min_lr     = 1e-5
+        )
+        
         criterion_base = nn.BCEWithLogitsLoss(reduction='none')
 
         best_loss        = float('inf')
         best_state       = None
         patience_counter = 0
 
-        ## 
         n_samples, n_features = X_tr_t.shape 
-        target_batch_elements = 500_000  
-
-        calculated_batch_size = target_batch_elements // max ( n_features, 1 )
         
-        batch_size = self.params.get ( 'batch_size' , calculated_batch_size )               
-        batch_size = min ( n_samples , max ( 1024 , min ( 8192 , batch_size ) ) )
+        batch_size = self.params.get ( 'batch_size' , max( 128, min( 1024, n_samples // 4 ) ) )
+        batch_size = min ( n_samples , max ( 32 , batch_size ) )
 
-        patience   =       self.params.get ( 'patience'   ,    5 ) 
-        nepochs    =       self.params.get ( 'epochs'     ,   50 )
-        
         no_pbar    = self.silent or self.progress or not self.__progress_epochs
-
-        n_samples = X_tr_t.size(0)
         w_va_sum  = w_va_t.sum() 
 
         with ProgressBar ( max_value   = nepochs   ,
                            silent      = no_pbar   ,
                            description = 'Epochs:' ) as pbar:
             for epoch in range(nepochs):
-                
-                # --- Training phase (Mini-batch manual slicing) ---
                 model.train()
-                
-                # Shuffle indices for stochasticity
                 permutation = torch.randperm(n_samples, device=device)
                 
                 for i in range(0, n_samples, batch_size):
@@ -1493,27 +1531,27 @@ class PyTorchDensityReweighter(DensityReweighter):
                     optimizer.zero_grad()
                     b_logits = model(b_x)
                     
-                    # Compute weighted loss for the current mini-batch
                     b_loss = (criterion_base(b_logits, b_y) * b_w).sum() / b_w.sum()
                     b_loss.backward()
                     optimizer.step()
 
-                # --- Validation phase ---
                 model.eval()
                 with torch.no_grad():
                     val_logits = model(X_va_t)
                     val_loss_sum = (criterion_base(val_logits, y_va_t) * w_va_t).sum()
                     val_loss = (val_loss_sum / w_va_sum).item()
 
+                # Шаг планировщика на основе val_loss
+                scheduler.step(val_loss)
                 pbar += 1                                
-                
+
                 if val_loss < best_loss:
                     best_loss = val_loss
                     best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()} 
                     patience_counter = 0
                 else:
                     patience_counter += 1
-                    if patience <= patience_counter: 
+                    if patience is not None and patience <= patience_counter: 
                         break
 
         if best_state is not None:
@@ -1526,10 +1564,6 @@ class PyTorchDensityReweighter(DensityReweighter):
         return model, val_preds
     
     # =========================================================================
-    ## Predict target probabilities using a trained PyTorch model.
-    #  @param model Trained PyTorch DensityMLP instance.
-    #  @param X Input features matrix.
-    #  @return Array of predicted target probabilities p(y=1|x).
     def _predict_single_model(self, model, X):
         """ Predict target probabilities using a trained PyTorch model (Full-Batch).
         """
@@ -1538,18 +1572,15 @@ class PyTorchDensityReweighter(DensityReweighter):
         device = next(model.parameters()).device
         model.eval()
 
-        # Scale features using the fitted scaler from training
         X_scaled = model.scaler.transform ( X )
-        
-        # Zero-copy tensor creation
-        X_t = torch.as_tensor ( numpy.ascontiguousarray ( X_scaled , dtype = numpy.float32 ), device = device )
+        X_t = torch.as_tensor ( X_scaled, dtype=torch.float32, device=device )
 
         with torch.no_grad():
             logits = model(X_t)
             probs  = torch.sigmoid( logits ).cpu().numpy()
 
         return numpy.ravel ( probs ).astype ( numpy.float32 , copy = False )
-    
+
 # =============================================================================
 # Filter parameters to keep only those accepted by scikit-learn LogisticRegression
 valid_LR_params = (

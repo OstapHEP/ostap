@@ -109,7 +109,6 @@ class ChopperTraining(Task) :
         del chopping, trainer
         return result 
 
-    
     ## merge results/datasets 
     def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output =  result

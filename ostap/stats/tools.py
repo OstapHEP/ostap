@@ -110,15 +110,17 @@ def hasSkLearn ( silent = True ) :
     try : # ===================================================================
         # =====================================================================
         import sklearn
-        
+
         # =====================================================================
-        try: # ================================================================
+        if Version ( sklearn.__version__ ) < Version ( "1.0" )  : # ===========
             # =================================================================
-            from sklearn.experimental import enable_hist_gradient_boosting
-            # =================================================================
-        except ImportError: # =================================================
-            # =================================================================
-            pass
+            try: # ============================================================
+                # =============================================================
+                from sklearn.experimental import enable_hist_gradient_boosting
+                # =============================================================
+            except ImportError: # =============================================
+                # =============================================================
+                pass
         
         # =====================================================================
         from   sklearn.ensemble      import HistGradientBoostingClassifier as _HGBC 
@@ -131,7 +133,7 @@ def hasSkLearn ( silent = True ) :
         # ====================================================================
         if not silent : logger.info ( 'sklearn    version: %s' %  sklearn.__version__ )
         ##
-        if Version ( "1.3.0" ) <= Version ( sklearn.__version ) :
+        if Version ( "1.3.0" ) <= Version ( sklearn.__version__ ) :
             import warnings
             warnings.filterwarnings ( "ignore", category = UserWarning , module = "sklearn.utils.parallel" )
             
