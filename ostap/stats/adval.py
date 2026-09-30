@@ -811,7 +811,6 @@ class ADVAL_HGBC (ADVAL_base) :
                     'scoring'           : 'neg_root_mean_squared_error',
                 }
 
-
         config.update ( params )
 
         import sklearn
@@ -1025,7 +1024,12 @@ class ADVAL_RF (ADVAL_base) :
                     'bootstrap'         :  True ,
                     'max_samples'       :  0.8  ,
                 }  
-        config.update ( params ) 
+        config.update ( params )
+        
+        import sklearn
+        from   packaging.version        import Version
+        if Version ( sklearn.__version__ ) < Version ( '1.0' ) :
+            if 'squared_error' == config.get ( 'loss'   ) : config [ 'loss'    ] = 'mse' 
         
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
