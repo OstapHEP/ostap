@@ -105,7 +105,7 @@ from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.root_utils    import ImplicitMT 
 from   ostap.utils.timing        import timing 
-from   ostap.utils.basic         import numjobs, numcpu  
+from   ostap.utils.basic         import numjobs, numcpu, main_process   
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ROOT, os, math, shutil, tarfile  
@@ -288,14 +288,14 @@ class Trainer(object) :
         self.__prescale_signal     = prescale_signal
         self.__prescale_background = prescale_background
         
-        if self.parallel and numcpu () <= 1 :
-            self.logger.info ( "Parallel chopping is switched-off" )
+        if self.parallel and numcpu () < 2 :
+            self.logger.attention ( "Parallel chopping is switched-off (#CPU<2)" )
             self.__parallel = False
 
         if self.parallel :
             import ostap.core.config as OCC
             if OCC.sequential :                
-                self.logger.info ( "Parallel chopping is switched-off" )
+                self.logger.attention ( "Parallel chopping is switched-off (environment)" )
                 self.__parallel = False
                             
         if self.parallel :
@@ -304,6 +304,10 @@ class Trainer(object) :
                 self.logger.attention  ("Disable parallel chopping due to old `dill` version")
                 self.__parallel = False
                 
+        if self.parallel and nto main_process () :
+            self.logger.attention ( "Parallel chopping is switched-off (not main_process)" )
+            self.__parallel = False
+
         self.__parallel_conf = {}
         self.__parallel_conf .update ( parallel_conf )
         self.__parallel_conf [ 'ncpus' ] = numjobs ( self.__parallel_conf.get ( 'ncpus' , -1 ) ) 

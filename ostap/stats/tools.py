@@ -31,8 +31,8 @@ import os
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.tools' )
-else                       : logger = getLogger( __name__ )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.tools' )
+else                       : logger = getLogger ( __name__ )
 # =============================================================================
 ##  Has  LightGBM ?
 # - Are LightGBM library & classificators available? 

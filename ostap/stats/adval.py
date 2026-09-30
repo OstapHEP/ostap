@@ -810,8 +810,16 @@ class ADVAL_HGBC (ADVAL_base) :
                     'n_iter_no_change'  : 20    ,
                     'scoring'           : 'neg_root_mean_squared_error',
                 }
-        
+
+
         config.update ( params )
+
+        import sklearn
+        from   packaging.version        import Version
+        if Version ( sklearn.__version__ ) < Version ( '1.0' ) :
+            if 'squared_error'               == config.get ( 'loss'   ) : config [ 'loss'    ] = 'least_squares' 
+            if 'neg_root_mean_squared_error' == config.get ( 'scoring') : config [ 'scoring' ] = 'loss'  
+            
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
@@ -854,7 +862,6 @@ class ADVAL_HGBC (ADVAL_base) :
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
-        
         
         from sklearn.ensemble import HistGradientBoostingRegressor
         from threadpoolctl    import threadpool_limits

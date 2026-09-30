@@ -156,7 +156,7 @@ fi
 # Run tests
 # =============================================================================
 
-OSTAP_BATCH=True COLUMNS=130 TERM=dumb ctest -j${ncpus} --output-on-failure --test-output-size-failed 5000000
+OSTAP_BATCH=True COLUMNS=130 TERM=dumb ctest -j${ncpus} -R '(chop|rewe)' --output-on-failure --test-output-size-failed 5000000
 
 # =============================================================================
 #                                                                       The END

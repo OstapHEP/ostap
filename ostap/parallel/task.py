@@ -916,9 +916,9 @@ class TaskManager(ManagerBase) :
                     dump_dbase       = None  ,
                     dump_jobs        = 0     ,
                     dump_freq        = 0     , **kwargs ) :
-
-        self.__ncpus      = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else max ( 1 , numcpu() - 1 ) 
-        self.__ncpus      = max ( 1 , min ( self.__ncpus , numcpu () - 1 ) ) 
+        
+        self.__ncpus      = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else max ( 1 , numcpu ()  ) 
+        self.__ncpus      = max ( 1 , min ( self.__ncpus , numcpu () ) ) 
         
         ## block& hyperblock sizes  
         self.__block_size       =       block_size if isinstance (       block_size , int ) \
