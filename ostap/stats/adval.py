@@ -926,6 +926,11 @@ class ADVAL_GBC (ADVAL_base) :
         
         config.update ( params ) 
         
+        import sklearn
+        from   packaging.version        import Version
+        if Version ( sklearn.__version__ ) < Version ( '1.0' ) :
+            if 'squared_error' == config.get ( 'loss' ) : config [ 'loss'    ] = 'ls' 
+        
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
                               normalize = False    ,
