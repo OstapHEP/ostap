@@ -304,7 +304,7 @@ class Trainer(object) :
                 self.logger.attention  ("Disable parallel chopping due to old `dill` version")
                 self.__parallel = False
                 
-        if self.parallel and nto main_process () :
+        if self.parallel and not main_process () :
             self.logger.attention ( "Parallel chopping is switched-off (not main_process)" )
             self.__parallel = False
 
