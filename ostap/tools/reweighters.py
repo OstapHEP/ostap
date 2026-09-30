@@ -1328,41 +1328,49 @@ class CatBoostDensityReweighter(DensityReweighter):
         
         return p.astype (numpy.float32 , copy = False )
 
+
+
 # =============================================================================
 ## @class PyTorchDensityReweighter
-#  Density ratio reweighter using PyTorch MLP with ResNet blocks as the underlying classifier.
-class PyTorchDensityReweighter(DensityReweighter):
-    """ Density ratio reweighter using PyTorch MLP with ResNet blocks as the underlying classifier.
+#  Clean, standard PyTorch MLP density ratio reweighter using BatchNorm1d.
+class PyTorchDensityReweighter ( DensityReweighter ) :
+    """ Clean, standard PyTorch MLP density ratio reweighter using BatchNorm1d.
     """
-
     # =========================================================================
-    def __init__( self            , * ,
-                  original        ,
-                  target          ,
-                  original_weight = None ,
-                  target_weight   = None ,
-                  progress        = True , **kwargs):
-        """ Initialize PyTorch density reweighter with high capacity and residual connections.
+    ## Initialize PyTorch density reweighter with standard Tabular MLP architecture.
+    #  @param original Features array for original sample.
+    #  @param target Features array for target sample.
+    #  @param original_weight Initial weights for original sample (optional).
+    #  @param target_weight Initial weights for target sample (optional).
+    #  @param progress Enable progress bar for epoch iteration.
+    #  @param kwargs Additional PyTorch model and optimizer parameters.
+    def __init__ ( self            , * ,
+                   original        ,
+                   target          ,
+                   original_weight = None ,
+                   target_weight   = None ,
+                   progress        = True , **kwargs ) :
+        """ Initialize PyTorch density reweighter with standard Tabular MLP architecture.
         """
         import torch
         cuda = torch.cuda.is_available() 
 
-        # Конфигурация с упором на максимальную выразительность модели
-        config = { 'hidden_dims'   : (256, 256, 256, 128), 
-                   'dropout'       : 0.0 ,               
-                   'learning_rate' : 2e-3 ,              
-                   'weight_decay'  : 1e-5 ,              
-                   'epochs'        : 400  ,              
-                   'patience'      : 50   ,              
-                   'foreach'       : True , 
-                   'device'        : 'cuda' if cuda else 'cpu',
-                   'n_jobs'        : 2    ,
-                  }
+        # Clean standard MLP configuration
+        config = { 'hidden_dims'   : ( 512 , 256 , 256 )       ,
+                   'dropout'       : 0.0                       ,               
+                   'learning_rate' : 1e-3                      ,              
+                   'weight_decay'  : 1e-6                      ,              
+                   'batch_size'    : 256                       ,
+                   'epochs'        : 1000                      ,              
+                   'patience'      : 250                       ,              
+                   'device'        : 'cuda' if cuda else 'cpu' ,
+                   'n_jobs'        : 2                         ,
+                 }
 
-        config.update(kwargs)
+        config.update ( kwargs )
 
-        device = config.get ( 'device' , 'cuda' if cuda else 'cpu')
-        if not cuda : config [ 'device' ]  = 'cpu'   
+        device = config.get ( 'device' , 'cuda' if cuda else 'cpu' )
+        if not cuda : config [ 'device' ] = 'cpu'   
 
         self.__progress_epochs = True if progress else False 
         
@@ -1373,26 +1381,41 @@ class PyTorchDensityReweighter(DensityReweighter):
                            progress        = False           , **config )
 
     # =========================================================================
+    ## Return method identifier string.
+    #  @return Method string identifier.
     @property
-    def method(self):
+    def method ( self ) :
+        """ Return method identifier string.
+        """
         return method_TORCH 
 
     # =========================================================================
-    ## Regularization rules keeping high network capacity
+    ## Regularization rules keeping standard capacity for small statistics.
+    #  @param params Current parameter dictionary.
+    #  @param n_features Number of input features.
+    #  @param n_samples Effective sample size.
+    #  @return Updated parameter dictionary.
     def regularization ( self       ,
                          params     ,
                          n_features ,
                          n_samples  ) :
-        """ Apply mild regularization rules for low statistics or low dimensions.
+        """ Apply mild regularization rules for low statistics.
         """
-        params [ 'hidden_dims'  ] = ( 128 , 128 , 128 )
-        params [ 'dropout'      ] = 0.0
-        params [ 'weight_decay' ] = 1e-5  
-        params [ 'patience'     ] = 50 
-        params [ 'epochs'       ] = 400
+        params [ 'hidden_dims'   ] = ( 128 , 64 , 164 )
+        params [ 'learning_rate' ] = 1e-4
+        params [ 'epochs'        ] = 1000
+        params [ 'patience'      ] =  500 
         return params
 
     # =========================================================================
+    ## Train single PyTorch model on fold data.
+    #  @param X_train Training features array.
+    #  @param y_train Training binary labels.
+    #  @param w_train Training event weights or None.
+    #  @param X_val Validation features array.
+    #  @param y_val Validation binary labels.
+    #  @param w_val Validation event weights or None.
+    #  @return Tuple of (trained_pytorch_model, val_predictions).
     def _train_single_model ( self    ,
                               X_train ,
                               y_train ,
@@ -1400,187 +1423,181 @@ class PyTorchDensityReweighter(DensityReweighter):
                               X_val   ,
                               y_val   ,
                               w_val   ) :
-        """ Trains a single PyTorch Multilayer Perceptron with residual connections on a specific data fold.
+        """ Trains a standard Tabular MLP classifier with BatchNorm1d.
         """
         import torch
         import torch.nn as nn
-        from sklearn.preprocessing import RobustScaler
+        from sklearn.preprocessing import StandardScaler
 
         n_jobs = max ( 2 , self.params.get ( 'n_jobs' , 2 ) ) 
         if torch.get_num_threads() != n_jobs :
             torch.set_num_threads ( n_jobs )
 
-        # Архитектура с остаточными связями (Residual Blocks) для предотвращения затухания градиента и недообучения
-        class ResidualBlock(nn.Module):
-            def __init__(self, dim, dropout=0.0):
+        # Standard Tabular MLP Architecture
+        class TabularMLP ( nn.Module ) :
+            def __init__ ( self , in_features , hidden_dims = ( 128 , 128 , 64 ) , dropout = 0.0 ) :
                 super().__init__()
-                self.block = nn.Sequential(
-                    nn.Linear(dim, dim),
-                    nn.GELU(),
-                    nn.Dropout(dropout),
-                    nn.Linear(dim, dim),
-                    nn.GELU()
-                )
-            def forward(self, x):
-                return x + self.block(x)
-
-        class DensityResNet(nn.Module):
-            def __init__(self, in_features, hidden_dims=(256, 256, 256, 128), dropout=0.0):
-                super().__init__()
+                layers = []
+                curr_dim = in_features
                 
-                # Начальный проекционный слой в скрытое пространство
-                first_dim = hidden_dims[0]
-                self.input_layer = nn.Sequential(
-                    nn.Linear(in_features, first_dim),
-                    nn.GELU()
-                )
+                for h_dim in hidden_dims :
+                    layers.append ( nn.Linear ( curr_dim , h_dim ) )
+                    layers.append ( nn.BatchNorm1d ( h_dim ) )
+                    layers.append ( nn.LeakyReLU ( 0.1 ) )
+                    if dropout > 0.0 :
+                        layers.append ( nn.Dropout ( dropout ) )
+                    curr_dim = h_dim
                 
-                # Промежуточные блоки с выравниванием размерностей
-                self.blocks = nn.ModuleList()
-                curr_dim = first_dim
-                for h_dim in hidden_dims:
-                    if curr_dim != h_dim:
-                        self.blocks.append(nn.Sequential(nn.Linear(curr_dim, h_dim), nn.GELU()))
-                        curr_dim = h_dim
-                    self.blocks.append(ResidualBlock(curr_dim, dropout))
+                layers.append ( nn.Linear ( curr_dim , 1 ) )
+                self.net = nn.Sequential ( *layers )
                 
-                # Выходной слой
-                self.output_layer = nn.Linear(curr_dim, 1)
-                nn.init.xavier_uniform_(self.output_layer.weight)
-                nn.init.zeros_(self.output_layer.bias)
+                # He/Kaiming initialization for LeakyReLU
+                for m in self.net.modules() :
+                    if isinstance ( m , nn.Linear ) :
+                        nn.init.kaiming_normal_ ( m.weight , a = 0.1 , mode = 'fan_in' )
+                        if m.bias is not None :
+                            nn.init.zeros_ ( m.bias )
                 
-            def forward(self, x):
-                out = self.input_layer(x)
-                for blk in self.blocks:
-                    out = blk(out)
-                return self.output_layer(out).squeeze(-1)
+            def forward ( self , x ) :
+                return self.net ( x ).squeeze ( -1 )
 
-        device = self.params.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
-        if not torch.cuda.is_available(): device = 'cpu'                                   
-        device = torch.device(device) 
+        device = self.params.get ( 'device' , 'cuda' if torch.cuda.is_available() else 'cpu' )
+        if not torch.cuda.is_available() : device = 'cpu'                                   
+        device = torch.device ( device ) 
 
-        patience   = self.params.get ( 'patience'   , 50  ) 
-        nepochs    = self.params.get ( 'epochs'     , 400 )
+        patience = self.params.get ( 'patience' ,  250 ) 
+        nepochs  = self.params.get ( 'epochs'   , 1000 )
 
-        # Используем RobustScaler вместо StandardScaler для защиты от физических выбросов
-        scaler = RobustScaler()
-        X_tr_scaled = scaler.fit_transform(X_train)
-        X_va_scaled = scaler.transform(X_val)
+        scaler = StandardScaler ()
+        X_tr_scaled = scaler.fit_transform ( X_train )
+        X_va_scaled = scaler.transform ( X_val )
 
-        w_tr = w_train if w_train is not None else numpy.ones(len(y_train), dtype=numpy.float32)
-        w_va = w_val   if w_val   is not None else numpy.ones(len(y_val), dtype=numpy.float32)
+        w_tr = w_train if w_train is not None else numpy.ones ( len ( y_train ) , dtype = numpy.float32 )
+        w_va = w_val   if w_val   is not None else numpy.ones ( len ( y_val   ) , dtype = numpy.float32 )
 
-        X_tr_t = torch.as_tensor(X_tr_scaled, dtype=torch.float32, device=device)
-        y_tr_t = torch.as_tensor(y_train, dtype=torch.float32, device=device)
-        w_tr_t = torch.as_tensor(w_tr, dtype=torch.float32, device=device)
+        X_tr_t = torch.as_tensor ( X_tr_scaled , dtype = torch.float32 , device = device )
+        y_tr_t = torch.as_tensor ( y_train     , dtype = torch.float32 , device = device )
+        w_tr_t = torch.as_tensor ( w_tr        , dtype = torch.float32 , device = device )
 
-        X_va_t = torch.as_tensor(X_va_scaled, dtype=torch.float32, device=device)
-        y_va_t = torch.as_tensor(y_val, dtype=torch.float32, device=device)
-        w_va_t = torch.as_tensor(w_va, dtype=torch.float32, device=device)
+        X_va_t = torch.as_tensor ( X_va_scaled , dtype = torch.float32 , device = device )
+        y_va_t = torch.as_tensor ( y_val       , dtype = torch.float32 , device = device )
+        w_va_t = torch.as_tensor ( w_va        , dtype = torch.float32 , device = device )
 
-        hidden_dims = self.params.get ( 'hidden_dims'  , ( 256, 256, 256, 128) ) 
-        dropout     = self.params.get ( 'dropout', 0.0 )
+        hidden_dims = self.params.get ( 'hidden_dims' , ( 128 , 128 , 64 ) ) 
+        dropout     = self.params.get ( 'dropout'     , 0.0 )
 
-        model = DensityResNet ( in_features = X_train.shape[1] ,
-                              hidden_dims = hidden_dims      ,
-                              dropout     = dropout          ).to ( device )  
+        model = TabularMLP ( in_features = X_train.shape[1] ,
+                             hidden_dims = hidden_dims      ,
+                             dropout     = dropout          ).to ( device )  
 
-        learning_rate = self.params.get ( 'learning_rate', 2.e-3 ) 
-        weight_decay  = self.params.get ( 'weight_decay' , 1e-5 ) 
-        foreach       = self.params.get ( 'foreach'      , True  ) 
+        learning_rate = self.params.get ( 'learning_rate' , 1e-3 ) 
+        weight_decay  = self.params.get ( 'weight_decay'  , 1e-4 ) 
 
-        optimizer = torch.optim.AdamW(model.parameters(),
-                                      lr           = learning_rate ,
-                                      weight_decay = weight_decay  ,
-                                      foreach      = foreach       )
+        optimizer = torch.optim.AdamW ( model.parameters()        ,
+                                        lr           = learning_rate ,
+                                        weight_decay = weight_decay  )
         
-        # Интегрирован адаптивный планировщик ReduceLROnPlateau
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, 
-            mode       = 'min', 
-            factor     = 0.5, 
-            patience   = max(5, patience // 3), 
-            min_lr     = 1e-5
+        n_samples = X_tr_t.shape[0]
+        batch_size = self.params.get ( 'batch_size' , 256 )
+        
+        # Ensure batch size is suitable for BatchNorm1d (at least > 1 sample per batch)
+        batch_size = min ( n_samples , max ( 32 , batch_size ) )
+
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau (
+            optimizer, mode='min', factor=0.5, patience=15, min_lr=1e-6
         )
         
-        criterion_base = nn.BCEWithLogitsLoss(reduction='none')
+        criterion_base = nn.BCEWithLogitsLoss ( reduction = 'none' )
 
-        best_loss        = float('inf')
+        best_loss        = float ( 'inf' )
         best_state       = None
         patience_counter = 0
 
-        n_samples, n_features = X_tr_t.shape 
-        
-        batch_size = self.params.get ( 'batch_size' , max( 128, min( 1024, n_samples // 4 ) ) )
-        batch_size = min ( n_samples , max ( 32 , batch_size ) )
-
         no_pbar    = self.silent or self.progress or not self.__progress_epochs
-        w_va_sum  = w_va_t.sum() 
+        w_va_sum   = w_va_t.sum() + 1e-8
 
+        min_epochs = 20 
         with ProgressBar ( max_value   = nepochs   ,
                            silent      = no_pbar   ,
-                           description = 'Epochs:' ) as pbar:
-            for epoch in range(nepochs):
-                model.train()
-                permutation = torch.randperm(n_samples, device=device)
+                           description = 'Epochs:' ) as pbar :
+            
+            for epoch in range ( nepochs ) :
+                model.train ()
+                permutation = torch.randperm ( n_samples , device = device )
                 
-                for i in range(0, n_samples, batch_size):
-                    indices = permutation[i : i + batch_size]
-                    b_x, b_y, b_w = X_tr_t[indices], y_tr_t[indices], w_tr_t[indices]
-
-                    optimizer.zero_grad()
-                    b_logits = model(b_x)
+                for i in range ( 0 , n_samples , batch_size ) :
                     
-                    b_loss = (criterion_base(b_logits, b_y) * b_w).sum() / b_w.sum()
-                    b_loss.backward()
-                    optimizer.step()
+                    indices = permutation[ i : i + batch_size ]
+                    
+                    # BatchNorm requires batch_size > 1
+                    if len ( indices ) <= 1 : continue
 
-                model.eval()
-                with torch.no_grad():
-                    val_logits = model(X_va_t)
-                    val_loss_sum = (criterion_base(val_logits, y_va_t) * w_va_t).sum()
-                    val_loss = (val_loss_sum / w_va_sum).item()
+                    b_x, b_y, b_w = X_tr_t[ indices ] , y_tr_t[ indices ] , w_tr_t[ indices ]
 
-                # Шаг планировщика на основе val_loss
-                scheduler.step(val_loss)
+                    optimizer.zero_grad ()
+                    b_logits = model ( b_x )
+                    
+                    b_loss = ( criterion_base ( b_logits , b_y ) * b_w ).sum () / ( b_w.sum () + 1e-8 )
+                    b_loss.backward ()
+                    optimizer.step ()
+
+                model.eval ()
+                with torch.no_grad () :
+                    val_logits   = model ( X_va_t )
+                    val_loss_sum = ( criterion_base ( val_logits , y_va_t ) * w_va_t ).sum ()
+                    val_loss     = ( val_loss_sum / w_va_sum ).item ()
+
+                scheduler.step ( val_loss )
                 pbar += 1                                
 
-                if val_loss < best_loss:
-                    best_loss = val_loss
-                    best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()} 
-                    patience_counter = 0
-                else:
-                    patience_counter += 1
-                    if patience is not None and patience <= patience_counter: 
-                        break
+                if epoch >= min_epochs :
+                    
+                    if val_loss < best_loss :
+                        best_loss        = val_loss
+                        best_state       = { k : v.cpu().clone() for k , v in model.state_dict().items() } 
+                        patience_counter = 0
+                    else :
+                        patience_counter += 1
+                        if patience is not None and patience <= patience_counter : 
+                            break
+                else :
+                    best_loss  = val_loss
+                    best_state = { k : v.cpu().clone() for k , v in model.state_dict().items() }
 
-        if best_state is not None:
-            model.load_state_dict(best_state)
+                
+        if best_state is not None :
+            model.load_state_dict ( best_state )
 
-        model.eval()
+        model.eval ()
         model.scaler = scaler
 
-        val_preds = self._predict_single_model(model, X_val)
-        return model, val_preds
-    
+        val_preds = self._predict_single_model ( model , X_val )
+        return model , val_preds
+
     # =========================================================================
-    def _predict_single_model(self, model, X):
-        """ Predict target probabilities using a trained PyTorch model (Full-Batch).
+    ## Predict target probabilities using a trained PyTorch model.
+    #  @param model Trained PyTorch TabularMLP model instance.
+    #  @param X Features array to evaluate.
+    #  @return Flat numpy array of target probabilities p(y=1|x).
+    def _predict_single_model ( self , model , X ) :
+        """ Predict target probabilities using a trained PyTorch model.
         """
         import torch
 
-        device = next(model.parameters()).device
-        model.eval()
+        device = next ( model.parameters() ).device
+        model.eval ()
 
         X_scaled = model.scaler.transform ( X )
-        X_t = torch.as_tensor ( X_scaled, dtype=torch.float32, device=device )
+        X_t      = torch.as_tensor ( X_scaled , dtype = torch.float32 , device = device )
 
-        with torch.no_grad():
-            logits = model(X_t)
-            probs  = torch.sigmoid( logits ).cpu().numpy()
+        with torch.no_grad () :
+            logits = model ( X_t )
+            probs  = torch.sigmoid ( logits ).cpu().numpy ()
 
         return numpy.ravel ( probs ).astype ( numpy.float32 , copy = False )
 
+
+    
 # =============================================================================
 # Filter parameters to keep only those accepted by scikit-learn LogisticRegression
 valid_LR_params = (
