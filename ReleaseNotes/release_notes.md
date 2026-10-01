@@ -1,3 +1,5 @@
+# v3.8.6.10
+
 ## New features
 
   1. `chopping`: make use of the soft limit for ncpus
