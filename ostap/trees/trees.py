@@ -52,12 +52,13 @@ from   ostap.trees.utils         import Tree, Chain
 from   ostap.logger.symbols      import ( script_v ,
                                           sub_mean , sub_rms ,
                                           sub_min  , sub_max ,
-                                          tree           as tree_symbol   ,
-                                          branch         as branch_symbol ,
-                                          tag            as type_symbol   , 
-                                          leaf           as leaf_symbol   ,
-                                          leaves         as leaves_symbol ,
-                                          tape_cartridge as files_symbol  )
+                                          tree     as tree_symbol   ,
+                                          branch   as branch_symbol ,
+                                          tag      as type_symbol   , 
+                                          leaf     as leaf_symbol   ,
+                                          leaves   as leaves_symbol ,
+                                          package  as files_symbol  )
+
 from   ostap.logger.pretty       import pretty_row 
 from   ostap.io.root_file        import ROOTCWD 
 from   ostap.utils.cleanup       import CleanUp

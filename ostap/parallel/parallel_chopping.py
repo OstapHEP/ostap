@@ -86,14 +86,17 @@ class ChopperTraining(Task) :
         
         import ostap.tools.tmva        
         from   ostap.utils.root_utils import batch
-        ## unpack arguments 
-        category , chopping = params
+        ## unpack arguments
         
-        if main_process () : chopping = copy.deepcopy ( chopping )
-            
+        ## category , chopping = params        
+        ## if main_process () : chopping = copy.deepcopy ( chopping )
+        
+        trainer  = params
+        category = trainer.category 
+        
         ## process...
         with batch ( True ) : 
-            trainer  = chopping.create_trainer ( category , False )
+            ## trainer  = chopping.create_trainer ( category , False )
             trainer.train ()
         ## Full output from TMVA trainer 
         result = (
@@ -106,7 +109,8 @@ class ChopperTraining(Task) :
             [ ( category , trainer.         AUC  ) ] ,
         )
         # 
-        del chopping, trainer
+        ## del chopping, trainer
+        del trainer
         return result 
 
     ## merge results/datasets 
@@ -257,11 +261,13 @@ def chopping_training ( chopper , **kwargs ) :
     task = ChopperTraining ()
     wmgr = WorkManager ( silent = False , **kwargs )
     
-    params = [ ( i , chopper ) for i in range ( chopper.N ) ]
+    ## params = [ ( i , chopper  ) for i in range ( chopper.N ) ]
+    params = [ chopper.create_trainer  ( i ) for i in range ( chopper.N ) ]
     
-    sys.stdout.flush()
-    sys.stderr.flush()
     
+    sys.stdout.flush ()
+    sys.stderr.flush ()
+
     wmgr.process ( task , params )
     
     while params : params.pop()

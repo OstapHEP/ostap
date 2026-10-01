@@ -806,17 +806,17 @@ parser, arguments = __parse_args ()
 
 # ================================================================================
 ## update the global configuration
-general [ 'Batch'      ] = str ( arguments.batch )
+general [ 'Batch'       ] = str ( arguments.batch )
 ## 
-general [ 'Silent'     ] = str ( arguments.Silent     ) 
-general [ 'Quiet'      ] = str ( arguments.Quiet      ) 
-general [ 'Verbose'    ] = str ( arguments.Verbose    )
-general [ 'Debug'      ] = str ( arguments.Debug      )
-general [ 'Level'      ] = str ( arguments.Level      )
-general [ 'Color'      ] = str ( arguments.Color      )
-general [ 'Unicode'    ] = str ( arguments.Unicode    )
+general [ 'Silent'      ] = str ( arguments.Silent     ) 
+general [ 'Quiet'       ] = str ( arguments.Quiet      ) 
+general [ 'Verbose'     ] = str ( arguments.Verbose    )
+general [ 'Debug'       ] = str ( arguments.Debug      )
+general [ 'Level'       ] = str ( arguments.Level      )
+general [ 'Color'       ] = str ( arguments.Color      )
+general [ 'Unicode'     ] = str ( arguments.Unicode    )
 ##
-general [ 'DumpConfig' ] = str ( arguments.DumpConfig )
+general [ 'DumpConfig'  ] = str ( arguments.DumpConfig )
 ##
 general [ 'BuildDir'    ] = arguments.BuildDir
 general [ 'CacheDir'    ] = arguments.CacheDir

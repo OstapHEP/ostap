@@ -49,6 +49,7 @@ from   ostap.utils.core          import typename
 from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.timing        import timing
+from   ostap.utils.basic         import numcpu 
 from   ostap.plotting.canvas     import use_canvas
 import ostap.trees.trees_base 
 import ostap.io.root_file
@@ -1181,18 +1182,17 @@ class Trainer(object):
         >>> trainer = ...
         >>> print ( trainer.AUC_table() )
         """
-        from ostap.logger.pretty  import pretty_float
-        from ostap.logger.symbols import times
-        header = 'Method' , 'AUC' , '1-AUC' , '' , '-log10(1-AUC)'
+        from ostap.logger.pretty  import pretty_float, format_pow10
+        header = 'Method' , 'AUC' , '1-AUC' , '' , '-log10(1-AUC)' , '' 
         rows   = [] 
         for key, auc in self.AUC.items() : 
-            da = 1 - auc 
+            da                  = 1 - auc 
             a1 , e1             = pretty_float ( da                 , precision = 4 , width = 6 )
             if 0 < da : a2 , e2 = pretty_float ( -math.log10 ( da ) , precision = 3 , width = 5 )
             else      : a2 , e2 = '' , 0             
-            row = key , '%.6f' % auc                              , \
-                a1 ,  '%s10^{%+d}' % ( times , e1 ) if e1 else '' , \
-                a2 ,  '%s10^{%+d}' % ( times , e2 ) if e2 else ''             
+            row = key , '%.6f' % auc                    , \
+                a1 ,  format_pow10 ( e1 ) if e1 else '' , \
+                a2 ,  format_pow10 ( e2 ) if e2 else ''             
             rows.append ( row )            
         rows = [ header ] + sorted ( rows )        
         import ostap.logger.table as T
@@ -1251,7 +1251,7 @@ class Trainer(object):
             
         from ostap.utils.basic      import NoContext
         from ostap.utils.root_utils import ImplicitMT
-        
+
         with context : 
 
             with ImplicitMT ( self.multithread ) : 
@@ -1664,7 +1664,7 @@ class Trainer(object):
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
 
             ## ATTENTION!!! check it later
-            ## outFile.cd () 
+            outFile.cd () 
 
             ## 
             Ostap.Tmva.disable_scatter_plots ()
@@ -1817,7 +1817,10 @@ class Trainer(object):
                 mname = m [ 1 ]
                 auc = factory.GetROCIntegral ( self.name , mname )
                 self.__AUC [ mname ] = auc
-                         
+
+            ## ROOT.SetOwnership ( factory    , True )
+            ## ROOT.SetOwnership ( dataloader , True )
+            
             del dataloader
             del factory 
 
@@ -1898,51 +1901,76 @@ class Trainer(object):
                 self.__tar_file = os.path.abspath ( tfile ) 
 
         self.__add_decision = True
-    
+
+        print ( 'HERE-1' ) 
         # =====================================================================
         ## Check the output ROOT file
         # =====================================================================
         if os.path.exists ( self.output_file ) : # ============================
             # =================================================================
+
+            print ( 'HERE-1.1' ) 
+
             import ostap.trees.trees 
         
             if self.verbose                         and \
                os.path.exists     ( self.tar_file ) and \
                tarfile.is_tarfile ( self.tar_file ) :
+
+                print ( 'HERE-1.2' ) 
                 
                 for ch in ( 'TrainTree' , 'TestTree' ) :
                     chain = ROOT.TChain ( '%s/%s' % ( self.name , ch ) )
                     chain.Add ( self.output_file )
+
+                    print ( 'HERE-1.3' ) 
                     
                     title = chain.fullpath 
                     table = chain.table ( title = title , prefix = '# ' )
                     self.logger.info ( '%s:\n%s' % ( title , table ) )
 
+        print ( 'HERE-2' ) 
         # ================================================================
         if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
+
+            print ( 'HERE-2.1' ) 
             # =============================================================
             try : # =======================================================
                 # =========================================================
+                print ( 'HERE-2.2' , self.output_file , os.path.exists ( self.output_file )  ) 
+                
                 shutil.move ( self.output_file , self.dirname )                    
                 noof = os.path.join ( self.dirname , os.path.basename ( self.output_file ) )
                 noof = os.path.abspath ( noof ) 
                 if os.path.exists ( noof ) : self.__output_file = noof
+
+                print ( 'HERE-2.3' , self.output_file , os.path.exists ( self.output_file )  ) 
+                
                 # =========================================================
             except : # ====================================================
                 # =========================================================
-                pass            
+                pass
+            
+        print ( 'HERE-3' )
+        
         # ================================================================
         try : # ==========================================================
+            print ( 'HERE-3.1' , self.output_file , os.path.exists ( self.output_file )  ) 
             # ============================================================
-            with ROOT.TFile.Open ( self.output_file, 'READ' ) as outFile :
+            with ROOT.TFile.Open ( self.output_file, 'READ' ) as out_file :
+                print ( 'HERE-3.2' , self.output_file , os.path.exists ( self.output_file )  ) 
                 if self.verbose :
-                    table = outFile.ls_table ( prefix = '# ' )
-                    self.logger.info ( 'Output ROOT file:%s' % table )
+                    print ( 'HERE-3.3' , self.output_file , os.path.exists ( self.output_file )  )
+                    title = 'Output ROOT file %s' % os.path.basename ( self.output_file ) 
+                    table = out_file.as_table ( prefix = '# ' , title = title  )
+                    self.logger.info ( '%s:\n%s' % ( title , table ) ) 
                 # ===========================================================
         except : # ======================================================
             # ===========================================================
             pass
-        
+
+        print ( 'HERE-4' , self.output_file , os.path.exists ( self.output_file )  ) 
+
         return self.tar_file 
 
     # =========================================================================

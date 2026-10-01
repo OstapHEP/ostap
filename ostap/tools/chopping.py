@@ -885,20 +885,15 @@ class Trainer(object) :
             table = T.table ( rows , prefix = '# ' , title = title , alignment = "lccc" )
             self.logger.info ( '%s:\n%s' % ( title , table ) ) 
 
-    ## create all trainers 
-    def __create_trainers ( self ) :
-        if self.trainers : self.logger.debug ('Remove existing trainers ')
-        self.__trainers = [] 
-        for i in  range ( self.N ) : self.__trainers.append ( self.create_trainer ( i ) )
-        self.__trainers     = tuple ( self.__trainers ) 
-        self.__trainer_dirs = [ t.dirname for t in self.trainers ]
-        
-    ## create the trainer for category "i"
+    ## create the trainer for category `i`
     def create_trainer ( self , i , verbose = True ) :
-        """ Create the trainer for category `i'
+        """ Create the trainer for category `i`
         """
-        cat       = '(%s)%%%d' % ( self.category , self.N  )
-        nam       =  '%s_%03d' % ( self.name , i )
+        ## 
+        if not isinstance ( i , int ) or not 0 <= i < self.N : raise ValueError ("Invaild category %s" % i )
+        ## 
+        cat       = '(%s)%%%d' % ( self.category , self.N   )
+        nam       =  '%s_%03d' % ( self.name     , i        )
         scuts     = self.    signal_cuts 
         bcuts     = self.background_cuts 
         icategory = "(%s)!=%d" % ( cat , i ) 
@@ -909,16 +904,16 @@ class Trainer(object) :
 
         if self.parallel :
             mp = self.make_plots and ( self.verbose or 0 == i )        
-            vb = self.verbose    and (                 0 == i ) 
+            vb = self.verbose    and (                 0 == i ) and verbose 
         else :
             mp = self.make_plots 
-            vb = self.verbose   
-        
+            vb = self.verbose    and verbose 
+
         vv = set ( self.variables )
         for v in self.signal_vars     : vv.add ( v ) 
         for v in self.background_vars : vv.add ( v )
         vv = sorted ( vv )
-        
+
         t  = TMVATrainer ( methods           = self.methods            ,
                            variables         = vv                      ,
                            ##
@@ -954,7 +949,7 @@ class Trainer(object) :
                            multithread       = self.multithread        ,
                            category          = i                       ,
                            workdir           = self.workdir            )
-        
+
         return t
     
     @property
@@ -984,7 +979,7 @@ class Trainer(object) :
 
     @property
     def category ( self ) :
-        """`category' -  the accessor(string) to the category"""
+        """`category' : category index"""
         return self.__category 
 
     @property
@@ -1444,31 +1439,36 @@ class Trainer(object) :
         >>> output_files  = trainer. output_files ## output ROOT files 
         >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
         """
-        ## create the trainers 
-        self.__create_trainers()
 
-        assert 1<= self.N and self.N == len ( self.trainers ), 'Invalid trainers!'
-        
         weights  = []
         classes  = []
         outputs  = [] 
-        tarfiles = [] 
+        tarfiles = []
+        dirnames = [] 
         logfiles = []
         
         from ostap.utils.progress_bar import progress_bar
-        for t in progress_bar ( self.trainers , silent = self.verbose ) :
-            if self.verbose : self.logger.info  ( "Train the trainer `%s'" % ( t.name ) ) 
-            t.train() 
+        
+        ## explciit sum over trainers 
+        for category in progress_bar ( self.N  ,  silent = self.verbose , description = 'Trainers:' ) :
+            
+            t = self.create_trainer ( category , verbose = self.verbose )
+                        
+            t.train () 
             weights  += [ t.weights_files ] 
             classes  += [ t.  class_files ] 
             outputs  += [ t. output_file  ] 
-            tarfiles += [ t.    tar_file  ] 
+            tarfiles += [ t.    tar_file  ]
+            dirnames += [ t.      dirname ]
             logfiles += [ t.    log_file  ] if t.log_file and os.path.exists ( t.log_file ) else [] 
             self.__AUCs [ t.category ] = t.AUC
+
+            del t
             
-        self.__weights_files = tuple ( weights ) 
-        self.__class_files   = tuple ( classes )
-        self.__output_files  = tuple ( outputs )
+        self.__weights_files = tuple ( weights  ) 
+        self.__class_files   = tuple ( classes  )
+        self.__output_files  = tuple ( outputs  )
+        self.__trainer_dirs  = tuple ( dirnames )
 
         ## create the final tar-file 
         self.__tar_file      = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz' ] ) ,

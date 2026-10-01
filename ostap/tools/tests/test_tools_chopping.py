@@ -201,13 +201,22 @@ trainer = Trainer (
 with timing ( 'for TMVA/Chopping training' , logger ) :
     trainer.train () 
     tar_file      = trainer.tar_file
-    
+
+print ( 'I AM HERE-1' ) 
 # =============================================================================
 # remove unnesessary output files
 for f in trainer.output_files :
+    print ( 'I AM HERE-2' ) 
     if os.path.exists ( f ) and os.path.isfile( f ) :
+        print ( 'I AM HERE-3' ) 
         try    : os.remove ( f )
         except : pass
+    print ( 'I AM HERE-4' ) 
+
+print ( 'I AM HERE-5' ) 
+
+
+print ( 'I AM HERE-6' ) 
 
 # =============================================================================
 ## Use trained TMVA/Chopping
@@ -219,6 +228,7 @@ for f in trainer.output_files :
 #    but it is very flexible and powerful with respect to variable transformations
 # =============================================================================
 
+"""
 # =============================================================================
 ## A) Add TMVA/Chopping decision to (input) TTrees 
 # =============================================================================
@@ -299,7 +309,7 @@ with timing ( "Add TMVA/Chopping response to (newly created) RooDataSet " , logg
     
     from ostap.tools.chopping import Reader
     reader = Reader (
-        N             = N         , ##  number of   categories
+        N             = N         , ##  number of categories
         categoryfunc  = category  , ## category 
         ## other argument  as for plain TMVA     
         name          = 'ChopReader' ,
@@ -369,6 +379,7 @@ rows.append ( row )
 title = 'Timing'
 table = T.table ( rows , title = title , prefix = '# ' , alignment = 'cc' )
 logger.info ( '%s\n%s' % ( title , table ) ) 
+"""
 
     
                           

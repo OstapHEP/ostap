@@ -171,7 +171,7 @@ trainer = Trainer (
     N        = N                 , ## ATTENTION! 
     category = "137*evt+813*run" , ## ATTENTION!
     ## other  arguments as for ``plain'' TMVA
-    name    = 'TestChopping' ,   
+    name    = 'TestChopping2' ,   
     methods = [ # type               name   configuration
     ( ROOT.TMVA.Types.kMLP        , "MLP1"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+1:TestRate=5:!UseRegulator" ) ,
     ## ( ROOT.TMVA.Types.kMLP        , "MLP5"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
@@ -263,7 +263,6 @@ with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as
 
     logger.info ('TTree   SIG (with TMVA decisions):\n%s' % cSignal.table ( prefix = '# ') ) 
     logger.info ('TTree   BKG (with TMVA decisions):\n%s' % cBkg   .table ( prefix = '# ') ) 
-
                           
 # =============================================================================
 ##                                                                      The END

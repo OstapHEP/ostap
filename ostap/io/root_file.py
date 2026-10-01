@@ -1004,7 +1004,7 @@ def _rd_table_ ( rdir                         ,
                  title   = ''                 ,
                  prefix  = '# '               , 
                  select  = lambda key : True  ,
-                 exclude = lambda key : False ) :
+                 exclude = lambda key : False ) : 
     """ Show the content of the directory as a table
     >>> rdir = ...
     >>> rdir.ls_table ()
@@ -1117,9 +1117,9 @@ ROOT.TDirectory.as_table     = _rd_table_
 
 ROOT.TDirectory.rm           = _rd_rm_
 
-ROOT.TDirectory.make_tree = _rd_make_tree_
-ROOT.TDirectory.show_tree = _rd_show_tree_
-ROOT.TDirectory.ls_tree   = _rd_ls_tree_
+ROOT.TDirectory.make_tree    = _rd_make_tree_
+ROOT.TDirectory.show_tree    = _rd_show_tree_
+ROOT.TDirectory.ls_tree      = _rd_ls_tree_
 
 # =============================================================================
 _modes = {

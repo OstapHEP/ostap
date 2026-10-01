@@ -227,14 +227,16 @@ if ( 3 , 13 ) <= python_info : from os import process_cpu_count as cpu_count
 else                         : from os import         cpu_count 
 # =============================================================================
 ## Get number of CPUs     
-#  - it uses the function `cpu_count` from `%s` module  
-#  - it reads OSTAP_NCPUS environment variable 
+#  - it uses the function `cpu_count` from `os` module  
+#  - it reads   OSTAP_NCPUS environment variable 
 #  - it checks `General.NCPUS` setting for global config
+#  - it reads `-n/--ncpus` command-line argument 
 def numcpu () :
     """ Get number of CPUs (non-negative integer number)
     - it uses the function `cpu_count` from `%s` module  
     - it reads OSTAP_NCPUS envrironment variable 
     - it checks `General.NCPUS` section of global config
+    - it reads `-n/--ncpus` command line argument 
     """
     # ========================================================================
     ## (1) check the system 
@@ -258,7 +260,7 @@ def numjobs ( njobs = -1 ) :
     """
     if not njobs : return  1 
     ncpus   = max ( 1 , numcpu () - 1 )
-    return ncpus if njobs < 0 else min ( njobs , ncpus ) 
+    return ncpus if njobs <= 0 else min ( njobs , ncpus ) 
 
 # =============================================================================
 ## create 'counted' function to know number of function calls

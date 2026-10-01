@@ -146,6 +146,8 @@ __all__     = (
     'not_equal'           , ## ≠
     'number'              , ## №
     'oil_drum'            , ## 🛢️  (wide)
+    ##
+    'package'             , ## 📦    
     'palette'             , ## 🎨  (wide)
     'permille'            , ## ‰
     'permutation'         , ## ⤭
@@ -304,14 +306,15 @@ not_equal        = '≠'   if show else '!='
 weight_lifter    = '🏋'  if show else ''
 weight_scale     = '⚖'   if show else '' 
 
-scissors         = '✂'  if show else '' 
+scissors         = '✂'   if show else '' 
 oil_drum         = '🛢 ' if show else '' 
 brain            = '🧠 ' if show else ''
-kitchen_knife    = '➖' if show else ''
+kitchen_knife    = '➖'  if show else ''
 axe              = '🪓 ' if show else ''
 gear             = '⚙ '  if show else ''
 wrench           = '🔧 ' if show else ''
 hammer_and_wrench= '🛠 ' if show else ''
+package          = '📦 ' if show else ''     
 
 union            = '⋃'  if show else ''
 intersection     = '⋂'  if show else ''
