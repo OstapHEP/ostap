@@ -48,7 +48,7 @@ from   ostap.utils.basic      import num_jobs, run_parallel
 from   ostap.stats.gof_np     import GoFnp
 from   ostap.logger.pretty    import nice_print 
 from   ostap.stats.tools      import hasSkLearn 
-
+## 
 import ostap.logger.symbols   as     S
 import numpy, abc
 # =============================================================================
@@ -74,7 +74,10 @@ method_HGBC  = 'AdVal/%s' % ( S.proportion + S.nabla if S.show        else 'HGBC
 method_GBC   = 'AdVal/%s' % ( S.nabla                if S.show        else 'GBC'      )
 method_RF    = 'AdVal/%s' % ( S.tree                 if S.show        else 'RF'       ) 
 method_TORCH = 'AdVal/%s' % ( S.flashlight           if S.flashlight  else 'TORCH'    ) 
-method_KERAS = 'AdVal/%s' % ( S.postal_horn          if S.postal_horn else 'KERAS'    ) 
+method_KERAS = 'AdVal/%s' % ( S.postal_horn          if S.postal_horn else 'KERAS'    )
+# =============================================================================
+epoch_symbol = ( '%s :' % S.repeat ) if S.show else 'Epoch:'
+
 # =============================================================================
 ## Evaluate whether strong regularization is required for BDT-based models.
 #  Evaluates feature dimension, Kish's effective sample size, and sPlot weight noise.
@@ -437,21 +440,32 @@ class ADVAL_LGBM (ADVAL_base) :
             'learning_rate'     :  0.03,
             'n_estimators'      : DEFAULT_ESTIMATORS ,
             'max_depth'         : MAX_DEPTH ,
-            'num_leaves'        : 24   ,
-            'min_child_samples' : 50   ,
-            'subsample'         :  0.8 ,
-            'subsample_freq'    :  1   ,
-            'colsample_bytree'  :  0.8 ,
-            'reg_alpha'         :  0.1 ,
-            'reg_lambda'        :  1.0 ,
-            'force_col_wise'    : True ,
-            'max_bin'           :  127 , 
-            'n_jobs'            : -11  ,  
-            'verbosity'         : -1   ,
-            'verbose'           : -1   ,
+            'num_leaves'        : 24    ,
+            'min_child_samples' : 50    ,
+            'subsample'         :  0.8  ,
+            'subsample_freq'    :  1    ,
+            'colsample_bytree'  :  0.8  ,
+            'reg_alpha'         :  0.1  ,
+            'reg_lambda'        :   1.0 ,
+            'force_row_wise'    :  True ,
+            'force_col_wise'    : False ,
+            'max_bin'           : 1023  , 
+            'n_jobs'            : -11   ,  
+            'verbosity'         : -1    ,
+            'verbose'           : -1    ,
         }
-            
+        
         config.update ( params ) 
+
+        row_wise = bool ( config.get ( 'force_row_wise' , True  ) ) 
+        col_wise = bool ( config.get ( 'force_col_wise' , False ) ) 
+
+        if row_wise ^ col_wise : pass 
+        else :
+            row_wise, col_wise = True, False 
+
+        config [ 'force_col_wise' ] = col_wise 
+        config [ 'force_row_wise' ] = row_wise            
         
         ADVAL_base.__init__ ( self, 
                               nToys     = nToys    ,
@@ -496,8 +510,8 @@ class ADVAL_LGBM (ADVAL_base) :
         params [ 'reg_alpha'         ] = 0.0
         params [ 'reg_lambda'        ] = 0.0
         
-        params [ 'learning_rate'     ] = min (  0.05 , params.get ( 'learning_rate' ,   0.05 ) )
-        params [ 'max_bins'          ] = min ( 63    , params.get ( 'mas_bin'       , 127    ) )
+        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' ,  0.05 ) )
+        params [ 'max_bin'           ] = min ( 256  , params.get ( 'max_bin'       , 1024  ) )
         
         return params
     

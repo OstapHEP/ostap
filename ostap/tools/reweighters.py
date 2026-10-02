@@ -58,6 +58,8 @@ method_CATB  = 'DRW/%s'   % ( S.cat_face   if S.cat_face    else 'CatBoost' )
 method_TORCH = 'DRW/%s'   % ( S.flashlight if S.flashlight  else 'TORCH'    ) 
 method_LR    = 'DRW/%s'   % ( S.ruler      if S.ruler       else 'LOGREG'   ) 
 method_GBRW  = 'HepML/%s' % ( S.wood       if S.wood        else 'GBRW'     )
+#
+epoch_symbol = ( '%s :' % S.repeat ) if S.show else 'Epoch:'
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================
@@ -203,7 +205,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                   target_weight          = None  ,
                   clip_threshold         = 1.e+4 ,
                   n_splits               = 5     ,
-                  random_state           = None  ,
                   store_original_weights = True  ,
                   progress               = True  , **params ) :
         """ Initialize and fit the density ratio reweighter ensemble.
@@ -278,10 +279,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         ## initialize the base 
         super ().__init__ ( original        = original        ,
-                          target          = target          , 
-                          original_weight = original_weight ,
-                          target_weight   = target_weight   ,
-                          random_state    = random_state    , **params )
+                            target          = target          , 
+                            original_weight = original_weight ,
+                            target_weight   = target_weight   , **params )
         
         original_ratios, original_reweighted_weights = (
             self.__fit_and_compute(
@@ -1358,27 +1358,35 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         # Clean standard MLP configuration
         config = { 'hidden_dims'   : ( 512 , 256 , 256 )       ,
                    'dropout'       : 0.0                       ,               
-                   'learning_rate' : 1e-3                      ,              
-                   'weight_decay'  : 1e-6                      ,              
-                   'batch_size'    : 256                       ,
-                   'epochs'        : 1000                      ,              
-                   'patience'      : 250                       ,              
+                   'learning_rate' : 5e-4                      ,              
+                   'weight_decay'  : 1e-5                      ,              
+                   'batch_size'    : 4096                      ,
+                   'epochs'        : 2000                      ,              
+                   'patience'      : 400                       ,              
                    'device'        : 'cuda' if cuda else 'cpu' ,
                    'n_jobs'        : 2                         ,
                  }
 
         config.update ( kwargs )
 
-        device = config.get ( 'device' , 'cuda' if cuda else 'cpu' )
-        if not cuda : config [ 'device' ] = 'cpu'   
+        ## use own progress-bar 
+        self.__progress_epochs = config.pop ( 'progress' , True )
+        
+        ## n_rows       = num_samples  ( original ) + num_samples ( target )
+        ## n_features   = num_features ( original )
+        ## data_size_mb = ( n_rows * m_features * 4 ) / ( 1024 * 1024 )
 
-        self.__progress_epochs = True if progress else False 
+        device = config.get ( 'device' , 'cuda' if cuda else 'cpu' )        
+        if not cuda : config [ 'device' ] = 'cpu'
         
         super().__init__ ( original        = original        ,
                            target          = target          ,
                            original_weight = original_weight ,
                            target_weight   = target_weight   ,
                            progress        = False           , **config )
+
+        ## reset thread pool 
+        torch.set_num_threads ( 1 )
 
     # =========================================================================
     ## Return method identifier string.
@@ -1401,10 +1409,10 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                          n_samples  ) :
         """ Apply mild regularization rules for low statistics.
         """
-        params [ 'hidden_dims'   ] = ( 128 , 64 , 164 )
-        params [ 'learning_rate' ] = 1e-4
-        params [ 'epochs'        ] = 1000
-        params [ 'patience'      ] =  500 
+        params [ 'hidden_dims'   ] = ( 256 , 256 )
+        params [ 'learning_rate' ] = 5e-4
+        params [ 'epochs'        ] = 2000
+        params [ 'patience'      ] =  600 
         return params
 
     # =========================================================================
@@ -1428,11 +1436,14 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         import torch
         import torch.nn as nn
         from sklearn.preprocessing import StandardScaler
-
-        n_jobs = max ( 2 , self.params.get ( 'n_jobs' , 2 ) ) 
-        if torch.get_num_threads() != n_jobs :
-            torch.set_num_threads ( n_jobs )
-
+        
+        n_features = num_features ( X_train )
+        if n_features <= 20 : torch.set_num_threads ( 1  )
+        else :             
+            n_jobs = max ( 2 , self.params.get ( 'n_jobs' , 2 ) )
+            if torch.get_num_threads() != n_jobs :
+                torch.set_num_threads ( n_jobs )
+                                
         # Standard Tabular MLP Architecture
         class TabularMLP ( nn.Module ) :
             def __init__ ( self , in_features , hidden_dims = ( 128 , 128 , 64 ) , dropout = 0.0 ) :
@@ -1442,8 +1453,11 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                 
                 for h_dim in hidden_dims :
                     layers.append ( nn.Linear ( curr_dim , h_dim ) )
-                    layers.append ( nn.BatchNorm1d ( h_dim ) )
-                    layers.append ( nn.LeakyReLU ( 0.1 ) )
+                    ## layers.append ( nn.BatchNorm1d ( h_dim ) )
+                    layers.append ( nn.LayerNorm   ( h_dim ) )
+                    layers.append ( nn.LeakyReLU   ( 0.1 ) )
+                    ## layers.append ( nn.SiLU   () )
+                    ## layers.append ( nn.GELU   () )
                     if dropout > 0.0 :
                         layers.append ( nn.Dropout ( dropout ) )
                     curr_dim = h_dim
@@ -1496,19 +1510,30 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         optimizer = torch.optim.AdamW ( model.parameters()        ,
                                         lr           = learning_rate ,
                                         weight_decay = weight_decay  )
+
         
-        n_samples = X_tr_t.shape[0]
-        batch_size = self.params.get ( 'batch_size' , 256 )
+        n_samples  = X_tr_t.shape[0]
+        batch_size = self.params.get ( 'batch_size' , 4096 )
         
         # Ensure batch size is suitable for BatchNorm1d (at least > 1 sample per batch)
-        batch_size = min ( n_samples , max ( 32 , batch_size ) )
+        batch_size = min ( n_samples // 2 , max ( 4096 , batch_size ) )
 
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau (
-            optimizer, mode='min', factor=0.5, patience=15, min_lr=1e-6
-        )
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau ( optimizer ,
+                                                                 mode      = 'min' ,
+                                                                 factor    = 0.5   ,
+                                                                 patience  = 50    ,
+                                                                 min_lr    = 1e-5  )
+        ## 
+        ## scheduler = torch.optim.lr_scheduler.CosineAnnealingLR ( optimizer         , 
+        ##                                                         T_max   = nepochs ,     
+        ##                                                         eta_min = 1e-6    ) 
+        ##
         
         criterion_base = nn.BCEWithLogitsLoss ( reduction = 'none' )
 
+        has_step_args = isinstance ( scheduler , torch.optim.lr_scheduler.ReduceLROnPlateau ) 
+
+    
         best_loss        = float ( 'inf' )
         best_state       = None
         patience_counter = 0
@@ -1516,12 +1541,13 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         no_pbar    = self.silent or self.progress or not self.__progress_epochs
         w_va_sum   = w_va_t.sum() + 1e-8
 
-        min_epochs = 20 
-        with ProgressBar ( max_value   = nepochs   ,
-                           silent      = no_pbar   ,
-                           description = 'Epochs:' ) as pbar :
+        min_epochs = min ( 50 , nepochs // 5 ) 
+        with ProgressBar ( max_value   = nepochs      ,
+                           silent      = no_pbar      ,
+                           description = epoch_symbol ) as pbar :
             
             for epoch in range ( nepochs ) :
+                
                 model.train ()
                 permutation = torch.randperm ( n_samples , device = device )
                 
@@ -1537,7 +1563,9 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                     optimizer.zero_grad ()
                     b_logits = model ( b_x )
                     
-                    b_loss = ( criterion_base ( b_logits , b_y ) * b_w ).sum () / ( b_w.sum () + 1e-8 )
+                    ## b_loss = ( criterion_base ( b_logits , b_y ) * b_w ).sum () / ( b_w.sum () + 1e-8 )
+                    b_loss = ( criterion_base ( b_logits , b_y ) * b_w ).sum () / ( b_w.abs().sum () + 1e-8 )
+                    
                     b_loss.backward ()
                     optimizer.step ()
 
@@ -1547,7 +1575,9 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                     val_loss_sum = ( criterion_base ( val_logits , y_va_t ) * w_va_t ).sum ()
                     val_loss     = ( val_loss_sum / w_va_sum ).item ()
 
-                scheduler.step ( val_loss )
+                if has_step_args : scheduler.step ( val_loss )
+                else             : scheduler.step ()
+                
                 pbar += 1                                
 
                 if epoch >= min_epochs :
@@ -1631,23 +1661,18 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
     #  @param store_original_weights If True, store computed results for original sample.
     #  @param params Additional Logistic Regression parameters.
     def __init__( self , * , 
-                   original               ,
-                   target                 ,
-                   original_weight        = None ,
-                   target_weight          = None ,
-                   store_original_weights = True , **params ) :        
+                  original               ,
+                  target                 ,
+                  original_weight        = None ,
+                  target_weight          = None ,
+                  store_original_weights = True , **params ) :        
         """ Initialize Logistic Regression density reweighter.
         """
-        config = {
-            'C'             : 1.0     ,
-            'solver'        : 'lbfgs' ,
-            'max_iter'      : 1000    ,
-            'random_state'  : None    ,
-            'polynomials'   : 0       , 
-        }
+        config = { 'C'             : 1.0     ,
+                   'solver'        : 'lbfgs' ,
+                   'max_iter'      : 2000    ,
+                   'polynomials'   : 2       }               
         config.update ( params )
-        
-        from sklearn.linear_model import LogisticRegression
         
         super().__init__ ( original               = original               ,
                            target                 = target                 ,
@@ -1656,37 +1681,21 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
                            store_original_weights = store_original_weights , **config )
         
     # =========================================================================
-    ## Return the method identifier name.
-    #  @return Method string identifier.
     @property
     def method ( self ) :
-        """ Return the method identifier name.
-        """
         return method_LR 
 
     # =========================================================================
     ## Dynamic regularization rules for Logistic Regression.
-    #  @param params Current parameters dictionary.
-    #  @param n_features Number of features.
-    #  @param n_samples Effective sample size.
-    #  @return Updated parameters dictionary.
     def regularization ( self , params , n_features , n_samples ) :
         """ Dynamic regularization rules for Logistic Regression.
         """
-        # Increase L2 regularization (decrease C) under limited statistics
         current_c = params.get ( 'C', 1.0 )
-        params [ 'C' ] = min ( current_c, 0.01 )
+        params [ 'C' ] = max ( 0.1, min ( current_c, 0.5 ) ) 
         return params
 
     # =========================================================================
     ## Train single Logistic Regression model on fold data.
-    #  @param X_train Training features array.
-    #  @param y_train Training binary labels.
-    #  @param w_train Training event weights or None.
-    #  @param X_val Validation features array.
-    #  @param y_val Validation binary labels.
-    #  @param w_val Validation event weights or None.
-    #  @return Tuple of (fitted_logistic_regression, val_predictions).
     def _train_single_model ( self    ,
                               X_train , y_train , w_train ,
                               X_val   , y_val   , w_val   ) :
@@ -1700,25 +1709,20 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         params.update ( self.params    )
         params.pop    ( 'n_jobs', None ) 
 
-        # Filter parameters to keep only those accepted by scikit-learn LogisticRegression
+        poly = params.pop ( 'polynomials', 2 )
+
         lr_kwargs = { k: v for k, v in params.items() if k in valid_LR_params }
 
-        ## construct the pipeline
-        #  (1) the first, mandatory, scaler
+        # Build the pipeline 
         steps = [ ( 'scaler1' , StandardScaler () ) ] 
 
-        poly  = self.params.get ( 'polynomials' , 0 )
         if poly and isinstance ( poly , int ) and 0 < poly <= 5 :
-            # (2) add polynomial features & secondary scaler  
             steps += [ ( 'poly'    , PolynomialFeatures ( degree = poly  , include_bias = False ) ) ]
-            # (3) add secondary scaler  
             steps += [ ( 'scaler2' , StandardScaler () ) ]
             
-        # (4) the majon compohnent - logistic regression  
         lr_model = LogisticRegression ( **lr_kwargs )
         steps += [ ( 'logistic', lr_model ) ]
         
-        ## (5) get the final model
         model = Pipeline ( steps  )
 
         w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else None
@@ -1731,16 +1735,13 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
 
     # =========================================================================
     ## Predict probabilities using a Logistic Regression model.
-    #  @param model Trained LogisticRegression instance.
-    #  @param X Input features array.
-    #  @return Array of predicted probabilities.
     def _predict_single_model ( self , model , X ) :
         """ Predict probabilities using a Logistic Regression model.
         """
         X_clean = numpy.ascontiguousarray ( X , dtype = numpy.float64 )
         p = model.predict_proba ( X_clean ) [ : , 1 ]
         return p.astype ( numpy.float32 , copy = False )
-    
+
 # ==============================================================================
 ## @class GBReweighter
 #  Helper wrapper class for reweighting using <code>hep_ml.reweight.GBReweighter</code>
@@ -1843,7 +1844,7 @@ class GBReweighter(Reweighter) :
             self.__reweighter = FRW ( self.reweighter ,
                                       n_folds      = self.n_splits     , 
                                       random_state = self.random_state ,
-                                      verbose      = not self.silent  )
+                                      verbose      = not self.silent   )
                
         with logAttention() if self.silent else NoContext() : 
             self.__reweighter.fit ( original        ,
@@ -2001,13 +2002,15 @@ if '__main__' == __name__ :
     from ostap.stats.tools import ( hasLightGBM ,
                                     hasXGBoost  ,
                                     hasCatBoost ,
-                                    hasPyTorch  , 
+                                    hasPyTorch  ,
+                                    hasSkLearn  , 
                                     hasHepML    )
 
     if not hasLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
     if not hasXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
     if not hasCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
     if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch  available!" ) 
+    if not hasSkLearn  ( False ) : logger.warning  ( "No SkLearn  available!" ) 
     if not hasHepML    ( False ) : logger.warning  ( "No HepML    available!" ) 
 
 # =============================================================================

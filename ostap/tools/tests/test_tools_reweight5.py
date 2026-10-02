@@ -20,6 +20,16 @@ os.environ [ "OMP_NUM_THREADS"      ]  = "1"
 os.environ [ "MKL_NUM_THREADS"      ]  = "1"
 os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
 # =============================================================================
+os.environ [ 'KMP_DUPLICATE_LIB_OK' ] = 'TRUE'
+os.environ [ 'KMP_INIT_AT_FORK'     ] = 'FALSE' 
+os.environ [ 'KMP_BLOCKTIME'        ] = '0'
+# =============================================================================
+os.environ [ 'OMP_PROC_BIND'        ] = 'false'
+os.environ [ 'OMP_WAIT_POLICY'      ] = 'PASSIVE' 
+# =============================================================================
+os.environ [ 'MKL_THREADING_LAYER'  ] = 'GNU' 
+# =============================================================================
+
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.logger.symbols     import script_p
 from   ostap.utils.core         import typename 
@@ -147,15 +157,15 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR2 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR3 ( parallel = True , nToys = 100 ) ) 
 
-## if hasLightGBM () :
-##    from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
-##    comparators += ( COMPARATOR5 ( parallel = True , nToys = 25 ) , ) 
+if hasLightGBM () :
+    from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
+    comparators += ( COMPARATOR5 ( parallel = True , nToys = 25 ) , ) 
 
 if hasXGBoost  () :  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6 ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
 
-if hasCatBoost () :  
+if False and hasCatBoost () :  
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
     comparators += ( COMPARATOR7 ( parallel = True , nToys = 25 ) , ) 
 
@@ -168,49 +178,59 @@ if hasSkLearn ():
 
 # ============================
 def run_reweight ( n_dim     = 3     ,
-                   n_samples = 10000 ) : 
+                   n_samples = 10000 ) :
     
     ## generate samples 
     target , original = make_datasets ( n_dim = n_dim , n_samples = n_samples) 
     
     reweighters = [ None ]
     
-    if hasHepML    () :
-        from ostap.tools.reweighters  import GBReweighter   as GBRW
-        rw1 = GBRW ( target = target , original = original )
-        reweighters.append ( rw1 )
+    if hasCatBoost () : 
+        from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
+        rw4 = CATB ( target = target , original = original )
+        reweighters.append ( rw4 )
         
-    if False and hasLightGBM () : 
+    if hasLightGBM () : 
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         rw2 = LGBM ( target = target , original = original )
         reweighters.append ( rw2 )
-
+        
         ## from ostap.tools.reweighter  import CascadeReweighter as  CASCADE
         ## rwc = CASCADE ( classes = [ LGBM , LGBM ] , target = target , original = original )
         ## reweighters.append ( rwc )
         
-    if False and hasXGBoost  () : 
+    if hasXGBoost  () : 
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         rw3 = XGB  ( target = target , original = original )
         reweighters.append ( rw3 )
-
-    if False and hasCatBoost () : 
-        from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
-        rw4 = CATB ( target = target , original = original )
-        reweighters.append ( rw4 )
         
     if hasPyTorch () : 
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
         rw5 = TORCH ( target = target , original = original , n_splits = 1 )
         reweighters.append ( rw5 )
         
-    if False and hasSkLearn (): 
+    if hasHepML    () :
+        from ostap.tools.reweighters  import GBReweighter   as GBRW
+        rw1 = GBRW ( target = target , original = original )
+        reweighters.append ( rw1 )
+        
+    if hasSkLearn ():
+        
         from ostap.tools.reweighters  import LogRegressionDensityReweighter as LOGREG 
-        rw6 = LOGREG ( target = target , original = original , polynomials = 2 )
+        rw6 = LOGREG ( target = target , original = original )
         reweighters.append ( rw6 )
-
+        
+        from ostap.tools.reweighter  import CascadeReweighter as  CASCADE
+        
+        rw7 = CASCADE ( classes = [ LOGREG , LOGREG ] , target = target , original = original )
+        reweighters.append ( rw7 )
+        
+        rw8 = CASCADE ( classes = [ LOGREG , LOGREG , LOGREG ] , target = target , original = original )
+        reweighters.append ( rw8 )
+       
     header = []
-    rows   = []     
+    rows   = []
+    
     for rw in reweighters :
         
         if rw : logger.info ( 'Using REWEIGHTER %s %s ' % ( typename ( rw ) , rw.method ) )

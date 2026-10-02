@@ -234,7 +234,6 @@ class CascadeReweighter(Reweighter):
         w_orig = numpy.ones  ( n_orig , dtype = numpy.float32 ) if original_weight is None else numpy.array ( original_weight , dtype = numpy.float32 )
         w_targ = numpy.ones  ( n_targ , dtype = numpy.float32 ) if target_weight   is None else numpy.array ( target_weight   , dtype = numpy.float32 )
 
-        
         # Train heterogeneous cascade stages sequentially with safety checks
         for i , stage_info in enumerate ( the_stages ) :
             

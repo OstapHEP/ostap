@@ -158,6 +158,7 @@ __all__     = (
     'question_mark'       , ## ❓  (wide)
     'ram'                 , ## 🐏  (wide)
     'rangle'              , ## 〉
+    'repeat'              , ##  🔁     
     'rms_symbol'          , ## σ
     'rocket'              , ## 🚀
     'ruler'               , ## 📏
@@ -462,6 +463,7 @@ efficiency       = greek_lower_epsilon if show else 'eff'
 
 ## toys = teddy bear 
 toys                  = '🧸 ' if show else 'toys'
+repeat                = '🔁'  if show else ''     
 
 ## star/convolution operator
 asterisk              = '✶' if show else '*'

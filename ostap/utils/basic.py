@@ -49,7 +49,7 @@ from   ostap.core.meta_info import python_info, whoami
 from   ostap.utils.core     import isfunction
 from   itertools            import zip_longest
 import multiprocessing      as     mp_
-import sys, os, shutil, functools
+import sys, os, shutil, psutil, functools
 # =============================================================================
 ## Interactive processing ?
 #  @see https://stackoverflow.com/questions/2356399/tell-if-python-is-in-interactive-mode
@@ -231,7 +231,7 @@ else                         : from os import         cpu_count
 #  - it reads   OSTAP_NCPUS environment variable 
 #  - it checks `General.NCPUS` setting for global config
 #  - it reads `-n/--ncpus` command-line argument 
-def numcpu () :
+def numcpu ( logical = True ) :
     """ Get number of CPUs (non-negative integer number)
     - it uses the function `cpu_count` from `%s` module  
     - it reads OSTAP_NCPUS envrironment variable 
@@ -239,8 +239,13 @@ def numcpu () :
     - it reads `-n/--ncpus` command line argument 
     """
     # ========================================================================
-    ## (1) check the system 
-    nn = cpu_count () 
+    ## (1) check the system
+    nn =        cpu_count ()
+    if not logical :
+        n = psutil.cpu_count ( logical = logical )
+        if nn is None or nn <= 0 : pass
+        else                     : nn = min ( n , nn )
+        
     # ========================================================================
     ## (2) Check the global Ostap configuration: 
     import ostap.core.config as config 

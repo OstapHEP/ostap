@@ -184,11 +184,13 @@ unset -f _path_prepend
 unset -f _path_remove 
 unset THIS_SCRIPT SCRIPT_PATH DIR old_ostap_dir
 
-
+##
 export KMP_DUPLICATE_LIB_OK=TRUE
 export KMP_INIT_AT_FORK=FALSE
-export OMP_PROC_BIND=false
 export KMP_BLOCKTIME=0
+##
+export OMP_PROC_BIND=false
+export OMP_WAIT_POLICY=PASSIVE 
 
 printf '\n'
 # =====================================================================
