@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+env_before=$(printenv|sort)
+
 # =========================================================================
 # Save current locale settings (or empty strings if unset)
 OLD_LC_ALL="${LC_ALL:-}"
@@ -14,9 +16,9 @@ export LC_CTYPE=C
 # =========================================================================
 
 prefix1='<<BUILD OSTAP>>'
-prefix1_error='<<BUILD OSTAP *ERROR*>>'
+prefix1_error='<<BUILD OSTAP ERROR>>'
 prefix='<<BUILD OSTAP>>'
-prefix_error='<<BUILD OSTAP *ERROR*>>'
+prefix_error='<<BUILD OSTAP ERROR>>'
 
 # =========================================================================
 # Portable Helper Functions
@@ -107,10 +109,15 @@ if [ "$COLORS" -gt 2 ]; then
     COLOR_ERR="${ESC}[1;93m${ESC}[6;101m"
     COLOR_OFF="${ESC}[0m"
 
-    prefix="${COLOR_OK}${prefix}${COLOR_OFF}"
-    prefix_error="${COLOR_ERR}${prefix_error}${COLOR_OFF}"
-    prefix1="${COLOR_OK}${prefix1}${COLOR_OFF}"
-    prefix1_error="${COLOR_ERR}${prefix1_error}${COLOR_OFF}"
+    prefix="${COLOR_OK}${prefix}${COLOR_OFF}   "
+    prefix_error="${COLOR_ERR}${prefix_error}${COLOR_OFF}   "
+    prefix1="${COLOR_OK}${prefix1}${COLOR_OFF}   "
+    prefix1_error="${COLOR_ERR}${prefix1_error}${COLOR_OFF}   "
+else
+    prefix1='<<BUILD OSTAP>>   '
+    prefix1_error='<<BUILD OSTAP ERROR>>   '
+    prefix='<<BUILD OSTAP>>   '
+    prefix_error='<<BUILD OSTAP ERROR>>   '    
 fi
 
 
@@ -429,7 +436,7 @@ fi
 # ==========================================================================
 if [ -f "${OSTAP_INSTALL}/thisostap.sh" ] && [ -r "${OSTAP_INSTALL}/thisostap.sh" ]; then
     printf "%s [6/7] 'thisostap.sh' is sourced %s\n" "${prefix1}" "${OSTAP_INSTALL}/thisostap.sh"
-    . "${OSTAP_INSTALL}/thisostap.sh"
+    show_environment=False . "${OSTAP_INSTALL}/thisostap.sh"
 else
     printf "%s [6/7] FAILURE: no thisostap.sh is found %s\n" "${prefix1_error}" "${OSTAP_INSTALL}/thisostap.sh"
     unset OSTAP_BUILD OSTAP_INSTALL
@@ -498,6 +505,24 @@ if [ "$result" -eq 0 ]; then
 else
     printf "%s RESULT             : FAILURE %s\n" "${prefix1_error}" "${result}"
 fi
+
+
+
+# =====================================================================
+env_after=$(printenv|sort)
+flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
+case "$flag" in
+    1|true|yes)
+        if [ "$result" -eq 0 ] && command -v ostap-table >/dev/null 2>&1; then
+            diff_data=$(comm -13 <(echo "$env_before") <(echo "$env_after"))
+            if [ -n "$diff_data" ]; then
+                printf "Variable | Value\n%s\n" "$diff_data" |
+                    sed -e 's/=/ | /' -e 's/:/  /g' |
+                    ostap-table -t "Ostap: New & Modified Variables" -s '|' -a 'lw'
+            fi
+        fi
+        ;;
+esac
 
 return ${result} 2>/dev/null || exit ${result}
 

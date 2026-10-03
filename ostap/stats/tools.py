@@ -158,6 +158,8 @@ def hasPyTorch ( silent = True ) :
         # ======================================================================
         import torch
         if not silent : logger.info ( 'PyTorch    version: %s' %    torch .__version__ )
+        ## ATTENTION!!! 
+        torch.set_num_threads ( 1 )
         return Version ( "2.1.0" ) <= Version ( torch.__version__ )
         # ======================================================================
     except ImportError : # =====================================================

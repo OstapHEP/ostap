@@ -450,7 +450,7 @@ class ADVAL_LGBM (ADVAL_base) :
             'force_row_wise'    :  True ,
             'force_col_wise'    : False ,
             'max_bin'           : 1023  , 
-            'n_jobs'            : -11   ,  
+            'n_jobs'            : -1    ,  
             'verbosity'         : -1    ,
             'verbose'           : -1    ,
         }
@@ -471,12 +471,12 @@ class ADVAL_LGBM (ADVAL_base) :
                               nToys     = nToys    ,
                               normalize = False    ,
                               method    = method_LGBM , **config   ) 
-
+        
         if 'n_jobs' in self.params :
-            self.params [ 'num_thread' ] = self.params.pop ( 'n_jobs' , 1 )
+            self.params [ 'num_threads' ] = self.params.pop ( 'n_jobs' , 1 )
         if self.silent :
-            self.params [ 'verbosity' ] = -1 
-            self.params [ 'verbose'   ] = -1 
+            self.params [ 'verbosity'   ] = -1 
+            self.params [ 'verbose'     ] = -1 
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -556,13 +556,13 @@ class ADVAL_LGBM (ADVAL_base) :
 
         train_data = LightGBM.Dataset ( X_train , label = Y_train_mod , weight = W_train_mod , free_raw_data = False , params    = params     )
         val_data   = LightGBM.Dataset ( X_val   , label = Y_val_mod   , weight = W_val_mod   , free_raw_data = False , reference = train_data )
-
-        model = LightGBM.train ( params          = params          ,
-                                 train_set       = train_data      ,
-                                 num_boost_round = num_boost_round ,
-                                 valid_sets      = [ val_data ]    ,
-                                 callbacks       = callbacks       )
-
+        
+        model      = LightGBM.train ( params          = params          ,
+                                      train_set       = train_data      ,
+                                      num_boost_round = num_boost_round ,
+                                      valid_sets      = [ val_data ]    ,
+                                      callbacks       = callbacks       )
+        
         predictions = model.predict ( X_val , num_iteration = model.best_iteration )
         imps = model.feature_importance ( importance_type = 'gain') if importance else None
         
@@ -1169,10 +1169,13 @@ class ADVAL_TORCH (ADVAL_base) :
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
+        
         import copy
         import torch    as Torch 
         import torch.nn as NN 
         from   torch.utils.data import DataLoader, TensorDataset
+
+        torch.set_num_threads ( 1 )
 
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
         Y_val_mod,   W_val_mod   = transform_weights_and_targets ( Y_val  , W_val   )

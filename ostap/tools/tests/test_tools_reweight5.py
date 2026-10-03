@@ -29,7 +29,6 @@ os.environ [ 'OMP_WAIT_POLICY'      ] = 'PASSIVE'
 # =============================================================================
 os.environ [ 'MKL_THREADING_LAYER'  ] = 'GNU' 
 # =============================================================================
-
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.logger.symbols     import script_p
 from   ostap.utils.core         import typename 

@@ -1,9 +1,10 @@
-
 #!/bin/csh
 # =====================================================================
 # @file
 # Helper script to define the environment for ostap-@OSTAP_VERSION@ csh/tcsh
 # =====================================================================
+
+
 
 if ( $?PYTHONNOUSERSITE ) then
     echo "thisostap.h: unset PYTHONNOUSERSITE ${PYTHONNOUSERSITE}"

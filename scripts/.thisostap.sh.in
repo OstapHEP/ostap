@@ -3,6 +3,7 @@
 # @file
 # Helper script to define the environment for ostap-@OSTAP_VERSION@ sh/bash/ksh/zsh 
 # =====================================================================
+env_before=$(printenv | sort)
 
 if [ -n "${PYTHONNOUSERSITE}" ]; then
     printf 'thisostap.sh: unset PYTHONNOUSERSITE %s\n' "${PYTHONNOUSERSITE}"
@@ -192,7 +193,23 @@ export KMP_BLOCKTIME=0
 export OMP_PROC_BIND=false
 export OMP_WAIT_POLICY=PASSIVE 
 
-printf '\n'
+
+# =====================================================================
+env_after=$(printenv | sort)
+flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
+case "$flag" in
+    1|true|yes)
+        if command -v ostap-table >/dev/null 2>&1; then
+            diff_data=$(comm -13 <(echo "$env_before") <(echo "$env_after"))
+            if [ -n "$diff_data" ]; then
+                printf "Variable | Value\n%s\n" "$diff_data" |
+                    sed -e 's/=/ | /' -e 's/:/  /g' |
+                    ostap-table -t "Ostap: New & Modified Variables" -s '|' -a 'lw'
+            fi
+        fi
+        ;;
+esac
+
 # =====================================================================
 #                                                               The END 
 # =====================================================================

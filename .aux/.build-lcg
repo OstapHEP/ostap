@@ -13,6 +13,7 @@ export LC_ALL=C
 export LC_CTYPE=C
 # =========================================================================
 
+env_before=$(printenv|sort)
 
 LCG="${1:-dev3/latest}"
 PLATFORM="${2:-x86_64-el9-clang22-opt}"
@@ -425,7 +426,7 @@ old_prefix_error="${prefix_error}"
 # =======================================================================================
 if [ -f "${OSTAP_SOURCE}/.aux/.build-ostap" ] && [ -r "${OSTAP_SOURCE}/.aux/.build-ostap" ]; then
     # ===================================================================================
-    . "${OSTAP_SOURCE}/.aux/.build-ostap" "${OSTAP_SOURCE}" "${OSTAP_INSTALL}" "${OSTAP_BUILD}"
+    show_environment=False . "${OSTAP_SOURCE}/.aux/.build-ostap" "${OSTAP_SOURCE}" "${OSTAP_INSTALL}" "${OSTAP_BUILD}"
     result=$?
 else
     printf "%s Build script not found: %s/.aux/.build-ostap\n" "${prefix_error}" "${OSTAP_SOURCE}"
@@ -445,6 +446,23 @@ if [ "$result" -eq 0 ]; then
 else
     printf "%s RESULT             : %s\n" "${prefix_error}" "${result}"
 fi
+
+
+# =====================================================================
+env_after=$(printenv|sort)
+flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
+case "$flag" in
+    1|true|yes)
+        if [ "$result" -eq 0 ] && command -v ostap-table >/dev/null 2>&1; then
+            diff_data=$(comm -13 <(echo "$env_before") <(echo "$env_after"))
+            if [ -n "$diff_data" ]; then
+                printf "Variable | Value\n%s\n" "$diff_data" |
+                    sed -e 's/=/ | /' -e 's/:/  /g' |
+                    ostap-table -t "Ostap: New & Modified Variables" -s '|' -a 'lw'
+            fi
+        fi
+        ;;
+esac
 
 # ===================================================================================
 return ${result} 2>/dev/null || exit ${result}

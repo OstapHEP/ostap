@@ -124,7 +124,7 @@ def memory_enough () :
 
 # ============================================================================
 ## format for memory prints 
-MEMORY_FORMAT = 'Memory %%-20s %s=%%+.3fMB %s=%%.3fGB %s%%.1f' % ( delta_ram , sum_symbol , enough_symbol )
+MEMORY_FORMAT = 'Memory %%-20s %s=%%+.2fMB %s=%%.3fGB %s%%.1f' % ( delta_ram , sum_symbol , enough_symbol )
 # =============================================================================
 ## @class Memory
 #  Simple context manager to measure the virtual memory increase

@@ -333,22 +333,20 @@ def wm_print ( wm , with_category = True ) :
 
 # ==============================================================================
 ## key-word arguments related to number of cores/threads to be used 
-njobs_kwords = ( 'num_threads'  , 'num_thread'  ,
-                 'numthreads'   , 'numthread'   ,
-                 'n_threads'    , 'n_thread'    ,
+njobs_kwords = ( 'numthreads'   , 'numthread'   , 
                  'nthreads'     , 'nthread'     ,
-                 'num_jobs'     , 'num_job'     ,
                  'numjobs'      , 'numjob'      ,
-                 'n_jobs'       , 'n_job'       ,
                  'njobs'        , 'njob'        ,
-                 'thread_count' , 'threadcount' )
+                 'threadcounts' , 'threadcount' )
 # ==============================================================================
 ## get the value of "n_jobs/num_threads/thread_count" parameter 
 def num_jobs ( params , defval = -1 ) :
     """ Get the value of "n_jobs/num_threads/thread_count" parameter
     """
     nj = defval 
-    for kw in njobs_kwords : nj = params.pop ( kw , nj )
+    for kw in njobs_kwords :
+        key = kw.lower().strip().replace('_','')
+        nj  = params.pop ( kkey , nj )
     ## 
     if not nj : return 1
     ## 
