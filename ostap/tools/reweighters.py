@@ -244,16 +244,14 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__norm_factor         = numpy.float32( 1.0 )
         self.__mode                = None
         self.__scale_factors       = {}
-
         
-        n_features = num_features ( targer ) 
+        n_features = num_features ( target ) 
+        n_rows     = num_samples  ( target ) + num_samples  ( original )
+        data_size  = n_rows * n_features 
+        K          = 200000
+         
         n_jobs     = num_jobs     ( params )
-
-        ## 
-        if   100 < n_features : n_jobs = min ( 16 , n_jobs )
-        elif  20 < n_features : n_jobs = min (  8 , n_jobs )
-        elif  10 < n_features : n_jobs = min (  4 , n_jobs )
-        else                  : n_jobs = min (  2 , n_jobs )
+        n_jobs     = min ( n_jobs , max ( 1 , math.floor ( data_size / K ) ) )
         ## 
         params [ 'n_jobs' ] = n_jobs 
         
@@ -1216,7 +1214,7 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
             
             # Destroy heavy training DMatrix objects and training C++ booster instance
             del dtrain, dval, model,
-            del X_tr, y_tr , w_tr, X_v , Y_v, w_v 
+            del X_tr, y_tr , w_tr, X_v , y_v, w_v 
             
             # Re-instantiate clean C++ booster dedicated strictly to inference
             model = XGBoost.Booster()
@@ -1402,7 +1400,7 @@ class CatBoostDensityReweighter(DensityReweighter):
         verbose_level = params.get ('verbose' , False)
         model.fit ( trn_pool , verbose = verbose_level, **fit_kwargs)
 
-        import gc, pickle  
+        import pickle  
         from ostap.utils.memory import memory
         
         with memory ( 'MEMORY CATBOOST' , logger = logger ) : 
@@ -1411,7 +1409,7 @@ class CatBoostDensityReweighter(DensityReweighter):
             model_bytes = pickle.dumps ( model ) 
             
             # Destroy training pools and heavy training model instance
-            del trn_pool, val_pool, model, X_tr, y_tr, w_tr, X_va, y_va, w_va
+            del trn_pool, val_pool, model, X_tr, y_tr, w_tr, X_v, y_v, w_v
             
             # Re-instantiate clean, standalone inference engine
             model = pickle.loads ( model_bytes )

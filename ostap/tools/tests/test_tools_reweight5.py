@@ -156,6 +156,10 @@ comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR2 ( parallel = True , nToys = 100 ) ,
                 COMPARATOR3 ( parallel = True , nToys = 100 ) ) 
 
+if hasCatBoost () :  
+    from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
+    comparators += ( COMPARATOR7 ( parallel = True , nToys = 25 ) , ) 
+    
 if hasLightGBM () :
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
     comparators += ( COMPARATOR5 ( parallel = True , nToys = 25 ) , ) 
@@ -163,10 +167,6 @@ if hasLightGBM () :
 if hasXGBoost  () :  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6 ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
-
-if False and hasCatBoost () :  
-    from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
-    comparators += ( COMPARATOR7 ( parallel = True , nToys = 25 ) , ) 
 
 if hasSkLearn (): 
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
@@ -266,7 +266,7 @@ def run_reweight ( n_dim     = 3     ,
 # =============================================================================
 if '__main__' == __name__ :
 
-    run_reweight ( 3 , 3000 ) 
+    run_reweight ( 3 , 4000 ) 
     
 # =============================================================================
 

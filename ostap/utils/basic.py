@@ -333,20 +333,33 @@ def wm_print ( wm , with_category = True ) :
 
 # ==============================================================================
 ## key-word arguments related to number of cores/threads to be used 
-njobs_kwords = ( 'numthreads'   , 'numthread'   , 
-                 'nthreads'     , 'nthread'     ,
-                 'numjobs'      , 'numjob'      ,
-                 'njobs'        , 'njob'        ,
-                 'threadcounts' , 'threadcount' )
+njobs_kwords = frozenset( [ 'numthreads'   , 'numthread'   , 
+                            'nthreads'     , 'nthread'     ,
+                            'numjobs'      , 'numjob'      ,
+                            'njobs'        , 'njob'        ,
+                            'threadcounts' , 'threadcount' ] )
 # ==============================================================================
 ## get the value of "n_jobs/num_threads/thread_count" parameter 
-def num_jobs ( params , defval = -1 ) :
+def num_jobs ( params = {} , defval = -1 , **kwargs ) :
     """ Get the value of "n_jobs/num_threads/thread_count" parameter
     """
-    nj = defval 
-    for kw in njobs_kwords :
-        key = kw.lower().strip().replace('_','')
-        nj  = params.pop ( kkey , nj )
+    nj    = defval
+    found = set()  
+    for k, v in params.items () : 
+        kw  = k.lower().strip().replace('_','').replace(' ','').replace('-','' )
+        if kw in njobs_kwords :
+            found.add ( k )
+            if  isinstance ( v , int ) :  nj = v 
+    
+    ##  remove the keys 
+    for k in found : params.pop ( k , None )
+    
+    ## loop over keyword arguments 
+    for k , v in kwargs :
+        kw = k.lower().strip().replace('_','').replace(' ','').replace('-','' )
+        if kw in njobs_kwords :
+            if isinstance ( v , int ) : nj = v
+            
     ## 
     if not nj : return 1
     ## 
