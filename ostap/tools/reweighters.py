@@ -1467,7 +1467,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                    'dropout'       : 0.0                       ,               
                    'learning_rate' : 5e-4                      ,              
                    'weight_decay'  : 1e-5                      ,              
-                   'batch_size'    : 4096                      ,
+                   'batch_size'    : 16384                     ,
                    'epochs'        : 2000                      ,              
                    'patience'      : 400                       ,              
                    'device'        : 'cuda' if cuda else 'cpu' ,
@@ -1522,8 +1522,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         params [ 'patience'      ] =  600 
         return params
 
-
-# =========================================================================
+    # =========================================================================
     ## Train single PyTorch model on fold data with complete memory sterilization.
     #  @param X_train Training features array.
     #  @param y_train Training binary labels.
@@ -1549,6 +1548,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         from sklearn.preprocessing import StandardScaler
 
         n_features = num_features ( X_train )
+        
         if n_features <= 20 : 
             torch.set_num_threads ( 1 )
         else :              
@@ -1584,13 +1584,17 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
             def forward ( self , x ) :
                 return self.net ( x ).squeeze ( -1 )
 
-        device_str = self.params.get ( 'device' , 'cuda' if torch.cuda.is_available() else 'cpu' )
-        if not torch.cuda.is_available() : 
-            device_str = 'cpu'                                    
+        device = self.params.get ( 'device' , 'cuda' if torch.cuda.is_available() else 'cpu' )
+        if not torch.cuda.is_available() : device = 'cpu'                                    
         device = torch.device ( device_str ) 
 
-        patience   = self.params.get ( 'patience' ,  250 ) 
-        nepochs    = self.params.get ( 'epochs'   , 1000 )
+        patience      = self.params.get ( 'patience'      ,  250 ) 
+        nepochs       = self.params.get ( 'epochs'        , 2000 )
+        learning_rate = self.params.get ( 'learning_rate' , 1e-3 ) 
+        weight_decay  = self.params.get ( 'weight_decay'  , 1e-4 ) 
+
+        hidden_dims   = self.params.get ( 'hidden_dims'   , ( 512 , 256 , 256 ) ) 
+        dropout       = self.params.get ( 'dropout'       , 0.0 )
 
         # Ensure contiguous arrays for feature scaling
         scaler      = StandardScaler ()
@@ -1609,29 +1613,26 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         y_va_t = torch.as_tensor ( numpy.ascontiguousarray ( y_val )   , dtype = torch.float32 , device = device )
         w_va_t = torch.as_tensor ( w_va                                , dtype = torch.float32 , device = device )
 
-        hidden_dims = self.params.get ( 'hidden_dims' , ( 128 , 128 , 64 ) ) 
-        dropout     = self.params.get ( 'dropout'     , 0.0 )
 
         model = TabularMLP ( in_features = X_train.shape[1] ,
                              hidden_dims = hidden_dims      ,
                              dropout     = dropout          ).to ( device )  
 
-        learning_rate = self.params.get ( 'learning_rate' , 1e-3 ) 
-        weight_decay  = self.params.get ( 'weight_decay'  , 1e-4 ) 
 
         optimizer = torch.optim.AdamW ( model.parameters()        ,
                                         lr           = learning_rate ,
                                         weight_decay = weight_decay  )
 
-        n_samples  = X_tr_t.shape[0]
-        batch_size = self.params.get ( 'batch_size' , 4096 )
-        batch_size = min ( n_samples // 2 , max ( 4096 , batch_size ) )
+        n_samples  = num_samples ( X_train )
+        batch_size = self.params.get ( 'batch_size' , 16384 )
+        batch_size = min ( n_samples // 2 , max ( 16384 , batch_size ) )
+        batch_size = 2 ** math.floor ( math.log2 ( max ( 1 , batch_size ) ) ) 
 
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau ( optimizer ,
-                                                                  mode      = 'min' ,
-                                                                  factor    = 0.5   ,
-                                                                  patience  = 50    ,
-                                                                  min_lr    = 1e-5  )
+                                                                 mode      = 'min' ,
+                                                                 factor    = 0.5   ,
+                                                                 patience  = 50    ,
+                                                                 min_lr    = 1e-5  )
 
         criterion_base = nn.BCEWithLogitsLoss ( reduction = 'none' )
         has_step_args  = isinstance ( scheduler , torch.optim.lr_scheduler.ReduceLROnPlateau ) 
@@ -1660,7 +1661,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
 
                     b_x, b_y, b_w = X_tr_t[ indices ] , y_tr_t[ indices ] , w_tr_t[ indices ]
 
-                    optimizer.zero_grad ()
+                    optimizer.zero_grad ( set_to_none = True )
                     b_logits = model ( b_x )
 
                     b_loss = ( criterion_base ( b_logits , b_y ) * b_w ).sum () / ( b_w.abs().sum () + 1e-8 )

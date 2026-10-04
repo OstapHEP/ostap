@@ -1175,7 +1175,7 @@ class ADVAL_TORCH (ADVAL_base) :
         import torch.nn as NN 
         from   torch.utils.data import DataLoader, TensorDataset
 
-        torch.set_num_threads ( 1 )
+        Torch.set_num_threads ( 1 )
 
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
         Y_val_mod,   W_val_mod   = transform_weights_and_targets ( Y_val  , W_val   )
@@ -1415,11 +1415,10 @@ if '__main__' == __name__ :
     if not hasLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
     if not hasXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
     if not hasCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
-    if not hasSkLearn  ( False ) : logger.warning  ( "No scikit-learn available!" ) 
-    if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch available!" ) 
-    if not hasKeras    ( False ) : logger.warning  ( "No Keras   available!" ) 
+    if not hasSkLearn  ( False ) : logger.warning  ( "No sklearn  available!" ) 
+    if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch  available!" ) 
+    if not hasKeras    ( False ) : logger.warning  ( "No Keras    available!" ) 
   
-
     
 # =============================================================================
 ##                                                                      The END 
