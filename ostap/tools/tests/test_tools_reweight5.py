@@ -147,34 +147,45 @@ def make_datasets2 ( n_samples = 5000 ,
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
-from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATOR3 , 
-                                        Hotelling       as COMPARATOR2 , 
-                                        Mahalanobis     as COMPARATOR1 ) 
+from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATORA , 
+                                        Jeffrey         as COMPARATORB , 
+                                        JensenShannon   as COMPARATORC ,
+                                        Mahalanobis     as COMPARATORD ,
+                                        Hotelling       as COMPARATORE , 
+                                        Bhattacharyya   as COMPARATORF , 
+                                        Hellinger       as COMPARATORG ) 
 
 from ostap.stats.data_compare import data_compare     
-comparators = ( COMPARATOR1 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR2 ( parallel = True , nToys = 100 ) ,
-                COMPARATOR3 ( parallel = True , nToys = 100 ) ) 
+comparators = ( COMPARATORA ( parallel = True , nToys = 100 ) ,
+                COMPARATORB ( parallel = True , nToys = 100 ) ,
+                COMPARATORC ( parallel = True , nToys = 100 ) , 
+                COMPARATORD ( parallel = True , nToys = 100 ) , 
+                COMPARATORE ( parallel = True , nToys = 100 ) , 
+                COMPARATORF ( parallel = True , nToys = 100 ) , 
+                COMPARATORG ( parallel = True , nToys = 100 ) )
 
-if False and hasCatBoost () :  
+if hasCatBoost () :  
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
-    comparators += ( COMPARATOR7 ( parallel = True , nToys = 25 ) , ) 
+    comparators += ( COMPARATOR7  ( parallel = True , nToys = 25 ) , ) 
     
-if False and hasLightGBM () :
+if hasLightGBM () :
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
-    comparators += ( COMPARATOR5 ( parallel = True , nToys = 25 ) , ) 
+    comparators += ( COMPARATOR5  ( parallel = True , nToys = 25 ) , ) 
 
-if False and hasXGBoost  () :  
+if hasXGBoost  () :  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
-    comparators += ( COMPARATOR6 ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
+    comparators += ( COMPARATOR6  ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
 
-if False and hasSkLearn (): 
+if hasSkLearn (): 
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
-    comparators += ( COMPARATOR8 ( parallel = True , nToys = 25 ) , )
+    comparators += ( COMPARATOR8  ( parallel = True , nToys = 25 ) , )
     
     from ostap.stats.adval        import ADVAL_GBC   as COMPARATOR9
-    comparators += ( COMPARATOR9 ( parallel = True , nToys = 25 ) , ) 
+    comparators += ( COMPARATOR9  ( parallel = True , nToys = 25 ) , ) 
 
+    from ostap.stats.adval        import ADVAL_RF   as COMPARATOR10
+    comparators += ( COMPARATOR10 ( parallel = True , nToys = 25 ) , ) 
+    
 # ============================
 def run_reweight ( n_dim     = 3     ,
                    n_samples = 10000 ) :
@@ -266,8 +277,9 @@ def run_reweight ( n_dim     = 3     ,
 # =============================================================================
 if '__main__' == __name__ :
 
-    run_reweight ( 3 , 3000 ) 
-    
+    if numcpu() <= 8 : run_reweight ( 3 ,  3000 )
+    else             : run_reweight ( 3 , 12000 )
+
 # =============================================================================
 
         

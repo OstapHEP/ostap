@@ -421,8 +421,9 @@ class ProgressBar(object):
         """ Context manager: ENTER 
         """
         self.__the_start  = time.time ()
-        self.__the_end    = None 
-        self.show ( force = True ) 
+        self.__the_end    = None
+        self.build_bar()
+        if not self.__silent : self.show ( force = True )
         return self
         
     # =========================================================================
@@ -579,6 +580,7 @@ class RunningBar(object):
         self.__start  = time.time ()
         self.__last   = None 
         self.__shown  = 0
+        self.build_bar()                 
         if not self.silent : self.show_ ( force = True )
         return self
     
@@ -631,12 +633,11 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
     else                   : bar = ProgressBar ( max_value = max_value , **kwargs ) 
 
     with bar :
-        bar.show () 
+        bar.show ( force = True )
         for item in iterable :
             yield item
             bar += 1
                         
-
 # ==============================================================================
 if __name__ == '__main__':
 

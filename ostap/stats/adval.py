@@ -983,7 +983,9 @@ class ADVAL_GBC (ADVAL_base) :
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
+        
         from sklearn.ensemble import GradientBoostingRegressor
+        from threadpoolctl    import threadpool_limits
 
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
         w_tr_arr = W_train_mod.values if hasattr(W_train_mod, 'values') else W_train_mod
@@ -1014,11 +1016,12 @@ class ADVAL_GBC (ADVAL_base) :
                                                      
         params [ 'n_estimators' ] = n_estimators
         
-        model = GradientBoostingRegressor ( **params )
-        model.fit ( X_train , Y_train_mod , sample_weight = w_tr_arr )
-
-        predictions = model.predict ( X_val )
-        imps = model.feature_importances_ if importance else None
+        with threadpool_limits ( limits = 1 ):
+            
+            model = GradientBoostingRegressor ( **params )
+            model.fit ( X_train , Y_train_mod , sample_weight = w_tr_arr )            
+            predictions = model.predict ( X_val )
+            imps = model.feature_importances_ if importance else None
 
         return predictions, imps
 
@@ -1086,7 +1089,9 @@ class ADVAL_RF (ADVAL_base) :
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
+        
         from sklearn.ensemble import RandomForestRegressor
+        from threadpoolctl    import threadpool_limits
 
         Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
         w_tr_arr = W_train_mod.values if hasattr(W_train_mod, 'values') else W_train_mod
@@ -1119,12 +1124,13 @@ class ADVAL_RF (ADVAL_base) :
             
         params [ 'n_estimators' ] = n_estimators
         
-        model = RandomForestRegressor ( **params )
-        model.fit ( X_train , Y_train_mod , sample_weight = w_tr_arr )
-
-        predictions = model.predict ( X_val )
-        imps = model.feature_importances_ if importance else None
-
+        with threadpool_limits ( limits = 1 ):
+            
+            model = RandomForestRegressor ( **params )
+            model.fit ( X_train , Y_train_mod , sample_weight = w_tr_arr )            
+            predictions = model.predict ( X_val )
+            imps = model.feature_importances_ if importance else None
+            
         return predictions, imps
 
 # =============================================================================

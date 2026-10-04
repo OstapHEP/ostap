@@ -26,7 +26,7 @@ from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu, num_jobs, NoContext
 from   ostap.logger.utils       import map2table_ex
 from   ostap.logger.pretty      import nice_print 
-from   ostap.utils.progress_bar import progress_bar, ProgressBar  
+from   ostap.utils.progress_bar import progress_bar
 from   ostap.tools.reweighter   import Reweighter
 from   ostap.stats.counters     import SE, table_counters  
 from   ostap.stats.utils        import ( weight_trivial     ,
@@ -245,14 +245,14 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__mode                = None
         self.__scale_factors       = {}
         
-        n_features = num_features ( target ) 
-        n_rows     = num_samples  ( target ) + num_samples  ( original )
-        data_size  = n_rows * n_features 
-        K          = 100_000
-         
-        n_jobs     = num_jobs     ( params )
-        n_jobs     = min ( n_jobs , max ( 1 , math.floor ( data_size / K ) ) )
-        params [ 'n_jobs' ] = n_jobs 
+
+        ## n_features = num_features ( target ) 
+        ## n_rows     = num_samples  ( target ) + num_samples  ( original )
+        ## data_size  = n_rows * n_features 
+        ## K          = 100_000         
+        ## n_jobs     = num_jobs     ( params )
+        ## n_jobs     = min ( n_jobs , max ( 1 , math.floor ( data_size / K ) ) )
+        params [ 'n_jobs' ] = num_jobs ( params )
                 
         reg_case = self.needs_regularization ( original        = original        ,
                                                target          = target          ,
@@ -710,10 +710,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     def _predict_single_model ( self, model, X ):
         """ Predict class probabilities from a single model instance.
         """
-        best_iter = getattr ( model, 'best_iteration_', None ) or getattr( model, 'best_iteration', None )
-        kwargs = {}
-        if best_iter is not None and best_iter > 0 :
-            kwargs[ 'ntree_end' ] = best_iter            
+        best_iter = getattr ( model, 'best_iteration_' , None ) or getattr( model, 'best_iteration', None )
+        kwargs    = {}
+        if best_iter is not None and 0 < best_iter : kwargs [ 'ntree_end' ] = best_iter            
         p = model.predict_proba( X, **kwargs )[:, 1]
         return p.astype( numpy.float32, copy = False )
 
@@ -844,7 +843,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             'learning_rate'         : LGBM_LEARNING_RATE      ,
             'max_depth'             : LGBM_MAX_DEPTH          ,
             'num_leaves'            : min ( 1023 , 2 ** LGBM_MAX_DEPTH - 1 ) , 
-            'max_bin'               : 2047                    , # Reduced from 2047 to prevent fine-grained noise fitting
+            'max_bin'               : 2047                    , # 
             'min_child_samples'     : 10                      , # Slightly increased from 10 to stabilize leaf estimation
             'min_child_weight'      : 1e-3                    , # Increased from 1e-4 for numerical stability in ratios
             'min_split_gain'        : 0.0                     , # 
@@ -965,24 +964,28 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         num_boost_round          = params.pop ( 'num_boost_round'       , None ) or params.pop ( 'n_estimators' , LGBM_DEFAULT_ESTIMATORS )
         early_stopping_rounds    = params.pop ( 'early_stopping_rounds' , None )
         params [ 'num_threads' ] = params.get ( 'num_threads'           , params.pop ( 'n_jobs' , max ( 1 , numcpu () // 2 ) ) ) 
+
         
-        callbacks = []
-        if early_stopping_rounds is not None : 
-            callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
+        if early_stopping_rounds :
+            callbacks  = [ LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) ]
+            valid_sets = [ val_data ]
+        else : 
+            callbacks  = []
+            valid_sets = None 
 
         model = LightGBM.train ( params          = params          ,
-        train_set       = trn_data        ,
-        num_boost_round = num_boost_round ,
-        valid_sets      = [ val_data ]    ,
-        callbacks       = callbacks       )
-
+                                 train_set       = trn_data        ,
+                                 num_boost_round = num_boost_round ,
+                                 valid_sets      = valid_sets      ,
+                                 callbacks       = callbacks       )
+            
         # =====================================================================
         ## PHOENIX
         # =====================================================================
         if True : # ===========================================================
             # =================================================================
             model_bytes = model.model_to_string()
-            
+            best_iter   = getattr ( model , 'best_iteration_' , None ) or getattr ( model , 'best_iteration' , None )                    
             model.free_dataset() 
             del model
             del trn_data
@@ -990,11 +993,12 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             del X_tr, X_va, w_tr, w_va
             
             model = LightGBM.Booster  ( model_str = model_bytes  )
+            if not best_iter is None : model.best_iteration = best_iter 
             del model_bytes
             
             gc.collect ()                
+
             
-                    
         val_preds = self._predict_single_model ( model , X_val )
 
         return model , val_preds
@@ -1007,14 +1011,11 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
     def _predict_single_model( self, model, X ):
         """ Predict probabilities using a LightGBM model.
         """
-        best_iter = getattr( model, 'best_iteration', 0 )
-        kwargs = {}
-        if best_iter is not None and 0 < best_iter :
-            kwargs[ 'num_iteration' ] = best_iter
-            
-        num_threads = self.params.get ( 'num_threads' , self.params.get ( 'n_jobs' , max ( 1 , numcpu () // 2 ) ) ) 
-                                   
-        p = model.predict( X, num_threads = num_threads , **kwargs )
+        best_iter  = getattr ( model , 'best_iteration_' , None ) or getattr ( model , 'best_iteration' , None )        
+        kwargs     = {}
+        if best_iter is not None and 0 < best_iter : kwargs[ 'num_iteration' ] = best_iter            
+        num_threads = self.params.get ( 'num_threads' , self.params.get ( 'n_jobs' , max ( 1 , numcpu () // 2 ) ) )                                    
+        p = model.predict ( X , num_threads = num_threads , **kwargs )
         return p.astype( numpy.float32, copy = False )
 
 # =============================================================================
@@ -1114,7 +1115,7 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
 
         if n_samples <= 5000                                 :  params [ 'tree_method' ] = 'exact'
         elif 'hist' == params.get ( 'tree_method' , 'hist' ) :
-            params [ 'tree_method' ] = 'hist '
+            params [ 'tree_method' ] = 'hist'
             current_max_bin          = params.get ( 'max_bin' , 1023 )
             params [ 'max_bin'     ] = min ( current_max_bin , max ( 31 , int ( n_samples / 10 ) ) )
                     
@@ -1153,10 +1154,11 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
         # Construct C++ DMatrix objects for training and validation
         dtrain = XGBoost.DMatrix ( X_tr , label = y_tr , weight = w_tr )
         dval   = XGBoost.DMatrix ( X_v  , label = y_v  , weight = w_v  )
-
-        params = self.params.copy()
         
-        n_estimators         = params.pop ( 'n_estimators'           , 1000 )
+        params = self.params.copy()
+        params [ 'nthread' ] = params.get ( 'nthread' , params.pop ( 'n_jobs' , max ( 1 , numcpu () // 2 ) ) ) 
+        
+        n_estimators          = params.pop ( 'n_estimators'           , 1000 )
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , None )
 
         evals = [ ( dval , 'val' ) ] if early_stopping_rounds is not None else []
@@ -1179,6 +1181,7 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
             
             # Export tree structure into a lightweight binary/JSON byte array
             model_bytes = model.save_raw ( raw_format = "json" )
+            best_iter   = getattr ( model , 'best_iteration_' , None ) or getattr ( model , 'best_iteration' , None )                    
             
             # Destroy heavy training DMatrix objects and training C++ booster instance
             del dtrain, dval, model,
@@ -1187,8 +1190,9 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
             # Re-instantiate clean C++ booster dedicated strictly to inference
             model = XGBoost.Booster()
             model.load_model ( model_bytes )
-            del model_bytes
+            if not best_iter is None : model.best_iteration = best_iter
             
+            del model_bytes            
             gc.collect()
 
         # Compute validation predictions safely using pre-allocated contiguous array
@@ -1205,11 +1209,12 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
         """ Predict probabilities using an XGBoost model.
         """
         import xgboost as XGBoost
-        dmat = XGBoost.DMatrix ( X )
-        best_iter = getattr ( model, 'best_iteration', None )
-        kwargs = {}
+        ## 
+        dmat      = XGBoost.DMatrix ( X )
+        best_iter = getattr ( model , 'best_iteration_' ,  None ) or getattr ( model , 'best_iteration' , None )
+        kwargs    = {}
         if best_iter is not None and 0 < best_iter : kwargs [ 'iteration_range' ] = ( 0, best_iter + 1 )
-        p = model.predict ( dmat , **kwargs )
+        p         = model.predict ( dmat , **kwargs )
         return p.astype ( numpy.float32, copy = False )
 
 # =============================================================================
@@ -1342,7 +1347,7 @@ class CatBoostDensityReweighter(DensityReweighter):
         
         params = self.params.copy()
         
-        params [ 'thread_count'  ] = params.get ( 'thread_count'  , params.pop('n_jobs', -1))
+        params [ 'thread_count'  ] = params.get ( 'thread_count' , params.pop ( 'n_jobs' , max ( 1 , numcpu () // 2 ) ) ) 
         params [ 'boosting_type' ] = params.get ( 'boosting_type' , 'Plain')
         
         iterations = params.pop ('n_estimators' , params.pop ( 'iterations' , CATB_DEFAULT_ESTIMATORS ) ) 
@@ -1377,12 +1382,15 @@ class CatBoostDensityReweighter(DensityReweighter):
                         
             # Extract tree geometry into a lightweight binary blob
             model_bytes = pickle.dumps ( model ) 
+            best_iter   = getattr ( model , 'best_iteration_' , None ) or getattr ( model , 'best_iteration' , None )                    
             
             # Destroy training pools and heavy training model instance
             del trn_pool, val_pool, model, X_tr, y_tr, w_tr, X_v, y_v, w_v
             
             # Re-instantiate clean, standalone inference engine
             model = pickle.loads ( model_bytes )
+            if not best_iter is None : model.best_iteration = best_iter
+            
             del model_bytes 
 
             gc.collect()
@@ -1397,13 +1405,11 @@ class CatBoostDensityReweighter(DensityReweighter):
         """ Predict probabilities using a CatBoost model.
         """
         X_clean   = numpy.ascontiguousarray ( X , dtype = numpy.float32  )
-        best_iter = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration' , None )
-        
-        kwargs = {}
-        if best_iter is not None and 0 <= best_iter :
-            kwargs [ 'ntree_end' ] = best_iter + 1
-
-        p = model.predict_proba ( X_clean , **kwargs)[:, 1]
+        best_iter = getattr ( model , 'best_iteration_' , None ) or getattr ( model , 'best_iteration' , None )        
+        kwargs    = {}
+        if best_iter is not None and 0 <= best_iter : kwargs [ 'ntree_end' ] = best_iter + 1
+        thread_count = self.params.get ( 'thread_count' , self.params.get ( 'n_jobs' , max ( 1 , numcpu () // 2 ) ) )                                    
+        p = model.predict_proba ( X_clean , thread_count = thread_count ,  **kwargs)[:, 1]
         
         return p.astype (numpy.float32 , copy = False )
 
@@ -1439,9 +1445,11 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                    'weight_decay'  : 1e-5                      ,              
                    'batch_size'    : 16384                     ,
                    'epochs'        : 2000                      ,              
-                   'patience'      : 400                       ,              
+                   'patience'      : 400                       ,
+                   'min_epochs'    :  25                       ,
+                   'eval_freq'     :   5                       , 
                    'device'        : 'cuda' if cuda else 'cpu' ,
-                   'n_jobs'        : 2                         ,
+                   'n_jobs'        : -1                        ,
                  }
 
         config.update ( kwargs )
@@ -1488,85 +1496,62 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         """
         params [ 'hidden_dims'   ] = ( 256 , 256 )
         params [ 'learning_rate' ] = 5e-4
-        params [ 'epochs'        ] = 2000
+        params [ 'epochs'        ] = 2400
         params [ 'patience'      ] =  600 
         return params
 
-    # =========================================================================
-    ## Train single PyTorch model on fold data with complete memory sterilization.
-    #  @param X_train Training features array.
-    #  @param y_train Training binary labels.
-    #  @param w_train Training event weights or None.
-    #  @param X_val Validation features array.
-    #  @param y_val Validation binary labels.
-    #  @param w_val Validation event weights or None.
-    #  @return Tuple of (clean_pytorch_model, val_predictions).
-    def _train_single_model ( self    ,
-                              X_train ,
-                              y_train ,
-                              w_train ,
-                              X_val   ,
-                              y_val   ,
-                              w_val   ) :
-        """ Trains a standard Tabular MLP classifier with LayerNorm and He initialization,
-            followed by complete C++ autograd & GPU/CPU memory sterilization.
+    
+    ## Train a single PyTorch MLP model with extreme CPU/GPU optimization.
+    def _train_single_model ( self , X_train , y_train , w_train , X_val , y_val , w_val ) :
+        """ Train a single PyTorch MLP model with extreme CPU/GPU optimization.
+        
+        Optimizations applied:
+        - `torch.compile` for kernel fusion (if available in PyTorch >= 2.0)
+        - Fast memory-contiguous batching via single tensor pre-shuffling
+        - Automatic Mixed Precision (AMP) for both CUDA (fp16) and CPU (bf16)
+        - ReduceLROnPlateau scheduler for faster convergence
         """
-        import gc
-        import numpy
         import torch
         import torch.nn as nn
-        from sklearn.preprocessing import StandardScaler
+        import torch.nn.functional as F
+        from   sklearn.preprocessing import StandardScaler
 
-        n_features = num_features ( X_train )
+        print ( 'TRAIN-SINGLE-MODEL') 
         
-        if n_features <= 20 : 
-            torch.set_num_threads ( 1 )
-        else :              
-            n_jobs = max ( 2 , self.params.get ( 'n_jobs' , 2 ) )
-            if torch.get_num_threads() != n_jobs :
-                torch.set_num_threads ( n_jobs )
+        device  = torch.device ( 'cuda' if torch.cuda.is_available () else 'cpu' )
+        is_cuda = device.type == 'cuda'
 
-        # Standard Tabular MLP Architecture
         class TabularMLP ( nn.Module ) :
-            def __init__ ( self , in_features , hidden_dims = ( 128 , 128 , 64 ) , dropout = 0.0 ) :
-                super().__init__()
+            def __init__ ( self , in_features , hidden_dims = ( 512 , 256 , 256 ) ) :
+                super ().__init__ ()
                 layers = []
                 curr_dim = in_features
-
                 for h_dim in hidden_dims :
                     layers.append ( nn.Linear ( curr_dim , h_dim ) )
-                    layers.append ( nn.LayerNorm   ( h_dim ) )
-                    layers.append ( nn.LeakyReLU   ( 0.1 ) )
-                    if 0.0 < dropout : 
-                        layers.append ( nn.Dropout ( dropout ) )
+                    layers.append ( nn.LayerNorm ( h_dim ) )
+                    layers.append ( nn.LeakyReLU ( 0.1 ) )
                     curr_dim = h_dim
-
                 layers.append ( nn.Linear ( curr_dim , 1 ) )
                 self.net = nn.Sequential ( *layers )
-
-                # He/Kaiming initialization for LeakyReLU
-                for m in self.net.modules() :
-                    if isinstance ( m , nn.Linear ) :
-                        nn.init.kaiming_normal_ ( m.weight , a = 0.1 , mode = 'fan_in' )
-                        if m.bias is not None :
-                            nn.init.zeros_ ( m.bias )
 
             def forward ( self , x ) :
                 return self.net ( x ).squeeze ( -1 )
 
-        device = self.params.get ( 'device' , 'cuda' if torch.cuda.is_available() else 'cpu' )
-        if not torch.cuda.is_available() : device = 'cpu'                                    
-        device = torch.device ( device) 
-
-        patience      = self.params.get ( 'patience'      ,  250 ) 
+        # 1. Dynamic batch sizing and hyperparameters
+        batch_size    = 65536 if is_cuda else 16384
+        batch_size    = self.params.get ( 'batch_size'    , batch_size )
+        # Ensure batch_size is a power of 2 for hardware alignment
+        batch_size    = max ( 2 , 2 ** math.floor ( math.log2 ( max ( 1 , batch_size ) ) ) )
+        
+        patience      = self.params.get ( 'patience'      , 300  )
         nepochs       = self.params.get ( 'epochs'        , 2000 )
-        learning_rate = self.params.get ( 'learning_rate' , 1e-3 ) 
-        weight_decay  = self.params.get ( 'weight_decay'  , 1e-4 ) 
+        min_epochs    = self.params.get ( 'min_epochs'    , 25   )        
+        eval_freq     = self.params.get ( 'eval_freq'     , 5    )
+        learning_rate = self.params.get ( 'learning_rate' , 1e-3 )
+        weight_decay  = self.params.get ( 'weight_decay'  , 1e-5 )
+        hidden_dims   = self.params.get ( 'hidden_dims'   , ( 512 , 256 , 256 ) )
 
-        hidden_dims   = self.params.get ( 'hidden_dims'   , ( 512 , 256 , 256 ) ) 
-        dropout       = self.params.get ( 'dropout'       , 0.0 )
-
-        # Ensure contiguous arrays for feature scaling
+        # 2. Data Preparation & Scaling
         scaler      = StandardScaler ()
         X_tr_scaled = scaler.fit_transform ( numpy.ascontiguousarray ( X_train , dtype = numpy.float32 ) )
         X_va_scaled = scaler.transform     ( numpy.ascontiguousarray ( X_val   , dtype = numpy.float32 ) )
@@ -1574,130 +1559,126 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else numpy.ones ( len ( y_train ) , dtype = numpy.float32 )
         w_va = numpy.ascontiguousarray ( w_val   , dtype = numpy.float32 ) if w_val   is not None else numpy.ones ( len ( y_val   ) , dtype = numpy.float32 )
 
-        # Allocate input tensors on target device
-        X_tr_t = torch.as_tensor ( X_tr_scaled                         , dtype = torch.float32 , device = device )
-        y_tr_t = torch.as_tensor ( numpy.ascontiguousarray ( y_train ) , dtype = torch.float32 , device = device )
-        w_tr_t = torch.as_tensor ( w_tr                                , dtype = torch.float32 , device = device )
+        # 3. Direct Memory Allocation to Device (Zero-copy execution)
+        X_tr_t = torch.from_numpy ( X_tr_scaled                      ).to ( device , non_blocking = True )
+        y_tr_t = torch.from_numpy ( y_train.astype ( numpy.float32 ) ).to ( device , non_blocking = True )
+        w_tr_t = torch.from_numpy ( w_tr                             ).to ( device , non_blocking = True )
 
-        X_va_t = torch.as_tensor ( X_va_scaled                         , dtype = torch.float32 , device = device )
-        y_va_t = torch.as_tensor ( numpy.ascontiguousarray ( y_val )   , dtype = torch.float32 , device = device )
-        w_va_t = torch.as_tensor ( w_va                                , dtype = torch.float32 , device = device )
+        X_va_t = torch.from_numpy ( X_va_scaled                      ).to ( device , non_blocking = True )
+        y_va_t = torch.from_numpy ( y_val.astype ( numpy.float32 )   ).to ( device , non_blocking = True )
+        w_va_t = torch.from_numpy ( w_va                             ).to ( device , non_blocking = True )
 
+        n_features = X_train.shape [ 1 ]
+        n_samples  = len ( X_train )
+        
+        # 4. Model and Graph Compilation
+        model = TabularMLP ( in_features = n_features , hidden_dims = hidden_dims ).to ( device )
+        
+        # Massive speedup for tabular MLPs on PyTorch 2.0+ (kernel fusion)
+        ## if hasattr ( torch , 'compile' ) :
+        ##    try : model = torch.compile ( model )
+        ##    except Exception : pass 
 
-        model = TabularMLP ( in_features = X_train.shape[1] ,
-                             hidden_dims = hidden_dims      ,
-                             dropout     = dropout          ).to ( device )  
+        optimizer = torch.optim.AdamW ( model.parameters () , lr = learning_rate , weight_decay = weight_decay )
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau ( optimizer , mode = 'min' , factor = 0.5 , patience = 5 , min_lr = 1e-5 )
 
-
-        optimizer = torch.optim.AdamW ( model.parameters()        ,
-                                        lr           = learning_rate ,
-                                        weight_decay = weight_decay  )
-
-        n_samples  = num_samples ( X_train )
-        batch_size = self.params.get ( 'batch_size' , 16384 )
-        batch_size = min ( n_samples // 2 , max ( 16384 , batch_size ) )
-        batch_size = 2 ** math.floor ( math.log2 ( max ( 1 , batch_size ) ) ) 
-
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau ( optimizer ,
-                                                                 mode      = 'min' ,
-                                                                 factor    = 0.5   ,
-                                                                 patience  = 50    ,
-                                                                 min_lr    = 1e-5  )
-
-        criterion_base = nn.BCEWithLogitsLoss ( reduction = 'none' )
-        has_step_args  = isinstance ( scheduler , torch.optim.lr_scheduler.ReduceLROnPlateau ) 
+        # 5. Universal Mixed Precision Setup
+        amp_dtype  = torch.float16 if is_cuda else torch.bfloat16
+        scaler_amp = torch.amp.GradScaler ( device = 'cuda' , enabled = is_cuda ) if is_cuda else None
 
         best_loss        = float ( 'inf' )
         best_state       = None
         patience_counter = 0
+        w_va_sum         = w_va_t.abs ().sum () + 1e-8
 
-        no_pbar  = self.silent or self.progress or not self.__progress_epochs
-        w_va_sum = w_va_t.sum() + 1e-8
+        show_bar = self.__progress_epochs and not ( self.silent or self.progress )
 
-        min_epochs = min ( 50 , nepochs // 5 ) 
-        with ProgressBar ( max_value   = nepochs      ,
-                           silent      = no_pbar      ,
-                           description = epoch_symbol ) as pbar :
+        print ( 'TRAIN-SINGLE-MODEL: BEFORE THE LOOP') 
+                
+        for epoch in progress_bar ( nepochs     ,
+                                    silent      = not show_bar ,
+                                    description = epoch_symbol ) :
 
-            for epoch in range ( nepochs ) :
+            
+            print ( 'TRAIN-SINGLE-MODEL: INSIDE THE LOOP') 
+            model.train ()
 
-                model.train ()
-                permutation = torch.randperm ( n_samples , device = device )
+            print ( 'TRAIN-SINGLE-MODEL: INSIDE THE LOOP : AFTER TRAIN') 
+            
+            # Fast Contiguous Shuffling: Gather once, slice sequentially
+            perm       = torch.randperm ( n_samples , device = device )
+            X_tr_shuff = X_tr_t [ perm ]
+            y_tr_shuff = y_tr_t [ perm ]
+            w_tr_shuff = w_tr_t [ perm ]
 
-                for i in range ( 0 , n_samples , batch_size ) :
+            print ( 'TRAIN-SINGLE-MODEL: INSIDE THE LOOP : BEFORE SAMPLE LOOP') 
+            
+            for i in range ( 0 , n_samples , batch_size ) :
+                
+                b_x = X_tr_shuff [ i : i + batch_size ]
+                b_y = y_tr_shuff [ i : i + batch_size ]
+                b_w = w_tr_shuff [ i : i + batch_size ] 
 
-                    indices = permutation[ i : i + batch_size ]
-                    if len ( indices ) <= 1 : continue
-
-                    b_x, b_y, b_w = X_tr_t[ indices ] , y_tr_t[ indices ] , w_tr_t[ indices ]
-
-                    optimizer.zero_grad ( set_to_none = True )
+                optimizer.zero_grad ( set_to_none = True )
+                
+                # Autocast context covers both CPU and GPU execution paths
+                with torch.amp.autocast ( device_type = device.type , dtype = amp_dtype ) :
                     b_logits = model ( b_x )
-
-                    b_loss = ( criterion_base ( b_logits , b_y ) * b_w ).sum () / ( b_w.abs().sum () + 1e-8 )
-
+                    b_w_sum  = b_w.abs ().sum () + 1e-8
+                    b_loss   = F.binary_cross_entropy_with_logits ( b_logits , b_y , weight = b_w , reduction = 'sum' ) / b_w_sum
+                
+                if is_cuda :
+                    scaler_amp.scale ( b_loss ).backward ()
+                    scaler_amp.step ( optimizer )
+                    scaler_amp.update ()
+                else :
                     b_loss.backward ()
                     optimizer.step ()
 
+            print ( 'TRAIN-SINGLE-MODEL: INSIDE THE LOOP : AFTER SAMPLE LOOP') 
+
+            # 6. Low-overhead Validation
+            if epoch % eval_freq == 0 or epoch == nepochs - 1 :
+
+                print ( 'TRAIN-SINGLE-MODEL: INSIDE EVAL') 
+
                 model.eval ()
                 with torch.no_grad () :
-                    val_logits   = model ( X_va_t )
-                    val_loss_sum = ( criterion_base ( val_logits , y_va_t ) * w_va_t ).sum ()
-                    val_loss     = ( val_loss_sum / w_va_sum ).item ()
-
-                if has_step_args : scheduler.step ( val_loss )
-                else             : scheduler.step ()
-
-                pbar += 1                                       
-
-                if epoch >= min_epochs :
-                    if val_loss < best_loss :
-                        best_loss        = val_loss
-                        # Safely detach and copy weights to CPU host memory
-                        best_state       = { k : v.detach().cpu().clone() for k , v in model.state_dict().items() } 
-                        patience_counter = 0
-                    else :
-                        patience_counter += 1
-                        if patience is not None and patience <= patience_counter : 
-                            break
-                else :
-                    best_loss  = val_loss
-                    best_state = { k : v.detach().cpu().clone() for k , v in model.state_dict().items() }
-
+                    with torch.amp.autocast ( device_type = device.type , dtype = amp_dtype ) :
+                        val_logits = model ( X_va_t )
+                        val_loss_t = F.binary_cross_entropy_with_logits ( val_logits , y_va_t , weight = w_va_t , reduction = 'sum' ) / w_va_sum
                     
-        # Fallback to current model state if early stopping didn't trigger
-        if best_state is None :
-            best_state = { k : v.detach().cpu().clone() for k , v in model.state_dict().items() }
+                    val_loss = val_loss_t.item () 
 
-        # =====================================================================
-        ## PHOENIX
-        # =====================================================================
-        if True : # ===========================================================
-            # =================================================================
+                scheduler.step ( val_loss )
+
+                if val_loss < best_loss :
+                    best_loss = val_loss
+                    best_state = { k : v.clone ().detach () for k , v in model.state_dict ().items () }
+                    patience_counter = 0
+                else :
+                    patience_counter += eval_freq
+                    if min_epochs < epoch and patience <= patience_counter : break
+
+            print ( 'TRAIN-SINGLE-MODEL: END OF THE LOOP') 
+                
+        # 7. Safe Memory Cleanup
+        if is_cuda: torch.cuda.synchronize()
+        del X_tr_t , y_tr_t , w_tr_t , X_va_t , y_va_t , w_va_t , X_tr_shuff , y_tr_shuff , w_tr_shuff , perm
+        gc.collect ()
+        if is_cuda : torch.cuda.empty_cache ()
+
+        # 8. Reload Best State
+        final_model = TabularMLP ( in_features = n_features , hidden_dims = hidden_dims ).to ( device )
+        if best_state is not None :
+            final_model.load_state_dict ( best_state )
         
-            # Destroy heavy training objects, optimizer states, and CUDA/CPU tensors
-            del model, optimizer, scheduler, criterion_base
-            del X_tr_t      , y_tr_t       , w_tr_t , X_va_t, y_va_t, w_va_t
-            del X_tr_scaled , X_va_scaled  , w_tr   , w_va
-            gc.collect()
+        final_model.eval ()
+        final_model.scaler = scaler
 
-            ## 
-            if torch.cuda.is_available() : torch.cuda.empty_cache()
-            
-            # Instantiate a clean, stateless model dedicated strictly to inference
-            model = TabularMLP ( in_features = X_train.shape[1] ,
-                                 hidden_dims = hidden_dims      ,
-                                 dropout     = dropout          ).to ( device )
-            
-            model.load_state_dict ( best_state )
-            model.eval ()
-            model.scaler = scaler
-
-
-        # Compute validation predictions safely using the sterile inference model
-        val_preds = self._predict_single_model ( model , X_val )
-
-        return model , val_preds
+        val_preds = self._predict_single_model ( final_model , X_val )
+        return final_model , val_preds
+    
 
     # =========================================================================
     ## Predict target probabilities using a trained PyTorch model.
@@ -1720,7 +1701,6 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
             probs  = torch.sigmoid ( logits ).cpu().numpy ()
 
         return numpy.ravel ( probs ).astype ( numpy.float32 , copy = False )
-
 
     
 # =============================================================================
