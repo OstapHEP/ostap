@@ -26,7 +26,6 @@ from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu, num_jobs, NoContext
 from   ostap.logger.utils       import map2table_ex
 from   ostap.logger.pretty      import nice_print 
-from   ostap.logger.symbols     import arrow_right  
 from   ostap.utils.progress_bar import progress_bar, ProgressBar  
 from   ostap.tools.reweighter   import Reweighter
 from   ostap.stats.counters     import SE, table_counters  
@@ -39,6 +38,7 @@ from   ostap.stats.utils        import ( weight_trivial     ,
                                          check_all          ,
                                          nEff               )
 from   ostap.stats.tools      import hasSkLearn 
+from   ostap.utils.memory     import memory
 import ostap.logger.symbols   as     S
 import numpy, abc, math, gc  
 # =============================================================================
@@ -248,14 +248,12 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         n_features = num_features ( target ) 
         n_rows     = num_samples  ( target ) + num_samples  ( original )
         data_size  = n_rows * n_features 
-        K          = 200000
+        K          = 100_000
          
         n_jobs     = num_jobs     ( params )
         n_jobs     = min ( n_jobs , max ( 1 , math.floor ( data_size / K ) ) )
-        ## 
         params [ 'n_jobs' ] = n_jobs 
-        
-        
+                
         reg_case = self.needs_regularization ( original        = original        ,
                                                target          = target          ,
                                                original_weight = original_weight ,
@@ -330,7 +328,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             if neff_after < 0.10 * neff_before :
                 n1 = nice_print ( neff_before )
                 n2 = nice_print ( neff_after  )                
-                logger.warning ( "%s: Large degradation of nEff %s %s %s" % ( self.method , n1 , arrow_right , n2 ) ) 
+                logger.warning ( "%s: Large degradation of nEff %s %s %s" % ( self.method , n1 , S.arrow_right , n2 ) ) 
 
             clipped_count = numpy.sum ( original_ratios >= ( self.__clip_threshold * 0.99 ) )
             if 0 < clipped_count : 
@@ -652,34 +650,24 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             n_folds = 1
 
         stream_models = []
-        print ( 'PROGRESS-BAR', typename ( self ) )
         for train_idx, val_idx in progress_bar ( splits      ,
                                                  max_value   = n_folds        ,
                                                  description = 'Folds:'       , 
                                                  silent      = not self.progress or self.silent or 1 >= self.n_splits ) :
             
-            print ( 'START-LOOP', typename ( self ) )
-
             X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
             X_va, y_va = X_comb [ val_idx   ] , y_comb [ val_idx ]
 
             w_tr = w_comb [ train_idx ] if w_comb is not None else None
             w_va = w_comb [ val_idx   ] if w_comb is not None else None
-
-    
-            print ( 'BEFORE-TRAIN', typename ( self ) )
             
             model, _ = self._train_single_model ( X_tr, y_tr, w_tr, X_va, y_va, w_va )
             stream_models.append( model )
 
-            print ( 'BEFORE-PREDICT', typename ( self ) )
-            
             raw_val_p = self._predict_single_model ( model, X_va )
             if 1 < raw_val_p.ndim : raw_val_p = raw_val_p[:, 1]
                 
             oof_raw [ val_idx ] = raw_val_p.astype ( numpy.float32, copy = False )
-
-            print ( 'END-LOOP', typename ( self ) )
 
         self.__fitted_models [ stream_key ] = stream_models 
         self.__scale_factors [ stream_key ] = scale_factor
@@ -982,23 +970,17 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         if early_stopping_rounds is not None : 
             callbacks.append ( LightGBM.early_stopping ( stopping_rounds = early_stopping_rounds , verbose = False ) )
 
-        print ( 'BEFORE-LIGHTGBM-TRAIN' , typename ( self ) )  
         model = LightGBM.train ( params          = params          ,
         train_set       = trn_data        ,
         num_boost_round = num_boost_round ,
         valid_sets      = [ val_data ]    ,
         callbacks       = callbacks       )
 
-        print ( 'AFTER-LIGHTGBM-PREDICT' , typename ( self ) )
-
-        data_size = num_features ( X_train ) * num_samples ( X_train ) * 4 / ( 1024 * 1024 )
-
-        from ostap.utils.memory import memory
-        
-        print ( 'data_size [MB]' , data_size  ) 
-
-        with memory ( "MEMORY LIGHTGBM" , logger = logger ) :
-            
+        # =====================================================================
+        ## PHOENIX
+        # =====================================================================
+        if True : # ===========================================================
+            # =================================================================
             model_bytes = model.model_to_string()
             
             model.free_dataset() 
@@ -1011,25 +993,9 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             del model_bytes
             
             gc.collect ()                
-
             
-        print ( 'BEFORE-LIGHTGBM-PREDICT' , typename ( self ) )
-        
-        """
-        print ('--- ТЕСТ ИЗОЛЯЦИИ: СТАРТ ТРЕНИРОВКИ БЕЗ VALIDATION ---', flush=True)
-        
-        model = LightGBM.train ( 
-        params          = params        ,
-        train_set       = trn_data      ,
-        num_boost_round = num_boost_round,
-        valid_sets      = None          ,  # Никакой валидации
-        callbacks       = None             # Никаких колбэков ранней остановки
-        )
-        print ('--- ТЕСТ ИЗОЛЯЦИИ: УСПЕХ! ---', flush=True)
-        """
-        
+                    
         val_preds = self._predict_single_model ( model , X_val )
-        print ( 'AFTER-LIGHTGBM-PREDICT' , typename ( self ) )  
 
         return model , val_preds
 
@@ -1205,9 +1171,11 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
             verbose_eval         = False
         )
 
-        from ostap.utils.memory import memory
-        
-        with memory ( "MEMORY XGBOOST" , logger = logger ) :
+        # =====================================================================
+        ## PHOENIX
+        # =====================================================================
+        if True : # ===========================================================
+            # =================================================================
             
             # Export tree structure into a lightweight binary/JSON byte array
             model_bytes = model.save_raw ( raw_format = "json" )
@@ -1222,7 +1190,7 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
             del model_bytes
             
             gc.collect()
-            
+
         # Compute validation predictions safely using pre-allocated contiguous array
         val_preds = self._predict_single_model ( model , X_val )
 
@@ -1400,10 +1368,12 @@ class CatBoostDensityReweighter(DensityReweighter):
         verbose_level = params.get ('verbose' , False)
         model.fit ( trn_pool , verbose = verbose_level, **fit_kwargs)
 
-        import pickle  
-        from ostap.utils.memory import memory
-        
-        with memory ( 'MEMORY CATBOOST' , logger = logger ) : 
+        # =====================================================================
+        ## PHOENIX
+        # =====================================================================
+        if True : # ===========================================================
+            # =================================================================
+            import pickle 
                         
             # Extract tree geometry into a lightweight binary blob
             model_bytes = pickle.dumps ( model ) 
@@ -1586,7 +1556,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
 
         device = self.params.get ( 'device' , 'cuda' if torch.cuda.is_available() else 'cpu' )
         if not torch.cuda.is_available() : device = 'cpu'                                    
-        device = torch.device ( device_str ) 
+        device = torch.device ( device) 
 
         patience      = self.params.get ( 'patience'      ,  250 ) 
         nepochs       = self.params.get ( 'epochs'        , 2000 )
@@ -1699,11 +1669,12 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         if best_state is None :
             best_state = { k : v.detach().cpu().clone() for k , v in model.state_dict().items() }
 
-        import gc 
-        from ostap.utils.memory import memory
+        # =====================================================================
+        ## PHOENIX
+        # =====================================================================
+        if True : # ===========================================================
+            # =================================================================
         
-        with memory ( 'MEMORY PYTORCH' , logger = logger ) : 
-            
             # Destroy heavy training objects, optimizer states, and CUDA/CPU tensors
             del model, optimizer, scheduler, criterion_base
             del X_tr_t      , y_tr_t       , w_tr_t , X_va_t, y_va_t, w_va_t
@@ -1713,9 +1684,6 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
             ## 
             if torch.cuda.is_available() : torch.cuda.empty_cache()
             
-            # -------------------------------------------------------------------------
-            # RESTORATION OF CLEAN INFERENCE MODEL
-            # -------------------------------------------------------------------------
             # Instantiate a clean, stateless model dedicated strictly to inference
             model = TabularMLP ( in_features = X_train.shape[1] ,
                                  hidden_dims = hidden_dims      ,
@@ -1771,7 +1739,8 @@ valid_LR_params = (
     'multi_class'       ,
     'verbose'           ,
     'warm_start'        ,
-    'l1_ratio'
+    'l1_ratio'          ,
+    'n_jobs' 
 )
 # =============================================================================
 ## @class LogRegressionDensityReweighter
@@ -1798,8 +1767,15 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         config = { 'C'             : 1.0     ,
                    'solver'        : 'lbfgs' ,
                    'max_iter'      : 2000    ,
-                   'polynomials'   : 2       }               
+                   'polynomials'   : 2       }
+        
         config.update ( params )
+        
+        poly       = config.get   ( 'polynomials', 2 )
+        n_features = num_features ( original         )
+        
+        if 20 <= n_features and 1 < poly :
+            config [ 'polynomials' ] = 1
         
         super().__init__ ( original               = original               ,
                            target                 = target                 ,
@@ -1817,8 +1793,10 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
     def regularization ( self , params , n_features , n_samples ) :
         """ Dynamic regularization rules for Logistic Regression.
         """
-        current_c = params.get ( 'C', 1.0 )
-        params [ 'C' ] = max ( 0.1, min ( current_c, 0.5 ) ) 
+        penalty = params.get ( 'penalty' , 'l2' )
+        if penalty not in  ( None, 'none' ) :
+            current_c = params.get ( 'C', 1.0 )
+            params [ 'C' ] = max ( 0.1, min ( current_c, 0.5 ) ) 
         return params
 
     # =========================================================================
@@ -1837,13 +1815,15 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         params.pop    ( 'n_jobs', None ) 
 
         poly = params.pop ( 'polynomials', 2 )
-
+        n_features = num_features ( X_train )
+        if 20 <= n_features and 1 < poly : poly = 1
+        
         lr_kwargs = { k: v for k, v in params.items() if k in valid_LR_params }
 
         # Build the pipeline 
         steps = [ ( 'scaler1' , StandardScaler () ) ] 
 
-        if poly and isinstance ( poly , int ) and 0 < poly <= 5 :
+        if poly and isinstance ( poly , int ) and 1 < poly <= 5 :
             steps += [ ( 'poly'    , PolynomialFeatures ( degree = poly  , include_bias = False ) ) ]
             steps += [ ( 'scaler2' , StandardScaler () ) ]
             
@@ -1857,6 +1837,22 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         if w_tr is not None : model.fit ( X_train , y_train , logistic__sample_weight = w_tr )
         else                : model.fit ( X_train , y_train )
 
+        # =====================================================================
+        ## PHOENIX
+        # =====================================================================
+        if True : # ===========================================================
+            # =================================================================
+            import pickle 
+        
+            model_bytes = pickle.dumps ( model ) 
+            del model
+            del w_tr
+            
+            model = pickle.loads ( model_bytes )
+            del model_bytes 
+
+            gc.collect()
+        
         val_preds = self._predict_single_model ( model , X_val )
         return model , val_preds.astype ( numpy.float32 , copy = False )
 
@@ -1865,8 +1861,8 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
     def _predict_single_model ( self , model , X ) :
         """ Predict probabilities using a Logistic Regression model.
         """
-        X_clean = numpy.ascontiguousarray ( X , dtype = numpy.float64 )
-        p = model.predict_proba ( X_clean ) [ : , 1 ]
+        X_clean = numpy.ascontiguousarray ( X , dtype = numpy.float32 )
+        p       = model.predict_proba ( X_clean ) [ : , 1 ]
         return p.astype ( numpy.float32 , copy = False )
 
 # ==============================================================================
@@ -1978,6 +1974,20 @@ class GBReweighter(Reweighter) :
                                     target          ,
                                     original_weight = original_weight , 
                                     target_weight   = target_weight   )
+
+        # =====================================================================
+        ## PHOENIX
+        # =====================================================================
+        if True : # ===========================================================
+            # =================================================================
+            import pickle
+            
+            model_bytes       = pickle.dumps ( self.__reweighter ) 
+            del self.__reweighter
+            self.__reweighter = pickle.loads ( model_bytes )
+            del model_bytes 
+            
+            gc.collect()
 
         self.__original_ratios             = None
         self.__original_reweighted_weights = None

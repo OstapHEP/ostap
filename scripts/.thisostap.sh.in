@@ -193,7 +193,6 @@ export KMP_BLOCKTIME=0
 export OMP_PROC_BIND=false
 export OMP_WAIT_POLICY=PASSIVE 
 
-
 # =====================================================================
 env_after=$(printenv | sort)
 flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
