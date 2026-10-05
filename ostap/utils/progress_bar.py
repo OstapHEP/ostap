@@ -398,7 +398,7 @@ class ProgressBar(object):
     ## Show the  bar 
     def show ( self , force = False ) :
         """ Show the bar """
-        if not self.__silent and self.__bar != self.__last : 
+        if not self.__silent and ( force or self.__bar != self.__last ) : 
             if self.__prefix : self.__output.write ( self.__prefix       ) 
             self.__output.write ( self.__bar + self.__r ) 
             self.__last = self.__bar  
@@ -607,6 +607,8 @@ def running_bar ( iterable , frequency = 0 , description = '' , **kwargs ) :
             bar += 1
             yield i
             
+            
+import time 
 # =============================================================================
 ## helper function to display progress bar
 #  @code 
@@ -649,7 +651,7 @@ if __name__ == '__main__':
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    limit = 1000 
+    limit = 200
     logger.info ( 'Example 1: Fixed Bar' )
     with ProgressBar ( limit ,  mode = 'fixed' ) as bar : 
         for i in range ( limit + 1 ):
