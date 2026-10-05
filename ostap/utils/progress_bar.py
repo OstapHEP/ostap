@@ -513,6 +513,8 @@ class RunningBar(object):
     def __str__ ( self ) :
         return str ( self.bar )
 
+    def build_bar ( self ) : pass
+
     def show ( self , force = False  ) :
 
         if self.silent : return

@@ -39,6 +39,7 @@ from   ostap.stats.utils        import ( weight_trivial     ,
                                          nEff               )
 from   ostap.stats.tools      import hasSkLearn 
 from   ostap.utils.memory     import memory
+from   ostap.utils.timing     import timing 
 import ostap.logger.symbols   as     S
 import numpy, abc, math, gc  
 # =============================================================================
@@ -1413,54 +1414,60 @@ class CatBoostDensityReweighter(DensityReweighter):
         
         return p.astype (numpy.float32 , copy = False )
 
+
 # =============================================================================
 ## @class PyTorchDensityReweighter
-#  Clean, standard PyTorch MLP density ratio reweighter using BatchNorm1d.
+#  Optimized PyTorch MLP density ratio reweighter.
+#  
+#  This implementation utilizes index-based zero-copy batching, Automatic 
+#  Mixed Precision (AMP), and optional torch.compile capabilities for 
+#  maximum hardware utilization and memory safety.
+# =============================================================================
 class PyTorchDensityReweighter ( DensityReweighter ) :
-    """ Clean, standard PyTorch MLP density ratio reweighter using BatchNorm1d.
+    """ 
+    Highly optimized PyTorch MLP density ratio reweighter.
     """
+
     # =========================================================================
-    ## Initialize PyTorch density reweighter with standard Tabular MLP architecture.
-    #  @param original Features array for original sample.
-    #  @param target Features array for target sample.
-    #  @param original_weight Initial weights for original sample (optional).
-    #  @param target_weight Initial weights for target sample (optional).
-    #  @param progress Enable progress bar for epoch iteration.
-    #  @param kwargs Additional PyTorch model and optimizer parameters.
+    ## Constructor.
+    #
+    #  @param original        Original dataset.
+    #  @param target          Target dataset.
+    #  @param original_weight Optional weights for the original dataset.
+    #  @param target_weight   Optional weights for the target dataset.
+    #  @param progress        Boolean flag to show epoch progress bar.
+    #  @param kwargs          Additional model hyperparameters.
+    # =========================================================================
     def __init__ ( self            , * ,
                    original        ,
                    target          ,
                    original_weight = None ,
                    target_weight   = None ,
                    progress        = True , **kwargs ) :
-        """ Initialize PyTorch density reweighter with standard Tabular MLP architecture.
-        """
+                   
         import torch
-        cuda = torch.cuda.is_available() 
+        cuda = torch.cuda.is_available () 
 
-        # Clean standard MLP configuration
+        # ---------------------------------------------------------------------
+        # Default configuration aligned for readability
+        # ---------------------------------------------------------------------
         config = { 'hidden_dims'   : ( 512 , 256 , 256 )       ,
                    'dropout'       : 0.0                       ,               
                    'learning_rate' : 5e-4                      ,              
                    'weight_decay'  : 1e-5                      ,              
-                   'batch_size'    : 16384                     ,
+                   'batch_size'    : 2**16                     ,
                    'epochs'        : 2000                      ,              
                    'patience'      : 400                       ,
-                   'min_epochs'    :  25                       ,
-                   'eval_freq'     :   5                       , 
+                   'min_epochs'    : 25                        ,
+                   'eval_freq'     : 5                         , 
                    'device'        : 'cuda' if cuda else 'cpu' ,
+                   'compile'       : False                     , 
                    'n_jobs'        : -1                        ,
                  }
 
         config.update ( kwargs )
-
-        ## use own progress-bar 
         self.__progress_epochs = config.pop ( 'progress' , True )
         
-        ## n_rows       = num_samples  ( original ) + num_samples ( target )
-        ## n_features   = num_features ( original )
-        ## data_size_mb = ( n_rows * m_features * 4 ) / ( 1024 * 1024 )
-
         device = config.get ( 'device' , 'cuda' if cuda else 'cpu' )        
         if not cuda : config [ 'device' ] = 'cpu'
         
@@ -1470,238 +1477,266 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                            target_weight   = target_weight   ,
                            progress        = False           , **config )
 
-        ## reset thread pool 
-        torch.set_num_threads ( 1 )
-
     # =========================================================================
-    ## Return method identifier string.
-    #  @return Method string identifier.
+    ## Returns the backend method identifier.
+    # =========================================================================
     @property
     def method ( self ) :
-        """ Return method identifier string.
-        """
         return method_TORCH 
 
     # =========================================================================
-    ## Regularization rules keeping standard capacity for small statistics.
-    #  @param params Current parameter dictionary.
-    #  @param n_features Number of input features.
-    #  @param n_samples Effective sample size.
-    #  @return Updated parameter dictionary.
-    def regularization ( self       ,
-                         params     ,
-                         n_features ,
-                         n_samples  ) :
-        """ Apply mild regularization rules for low statistics.
-        """
+    ## Adjusts hyperparameters based on dataset size for regularization.
+    # =========================================================================
+    def regularization ( self , params , n_features , n_samples ) :
         params [ 'hidden_dims'   ] = ( 256 , 256 )
         params [ 'learning_rate' ] = 5e-4
         params [ 'epochs'        ] = 2400
-        params [ 'patience'      ] =  600 
+        params [ 'patience'      ] = 600 
         return params
 
-    
-    ## Train a single PyTorch MLP model with extreme CPU/GPU optimization.
+    # =========================================================================
+    ## Trains a single neural network model.
+    #
+    #  @param X_train Features for training.
+    #  @param y_train Labels for training.
+    #  @param w_train Sample weights for training.
+    #  @param X_val   Features for validation.
+    #  @param y_val   Labels for validation.
+    #  @param w_val   Sample weights for validation.
+    #  @return Tuple of ( trained_model , validation_predictions ).
+    # =========================================================================
     def _train_single_model ( self , X_train , y_train , w_train , X_val , y_val , w_val ) :
-        """ Train a single PyTorch MLP model with extreme CPU/GPU optimization.
         
-        Optimizations applied:
-        - `torch.compile` for kernel fusion (if available in PyTorch >= 2.0)
-        - Fast memory-contiguous batching via single tensor pre-shuffling
-        - Automatic Mixed Precision (AMP) for both CUDA (fp16) and CPU (bf16)
-        - ReduceLROnPlateau scheduler for faster convergence
-        """
         import torch
-        import torch.nn as nn
-        import torch.nn.functional as F
+        import torch.nn              as nn
+        import torch.nn.functional   as F
         from   sklearn.preprocessing import StandardScaler
+        import time
 
-        print ( 'TRAIN-SINGLE-MODEL') 
-        
-        device  = torch.device ( 'cuda' if torch.cuda.is_available () else 'cpu' )
+        device  = torch.device ( self.params.get ( 'device' , 'cuda' if torch.cuda.is_available () else 'cpu' ) )
         is_cuda = device.type == 'cuda'
 
-        class TabularMLP ( nn.Module ) :
-            def __init__ ( self , in_features , hidden_dims = ( 512 , 256 , 256 ) ) :
-                super ().__init__ ()
-                layers = []
-                curr_dim = in_features
-                for h_dim in hidden_dims :
-                    layers.append ( nn.Linear ( curr_dim , h_dim ) )
-                    layers.append ( nn.LayerNorm ( h_dim ) )
-                    layers.append ( nn.LeakyReLU ( 0.1 ) )
-                    curr_dim = h_dim
-                layers.append ( nn.Linear ( curr_dim , 1 ) )
-                self.net = nn.Sequential ( *layers )
-
-            def forward ( self , x ) :
-                return self.net ( x ).squeeze ( -1 )
-
-        # 1. Dynamic batch sizing and hyperparameters
-        batch_size    = 65536 if is_cuda else 16384
-        batch_size    = self.params.get ( 'batch_size'    , batch_size )
-        # Ensure batch_size is a power of 2 for hardware alignment
-        batch_size    = max ( 2 , 2 ** math.floor ( math.log2 ( max ( 1 , batch_size ) ) ) )
+        torch.set_num_threads ( max ( 1 , numcpu () // 2 ) if not is_cuda else 1 )
+            
+        n_samples  = num_samples  ( X_train )
+        n_features = num_features ( X_train )
         
-        patience      = self.params.get ( 'patience'      , 300  )
-        nepochs       = self.params.get ( 'epochs'        , 2000 )
-        min_epochs    = self.params.get ( 'min_epochs'    , 25   )        
-        eval_freq     = self.params.get ( 'eval_freq'     , 5    )
-        learning_rate = self.params.get ( 'learning_rate' , 1e-3 )
-        weight_decay  = self.params.get ( 'weight_decay'  , 1e-5 )
-        hidden_dims   = self.params.get ( 'hidden_dims'   , ( 512 , 256 , 256 ) )
+        # ---------------------------------------------------------------------
+        # Extract and validate hyperparameters
+        # ---------------------------------------------------------------------
+        batch_size = self.params.get ( 'batch_size' , 2 ** 17 if is_cuda else 2 ** 15 )
+        if not isinstance ( batch_size , int ) or batch_size <= 0 :
+            batch_size = 2 ** 18 if is_cuda else 2 ** 15
+            
+        batch_size = min ( max ( 2 , ( n_samples + 1 ) // 2 ) , batch_size ) 
+        batch_size = max ( 2 , 2 ** math.floor ( math.log2 ( batch_size ) ) )
 
-        # 2. Data Preparation & Scaling
+        nepochs       = self.params.get ( 'epochs'        , 2000                  )
+        patience      = self.params.get ( 'patience'      , 400                   )
+        min_epochs    = self.params.get ( 'min_epochs'    , 20                    )
+        min_delta     = self.params.get ( 'min_delta'     , 2.e-4                 ) 
+        eval_freq     = self.params.get ( 'eval_freq'     , 10                    )
+        learning_rate = self.params.get ( 'learning_rate' , 3e-3                  )
+        hidden_dims   = self.params.get ( 'hidden_dims'   , ( 512 , 256 , 256 )   )
+        use_compile   = self.params.get ( 'compile'       , False                 ) and hasattr ( torch , 'compile' )
+
+        # ---------------------------------------------------------------------
+        # Data preprocessing (contiguous arrays for fast tensor conversion)
+        # ---------------------------------------------------------------------
         scaler      = StandardScaler ()
         X_tr_scaled = scaler.fit_transform ( numpy.ascontiguousarray ( X_train , dtype = numpy.float32 ) )
         X_va_scaled = scaler.transform     ( numpy.ascontiguousarray ( X_val   , dtype = numpy.float32 ) )
 
-        w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else numpy.ones ( len ( y_train ) , dtype = numpy.float32 )
-        w_va = numpy.ascontiguousarray ( w_val   , dtype = numpy.float32 ) if w_val   is not None else numpy.ones ( len ( y_val   ) , dtype = numpy.float32 )
+        w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else numpy.ones ( n_samples   , dtype = numpy.float32 )
+        w_va = numpy.ascontiguousarray ( w_val   , dtype = numpy.float32 ) if w_val   is not None else numpy.ones ( len ( y_val ) , dtype = numpy.float32 )
+        y_tr = y_train.astype ( numpy.float32 )
 
-        # 3. Direct Memory Allocation to Device (Zero-copy execution)
-        X_tr_t = torch.from_numpy ( X_tr_scaled                      ).to ( device , non_blocking = True )
-        y_tr_t = torch.from_numpy ( y_train.astype ( numpy.float32 ) ).to ( device , non_blocking = True )
-        w_tr_t = torch.from_numpy ( w_tr                             ).to ( device , non_blocking = True )
-
-        X_va_t = torch.from_numpy ( X_va_scaled                      ).to ( device , non_blocking = True )
-        y_va_t = torch.from_numpy ( y_val.astype ( numpy.float32 )   ).to ( device , non_blocking = True )
-        w_va_t = torch.from_numpy ( w_va                             ).to ( device , non_blocking = True )
-
-        n_features = X_train.shape [ 1 ]
-        n_samples  = len ( X_train )
+        # ---------------------------------------------------------------------
+        # Move data directly to device tensors
+        # ---------------------------------------------------------------------
+        X_tr_t = torch.from_numpy ( X_tr_scaled ).to ( device )
+        y_tr_t = torch.from_numpy ( y_tr        ).to ( device )
+        w_tr_t = torch.from_numpy ( w_tr        ).to ( device )
         
-        # 4. Model and Graph Compilation
-        model = TabularMLP ( in_features = n_features , hidden_dims = hidden_dims ).to ( device )
+        X_va_t = torch.from_numpy ( X_va_scaled ).to ( device )
+        y_va_t = torch.from_numpy ( y_val.astype ( numpy.float32 ) ).to ( device )
+        w_va_t = torch.from_numpy ( w_va        ).to ( device )
+
+        # ---------------------------------------------------------------------
+        ## @class TabularMLP
+        #  Inner class defining the multi-layer perceptron architecture.
+        # ---------------------------------------------------------------------
+        class TabularMLP ( nn.Module ) :
+            def __init__ ( self , n_features , hidden_dims = ( 512 , 256 , 256 ) , negative_slope = 0.1 ) :
+                super().__init__()
+                layers = []
+                in_dim = n_features
+                
+                for h_dim in hidden_dims :
+                    layers.extend ( [
+                        nn.Linear    ( in_dim , h_dim ) ,
+                        nn.LayerNorm ( h_dim )          ,
+                        nn.LeakyReLU ( negative_slope )
+                    ] )
+                    in_dim = h_dim
+                    
+                layers.append ( nn.Linear ( in_dim , 1 ) )
+                self.net = nn.Sequential ( *layers )
+                
+            def forward ( self , x ) : 
+                return self.net ( x ).squeeze ( -1 )
+
+        model_config = { 'n_features'  : n_features , 
+                         'hidden_dims' : hidden_dims }
+                         
+        model = TabularMLP ( **model_config ).to ( device )
         
-        # Massive speedup for tabular MLPs on PyTorch 2.0+ (kernel fusion)
-        ## if hasattr ( torch , 'compile' ) :
-        ##    try : model = torch.compile ( model )
-        ##    except Exception : pass 
+        ##if use_compile :
+        ##    try :
+        ##        model = torch.compile ( model )
+        ##    except Exception as e :
+        ##        logger.warning ( f"torch.compile failed, falling back to eager mode: {e}" )
 
-        optimizer = torch.optim.AdamW ( model.parameters () , lr = learning_rate , weight_decay = weight_decay )
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau ( optimizer , mode = 'min' , factor = 0.5 , patience = 5 , min_lr = 1e-5 )
+        optimizer  = torch.optim.AdamW ( model.parameters () , lr = learning_rate , weight_decay = 1e-5 )
+        ## scaler_amp = torch.cuda.amp.GradScaler ( enabled = is_cuda )
+        scaler_amp = torch.amp.GradScaler ( 'cuda' , enabled = is_cuda )
 
-        # 5. Universal Mixed Precision Setup
-        amp_dtype  = torch.float16 if is_cuda else torch.bfloat16
-        scaler_amp = torch.amp.GradScaler ( device = 'cuda' , enabled = is_cuda ) if is_cuda else None
-
+        w_va_sum         = w_va_t.abs().sum() + 1e-8
         best_loss        = float ( 'inf' )
         best_state       = None
         patience_counter = 0
-        w_va_sum         = w_va_t.abs ().sum () + 1e-8
 
         show_bar = self.__progress_epochs and not ( self.silent or self.progress )
 
-        print ( 'TRAIN-SINGLE-MODEL: BEFORE THE LOOP') 
-                
+        # ---------------------------------------------------------------------
+        # Main training loop
+        # ---------------------------------------------------------------------
         for epoch in progress_bar ( nepochs     ,
                                     silent      = not show_bar ,
                                     description = epoch_symbol ) :
-
-            
-            print ( 'TRAIN-SINGLE-MODEL: INSIDE THE LOOP') 
+            t0 = time.time ()
             model.train ()
 
-            print ( 'TRAIN-SINGLE-MODEL: INSIDE THE LOOP : AFTER TRAIN') 
-            
-            # Fast Contiguous Shuffling: Gather once, slice sequentially
-            perm       = torch.randperm ( n_samples , device = device )
-            X_tr_shuff = X_tr_t [ perm ]
-            y_tr_shuff = y_tr_t [ perm ]
-            w_tr_shuff = w_tr_t [ perm ]
+            # Zero-copy index shuffle
+            perm = torch.randperm ( n_samples , device = device )
 
-            print ( 'TRAIN-SINGLE-MODEL: INSIDE THE LOOP : BEFORE SAMPLE LOOP') 
-            
             for i in range ( 0 , n_samples , batch_size ) :
                 
-                b_x = X_tr_shuff [ i : i + batch_size ]
-                b_y = y_tr_shuff [ i : i + batch_size ]
-                b_w = w_tr_shuff [ i : i + batch_size ] 
+                idx = perm [ i : i + batch_size ]
+                
+                b_x = X_tr_t [ idx ]
+                b_y = y_tr_t [ idx ]
+                b_w = w_tr_t [ idx ]
 
                 optimizer.zero_grad ( set_to_none = True )
+                b_w_sum = b_w.abs().sum() + 1e-8
                 
-                # Autocast context covers both CPU and GPU execution paths
-                with torch.amp.autocast ( device_type = device.type , dtype = amp_dtype ) :
-                    b_logits = model ( b_x )
-                    b_w_sum  = b_w.abs ().sum () + 1e-8
-                    b_loss   = F.binary_cross_entropy_with_logits ( b_logits , b_y , weight = b_w , reduction = 'sum' ) / b_w_sum
+                # AMP Context for fast GPU execution
+                with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
+                    logits = model ( b_x )
+                    loss   = F.binary_cross_entropy_with_logits ( logits , b_y , weight = b_w , reduction = 'sum' ) / b_w_sum
                 
-                if is_cuda :
-                    scaler_amp.scale ( b_loss ).backward ()
-                    scaler_amp.step ( optimizer )
-                    scaler_amp.update ()
-                else :
-                    b_loss.backward ()
-                    optimizer.step ()
+                scaler_amp.scale ( loss ).backward ()
+                scaler_amp.step  ( optimizer )
+                scaler_amp.update ()
 
-            print ( 'TRAIN-SINGLE-MODEL: INSIDE THE LOOP : AFTER SAMPLE LOOP') 
-
-            # 6. Low-overhead Validation
+            # -----------------------------------------------------------------
+            # Validation (Batched to prevent Out-Of-Memory errors)
+            # -----------------------------------------------------------------
             if epoch % eval_freq == 0 or epoch == nepochs - 1 :
-
-                print ( 'TRAIN-SINGLE-MODEL: INSIDE EVAL') 
-
                 model.eval ()
-                with torch.no_grad () :
-                    with torch.amp.autocast ( device_type = device.type , dtype = amp_dtype ) :
-                        val_logits = model ( X_va_t )
-                        val_loss_t = F.binary_cross_entropy_with_logits ( val_logits , y_va_t , weight = w_va_t , reduction = 'sum' ) / w_va_sum
-                    
-                    val_loss = val_loss_t.item () 
+                val_loss = 0.0
+                
+                with torch.inference_mode () :
+                    for i in range ( 0 , len ( y_val ) , batch_size ) :
+                        v_x = X_va_t [ i : i + batch_size ]
+                        v_y = y_va_t [ i : i + batch_size ]
+                        v_w = w_va_t [ i : i + batch_size ]
+                        
+                        with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
+                            v_logits     = model ( v_x )
+                            v_loss_batch = F.binary_cross_entropy_with_logits ( v_logits , v_y , weight = v_w , reduction = 'sum' )
+                            val_loss    += v_loss_batch.item ()
+                            
+                val_loss /= w_va_sum.item ()
 
-                scheduler.step ( val_loss )
+                if not self.silent :
+                    logger.info ( f"Epoch {epoch:03d}/{nepochs} | Val Loss: {val_loss:.5f} | Time: {time.time()-t0:.3f} s" )
 
-                if val_loss < best_loss :
+                if val_loss + min_delta < best_loss :
                     best_loss = val_loss
-                    best_state = { k : v.clone ().detach () for k , v in model.state_dict ().items () }
+                    
+                    # Store unwrapped model state safely (handles torch.compile wrapping)
+                    unwrapped_model  = model._orig_mod if hasattr ( model , '_orig_mod' ) else model
+                    best_state       = { k : v.clone().detach() for k , v in unwrapped_model.state_dict().items() }
                     patience_counter = 0
+                    
                 else :
                     patience_counter += eval_freq
-                    if min_epochs < epoch and patience <= patience_counter : break
+                    if min_epochs <= epoch and patience <= patience_counter :
+                        if not self.silent : logger.info ( f"[Info] Early stopping at epoch {epoch}. Best Val Loss: {best_loss:.5f}" )
+                        break
 
-            print ( 'TRAIN-SINGLE-MODEL: END OF THE LOOP') 
-                
-        # 7. Safe Memory Cleanup
-        if is_cuda: torch.cuda.synchronize()
-        del X_tr_t , y_tr_t , w_tr_t , X_va_t , y_va_t , w_va_t , X_tr_shuff , y_tr_shuff , w_tr_shuff , perm
+        # ---------------------------------------------------------------------
+        # Cleanup memory and restore best weights
+        # ---------------------------------------------------------------------
+        del model , optimizer , scaler_amp
+        del X_tr_t , y_tr_t , w_tr_t , X_va_t , y_va_t , w_va_t
+        
         gc.collect ()
         if is_cuda : torch.cuda.empty_cache ()
 
-        # 8. Reload Best State
-        final_model = TabularMLP ( in_features = n_features , hidden_dims = hidden_dims ).to ( device )
-        if best_state is not None :
-            final_model.load_state_dict ( best_state )
+        model = TabularMLP ( **model_config ).to ( device )
         
-        final_model.eval ()
-        final_model.scaler = scaler
+        if best_state is not None :
+            model.load_state_dict ( best_state )
+            del best_state
+            gc.collect ()
 
-        val_preds = self._predict_single_model ( final_model , X_val )
-        return final_model , val_preds
-    
+        model.eval ()
+        model.scaler = scaler
+
+        val_preds = self._predict_single_model ( model , X_val )
+        return model , val_preds
 
     # =========================================================================
-    ## Predict target probabilities using a trained PyTorch model.
-    #  @param model Trained PyTorch TabularMLP model instance.
-    #  @param X Features array to evaluate.
-    #  @return Flat numpy array of target probabilities p(y=1|x).
+    ## Predicts probabilities for the given dataset.
+    #
+    #  @param model Trained PyTorch model.
+    #  @param X     Features to predict on.
+    #  @return Numpy array of predicted probabilities.
+    # =========================================================================
     def _predict_single_model ( self , model , X ) :
-        """ Predict target probabilities using a trained PyTorch model.
-        """
+        
         import torch
-
-        device = next ( model.parameters() ).device
+        
         model.eval ()
+        device  = next ( model.parameters () ).device
+        is_cuda = device.type == 'cuda'
 
-        X_scaled = model.scaler.transform ( X )
-        X_t      = torch.as_tensor ( X_scaled , dtype = torch.float32 , device = device )
+        n_samples = num_samples ( X )
+        
+        batch_size = 2**17 if is_cuda else 2**16
+        batch_size = max ( 1024 , 2 ** math.floor ( math.log2 ( max ( 1 , min ( batch_size , n_samples ) ) ) ) )
 
-        with torch.no_grad () :
-            logits = model ( X_t )
-            probs  = torch.sigmoid ( logits ).cpu().numpy ()
+        X_scaled = model.scaler.transform ( numpy.ascontiguousarray ( X , dtype = numpy.float32 ) )
+        preds    = numpy.empty ( n_samples , dtype = numpy.float32 )
 
-        return numpy.ravel ( probs ).astype ( numpy.float32 , copy = False )
+        # ---------------------------------------------------------------------
+        # Batched inference loop
+        # ---------------------------------------------------------------------
+        with torch.inference_mode () :
+            for i in range ( 0 , n_samples , batch_size ) :
+                chunk = X_scaled [ i : i + batch_size ]
+                b_x   = torch.from_numpy ( chunk ).to ( device )
+                
+                with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
+                    logits  = model ( b_x )
+                    b_preds = torch.sigmoid ( logits )
+                
+                preds [ i : i + batch_size ] = b_preds.cpu().numpy ()
 
+        return preds
     
 # =============================================================================
 # Filter parameters to keep only those accepted by scikit-learn LogisticRegression
