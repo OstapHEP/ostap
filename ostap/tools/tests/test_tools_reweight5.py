@@ -16,9 +16,9 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 ## ATTENTION! 
 import os 
-os.environ [ "MKL_NUM_THREADS"      ]  = "1"
-os.environ [ "OMP_NUM_THREADS"      ]  = "1"
-os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
+os.environ [ "MKL_NUM_THREADS"      ]  = "8"
+os.environ [ "OMP_NUM_THREADS"      ]  = "8"
+os.environ [ "OPENBLAS_NUM_THREADS" ]  = "8"
 # =============================================================================
 os.environ [ 'KMP_DUPLICATE_LIB_OK' ] = 'TRUE'
 os.environ [ 'KMP_INIT_AT_FORK'     ] = 'FALSE' 
@@ -195,12 +195,12 @@ def run_reweight ( n_dim     = 3     ,
     
     reweighters = [ None ]
     
-    if hasCatBoost () : 
+    if False and hasCatBoost () : 
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
         rw4 = CATB ( target = target , original = original )
         reweighters.append ( rw4 )
         
-    if hasLightGBM () : 
+    if False and hasLightGBM () : 
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         rw2 = LGBM ( target = target , original = original )
         reweighters.append ( rw2 )
@@ -209,22 +209,22 @@ def run_reweight ( n_dim     = 3     ,
         ## rwc = CASCADE ( classes = [ LGBM , LGBM ] , target = target , original = original )
         ## reweighters.append ( rwc )
         
-    if hasXGBoost  () : 
+    if False and hasXGBoost  () : 
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         rw3 = XGB  ( target = target , original = original )
         reweighters.append ( rw3 )
         
     if hasPyTorch () : 
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
-        rw5 = TORCH ( target = target , original = original , n_splits = 1 )
+        rw5 = TORCH ( target = target , original = original , n_splits = 1 , batch_size = 2**10 , hidden_dims = ( 128, 128, 128)  )
         reweighters.append ( rw5 )
         
-    if hasHepML    () :
+    if False and hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw1 = GBRW ( target = target , original = original )
         reweighters.append ( rw1 )
         
-    if hasSkLearn ():
+    if False and hasSkLearn ():
         
         from ostap.tools.reweighters  import LogRegressionDensityReweighter as LOGREG 
         rw6 = LOGREG ( target = target , original = original )

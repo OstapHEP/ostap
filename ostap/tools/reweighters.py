@@ -1451,7 +1451,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         # ---------------------------------------------------------------------
         # Default configuration aligned for readability
         # ---------------------------------------------------------------------
-        config = { 'hidden_dims'   : ( 512 , 256 , 256 )       ,
+        config = { 'hidden_dims'   : ( 512 , 512 , 512 , 512 ) ,
                    'dropout'       : 0.0                       ,               
                    'learning_rate' : 5e-4                      ,              
                    'weight_decay'  : 1e-5                      ,              
@@ -1459,6 +1459,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                    'epochs'        : 2000                      ,              
                    'patience'      : 400                       ,
                    'min_epochs'    : 25                        ,
+                   'min_delta'     : 2.e-4                     , 
                    'eval_freq'     : 5                         , 
                    'device'        : 'cuda' if cuda else 'cpu' ,
                    'compile'       : False                     , 
@@ -1477,6 +1478,8 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                            target_weight   = target_weight   ,
                            progress        = False           , **config )
 
+        torch.set_num_threads ( 1  )
+
     # =========================================================================
     ## Returns the backend method identifier.
     # =========================================================================
@@ -1488,14 +1491,16 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
     ## Adjusts hyperparameters based on dataset size for regularization.
     # =========================================================================
     def regularization ( self , params , n_features , n_samples ) :
-        params [ 'hidden_dims'   ] = ( 256 , 256 )
+        """ Adjusts hyperparameters based on dataset size for regularization
+        """
+        params [ 'hidden_dims'   ] = ( 512 , 512 , 512 )
         params [ 'learning_rate' ] = 5e-4
         params [ 'epochs'        ] = 2400
-        params [ 'patience'      ] = 600 
+        params [ 'patience'      ] = 200 
         return params
 
     # =========================================================================
-    ## Trains a single neural network model.
+    ## Trains a single neural network model using Tabular ResNet architecture.
     #
     #  @param X_train Features for training.
     #  @param y_train Labels for training.
@@ -1506,27 +1511,45 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
     #  @return Tuple of ( trained_model , validation_predictions ).
     # =========================================================================
     def _train_single_model ( self , X_train , y_train , w_train , X_val , y_val , w_val ) :
-        
+
+        ## import os
+        # ---------------------------------------------------------------------
+        # Unlock CPU Multithreading before PyTorch backend initialization
+        # Set to 4-8 threads depending on your batch system allocation
+        # ---------------------------------------------------------------------
+        ## n_threads = "8"
+        ## os.environ [ 'OMP_NUM_THREADS'      ] = n_threads
+        ## os.environ [ 'MKL_NUM_THREADS'      ] = n_threads
+        ## os.environ [ 'OPENBLAS_NUM_THREADS' ] = n_threads
+
         import torch
-        import torch.nn              as nn
-        import torch.nn.functional   as F
-        from   sklearn.preprocessing import StandardScaler
+        
+        n_threads = self.params.get ( 'n_jobs' , max ( 1 , numcpu () // 2 ) )
+        n_threads = min ( 4  , n_threads ,       max ( 1 , numcpu () // 2 ) )
+        n_threads = max ( 1  , n_threads )
+
+        torch.set_num_threads ( 8 )
+        ### torch.set_num_interop_threads ( int ( n_threads ) )
+
+        import torch.nn            as nn
+        import torch.nn.functional as F
+        ## from   sklearn.preprocessing import QuantileTransformer
+        from   sklearn.preprocessing import MinMaxScaler
+
         import time
 
         device  = torch.device ( self.params.get ( 'device' , 'cuda' if torch.cuda.is_available () else 'cpu' ) )
         is_cuda = device.type == 'cuda'
-
-        torch.set_num_threads ( max ( 1 , numcpu () // 2 ) if not is_cuda else 1 )
-            
+        
         n_samples  = num_samples  ( X_train )
         n_features = num_features ( X_train )
         
-        # ---------------------------------------------------------------------
+        # =====================================================================
         # Extract and validate hyperparameters
-        # ---------------------------------------------------------------------
-        batch_size = self.params.get ( 'batch_size' , 2 ** 17 if is_cuda else 2 ** 15 )
+        # =====================================================================
+        batch_size = self.params.get ( 'batch_size' , 2**17 if is_cuda else 2**15 )
         if not isinstance ( batch_size , int ) or batch_size <= 0 :
-            batch_size = 2 ** 18 if is_cuda else 2 ** 15
+            batch_size = 2**17 if is_cuda else 2**15
             
         batch_size = min ( max ( 2 , ( n_samples + 1 ) // 2 ) , batch_size ) 
         batch_size = max ( 2 , 2 ** math.floor ( math.log2 ( batch_size ) ) )
@@ -1538,12 +1561,16 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         eval_freq     = self.params.get ( 'eval_freq'     , 10                    )
         learning_rate = self.params.get ( 'learning_rate' , 3e-3                  )
         hidden_dims   = self.params.get ( 'hidden_dims'   , ( 512 , 256 , 256 )   )
+        weight_decay  = self.params.get ( 'weight_decay'  , 1.e-5                 )
         use_compile   = self.params.get ( 'compile'       , False                 ) and hasattr ( torch , 'compile' )
+        
+        # =====================================================================
+        # Data preprocessing: QuantileTransformer maps complex kinematics
+        # and resonance peaks into a smooth Gaussian space
+        # =====================================================================
+        ## scaler      = QuantileTransformer  ( output_distribution = 'normal'    , n_quantiles = 10000 , random_state = self.random_state )
+        scaler      = MinMaxScaler         ( feature_range = ( -1 , 1 ) )
 
-        # ---------------------------------------------------------------------
-        # Data preprocessing (contiguous arrays for fast tensor conversion)
-        # ---------------------------------------------------------------------
-        scaler      = StandardScaler ()
         X_tr_scaled = scaler.fit_transform ( numpy.ascontiguousarray ( X_train , dtype = numpy.float32 ) )
         X_va_scaled = scaler.transform     ( numpy.ascontiguousarray ( X_val   , dtype = numpy.float32 ) )
 
@@ -1551,9 +1578,9 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         w_va = numpy.ascontiguousarray ( w_val   , dtype = numpy.float32 ) if w_val   is not None else numpy.ones ( len ( y_val ) , dtype = numpy.float32 )
         y_tr = y_train.astype ( numpy.float32 )
 
-        # ---------------------------------------------------------------------
+        # =====================================================================
         # Move data directly to device tensors
-        # ---------------------------------------------------------------------
+        # =====================================================================
         X_tr_t = torch.from_numpy ( X_tr_scaled ).to ( device )
         y_tr_t = torch.from_numpy ( y_tr        ).to ( device )
         w_tr_t = torch.from_numpy ( w_tr        ).to ( device )
@@ -1562,23 +1589,42 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         y_va_t = torch.from_numpy ( y_val.astype ( numpy.float32 ) ).to ( device )
         w_va_t = torch.from_numpy ( w_va        ).to ( device )
 
-        # ---------------------------------------------------------------------
-        ## @class TabularMLP
-        #  Inner class defining the multi-layer perceptron architecture.
-        # ---------------------------------------------------------------------
-        class TabularMLP ( nn.Module ) :
-            def __init__ ( self , n_features , hidden_dims = ( 512 , 256 , 256 ) , negative_slope = 0.1 ) :
+        # =====================================================================
+        ## @class ResBlock
+        #  Inner class defining a Residual Block to prevent gradient vanishing
+        #  and improve fitting of sharp kinematic edges.
+        class ResBlock ( nn.Module ) :
+            def __init__ ( self , dim ) :
+                super().__init__()
+                self.block = nn.Sequential (
+                    nn.Linear    ( dim , dim ) ,
+                    nn.LayerNorm ( dim )       ,
+                    nn.SiLU      ()            ,
+                    nn.Linear    ( dim , dim ) ,
+                    nn.LayerNorm ( dim )
+                )
+                self.act = nn.SiLU ()
+
+            def forward ( self , x ) :
+                return self.act ( x + self.block ( x ) )
+
+        # =====================================================================
+        ## @class TabularResNet
+        #  Inner class defining the network architecture with skip-connections.
+        class TabularResNet ( nn.Module ) :
+            def __init__ ( self , n_features , hidden_dims = ( 512 , 256 , 256 ) ) :
                 super().__init__()
                 layers = []
-                in_dim = n_features
                 
+                first_dim = hidden_dims [ 0 ]
+                layers.append ( nn.Linear ( n_features , first_dim ) )
+                
+                in_dim = first_dim
                 for h_dim in hidden_dims :
-                    layers.extend ( [
-                        nn.Linear    ( in_dim , h_dim ) ,
-                        nn.LayerNorm ( h_dim )          ,
-                        nn.LeakyReLU ( negative_slope )
-                    ] )
-                    in_dim = h_dim
+                    if in_dim != h_dim :
+                        layers.append ( nn.Linear ( in_dim , h_dim ) )
+                        in_dim = h_dim
+                    layers.append ( ResBlock ( h_dim ) )
                     
                 layers.append ( nn.Linear ( in_dim , 1 ) )
                 self.net = nn.Sequential ( *layers )
@@ -1589,39 +1635,63 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         model_config = { 'n_features'  : n_features , 
                          'hidden_dims' : hidden_dims }
                          
-        model = TabularMLP ( **model_config ).to ( device )
+        model = TabularResNet ( **model_config ).to ( device )
         
-        ##if use_compile :
-        ##    try :
-        ##        model = torch.compile ( model )
-        ##    except Exception as e :
-        ##        logger.warning ( f"torch.compile failed, falling back to eager mode: {e}" )
+        if False and use_compile :
+            try :
+                model = torch.compile ( model )
+            except Exception as e :
+                logger.warning ( f"torch.compile failed, falling back to eager mode: {e}" )
 
-        optimizer  = torch.optim.AdamW ( model.parameters () , lr = learning_rate , weight_decay = 1e-5 )
-        ## scaler_amp = torch.cuda.amp.GradScaler ( enabled = is_cuda )
-        scaler_amp = torch.amp.GradScaler ( 'cuda' , enabled = is_cuda )
+
+        ## JIT?
+        dummy_input = torch.randn ( batch_size , n_features , device = device )
+        model       = torch.jit.trace ( model , dummy_input )
+
+                
+        optimizer  = torch.optim.AdamW                          ( model.parameters () , lr    = learning_rate , weight_decay = weight_decay )
+        scheduler  = torch.optim.lr_scheduler.CosineAnnealingLR ( optimizer           , T_max = nepochs       , eta_min      = 1e-5         )
+        scaler_amp = torch.amp.GradScaler                       ( 'cuda'              , enabled = is_cuda )
 
         w_va_sum         = w_va_t.abs().sum() + 1e-8
         best_loss        = float ( 'inf' )
         best_state       = None
         patience_counter = 0
 
-        show_bar = self.__progress_epochs and not ( self.silent or self.progress )
+        if not self.silent :
+            data_size = n_features * n_samples * 4 ## in bytes 
+            if   1024 ** 3 < data_size : data_size = '%.0fGB' % ( data_size / 1024 ** 3 )
+            elif 1024 ** 2 < data_size : data_size = '%.0fMB' % ( data_size / 1024 ** 2 )
+            elif 1024      < data_size : data_size = '%.0fkB' % ( data_size / 1024      )
+            else                       : data_size = '%dB'    % ( data_size             )                                    
+            steps_epoch = math.ceil  ( n_samples  / batch_size )
+            logger.info ( "Train single model #events=%d total_data=%s batch_size=%d steps/epoch=%.0f" % ( n_samples   ,
+                                                                                                           data_size   ,
+                                                                                                           batch_size  ,
+                                                                                                           steps_epoch ) )
+            
+        def get_autocast_config(device):
+            if   'cuda' == device.type : return True, torch.bfloat16
+            elif 'cpu'  == device.type :
+                bf16_supported = hasattr ( torch.cpu, 'is_bf16_supported') and torch.cpu.is_bf16_supported ()
+                return bf16_supported , torch.bfloat16
+            return False, torch.float32
 
-        # ---------------------------------------------------------------------
+        use_autocast, autocast_dtype = get_autocast_config(device)
+        
+        # =====================================================================
         # Main training loop
-        # ---------------------------------------------------------------------
-        for epoch in progress_bar ( nepochs     ,
-                                    silent      = not show_bar ,
-                                    description = epoch_symbol ) :
+        # =====================================================================
+        show_bar = self.__progress_epochs and not ( self.silent or self.progress )
+        for epoch in progress_bar ( nepochs , silent = not show_bar , description = epoch_symbol ) :
+            
             t0 = time.time ()
-            model.train ()
+            
+            model.train    ()
 
-            # Zero-copy index shuffle
             perm = torch.randperm ( n_samples , device = device )
 
             for i in range ( 0 , n_samples , batch_size ) :
-                
                 idx = perm [ i : i + batch_size ]
                 
                 b_x = X_tr_t [ idx ]
@@ -1631,19 +1701,22 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                 optimizer.zero_grad ( set_to_none = True )
                 b_w_sum = b_w.abs().sum() + 1e-8
                 
-                # AMP Context for fast GPU execution
-                with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
+                with torch.autocast ( device_type = device.type, dtype = autocast_dtype , enabled = use_autocast ) :
                     logits = model ( b_x )
                     loss   = F.binary_cross_entropy_with_logits ( logits , b_y , weight = b_w , reduction = 'sum' ) / b_w_sum
                 
-                scaler_amp.scale ( loss ).backward ()
-                scaler_amp.step  ( optimizer )
+                scaler_amp.scale  ( loss      ).backward ()
+                scaler_amp.step   ( optimizer )
                 scaler_amp.update ()
 
-            # -----------------------------------------------------------------
-            # Validation (Batched to prevent Out-Of-Memory errors)
-            # -----------------------------------------------------------------
-            if epoch % eval_freq == 0 or epoch == nepochs - 1 :
+            # Step the learning rate scheduler
+            scheduler.step ()
+
+            # =================================================================
+            # Validation
+            # =================================================================
+            if epoch % eval_freq == 0 or epoch + 1 == nepochs :
+                
                 model.eval ()
                 val_loss = 0.0
                 
@@ -1661,32 +1734,36 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                 val_loss /= w_va_sum.item ()
 
                 if not self.silent :
-                    logger.info ( f"Epoch {epoch:03d}/{nepochs} | Val Loss: {val_loss:.5f} | Time: {time.time()-t0:.3f} s" )
+                    logger.info ( f"Epoch {epoch:03d}/{nepochs} | Val Loss: {val_loss:.5f} | LR: {scheduler.get_last_lr()[0]:.2e} | Time: {time.time()-t0:.3f} s" )
 
                 if val_loss + min_delta < best_loss :
                     best_loss = val_loss
                     
-                    # Store unwrapped model state safely (handles torch.compile wrapping)
                     unwrapped_model  = model._orig_mod if hasattr ( model , '_orig_mod' ) else model
                     best_state       = { k : v.clone().detach() for k , v in unwrapped_model.state_dict().items() }
                     patience_counter = 0
-                    
                 else :
                     patience_counter += eval_freq
                     if min_epochs <= epoch and patience <= patience_counter :
-                        if not self.silent : logger.info ( f"[Info] Early stopping at epoch {epoch}. Best Val Loss: {best_loss:.5f}" )
+                        if not self.silent : 
+                            logger.info ( f"[Info] Early stopping at epoch {epoch}. Best Val Loss: {best_loss:.5f}" )
+                            
+                        if best_state is None :
+                            unwrapped_model  = model._orig_mod if hasattr ( model , '_orig_mod' ) else model
+                            best_state       = { k : v.clone().detach() for k , v in unwrapped_model.state_dict().items() }
+                            
                         break
 
-        # ---------------------------------------------------------------------
+        # =====================================================================
         # Cleanup memory and restore best weights
-        # ---------------------------------------------------------------------
-        del model , optimizer , scaler_amp
+        # =====================================================================
+        del model , optimizer , scaler_amp , scheduler
         del X_tr_t , y_tr_t , w_tr_t , X_va_t , y_va_t , w_va_t
         
         gc.collect ()
         if is_cuda : torch.cuda.empty_cache ()
 
-        model = TabularMLP ( **model_config ).to ( device )
+        model = TabularResNet ( **model_config ).to ( device )
         
         if best_state is not None :
             model.load_state_dict ( best_state )
@@ -1722,9 +1799,9 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         X_scaled = model.scaler.transform ( numpy.ascontiguousarray ( X , dtype = numpy.float32 ) )
         preds    = numpy.empty ( n_samples , dtype = numpy.float32 )
 
-        # ---------------------------------------------------------------------
+        # =====================================================================
         # Batched inference loop
-        # ---------------------------------------------------------------------
+        # =====================================================================
         with torch.inference_mode () :
             for i in range ( 0 , n_samples , batch_size ) :
                 chunk = X_scaled [ i : i + batch_size ]
@@ -1782,14 +1859,14 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         config = { 'C'             : 1.0     ,
                    'solver'        : 'lbfgs' ,
                    'max_iter'      : 2000    ,
-                   'polynomials'   : 2       }
+                   'polynomials'   :    2    }
         
         config.update ( params )
         
         poly       = config.get   ( 'polynomials', 2 )
         n_features = num_features ( original         )
         
-        if 20 <= n_features and 1 < poly :
+        if 15 <= n_features and 1 < poly :
             config [ 'polynomials' ] = 1
         
         super().__init__ ( original               = original               ,

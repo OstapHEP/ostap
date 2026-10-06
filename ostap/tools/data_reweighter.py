@@ -49,10 +49,10 @@ class DataReweighter(Config) :
                    progress           = True          ,
                    description        = 'reweighting' , **params ) :        
         ##
-        if not issubclass ( reweighter_type , Reweighter ) :
-            raise TypeError ( "Reweighet type %s is not subclass of %s" % ( typename ( reweighter_type ) , 
+        if not isinstance ( reweighter_type , type ) or not issubclass ( reweighter_type , Reweighter ) :
+            raise TypeError ( "Reweighter type %s is not subclass of %s" % ( typename ( reweighter_type ) , 
                                                                             typename ( Reweighter      ) ) ) 
-
+        
         ## target variables&cuts&weights
         tvars, tweight, _ = vars_and_cuts ( target_variables , target_weight )
             
