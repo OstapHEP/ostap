@@ -1494,9 +1494,18 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         """ Adjusts hyperparameters based on dataset size for regularization
         """
         params [ 'hidden_dims'   ] = ( 512 , 512 , 512 )
-        params [ 'learning_rate' ] = 5e-4
-        params [ 'epochs'        ] = 2400
-        params [ 'patience'      ] = 200 
+        params [ 'hidden_dims'   ] = ( 64  , 64  , 64  )
+        params [ 'hidden_dims'   ] = ( 256 , 256 , 256 )
+        params [ 'hidden_dims'   ] = ( 256 , 256 )
+        params [ 'hidden_dims'   ] = ( 128 , 128 , 128 )
+        params [ 'learning_rate' ] = 2e-4
+        
+        epochs                     = max ( 5000 , params.get ( 'epochs'     , 5000 ) )
+        params [ 'epochs'        ] = epochs
+        min_epochs                 = max ( 200  , params.get ( 'min_epochs' ,  200 ) )
+        params [ 'min_epochs'    ] = min ( epochs   , min_epochs ) 
+        patience                   = max ( 300 , params.get ( 'patience'    ,  300 ) )
+        params [ 'patience'      ] = min ( patience , epochs ) 
         return params
 
     # =========================================================================
@@ -1533,7 +1542,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
 
         import torch.nn            as nn
         import torch.nn.functional as F
-        ## from   sklearn.preprocessing import QuantileTransformer
+        from   sklearn.preprocessing import QuantileTransformer
         from   sklearn.preprocessing import MinMaxScaler
 
         import time
@@ -1554,11 +1563,12 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         batch_size = min ( max ( 2 , ( n_samples + 1 ) // 2 ) , batch_size ) 
         batch_size = max ( 2 , 2 ** math.floor ( math.log2 ( batch_size ) ) )
 
-        nepochs       = self.params.get ( 'epochs'        , 2000                  )
+        nepochs       = self.params.get ( 'epochs'        , 2500                  )
         patience      = self.params.get ( 'patience'      , 400                   )
         min_epochs    = self.params.get ( 'min_epochs'    , 20                    )
         min_delta     = self.params.get ( 'min_delta'     , 2.e-4                 ) 
         eval_freq     = self.params.get ( 'eval_freq'     , 10                    )
+        max_logit     = self.params.get ( 'max_logit'     , 10                    )
         learning_rate = self.params.get ( 'learning_rate' , 3e-3                  )
         hidden_dims   = self.params.get ( 'hidden_dims'   , ( 512 , 256 , 256 )   )
         weight_decay  = self.params.get ( 'weight_decay'  , 1.e-5                 )
@@ -1568,8 +1578,9 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         # Data preprocessing: QuantileTransformer maps complex kinematics
         # and resonance peaks into a smooth Gaussian space
         # =====================================================================
-        ## scaler      = QuantileTransformer  ( output_distribution = 'normal'    , n_quantiles = 10000 , random_state = self.random_state )
-        scaler      = MinMaxScaler         ( feature_range = ( -1 , 1 ) )
+        n_quantiles = min ( 10000 , n_samples ) 
+        scaler      = QuantileTransformer  ( output_distribution = 'normal' , n_quantiles = n_quantiles , random_state = self.random_state )
+        ## scaler      = MinMaxScaler         ( feature_range = ( -1 , 1 ) )
 
         X_tr_scaled = scaler.fit_transform ( numpy.ascontiguousarray ( X_train , dtype = numpy.float32 ) )
         X_va_scaled = scaler.transform     ( numpy.ascontiguousarray ( X_val   , dtype = numpy.float32 ) )
@@ -1589,6 +1600,32 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         y_va_t = torch.from_numpy ( y_val.astype ( numpy.float32 ) ).to ( device )
         w_va_t = torch.from_numpy ( w_va        ).to ( device )
 
+        class DensityRatioLoss(nn.Module):
+            def __init__(self, max_logit=8.0):
+                super().__init__()
+                self.max_logit = max_logit
+
+            def forward(self, logits, targets, weights):
+                mask_orig = (targets == 0)
+                mask_targ = (targets == 1)
+
+                z_orig = logits[mask_orig]
+                w_orig = weights[mask_orig]
+                z_targ = logits[mask_targ]
+                w_targ = weights[mask_targ]
+
+                # Жесткий зажим логитов от взрыва экспоненты
+                z_orig_safe = torch.clamp(z_orig, max=self.max_logit)
+
+                # Вычисление с зажимом
+                w_orig_sum = w_orig.abs().sum() + 1e-8
+                loss_orig  = torch.sum(w_orig * torch.exp(z_orig_safe)) / w_orig_sum
+
+                w_targ_sum = w_targ.abs().sum() + 1e-8
+                loss_targ  = torch.sum(w_targ * z_targ) / w_targ_sum
+
+                return loss_orig - loss_targ
+    
         # =====================================================================
         ## @class ResBlock
         #  Inner class defining a Residual Block to prevent gradient vanishing
@@ -1649,8 +1686,8 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         model       = torch.jit.trace ( model , dummy_input )
 
                 
-        optimizer  = torch.optim.AdamW                          ( model.parameters () , lr    = learning_rate , weight_decay = weight_decay )
-        scheduler  = torch.optim.lr_scheduler.CosineAnnealingLR ( optimizer           , T_max = nepochs       , eta_min      = 1e-5         )
+        optimizer  = torch.optim.AdamW                          ( model.parameters () , lr      = learning_rate , weight_decay =       weight_decay  )
+        scheduler  = torch.optim.lr_scheduler.CosineAnnealingLR ( optimizer           , T_max   = nepochs       , eta_min      = 0.1 * learning_rate )
         scaler_amp = torch.amp.GradScaler                       ( 'cuda'              , enabled = is_cuda )
 
         w_va_sum         = w_va_t.abs().sum() + 1e-8
@@ -1678,7 +1715,10 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
             return False, torch.float32
 
         use_autocast, autocast_dtype = get_autocast_config(device)
+
+        criterion = DensityRatioLoss(max_logit=10.0)
         
+        best_epoch = None 
         # =====================================================================
         # Main training loop
         # =====================================================================
@@ -1702,9 +1742,13 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                 b_w_sum = b_w.abs().sum() + 1e-8
                 
                 with torch.autocast ( device_type = device.type, dtype = autocast_dtype , enabled = use_autocast ) :
+                    
                     logits = model ( b_x )
-                    loss   = F.binary_cross_entropy_with_logits ( logits , b_y , weight = b_w , reduction = 'sum' ) / b_w_sum
-                
+                    ## loss   = F.binary_cross_entropy_with_logits ( logits , b_y , weight = b_w , reduction = 'sum' ) / b_w_sum
+                    
+                    loss    = criterion ( logits , b_y , b_w ) 
+
+                    
                 scaler_amp.scale  ( loss      ).backward ()
                 scaler_amp.step   ( optimizer )
                 scaler_amp.update ()
@@ -1715,30 +1759,36 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
             # =================================================================
             # Validation
             # =================================================================
-            if epoch % eval_freq == 0 or epoch + 1 == nepochs :
+            if epoch % eval_freq == 0 or nepochs <= epoch + 10 : 
                 
                 model.eval ()
                 val_loss = 0.0
                 
                 with torch.inference_mode () :
+                    
                     for i in range ( 0 , len ( y_val ) , batch_size ) :
                         v_x = X_va_t [ i : i + batch_size ]
                         v_y = y_va_t [ i : i + batch_size ]
                         v_w = w_va_t [ i : i + batch_size ]
                         
+                        ##  with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
+                        ##    v_logits     = model ( v_x )
+                        ##    v_loss_batch = F.binary_cross_entropy_with_logits ( v_logits , v_y , weight = v_w , reduction = 'sum' )
+                        ##    val_loss    += v_loss_batch.item ()
                         with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
                             v_logits     = model ( v_x )
-                            v_loss_batch = F.binary_cross_entropy_with_logits ( v_logits , v_y , weight = v_w , reduction = 'sum' )
-                            val_loss    += v_loss_batch.item ()
+                            # Compute validation loss using custom density ratio loss
+                            v_loss_batch = criterion ( v_logits , v_y , v_w )
+                            val_loss    += v_loss_batch.item () * v_w.abs().sum().item()
                             
-                val_loss /= w_va_sum.item ()
+                    val_loss /= w_va_sum.item ()
 
                 if not self.silent :
                     logger.info ( f"Epoch {epoch:03d}/{nepochs} | Val Loss: {val_loss:.5f} | LR: {scheduler.get_last_lr()[0]:.2e} | Time: {time.time()-t0:.3f} s" )
 
-                if val_loss + min_delta < best_loss :
-                    best_loss = val_loss
-                    
+                if val_loss + min_delta < best_loss or best_state is None :
+                    best_loss        = val_loss
+                    best_epoch       = epoch 
                     unwrapped_model  = model._orig_mod if hasattr ( model , '_orig_mod' ) else model
                     best_state       = { k : v.clone().detach() for k , v in unwrapped_model.state_dict().items() }
                     patience_counter = 0

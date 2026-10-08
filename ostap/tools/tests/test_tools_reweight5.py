@@ -216,7 +216,17 @@ def run_reweight ( n_dim     = 3     ,
         
     if hasPyTorch () : 
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
-        rw5 = TORCH ( target = target , original = original , n_splits = 1 , batch_size = 2**10 , hidden_dims = ( 128, 128, 128)  )
+        rw5 = TORCH ( target        = target    ,
+                      nepochs       = 3000      ,
+                      original      = original  ,
+                      n_splits      = 1         ,
+                      epochs        = 5000      ,  
+                      batch_size    = 2**7      ,
+                      min_delta     = 1e-3      ,
+                      weight_decay  = 1.e-6     ,
+                      learning_rate = 1.e-3     ,
+                      max_logit     = 8         , 
+                      hidden_dims   = ( 64 , 64 , 64 )  )
         reweighters.append ( rw5 )
         
     if False and hasHepML    () :
@@ -278,7 +288,7 @@ def run_reweight ( n_dim     = 3     ,
 if '__main__' == __name__ :
 
     if numcpu() <= 8 : run_reweight ( 3 ,  3000 )
-    else             : run_reweight ( 3 , 12000 )
+    else             : run_reweight ( 3 ,  3000 )
 
 # =============================================================================
 
