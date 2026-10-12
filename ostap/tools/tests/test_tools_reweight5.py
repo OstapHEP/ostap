@@ -16,9 +16,9 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 ## ATTENTION! 
 import os 
-os.environ [ "MKL_NUM_THREADS"      ]  = "8"
-os.environ [ "OMP_NUM_THREADS"      ]  = "8"
-os.environ [ "OPENBLAS_NUM_THREADS" ]  = "8"
+os.environ [ "MKL_NUM_THREADS"      ]  = "4"
+os.environ [ "OMP_NUM_THREADS"      ]  = "4"
+os.environ [ "OPENBLAS_NUM_THREADS" ]  = "4"
 # =============================================================================
 os.environ [ 'KMP_DUPLICATE_LIB_OK' ] = 'TRUE'
 os.environ [ 'KMP_INIT_AT_FORK'     ] = 'FALSE' 
