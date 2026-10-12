@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-env_before=$(printenv|sort)
+env_init=$(printenv|sort)
 
 # =========================================================================
 # Save current locale settings (or empty strings if unset)
@@ -507,21 +507,14 @@ else
 fi
 
 
-
 # =====================================================================
-env_after=$(printenv|sort)
+env_final=$(printenv|sort)
 flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
 case "$flag" in
     1|true|yes)
-        if [ "$result" -eq 0 ] && command -v ostap-table >/dev/null 2>&1; then
-            diff_data=$(comm -13 <(echo "$env_before") <(echo "$env_after"))
-            if [ -n "$diff_data" ]; then
-                printf "Variable | Value\n%s\n" "$diff_data" |
-                    sed -e 's/=/ | /' -e 's/:/  /g' |
-                    ostap-table -t "Ostap: New & Modified Variables" -s '|' -a 'lw'
-            fi
-        fi
-        ;;
+	if [ "$(type -t env_diff 2>/dev/null)" = "function" ]; then
+	    env_diff "${env_init}" "${env_final}"
+	fi 
 esac
 
 return ${result} 2>/dev/null || exit ${result}

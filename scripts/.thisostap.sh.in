@@ -3,7 +3,7 @@
 # @file
 # Helper script to define the environment for ostap-@OSTAP_VERSION@ sh/bash/ksh/zsh 
 # =====================================================================
-env_before=$(printenv | sort)
+env_start=$(printenv|sort)
 
 if [ -n "${PYTHONNOUSERSITE}" ]; then
     printf 'thisostap.sh: unset PYTHONNOUSERSITE %s\n' "${PYTHONNOUSERSITE}"
@@ -193,20 +193,73 @@ export KMP_BLOCKTIME=0
 export OMP_PROC_BIND=false
 export OMP_WAIT_POLICY=PASSIVE 
 
+
 # =====================================================================
-env_after=$(printenv | sort)
+env_diff ()
+{
+    local env_before="$1"
+    local env_after="$2"
+    local title="${3:-Ostap: Environment Changes}"
+
+    if command -v ostap-table >/dev/null 2>&1; then
+        {
+            printf "Variable | Status | Value\n"
+            awk '
+            # Жесткий фильтр: пропускаем всё, что не начинается с валидного имени переменной (ИМЯ=)
+            !/^[a-zA-Z_][a-zA-Z0-9_]*=/ { next }
+
+            NR==FNR {
+                eq = index($0, "=")
+                if (eq > 0) {
+                    k = substr($0, 1, eq - 1)
+                    v = substr($0, eq + 1)
+                    old[k] = v
+                }
+                next
+            }
+            {
+                eq = index($0, "=")
+                if (eq > 0) {
+                    k = substr($0, 1, eq - 1)
+                    v = substr($0, eq + 1)
+                    seen[k] = 1
+                    
+                    if (!(k in old)) {
+                        st = "✨"
+                    } else if (old[k] != v) {
+                        st = "🔄"
+                    } else {
+                        next
+                    }
+                    
+                    n = split(v, parts, ":")
+                    for (i=1; i<=n; i++) {
+                        if (i == 1) {
+                            print k " | " st " | " parts[i]
+                        } else {
+                            print "〃 | 〃 | " parts[i]
+                        }
+                    }
+                }
+            }
+            END {
+                for (k in old) {
+                    if (!(k in seen)) {
+                        print k " | ❌ | (removed)"
+                    }
+                }
+            }
+            ' <(echo "$env_before") <(echo "$env_after")
+        } | ostap-table -t "$title" -s '|' -a 'lw'
+    fi
+}
+# =====================================================================
+
+env_end=$(printenv|sort)
 flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
 case "$flag" in
     1|true|yes)
-        if command -v ostap-table >/dev/null 2>&1; then
-            diff_data=$(comm -13 <(echo "$env_before") <(echo "$env_after"))
-            if [ -n "$diff_data" ]; then
-                printf "Variable | Value\n%s\n" "$diff_data" |
-                    sed -e 's/=/ | /' -e 's/:/  /g' |
-                    ostap-table -t "Ostap: New & Modified Variables" -s '|' -a 'lw'
-            fi
-        fi
-        ;;
+	env_diff "${env_start}" "${env_end}" "Ostap: Environment change"
 esac
 
 # =====================================================================
