@@ -1,6 +1,12 @@
+# v3.8.6.12
+
 ## New features
 
+ 1. Add `TextBar` - variant of `progress_bar` where more information is needed 
+
 ## Bug fixes
+
+ 1. `chopping.py` : fix the typo (thanks to Artem Egorychev!)
 
 ## Backward incompatible
 

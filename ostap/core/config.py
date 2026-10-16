@@ -86,6 +86,7 @@ from   ostap.utils.env           import ( get_env              ,
                                           ##
                                           OSTAP_TABLE          ,
                                           OSTAP_PROTOCOL       ,
+                                          OSTAP_RANDOM_SEED    , 
                                           ## 
                                           OSTAP_STARTUP        )
 
@@ -147,6 +148,7 @@ config [ 'General' ] = {
     'ImplicitMT'  : str ( default_config.implicitMT    ) ,
     'Profile'     : str ( default_config.profile       ) ,
     'Protocol'    : str ( default_config.protocol      ) ,    
+    'RandomSeed'  : str ( default_config.randomseed    ) ,    
     ##
     'Startup'     : ', ' .join ( v for v in default_config.startup_files ) ,
     'LoadMacros'  : ', ' .join ( v for v in default_config.load_macros   ) ,
@@ -355,7 +357,6 @@ if has_env ( OSTAP_STARTUP ) :
         ## os.pathsep-separated list 
         else            : general [ 'StartUp' ] = ', '.join ( i.strip() for i in value.split ( os.pathsep ) )
 
-
 if has_env ( OSTAP_PROTOCOL ) :
     
     value    = get_env ( OSTAP_PROTOCOL , '5' , silent = True )
@@ -370,7 +371,16 @@ if has_env ( OSTAP_PROTOCOL ) :
         except : # =============================================================
             # ==================================================================
             pass
+
+if has_env ( OSTAP_RANDOM_SEED ) :
     
+    value    = get_env ( OSTAP_RANDOM_SEED , None , silent = True )
+    if       value is None : general [ 'RandomSeed' ]  = None
+    elif not value         : general [ 'RandomSeed' ]  = None
+    elif isinstance ( value , int ) : general [ 'RandomSeed' ]  = value 
+    else                            : general [ 'RandomSeed' ]  = hash ( value )  
+    
+
 # =============================================================================
 ## Some explicit & important elements from the `General` section:
 arg_parse     = general.getboolean ( 'ArgParse'    , fallback = default_config.arg_parse    )
@@ -400,11 +410,12 @@ implicitMT    = general.getboolean ( 'ImplicitMT'  , fallback = default_config.i
 profile       = general.getboolean ( 'Profile'     , fallback = default_config.profile      )
 
 protocol      = general.getint     ( 'Protocol'    , fallback = default_config.protocol     )
+randomseed    = general.get        ( 'RandomSeed'  , fallback = default_config.randomseed   )
 
-startup_files = general.getlist   ( 'StartUp'    , fallback = [ v for v in default_config.startup_files ] ) 
-load_macros   = general.getlist   ( 'LoadMacros' , fallback = [ v for v in default_config.load_macros   ] ) 
-exec_macros   = general.getlist   ( 'LoadMacros' , fallback = [ v for v in default_config.exec_macros   ] ) 
-commands      = general.getlist   ( 'Commands'   , fallback = [ v for v in default_config.commands      ] ) 
+startup_files = general.getlist    ( 'StartUp'    , fallback = [ v for v in default_config.startup_files ] ) 
+load_macros   = general.getlist    ( 'LoadMacros' , fallback = [ v for v in default_config.load_macros   ] ) 
+exec_macros   = general.getlist    ( 'LoadMacros' , fallback = [ v for v in default_config.exec_macros   ] ) 
+commands      = general.getlist    ( 'Commands'   , fallback = [ v for v in default_config.commands      ] ) 
 
 # =============================================================================
 ## Section with canvas configuration
@@ -599,7 +610,7 @@ def __parse_args ( args  = [] ) :
         help    =  "Printout level [default: %(default)s]" ,
         default = level if 0 <= level <= 8 else -1 ) 
     
-    egroup1.add_argument(
+    group1.add_argument(
         "--no-log2stdout"       , 
         dest    = "Log2stdout"  , 
         action  = "store_false" ,
@@ -784,6 +795,13 @@ def __parse_args ( args  = [] ) :
         help    = "Dump-file for configuration [default: %(default)s]" , 
         default = dump_config      )
     #
+    group7.add_argument ( 
+        '--random-seed'            ,
+        metavar = "RANDOM_SEED"    ,        
+        dest    = 'RandomSeed'     , 
+        help    = "Random seed used for random number generators [default: %(default)s]" , 
+        default = randomseed       )
+    #
     
     # ===============================================================================
     ## use the parser!!
@@ -829,6 +847,7 @@ general [ 'Parallel'    ] = str ( arguments.Parallel   )
 general [ 'Sequential'  ] = str ( arguments.Sequential )
 general [ 'ImplicitMT'  ] = str ( arguments.ImplicitMT )
 general [ 'Profile'     ] = str ( arguments.Profile    )
+general [ 'RandomSeed'  ] = str ( arguments.RandomSeed )
 
 general [ 'StartUp'     ] = ', ' .join ( arguments.StartUp    )
 general [ 'LoadMacros'  ] = ', ' .join ( arguments.LoadMacros )
@@ -860,6 +879,7 @@ sequential    = arguments.Sequential
 ncpus         = arguments.NCPUs
 implicitMT    = arguments.ImplicitMT
 profile       = arguments.Profile
+randomseed    = arguments.RandomSeed
 
 startup_files = tuple ( arguments.StartUp     ) 
 load_macros   = tuple ( arguments.LoadMacros  ) 
@@ -883,7 +903,7 @@ def config_atexit ( config , files , dump ) :
     logger = getLogger ( 'ostap.core.config' )
     ## 
     # ===========================================================================
-    ## (1) print lift/table of read input config files 
+    ## (1) print list/table of read input config files 
     # ===========================================================================
     if   1 == len ( files ) :  logger.info ( 'Ostap configuration is read from %s' % files [ 0 ]  ) 
     elif 1 <  len ( files ) :

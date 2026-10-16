@@ -54,8 +54,9 @@ profile      = False                 ## profile the execution?
 
 table_style  = 'default'             ## Table style
 
-protocol     = 5                     ## pickling protocol 
+protocol     = 5                     ## pickling protocol
 
+randomseed   = None                  ## random seed 
 # =============================================================================
 ## configuration files to read
 # =============================================================================

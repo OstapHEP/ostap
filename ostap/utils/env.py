@@ -54,6 +54,7 @@ __all__     = (
     'OSTAP_STARTUP'      , ## startup files to be (pre)execucted
     ## 
     'OSTAP_PROTOCOL'     , ## Ostap pickling protocol
+    'OSTAP_RANDOM_SEED'  , ## Ostap random seed 
 )
 # =============================================================================
 import os
@@ -90,6 +91,7 @@ OSTAP_TABLE         = 'OSTAP_TABLE'        ## table style
 OSTAP_STARTUP       = 'OSTAP_STARTUP'      ## list of startup files to be (pre)execucted
 ## 
 OSTAP_PROTOCOL      = 'OSTAP_PROTOCOL'     ## pickling protocol 
+OSTAP_RANDOM_SEED   = 'OSTAP_RANDOM_SEED'  ## Ostap random seed 
 ##
 OSTAP_DIR           = 'OSTAP_DIR'
 ## 

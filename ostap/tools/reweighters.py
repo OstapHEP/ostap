@@ -26,7 +26,7 @@ from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu, num_jobs, NoContext
 from   ostap.logger.utils       import map2table_ex
 from   ostap.logger.pretty      import nice_print 
-from   ostap.utils.progress_bar import progress_bar
+from   ostap.utils.progress_bar import progress_bar, text_bar
 from   ostap.tools.reweighter   import Reweighter
 from   ostap.stats.counters     import SE, table_counters  
 from   ostap.stats.utils        import ( weight_trivial     ,
@@ -64,12 +64,12 @@ epoch_symbol = ( '%s :' % S.repeat ) if S.show else 'Epoch:'
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================
-DEFAULT_ESTIMATORS        = 1000  # High capacity: deep ensemble with low learning rate
-REGULARIZED_ESTIMATORS    =  500  # Strong regularization: constrained number of trees
-MAX_DEPTH                 =   10  # Deep tree capacity for high dimensions / large statistics
-REGULARIZED_DEPTH         =    5  # Shallow depth (8 leaves max) to enforce heavy smoothing
-LEARNING_RATE             =  0.02 # Small step for stable density ratio convergence
-REGULARIZED_LEARNING_RATE =  0.04 # Slightly larger step for shallow regularized trees
+DEFAULT_ESTIMATORS             = 1000  # High capacity: deep ensemble with low learning rate
+REGULARIZED_ESTIMATORS         =  500  # Strong regularization: constrained number of trees
+MAX_DEPTH                      =   10  # Deep tree capacity for high dimensions / large statistics
+REGULARIZED_DEPTH              =    5  # Shallow depth (8 leaves max) to enforce heavy smoothing
+LEARNING_RATE                  =  0.02 # Small step for stable density ratio convergence
+REGULARIZED_LEARNING_RATE      =  0.04 # Slightly larger step for shallow regularized trees
 
 LGBM_DEFAULT_ESTIMATORS        = 1600 # High capacity: deep ensemble with low learning rate
 LGBM_REGULARIZED_ESTIMATORS    = 1000 # Strong regularization: constrained number of trees
@@ -235,9 +235,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                     weight2 = target_weight     ,
                     where   = typename ( self ) )   
         
-        self.__progress       = True if progress else False 
-        self.__clip_threshold = float ( clip_threshold )
-        self.__n_splits       = n_splits
+        self.__progress            = True if progress else False 
+        self.__clip_threshold      = float ( clip_threshold )
+        self.__n_splits            = n_splits
 
         self.__fitted_models       = {}
         self.__priors              = {}
@@ -246,7 +246,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__mode                = None
         self.__scale_factors       = {}
         
-
         ## n_features = num_features ( target ) 
         ## n_rows     = num_samples  ( target ) + num_samples  ( original )
         ## data_size  = n_rows * n_features 
@@ -260,7 +259,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                                original_weight = original_weight ,
                                                target_weight   = target_weight   ) 
         
-        if reg_case :
+        if False and reg_case :
             
             n_features = num_features ( original )
             neff_orig  = nEff ( original  , original_weight )
@@ -285,7 +284,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__original_ratios             = None
         self.__original_reweighted_weights = None
 
+        # ====================================================================================
         ## initialize the base 
+        # ====================================================================================
         super ().__init__ ( original        = original        ,
                             target          = target          , 
                             original_weight = original_weight ,
@@ -408,8 +409,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """`scale_factors` : scale factors for traing data(per stream)"""
         return self.__scale_factors 
         
-        
-
     # =================================================================================
     ## Get active stream decomposition scheme string.
     #  @return Stream mode identifier string.
@@ -651,10 +650,11 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             n_folds = 1
 
         stream_models = []
+
         for train_idx, val_idx in progress_bar ( splits      ,
-                                                 max_value   = n_folds        ,
-                                                 description = 'Folds:'       , 
-                                                 silent      = not self.progress or self.silent or 1 >= self.n_splits ) :
+                                                 max_value   = n_folds           ,
+                                                 description = 'Folds:'          , 
+                                                 silent      = not self.progress ) :
             
             X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
             X_va, y_va = X_comb [ val_idx   ] , y_comb [ val_idx ]
@@ -1420,12 +1420,12 @@ class CatBoostDensityReweighter(DensityReweighter):
 #  Optimized PyTorch MLP density ratio reweighter.
 #  
 #  This implementation utilizes index-based zero-copy batching, Automatic 
-#  Mixed Precision (AMP), and optional torch.compile capabilities for 
-#  maximum hardware utilization and memory safety.
+#  Mixed Precision (AMP), Exponential Moving Average (EMA) for weights, 
+#  strict gradient clipping, and bounded direct density ratio loss for 
+#  maximum training stability and hardware utilization.
 # =============================================================================
 class PyTorchDensityReweighter ( DensityReweighter ) :
-    """ 
-    Highly optimized PyTorch MLP density ratio reweighter.
+    """ Highly optimized and stabilized PyTorch MLP density ratio reweighter.
     """
 
     # =========================================================================
@@ -1438,9 +1438,9 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
     #  @param progress        Boolean flag to show epoch progress bar.
     #  @param kwargs          Additional model hyperparameters.
     # =========================================================================
-    def __init__ ( self            , * ,
-                   original        ,
-                   target          ,
+    def __init__ ( self                   , * ,
+                   original               ,
+                   target                 ,
                    original_weight = None ,
                    target_weight   = None ,
                    progress        = True , **kwargs ) :
@@ -1451,20 +1451,25 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         # ---------------------------------------------------------------------
         # Default configuration aligned for readability
         # ---------------------------------------------------------------------
-        config = { 'hidden_dims'   : ( 512 , 512 , 512 , 512 ) ,
-                   'dropout'       : 0.0                       ,               
-                   'learning_rate' : 5e-4                      ,              
+        config = { 'hidden_dims'   : ( 256 , 256 , 256 )       ,
+                   'dropout'       : 0.35                      ,               
+                   'learning_rate' : 3e-4                      ,              
                    'weight_decay'  : 1e-5                      ,              
-                   'batch_size'    : 2**16                     ,
+                   'batch_size'    : 256                       ,
                    'epochs'        : 2000                      ,              
-                   'patience'      : 400                       ,
-                   'min_epochs'    : 25                        ,
-                   'min_delta'     : 2.e-4                     , 
+                   'patience'      :   50                      ,
+                   'min_epochs'    :   50                      ,
+                   'min_delta'     : 1e-5                      , 
                    'eval_freq'     : 5                         , 
+                   'max_logit'     : 8.0                       , # Cap w = exp(z) <= ~400
+                   'logit_reg'     : 1e-3                      , # L2 penalty on logits
+                   'grad_clip'     : 0.2                       ,
+                   'ema_decay'     : 0.999                     , 
+                   'ma_window'     : 5                         , 
                    'device'        : 'cuda' if cuda else 'cpu' ,
-                   'compile'       : False                     , 
-                   'n_jobs'        : -1                        ,
-                 }
+                   'compile'       : False                     ,
+                   'jit'           : True                      ,
+                   'n_jobs'        : -1                        }
 
         config.update ( kwargs )
         self.__progress_epochs = config.pop ( 'progress' , True )
@@ -1493,19 +1498,21 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
     def regularization ( self , params , n_features , n_samples ) :
         """ Adjusts hyperparameters based on dataset size for regularization
         """
-        params [ 'hidden_dims'   ] = ( 512 , 512 , 512 )
-        params [ 'hidden_dims'   ] = ( 64  , 64  , 64  )
-        params [ 'hidden_dims'   ] = ( 256 , 256 , 256 )
-        params [ 'hidden_dims'   ] = ( 256 , 256 )
-        params [ 'hidden_dims'   ] = ( 128 , 128 , 128 )
-        params [ 'learning_rate' ] = 2e-4
+        ## params [ 'hidden_dims'   ] = ( 256 , 256 )
+        ## params [ 'learning_rate' ] = 2e-5
+        ## params [ 'max_logit'     ] = 8.0
+        ## params [ 'grad_clip'     ] = 0.2
+        ## params [ 'logit_reg'     ] = 3e-5
         
         epochs                     = max ( 5000 , params.get ( 'epochs'     , 5000 ) )
         params [ 'epochs'        ] = epochs
-        min_epochs                 = max ( 200  , params.get ( 'min_epochs' ,  200 ) )
-        params [ 'min_epochs'    ] = min ( epochs   , min_epochs ) 
-        patience                   = max ( 300 , params.get ( 'patience'    ,  300 ) )
-        params [ 'patience'      ] = min ( patience , epochs ) 
+        
+        min_epochs                 = max (  75  , params.get ( 'min_epochs' ,   75 ) )
+        params [ 'min_epochs'    ] = min ( min_epochs , epochs )
+        
+        patience                   = max (  50  , params.get ( 'patience'   ,   50 ) )
+        params [ 'patience'      ] = min ( patience   , epochs )
+
         return params
 
     # =========================================================================
@@ -1521,30 +1528,18 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
     # =========================================================================
     def _train_single_model ( self , X_train , y_train , w_train , X_val , y_val , w_val ) :
 
-        ## import os
-        # ---------------------------------------------------------------------
-        # Unlock CPU Multithreading before PyTorch backend initialization
-        # Set to 4-8 threads depending on your batch system allocation
-        # ---------------------------------------------------------------------
-        ## n_threads = "8"
-        ## os.environ [ 'OMP_NUM_THREADS'      ] = n_threads
-        ## os.environ [ 'MKL_NUM_THREADS'      ] = n_threads
-        ## os.environ [ 'OPENBLAS_NUM_THREADS' ] = n_threads
-
         import torch
         
         n_threads = self.params.get ( 'n_jobs' , max ( 1 , numcpu () // 2 ) )
         n_threads = min ( 4  , n_threads ,       max ( 1 , numcpu () // 2 ) )
         n_threads = max ( 1  , n_threads )
+        torch.set_num_threads ( 4 )
 
-        torch.set_num_threads ( 8 )
-        ### torch.set_num_interop_threads ( int ( n_threads ) )
-
-        import torch.nn            as nn
-        import torch.nn.functional as F
-        from   sklearn.preprocessing import QuantileTransformer
-        from   sklearn.preprocessing import MinMaxScaler
-
+        import torch.nn                        as nn
+        import torch.nn.functional             as F
+        from   torch.optim.swa_utils           import AveragedModel , get_ema_multi_avg_fn
+        from   sklearn.preprocessing           import QuantileTransformer, StandardScaler 
+        from   collections                     import deque
         import time
 
         device  = torch.device ( self.params.get ( 'device' , 'cuda' if torch.cuda.is_available () else 'cpu' ) )
@@ -1556,34 +1551,39 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         # =====================================================================
         # Extract and validate hyperparameters
         # =====================================================================
-        batch_size = self.params.get ( 'batch_size' , 2**17 if is_cuda else 2**15 )
-        if not isinstance ( batch_size , int ) or batch_size <= 0 :
-            batch_size = 2**17 if is_cuda else 2**15
+        batch_size = self.params.get ( 'batch_size' , 256 )
+        if not isinstance ( batch_size , int ) or batch_size <= 1 : batch_size = 256
             
         batch_size = min ( max ( 2 , ( n_samples + 1 ) // 2 ) , batch_size ) 
         batch_size = max ( 2 , 2 ** math.floor ( math.log2 ( batch_size ) ) )
 
-        nepochs       = self.params.get ( 'epochs'        , 2500                  )
-        patience      = self.params.get ( 'patience'      , 400                   )
-        min_epochs    = self.params.get ( 'min_epochs'    , 20                    )
-        min_delta     = self.params.get ( 'min_delta'     , 2.e-4                 ) 
-        eval_freq     = self.params.get ( 'eval_freq'     , 10                    )
-        max_logit     = self.params.get ( 'max_logit'     , 10                    )
-        learning_rate = self.params.get ( 'learning_rate' , 3e-3                  )
-        hidden_dims   = self.params.get ( 'hidden_dims'   , ( 512 , 256 , 256 )   )
-        weight_decay  = self.params.get ( 'weight_decay'  , 1.e-5                 )
-        use_compile   = self.params.get ( 'compile'       , False                 ) and hasattr ( torch , 'compile' )
+        nepochs       = self.params.get ( 'epochs'        , 3000          )
+        patience      = self.params.get ( 'patience'      , 300           )
+        min_epochs    = self.params.get ( 'min_epochs'    , 100           )
+        min_delta     = self.params.get ( 'min_delta'     , 1.e-4         ) 
+        eval_freq     = self.params.get ( 'eval_freq'     , 5             )
+        max_logit     = self.params.get ( 'max_logit'     , 8.0           )
+        logit_reg     = self.params.get ( 'logit_reg'     , 1e-3          )
+        grad_clip     = self.params.get ( 'grad_clip'     , 0.2           )
+        ema_decay     = self.params.get ( 'ema_decay'     , 0.9           )
+        ma_window     = self.params.get ( 'ma_window'     , 5             )
+        learning_rate = self.params.get ( 'learning_rate' , 3e-4          )
+        dropout       = self.params.get ( 'dropout'       , 0.1           )
+        hidden_dims   = self.params.get ( 'hidden_dims'   , ( 256 , 256 ) )
+        weight_decay  = self.params.get ( 'weight_decay'  , 1.e-5         )
+        use_compile   = self.params.get ( 'compile'       , False         ) and hasattr ( torch , 'compile' )
+        use_jit       = self.params.get ( 'jit'           , False         ) 
         
         # =====================================================================
-        # Data preprocessing: QuantileTransformer maps complex kinematics
-        # and resonance peaks into a smooth Gaussian space
+        # Data preprocessing
         # =====================================================================
-        n_quantiles = min ( 10000 , n_samples ) 
-        scaler      = QuantileTransformer  ( output_distribution = 'normal' , n_quantiles = n_quantiles , random_state = self.random_state )
-        ## scaler      = MinMaxScaler         ( feature_range = ( -1 , 1 ) )
 
-        X_tr_scaled = scaler.fit_transform ( numpy.ascontiguousarray ( X_train , dtype = numpy.float32 ) )
-        X_va_scaled = scaler.transform     ( numpy.ascontiguousarray ( X_val   , dtype = numpy.float32 ) )
+        ## n_quantiles = min ( 10000 , n_samples ) 
+        ## scaler      = QuantileTransformer  ( output_distribution = 'normal' , n_quantiles = n_quantiles , random_state = self.random_state )
+        scaler      = StandardScaler () 
+
+        X_tr_scaled = scaler.fit_transform ( numpy.ascontiguousarray ( X_train , dtype = numpy.float32 ) ) .astype ( numpy.float32 , copy = False)
+        X_va_scaled = scaler.transform     ( numpy.ascontiguousarray ( X_val   , dtype = numpy.float32 ) ) .astype ( numpy.float32 , copy = False)
 
         w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else numpy.ones ( n_samples   , dtype = numpy.float32 )
         w_va = numpy.ascontiguousarray ( w_val   , dtype = numpy.float32 ) if w_val   is not None else numpy.ones ( len ( y_val ) , dtype = numpy.float32 )
@@ -1600,56 +1600,72 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         y_va_t = torch.from_numpy ( y_val.astype ( numpy.float32 ) ).to ( device )
         w_va_t = torch.from_numpy ( w_va        ).to ( device )
 
+        # =====================================================================
+        ## @class ResBlock
+        
         class DensityRatioLoss(nn.Module):
-            def __init__(self, max_logit=8.0):
+            def __init__(self, max_logit=12.0, logit_reg=0.0):
                 super().__init__()
                 self.max_logit = max_logit
+                self.logit_reg = logit_reg
 
             def forward(self, logits, targets, weights):
+                logits  = logits.float()
+                targets = targets.float()
+                weights = weights.float()
+                
                 mask_orig = (targets == 0)
                 mask_targ = (targets == 1)
-
+                
                 z_orig = logits[mask_orig]
                 w_orig = weights[mask_orig]
                 z_targ = logits[mask_targ]
                 w_targ = weights[mask_targ]
-
-                # Жесткий зажим логитов от взрыва экспоненты
-                z_orig_safe = torch.clamp(z_orig, max=self.max_logit)
-
-                # Вычисление с зажимом
+                
                 w_orig_sum = w_orig.abs().sum() + 1e-8
-                loss_orig  = torch.sum(w_orig * torch.exp(z_orig_safe)) / w_orig_sum
-
                 w_targ_sum = w_targ.abs().sum() + 1e-8
-                loss_targ  = torch.sum(w_targ * z_targ) / w_targ_sum
-
-                return loss_orig - loss_targ
-    
+                
+                # Ограничиваем ТОЛЬКО вход в exp(), чтобы избегать inf во float32
+                exp_z = torch.exp(torch.clamp(z_orig, max=self.max_logit))
+                
+                loss_orig = torch.sum(w_orig * exp_z) / w_orig_sum
+                loss_targ = torch.sum(w_targ * z_targ) / w_targ_sum
+                
+                loss = loss_orig - loss_targ
+                
+                if self.logit_reg > 0:
+                    loss += self.logit_reg * torch.mean(logits ** 2)
+                    
+                return loss
+                
+        
         # =====================================================================
         ## @class ResBlock
-        #  Inner class defining a Residual Block to prevent gradient vanishing
-        #  and improve fitting of sharp kinematic edges.
         class ResBlock ( nn.Module ) :
-            def __init__ ( self , dim ) :
+            def __init__ ( self , dim , dropout = 0.1 ) :
                 super().__init__()
-                self.block = nn.Sequential (
-                    nn.Linear    ( dim , dim ) ,
-                    nn.LayerNorm ( dim )       ,
-                    nn.SiLU      ()            ,
-                    nn.Linear    ( dim , dim ) ,
-                    nn.LayerNorm ( dim )
-                )
-                self.act = nn.SiLU ()
+
+                ## Build layers 
+                layers = [ nn.Linear      ( dim , dim ) ,
+                           nn.LayerNorm   ( dim )       ,
+                           ## nn.BatchNorm1d ( dim )       ,
+                           nn.SiLU        ()            ] 
+                
+                if 0 < dropout < 1 : layers.append ( nn.Dropout ( p = dropout ) ) 
+                                    
+                layers.append ( nn.Linear    ( dim , dim ) )
+                layers.append ( nn.LayerNorm ( dim )       ) 
+                
+                self.block = nn.Sequential ( *layers ) 
+                self.act   = nn.SiLU ()
 
             def forward ( self , x ) :
                 return self.act ( x + self.block ( x ) )
 
         # =====================================================================
         ## @class TabularResNet
-        #  Inner class defining the network architecture with skip-connections.
         class TabularResNet ( nn.Module ) :
-            def __init__ ( self , n_features , hidden_dims = ( 512 , 256 , 256 ) ) :
+            def __init__ ( self , n_features , hidden_dims = ( 256 , 256 ) , dropout = 0.1 ) :
                 super().__init__()
                 layers = []
                 
@@ -1661,42 +1677,64 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                     if in_dim != h_dim :
                         layers.append ( nn.Linear ( in_dim , h_dim ) )
                         in_dim = h_dim
-                    layers.append ( ResBlock ( h_dim ) )
-                    
+                    layers.append ( ResBlock ( h_dim , dropout = dropout ) )
+
+                if 0.0 < dropout < 1.0 : layers.append ( nn.Dropout ( p = dropout ) )
+            
                 layers.append ( nn.Linear ( in_dim , 1 ) )
                 self.net = nn.Sequential ( *layers )
                 
             def forward ( self , x ) : 
                 return self.net ( x ).squeeze ( -1 )
 
-        model_config = { 'n_features'  : n_features , 
-                         'hidden_dims' : hidden_dims }
+        model_config = { 'n_features'  : n_features  ,
+                         'hidden_dims' : hidden_dims ,
+                         'dropout'     : dropout     }
                          
-        model = TabularResNet ( **model_config ).to ( device )
-        
-        if False and use_compile :
-            try :
-                model = torch.compile ( model )
-            except Exception as e :
+        model     = TabularResNet ( **model_config ).to ( device )
+        ema_model = AveragedModel ( model , multi_avg_fn = get_ema_multi_avg_fn ( ema_decay ) )
+
+        # ======================================================================================
+        if False and use_compile : # ===========================================================
+            # ==================================================================================
+            try : # ============================================================================
+                # ==============================================================================
+                model     = torch.compile ( model     )
+                ema_model = torch.compile ( ema_model )
+                # ==============================================================================
+            except Exception as e : # ==========================================================
+                # ==============================================================================
                 logger.warning ( f"torch.compile failed, falling back to eager mode: {e}" )
-
-
-        ## JIT?
-        dummy_input = torch.randn ( batch_size , n_features , device = device )
-        model       = torch.jit.trace ( model , dummy_input )
-
+            # ==================================================================================
+        elif use_jit : # =======================================================================
+            # ==================================================================================
+            try : # ============================================================================
+                # ==============================================================================
+                model     = torch.jit.script ( model     )
+                # ==============================================================================
+            except Exception as e : # ==========================================================
+                # ==============================================================================
+                logger.warning ( f"torch.jit.script failed, falling back to eager mode: {e}" )
+            # ==================================================================================
+            
+        
                 
         optimizer  = torch.optim.AdamW                          ( model.parameters () , lr      = learning_rate , weight_decay =       weight_decay  )
         scheduler  = torch.optim.lr_scheduler.CosineAnnealingLR ( optimizer           , T_max   = nepochs       , eta_min      = 0.1 * learning_rate )
         scaler_amp = torch.amp.GradScaler                       ( 'cuda'              , enabled = is_cuda )
+        criterion  = DensityRatioLoss                           ( max_logit = max_logit , logit_reg = logit_reg )
 
         w_va_sum         = w_va_t.abs().sum() + 1e-8
         best_loss        = float ( 'inf' )
+        best_epoch       = 0 
         best_state       = None
         patience_counter = 0
 
+        # Moving average window for smooth validation monitoring
+        val_loss_history = deque ( maxlen = ma_window )
+
         if not self.silent :
-            data_size = n_features * n_samples * 4 ## in bytes 
+            data_size = n_features * n_samples * 4
             if   1024 ** 3 < data_size : data_size = '%.0fGB' % ( data_size / 1024 ** 3 )
             elif 1024 ** 2 < data_size : data_size = '%.0fMB' % ( data_size / 1024 ** 2 )
             elif 1024      < data_size : data_size = '%.0fkB' % ( data_size / 1024      )
@@ -1707,62 +1745,78 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                                                                                                            batch_size  ,
                                                                                                            steps_epoch ) )
             
-        def get_autocast_config(device):
-            if   'cuda' == device.type : return True, torch.bfloat16
+        def get_autocast_config ( device ) :
+            if   'cuda' == device.type : return True , torch.bfloat16
             elif 'cpu'  == device.type :
-                bf16_supported = hasattr ( torch.cpu, 'is_bf16_supported') and torch.cpu.is_bf16_supported ()
+                bf16_supported = hasattr ( torch.cpu , 'is_bf16_supported' ) and torch.cpu.is_bf16_supported ()
                 return bf16_supported , torch.bfloat16
-            return False, torch.float32
+            return False , torch.float32
 
-        use_autocast, autocast_dtype = get_autocast_config(device)
-
-        criterion = DensityRatioLoss(max_logit=10.0)
-        
-        best_epoch = None 
+        ## Autocast ? 
+        use_autocast , autocast_dtype = get_autocast_config ( device )
+        if not is_cuda :
+            use_autocast, autocast_dtype  = False, torch.float32
+            
         # =====================================================================
         # Main training loop
         # =====================================================================
         show_bar = self.__progress_epochs and not ( self.silent or self.progress )
-        for epoch in progress_bar ( nepochs , silent = not show_bar , description = epoch_symbol ) :
+        ## for epoch in progress_bar ( nepochs , silent = not show_bar , description = epoch_symbol ) :
+        for epoch, bar in text_bar ( nepochs , silent = not show_bar , description = epoch_symbol ) :
+
+            t_start = time.time() 
+
+            model.train ()
+            
+            perm = torch.randperm ( n_samples , device=device)
+            X_sh = X_tr_t [ perm ]
+            y_sh = y_tr_t [ perm ]
+            w_sh = w_tr_t [ perm ]
             
             t0 = time.time ()
-            
-            model.train    ()
-
-            perm = torch.randperm ( n_samples , device = device )
-
             for i in range ( 0 , n_samples , batch_size ) :
-                idx = perm [ i : i + batch_size ]
                 
-                b_x = X_tr_t [ idx ]
-                b_y = y_tr_t [ idx ]
-                b_w = w_tr_t [ idx ]
-
+                b_x = X_sh [ i : i + batch_size ]  # Zero-copy slicing!
+                b_y = y_sh [ i : i + batch_size ]
+                b_w = w_sh [ i : i + batch_size ]
+            
                 optimizer.zero_grad ( set_to_none = True )
-                b_w_sum = b_w.abs().sum() + 1e-8
                 
-                with torch.autocast ( device_type = device.type, dtype = autocast_dtype , enabled = use_autocast ) :
-                    
+                with torch.autocast ( device_type = device.type , dtype = autocast_dtype , enabled = use_autocast ) :
                     logits = model ( b_x )
-                    ## loss   = F.binary_cross_entropy_with_logits ( logits , b_y , weight = b_w , reduction = 'sum' ) / b_w_sum
-                    
-                    loss    = criterion ( logits , b_y , b_w ) 
+                    loss   = criterion ( logits , b_y , b_w ) 
 
-                    
-                scaler_amp.scale  ( loss      ).backward ()
-                scaler_amp.step   ( optimizer )
-                scaler_amp.update ()
 
-            # Step the learning rate scheduler
+                if is_cuda :
+                    scaler_amp.scale ( loss ).backward()
+                    scaler_amp.unscale_( optimizer )
+                    if 0 < grad_clip : torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip)
+                    scaler_amp.step   ( optimizer)
+                    scaler_amp.update ( )
+                else :
+                    loss.backward()
+                    if 0 < grad_clip : torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip)
+                    optimizer.step()
+                        
+                
+                ## # EMA update
+                ## ema_model.update_parameters ( model )
+
+            t_train = time.time() - t0
+
+            
+            ## EMA update
+            ema_model.update_parameters ( model )
+            
             scheduler.step ()
 
             # =================================================================
-            # Validation
+            # Validation using EMA model
             # =================================================================
-            if epoch % eval_freq == 0 or nepochs <= epoch + 10 : 
+            if epoch <= ma_window or epoch % eval_freq == 0 or nepochs <= epoch + 10 : 
                 
-                model.eval ()
-                val_loss = 0.0
+                ema_model.eval ()
+                val_loss_raw = 0.0
                 
                 with torch.inference_mode () :
                     
@@ -1771,60 +1825,59 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                         v_y = y_va_t [ i : i + batch_size ]
                         v_w = w_va_t [ i : i + batch_size ]
                         
-                        ##  with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
-                        ##    v_logits     = model ( v_x )
-                        ##    v_loss_batch = F.binary_cross_entropy_with_logits ( v_logits , v_y , weight = v_w , reduction = 'sum' )
-                        ##    val_loss    += v_loss_batch.item ()
                         with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
-                            v_logits     = model ( v_x )
-                            # Compute validation loss using custom density ratio loss
+                            v_logits     = ema_model ( v_x )
                             v_loss_batch = criterion ( v_logits , v_y , v_w )
-                            val_loss    += v_loss_batch.item () * v_w.abs().sum().item()
+                            val_loss_raw += v_loss_batch.item () * v_w.abs().sum().item()
                             
-                    val_loss /= w_va_sum.item ()
+                    val_loss_raw /= w_va_sum.item ()
 
-                if not self.silent :
-                    logger.info ( f"Epoch {epoch:03d}/{nepochs} | Val Loss: {val_loss:.5f} | LR: {scheduler.get_last_lr()[0]:.2e} | Time: {time.time()-t0:.3f} s" )
+                val_loss_history.append ( val_loss_raw )
+                val_loss_smoothed = sum ( val_loss_history ) / len ( val_loss_history )
 
-                if val_loss + min_delta < best_loss or best_state is None :
-                    best_loss        = val_loss
+                if show_bar :
+                    rl = nice_print ( val_loss_raw               , precision = 3 )
+                    sl = nice_print ( val_loss_smoothed          , precision = 3 )
+                    lr = nice_print ( scheduler.get_last_lr()[0] , precision = 2 , with_sign = False ) 
+                    bar.text = f"Epoch: {epoch:3d}/{nepochs} | Raw/Smoothed Losses:{rl}/{sl} | LR:{lr} | Best epoch: #{best_epoch} | Time:{time.time()-t_start:.2f}s/epoch" 
+
+                if val_loss_smoothed + min_delta < best_loss or best_state is None :
+                    best_loss        = val_loss_smoothed
+                    unwrapped_ema    = ema_model.module if hasattr ( ema_model , 'module' ) else ema_model
+                    best_state       = { k : v.clone().detach() for k , v in unwrapped_ema.state_dict().items() }
                     best_epoch       = epoch 
-                    unwrapped_model  = model._orig_mod if hasattr ( model , '_orig_mod' ) else model
-                    best_state       = { k : v.clone().detach() for k , v in unwrapped_model.state_dict().items() }
                     patience_counter = 0
                 else :
                     patience_counter += eval_freq
                     if min_epochs <= epoch and patience <= patience_counter :
-                        if not self.silent : 
-                            logger.info ( f"[Info] Early stopping at epoch {epoch}. Best Val Loss: {best_loss:.5f}" )
-                            
-                        if best_state is None :
-                            unwrapped_model  = model._orig_mod if hasattr ( model , '_orig_mod' ) else model
-                            best_state       = { k : v.clone().detach() for k , v in unwrapped_model.state_dict().items() }
-                            
+                        if show_bar :
+                            bl       = nice_print ( best_loss , precision = 4 )
+                            bar.text = f"Early stopping at epoch #{epoch}/{nepochs} | Best Smoothed Loss: {bl} | Best epoch: #{best_epoch}" 
                         break
-
+                    
         # =====================================================================
-        # Cleanup memory and restore best weights
+        ## PHOENIX 
         # =====================================================================
-        del model , optimizer , scaler_amp , scheduler
-        del X_tr_t , y_tr_t , w_tr_t , X_va_t , y_va_t , w_va_t
-        
-        gc.collect ()
-        if is_cuda : torch.cuda.empty_cache ()
-
-        model = TabularResNet ( **model_config ).to ( device )
-        
-        if best_state is not None :
-            model.load_state_dict ( best_state )
-            del best_state
+        if True : # ===========================================================
+            # =================================================================
+            del model , ema_model , optimizer , scaler_amp , scheduler
+            del X_tr_t , y_tr_t , w_tr_t , X_va_t , y_va_t , w_va_t
+            
             gc.collect ()
+            if is_cuda : torch.cuda.empty_cache ()
+    
+            final_model = TabularResNet ( **model_config ).to ( device )
+            
+            if best_state is not None :
+                final_model.load_state_dict ( best_state )
+                del best_state
+                gc.collect ()
+    
+            final_model.eval ()
+            final_model.scaler = scaler
 
-        model.eval ()
-        model.scaler = scaler
-
-        val_preds = self._predict_single_model ( model , X_val )
-        return model , val_preds
+        val_preds = self._predict_single_model ( final_model , X_val )
+        return final_model , val_preds
 
     # =========================================================================
     ## Predicts probabilities for the given dataset.
@@ -1846,7 +1899,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         batch_size = 2**17 if is_cuda else 2**16
         batch_size = max ( 1024 , 2 ** math.floor ( math.log2 ( max ( 1 , min ( batch_size , n_samples ) ) ) ) )
 
-        X_scaled = model.scaler.transform ( numpy.ascontiguousarray ( X , dtype = numpy.float32 ) )
+        X_scaled = model.scaler.transform ( numpy.ascontiguousarray ( X , dtype = numpy.float32 ) ) .astype ( numpy.float32 , copy = False)        
         preds    = numpy.empty ( n_samples , dtype = numpy.float32 )
 
         # =====================================================================
@@ -1864,7 +1917,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                 preds [ i : i + batch_size ] = b_preds.cpu().numpy ()
 
         return preds
-    
+
 # =============================================================================
 # Filter parameters to keep only those accepted by scikit-learn LogisticRegression
 valid_LR_params = (

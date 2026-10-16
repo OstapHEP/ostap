@@ -573,7 +573,7 @@ class Trainer(object) :
         if self.prefilter_background     or \
            self.prefilter                or \
            self.background_cuts          or \
-           self.backgruund_vars          or \
+           self.background_vars          or \
            self.background_add_vars      or \
            self.__more_backgrounds       or 1 != self.prescale_background  :
             

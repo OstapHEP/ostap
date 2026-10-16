@@ -16,9 +16,9 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 ## ATTENTION! 
 import os 
-os.environ [ "MKL_NUM_THREADS"      ]  = "4"
-os.environ [ "OMP_NUM_THREADS"      ]  = "4"
-os.environ [ "OPENBLAS_NUM_THREADS" ]  = "4"
+os.environ [ "MKL_NUM_THREADS"      ]  = "2"
+os.environ [ "OMP_NUM_THREADS"      ]  = "2"
+os.environ [ "OPENBLAS_NUM_THREADS" ]  = "2"
 # =============================================================================
 os.environ [ 'KMP_DUPLICATE_LIB_OK' ] = 'TRUE'
 os.environ [ 'KMP_INIT_AT_FORK'     ] = 'FALSE' 
@@ -195,12 +195,12 @@ def run_reweight ( n_dim     = 3     ,
     
     reweighters = [ None ]
     
-    if False and hasCatBoost () : 
+    if hasCatBoost () : 
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
         rw4 = CATB ( target = target , original = original )
         reweighters.append ( rw4 )
         
-    if False and hasLightGBM () : 
+    if hasLightGBM () : 
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         rw2 = LGBM ( target = target , original = original )
         reweighters.append ( rw2 )
@@ -209,32 +209,30 @@ def run_reweight ( n_dim     = 3     ,
         ## rwc = CASCADE ( classes = [ LGBM , LGBM ] , target = target , original = original )
         ## reweighters.append ( rwc )
         
-    if False and hasXGBoost  () : 
+    if hasXGBoost  () : 
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         rw3 = XGB  ( target = target , original = original )
         reweighters.append ( rw3 )
-        
+
     if hasPyTorch () : 
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
         rw5 = TORCH ( target        = target    ,
-                      nepochs       = 3000      ,
                       original      = original  ,
                       n_splits      = 1         ,
-                      epochs        = 5000      ,  
-                      batch_size    = 2**7      ,
-                      min_delta     = 1e-3      ,
-                      weight_decay  = 1.e-6     ,
-                      learning_rate = 1.e-3     ,
-                      max_logit     = 8         , 
-                      hidden_dims   = ( 64 , 64 , 64 )  )
+                      epochs        = 1000      ,  
+                      batch_size    = 2 ** 8    ,
+                      dropout       = 0.4       , 
+                      learning_rate = 2e-5      , 
+                      logit_reg     = 2e-5      ,
+                      hidden_dims   = ( 256 , 256 ) )                       
         reweighters.append ( rw5 )
-        
-    if False and hasHepML    () :
+
+    if hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw1 = GBRW ( target = target , original = original )
         reweighters.append ( rw1 )
         
-    if False and hasSkLearn ():
+    if hasSkLearn ():
         
         from ostap.tools.reweighters  import LogRegressionDensityReweighter as LOGREG 
         rw6 = LOGREG ( target = target , original = original )
@@ -242,12 +240,17 @@ def run_reweight ( n_dim     = 3     ,
         
         from ostap.tools.reweighter  import CascadeReweighter as  CASCADE
         
-        rw7 = CASCADE ( classes = [ LOGREG , LOGREG ] , target = target , original = original )
-        reweighters.append ( rw7 )
+        ## rw7 = CASCADE ( classes = [ LOGREG , LOGREG ] , target = target , original = original )
+        ## reweighters.append ( rw7 )
         
         rw8 = CASCADE ( classes = [ LOGREG , LOGREG , LOGREG ] , target = target , original = original )
         reweighters.append ( rw8 )
-       
+
+
+    # =========================================================================
+    ## Summary table 
+    # =========================================================================
+    
     header = []
     rows   = []
     
@@ -287,9 +290,11 @@ def run_reweight ( n_dim     = 3     ,
 # =============================================================================
 if '__main__' == __name__ :
 
-    if numcpu() <= 8 : run_reweight ( 3 ,  3000 )
-    else             : run_reweight ( 3 ,  3000 )
-
+    ## if numcpu() <= 8 : run_reweight ( 3 ,  3000 )
+    ## else             : run_reweight ( 3 ,  3000 )
+    
+    run_reweight ( 3 , 3000 )
+    
 # =============================================================================
 
         

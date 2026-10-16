@@ -97,8 +97,10 @@ __date__     = "2011-12-01"
 __all__      = (
     "ProgressBar"   , ## Progress bas as it is 
     "RunningBar"    , ## Running bar 
+    "TextBar"       , ## Text bar 
     "progress_bar"  , ## helper function for ProgressBar 
-    "running_bar"     ## helper function for RunningBar 
+    "running_bar"   , ## helper function for RunningBar 
+    "text_bar"        ## helper function for TextBar 
     )
 # =============================================================================
 from   ostap.core.ostap_types import sized_types 
@@ -254,8 +256,12 @@ class ProgressBar(object):
         self.build_bar ()
         self.show      ()
         
-        self.__the_start  = time.time ()
         self.__done       = 0 
+
+        self.__the_start  = time.time ()
+        self.__the_end    = None
+        self.build_bar()
+        if not self.__silent : self.show ( force = True )
         
     # =========================================================================
     ## Is this bar active?
@@ -399,7 +405,7 @@ class ProgressBar(object):
     def show ( self , force = False ) :
         """ Show the bar """
         if not self.__silent and ( force or self.__bar != self.__last ) : 
-            if self.__prefix : self.__output.write ( self.__prefix       ) 
+            if self.__prefix : self.__output.write ( self.__prefix    ) 
             self.__output.write ( self.__bar + self.__r ) 
             self.__last = self.__bar  
             self.__output.flush ()
@@ -486,8 +492,10 @@ class RunningBar(object):
 
         if not isinstance ( self.freq , int ) or self.freq < 0 : self.freq = 0 
             
-        self.update_amount() 
-
+        self.update_amount () 
+        self.build_bar     () 
+        if not self.__silent : self.show ( force = True )
+        
     @property 
     def silent ( self ) :
         return self.__silent
@@ -588,8 +596,145 @@ class RunningBar(object):
     
     ## CONTEXT manager EXIT 
     def __exit__  ( self , *_ ) : self.end()
-    ## def __del__   ( self , *_ ) : self.end()
 
+
+# =============================================================================
+## @class TextBar
+#  Text-based status bar for dynamic single-line text updates with ETA and timing.
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+class TextBar(object):
+    """ TextBar
+    
+    Use as context manager:
+    
+    >>> with TextBar("Initializing...", final_message="Done!", description="Training:") as bar:
+    ...    bar.text = "Processing step 1..."
+    ...    bar.update("Processing step 2...")
+    """
+    def __init__(self , text = '' , *,
+                 output        = sys.stdout ,
+                 final_message = ''         , **kwargs):
+        
+        tty = not _is_ci and isatty ( output )
+        self.__silent          = kwargs.get ( 'silent' , not tty )
+        self.__r               = '\r'
+        self.__output          = output
+        self.__text            = text
+        self.__final_message   = final_message
+        self.__prefix          = allright ( kwargs.get ( 'description' , '' ) ) 
+        self.__last_len        = 0
+        
+        self.__min_interval    = kwargs.get ( 'min_interval' , 0.1 ) 
+
+        self.__the_start       = time.time()
+        self.__last_print_time = self.__the_start 
+        self.__the_end         = None
+
+        if not self.__silent: self.show ( force = True )
+
+    @property
+    def silent(self):
+        return self.__silent
+
+    @property
+    def text(self):
+        return self.__text
+
+    @text.setter
+    def text(self, value):
+        self.__text = value
+        self.show()
+
+    def update(self, value):
+        """ Update text message."""
+        self.text = value
+        return self
+
+    def __iadd__(self, value):
+        """ Allow syntax like bar += ' new text'."""
+        if isinstance(value, str):
+            self.text = value
+        return self
+
+    def show(self, force=False):
+        if self.__silent: return
+        
+        now = time.time()
+        
+        if not force and  ( now - self.__last_print_time < self.__min_interval ) : return
+        
+        self.__last_print_time = now
+        
+        elapsed = int    ( now - self.__the_start )
+        h, _    = divmod ( elapsed            , 3600 )
+        m, s    = divmod ( elapsed - h * 3600 ,   60 )
+        
+        if   h      : time_str = f"{h:02d}h{m:02d}'{s:02d}\""
+        elif m      : time_str = f"{m:02d}'{s:02d}\""
+        elif s >= 1 : time_str = f"{s:02d}\""
+        else: time_str = '0"'
+
+        prefix_str  = f"{self.__prefix} " if self.__prefix else ""
+        time_part   = f"🕒 {time_str}"
+        content     = f"{prefix_str}{time_part} {self.__text}"
+        
+        padding   = max ( 0 , self.__last_len - len ( content ) ) 
+        line      = content + ' ' * padding
+        
+        self.__output.write ( line + self.__r)
+        self.__output.flush ( )
+        self.__last_len = len(content)
+
+    def end ( self, final_text = None ) :
+        
+        if self.__silent: return
+        
+        if self.__the_end is None : self.__the_end = time.time()
+
+        if   final_text           : self.__text = final_text
+        elif self.__final_message : self.__text = self.__final_message
+
+        start = datetime.datetime.fromtimestamp(self.__the_start)
+        end   = datetime.datetime.now()
+        delta = end - start
+
+        hours   , reminder = divmod ( delta.seconds , 3600 )
+        minutes , seconds  = divmod ( reminder      ,   60 )
+        days = delta.days 
+        secs = seconds + 1.e-6 * delta.microseconds
+        
+        if    days    : timebar = f" {days} days {hours:02d}h{minutes:02d}'{secs:04.1f}\""
+        elif  hours   : timebar = f" {hours:02d}h{minutes:02d}'{secs:04.1f}\""
+        elif  minutes : timebar = f" {minutes:02d}'{secs:04.1f}\""
+        else          : timebar = f" {secs:.2f}\"" 
+
+        timebar += f" {start.strftime('%a %d %b %Y, %I:%M%p')} ➔ {end.strftime('%a %d %b %Y, %I:%M%p')}"
+        
+        prefix_str = f"{self.__prefix} " if self.__prefix else ""
+        content    = f"{prefix_str}{self.__text} 🕒{timebar}"
+        
+        padding    = max(0, self.__last_len - len(content))
+        line       = content + ' ' * padding
+        
+        self.__output.write(line + '\n')
+        self.__output.flush()
+        self.__silent = True
+
+    ## context manager: ENTER 
+    def __enter__(self):
+        """ Context mnager: ENTER
+        """        
+        self.__the_start = time.time()
+        self.__the_end   = None
+        if not self.__silent: self.show ( force = True )
+        return self
+
+    ## context manager: EXIT 
+    def __exit__(self, *_):
+        """ Context mnager: EXIT
+        """        
+        self.end()
+    
 # ==============================================================================
 ## helper function to display running bar 
 #  @code
@@ -608,7 +753,6 @@ def running_bar ( iterable , frequency = 0 , description = '' , **kwargs ) :
             yield i
             
             
-import time 
 # =============================================================================
 ## helper function to display progress bar
 #  @code 
@@ -641,7 +785,28 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
         for item in iterable :
             yield item
             bar += 1
-                        
+
+# =============================================================================
+## @brief Helper function to iterate over elements using TextBar.
+#  @param iterable The collection to iterate over.
+#  @param text Initial text message.
+#  @param final_message Message to display upon completion.
+#  @param description Prefix description for the progress bar.
+#  @return Yields pairs of (current_item, bar_instance).
+def text_bar ( iterable , **kwargs ) :
+    """ Helper function for looping through an iterable with a TextBar.
+    
+    Usage:
+        >>> for item, bar in text_bar(my_list, final_message="Done!"):
+        ...     bar.text = f"Processing {item}..."
+    """
+    ## 
+    if isinstance ( iterable , int ) and  0 <= iterable  : iterable = range ( iterable )
+    ## 
+    with TextBar ( **kwargs ) as bar : 
+        for item in iterable :
+            yield item, bar
+            
 # ==============================================================================
 if __name__ == '__main__':
 
@@ -663,12 +828,34 @@ if __name__ == '__main__':
         for i in range ( limit + 1 ):
             bar += 1 
             time.sleep ( 0.005 )
-            
+
+
+    logger.info ( 'Example 3: Text Bar' )
+    with TextBar ( "working...", final_message = "Done!", description = "PIPELINE:" ) as bar:
+        
+        time.sleep(1.5)
+        bar.update ( "Load configuration.." ) 
+        
+        # Шаг 2: Используем метод .update()
+        time.sleep(1.0)
+        bar.update ( "Prepare data" )
+        
+        time.sleep(1.0)
+        bar += "Start learning "
+
+        for i in  range ( 10 ) :
+            time.sleep ( 0.2 )
+            bar += 'Learning..'
+
+        
     for i in progress_bar ( range ( 5000  ) , description = "Doing something ") : 
         time.sleep(0.001)
     
     for i in running_bar  ( range ( 120000 ) , description = "Empty looping ") :         
         time.sleep(0.0001)
+        
+    for i in text_bar  ( 100  , description = "Progressing ") :         
+        time.sleep(0.05)
     
     logger.info ( 80*'*' ) 
     
