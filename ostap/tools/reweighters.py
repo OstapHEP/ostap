@@ -845,15 +845,6 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             'max_depth'             : LGBM_MAX_DEPTH          ,
             'num_leaves'            : min ( 1023 , 2 ** LGBM_MAX_DEPTH - 1 ) , 
             'max_bin'               : 2047                    , # 
-            'min_child_samples'     : 10                      , # Slightly increased from 10 to stabilize leaf estimation
-            'min_child_weight'      : 1e-3                    , # Increased from 1e-4 for numerical stability in ratios
-            'min_split_gain'        : 0.0                     , # 
-            'reg_alpha'             : 0.0                     , # L1 penalty to prune non-informative splits
-            'reg_lambda'            : 0.0                     , # Increased L2 penalty (was 0.01) for smoother probabilities
-            'subsample'             : 1.0                     , # Bagging fraction to reduce variance
-            'subsample_freq'        : 1                       ,
-            'colsample_bytree'      : 1.0                     , # Feature subsampling to increase ensemble diversity (was 1.0)
-            'path_smooth'           : 1.0                     , # LightGBM tree smoothing for density ratio stability
             'boost_from_average'    : True                    ,
             'early_stopping_rounds' : LGBM_DEFAULT_ESTIMATORS // 2 ,
             'verbosity'             : -1                      ,
@@ -1050,11 +1041,6 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
             'tree_method'           : 'hist'                  , # Fast histogram-based algorithm (similar to LGBM)
             'max_bin'               : 1023                    , # Limit binning to prevent noise fitting
             'min_child_weight'      : 1.e-3                   , # Minimum sum of instance weight (hessian) in a child
-            'gamma'                 : 0.0                     , # Minimum loss reduction required for partition
-            'alpha'                 : 0.0                     , # L1 penalty on leaf weights
-            'lambda'                : 0.0                     , # L2 penalty on leaf weights
-            'subsample'             : 0.8                     , # Row subsampling to reduce variance
-            'colsample_bytree'      : 1.0                     , # Feature subsampling to increase ensemble diversity
             'early_stopping_rounds' : XGB_DEFAULT_ESTIMATORS // 2 ,            
             'verbosity'             :  0                      ,      
             'n_jobs'                : -1                      ,
@@ -1221,6 +1207,9 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
 # =============================================================================
 ## @class CatBoostDensityReweighter
 #  Density ratio reweighter using CatBoost as the underlying classifier.
+#
+# Tested/tuned configurations for "small" test"
+# - 
 class CatBoostDensityReweighter(DensityReweighter):
     """ Density ratio reweighter using CatBoost as the underlying classifier.
     """
@@ -1248,7 +1237,6 @@ class CatBoostDensityReweighter(DensityReweighter):
                    'min_data_in_leaf'      : 5                                ,
                    'bootstrap_type'        : 'MVS'                            ,
                    'mvs_reg'               : 2.0                              , 
-                   'subsample'             : 1.0                              ,
                    'random_strength'       : 0.01                             ,
                    'early_stopping_rounds' : CATB_DEFAULT_ESTIMATORS // 2     ,
                    'boosting_type'         : 'Plain'                          ,
@@ -1453,16 +1441,16 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         # ---------------------------------------------------------------------
         config = { 'hidden_dims'   : ( 256 , 256 , 256 )       ,
                    'dropout'       : 0.35                      ,               
-                   'learning_rate' : 3e-4                      ,              
+                   'learning_rate' : 2e-4                      ,              
                    'weight_decay'  : 1e-5                      ,              
                    'batch_size'    : 256                       ,
-                   'epochs'        : 2000                      ,              
+                   'epochs'        : 2000                      ,         
                    'patience'      :   50                      ,
                    'min_epochs'    :   50                      ,
                    'min_delta'     : 1e-5                      , 
                    'eval_freq'     : 5                         , 
                    'max_logit'     : 8.0                       , # Cap w = exp(z) <= ~400
-                   'logit_reg'     : 1e-3                      , # L2 penalty on logits
+                   'logit_reg'     : 1e-4                      , # L2 penalty on logits
                    'grad_clip'     : 0.2                       ,
                    'ema_decay'     : 0.999                     , 
                    'ma_window'     : 5                         , 
@@ -1571,6 +1559,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         dropout       = self.params.get ( 'dropout'       , 0.1           )
         hidden_dims   = self.params.get ( 'hidden_dims'   , ( 256 , 256 ) )
         weight_decay  = self.params.get ( 'weight_decay'  , 1.e-5         )
+        bce_epochs    = self.params.get ( 'bce_epochs'    , 0             )
         use_compile   = self.params.get ( 'compile'       , False         ) and hasattr ( torch , 'compile' )
         use_jit       = self.params.get ( 'jit'           , False         ) 
         
@@ -1717,12 +1706,10 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                 logger.warning ( f"torch.jit.script failed, falling back to eager mode: {e}" )
             # ==================================================================================
             
-        
-                
-        optimizer  = torch.optim.AdamW                          ( model.parameters () , lr      = learning_rate , weight_decay =       weight_decay  )
-        scheduler  = torch.optim.lr_scheduler.CosineAnnealingLR ( optimizer           , T_max   = nepochs       , eta_min      = 0.1 * learning_rate )
-        scaler_amp = torch.amp.GradScaler                       ( 'cuda'              , enabled = is_cuda )
-        criterion  = DensityRatioLoss                           ( max_logit = max_logit , logit_reg = logit_reg )
+        optimizer     = torch.optim.AdamW                          ( model.parameters () , lr      = learning_rate , weight_decay =       weight_decay  )
+        scheduler     = torch.optim.lr_scheduler.CosineAnnealingLR ( optimizer           , T_max   = nepochs       , eta_min      = 0.1 * learning_rate )
+        scaler_amp    = torch.amp.GradScaler                       ( 'cuda'              , enabled = is_cuda )
+        criterion_drw = DensityRatioLoss                           ( max_logit = max_logit , logit_reg = logit_reg )
 
         w_va_sum         = w_va_t.abs().sum() + 1e-8
         best_loss        = float ( 'inf' )
@@ -1762,8 +1749,16 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         # =====================================================================
         show_bar = self.__progress_epochs and not ( self.silent or self.progress )
         ## for epoch in progress_bar ( nepochs , silent = not show_bar , description = epoch_symbol ) :
-        for epoch, bar in text_bar ( nepochs , silent = not show_bar , description = epoch_symbol ) :
+        for epoch, bar in text_bar ( nepochs + bce_epochs , silent = not show_bar , description = epoch_symbol ) :
 
+            if bce_epochs == epoch : 
+                val_loss_history.clear()
+                best_loss        = float ( 'inf' )
+                best_epoch       = 0 
+                best_state       = None
+                patience_counter = 0
+                
+                
             t_start = time.time() 
 
             model.train ()
@@ -1784,9 +1779,13 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                 
                 with torch.autocast ( device_type = device.type , dtype = autocast_dtype , enabled = use_autocast ) :
                     logits = model ( b_x )
-                    loss   = criterion ( logits , b_y , b_w ) 
-
-
+                    
+                    if bce_epochs <= epoch : loss = criterion_drw ( logits , b_y , b_w )
+                    else : 
+                        bce_vals = nn.functional.binary_cross_entropy_with_logits ( logits , b_y , reduction = 'none' )
+                        loss     = torch.sum ( bce_vals * b_w ) / ( b_w.abs().sum() + 1e-8 )
+                        if 0 < logit_reg : loss += logit_reg * torch.mean ( logits ** 2 ) 
+                        
                 if is_cuda :
                     scaler_amp.scale ( loss ).backward()
                     scaler_amp.unscale_( optimizer )
@@ -1799,12 +1798,8 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                     optimizer.step()
                         
                 
-                ## # EMA update
-                ## ema_model.update_parameters ( model )
-
             t_train = time.time() - t0
 
-            
             ## EMA update
             ema_model.update_parameters ( model )
             
@@ -1813,7 +1808,9 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
             # =================================================================
             # Validation using EMA model
             # =================================================================
-            if epoch <= ma_window or epoch % eval_freq == 0 or nepochs <= epoch + 10 : 
+            if  ( epoch      <= bce_epochs and epoch <= ma_window ) or \
+                ( bce_epochs <= epoch   <= bce_epochs + ma_window ) or \
+                ( epoch % eval_freq == 0 or nepochs <= epoch + 10 ) : 
                 
                 ema_model.eval ()
                 val_loss_raw = 0.0
@@ -1827,12 +1824,21 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                         
                         with torch.autocast ( device_type = 'cuda' if is_cuda else 'cpu' , enabled = is_cuda ) :
                             v_logits     = ema_model ( v_x )
-                            v_loss_batch = criterion ( v_logits , v_y , v_w )
+                            
+                            if epoch < bce_epochs :
+                                v_bce = nn.functional.binary_cross_entropy_with_logits ( v_logits , v_y , reduction = 'none' )
+                                v_loss_batch = torch.sum ( v_bce * v_w ) / ( v_w.abs().sum() + 1e-8 )
+                                if 0 < logit_reg : v_loss_batch += logit_reg * torch.mean ( v_logits ** 2 )
+                            else :
+                                v_loss_batch = criterion_drw ( v_logits , v_y , v_w )
+                            
                             val_loss_raw += v_loss_batch.item () * v_w.abs().sum().item()
                             
                     val_loss_raw /= w_va_sum.item ()
 
                 val_loss_history.append ( val_loss_raw )
+                while ma_window < len ( val_loss_history ) : val_loss_history.popleft() 
+                
                 val_loss_smoothed = sum ( val_loss_history ) / len ( val_loss_history )
 
                 if show_bar :
@@ -1841,7 +1847,8 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                     lr = nice_print ( scheduler.get_last_lr()[0] , precision = 2 , with_sign = False ) 
                     bar.text = f"Epoch: {epoch:3d}/{nepochs} | Raw/Smoothed Losses:{rl}/{sl} | LR:{lr} | Best epoch: #{best_epoch} | Time:{time.time()-t_start:.2f}s/epoch" 
 
-                if val_loss_smoothed + min_delta < best_loss or best_state is None :
+                if   epoch <= ma_window or  bce_epochs <= epoch <= bce_epochs + ma_window : continue
+                elif val_loss_smoothed + min_delta < best_loss or best_state is None      :
                     best_loss        = val_loss_smoothed
                     unwrapped_ema    = ema_model.module if hasattr ( ema_model , 'module' ) else ema_model
                     best_state       = { k : v.clone().detach() for k , v in unwrapped_ema.state_dict().items() }
