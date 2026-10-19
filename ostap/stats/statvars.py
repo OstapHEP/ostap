@@ -2512,14 +2512,15 @@ def data_VIFs ( data        ,
         
         from   ostap.logger.pretty    import pretty_float, format_pow10
         from   ostap.logger.colorized import attstr
-        rows =  [ ( 'Variable' , 'VIF' , 'Unit' ) ] 
+        rows =  [ ( 'Variable' , 'VIF' , 'Unit' , 'R2[%]' ) ] 
         for var , vif in zip ( var_lst , vifs ) :
             v , expo = pretty_float ( vif , precision = precision , width = width )
-            if vif < threshold : row = var ,          v   ,          format_pow10 ( expo )   if expo else ''
-            else               : row = var , attstr ( v ) , attstr ( format_pow10 ( expo ) ) if expo else ''            
+            r2       = ( '%5.1f' % ( 100 * ( 1.0 - 1.0 / vif ) ) ) if 1 <= vif else '' 
+            if vif < threshold : row = var ,          v   ,          format_pow10 ( expo )   if expo else '' , r2 
+            else               : row = var , attstr ( v ) , attstr ( format_pow10 ( expo ) ) if expo else '' , r2            
             rows.append ( row )
             
-        title = title if title else 'VIFs for variables'
+        title = title if title else 'VIFs/R2 for variables'
         rows  = T.remove_empty_columns ( rows )
         logger.info ('%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' ) ) )
         

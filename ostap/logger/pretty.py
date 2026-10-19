@@ -367,6 +367,7 @@ def pretty_float ( value             , * ,
                    width     = 6     ,
                    precision = 4     ,
                    with_sign = True  ,
+                   strip     = False , 
                    latex     = False ) :
     """ Nice printout of the floating number
     - return nice string and the separate exponent 
@@ -388,8 +389,11 @@ def pretty_float ( value             , * ,
     if expo :
         scale = 10 ** expo
         v /= scale
-        
-    return  fmt % v , expo 
+
+    result = fmt % v
+    if strip : result = result.strip
+    
+    return  result , expo 
 
 # ===============================================================================
 ## nice printout of value with (singular, symetric) error  ( string + exponent)
@@ -403,7 +407,8 @@ def pretty_error ( value               ,
                    precision   = 4     ,
                    with_sign   = True  , 
                    parentheses = True  ,
-                   latex       = False ) :
+                   latex       = False ,
+                   strip       = False ) :
     """ Nice printout of the value with singuar, symmetric, error ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_err1 ( value , error ) 
@@ -445,8 +450,11 @@ def pretty_error ( value               ,
     if expo :
         scale = 10 ** expo 
         values = tuple ( v / scale for v in values ) 
+
+    result = fmt % values
+    if strip : result = result.strip()
     
-    return fmt % values , expo 
+    return result , expo 
 
 # ===============================================================================
 ## nice printout of the object with asymmetric  errors  ( string + exponent)
@@ -461,7 +469,8 @@ def pretty_error2 ( value               ,
                     precision   = 4     ,
                     with_sign   = True  , 
                     parentheses = True  ,
-                    latex       = False ) :
+                    latex       = False ,
+                    strip       = False ) :
     """ Nice printout of the object with asymmetric  errors   ( string + exponent)
     >>> s , expo = pretty_err2 ( number , elow , ehigh ) 
     """
@@ -493,7 +502,10 @@ def pretty_error2 ( value               ,
         scale = 10 ** expo 
         values = tuple ( v / scale for v in values ) 
     
-    return fmt % values , expo 
+    result = fmt % values
+    if strip : result = result.strip()
+    
+    return result , expo 
 
 # ===============================================================================
 ## nice printout of the asymmetric  errors  ( string + exponent)
@@ -507,7 +519,8 @@ def pretty_errors ( errlow              ,
                     precision   = 4     ,
                     with_sign   = True  , 
                     parentheses = True  ,
-                    latex       = False ) :
+                    latex       = False ,
+                    strip       = False ) :
     """ Nice printout of asymmetric  errors   ( string + exponent)
     >>> s , expo = pretty_errors ( errlow , errhigh ) 
     """
@@ -539,8 +552,12 @@ def pretty_errors ( errlow              ,
     if expo :
         scale = 10 ** expo 
         values = tuple ( v / scale for v in values ) 
+
+
+    result = fmt % values
+    if strip : result = result.strip()
     
-    return fmt % values , expo 
+    return result , expo 
 
 # =============================================================================
 ##  Add the exponent to the string representation of the obejuct
@@ -570,7 +587,8 @@ def pretty_ae  ( errors              , * ,
                  width       = 6     ,
                  precision   = 4     ,
                  parentheses = True  ,
-                 latex       = False ) :
+                 latex       = False ,
+                 strip       = False ) :
     """ Nice printout of asymmetric errors ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
@@ -580,7 +598,8 @@ def pretty_ae  ( errors              , * ,
                          width       = width       ,
                          precision   = precision   ,
                          parentheses = parentehses ,
-                         latex       = latex       ) 
+                         latex       = latex       ,
+                         strip       = strip       ) 
 
 # =======================================================================
 ## nice printout of the ValWithErrors object  ( string + exponent)
@@ -594,7 +613,8 @@ def pretty_vae ( value               , * ,
                  precision   = 4     ,
                  parentheses = True  ,
                  latex       = False ,
-                 PDG         = ''    ) :
+                 PDG         = ''    ,
+                 strip       = False ) :
     """ Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
@@ -605,7 +625,8 @@ def pretty_vae ( value               , * ,
                           precision   = precision   ,
                           parentheses = parentheses ,
                           latex       = latex       ,
-                          PDG         = PDG         ) 
+                          PDG         = PDG         ,
+                          strip       = strip       ) 
 
 # =======================================================================
 ## Pretty print for the object

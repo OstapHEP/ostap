@@ -42,8 +42,8 @@ from   ostap.stats.statvars         import data_decorate, data_range
 from   ostap.utils.valerrors        import VAE
 from   ostap.utils.progress_conf    import progress_conf
 from   ostap.utils.progress_bar     import progress_bar
-from   ostap.logger.pretty          import pretty_float, pretty_row  
-from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis
+from   ostap.logger.pretty          import pretty_float, pretty_row, nice_print   
+from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis, sum_symbol 
 from   ostap.logger.colorized       import allright
 import ostap.logger.table           as     T
 import ostap.fitting.variables  
@@ -2730,9 +2730,17 @@ def _ds_table_ ( dataset                 ,
         else :                              title += ' Weighted/Poisson'
 
         ## name of weight variable
-        weight = dataset.wname ()
-        wcnt   = dataset.statVar ( '1' , cuts = cuts , first = first , last = last , cut_range = cut_range )
-        wcnt   = wcnt.weights ()
+        weight     = dataset.wname ()
+        wcnt       = dataset.statVar ( '1' , cuts = cuts , first = first , last = last , cut_range = cut_range )
+        wsum       = wcnt.sum     ()
+        nEff       = dataset.nEff ()        
+        
+        ## add sum of weights & neff to the title 
+        title      += ' %sw=%s, #eff=%s'  % ( sum_symbol ,
+                                              nice_print ( float ( wsum ) , precision = 3 , width = 4 , with_sign = False ) ,
+                                              nice_print ( float ( nEff ) , precision = 3 , width = 4 , with_sign = False ) ) 
+
+        wcnt       = wcnt.weights ()
         
         vmin, vmax = wcnt.minmax ()
         mean       = wcnt.mean   ()

@@ -565,7 +565,8 @@ def pretty_ve ( value               , * ,
                 with_sign   = True  , 
                 parentheses = True  ,
                 latex       = False ,
-                PDG         = False ) :
+                PDG         = False ,
+                strip       = False ) :
     """ Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
@@ -585,7 +586,8 @@ def pretty_ve ( value               , * ,
                           precision   = precision   ,
                           with_sign   = True        , 
                           parentheses = parentheses ,
-                          latex       = latex       )
+                          latex       = latex       ,
+                          strip       = strip       )
 
 # =============================================================================
 ## nice ready-to-use printout of the ValueWithError object  ( string + exponent)

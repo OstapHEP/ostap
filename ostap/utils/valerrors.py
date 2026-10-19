@@ -271,7 +271,8 @@ class AsymErrors (object) :
                         precision   = 4     ,
                         with_sign   = True  , 
                         parentheses = True  ,
-                        latex       = False ) : 
+                        latex       = False ,
+                        strip       = False ) : 
         """ Pretty print
         >>> errors = ...
         >>> result, expo = errors.pretty_print () 
@@ -293,7 +294,8 @@ class AsymErrors (object) :
                            precision   = precision   ,
                            with_sign   = with_sign   ,
                            parentheses = parentheses ,
-                           latex       = latex       )
+                           latex       = latex       ,
+                           strip       = strip       )
 
     # =========================================================================
     ## nice print
@@ -1262,7 +1264,8 @@ def pretty_ae ( errors              ,
                 precision   = 4     ,
                 with_sign   = True  , 
                 parentheses = True  ,
-                latex       = False )  :
+                latex       = False ,
+                strip       = False )  :
     """ Pretty print for asymemtric errors
     >>> ae = AsymErrors ( -5 , 10000 )
     >>> s , expo = pretty_ae ( ae , width = 8, precision = 6 ) 
@@ -1276,7 +1279,8 @@ def pretty_ae ( errors              ,
                            precision   = precision   ,
                            with_sign   = with_sign   , 
                            parentheses = parentheses ,
-                           latex       = latex       ) 
+                           latex       = latex       ,
+                           strip       = strip       ) 
 
 # =============================================================================
 ## pretty print for value with asymmetric errors
@@ -1290,7 +1294,8 @@ def pretty_vae ( value                 ,
                  with_sign   = True    , 
                  parentheses = True    ,
                  latex       = False   ,
-                 PDG         = ''      ) : 
+                 PDG         = ''      ,
+                 strip       = False   ) : 
     """ Pretty print for value  with asymmetric errors
     >>> vae = ValWithErrors ( ... )
     >>> s , expo = pretty_vae ( vae , width = 8, precision = 6 ) 
@@ -1325,7 +1330,8 @@ def pretty_vae ( value                 ,
                               precision   = precision   ,
                               with_sign   = with_sign   , 
                               parentheses = parentheses ,
-                              latex       = latex       )
+                              latex       = latex       ,
+                              strip       = strip       )
         
     from ostap.logger.pretty import pretty_error2
     return pretty_error2 ( value.value               ,
@@ -1335,7 +1341,8 @@ def pretty_vae ( value                 ,
                            precision   = precision   ,
                            with_sign   = with_sign   , 
                            parentheses = parentheses ,
-                           latex       = latex       ) 
+                           latex       = latex       ,
+                           strip       = strip       ) 
     
 # =============================================================================
 ## pretty print for value with multiple asymmetric errors
@@ -1349,7 +1356,8 @@ def pretty_vme ( value               ,
                  with_sign   = True  , 
                  parentheses = True  ,
                  latex       = False , 
-                 PDG         = ''    )  :
+                 PDG         = ''    ,
+                 strip       = False )  :
     
     """ Pretty print for value  with multiple asymmetric errors
     >>> vme = ValWithMultiErrors ( ... )
@@ -1357,11 +1365,8 @@ def pretty_vme ( value               ,
     """    
     assert isinstance ( value , ValWithMultiErrors ), "Invalid type of `value`: %s" % typename ( value)
     
-
-    
     errors  = tuple ( e.negative for e in value.errors ) 
     errors += tuple ( e.positive for e in value.errors )
-
 
     if PDG :        
         import ostap.utils.pdg_format as pdg
@@ -1396,6 +1401,8 @@ def pretty_vme ( value               ,
 
     if parentheses  : result = '( %s )' % result 
 
+    if strip : result = resul.strip()
+    
     return result , expo 
 
 # =============================================================================

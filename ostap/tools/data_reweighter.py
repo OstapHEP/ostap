@@ -69,8 +69,8 @@ class DataReweighter(Config) :
         tdata, tw = data_slice ( target  , tvars, tweight , structured = False , progress = self.progress )
         odata, ow = data_slice ( original, ovars, oweight , structured = False , progress = self.progress ) 
 
-        if not weight_trivial ( tw ) : tw /= numpy.sum ( tw )
-        if not weight_trivial ( ow ) : ow /= numpy.sum ( ow )
+        ## if not weight_trivial ( tw ) : tw /= numpy.sum ( tw )
+        ## if not weight_trivial ( ow ) : ow /= numpy.sum ( ow )
 
         ## create the actual reweighter
         self.__rw = reweighter_type ( original        = odata  , 

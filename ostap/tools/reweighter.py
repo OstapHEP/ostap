@@ -21,8 +21,9 @@ __all__     = (
 # =============================================================================
 from   ostap.utils.core       import typename
 from   ostap.core.ostap_types import dictlike_types 
-from   ostap.stats.utils      import weight_trivial, num_samples, num_features, check_all  
+from   ostap.stats.utils      import weight_trivial, num_samples, num_features, check_all , nEff   
 from   ostap.utils.config     import Config
+from   ostap.logger.pretty    import nice_print 
 from   itertools              import zip_longest 
 import numpy, abc 
 # =============================================================================
@@ -66,8 +67,16 @@ class Reweighter(abc.ABC,Config) :
                     original_weight ,
                     target_weight   , typename ( self ) )
 
-        self.__n_features = num_features ( target ) 
-
+        self.__n_features    = num_features ( target   )
+        
+        self.__n_target      = num_samples  ( target   )
+        self.__n_original    = num_samples  ( original )
+        
+        self.__nEff_target   = nEff ( target   , target_weight   )
+        self.__nEff_original = nEff ( original , original_weight )        
+        self.__sumw_target   = self.__n_target   if target_weight   is None else float ( numpy.sum ( target_weight   ) ) 
+        self.__sumw_original = self.__n_original if original_weight is None else float ( numpy.sum ( original_weight ) ) 
+                  
         # =====================================================================
         ## initialize the base 
         # =====================================================================
@@ -89,14 +98,61 @@ class Reweighter(abc.ABC,Config) :
         """`n_features` : number of features for this reweighter"""
         return self.__n_features
 
+    @property
+    def n_target ( self ) :
+        """`n_target` : number of `target' events"""
+        return self.__n_target
+    
+    @property
+    def n_original ( self ) :
+        """`n_original` : number of `original' events"""
+        return self.__n_original 
+
+    @property
+    def n_total ( self ) :
+        """`n_total` : total number of `target` & `original' events"""
+        return self.n_target +  self.n_original 
+    
+    @property
+    def nEff_target ( self ) :
+        """`nEff_target` : effective number of `target' events"""
+        return self.__nEff_target
+    
+    @property
+    def nEff_original ( self ) :
+        """`nEff_original` : effective number of `original' events"""
+        return self.__nEff_original 
+
+    @property
+    def sumw_target ( self ) :
+        """`sumw_target` : sum of weights for `target' events"""
+        return self.__sumw_target
+    
+    @property
+    def sumw_original ( self ) :
+        """`sumw_original` : sum of weights for `original' events"""
+        return self.__sumw_original 
+    
     @property 
     def config ( self ) :
-        """`config` : Reweighter configuraton"""
+        """`config` : Actual reweighter configuraton"""
+        
         conf = {}
         conf.update ( super().config  )
+        
         conf [ 'method'       ] = self.method
         conf [ 'random_state' ] = self.random_state 
-        conf [ 'n_features'   ] = self.n_features 
+        conf [ 'n_features'   ] = self.n_features
+        
+        conf [ 'n_target'     ] = nice_print ( self.n_target   , precision = 3 , with_sign = False , strip = True ) 
+        conf [ 'n_original'   ] = nice_print ( self.n_original , precision = 3 , with_sign = False , strip = True ) 
+        conf [ 'n_total'      ] = nice_print ( self.n_total    , precision = 3 , with_sign = False , strip = True ) 
+        
+        if self.n_target   != self.nEff_target   : conf [ 'nEff_target'   ] = nice_print ( self.nEff_target   , precision = 3 , with_sign = False , strip = True ) 
+        if self.n_original != self.nEff_original : conf [ 'nEff_original' ] = nice_print ( self.nEff_original , precision = 3 , with_sign = False , strip = True )  
+        if self.n_target   != self.sumw_target   : conf [ 'sumw_target'   ] = nice_print ( self.sumw_target   , precision = 3 , with_sign = False , strip = True )  
+        if self.n_original != self.sumw_original : conf [ 'sumw_original' ] = nice_print ( self.sumw_original , precision = 3 , with_sign = False , strip = True )  
+        
         return conf 
                     
     # =========================================================================
@@ -136,7 +192,7 @@ class Reweighter(abc.ABC,Config) :
             """
         return self.weights ( original , original_weight )
      
-
+    
 # =============================================================================
 ## @class CascadeReweighter
 #  Cascade density reweighter supporting heterogeneous estimators with smart padding.

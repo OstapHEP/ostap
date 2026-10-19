@@ -40,7 +40,7 @@ from   ostap.core.ostap_types import string_types
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size, zip_longest 
 import ostap.core.config      as     config
-import textwrap, wcwidth, re, sys
+import textwrap, wcwidth, re, sys, unicodedata 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -58,8 +58,28 @@ def  visible_width ( what ) :
     
     text = decolorize ( what )
     text = CLEANUP_RE.sub('', text)
-    if not text : return 0 
-    return max ( 0 , wcwidth.wcswidth ( text ) )
+    if not text : return 0
+    
+    text = text.replace('\uFE0F', '').replace('\uFE0E', '')
+
+    ## w = wcwidth.wcswidth ( text )
+    ## if w < 0 : return len ( text ) 
+    ## return w 
+
+    width = 0
+    for char in text:
+        # make use of wcwidth
+        w = wcwidth.wcswidth(char)
+        if 0 <= w : width += w
+        else:
+            # Fallback:
+            # check Unicode East Asian Width
+            ea = unicodedata.east_asian_width(char)
+            if ea in ('W', 'F') : width += 2 # Wide / Fullwidth
+            else                : width += 1 # Narrow / Neutral / etc.
+
+    return width
+
 
 # =============================================================================
 terminaltables = None

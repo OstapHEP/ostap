@@ -72,30 +72,16 @@ LEARNING_RATE                  =  0.02 # Small step for stable density ratio con
 REGULARIZED_LEARNING_RATE      =  0.04 # Slightly larger step for shallow regularized trees
 
 LGBM_DEFAULT_ESTIMATORS        = 1600 # High capacity: deep ensemble with low learning rate
-LGBM_REGULARIZED_ESTIMATORS    = 1000 # Strong regularization: constrained number of trees
 LGBM_MAX_DEPTH                 =   10 # Deep tree capacity for high dimensions / large statistics
-LGBM_REGULARIZED_DEPTH         =   10 # Shallow depth (8 leaves max) to enforce heavy smoothing
 LGBM_LEARNING_RATE             = 0.01 # Small step for stable density ratio convergence
-LGBM_REGULARIZED_LEARNING_RATE = 0.02 # Slightly larger step for shallow regularized trees
 
 XGB_DEFAULT_ESTIMATORS         = 1600 # High capacity: deep ensemble with low learning rate
-XGB_REGULARIZED_ESTIMATORS     = 1000 # Strong regularization: constrained number of trees
 XGB_MAX_DEPTH                  =   10 # Deep tree capacity for high dimensions / large statistics
-XGB_REGULARIZED_DEPTH          =   10 # Shallow depth (8 leaves max) to enforce heavy smoothing
 XGB_LEARNING_RATE              = 0.01 # Small step for stable density ratio convergence
-XGB_REGULARIZED_LEARNING_RATE  = 0.02 # Slightly larger step for shallow regularized trees
 
 CATB_DEFAULT_ESTIMATORS        =  1600 # High capacity: deep ensemble with low learning rate
-CATB_REGULARIZED_ESTIMATORS    =  1000 # Strong regularization: constrained number of trees
 CATB_MAX_DEPTH                 =    10 # Deep tree capacity for high dimensions / large statistics
-CATB_REGULARIZED_DEPTH         =    10 # Shallow depth (8 leaves max) to enforce heavy smoothing
 CATB_LEARNING_RATE             = 0.005 # Small step for stable density ratio convergence
-CATB_REGULARIZED_LEARNING_RATE = 0.010 # Slightly larger step for shallow regularized trees
-
-## DEFAULT_ESTIMATORS        = 1000  # High capacity: deep ensemble with low learning rate
-## REGULARIZED_ESTIMATORS    = 1000  # Strong regularization: constrained number of trees
-## MAX_DEPTH                 =   10  # Deep tree capacity for high dimensions / large statistics
-## REGULARIZED_DEPTH         =    5  # Shallow depth (8 leaves max) to enforce heavy smoothing
 
 # =============================================================================
 ## @brief Check if strong regularization is needed for BDT-based reweighting.
@@ -254,38 +240,11 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         ## n_jobs     = min ( n_jobs , max ( 1 , math.floor ( data_size / K ) ) )
         params [ 'n_jobs' ] = num_jobs ( params )
                 
-        reg_case = self.needs_regularization ( original        = original        ,
-                                               target          = target          ,
-                                               original_weight = original_weight ,
-                                               target_weight   = target_weight   ) 
-        
-        if False and reg_case :
-            
-            n_features = num_features ( original )
-            neff_orig  = nEff ( original  , original_weight )
-            neff_targ  = nEff ( target    , target_weight   ) 
-            neff       = min  ( neff_orig , neff_targ )
-            
-            params.update ( self.regularization ( params , n_features , neff ) )
-
-            ESR = params.get ( 'early_stopping_rounds' , 15 )
-            if ESR is None : params [ 'early_stopping_rounds' ] = None 
-            else           : params [ 'early_stopping_rounds' ] = min ( 15 , ESR )
-
-            title = '%s strong regularization' % typename ( self ) 
-            table = map2table_ex ( params    , 
-                                   header    = ( 'Parameter' , 'type' , 'value' ) ,
-                                   alignment = 'rcw'  , 
-                                   prefix    = '# '   ,
-                                   title     = title  )
-            
-            logger.info ( "%s is applied, case '%s':\n%s" % ( title , reg_case , table ) )
-
         self.__original_ratios             = None
         self.__original_reweighted_weights = None
 
         # ====================================================================================
-        ## initialize the base 
+        ## initialize the base: check input data 
         # ====================================================================================
         super ().__init__ ( original        = original        ,
                             target          = target          , 
@@ -362,30 +321,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return self.__n_splits
 
     # =================================================================================
-    ## Check if strong regularization is required considering both samples.
-    #  @param original Features array for original sample.
-    #  @param target Features array for target sample.
-    #  @param original_weight Event weights for original sample.
-    #  @param target_weight Event weights for target sample.
-    #  @return Reason string if regularization is needed, else empty string.
-    def needs_regularization ( self ,
-                               original                       ,
-                               target                         ,
-                               original_weight        = None  , 
-                               target_weight          = None  ) :
-        """ Check if strong regularization is required considering both samples.
-        """
-        check_all ( data1   = original            ,
-                    data2   = target              ,
-                    weight1 = original_weight     ,
-                    weight2 = target_weight       ,
-                    where   = "%s:needs_regularization" % typename ( self ) )
-        return RW_needs_regularization ( original        = original        ,
-                                         target          = target          ,
-                                         original_weight = original_weight ,
-                                         target_weight   = target_weight   )
-
-    # =================================================================================
     ## Get computed density ratio factors r(x) for original sample.
     #  @return Array of density ratios r(x).
     @property
@@ -403,7 +338,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """
         return self.__original_reweighted_weights
     
-
     @property 
     def scale_factors ( self ) :
         """`scale_factors` : scale factors for traing data(per stream)"""
@@ -435,13 +369,15 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ Get full reweighter configuration dictionary.
         """
         conf = {}
-        conf.update( super().config if hasattr( super(), "config" ) else {} )
+        conf.update( super().config )
+        ##
         conf [ "progress" ]                    = self.progress
-        conf [ "mode" ]                        = self.mode
+        conf [ "mode"     ]                    = self.mode
         conf [ "clip_threshold" ]              = self.__clip_threshold
         conf [ "n_splits" ]                    = self.__n_splits
         conf [ "original_ratios" ]             = self.__original_ratios             is not None
         conf [ "original_reweighted_weights" ] = self.__original_reweighted_weights is not None
+        ## 
         return conf
 
     # =================================================================================
@@ -876,58 +812,6 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         return method_LGBM 
 
     # =========================================================================
-    ## Apply soft regularization rules for low statistics or low dimensions.
-    #  @param params Current parameters dictionary.
-    #  @param n_features Number of phase space features.
-    #  @param n_samples Effective sample size.
-    #  @return Updated parameters dictionary.
-    def regularization ( self       ,
-                         params     , 
-                         n_features ,
-                         n_samples  ) :
-        """ Apply strong regularization rules for limited statistics or low dimensions.
-        """
-
-                
-        n_estimators = params.get ( 'n_estimators' , LGBM_REGULARIZED_ESTIMATORS )
-        n_estimators = min        (  n_estimators  , LGBM_REGULARIZED_ESTIMATORS , 1 + math.floor ( n_samples / 2 ) ) 
-
-        learning_rate                      = LGBM_REGULARIZED_LEARNING_RATE
-               
-        params [ 'n_estimators'          ] = n_estimators
-        params [ 'learning_rate'         ] = learning_rate 
-        params [ 'max_depth'             ] = LGBM_REGULARIZED_DEPTH
-
-        num_leaves = min ( 1023 , 2 ** LGBM_REGULARIZED_DEPTH - 1    ) # maximl number of leaves for the given depth
-        num_leaves = min ( num_leaves , 1 + math.floor ( n_samples ) )
-        
-        params [ 'num_leaves'            ] = num_leaves 
-
-        params [ 'min_child_samples'     ] = max ( 10 , int ( n_samples * 0.001 ) ) # Scale with sample size (~0.5% min per leaf)
-        params [ 'min_child_weight'      ] = 1.e-3 # Substantially increased from 1e-7 to prevent unstable leaves
-        params [ 'min_split_gain'        ] = 0.0   # 
-        params [ 'reg_alpha'             ] = 0.0   # Active L1 regularization
-        params [ 'reg_lambda'            ] = 0.0   # Strong L2 regularization 
-        params [ 'subsample'             ] = 1.0   # Active row subsampling (was incorrectly set to 1.0)
-        params [ 'subsample_freq'        ] = 1
-        params [ 'colsample_bytree'      ] = 1.0   # Active feature subsampling
-        params [ 'min_data_in_bin'       ] = 1     # Increased from 1 to smooth out histogram binning
-        
-        raw_patience          = int ( 3   / learning_rate     )
-        max_limit             = min ( 200 , n_estimators // 5 )
-        early_stopping_rounds = max ( 15  , min ( raw_patience , max_limit ) )
-
-        params [ 'early_stopping_rounds' ] = None ## 250 ## None ##  100 ## early_stopping_rounds 
-        
-        ## current_max_bin      = params.get ( 'max_bin', 4095 )
-        ## params [ 'max_bin' ] = min ( current_max_bin , max ( 31 , 1 + math.floor ( n_samples / 5 ) ) ) 
-        
-        # Enforce tree-path smoothing parameter if supported by LightGBM
-        ## params [ 'path_smooth' ] = 2.0
-
-        return params
-    
-    # =========================================================================
     ## Train single LightGBM model on fold data.
     #  @param X_train Training features array.
     #  @param y_train Training binary labels.
@@ -1066,52 +950,6 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
         """
         return method_XGB 
 
-    # =========================================================================
-    ## Apply strong regularization rules for low statistics or low dimensions.
-    #  @param params Current parameters dictionary.
-    #  @param n_features Number of phase space features.
-    #  @param n_samples Effective sample size.
-    #  @return Updated parameters dictionary.
-    def regularization ( self       ,
-                         params     , 
-                         n_features ,
-                         n_samples  ) :
-        """ Apply strong regularization rules for limited statistics or low dimensions.
-        """
-        
-        n_estimators = params.get ( 'n_estimators' , XGB_REGULARIZED_ESTIMATORS )
-        n_estimators = min        (  n_estimators  , XGB_REGULARIZED_ESTIMATORS , 1 + math.floor ( n_samples / 2 ) ) 
-
-        learning_rate                      = XGB_REGULARIZED_LEARNING_RATE
-
-        params [ 'max_depth'             ] = XGB_REGULARIZED_DEPTH       
-
-        params [ 'n_estimators'          ] = n_estimators         
-        params [ 'learning_rate'         ] = learning_rate
-        
-        # Scale min_child_weight (sum of hessian) with sample size to prevent isolated leaves
-        ## params [ 'min_child_weight'      ] = max ( 10 , int ( n_samples * 0.001 ) ) 
-        params [ 'min_child_weight'      ] = 1.e-3 
-        
-        params [ 'gamma'                 ] = 0.0    # More aggressive complexity control/pruning
-        params [ 'alpha'                 ] = 0.0    # Active L1 regularization to encourage sparsity
-        params [ 'lambda'                ] = 0.0    # Strong L2 regularization for smoother weights
-        params [ 'subsample'             ] = 1.0    # Active row subsampling 
-        params [ 'colsample_bytree'      ] = 1.0    # Active feature subsampling 
-        params [ 'early_stopping_rounds' ] = None   # Tighter early stopping
-
-        if n_samples <= 5000                                 :  params [ 'tree_method' ] = 'exact'
-        elif 'hist' == params.get ( 'tree_method' , 'hist' ) :
-            params [ 'tree_method' ] = 'hist'
-            current_max_bin          = params.get ( 'max_bin' , 1023 )
-            params [ 'max_bin'     ] = min ( current_max_bin , max ( 31 , int ( n_samples / 10 ) ) )
-                    
-        # Dynamic binning adjustment, only applicable if using histogram-based tree method
-        ## if params.get ( 'tree_method' , 'hist' ) == 'hist' :
-        ## current_max_bin      = params.get ( 'max_bin' , 255 )
-        ## params [ 'max_bin' ] = min ( current_max_bin , max ( 31 , int ( n_samples / 20 ) ) )
-
-        return params
 
     # =========================================================================
     ## Train single XGBoost booster on fold data.
@@ -1250,9 +1088,9 @@ class CatBoostDensityReweighter(DensityReweighter):
         if 'n_jobs'            in config : config [ 'thread_count'     ] = config.pop ( 'n_jobs'            )
         if 'n_estimators'      in config : config [ 'iterations'       ] = config.pop ( 'n_estimators'      )
         
-        if 'silent' in config :
-            silent = config.get ( 'silent' , True ) 
-            config [ 'verbose' ] = not silent 
+        ## if 'silent' in config :
+        ##    silent = config.get ( 'silent' , True ) 
+        ## config [ 'verbose' ] = not silent 
 
         device = config.get ( 'device' , 'GPU' if 0 < self.gpu else 'CPU' )
         if self.gpu <= 0 : config [ 'device' ] = 'CPU'
@@ -1273,43 +1111,6 @@ class CatBoostDensityReweighter(DensityReweighter):
     @property
     def method(self):
         return method_CATB
-    
-    # =========================================================================
-    def regularization ( self , params , n_features , n_samples ):
-        """ Dynamic regularization rules for CatBoost.
-        """
-        iterations = params.pop ( 'n_estimators' , params.pop ( 'iterations' , CATB_REGULARIZED_ESTIMATORS ) )         
-        ## iterations = min ( iterations , 1 + math.floor(n_samples / 2 ) ) 
-        
-        params [ 'iterations'            ] = iterations
-        params [ 'learning_rate'         ] = CATB_REGULARIZED_LEARNING_RATE
-        params [ 'depth'                 ] = CATB_REGULARIZED_DEPTH
-
-        # the penalty smoothly increases to prevent overfitting.
-        dynamic_l2 = max ( 3.0 , 10000.0 / ( n_samples + 1 ) ) 
-        min_data   = max ( 1, int ( n_samples * 0.001 ) )
-        
-        params [ 'l2_leaf_reg'           ] = 0 ## dynamic_l2 
-        params [ 'min_data_in_leaf'      ] = 1 ## min_data 
-        
-        ## params [ 'bootstrap_type'        ] = 'Bernoulli'
-        ## params [ 'subsample'             ] = 1.0
-        ## params [ 'random_strength'       ] = 0.001
-        
-        params [ 'early_stopping_rounds' ] = None
-        params [ 'boosting_type'         ] = 'Plain'
-
-        ## MVS - ОЧЕНЬ ХОРОЩО!!! 
-        params [ 'bootstrap_type' ] = 'MVS'
-        params [ 'mvs_reg'        ] =  1.0 
-
-        ## НЕПЛОХО!
-        ## params [ 'bootstrap_type' ] = 'Bernoulli'
-        ## params [ 'subsample'      ] =  1.0
-
-        return params
-
-
     
     # =========================================================================
     def _train_single_model ( self    ,
@@ -1464,7 +1265,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         
         device = config.get ( 'device' , 'cuda' if cuda else 'cpu' )        
         if not cuda : config [ 'device' ] = 'cpu'
-        
+
         super().__init__ ( original        = original        ,
                            target          = target          ,
                            original_weight = original_weight ,
@@ -1479,29 +1280,6 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
     @property
     def method ( self ) :
         return method_TORCH 
-
-    # =========================================================================
-    ## Adjusts hyperparameters based on dataset size for regularization.
-    # =========================================================================
-    def regularization ( self , params , n_features , n_samples ) :
-        """ Adjusts hyperparameters based on dataset size for regularization
-        """
-        ## params [ 'hidden_dims'   ] = ( 256 , 256 )
-        ## params [ 'learning_rate' ] = 2e-5
-        ## params [ 'max_logit'     ] = 8.0
-        ## params [ 'grad_clip'     ] = 0.2
-        ## params [ 'logit_reg'     ] = 3e-5
-        
-        epochs                     = max ( 5000 , params.get ( 'epochs'     , 5000 ) )
-        params [ 'epochs'        ] = epochs
-        
-        min_epochs                 = max (  75  , params.get ( 'min_epochs' ,   75 ) )
-        params [ 'min_epochs'    ] = min ( min_epochs , epochs )
-        
-        patience                   = max (  50  , params.get ( 'patience'   ,   50 ) )
-        params [ 'patience'      ] = min ( patience   , epochs )
-
-        return params
 
     # =========================================================================
     ## Trains a single neural network model using Tabular ResNet architecture.
@@ -1991,17 +1769,6 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         return method_LR 
 
     # =========================================================================
-    ## Dynamic regularization rules for Logistic Regression.
-    def regularization ( self , params , n_features , n_samples ) :
-        """ Dynamic regularization rules for Logistic Regression.
-        """
-        penalty = params.get ( 'penalty' , 'l2' )
-        if penalty not in  ( None, 'none' ) :
-            current_c = params.get ( 'C', 1.0 )
-            params [ 'C' ] = max ( 0.1, min ( current_c, 0.5 ) ) 
-        return params
-
-    # =========================================================================
     ## Train single Logistic Regression model on fold data.
     def _train_single_model ( self    ,
                               X_train , y_train , w_train ,
@@ -2115,28 +1882,6 @@ class GBReweighter(Reweighter) :
                     weight2 = target_weight     ,
                     where   = typename ( self ) )   
         
-        reg_case = self.needs_regularization ( original        = original        ,
-                                               target          = target          ,
-                                               original_weight = original_weight ,
-                                               target_weight   = target_weight   )
-
-        if reg_case :
-            n_features = num_features ( original )
-            neff_orig  = nEff ( original  , original_weight )
-            neff_targ  = nEff ( target    , target_weight   ) 
-            neff       = min  ( neff_orig , neff_targ       )
-            
-            config.update ( self.regularization ( config , n_features , neff ) )
-            
-            title = '%s strong regularization' % typename ( self ) 
-            table = map2table_ex ( config    , 
-                                   header    = ( 'Parameter' , 'type' , 'value' ) ,
-                                   alignment = 'rcw'  , 
-                                   prefix    = '# '   ,
-                                   title     = title  )
-            
-            logger.info ( "%s is applied, case '%s':\n%s" % ( title , reg_case , table ) )
-
         Reweighter.__init__ ( self            ,
                               original        = original        ,
                               target          = target          , 
@@ -2199,53 +1944,6 @@ class GBReweighter(Reweighter) :
                 original_weight = original_weight )
             self.__original_ratios             = factors 
             self.__original_reweighted_weights = factors if weight_trivial ( original_weight ) else factors * original_weight
-
-    # =========================================================================
-    ## Check if strong regularization is needed for GBReweighter.
-    #  @param original Features array for original sample.
-    #  @param target Features array for target sample.
-    #  @param original_weight Optional weights for original sample.
-    #  @param target_weight Optional weights for target sample.
-    #  @return String reason for regularization if needed, else empty string.
-    def needs_regularization ( self ,
-                               original                       ,
-                               target                         ,
-                               original_weight        = None  , 
-                               target_weight          = None  ) :
-        """ Check if strong regularization is needed for GBReweighter.
-        """
-        check_all ( data1   = original            ,
-                    data2   = target              ,
-                    weight1 = original_weight     ,
-                    weight2 = target_weight       ,
-                    where   = "%s:needs_regularization" % typename ( self ) ) 
-        return RW_needs_regularization ( original        = original        ,
-                                         target          = target          ,
-                                         original_weight = original_weight ,
-                                         target_weight   = target_weight   )
-    
-    # =========================================================================
-    ## Apply regularization rules for GBReweighter.
-    #  @param params Parameter dictionary.
-    #  @param n_features Number of features.
-    #  @param n_samples Effective sample size.
-    #  @return Updated parameter dictionary.
-    def regularization ( self       ,
-                         params     , 
-                         n_features ,
-                         n_samples  ) : 
-        """ Apply regularization rules for GBReweighter.
-        """
-        N = n_samples
-        params [ 'n_estimators'     ] = 100
-        params [ 'learning_rate'    ] = REGULARIZED_LEARNING_RATE
-        params [ 'max_depth'        ] = REGULARIZED_DEPTH 
-        params [ 'min_samples_leaf' ] = max ( 100, int ( N * 0.005 ) )
-        
-        gb_args = params.get ( 'gb_args', {} ).copy ()
-        gb_args.update ( { 'subsample': 1.0, 'max_features': 0.8 } )
-        params [ 'gb_args'          ] = gb_args
-        return params
     
     # =========================================================================
     ## Get method identifier string.

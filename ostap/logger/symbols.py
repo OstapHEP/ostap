@@ -164,6 +164,7 @@ __all__     = (
     'ruler'               , ## 📏
     'runner'              , ## 🏃  (wide)
     'same'                , ## ≡
+    'scale'               , ## ⚖️  (wide)
     'scissors'            , ## ✂️
     ##
     'script_A'            , ## 𝒜
@@ -305,7 +306,10 @@ similar          = '∼'   if show else '~'
 approximate      = '≈'   if show else '~='
 not_equal        = '≠'   if show else '!='
 weight_lifter    = '🏋'  if show else ''
-weight_scale     = '⚖'   if show else '' 
+
+scale            = '⚖️'  if show else '' 
+weight_scale     = scale  
+
 
 scissors         = '✂'   if show else '' 
 oil_drum         = '🛢 ' if show else '' 
