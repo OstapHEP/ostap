@@ -215,7 +215,9 @@ def run_reweight ( n_dim     = 3     ,
 
     reweighters = [ None ]
     
-    if False and hasCatBoost () : 
+    if hasCatBoost () :
+
+        """
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
         rw4 = CATB ( target               = target      , 
                     original              = original    , 
@@ -229,33 +231,62 @@ def run_reweight ( n_dim     = 3     ,
                     bagging_temperature   = 1.0            , 
                     ##   
                     boosting_type         = 'Ordered'
+                    )                           
+        reweighters.append ( rw4 )
+        """
+
+        from ostap.tools.reweighters  import CatBoostIterativeReweighter as CATB
+        rw4 = CATB ( target        = target      , 
+                     original      = original    ,
+                     learning_rate = 0.1 
                     )       
-                    
+
         reweighters.append ( rw4 )
         
-    if False and hasLightGBM () : 
-        from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
+    if hasLightGBM () :
+        
+        ## from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
+        ## rw2 = LGBM ( target                = target   ,
+        ##             original              = original ,
+        ##             early_stopping_rounds = None     ,
+        ##             min_child_samples     = 10       ,
+        ##             subsample             = 0.8      ,
+        ##             path_smooth           = 0.5      )
+        ## 
+        ## reweighters.append ( rw2 )
+
+        from ostap.tools.reweighters  import LightGBMIterativeReweighter as  LGBM
         rw2 = LGBM ( target                = target   ,
-                     original              = original ,
-                     early_stopping_rounds = None     ,
-                     min_child_samples     = 10       ,
-                     subsample             = 0.8      ,
-                     path_smooth           = 0.5      )
-        
-        
+                     original              = original )
+
         reweighters.append ( rw2 )
-                
-    if False and hasXGBoost  () : 
-        from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
+        
+
+        
+    if  hasXGBoost  () :
+        
+        ## from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
+        ## rw3 = XGB  ( target                = target   ,
+        ##             original              = original ,
+        ##             subsample             = 0.8      ,
+        ##             early_stopping_rounds = None     , 
+        ##             tree_method           = 'exact'  )
+        
+        ## reweighters.append ( rw3 )
+
+        from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB 
         rw3 = XGB  ( target                = target   ,
                      original              = original ,
-                     subsample             = 0.8      ,
-                     early_stopping_rounds = None     , 
-                     tree_method           = 'exact'  )
+                     ##
+                     learning_rate         = 0.05     ,
+                     max_depth             = 10       , 
+                     tree_method           = 'hist'   )
         
         reweighters.append ( rw3 )
+        
+    if hasPyTorch () :
 
-    if hasPyTorch () : 
+        """
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
         rw5 = TORCH ( target        = target        ,
                       original      = original      ,
@@ -275,8 +306,16 @@ def run_reweight ( n_dim     = 3     ,
                       min_delta     = 1e-6          ,
                       hidden_dims   = ( 256 , 256 , 256 ) )                       
         reweighters.append ( rw5 )
+        """
 
-    if False and hasHepML    () :
+        from ostap.tools.reweighters  import PyTorchIterativeReweighter as TORCH
+        rw5 = TORCH ( target        = target        ,
+                      original      = original      )
+        
+        reweighters.append ( rw5 )
+                      
+
+    if hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw1 = GBRW ( target = target , original = original )
         reweighters.append ( rw1 )
@@ -293,8 +332,8 @@ def run_reweight ( n_dim     = 3     ,
         ## rw7 = CASCADE ( classes = [ LOGREG , LOGREG ] , target = target , original = original )
         ## reweighters.append ( rw7 )
         
-        rw8 = CASCADE ( classes = [ LOGREG , LOGREG , LOGREG ] , target = target , original = original )
-        reweighters.append ( rw8 )
+        ## rw8 = CASCADE ( classes = [ LOGREG , LOGREG , LOGREG ] , target = target , original = original )
+        ## reweighters.append ( rw8 )
 
 
     # =========================================================================

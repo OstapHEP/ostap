@@ -1,7 +1,8 @@
+
 // ============================================================================
 // Include files
 // ============================================================================
-// STD& STL 
+// STD & STL 
 // ============================================================================
 #include <vector>
 #include <algorithm>
@@ -18,7 +19,7 @@
 #include "status_codes.h"
 // ============================================================================
 /** @file
- *  Implement Twi-Samples (weighted) Test
+ *  Implement Two-Samples (weighted) Test statistics and distances.
  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
  *  @date 2026-02-22
  */
@@ -31,11 +32,25 @@ namespace
   /// Internal structure storing cumulative probability state at pooled points
   struct PooledPoint 
   {
+    double x    { 0.0 } ;
     double cdf1 { 0.0 } ;
     double cdf2 { 0.0 } ;
     double H    { 0.0 } ;
     double dH   { 0.0 } ;
+    double dx   { 0.0 } ;
   } ;
+
+  /// Internal helper to calculate interval widths dx for integration
+  inline void _fill_dx ( std::vector<PooledPoint>& pts ) 
+  {
+    if ( pts.size() < 2 ) { return ; }
+    for ( std::size_t i = 0 ; i + 1 < pts.size() ; ++i ) 
+    {
+      pts[i].dx = pts[i+1].x - pts[i].x ;
+    }
+    pts.back().dx = 0.0 ;
+  }
+
   // ==========================================================================
   /// Internal helper for clipped Kullback-Leibler divergence
   inline double kl_div
@@ -88,6 +103,7 @@ namespace
       cnt2 += c2 ;
 
       PooledPoint pt ;
+      pt.x    = x ;
       pt.cdf1 = cnt1 / N1 ;
       pt.cdf2 = cnt2 / N2 ;
       pt.dH   = static_cast<double>( c1 + c2 ) / W_tot ;
@@ -95,6 +111,7 @@ namespace
       
       result.push_back ( pt ) ;
     }
+    _fill_dx ( result ) ;
     return result ;
   }
   // ==========================================================================
@@ -139,6 +156,7 @@ namespace
       acc_w2 += step_w2 ;
 
       PooledPoint pt ;
+      pt.x    = x ;
       pt.cdf1 = acc_w1 / sum_w1 ;
       pt.cdf2 = acc_w2 / sum_w2 ;
       pt.dH   = ( step_w1 + step_w2 ) / W_tot ;
@@ -146,6 +164,7 @@ namespace
 
       result.push_back ( pt ) ;
     }
+    _fill_dx ( result ) ;
     return result ;
   }
 
@@ -240,6 +259,31 @@ namespace
     }
     return zk ;
   }
+
+  double compute_w1
+  ( const std::vector<PooledPoint>& pts ) 
+  {
+    double w1 = 0.0 ;
+    for ( const auto& pt : pts ) 
+    {
+      if ( pt.dx <= 0.0 ) { continue ; }
+      w1 += std::abs ( pt.cdf1 - pt.cdf2 ) * pt.dx ;
+    }
+    return w1 ;
+  }
+
+  double compute_w2
+  ( const std::vector<PooledPoint>& pts ) 
+  {
+    double w2_sq = 0.0 ;
+    for ( const auto& pt : pts ) 
+    {
+      if ( pt.dx <= 0.0 ) { continue ; }
+      const double diff = pt.cdf1 - pt.cdf2 ;
+      w2_sq += ( diff * diff ) * pt.dx ;
+    }
+    return std::sqrt ( w2_sq ) ;
+  }
   //
   // ==========================================================================
 } // The end of anonymous namespace
@@ -295,6 +339,12 @@ namespace Ostap
 
     // 8. Zhang's ZK
     IMPLEMENT_TWOSAMPLE_EPS    ( ZK , compute_zk )
+
+    // 9. Wasserstein-1
+    IMPLEMENT_TWOSAMPLE_NO_EPS ( wasserstein1 , compute_w1 )
+
+    // 10. Wasserstein-2
+    IMPLEMENT_TWOSAMPLE_NO_EPS ( wasserstein2 , compute_w2 )
 
 #undef IMPLEMENT_TWOSAMPLE_NO_EPS
 #undef IMPLEMENT_TWOSAMPLE_EPS

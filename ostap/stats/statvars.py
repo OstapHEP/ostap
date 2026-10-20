@@ -2515,14 +2515,14 @@ def data_VIFs ( data        ,
         rows =  [ ( 'Variable' , 'VIF' , 'Unit' , 'R2[%]' ) ] 
         for var , vif in zip ( var_lst , vifs ) :
             v , expo = pretty_float ( vif , precision = precision , width = width )
-            r2       = ( '%5.1f' % ( 100 * ( 1.0 - 1.0 / vif ) ) ) if 1 <= vif else '' 
-            if vif < threshold : row = var ,          v   ,          format_pow10 ( expo )   if expo else '' , r2 
-            else               : row = var , attstr ( v ) , attstr ( format_pow10 ( expo ) ) if expo else '' , r2            
+            R2       = ( '%6.2f' % ( 100 * ( 1.0 - 1.0 / vif ) ) ) if 1 <= vif else '' 
+            if vif < threshold : row = var ,          v   ,          format_pow10 ( expo )   if expo else '' , R2 
+            else               : row = var , attstr ( v ) , attstr ( format_pow10 ( expo ) ) if expo else '' , R2            
             rows.append ( row )
             
         title = title if title else 'VIFs/R2 for variables'
         rows  = T.remove_empty_columns ( rows )
-        logger.info ('%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' ) ) )
+        logger.info ('%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ', alignment = 'lccc') ) )
         
     return tuple ( vifs )
 
