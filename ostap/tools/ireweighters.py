@@ -341,11 +341,18 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                                          dtrain          = trn_data ,
                                          num_boost_round = 1        )
 
-            # БЕРЕМ СЫРЫЕ МАРГИНЫ ВМЕСТО ВЕРОЯТНОСТЕЙ:
-            margins        = model.predict ( dmat_orig , output_margin = True )
-            log_step       = numpy.clip    ( margins , -10.0 , 10.0 )
+            ## # БЕРЕМ СЫРЫЕ МАРГИНЫ ВМЕСТО ВЕРОЯТНОСТЕЙ:
+            ## margins        = model.predict ( dmat_orig , output_margin = True )
+            ## log_step       = numpy.clip    ( margins , -10.0 , 10.0 )
+            ## current_w_orig *= numpy.exp    ( log_step * learning_rate )
+
+
+            # Для binary:logitraw метод predict сразу возвращает сырые логиты!
+            log_step       = model.predict ( dmat_orig )
+            log_step       = numpy.clip    ( log_step , -10.0 , 10.0 )
             current_w_orig *= numpy.exp    ( log_step * learning_rate )
 
+            
             # Очистка памяти (механизм Феникса)
             model_bytes = model.save_raw ()
             del model

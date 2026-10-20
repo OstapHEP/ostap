@@ -279,7 +279,8 @@ def run_reweight ( n_dim     = 3     ,
                      original              = original ,
                      ##
                      learning_rate         = 0.05     ,
-                     max_depth             = 10       , 
+                     max_depth             = 10       ,
+                     objective             = 'binary:logitraw', # ВА
                      tree_method           = 'hist'   )
         
         reweighters.append ( rw3 )
