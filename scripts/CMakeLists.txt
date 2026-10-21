@@ -18,6 +18,11 @@ install ( FILES       sync-dirs
           DESTINATION bin
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+	
+install ( FILES       monkey-patch 
+          DESTINATION bin
+          COMPONENT   scripts 
+          PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install ( FILES       pplaunch
           DESTINATION bin

@@ -213,6 +213,43 @@ set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
 message ( "----> AVX2       ?               : " ${OSTAP_HAS_AVX2} )
 
 # ============================================================================
+### CHECK FOR AVX-512  
+# ============================================================================
+
+include(CheckCXXSourceRuns)
+
+# 1. Test code that actually executes AVX-512 (Foundation) instructions
+set(AVX512_RUN_CODE "
+    #include <immintrin.h>
+    int main() {
+        // Using AVX-512F 512-bit registers and operations
+        __m512d a = _mm512_set1_pd(1.0);
+        __m512d b = _mm512_set1_pd(2.0);
+        __m512d c = _mm512_add_pd(a, b);
+        
+        // Volatile to prevent compiler optimization
+        volatile double* ptr = (volatile double*)&c;
+        return (ptr[0] == 3.0) ? 0 : 1;
+    }
+")
+
+# 2. Set the flags temporarily
+set(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+if(MSVC)
+    set(CMAKE_REQUIRED_FLAGS "/arch:AVX512")
+else()
+    set(CMAKE_REQUIRED_FLAGS "-mavx512f")
+endif()
+
+# 3. Compile AND Execute the code
+check_cxx_source_runs("${AVX512_RUN_CODE}" OSTAP_HAS_AVX512)
+
+# Restore flags
+set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
+
+message ( "----> AVX-512    ?               : " ${OSTAP_HAS_AVX512} )
+
+# ===============================================================================
 
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:

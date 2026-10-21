@@ -1176,7 +1176,6 @@ def two_yields ( total , fraction ) :
     
     return yield1 , yield2 
     
-
 # =============================================================================
 var1_types = ROOT.RooAbsRealLValue , ROOT.RooAbsCategoryLValue
 var2_types = ROOT.RooAbsReal       , ROOT.RooAbsCategory 

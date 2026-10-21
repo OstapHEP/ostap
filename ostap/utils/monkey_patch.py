@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 # @file   ostap/utils/monkey_patch.py  
-# Identify all ``monkey-patch'' occurenced for the given module/file 
+# Identify all ``monkey-patch'' occurences for the given module/file 
 # @author Vanya Belyaev Ivan.Belyaev@itep.ru
 # @date   2016-12-02
 # =============================================================================
-""" Identify all ``monkey-patch'' occurenced for the given module/file 
->>> docme ( module )
+""" Identify all ``monkey-patch'' occurences for the given module/file 
 """
 # =============================================================================
 __version__ = "$Revision:"
