@@ -2622,7 +2622,7 @@ class UseAliases(object) :
 
         self.__aliases  = {}
         self.__aliases.update ( aliases )
-        slef.__tree     = tree 
+        self.__tree     = tree 
         self.__previous = {}
         
     def __enter__ ( self ) :

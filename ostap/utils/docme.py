@@ -3,10 +3,10 @@
 # =============================================================================
 # @file
 # Trivial utility for documentation
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date   2016-12-02
+# @author Vanya Belyaev Ivan.Belyaev@itep.ru
+# @date   2016-12-02
 # =============================================================================
-"""Trivial utility for documentation purposes
+""" Trivial utility for documentation purposes
 >>> docme ( module )
 """
 # =============================================================================
@@ -24,7 +24,7 @@ primitive =  int        , float , bool , str , bytes   , list , dict , set
 #  @code
 #  docme ( module )
 #  @endcode
-def docme( module , symbols = {} , logger = None ) :
+def docme ( module , symbols = {} , logger = None ) :
     """Simple function to allow coherent self-print for all ostap modules
     >>> docme ( module ) 
     """
