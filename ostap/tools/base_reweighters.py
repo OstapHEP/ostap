@@ -559,7 +559,14 @@ class IterativeReweighter ( DensityReweighter ) :
         models = self.fitted_models [ stream_key ]
         return self._predict_iterative_stream ( models, X )
 
-
+    # =========================================================================
+    def _normalize_and_iter_clip ( self, ratios, w_orig, w_targ ) :
+        clipped  = numpy.clip ( ratios, 0.0 , self.config [ 'clip_threshold' ] )
+        orig_sum = numpy.sum ( numpy.abs ( w_orig ) * clipped , dtype = numpy.float64 )
+        targ_sum = numpy.sum ( numpy.abs ( w_targ )          , dtype = numpy.float64 )
+        norm     = targ_sum / ( orig_sum + 1e-12 )
+        return clipped * norm
+    
     # =========================================================================
     def _train_single_model ( self, X_train, y_train, w_train, X_val, y_val, w_val ) :
         """ Dummy implementation to satisfy abstract base class requirements. """

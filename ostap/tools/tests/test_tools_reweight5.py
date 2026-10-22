@@ -216,7 +216,7 @@ def run_reweight ( n_dim     = 3     ,
     reweighters = [ None ]
     reweighters = [] 
     
-    if False and hasCatBoost () :
+    if hasCatBoost () :
 
         """
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
@@ -240,11 +240,13 @@ def run_reweight ( n_dim     = 3     ,
         rw4 = CATB ( target        = target      , 
                      original      = original    ,
                      ## 
-                     leaf_estimation_iterations = 30   , 
-                     min_data_in_leaf           =  2   ,
-                     learning_rate              = 0.2  ,
-                     n_estimators               = 2000 , 
-                     ## 
+                     leaf_estimation_iterations =    1 , 
+                     min_data_in_leaf           =    2 ,
+                     learning_rate              = 0.05 ,
+                     max_depth                  =    8 , 
+                     n_estimators               =  300 ,
+                     max_delsta_step            =    1 ,  
+                     ##
                     )       
 
         reweighters.append ( rw4 )
@@ -285,19 +287,22 @@ def run_reweight ( n_dim     = 3     ,
                      original              = original ,
                      ##
                      n_estimators          = 300     ,
-                     learning_rate         = 0.02    ,
-                     max_depth             = 5       ,
+                     learning_rate         = 0.05    ,
+                     max_depth             = 7       ,
                      ## 
-                     tree_method           = 'hist'  ,
+                     tree_method           = 'exact' ,
                      max_bin               = 1023    ,
                      ##
-                     min_child_weight      = 5.0     ,
-                     max_delta_step        = 1.0     , 
-                     subsample             = 0.7     ,
+                     min_child_weight      = 0.01    ,
+                     max_delta_step        = 0.0     , 
+                     subsample             = 0.9     ,
                      ## 
-                     gamma                 = 0.5     , 
-                     reg_alpha             = 0.01    ,
-                     reg_lambda            = 0.50    ,
+                     gamma                 = 0.0     , 
+                     reg_alpha             = 0.0     ,
+                     reg_lambda            = 0.0     ,
+                     ##
+                     grow_policy           = 'depthwise' , 
+                     max_leaves            =  0      ,
                     )
         
         reweighters.append ( rw3 )
@@ -372,7 +377,7 @@ def run_reweight ( n_dim     = 3     ,
         if not original_weight is None :
             wmin = float ( numpy.min ( original_weight ) ) 
             wmax = float ( numpy.max ( original_weight ) )
-            wmin , wmax = '%.4g' % wmin , '%.4g' % wmax 
+            wmin , wmax = '%.5g' % wmin , '%.5g' % wmax 
                                
         for c in comparators :
             

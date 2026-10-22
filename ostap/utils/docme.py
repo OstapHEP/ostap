@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file
+# @file   ostap/utils/docme.py  
 # Trivial utility for documentation
 # @author Vanya Belyaev Ivan.Belyaev@itep.ru
 # @date   2016-12-02
