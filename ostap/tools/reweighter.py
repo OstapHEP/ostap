@@ -283,7 +283,6 @@ class CascadeReweighter(Reweighter):
             the_stages.append ( ( cl , cnf ) ) 
             last = cl
 
-
         n_orig = num_samples ( original )
         n_targ = num_samples ( target   )
         

@@ -1,3 +1,12 @@
+## New features
+
+   1. Add the first and second Wasserstein' distances
+   1. Add Two-samples&GoF 1D-estimators based on Wassertein's 1&2 distances
+   
+## Bug fixes
+
+## Backward incompatible
+
 # v3.8.6.14
 
 ## New features

@@ -70,7 +70,7 @@ TORCH_HIDDEN_DIM      =  128 # Hidden layer size for small MLP weak learners
 TORCH_EPOCHS_PER_STEP =  100 # Training epochs per boosting step
 
 # =============================================================================
-## LigthGBM
+## LightGBM
 # =============================================================================
 
 # =============================================================================
@@ -229,32 +229,39 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
 # =============================================================================
 ## XGBoost 
 # =============================================================================
+# =============================================================================
+## XGBoost 
+# =============================================================================
 
 # =============================================================================
-# True Density Ratio Objective for XGBoost (Exact Exponential DRE)
-# =============================================================================
 def xgboost_density_ratio_obj ( preds , dtrain ) :
-    """ Exact Density Ratio Estimation objective for XGBoost. """
+    """
+    Direct Density Ratio Estimation (DRE) custom objective for XGBoost.
+    Uses exponential / log-linear DRE loss instead of binary logloss
+    to prevent Hessian collapse on high-density peaks.
+    """
     labels  = dtrain.get_label  ()
     weights = dtrain.get_weight ()
     
     if weights is None or len ( weights ) == 0:
         weights = numpy.ones_like ( labels )
         
-    # Защита от зануления градиентов (baseline weight)
-    weights = numpy.maximum ( weights , 1e-4 )
-        
-    margin = numpy.clip ( preds  , -10.0, 10.0 )
+    # Clip raw margins to prevent numerical overflow in exp(margin)
+    margin = numpy.clip ( preds , -10.0 , 10.0 )
     exp_m  = numpy.exp  ( margin )
     
-    # Для Target (1) истинный гессиан равен 0.0 (стабильность обеспечит reg_lambda в параметрах)
-    grad = numpy.where ( labels == 1 , -1.0 , exp_m )
-    hess = numpy.where ( labels == 1 ,  0.0 , exp_m )
+    # Analytical First (grad) and Second (hess) order derivatives for DRE:
+    # Target   (y=1): grad = -1,   hess = 1e-5 (floor to avoid zero division)
+    # Original (y=0): grad = e^m,  hess = e^m
+    grad = numpy.where ( labels == 1.0 , -1.0  , exp_m )
+    hess = numpy.where ( labels == 1.0 , 1e-5  , exp_m )
     
+    # Scale by instance observation weights
     grad *= weights
     hess *= weights
     
     return grad, hess
+
 
 # =============================================================================
 ## @class XGBoostIterativeReweighter
@@ -270,27 +277,21 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                    **kwargs        ) :
         
         config = {
-            ## 
             'n_estimators'            :  XGB_ESTIMATORS     ,
             'learning_rate'           :  XGB_LEARNING_RATE  ,
-            'max_depth'               :  XGB_MAX_DEPTH      ,
-            ## 
+            'max_depth'               :  XGB_MAX_DEPTH      , 
             'tree_method'             :  'hist'     , 
-            'max_bin'                 :  1023       ,
-            ##
-            'grow_policy'             : 'depthwise' ,
-            'max_leaves'              :  31         ,                     
-            ## 
-            'min_child_weight'        :  1e-6   ,
-            'max_delta_step'          :  0.0    , ## UNSET: Allow unrestricted logits for high density ratios
-            ##
-            'gamma'                   :  0.0   , 
-            'subsample'               :  1.0    , ## UNSET: Retain full sample to resolve sharp density peaks
-            'reg_alpha'               :  0.0   ,
-            'reg_lambda'              :  0.0   ,                        
-            ## 
-            'verbosity'               :  0     ,
-            'n_jobs'                  :  1     ,
+            'max_bin'                 :  1023       , 
+            'grow_policy'             : 'lossguide' , 
+            'max_leaves'              :  31         , 
+            'min_child_weight'        :  1e-2       , 
+            'max_delta_step'          :  0.0        , 
+            'gamma'                   :  0.0        , 
+            'subsample'               :  0.9        , 
+            'reg_alpha'               :  0.0        , 
+            'reg_lambda'              :  0.001      , 
+            'verbosity'               :  0          , 
+            'n_jobs'                  :  1          , 
         }
 
         config.update ( kwargs )
@@ -313,7 +314,6 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                                 w_orig             ,
                                 X_targ             ,
                                 w_targ             ) :
-        
         import xgboost as XGBoost
 
         n_orig = len ( X_orig )
@@ -324,44 +324,41 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         abs_w_orig = numpy.abs ( w_orig )
         abs_w_targ = numpy.abs ( w_targ )
         
-        norm_targ = w_targ * ( numpy.sum ( abs_w_orig ) / ( numpy.sum ( abs_w_targ ) + 1e-12 ) )
+        sum_w_orig = numpy.sum ( abs_w_orig )
+        sum_w_targ = numpy.sum ( abs_w_targ )
+        
+        norm_targ = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
 
         y_comb = numpy.hstack ( [ numpy.zeros ( n_orig , dtype = numpy.float32 ) ,
                                   numpy.ones  ( n_targ , dtype = numpy.float32 ) ] )
 
         current_w_orig = abs_w_orig.copy ()
 
-        
         n_estimators  = self.params.get ( 'n_estimators'  , XGB_ESTIMATORS    )
         learning_rate = self.params.get ( 'learning_rate' , XGB_LEARNING_RATE )
         max_depth     = self.params.get ( 'max_depth'     , XGB_MAX_DEPTH     )
+        max_leaves    = self.params.get ( 'max_leaves'    , 31                )
     
         models = []
+        dmat_orig = XGBoost.DMatrix ( X_orig )
 
         params = {
-            'eval_metric'             : 'logloss'         , 
-            'tree_method'             : self.params.get ( 'tree_method'        , 'exact'     ) , 
+            'tree_method'             : self.params.get ( 'tree_method'        , 'hist'      ) , 
             'max_bin'                 : self.params.get ( 'max_bin'            , 1023        ) ,
-            'min_child_weight'        : self.params.get ( 'min_child_weight'   , 0.001       ) ,
+            'min_child_weight'        : self.params.get ( 'min_child_weight'   , 1e-2        ) ,
             'max_delta_step'          : self.params.get ( 'max_delta_step'     , 0.0         ) ,
-            'subsample'               : self.params.get ( 'subsample'          , 1.0         ) , 
+            'subsample'               : self.params.get ( 'subsample'          , 0.9         ) , 
             'gamma'                   : self.params.get ( 'gamma'              , 0.0         ) , 
             'reg_alpha'               : self.params.get ( 'reg_alpha'          , 0.0         ) , 
-            'reg_lambda'              : self.params.get ( 'reg_lambda'         , 0.0         ) , 
+            'reg_lambda'              : self.params.get ( 'reg_lambda'         , 0.001       ) , 
             'max_depth'               : max_depth ,
-            'learning_rate'           : 1.0       , ## Margin is multiplied by external learning_rate
-            ## 
-            'grow_policy'             : self.params.get ( 'grow_policy' , 'depthwise' ) , 
-            'max_leaves'              : self.params.get ( 'max_leaves'  , 0           ) , 
-            'disable_default_eval_metric' : 1 ,
-            ##             
+            'learning_rate'           : 1.0       , # Raw Newton step inside XGBoost
+            'grow_policy'             : self.params.get ( 'grow_policy' , 'lossguide' ) , 
+            'max_leaves'              : max_leaves , 
             'verbosity'               : self.params.get ( 'verbosity' , 0 ) , 
             'n_jobs'                  : self.params.get ( 'n_jobs'    , 1 ) , 
         }
-        
-        dmat_orig = XGBoost.DMatrix ( X_orig )
-        
-        prev_model = None
+
         for it in progress_bar ( n_estimators , description = 'Boosting:' , silent = not self.progress ) :
             
             comb_weights  = numpy.hstack ( [ current_w_orig , numpy.abs ( norm_targ ) ] )
@@ -369,25 +366,21 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             
             trn_data = XGBoost.DMatrix ( X_comb , label = y_comb , weight = comb_weights )
             
-            # Train next tree using custom_density_ratio_obj instead of default objective
             model    = XGBoost.train   ( params          = params,
                                          dtrain          = trn_data,
                                          num_boost_round = 1,
                                          obj             = xgboost_density_ratio_obj )
             
-            prev_model = model
-
-            # Obtain raw margin step exp(lr * margin)
-            margin = model.predict ( dmat_orig, output_margin = True )
-
-            # Apply external learning_rate update step
-            step_ratio      = numpy.exp   ( numpy.clip ( margin , -5.0 , 5.0 ) )
-            current_w_orig *= numpy.power ( step_ratio, learning_rate)
+            # Predict raw logit / margin
+            margin      = model.predict ( dmat_orig, output_margin = True )
+            margin      = numpy.clip    ( margin, -10.0, 10.0 )
             
-            # 2. НОРМИРОВКА (убирает дрейф среднего веса):
-            current_w_orig *= (numpy.sum ( abs_w_orig ) / ( numpy.sum ( current_w_orig ) + 1e-12))
+            step_ratios = numpy.exp ( margin )
+            current_w_orig *= numpy.power ( numpy.clip ( step_ratios , 1e-6 , 1e+6 ) , learning_rate )
+            
+            # Normalize total mass to prevent global drift
+            current_w_orig *= ( sum_w_orig / ( numpy.sum ( current_w_orig ) + 1e-12 ) )
 
-            # Log progress
             if ( ( it + 1 ) % 10 == 0 or ( it + 1 ) == n_estimators ) : 
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 logger.info ( f" Iteration {it+1}/{n_estimators} -> weights min/max: {ratios_curr.min():.4f} / {ratios_curr.max():.4f}" )
@@ -398,28 +391,25 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         final_ratios = self._normalize_and_iter_clip ( final_ratios , w_orig , norm_targ )
         
         return models, final_ratios
-
     
     # =========================================================================
-    def _predict_iterative_stream(self, models, X):
+    def _predict_iterative_stream ( self, models, X ) :
         import xgboost as XGBoost
-        dmat = XGBoost.DMatrix(X)
+        dmat = XGBoost.DMatrix ( X )
     
-        learning_rate = self.params.get('learning_rate', XGB_LEARNING_RATE)
-        margin        = numpy.zeros(len(X), dtype=numpy.float32)
+        learning_rate = self.params.get ( 'learning_rate' , XGB_LEARNING_RATE )
+        margin        = numpy.zeros ( len ( X ) , dtype = numpy.float32 )
     
-        for model in models:
-            step_margin = model.predict(dmat, output_margin=True)
-            # Зажимаем шаг дерева аналогично fit_stream
-            step_margin = numpy.clip(step_margin, -5.0 , 5.0)
+        for model in models :
+            step_margin = model.predict ( dmat, output_margin = True )
+            step_margin = numpy.clip ( step_margin, -10.0, 10.0 )
             margin     += step_margin * learning_rate
         
-        weights = numpy.exp(margin)
-        # Нормируем предсказанные веса, чтобы их среднее равнялось 1.0 (как при fit)
-        weights /= numpy.mean(weights)
+        weights  = numpy.exp ( margin )
+        weights /= ( numpy.mean ( weights ) + 1e-12 )
     
         return weights
-
+    
 # =============================================================================
 ## CatBoost 
 # =============================================================================

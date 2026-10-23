@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/stats/gof.py
-#  Set of utulities for goodness-of-fit studies 
+#  Set of utulities for goodness-of-fit&two-samples-test studies 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2023-12-06
 # =============================================================================
@@ -25,7 +25,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug ( 'Simple utilities for goodness-of-fit studies' )
+logger.debug ( 'Simple utilities for goodness-of-fit&two-samples-test studies' )
 # =============================================================================
 ## @class AGoF
 #  An absract base class for family of methods to probe Goodness-of-Fit.

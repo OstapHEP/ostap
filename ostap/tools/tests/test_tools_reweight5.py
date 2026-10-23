@@ -37,7 +37,8 @@ from   ostap.logger.pretty      import nice_print
 from   ostap.stats.utils        import nEff 
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
-                                         hasPyTorch  , hasHepML   ) 
+                                         hasPyTorch  , hasHepML   )
+from   ostap.tools.reweighter   import CascadeReweighter as  CASCADE
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
@@ -288,27 +289,28 @@ def run_reweight ( n_dim     = 3     ,
                      original              = original ,
                      ##
                      n_estimators          = 300     ,
-                     learning_rate         = 0.05    ,
+                     learning_rate         = 0.10    ,
                      ## max_depth             = 7       ,
                      ## 
                      ## tree_method           = 'exact' ,
                      ## max_bin               = 1023    ,
                      ##
-                     min_child_weight      = 1e-5    ,
-                     max_delta_step        = 2.0     , 
+                     min_child_weight      = 1e-6    ,
+                     max_delta_step        = 0.0     , 
                      subsample             = 1.0     ,
                      ## 
                      gamma                 = 0.0     , 
                      reg_alpha             = 0.0     ,
-                     reg_lambda            = 0.1     ,
+                     reg_lambda            = 0.0     , ## 1e-3    , ## 0.01 
                      ##
                      ## grow_policy           = 'depthwise' , 
                      ## max_leaves            =  0      ,
-                     ## 
+                     ##
                      grow_policy           = 'lossguide' , 
                      max_leaves            =  63         ,
-                     max_depth             =   6         ,
-                     tree_method           = 'hist'      ,
+                     max_depth             =   0         ,
+                     tree_method           = 'hist'   ,
+                     ## tree_method           = 'exact'      ,
                      max_bin               = 1023        ,
                     )
         
@@ -350,20 +352,27 @@ def run_reweight ( n_dim     = 3     ,
         rw1 = GBRW ( target = target , original = original )
         reweighters.append ( rw1 )
         
-    if False and hasSkLearn ():
+    if hasSkLearn ():
         
         from ostap.tools.reweighters  import LogRegressionDensityReweighter as LOGREG 
 
         ## rw6 = LOGREG ( target = target , original = original )
         ## reweighters.append ( rw6 )
         
-        from ostap.tools.reweighter  import CascadeReweighter as  CASCADE
         
         ## rw7 = CASCADE ( classes = [ LOGREG , LOGREG ] , target = target , original = original )
         ## reweighters.append ( rw7 )
         
-        ## rw8 = CASCADE ( classes = [ LOGREG , LOGREG , LOGREG ] , target = target , original = original )
-        ## reweighters.append ( rw8 )
+        rw8 = CASCADE ( classes     = [ LOGREG , LOGREG , LOGREG ] ,
+                        target      = target   ,
+                        original    = original ,
+                        ##
+                        polynomials = 2 , 
+                        ##
+                       )
+        
+        
+        reweighters.append ( rw8 )
 
 
     # =========================================================================

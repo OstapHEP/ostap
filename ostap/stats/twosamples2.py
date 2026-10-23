@@ -21,6 +21,8 @@ __all__     = (
     'ZA'                 , ## Zhang's ZA         2-sample  test 
     'ZC'                 , ## Zhang's ZC         2-sample  test 
     'ZK'                 , ## Zhang's ZK         2-sample  test
+    'wasserstein1'       , ## The first Wasserstein 2-sample test
+    'wasserstein2'       , ## The second Wasserstein 2-sample test    
 ) 
 # =============================================================================
 from   ostap.stats.utils    import ( weight_trivial     ,
@@ -192,6 +194,47 @@ def ZK ( data1           ,
     ecdf2 = data2ecdf ( data2 , weight2 )
     ## 
     return Ostap.Math.ZK ( ecdf1 , ecdf2 , eps )
+
+# =============================================================================
+## Calculates First Wasserstein distance (\f$W_1\f$ / Earth Mover's Distance).
+#
+#  Calculates the 1st Wasserstein distance between two empirical distributions:
+#  \f[ W_1(F_1, F_2) = \int_{-\infty}^{\infty} |F_1(x) - F_2(x)| \, dx \f]
+#
+#  @see https://en.wikipedia.org/wiki/Wasserstein_metric
+def wasserstein1 ( data1           , 
+                   data2           ,
+                   weight1 = None  ,
+                   weight2 = None  ) : 
+    """ Calculates the First Wasserstein distance / Earth Mover's Distance).
+    @see https://en.wikipedia.org/wiki/Wasserstein_metric
+    """
+    ##
+    ecdf1 = data2ecdf ( data1 , weight1 )
+    ecdf2 = data2ecdf ( data2 , weight2 )
+    ## 
+    return Ostap.Math.wasserstein1 ( ecdf1 , ecdf2 , eps )
+
+# =============================================================================
+## Calculates First Wasserstein distance (\f$W_1\f$ / Earth Mover's Distance).
+#
+#  Calculates the square root of the integrated squared differences between empirical CDFs:
+#  \f[ W_2(F_1, F_2) = \left( \int_{-\infty}^{\infty} (F_1(x) - F_2(x))^2 \, dx \right)^{1/2} \f]
+#
+#
+#  @see https://en.wikipedia.org/wiki/Wasserstein_metric
+def wasserstein2 ( data1           , 
+                   data2           ,
+                   weight1 = None  ,
+                   weight2 = None  ) : 
+    """ Calculates the Second Wasserstein distance .
+    @see https://en.wikipedia.org/wiki/Wasserstein_metric
+    """
+    ##
+    ecdf1 = data2ecdf ( data1 , weight1 )
+    ecdf2 = data2ecdf ( data2 , weight2 )
+    ## 
+    return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
 if '__main__' == __name__ :

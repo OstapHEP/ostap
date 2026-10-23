@@ -21,6 +21,8 @@ __all__     = (
     'ZK'                 , ## ZK                GoF estimator
     'ZA'                 , ## ZA                GoF estimator
     'ZC'                 , ## ZC                GoF estimator
+    'Wasserstein1'       , ## Wasserstein-1     GoF estimator 
+    'Wasserstein2'       , ## Wasserstein-2     GoF estimator 
 )
 # =============================================================================
 from   ostap.stats.gof_np      import GoFnp
@@ -29,16 +31,16 @@ import ostap.stats.twosamples2 as     TS2
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof1dw' )
-else                       : logger = getLogger( __name__ )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.gof1dw' )
+else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Two-sample & GoF 1D-weighted tests' )
 # =============================================================================
 ## @class BootstrapGoF 
-#  Implementation of 1D GoFnp base class for getting p-value via boostrapping 
+#  Implementation of 1D GoFnp base class for getting p-value via boostrapping/permutations 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 class BootstrapGoF ( GoFnp ) :
-    """ 1D GoFnp base class to get p-value via BootStrap
+    """ 1D GoFnp base class to get p-value via BootStrap/Permutation
     """
     def __init__ ( self             ,
                    method           ,
@@ -207,7 +209,31 @@ class ZK(BootstrapGoF) :
         BootstrapGoF.__init__ ( self ,
                                 method    = "Zhang' ZK" ,
                                 estimator = TS2.ZK      , **kwargs )
-            
+
+# =============================================================================
+## @class Wasserstein1 
+#  Two (weighted) sample test using the fitrst Wasserstein distance 
+class Wasserstein1(BootstrapGoF) :
+    """ Two (weighted) sample test using the First Wasserstein distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using the First Wasserstein distance
+        """
+        BootstrapGoF.__init__ ( self ,
+                                method    = "Wasserstein-1"  ,
+                                estimator = TS2.wasserstein1 , **kwargs )
+
+# =============================================================================
+## @class Wasserstein2
+#  Two (weighted) sample test using the second Wasserstein distance 
+class Wasserstein2(BootstrapGoF) :
+    """ Two (weighted) sample test using the second Wasserstein distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using the second Wasserstein distance
+        """
+        BootstrapGoF.__init__ ( self ,
+                                method    = "Wasserstein-2"  ,
+                                estimator = TS2.wasserstein2 , **kwargs )
+        
 # =============================================================================
 if '__main__' == __name__ :
     

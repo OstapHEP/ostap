@@ -97,7 +97,12 @@ class GBReweighter(Reweighter) :
                     weight1 = original_weight   ,
                     weight2 = target_weight     ,
                     where   = typename ( self ) )   
-        
+
+        if num_features ( target ) <= 6 :
+            gb_args = config.get ( 'gb_args' , {} )
+            gb_args [ 'max_features' ] = 1.00
+            config  [ 'gb_args'      ] = gb_args 
+            
         Reweighter.__init__ ( self            ,
                               original        = original        ,
                               target          = target          , 
