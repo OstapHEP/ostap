@@ -1,8 +1,10 @@
-# v3.8.6.12
+# v3.8.6.14
 
 ## New features
 
  1. Add `TextBar` - variant of `progress_bar` where more information is needed 
+ 1. Add `SafeLoop/safe_loop`
+ 1. Add `IterativeReweighter`
 
 ## Bug fixes
 

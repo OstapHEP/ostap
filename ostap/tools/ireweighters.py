@@ -234,27 +234,23 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
 # True Density Ratio Objective for XGBoost (Exact Exponential DRE)
 # =============================================================================
 def xgboost_density_ratio_obj ( preds , dtrain ) :
-    """ Exact Density Ratio Estimation objective for XGBoost.
-    - Target (y=1):   g = -1,            h = 1e-6 (no denominator bloating)
-    - Original (y=0): g = exp(margin),   h = exp(margin)
-    """
+    """ Exact Density Ratio Estimation objective for XGBoost. """
     labels  = dtrain.get_label  ()
     weights = dtrain.get_weight ()
     
     if weights is None or len ( weights ) == 0:
         weights = numpy.ones_like ( labels )
         
-    # Ограничиваем маржин для стабильности exp
+    # Защита от зануления градиентов (baseline weight)
+    weights = numpy.maximum ( weights , 1e-4 )
+        
     margin = numpy.clip ( preds  , -10.0, 10.0 )
     exp_m  = numpy.exp  ( margin )
     
-    # Вычисляем g и h
-    # For Target (1):   grad = -1.0,         hess = 1e-6
-    # For Original (0): grad = exp(margin),  hess = exp(margin)
-    grad = numpy.where ( labels == 1 , -1.0  , exp_m )
-    hess = numpy.where ( labels == 1 ,  1e-6 , exp_m )
+    # Для Target (1) истинный гессиан равен 0.0 (стабильность обеспечит reg_lambda в параметрах)
+    grad = numpy.where ( labels == 1 , -1.0 , exp_m )
+    hess = numpy.where ( labels == 1 ,  0.0 , exp_m )
     
-    # Домножаем на итерационные веса
     grad *= weights
     hess *= weights
     
@@ -266,8 +262,6 @@ def xgboost_density_ratio_obj ( preds , dtrain ) :
 class XGBoostIterativeReweighter ( IterativeReweighter ) :
     """ Iterative weight boosting density reweighter using XGBoost.
     """
-
-
     def __init__ ( self            , 
                    original        , 
                    target          , 
@@ -387,14 +381,14 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             margin = model.predict ( dmat_orig, output_margin = True )
 
             # Apply external learning_rate update step
-            step_ratio      = numpy.exp   ( numpy.clip ( margin , -3.0 , 3.0 ) )
+            step_ratio      = numpy.exp   ( numpy.clip ( margin , -5.0 , 5.0 ) )
             current_w_orig *= numpy.power ( step_ratio, learning_rate)
             
             # 2. НОРМИРОВКА (убирает дрейф среднего веса):
             current_w_orig *= (numpy.sum ( abs_w_orig ) / ( numpy.sum ( current_w_orig ) + 1e-12))
 
             # Log progress
-            if ( ( it + 1 ) % 50 == 0 or ( it + 1 ) == n_estimators ) : 
+            if ( ( it + 1 ) % 10 == 0 or ( it + 1 ) == n_estimators ) : 
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 logger.info ( f" Iteration {it+1}/{n_estimators} -> weights min/max: {ratios_curr.min():.4f} / {ratios_curr.max():.4f}" )
             
@@ -417,7 +411,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         for model in models:
             step_margin = model.predict(dmat, output_margin=True)
             # Зажимаем шаг дерева аналогично fit_stream
-            step_margin = numpy.clip(step_margin, -3.0, 3.0)
+            step_margin = numpy.clip(step_margin, -5.0 , 5.0)
             margin     += step_margin * learning_rate
         
         weights = numpy.exp(margin)
@@ -441,26 +435,20 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
     # Custom Exact Density Ratio Objective for CatBoost (Numba JIT Compatible)
     # =========================================================================
     class DensityRatioObj ( object ) :
-        """ Custom exact Density Ratio Estimation (DRE) objective for CatBoost.
         
-        Target class   (y = 1): grad = -1.0,        hess = 1e-6
-        Original class (y = 0): grad = exp(margin), hess = exp(margin)
-        """
         def calc_ders_range ( self , approxes , targets , weights ) :
-            # approxes, targets, weights are passed directly as 1D numpy arrays by CatBoost
             margin = numpy.clip ( approxes , -10.0 , 10.0 )
             exp_m  = numpy.exp  ( margin )
             
-            # Compute raw gradient and hessian
             grad = numpy.where ( targets == 1.0 , -1.0  , exp_m )
-            hess = numpy.where ( targets == 1.0 ,  1e-6 , exp_m )
+            hess = numpy.where ( targets == 1.0 ,  1e-5 , exp_m )
             
-            # Scale derivatives by sample weights
             if weights is not None and 0 < len ( weights ) :
-                grad = grad * weights
-                hess = hess * weights
+                # Защита от зануления градиентов (baseline weight)
+                weights = numpy.maximum ( weights , 1e-4 )
+                grad    = grad * weights
+                hess    = hess * weights
                 
-            # CatBoost C++ engine expects der1 = -grad and der2 = hess
             der1 = -grad
             der2 =  hess
             
@@ -577,13 +565,13 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
             if 1 < margin.ndim : margin = margin[:, 0]
             
             # Apply external learning rate scaling to margin update
-            step_ratio      = numpy.exp   ( numpy.clip ( margin , -3.0 , 3.0 ) )
+            step_ratio      = numpy.exp   ( numpy.clip ( margin , -5.0 , 5.0 ) )
             current_w_orig *= numpy.power ( step_ratio , learning_rate )
             
             # Per-iteration weight normalization to prevent constant logit drift
             current_w_orig *= ( sum_w_orig / ( numpy.sum ( current_w_orig ) + 1e-12 ) )
             
-            if ( ( it + 1 ) % 50 == 0 or ( it + 1 ) == n_estimators ) : 
+            if ( ( it + 1 ) % 10 == 0 or ( it + 1 ) == n_estimators ) : 
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 logger.info ( f" Iteration {it+1}/{n_estimators} -> weights min/max: {ratios_curr.min():.4f} / {ratios_curr.max():.4f}" )
             
@@ -611,7 +599,7 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
             if 1 < step_margin.ndim : step_margin = step_margin[:, 0]
             
             # Clip step margin to match fit_stream bounding box
-            step_margin = numpy.clip ( step_margin , -3.0 , 3.0 )
+            step_margin = numpy.clip ( step_margin , -5.0 , 5.0 )
             margin     += step_margin * learning_rate
             
         # Exponentiate logits to ratios and normalize mean to 1.0

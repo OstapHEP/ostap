@@ -77,8 +77,8 @@ from   ostap.utils.memory     import memory, virtualMemory, Memory
 import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime, operator, threading  ## attention here!!
 # =============================================================================
 from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
-else                       : logger = getLogger( __name__            )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.utils' )
+else                       : logger = getLogger ( __name__            )
 del getLogger
 # =============================================================================
 try : # =======================================================================

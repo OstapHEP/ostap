@@ -216,7 +216,7 @@ def run_reweight ( n_dim     = 3     ,
     reweighters = [ None ]
     reweighters = [] 
     
-    if hasCatBoost () :
+    if False and hasCatBoost () :
 
         """
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
@@ -245,7 +245,8 @@ def run_reweight ( n_dim     = 3     ,
                      learning_rate              = 0.05 ,
                      max_depth                  =    8 , 
                      n_estimators               =  300 ,
-                     max_delsta_step            =    1 ,  
+                     max_delsta_step            =    1 ,
+                     l2_leaf_reg                =  1.0 , 
                      ##
                     )       
 
@@ -288,21 +289,27 @@ def run_reweight ( n_dim     = 3     ,
                      ##
                      n_estimators          = 300     ,
                      learning_rate         = 0.05    ,
-                     max_depth             = 7       ,
+                     ## max_depth             = 7       ,
                      ## 
-                     tree_method           = 'exact' ,
-                     max_bin               = 1023    ,
+                     ## tree_method           = 'exact' ,
+                     ## max_bin               = 1023    ,
                      ##
-                     min_child_weight      = 0.01    ,
-                     max_delta_step        = 0.0     , 
-                     subsample             = 0.9     ,
+                     min_child_weight      = 1e-5    ,
+                     max_delta_step        = 2.0     , 
+                     subsample             = 1.0     ,
                      ## 
                      gamma                 = 0.0     , 
                      reg_alpha             = 0.0     ,
-                     reg_lambda            = 0.0     ,
+                     reg_lambda            = 0.1     ,
                      ##
-                     grow_policy           = 'depthwise' , 
-                     max_leaves            =  0      ,
+                     ## grow_policy           = 'depthwise' , 
+                     ## max_leaves            =  0      ,
+                     ## 
+                     grow_policy           = 'lossguide' , 
+                     max_leaves            =  63         ,
+                     max_depth             =   6         ,
+                     tree_method           = 'hist'      ,
+                     max_bin               = 1023        ,
                     )
         
         reweighters.append ( rw3 )

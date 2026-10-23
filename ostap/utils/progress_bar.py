@@ -275,6 +275,16 @@ class ProgressBar(object):
         """ Is this bar active? """
         return self.__min <= self.__amount < self.__max
 
+    @property
+    def amount ( self ) :
+        """`amount` : `amount', associated with the bar"""
+        return self.__amount
+
+    @property
+    def output ( self ) :
+        """`output` : output stream associated with the bar"""
+        return self.__output
+    
     # =========================================================================
     ## Increment self.amount
     def increment_amount ( self , add_amount = 1 ) :
@@ -475,14 +485,13 @@ class RunningBar(object):
     """
     def __init__ ( self, * , output  = sys.stdout , **kwargs ) :
 
-
         ## tty ? 
         ## tty = not _is_ci and ( _interactive or isatty ( output ) )
         tty = not _is_ci and isatty ( output ) 
 
         self.__silent = kwargs.get ( 'silent' , not tty )
 
-        self.amount   =  0 
+        self.__amount =  0 
         self.freq     =  kwargs.get ( 'frequence'   , 0   ) ## dynamic/adaptive  
         self.prefix   =  kwargs.get ( 'description' , ''  )
         self.__start  =  time.time ()
@@ -499,17 +508,27 @@ class RunningBar(object):
     @property 
     def silent ( self ) :
         return self.__silent
-    
+
+    @property
+    def amount ( self ) :
+        """`amount` : `amount', associated with the bar"""
+        return self.__amount
+
+    @property
+    def output ( self ) :
+        """`output` : output stream associated with the bar"""
+        return self.__output
+        
     def increment_amount ( self , add_amount = 1 ) :
-        return self if self.silent else self.update_amount ( self.amount + add_amount )
+        return self if self.silent else self.update_amount ( self.__amount + add_amount )
 
     def update_amount ( self , new_amount = None ) :
         """ Update self.amount with 'new_amount', and then rebuild the bar string.
         """
         if self.silent : return self ## really silent 
         #
-        if not new_amount: new_amount = self.amount
-        self.amount = new_amount 
+        if not new_amount: new_amount = self.__amount
+        self.__amount = new_amount 
         ##
         if not self.silent : self.show() 
         ##
@@ -527,17 +546,17 @@ class RunningBar(object):
 
         if self.silent : return
 
-        if   0 < self.freq          and 0 == self.amount % self.freq : return self.show_ ()
-        elif self.amount <=     100                                  : return self.show_ () 
-        elif self.amount <=     500 and 0 == self.amount % 2         : return self.show_ () 
-        elif self.amount <=    1000 and 0 == self.amount % 5         : return self.show_ () 
-        elif self.amount <=    5000 and 0 == self.amount % 20        : return self.show_ () 
-        elif self.amount <=   10000 and 0 == self.amount % 50        : return self.show_ ()
-        elif self.amount <=   50000 and 0 == self.amount % 200       : return self.show_ ()        
-        elif self.amount <=  100000 and 0 == self.amount % 500       : return self.show_ ()
-        elif self.amount <=  500000 and 0 == self.amount % 2000      : return self.show_ ()        
-        elif self.amount <= 1000000 and 0 == self.amount % 5000      : return self.show_ ()
-        elif                            0 == self.amount % 10000     : return self.show_ () 
+        if   0 < self.freq          and 0 == self.__amount % self.freq : return self.show_ ()
+        elif self.amount <=     100                                    : return self.show_ () 
+        elif self.amount <=     500 and 0 == self.__amount % 2         : return self.show_ () 
+        elif self.amount <=    1000 and 0 == self.__amount % 5         : return self.show_ () 
+        elif self.amount <=    5000 and 0 == self.__amount % 20        : return self.show_ () 
+        elif self.amount <=   10000 and 0 == self.__amount % 50        : return self.show_ ()
+        elif self.amount <=   50000 and 0 == self.__amount % 200       : return self.show_ ()        
+        elif self.amount <=  100000 and 0 == self.__amount % 500       : return self.show_ ()
+        elif self.amount <=  500000 and 0 == self.__amount % 2000      : return self.show_ ()        
+        elif self.amount <= 1000000 and 0 == self.__amount % 5000      : return self.show_ ()
+        elif                            0 == self.__amount % 10000     : return self.show_ () 
 
     def show_ ( self , now = None , force = False ) :
 
@@ -548,7 +567,7 @@ class RunningBar(object):
         if not force and self.__last and now - self.__last < 0.1 : return
         
         ## index 
-        bar = '%s %s %d' % ( self.prefix , _bar_ [ self.__shown % _lbar_ ] , self.amount ) 
+        bar = '%s %s %d' % ( self.prefix , _bar_ [ self.__shown % _lbar_ ] , self.__amount ) 
         self.__output.write ( bar + '\r' ) 
         self.__output.flush ()
 
@@ -580,7 +599,7 @@ class RunningBar(object):
         timebar += ' ' + end.strftime   ('%a %d %b %Y, %I:%M%p')
         
         self.__output.flush ()
-        self.__output.write( self.prefix + ( _done_ % self.amount ) + ' ' + clock + timebar + '\n' ) 
+        self.__output.write( self.prefix + ( _done_ % self.__amount ) + ' ' + clock + timebar + '\n' ) 
         self.__output.flush ()
         
         self.__silent = True
@@ -722,7 +741,7 @@ class TextBar(object):
 
     ## context manager: ENTER 
     def __enter__(self):
-        """ Context mnager: ENTER
+        """ Context manager: ENTER
         """        
         self.__the_start = time.time()
         self.__the_end   = None
@@ -747,12 +766,12 @@ def running_bar ( iterable , frequency = 0 , description = '' , **kwargs ) :
     >>> for i in running_bar  ( xrange(10000 ) ) :
     ...    do something here
     """
-    with RunningBar ( frequency = frequency , description = description , **kwargs ) as bar :
+    with RunningBar ( frequency   = frequency   ,
+                      description = description , **kwargs ) as bar :
         for i in iterable :
-            bar += 1
             yield i
-            
-            
+            bar   += 1
+                
 # =============================================================================
 ## helper function to display progress bar
 #  @code 
@@ -760,7 +779,8 @@ def running_bar ( iterable , frequency = 0 , description = '' , **kwargs ) :
 #      .. do something here ...
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-def progress_bar ( iterable , max_value = None , **kwargs ) :
+def progress_bar ( iterable         ,
+                   max_value = None , **kwargs ) :
     """ Helper function to display progress bar 
     
     >>> for i in progress_bar  ( range ( 10000 ) ) :
@@ -784,8 +804,8 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
         bar.show ( force = True )
         for item in iterable :
             yield item
-            bar += 1
-
+            bar   += 1
+                        
 # =============================================================================
 ## @brief Helper function to iterate over elements using TextBar.
 #  @param iterable The collection to iterate over.
@@ -802,10 +822,10 @@ def text_bar ( iterable , **kwargs ) :
     """
     ## 
     if isinstance ( iterable , int ) and  0 <= iterable  : iterable = range ( iterable )
-    ## 
+    ##    
     with TextBar ( **kwargs ) as bar : 
-        for item in iterable :
-            yield item, bar
+        for count , item in enumerate ( iterable ) :
+            yield count, item, bar 
             
 # ==============================================================================
 if __name__ == '__main__':
@@ -848,14 +868,16 @@ if __name__ == '__main__':
             bar += 'Learning..'
 
         
-    for i in progress_bar ( range ( 5000  ) , description = "Doing something ") : 
+    for i in progress_bar ( 5000 ,
+                            description    = "Doing something " ) : 
         time.sleep(0.001)
-    
-    for i in running_bar  ( range ( 120000 ) , description = "Empty looping ") :         
+        
+    for i in running_bar  ( 120000          ,
+                            description     = "Empty looping " ) : 
         time.sleep(0.0001)
         
-    for i in text_bar  ( 100  , description = "Progressing ") :         
-        time.sleep(0.05)
+    for i in text_bar  ( 100  , description = "Progressing " ) :         
+        time.sleep (0.05 )
     
     logger.info ( 80*'*' ) 
     

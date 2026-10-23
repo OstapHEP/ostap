@@ -42,6 +42,9 @@ __all__     = (
     'counted'              , ## helper to count function calls 
     'memoize'              , ## lightweight cache
     ##
+    'SafeLoop'             , ## A safe loop wrapper that catches KeyboardInterrupt 
+    'safe_loop'            , ## A safe loop wrapper that catches KeyboardInterrupt 
+    ##
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
@@ -385,6 +388,82 @@ def run_parallel ( parallel ) :
     elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ).strip () : return False
     ## 
     return True 
+
+
+
+# =============================================================================
+## @class SafeLoop
+#  A safe loop wrapper that catches KeyboardInterrupt 
+#  @code
+#  for a in SafeLoop ( iterable ,  interrupt_message = 'Interrupted at step %d\n' ) :
+#      ...
+#  @endcode
+class SafeLoop ( object ) :
+    """ A safe loop wrapper that catches KeyboardInterrupt
+    >>> for a in SafeLoop ( iterable ,  interrupt_message = 'Interrupted at step %d\n' ) :
+    ...
+    """
+    # =========================================================================
+    def __init__ ( self     ,
+                   iterable ,
+                   message  = 'Interrupted at step #%d\n' ,
+                   output   = sys.stdout                  ) :
+        
+        if insinstance ( iterable , int ) and 0 <= iterable : iterable = range ( iterable )
+        ##         
+        self.iterable = iterable
+        self.message  = message
+        self.output   = output
+        
+    # =========================================================================
+    ## standard iterator 
+    def __iter__ ( self ) :
+        """ Standard iterator
+        """
+        count = 0        
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            for item in self.iterable :
+                count += 1
+                yield item
+            # =================================================================
+        except KeyboardInterrupt : # ==========================================
+            # =================================================================
+            if self.message :
+                msg = self.message
+                # =============================================================
+                try : # =======================================================
+                    # =========================================================
+                    msg = msg % count
+                    # =========================================================
+                except : # ====================================================
+                    # =========================================================
+                    pass
+
+                self.output.write ( msg )
+                if not msg.endswith ( '\n' ) : self.output.write ( '\n' )
+                self.output.flush ()
+            # =================================================================
+        finally : # ===========================================================
+            # =================================================================
+            self.iterable = None
+            self.output   = None
+
+# =============================================================================
+## A safe loop wrapper that catches KeyboardInterrupt
+#  @code
+#  for a in safe_loop ( iterable ,  interrupt_message = 'Interrupted at step %d\n' ) :
+#      ...
+#  @endcode
+def safe_loop ( iterable ,
+                message  = 'Interrupted at step #%d\n' ,
+                output   = sys.stdout                  ) :
+    """ A safe loop wrapper that catches KeyboardInterrupt
+    >>> for a in safe_loop ( iterable ,  interrupt_message = 'Interrupted at step %d\n' ) :
+    ...
+    """
+    return SafeLoop ( iterable , message = message , output = output )
 
 # =============================================================================
 if __name__ == '__main__' :
