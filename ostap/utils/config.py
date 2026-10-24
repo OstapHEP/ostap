@@ -30,8 +30,9 @@ else                       : logger = getLogger( __name__ )
 #  It provides:
 #   - property <code>params</code>
 #   - property <code>silent</code>
+#   - property <code>verbose</code> (opposite to <code>silent</code>)
 #   - method <code>table</code>
-#   - prints ...
+#   - prints: __str__ and __repr__
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2021-09-22 
 class Config ( object ) :
@@ -39,8 +40,9 @@ class Config ( object ) :
     It provides:
     - property `params`
     - property `silent`    
+    - property `verbose` (opposite to `silent`)
     - method `table`
-    - prints ...
+    - prints: __str__ and __repr__
     """
     def __init__ ( self , silent = True , **params  ) :
         """ The base class for configuration holders
@@ -62,8 +64,16 @@ class Config ( object ) :
         self.__silent = True if value else False 
     
     @property
+    def verbose ( self ) :
+        """`verbose` : verbose processing?"""
+        return not self.silent
+    @verbose.setter
+    def verbose ( self , value ) :
+        self.silent = False if value else True 
+        
+    @property
     def params ( self ) :
-        """`params`: actual configuration used for creation"""
+        """`params`: actual configuration: dictionary of parameters"""
         return self.__params
 
     @property 
@@ -76,7 +86,7 @@ class Config ( object ) :
         return conf 
 
     # =========================================================================
-    ## self-print get the configuration 
+    ## self-print: get the configuration 
     def table (  self , title = '' , prefix = '# ') : 
         """ print configuration """
         from ostap.logger.utils import map2table_ex
