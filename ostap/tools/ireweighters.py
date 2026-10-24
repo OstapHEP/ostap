@@ -229,9 +229,6 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
 # =============================================================================
 ## XGBoost 
 # =============================================================================
-# =============================================================================
-## XGBoost 
-# =============================================================================
 
 # =============================================================================
 def xgboost_density_ratio_obj ( preds , dtrain ) :
@@ -253,8 +250,8 @@ def xgboost_density_ratio_obj ( preds , dtrain ) :
     # Analytical First (grad) and Second (hess) order derivatives for DRE:
     # Target   (y=1): grad = -1,   hess = 1e-5 (floor to avoid zero division)
     # Original (y=0): grad = e^m,  hess = e^m
-    grad = numpy.where ( labels == 1.0 , -1.0  , exp_m )
-    hess = numpy.where ( labels == 1.0 , 1e-5  , exp_m )
+    grad = numpy.where ( labels == 1.0 , -1.0  , exp_m         )
+    hess = numpy.where ( labels == 1.0 ,  1e-5 , exp_m + 1.e-5 )
     
     # Scale by instance observation weights
     grad *= weights
@@ -287,7 +284,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             'min_child_weight'        :  1e-2       , 
             'max_delta_step'          :  0.0        , 
             'gamma'                   :  0.0        , 
-            'subsample'               :  0.9        , 
+            'subsample'               :  1.        , 
             'reg_alpha'               :  0.0        , 
             'reg_lambda'              :  0.001      , 
             'verbosity'               :  0          , 
@@ -347,7 +344,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             'max_bin'                 : self.params.get ( 'max_bin'            , 1023        ) ,
             'min_child_weight'        : self.params.get ( 'min_child_weight'   , 1e-2        ) ,
             'max_delta_step'          : self.params.get ( 'max_delta_step'     , 0.0         ) ,
-            'subsample'               : self.params.get ( 'subsample'          , 0.9         ) , 
+            'subsample'               : self.params.get ( 'subsample'          , 1.0         ) , 
             'gamma'                   : self.params.get ( 'gamma'              , 0.0         ) , 
             'reg_alpha'               : self.params.get ( 'reg_alpha'          , 0.0         ) , 
             'reg_lambda'              : self.params.get ( 'reg_lambda'         , 0.001       ) , 
@@ -372,11 +369,11 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                                          obj             = xgboost_density_ratio_obj )
             
             # Predict raw logit / margin
-            margin      = model.predict ( dmat_orig, output_margin = True )
-            margin      = numpy.clip    ( margin, -10.0, 10.0 )
+            margin          = model.predict ( dmat_orig, output_margin = True )
+            margin          = numpy.clip    ( margin, -10.0, 10.0 )
             
-            step_ratios = numpy.exp ( margin )
-            current_w_orig *= numpy.power ( numpy.clip ( step_ratios , 1e-6 , 1e+6 ) , learning_rate )
+            step_ratios     = numpy.exp     ( margin )
+            current_w_orig *= numpy.power   ( numpy.clip ( step_ratios , 1e-5 , 1e+5 ) , learning_rate )
             
             # Normalize total mass to prevent global drift
             current_w_orig *= ( sum_w_orig / ( numpy.sum ( current_w_orig ) + 1e-12 ) )
@@ -392,23 +389,23 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         
         return models, final_ratios
     
-    # =========================================================================
+    # =========================================================================    
     def _predict_iterative_stream ( self, models, X ) :
         import xgboost as XGBoost
         dmat = XGBoost.DMatrix ( X )
     
         learning_rate = self.params.get ( 'learning_rate' , XGB_LEARNING_RATE )
-        margin        = numpy.zeros ( len ( X ) , dtype = numpy.float32 )
+        current_weights = numpy.ones ( len ( X ) , dtype = numpy.float32 )
     
         for model in models :
-            step_margin = model.predict ( dmat, output_margin = True )
-            step_margin = numpy.clip ( step_margin, -10.0, 10.0 )
-            margin     += step_margin * learning_rate
-        
-        weights  = numpy.exp ( margin )
-        weights /= ( numpy.mean ( weights ) + 1e-12 )
+            margin = model.predict ( dmat, output_margin = True )
+            margin = numpy.clip ( margin, -10.0, 10.0 )
+            
+            # Точно так же, как на обучении: берем шаг через степень learning_rate
+            step_ratios = numpy.exp ( margin )
+            current_weights *= numpy.power ( numpy.clip ( step_ratios , 1e-5 , 1e+5 ) , learning_rate )
     
-        return weights
+        return current_weights
     
 # =============================================================================
 ## CatBoost 
@@ -572,31 +569,23 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
 
         return models, final_ratios
 
-    # =========================================================================
     def _predict_iterative_stream ( self, models, X ) :
-        """ Accumulate raw logit predictions across all trained CatBoost weak learners
-        and evaluate normalized reweighting factors for unseen dataset X.
-        """
         import catboost as CatBoost
         
         learning_rate = self.params.get ( 'learning_rate' , CATB_LEARNING_RATE )
-        margin        = numpy.zeros ( len ( X ) , dtype = numpy.float32 )
+        current_weights = numpy.ones ( len ( X ) , dtype = numpy.float32 )
         pool          = CatBoost.Pool ( data = X )
 
         for model in models :
-            # Extract raw logit prediction
-            step_margin = model.predict ( pool , prediction_type = 'RawFormulaVal' )
-            if 1 < step_margin.ndim : step_margin = step_margin[:, 0]
+            margin = model.predict ( pool , prediction_type = 'RawFormulaVal' )
+            if 1 < margin.ndim : margin = margin[:, 0]
             
-            # Clip step margin to match fit_stream bounding box
-            step_margin = numpy.clip ( step_margin , -5.0 , 5.0 )
-            margin     += step_margin * learning_rate
+            margin = numpy.clip ( margin , -5.0 , 5.0 )
             
-        # Exponentiate logits to ratios and normalize mean to 1.0
-        weights  = numpy.exp ( margin )
-        weights /= ( numpy.mean ( weights ) + 1e-12 )
-        
-        return weights
+            step_ratio = numpy.exp ( margin )
+            current_weights *= numpy.power ( step_ratio , learning_rate )
+            
+        return current_weights
 
 """                
     # =================================================================

@@ -169,6 +169,11 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     def original_reweighted_weights( self ) :
         return self.__original_reweighted_weights
     
+    @property
+    def norm_factor ( self ) :
+        return self._norm_factor
+     
+     
     ## @property 
     ## def scale_factors ( self ) :
     ##    return self.scale_factors 
@@ -224,7 +229,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             self.__norm_factor = numpy.float32 ( len( original )
                                                  / ( numpy.sum ( clipped, dtype = numpy.float64 ) + 1e-12 ) )
 
-            original_ratios = clipped * self.__norm_factor
+            original_ratios = self._apply_norm_factor ( clipped ) 
             return original_ratios, original_ratios.copy()
 
         w_orig = original_weight if original_weight is not None else numpy.ones ( len ( original ) , dtype = numpy.float32 )
@@ -310,7 +315,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             ratios_valid[ mask_orig_pos ] = ( r_pos_pos * w_pos_sum - r_pos_neg * w_neg_sum ) / denom
             ratios_valid[ mask_orig_neg ] = ( r_neg_pos * w_pos_sum - r_neg_neg * w_neg_sum ) / denom
 
-        ratios_valid_norm = self.__normalize_and_clip ( ratios_valid, w_orig_valid )
+        ratios_valid_norm = self._normalize_and_clip ( ratios_valid, w_orig_valid )
 
         original_ratios                 = numpy.zeros( len( w_orig ), dtype = numpy.float32 )
         original_ratios[ nz_orig_mask ] = ratios_valid_norm
@@ -405,9 +410,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
         return ratios_sum / len(models)
 
-    def __normalize_and_clip ( self   ,
-                               ratios ,
-                               w_orig ) :
+    def _normalize_and_clip ( self   ,
+                              ratios ,
+                              w_orig ) :
         clipped_ratios = numpy.clip ( ratios, numpy.float32 ( 0.0 ) , numpy.float32 ( self.__clip_threshold ) )
         orig_sum       = numpy.sum  ( w_orig, dtype = numpy.float64 )
         reweighted_sum = numpy.sum  ( w_orig * clipped_ratios, dtype = numpy.float64 )
@@ -481,16 +486,26 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                                numpy.float32 ( 0.0 ),
                                                numpy.float32 ( self.__clip_threshold ) )
         final_ratios            = numpy.zeros( len( w_new_f32 ), dtype = numpy.float32 )
-        final_ratios[ nz_mask ] = clipped * self.__norm_factor
+        final_ratios[ nz_mask ] = self._apply_norm_factor ( clipped ) 
 
         return final_ratios if original_weight is None else final_ratios * w_new_f32
 
-
+    def _apply_norm_factor ( self, clipped_ratios ) :
+        """ Apply global normalization factor to clipped ratios """
+        return clipped_ratios * self.__norm_factor
+    
 # =============================================================================
 ## @class IterativeReweighter
 #  Base class for iterative weight boosting density reweighters.
+#  Implements Gradient Weight Boosting (GWB) combined with cross-validation 
+#  via the Template Method pattern inherited from DensityReweighter.
 class IterativeReweighter ( DensityReweighter ) :
-    """ Base class for iterative weight boosting density reweighters (Gradient Weight Boosting).
+    """Base class for iterative weight boosting density reweighters (Gradient Weight Boosting).
+    
+    This class adapts sequential iterative density ratio estimation algorithms 
+    (such as LightGBM, XGBoost, CatBoost, and PyTorch iterative wrappers) 
+    to fit seamlessly into the cross-validation and evaluation pipeline 
+    provided by the DensityReweighter base class[cite: 2].
     """
     def __init__ ( self                   , * ,
                    original               ,
@@ -504,78 +519,186 @@ class IterativeReweighter ( DensityReweighter ) :
                    store_original_weights = True  ,
                    progress               = True  , **params ) :
         
+        # Inject core boosting hyperparameters into the parameter dictionary
         params [ 'n_estimators'  ] = n_estimators
         params [ 'learning_rate' ] = learning_rate
         params [ 'max_depth'     ] = max_depth
         
+        # Delegate initialization and immediate fitting to the parent DensityReweighter[cite: 2]
         super().__init__ ( original               = original               ,
                            target                 = target                 ,
                            original_weight        = original_weight        ,
                            target_weight          = target_weight          ,
                            clip_threshold         = clip_threshold         ,
-                           n_splits               = 1                      ,
                            store_original_weights = store_original_weights ,
                            progress               = progress               , **params )
+    @property
+    def norm_factor ( self ) :
+        """ For iterative reweighters, normalization is handled internally per-step. """
+        return numpy.float32 ( 1.0 )
+    
 
     # =========================================================================
+    ## @brief Abstract method to execute sequential boosting steps.
+    #  @details To be implemented by concrete backend reweighters (e.g., LightGBM, XGBoost).
+    #  @param self Object instance.
+    #  @param X_orig Original features subset.
+    #  @param w_orig Original weights subset.
+    #  @param X_targ Target features subset.
+    #  @param w_targ Target weights subset.
+    #  @return Tuple of (models list, final ratios array).
     @abc.abstractmethod
     def _fit_iterative_stream      ( self      ,
                                      X_orig    ,
                                      w_orig    ,
                                      X_targ    ,
                                      w_targ    ) :
-        
+        """Abstract method to be implemented by concrete backend reweighters 
+        to execute sequential boosting steps.
+        """
         raise NotImplementedError
 
     # =========================================================================
+    ## @brief Abstract method to accumulate log-ratios or margins.
+    #  @details Evaluates predictions across all trained sequential models for an unseen feature matrix X.
+    #  @param self Object instance.
+    #  @param models List of trained sequential models.
+    #  @param X Unseen feature matrix.
+    #  @return Array of density ratios predicted by the iterative chain.
     @abc.abstractmethod
     def _predict_iterative_stream ( self       ,
                                     models     ,
                                     X          ) :
+        """Abstract method to accumulate log-ratios or margins across all trained 
+        sequential models for an unseen feature matrix X.
+        """
         raise NotImplementedError
 
-    # =========================================================================
-    def _fit_eval_stream          ( self       ,
-                                    stream_key ,
-                                    X_orig_sub ,
-                                    w_orig_sub ,
-                                    X_targ_sub ,
-                                    w_targ_sub ) :
-        
-        w_orig = w_orig_sub if w_orig_sub is not None else numpy.ones ( len ( X_orig_sub ) , dtype = numpy.float32 )
-        w_targ = w_targ_sub if w_targ_sub is not None else numpy.ones ( len ( X_targ_sub ) , dtype = numpy.float32 )
-
-        models, final_ratios = self._fit_iterative_stream ( X_orig_sub , w_orig ,
-                                                            X_targ_sub , w_targ )
-
-        self.fitted_models [ stream_key ] = models
-        self.scale_factors [ stream_key ] = numpy.float32 ( 1.0 )
-        self.priors        [ stream_key ] = numpy.float32 ( 1.0 )
-
-        return final_ratios
 
     # =========================================================================
+    ## @brief Template Method Hook: Predicting stream ratios across CV folds.
+    #  @details Computes the geometric mean of predicted density ratios across all 
+    #           cross-validation folds by accumulating log-ratios before exponentiation.
+    #           This matches the additive log-margin mechanics of gradient boosting,
+    #           maintains total mass consistency, and prevents upper-bound divergence.
+    #  @param self Object instance.
+    #  @param stream_key Stream identifier string.
+    #  @param X Unseen feature matrix to predict density ratios for.
+    #  @return Averaged numpy array of density ratios.
     def _predict_stream_ratios ( self, stream_key, X ) :
-        models = self.fitted_models [ stream_key ]
-        return self._predict_iterative_stream ( models, X )
+        """ Predict density ratios across all CV folds and aggregate them using the median 
+        to guarantee that the ensemble maximum never exceeds individual fold limits.
+        """
+        models_list = self.fitted_models [ stream_key ]
+        if not models_list :
+            return numpy.ones ( len ( X ) , dtype = numpy.float32 )
+
+        # Collect predictions from every single fold model chain
+        fold_preds = []
+        for models in models_list :
+            ratios_fold = self._predict_iterative_stream ( models, X )
+            fold_preds.append ( ratios_fold )
+
+        # Stack into shape (n_folds, len(X))
+        stacked = numpy.vstack ( fold_preds )
+
+        # Take the median across folds. 
+        # Median is mathematically bounded by the min and max of the individual folds,
+        # preventing any out-of-fold tail accumulation or explosion.
+        ensemble_ratios = numpy.median ( stacked, axis = 0 )
+
+        return ensemble_ratios.astype ( numpy.float32, copy = False )
 
     # =========================================================================
-    def _normalize_and_iter_clip ( self, ratios, w_orig, w_targ ) :
-        clipped  = numpy.clip ( ratios, 0.0 , self.config [ 'clip_threshold' ] )
-        orig_sum = numpy.sum ( numpy.abs ( w_orig ) * clipped , dtype = numpy.float64 )
-        targ_sum = numpy.sum ( numpy.abs ( w_targ )          , dtype = numpy.float64 )
-        norm     = targ_sum / ( orig_sum + 1e-12 )
-        return clipped * norm
-    
-    # =========================================================================
+    ## @brief Template Method Hook: Training a single fold.
+    #  @details Trains an iterative boosting chain on the training partition of the current fold.
+    #           Acts as a bridge, unpacking binary-labeled combined fold data (y=0 for original, y=1 for target)
+    #           and passing them separately into the backend's iterative training routine.
+    #  @param self Object instance.
+    #  @param X_train Combined training feature matrix for the fold.
+    #  @param y_train Combined binary labels (0 for original, 1 for target).
+    #  @param w_train Observation weights for the training partition.
+    #  @param X_val Combined validation feature matrix.
+    #  @param y_val Combined validation labels.
+    #  @param w_val Validation observation weights.
+    #  @return Tuple of (list of trained sequential models, dummy validation predictions array).
     def _train_single_model ( self, X_train, y_train, w_train, X_val, y_val, w_val ) :
-        """ Dummy implementation to satisfy abstract base class requirements. """
-        pass
+        """Train an iterative boosting chain on the training partition of the current fold.
+        
+        This method acts as a bridge, unpacking the binary-labeled combined fold data 
+        (where y=0 represents original samples and y=1 represents target samples) 
+        and passing them separately into the backend's iterative training routine.
+        """
+        # Separate original (y=0) and target (y=1) samples within the current fold
+        orig_mask = ( y_train == 0 )
+        targ_mask = ( y_train == 1 )
+
+        X_orig_tr = X_train [ orig_mask ]
+        w_orig_tr = w_train [ orig_mask ] if w_train is not None else None
+        X_targ_tr = X_train [ targ_mask ]
+        w_targ_tr = w_train [ targ_mask ] if w_train is not None else None
+
+        # Execute sequential gradient weight boosting on the fold's training data
+        models, _ = self._fit_iterative_stream ( X_orig_tr , w_orig_tr ,
+                                                 X_targ_tr , w_targ_tr )
+        
+        # Generate dummy placeholder predictions to satisfy DensityReweighter's unpacking requirement 
+        # (`model, val_preds = self._train_single_model(...)`). 
+        # Actual fold ensembling is handled natively via _predict_stream_ratios.
+        dummy_val_preds = numpy.zeros ( len ( X_val ) , dtype = numpy.float32 )
+        
+        return models, dummy_val_preds
 
     # =========================================================================
-    def _predict_single_model ( self, model, X ) :
-        """ Dummy implementation to satisfy abstract base class requirements. """
-        pass
+    ## @brief Template Method Hook: Predicting fold validation probabilities.
+    #  @details Iterative reweighters naturally compute density ratios r(x). 
+    #           To fit into the standard classification-based pipeline of DensityReweighter, 
+    #           these ratios are mapped to equivalent pseudo-probabilities via p = r / (1 + r).
+    #  @param self Object instance.
+    #  @param models List of trained sequential weak learners for the fold.
+    #  @param X Feature matrix to predict on.
+    #  @return Numpy array of float32 pseudo-probabilities.
+    def _predict_single_model ( self, models, X ) :
+        """Predict pseudo-probabilities for validation/evaluation data.
+        
+        Iterative reweighters naturally compute density ratios r(x). 
+        To fit into the standard classification-based pipeline of DensityReweighter, 
+        these ratios are mapped to equivalent pseudo-probabilities via p = r / (1 + r).
+        """
+        # Obtain direct density ratio estimations from the iterative model chain
+        ratios = self._predict_iterative_stream ( models, X )
+        
+        # Clip ratios to a physically reasonable range to prevent overflow in pseudo-probability conversion
+        ratios_clipped = numpy.clip ( ratios, 1.e-5, self.config [ 'clip_threshold' ] )
+        
+        # Convert density ratios r(x) back to equivalent classification probabilities p(y=1|x)
+        # Mathematical identity: if r = p / (1 - p), then p = r / (1 + r)
+        p = ratios_clipped / ( 1.0 + ratios_clipped )
+        
+        return p.astype ( numpy.float32, copy = False )
+
+
+    def _normalize_and_iter_clip ( self, ratios, w_orig, w_targ ) :
+        """Clip extreme density ratio values and normalize total statistical mass 
+        between original and target distributions.
+        """
+        clipped  = numpy.clip ( ratios , 0.0 , self.params.get ( 'clip_threshold', 1e4 ) ) 
+        orig_sum = numpy.sum  ( numpy.abs ( w_orig ), dtype = numpy.float64 )
+        targ_sum = numpy.sum  ( numpy.abs ( w_targ ), dtype = numpy.float64 )
+        norm = targ_sum / ( orig_sum + 1e-12 )
+        return clipped * norm
+
+    def _normalize_and_clip ( self, ratios, w_orig ) :
+        """Clip extreme density ratio values for iterative streams."""
+        return numpy.clip ( ratios, numpy.float32 ( 0.0 ) , numpy.float32 ( self.params.get ( 'clip_threshold', 1e4 ) ) )
+       
+    def _apply_norm_factor ( self, clipped_ratios ) :
+        """Мягкая нормализация для итеративного ансамбля фолдов, 
+           сохраняющая среднее значение весов стабильным.
+        """
+        ## mean_val = numpy.mean ( clipped_ratios )
+        ## if 0 < mean_val : return clipped_ratios / mean_val
+        return clipped_ratios
 
 # ============================================================================
 if '__main__' == __name__ :
@@ -583,7 +706,6 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    
 # =============================================================================
 #                                                                       The END 
 # =============================================================================

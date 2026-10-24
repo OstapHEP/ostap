@@ -289,7 +289,7 @@ def run_reweight ( n_dim     = 3     ,
                      original              = original ,
                      ##
                      n_estimators          = 300     ,
-                     learning_rate         = 0.10    ,
+                     learning_rate         = 0.02    ,
                      ## max_depth             = 7       ,
                      ## 
                      ## tree_method           = 'exact' ,
@@ -297,7 +297,7 @@ def run_reweight ( n_dim     = 3     ,
                      ##
                      min_child_weight      = 1e-6    ,
                      max_delta_step        = 0.0     , 
-                     subsample             = 1.0     ,
+                     subsample             = 1.0    ,
                      ## 
                      gamma                 = 0.0     , 
                      reg_alpha             = 0.0     ,
@@ -307,8 +307,8 @@ def run_reweight ( n_dim     = 3     ,
                      ## max_leaves            =  0      ,
                      ##
                      grow_policy           = 'lossguide' , 
-                     max_leaves            =  63         ,
-                     max_depth             =   0         ,
+                     max_leaves            =  31         ,
+                     max_depth             =   8         ,
                      tree_method           = 'hist'   ,
                      ## tree_method           = 'exact'      ,
                      max_bin               = 1023        ,
