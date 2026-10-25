@@ -56,20 +56,47 @@ def weight_trivial ( weight ) :
     return False
 
 # ==============================================================================
-## Compute effective sample size (Kish's design effect formula)
-#  taking into account sample weights (including negative sPlot weights).
-def nEff ( X , W = None ) :
-    """ Compute effective sample size (Kish's design effect formula)
-        taking into account sample weights (including negative sPlot weights).
+def nEff ( X , W = None ):
+    """Compute the effective sample size using Kish's design effect formula.
+    
+    This function takes sample weights into account, properly handling negative 
+    weights which commonly occur in sPlot background-subtraction techniques.
+
+    Parameters:
+    -----------
+    X : array-like or dataset container
+        The input dataset (used solely to determine the total number of samples).
+    W : array-like, optional
+        Sample weights corresponding to the dataset. Can contain negative values 
+        (e.g., sPlot weights). If None or trivial, unweighted sample size is returned.
+
+    Returns:
+    --------
+    float
+        The effective sample size (N_eff). Falls back to the raw number of samples 
+        if weights are trivial or if the sum of squared weights is non-positive.
     """
-    ns = num_samples  ( X )
-    if weight_trivial ( W  ) : return float ( ns )
+    # Step 1: Retrieve the raw number of samples from the dataset
+    ns = float ( num_samples ( X ) )
     
-    w_arr  = numpy.asarray ( W     , dtype = numpy.float32 )
-    sum_w  = numpy.sum     ( w_arr , dtype = numpy.float64 )
-    sum_w2 = numpy.dot     ( w_arr.astype (  numpy.float64 ) , w_arr ) 
+    # Step 2: Check if weights are trivial (e.g., None, all ones, or empty)
+    if weight_trivial ( W ) : return ns
+
+    # Step 3: Convert weights directly to float64 to prevent precision loss.
+    # High-precision accumulation is critical here because sPlot weights can have 
+    # large dynamic ranges and negative values, making them sensitive to rounding errors.
+    w_arr = numpy.asarray ( W , dtype = numpy.float64 )
     
-    return ( sum_w** 2 ) / sum_w2 if 0 < sum_w2 else float ( ns )
+    # Step 4: Compute the sum of weights (Sum of W)
+    sum_w = float ( numpy.sum ( w_arr ) ) 
+    
+    # Step 5: Compute the sum of squared weights (Sum of W^2) 
+    # using an optimized dot product for performance.
+    sum_w2 = float ( numpy.dot ( w_arr, w_arr ) ) 
+
+    # Step 6: Apply Kish's formula: N_eff = (sum_w)^2 / sum_w2.
+    # Guard against division by zero or negative sum of squares (pathological weight cases).
+    return float ( sum_w ** 2 ) / sum_w2 if 0  < sum_w2 else ns 
 
 # =============================================================================
 ## Compute the effective size of two samples
@@ -77,13 +104,13 @@ def nEff ( X , W = None ) :
 def eff_size ( data1   , 
                data2   , 
                weight1 = None ,
-               weigth2 = None ) :
+               weight2 = None ) :
     """ Compute the effective size of two samples
     N = Neff_1 * Neff_2 / ( Neff_1 + Neff_2 )
     """
     n1 = nEff ( data1 , weight1 )
     n2 = nEff ( data2 , weight2 )
-    return n1 * n2 / ( n1 + n2 ) 
+    return float ( n1 * n2 / ( n1 + n2 ) ) 
     
 # =============================================================================
 ## Check if weights array has a valid 1D/column vector shape
@@ -170,7 +197,7 @@ def num_samples(X):
     shape = getattr ( X , "shape" , None )
     if shape is not None:
         if 0 == len ( shape ) : return 0 # 0D scalar has 0 samples 
-        return int( shape  [ 0 ] )
+        return int ( shape  [ 0 ] )
 
     raise TypeError ( "Unsupported data structure for determining sample count: %s" % typename ( X ) )
 
