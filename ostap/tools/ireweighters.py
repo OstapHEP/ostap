@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/tools/reweghters.py
-#  Iterative Density rreweighters based on LightGBM, XGBoost, CatBoost & PyTorch 
+## @file ostap/tools/ireweighters.py
+#  Iterative Density ratio reweighters based on LightGBM, XGBoost, CatBoost & PyTorch 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @Date  2026-07-18
 # =============================================================================
@@ -17,27 +17,26 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
-    'LightGBMIterativeReweighter'  , ## LightGBM-based iterative density reweighter
-    'XGBoostIterativeReweighter'   , ## XGBoost-based  iterative density reweighter
-    'CatBoostIterativeReweighter'  , ## CatBoost-based iterative density reweighter
-    'PyTorchIterativeReweighter'   , ## PyTorch-based iterative density reweighter
+    'LightGBMIterativeReweighter'  , # LightGBM-based iterative density reweighter
+    'XGBoostIterativeReweighter'   , # XGBoost-based  iterative density reweighter
+    'CatBoostIterativeReweighter'  , # CatBoost-based iterative density reweighter
+    'PyTorchIterativeReweighter'   , # PyTorch-based iterative density reweighter
 ) 
 # =============================================================================
 from   ostap.core.ostap_types       import num_types, string_types, integer_types  
 from   ostap.utils.core             import typename
-from   ostap.utils.basic            import numcpu, num_jobs, NoContext
 from   ostap.logger.pretty          import nice_print 
-from   ostap.utils.progress_bar     import progress_bar, text_bar
-from   ostap.stats.utils            import num_samples
+from   ostap.utils.progress_bar     import progress_bar
+from   ostap.stats.utils            import num_samples, nEff 
 from   ostap.tools.base_reweighters import IterativeReweighter  
 import ostap.logger.symbols         as     S
-import numpy, abc, math, gc  
+import numpy, math  
 # =============================================================================
 # Logging setup
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighters' )
-else                       : logger = getLogger( __name__ )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.ireweighters' )
+else                       : logger = getLogger ( __name__ )
 # =============================================================================
 ## Decorations 
 # =============================================================================
@@ -70,377 +69,355 @@ TORCH_HIDDEN_DIM      =  128 # Hidden layer size for small MLP weak learners
 TORCH_EPOCHS_PER_STEP =  100 # Training epochs per boosting step
 
 # =============================================================================
-## LightGBM
-# =============================================================================
-
-# =============================================================================
 ## @class LightGBMIterativeReweighter
 #  Iterative weight boosting density reweighter using LightGBM.
 class LightGBMIterativeReweighter ( IterativeReweighter ) :
-    """ Iterative weight boosting density reweighter using LightGBM.
-    """
+    """ Iterative weight boosting density reweighter using LightGBM. """
+
     def __init__ ( self            , 
                    original        , 
                    target          , 
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        
+        """ Initialize LightGBM iterative density reweighter. """
         config = {
-            ## 
             'n_estimators'            :  LGBM_ESTIMATORS    ,
             'learning_rate'           :  LGBM_LEARNING_RATE ,
             'max_depth'               :  LGBM_MAX_DEPTH     ,
-            ## 
             'max_bins'                :  1023 ,
             'min_data_in_leaf'        :  30   ,
             'min_sum_hessian_in_leaf' :  1e-2 , 
-            ## 
             'bagging_fraction'        :  0.9  , 
             'bagging_freq'            :  1    ,
             'lambda_l1'               :  0    ,
             'lambda_l2'               :  0    ,                        
-            ## 
             'verbosity'               : -1    ,
-            'n_jobs'                  :  1    , ## we are working with a single tree 
+            'n_jobs'                  :  1    ,
         }
         
         config.update ( kwargs )
         if 'silent' in config and config.get ( 'silent' ) : config [ 'verbosity' ] = -1        
-        if 'num_boost_round'  in config : config [ 'n_estimators'            ] = config.pop ( 'num_boost_round'  , LGBM_ESTIMATORS ) 
-        if 'min_child_weight' in config : config [ 'min_sum_hessian_in_leaf' ] = config.pop ( 'min_child_weight' , 1e-2 )         
+        if 'num_boost_round'  in config : config [ 'n_estimators'            ] = config.pop ( 'num_boost_round', LGBM_ESTIMATORS ) 
+        if 'min_child_weight' in config : config [ 'min_sum_hessian_in_leaf' ] = config.pop ( 'min_child_weight', 1e-2 )         
         
-        super().__init__ ( original        = original        ,
-                           target          = target          ,
-                           original_weight = original_weight ,
-                           target_weight   = target_weight   , **config )
+        super ().__init__ ( original        = original        ,
+                            target          = target          ,
+                            original_weight = original_weight ,
+                            target_weight   = target_weight   , **config )
 
-    # =========================================================================
     @property
     def method ( self ) :
+        """ Return method identifier name. """
         return 'DRW/LGBM-Iterative'
 
-    # =========================================================================
-    def _fit_iterative_stream ( self               ,
-                                X_orig             ,
-                                w_orig             ,
-                                X_targ             ,
-                                w_targ             ) :
-        
+    ## @brief Execute iterative LightGBM boosting stream on fold data.
+    def _fit_iterative_stream ( self   ,
+                                X_orig ,
+                                w_orig ,
+                                X_targ ,
+                                w_targ ) :
+        """ Execute iterative LightGBM boosting stream on fold data. """
         import lightgbm as LightGBM
 
         n_orig = len ( X_orig )
         n_targ = len ( X_targ )
 
-        X_comb = numpy.vstack ( [ X_orig, X_targ ] )
-        
+        X_comb     = numpy.vstack ( [ X_orig, X_targ ] )
         abs_w_orig = numpy.abs ( w_orig )
         abs_w_targ = numpy.abs ( w_targ )
         
         sum_w_orig = numpy.sum ( abs_w_orig )
         sum_w_targ = numpy.sum ( abs_w_targ )
-        
-        norm_targ = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
+        norm_targ  = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
 
-        y_comb = numpy.hstack ( [ numpy.zeros ( n_orig , dtype = numpy.float32 ) ,
-                                  numpy.ones  ( n_targ , dtype = numpy.float32 ) ] )
-
+        y_comb         = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
+                                          numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
         current_w_orig = abs_w_orig.copy ()
         
-        n_estimators  = self.params.get ( 'n_estimators'  , LGBM_ESTIMATORS    )
-        learning_rate = self.params.get ( 'learning_rate' , LGBM_LEARNING_RATE )
-        max_depth     = self.params.get ( 'max_depth'     , LGBM_MAX_DEPTH     )
-        num_leaves    = self.params.get ( 'num_leaves'    , 2 ** max_depth - 1 )
+        n_estimators  = self.params.get ( 'n_estimators' , LGBM_ESTIMATORS    )
+        learning_rate = self.params.get ( 'learning_rate', LGBM_LEARNING_RATE )
+        max_depth     = self.params.get ( 'max_depth'    , LGBM_MAX_DEPTH     )
+        num_leaves    = self.params.get ( 'num_leaves'   , 2 ** max_depth - 1 )
     
         models = []
 
         params = {
-            'objective'               : self.params.get ( 'objective'                , 'binary'         ) ,     
-            'metric'                  : self.params.get ( 'metric'                   , 'binary_logloss' ) , 
-            ## 
-            'max_bins'                : self.params.get ( 'max_bins'                 , 1023 ) , 
-            'min_data_in_leaf'        : self.params.get ( 'min_data_in_leaf'         , 30   ) , 
-            'min_sum_hessian_in_leaf' : self.params.get ( 'min_sum_hessian_in_leaf'  , 1e-2 ) , 
-            ##
-            'feature_fraction'        : self.params.get ( 'feature_fraction'         , 1.0  ) , 
-            'bagging_fraction'        : self.params.get ( 'bagging_fraction'         , 0.9  ) , 
-            'bagging_freq'            : self.params.get ( 'bagging_freq'             , 1    ) , 
-            ## 
-            'lambda_l1'               : self.params.get ( 'lambda_l1'                , 0    ) , 
-            'lambda_l2'               : self.params.get ( 'lambda_l2'                , 0    ) , 
-            ##
+            'objective'               : self.params.get ( 'objective'               , 'binary'         ) ,     
+            'metric'                  : self.params.get ( 'metric'                  , 'binary_logloss' ) , 
+            'max_bins'                : self.params.get ( 'max_bins'                , 1023 ) , 
+            'min_data_in_leaf'        : self.params.get ( 'min_data_in_leaf'        , 30   ) , 
+            'min_sum_hessian_in_leaf' : self.params.get ( 'min_sum_hessian_in_leaf' , 1e-2 ) , 
+            'feature_fraction'        : self.params.get ( 'feature_fraction'        , 1.0  ) , 
+            'bagging_fraction'        : self.params.get ( 'bagging_fraction'        , 0.9  ) , 
+            'bagging_freq'            : self.params.get ( 'bagging_freq'            , 1    ) , 
+            'lambda_l1'               : self.params.get ( 'lambda_l1'               , 0    ) , 
+            'lambda_l2'               : self.params.get ( 'lambda_l2'               , 0    ) , 
             'max_depth'               : max_depth  ,
             'num_leaves'              : num_leaves ,
-            ## 
-            'learning_rate'           : 1.0               , ## ATTENTION!!! 
-            'verbosity'               : self.params.get ( 'verbosity' , -1 ) , 
-            'n_jobs'                  : self.params.get ( 'n_jobs'    ,  1 ) , 
+            'learning_rate'           : 1.0        , 
+            'verbosity'               : self.params.get ( 'verbosity', -1 ) , 
+            'n_jobs'                  : self.params.get ( 'n_jobs'   ,  1 ) , 
         }
 
         eps = 1e-4 
-        for it in progress_bar ( n_estimators , description = 'Boosting:' , silent = not self.progress ) :
+        for it in progress_bar ( n_estimators, description = 'Boosting:', silent = not self.progress ) :
             
-            comb_weights  = numpy.hstack ( [ current_w_orig , numpy.abs ( norm_targ ) ] )
+            comb_weights  = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
             comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
 
-            trn_data = LightGBM.Dataset ( X_comb , label = y_comb , weight = comb_weights, free_raw_data = True )            
-            model    = LightGBM.train ( params          = params   ,
-                                        train_set       = trn_data ,
-                                        num_boost_round = 1        )
+            trn_data = LightGBM.Dataset ( X_comb, label = y_comb, weight = comb_weights, free_raw_data = True )            
+            model    = LightGBM.train   ( params          = params   ,
+                                          train_set       = trn_data ,
+                                          num_boost_round = 1        )
 
             p_orig          = model.predict ( X_orig )            
-            p_orig          = numpy.clip    ( p_orig , eps , 1.0 - eps )
+            p_orig          = numpy.clip ( p_orig, eps, 1.0 - eps )
             r_step          = p_orig / ( 1.0 - p_orig )
-            current_w_orig *= numpy.power ( numpy.clip ( r_step , 1e-2 , 1e+2 ) , learning_rate )
+            current_w_orig *= numpy.power ( numpy.clip ( r_step, 1e-2, 1e+2 ), learning_rate )
 
-            # =================================================================
-            if True : # =======================================================
-                # =============================================================
-                model_bytes = model.model_to_string ()
-                model.free_dataset ()
-                del model
-                del trn_data
-                ## recreate model 
-                model = LightGBM.Booster ( model_str = model_bytes )
-                del model_bytes
+            model_bytes = model.model_to_string ()
+            model.free_dataset ()
+            del model, trn_data
+            
+            model = LightGBM.Booster ( model_str = model_bytes )
+            del model_bytes
             
             models.append ( model )
             
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
-        final_ratios = self._normalize_and_iter_clip ( final_ratios , w_orig , norm_targ )
+        final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
 
         return models, final_ratios
 
-    # =========================================================================
+    ## @brief Accumulate predictions across sequential LightGBM models.
     def _predict_iterative_stream ( self, models, X ) :
-        
-        learning_rate = self.params.get ( 'learning_rate' , 0.05 )
-        log_ratios    = numpy.zeros ( len ( X ) , dtype = numpy.float32 )
+        """ Accumulate predictions across sequential LightGBM models. """
+        learning_rate = self.params.get ( 'learning_rate', 0.05 )
+        log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
 
         for model in models :
             p           = model.predict ( X )
-            p           = numpy.clip ( p , 1e-4 , 1.0 - 1e-4 )
+            p           = numpy.clip ( p, 1e-4, 1.0 - 1e-4 )
             r_step      = p / ( 1.0 - p )
-            log_ratios += numpy.log ( numpy.clip ( r_step , 1e-2 , 1e+2 ) ) * learning_rate
+            log_ratios += numpy.log ( numpy.clip ( r_step, 1e-2, 1e+2 ) ) * learning_rate
 
         return numpy.exp ( log_ratios )
 
-    
 # =============================================================================
-## XGBoost 
-# =============================================================================
-
-# =============================================================================
-def xgboost_density_ratio_obj ( preds , dtrain ) :
-    """
-    Direct Density Ratio Estimation (DRE) custom objective for XGBoost.
-    Uses exponential / log-linear DRE loss instead of binary logloss
-    to prevent Hessian collapse on high-density peaks.
-    """
+## @brief Custom Density Ratio Objective for XGBoost.
+def xgboost_density_ratio_obj ( preds, dtrain ) :
+    """ Direct Density Ratio Estimation (DRE) custom objective for XGBoost. """
     labels  = dtrain.get_label  ()
     weights = dtrain.get_weight ()
     
-    if weights is None or len ( weights ) == 0:
+    if weights is None or len ( weights ) == 0 :
         weights = numpy.ones_like ( labels )
         
-    # Clip raw margins to prevent numerical overflow in exp(margin)
-    margin = numpy.clip ( preds , -10.0 , 10.0 )
+    margin = numpy.clip ( preds, -10.0, 10.0 )
     exp_m  = numpy.exp  ( margin )
     
-    # Analytical First (grad) and Second (hess) order derivatives for DRE:
-    # Target   (y=1): grad = -1,   hess = 1e-5 (floor to avoid zero division)
-    # Original (y=0): grad = e^m,  hess = e^m
-    grad = numpy.where ( labels == 1.0 , -1.0  , exp_m         )
-    hess = numpy.where ( labels == 1.0 ,  1e-5 , exp_m + 1.e-5 )
+    grad   = numpy.where ( labels == 1.0, -1.0, exp_m )
+    hess   = numpy.where ( labels == 1.0,  1e-5, exp_m + 1.e-5 )
     
-    # Scale by instance observation weights
     grad *= weights
     hess *= weights
     
     return grad, hess
 
-
 # =============================================================================
 ## @class XGBoostIterativeReweighter
 #  Iterative weight boosting density reweighter using XGBoost.
 class XGBoostIterativeReweighter ( IterativeReweighter ) :
-    """ Iterative weight boosting density reweighter using XGBoost.
-    """
+    """ Iterative weight boosting density reweighter using XGBoost. """
+
     def __init__ ( self            , 
                    original        , 
                    target          , 
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        
+        """ Initialize XGBoost iterative density reweighter. """
         config = {
-            'n_estimators'            :  XGB_ESTIMATORS     ,
-            'learning_rate'           :  XGB_LEARNING_RATE  ,
-            'max_depth'               :  XGB_MAX_DEPTH      , 
-            'tree_method'             :  'hist'     , 
-            'max_bin'                 :  1023       , 
-            'grow_policy'             : 'lossguide' , 
-            'max_leaves'              :  31         , 
-            'min_child_weight'        :  1e-2       , 
-            'max_delta_step'          :  0.0        , 
-            'gamma'                   :  0.0        , 
-            'subsample'               :  1.        , 
-            'reg_alpha'               :  0.0        , 
-            'reg_lambda'              :  0.001      , 
-            'verbosity'               :  0          , 
-            'n_jobs'                  :  1          , 
+            'n_estimators'     :  XGB_ESTIMATORS    ,
+            'learning_rate'    :  XGB_LEARNING_RATE ,
+            'max_depth'        :  XGB_MAX_DEPTH     , 
+            'tree_method'      :  'hist'            , 
+            'max_bin'          :  1023              , 
+            'grow_policy'      : 'lossguide'        , 
+            'max_leaves'       :  31                , 
+            'min_child_weight' :  1e-2              , 
+            'max_delta_step'   :  0.0               , 
+            'gamma'            :  0.0               , 
+            'subsample'        :  1.0               , 
+            'reg_alpha'        :  0.0               , 
+            'reg_lambda'       :  0.001             , 
+            'verbosity'        :  0                 , 
+            'n_jobs'           :  1                 , 
         }
 
         config.update ( kwargs )
         if 'silent' in config and config.get ( 'silent' ) : config [ 'verbosity' ] = 0        
-        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , XGB_ESTIMATORS ) 
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round', XGB_ESTIMATORS ) 
         
-        super().__init__ ( original        = original        ,
-                           target          = target          ,
-                           original_weight = original_weight ,
-                           target_weight   = target_weight   , **config )
+        super ().__init__ ( original        = original        ,
+                            target          = target          ,
+                            original_weight = original_weight ,
+                            target_weight   = target_weight   , **config )
 
-    # =========================================================================
     @property
     def method ( self ) :
+        """ Return method identifier name. """
         return method_XGB
 
-    # =========================================================================
-    def _fit_iterative_stream ( self               ,
-                                X_orig             ,
-                                w_orig             ,
-                                X_targ             ,
-                                w_targ             ) :
+    ## @brief Execute iterative XGBoost boosting stream on fold data.
+    def _fit_iterative_stream ( self   ,
+                                X_orig ,
+                                w_orig ,
+                                X_targ ,
+                                w_targ ) :
+        """ Execute iterative XGBoost boosting stream on fold data. """
         import xgboost as XGBoost
 
-        n_orig = len ( X_orig )
-        n_targ = len ( X_targ )
-
-        X_comb = numpy.vstack ( [ X_orig, X_targ ] )
-        
+        n_orig     = len ( X_orig )
+        n_targ     = len ( X_targ )
+        X_comb     = numpy.vstack ( [ X_orig, X_targ ] )
         abs_w_orig = numpy.abs ( w_orig )
         abs_w_targ = numpy.abs ( w_targ )
         
         sum_w_orig = numpy.sum ( abs_w_orig )
         sum_w_targ = numpy.sum ( abs_w_targ )
-        
-        norm_targ = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
+        norm_targ  = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
 
-        y_comb = numpy.hstack ( [ numpy.zeros ( n_orig , dtype = numpy.float32 ) ,
-                                  numpy.ones  ( n_targ , dtype = numpy.float32 ) ] )
-
+        y_comb         = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
+                                          numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
         current_w_orig = abs_w_orig.copy ()
 
-        n_estimators  = self.params.get ( 'n_estimators'  , XGB_ESTIMATORS    )
-        learning_rate = self.params.get ( 'learning_rate' , XGB_LEARNING_RATE )
-        max_depth     = self.params.get ( 'max_depth'     , XGB_MAX_DEPTH     )
-        max_leaves    = self.params.get ( 'max_leaves'    , 31                )
+        n_estimators  = self.params.get ( 'n_estimators' , XGB_ESTIMATORS    )
+        learning_rate = self.params.get ( 'learning_rate', XGB_LEARNING_RATE )
+        max_depth     = self.params.get ( 'max_depth'    , XGB_MAX_DEPTH     )
+        max_leaves    = self.params.get ( 'max_leaves'   , 31                )
     
-        models = []
+        models    = []
         dmat_orig = XGBoost.DMatrix ( X_orig )
 
         params = {
-            'tree_method'             : self.params.get ( 'tree_method'        , 'hist'      ) , 
-            'max_bin'                 : self.params.get ( 'max_bin'            , 1023        ) ,
-            'min_child_weight'        : self.params.get ( 'min_child_weight'   , 1e-2        ) ,
-            'max_delta_step'          : self.params.get ( 'max_delta_step'     , 0.0         ) ,
-            'subsample'               : self.params.get ( 'subsample'          , 1.0         ) , 
-            'gamma'                   : self.params.get ( 'gamma'              , 0.0         ) , 
-            'reg_alpha'               : self.params.get ( 'reg_alpha'          , 0.0         ) , 
-            'reg_lambda'              : self.params.get ( 'reg_lambda'         , 0.001       ) , 
-            'max_depth'               : max_depth ,
-            'learning_rate'           : 1.0       , # Raw Newton step inside XGBoost
-            'grow_policy'             : self.params.get ( 'grow_policy' , 'lossguide' ) , 
-            'max_leaves'              : max_leaves , 
-            'verbosity'               : self.params.get ( 'verbosity' , 0 ) , 
-            'n_jobs'                  : self.params.get ( 'n_jobs'    , 1 ) , 
+            'tree_method'      : self.params.get ( 'tree_method'     , 'hist'      ) , 
+            'max_bin'          : self.params.get ( 'max_bin'         , 1023        ) ,
+            'min_child_weight' : self.params.get ( 'min_child_weight', 1e-2        ) ,
+            'max_delta_step'   : self.params.get ( 'max_delta_step'  , 0.0         ) ,
+            'subsample'        : self.params.get ( 'subsample'       , 1.0         ) , 
+            'gamma'            : self.params.get ( 'gamma'           , 0.0         ) , 
+            'reg_alpha'        : self.params.get ( 'reg_alpha'       , 0.0         ) , 
+            'reg_lambda'       : self.params.get ( 'reg_lambda'      , 0.001       ) , 
+            'max_depth'        : max_depth ,
+            'learning_rate'    : 1.0       ,
+            'grow_policy'      : self.params.get ( 'grow_policy', 'lossguide' ) , 
+            'max_leaves'       : max_leaves , 
+            'verbosity'        : self.params.get ( 'verbosity', 0 ) , 
+            'n_jobs'           : self.params.get ( 'n_jobs'   , 1 ) , 
         }
-
-        for it in progress_bar ( n_estimators , description = 'Boosting:' , silent = not self.progress ) :
+        
+        
+        neff0 = nEff ( X_orig, current_w_orig )
+ 
+        for it in progress_bar ( n_estimators, description = 'Boosting:', silent = not self.progress ) :
             
-            comb_weights  = numpy.hstack ( [ current_w_orig , numpy.abs ( norm_targ ) ] )
+            comb_weights  = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
             comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
             
-            trn_data = XGBoost.DMatrix ( X_comb , label = y_comb , weight = comb_weights )
+            trn_data = XGBoost.DMatrix ( X_comb, label = y_comb, weight = comb_weights )
             
-            model    = XGBoost.train   ( params          = params,
-                                         dtrain          = trn_data,
-                                         num_boost_round = 1,
-                                         obj             = xgboost_density_ratio_obj )
+            model    = XGBoost.train ( params          = params,
+                                       dtrain          = trn_data,
+                                       num_boost_round = 1,
+                                       obj             = xgboost_density_ratio_obj )
             
-            # Predict raw logit / margin
             margin          = model.predict ( dmat_orig, output_margin = True )
-            margin          = numpy.clip    ( margin, -10.0, 10.0 )
+            margin          = numpy.clip ( margin, -10.0, 10.0 )
+            step_ratios     = numpy.exp  ( margin )
+            current_w_orig *= numpy.power ( numpy.clip ( step_ratios, 1e-5, 1e+5 ), learning_rate )
+        
+            # 2. Compute exact step normalization factor alpha
+            sum_curr     = numpy.sum ( current_w_orig )
+            step_alpha   = sum_w_orig / ( sum_curr + 1e-12 )
             
-            step_ratios     = numpy.exp     ( margin )
-            current_w_orig *= numpy.power   ( numpy.clip ( step_ratios , 1e-5 , 1e+5 ) , learning_rate )
+            # 3. Apply step normalization factor to current weights
+            current_w_orig *= step_alpha
             
-            # Normalize total mass to prevent global drift
-            current_w_orig *= ( sum_w_orig / ( numpy.sum ( current_w_orig ) + 1e-12 ) )
-
-            if ( ( it + 1 ) % 10 == 0 or ( it + 1 ) == n_estimators ) : 
+            # 4. Save log(alpha) directly into the Python Booster object
+            model.log_alpha = float ( numpy.log ( step_alpha ) )
+        
+            # Печать прогресса:
+            if not self.silent and ( it < 5  or ( it + 1 ) % 25 == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
-                logger.info ( f" Iteration {it+1}/{n_estimators} -> weights min/max: {ratios_curr.min():.4f} / {ratios_curr.max():.4f}" )
-            
+                neff        = nEff ( X_orig, current_w_orig )
+                wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 3, with_sign = False, strip = True )
+                wmax        = nice_print ( float ( ratios_curr.max () ) , precision = 3, with_sign = False, strip = True )
+                ne0         = nice_print ( float ( neff0              ) , precision = 3, with_sign = False, strip = True )
+                ne          = nice_print ( float ( neff               ) , precision = 3, with_sign = False, strip = True )
+                
+                logger.info ( f"Iteration {it+1:4d}/{n_estimators:4d} | min/max: {wmin}/{wmax} | nEff: {ne0} {S.arrow_right} {ne}" )
+                
+                        
             models.append ( model )
             
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
-        final_ratios = self._normalize_and_iter_clip ( final_ratios , w_orig , norm_targ )
-        
-        return models, final_ratios
-    
-    # =========================================================================    
-    def _predict_iterative_stream ( self, models, X ) :
-        import xgboost as XGBoost
-        dmat = XGBoost.DMatrix ( X )
-    
-        learning_rate = self.params.get ( 'learning_rate' , XGB_LEARNING_RATE )
-        current_weights = numpy.ones ( len ( X ) , dtype = numpy.float32 )
-    
-        for model in models :
-            margin = model.predict ( dmat, output_margin = True )
-            margin = numpy.clip ( margin, -10.0, 10.0 )
-            
-            # Точно так же, как на обучении: берем шаг через степень learning_rate
-            step_ratios = numpy.exp ( margin )
-            current_weights *= numpy.power ( numpy.clip ( step_ratios , 1e-5 , 1e+5 ) , learning_rate )
-    
-        return current_weights
-    
-# =============================================================================
-## CatBoost 
-# =============================================================================
+        final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
 
+        return models, final_ratios
+
+    ## @brief Predict single model ratios with per-fold baseline scale calibration.
+    def _predict_single_model ( self, models, X ) :
+        """ Predict probabilities for fold evaluation with per-fold scale calibration. """
+        ratios = self._predict_iterative_stream ( models, X )
+        
+        # Per-fold scale calibration: balance OOF baseline mean to 1.0
+        mean_r = numpy.mean ( ratios )
+        if 0 < mean_r : ratios = ratios / mean_r
+            
+        p = ratios / ( 1.0 + ratios )
+        return p.astype ( numpy.float32, copy = False )
+
+    ## @brief Predict ratios directly using iterative XGBoost stream in log-space.
+    def _predict_iterative_stream ( self, models, X ) :
+        """ Predict ratios directly using iterative XGBoost stream in log-space. """
+        import xgboost as XGBoost
+        dmat          = XGBoost.DMatrix ( X )
+        learning_rate = self.params.get ( 'learning_rate', XGB_LEARNING_RATE )
+        log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
+
+        for model in models :
+            margin      = model.predict ( dmat, output_margin = True )
+            margin      = numpy.clip ( margin, -10.0, 10.0 )
+            step_log_alpha = getattr ( model, 'log_alpha', 0.0 )
+            log_ratios += margin * learning_rate + step_log_alpha
+            
+        return numpy.exp ( numpy.clip ( log_ratios, -15.0, 15.0 ) )
+
+   
 # =============================================================================
 ## @class CatBoostIterativeReweighter
 #  Iterative weight boosting density reweighter using CatBoost.
 class CatBoostIterativeReweighter ( IterativeReweighter ) :
-    """ Iterative weight boosting density reweighter using CatBoost.
-    """
+    """ Iterative weight boosting density reweighter using CatBoost. """
 
-    # =========================================================================
-    # Custom Exact Density Ratio Objective for CatBoost (Numba JIT Compatible)
-    # =========================================================================
     class DensityRatioObj ( object ) :
-        
-        def calc_ders_range ( self , approxes , targets , weights ) :
-            margin = numpy.clip ( approxes , -10.0 , 10.0 )
+        def calc_ders_range ( self, approxes, targets, weights ) :
+            margin = numpy.clip ( approxes, -10.0, 10.0 )
             exp_m  = numpy.exp  ( margin )
             
-            grad = numpy.where ( targets == 1.0 , -1.0  , exp_m )
-            hess = numpy.where ( targets == 1.0 ,  1e-5 , exp_m )
+            grad   = numpy.where ( targets == 1.0, -1.0, exp_m )
+            hess   = numpy.where ( targets == 1.0,  1e-5, exp_m )
             
             if weights is not None and 0 < len ( weights ) :
-                # Защита от зануления градиентов (baseline weight)
-                weights = numpy.maximum ( weights , 1e-4 )
+                weights = numpy.maximum ( weights, 1e-4 )
                 grad    = grad * weights
                 hess    = hess * weights
                 
-            der1 = -grad
-            der2 =  hess
-            
-            return list ( zip ( der1 , der2 ) )
-        
+            der1   = -grad
+            der2   =  hess
+            return list ( zip ( der1, der2 ) )
 
     def __init__ ( self            , 
                    original        , 
@@ -448,296 +425,241 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        
+        """ Initialize CatBoost iterative density reweighter. """
         config = {
-            ## Core boosting hyperparameters
             'n_estimators'               :  CATB_ESTIMATORS    ,
             'learning_rate'              :  CATB_LEARNING_RATE ,
             'max_depth'                  :  CATB_MAX_DEPTH     ,
-            ## 
-            'grow_policy'                :  'Lossguide' , # Asymmetric tree growth to capture high ratio peaks
-            'max_leaves'                 :  31    ,
-            'l2_leaf_reg'                :  0.0   , # Unregularized for exact density ratio convergence
-            'subsample'                  :  1.0   , # Full sampling to retain sample statistics
-            'random_strength'            :  0.0   ,
-            'leaf_estimation_iterations' :  1     ,
-            'min_data_in_leaf'           :  1     ,
-            ## Execution settings
-            'verbose'                    :  False ,
-            'thread_count'               :  1     , # Single-threaded weak learner inside Ostap loops
+            'grow_policy'                :  'Lossguide'        ,
+            'max_leaves'                 :  31                 ,
+            'l2_leaf_reg'                :  0.0                ,
+            'subsample'                  :  1.0                ,
+            'random_strength'            :  0.0                ,
+            'leaf_estimation_iterations' :  1                  ,
+            'min_data_in_leaf'           :  1                  ,
+            'verbose'                    :  False              ,
+            'thread_count'               :  1                  ,
         }
         
         config.update ( kwargs )
         if 'silent' in config and config.get ( 'silent' ) : config [ 'verbose' ] = False        
-        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , CATB_ESTIMATORS ) 
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round', CATB_ESTIMATORS ) 
         
-        super().__init__ ( original        = original        ,
-                           target          = target          ,
-                           original_weight = original_weight ,
-                           target_weight   = target_weight   , **config )
+        super ().__init__ ( original        = original        ,
+                            target          = target          ,
+                            original_weight = original_weight ,
+                            target_weight   = target_weight   , **config )
 
-    # =========================================================================
     @property
     def method ( self ) :
+        """ Return method identifier name. """
         return method_CATB
 
-    # =========================================================================
-    def _fit_iterative_stream ( self               ,
-                                X_orig             ,
-                                w_orig             ,
-                                X_targ             ,
-                                w_targ             ) :
-        
+    ## @brief Execute iterative CatBoost boosting stream on fold data.
+    def _fit_iterative_stream ( self   ,
+                                X_orig ,
+                                w_orig ,
+                                X_targ ,
+                                w_targ ) :
+        """ Execute iterative CatBoost boosting stream on fold data. """
         import catboost as CatBoost
 
-        n_orig = len ( X_orig )
-        n_targ = len ( X_targ )
-
-        X_comb = numpy.vstack ( [ X_orig, X_targ ] )
-        
+        n_orig     = len ( X_orig )
+        n_targ     = len ( X_targ )
+        X_comb     = numpy.vstack ( [ X_orig, X_targ ] )
         abs_w_orig = numpy.abs ( w_orig )
         abs_w_targ = numpy.abs ( w_targ )
         
         sum_w_orig = numpy.sum ( abs_w_orig )
         sum_w_targ = numpy.sum ( abs_w_targ )
-        
-        norm_targ = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
+        norm_targ  = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
 
-        y_comb = numpy.hstack ( [ numpy.zeros ( n_orig , dtype = numpy.float32 ) ,
-                                  numpy.ones  ( n_targ , dtype = numpy.float32 ) ] )
-
+        y_comb         = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
+                                          numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
         current_w_orig = abs_w_orig.copy ()
         
-        n_estimators  = self.params.get ( 'n_estimators'  , CATB_ESTIMATORS    )
-        learning_rate = self.params.get ( 'learning_rate' , CATB_LEARNING_RATE )
-        max_depth     = self.params.get ( 'max_depth'     , CATB_MAX_DEPTH     )
+        n_estimators  = self.params.get ( 'n_estimators' , CATB_ESTIMATORS    )
+        learning_rate = self.params.get ( 'learning_rate', CATB_LEARNING_RATE )
+        max_depth     = self.params.get ( 'max_depth'    , CATB_MAX_DEPTH     )
 
-        models = []
+        models    = []
         pool_orig = CatBoost.Pool ( data = X_orig )
 
-        # Configure CatBoost parameters for single-tree iterative DRE boosting
         params = {
-            'loss_function'             : self.DensityRatioObj()                          , # Custom exact DRE objective
-            'eval_metric'               : self.params.get ( 'eval_metric' , 'Logloss' )   , # Required by CatBoost for user-defined loss
-            'iterations'                : 1                                               , # Train a single tree per iteration
-            'learning_rate'             : 1.0                                             , # Step size scaled externally by learning_rate
+            'loss_function'             : self.DensityRatioObj ()                         ,
+            'eval_metric'               : self.params.get ( 'eval_metric', 'Logloss' )    ,
+            'iterations'                : 1                                               ,
+            'learning_rate'             : 1.0                                             ,
             'depth'                     : max_depth                                       ,
-            'grow_policy'               : self.params.get ( 'grow_policy' , 'Lossguide' ) , # Asymmetric tree growth
-            'max_leaves'                : self.params.get ( 'max_leaves'  , 31          ) ,
-            'l2_leaf_reg'               : self.params.get ( 'l2_leaf_reg' , 0.0         ) , 
-            'subsample'                 : self.params.get ( 'subsample'   , 1.0         ) , 
-            'random_strength'           : 0.0                                             , # Disable perturbation noise
+            'grow_policy'               : self.params.get ( 'grow_policy', 'Lossguide' )  ,
+            'max_leaves'                : self.params.get ( 'max_leaves' , 31          )  ,
+            'l2_leaf_reg'               : self.params.get ( 'l2_leaf_reg', 0.0         )  , 
+            'subsample'                 : self.params.get ( 'subsample'  , 1.0         )  , 
+            'random_strength'           : 0.0                                             ,
             'leaf_estimation_iterations': 1                                               ,
-            'min_data_in_leaf'          : self.params.get ( 'min_data_in_leaf' , 1  )     , 
+            'min_data_in_leaf'          : self.params.get ( 'min_data_in_leaf', 1 )       , 
             'verbose'                   : False                                           , 
-            'thread_count'              : self.params.get ( 'n_jobs' , 1 )                ,
+            'thread_count'              : self.params.get ( 'n_jobs', 1 )                 ,
             'leaf_estimation_method'    : 'Newton'                                        ,
         }
 
-        for it in progress_bar ( n_estimators , description = 'Boosting:' , silent = not self.progress ) :
+        for it in progress_bar ( n_estimators, description = 'Boosting:', silent = not self.progress ) :
             
-            # Combine current original weights with initial target weights
-            comb_weights  = numpy.hstack ( [ current_w_orig , numpy.abs ( norm_targ ) ] )
+            comb_weights  = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
             comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
 
-            trn_pool = CatBoost.Pool ( data = X_comb , label = y_comb , weight = comb_weights )
+            trn_pool = CatBoost.Pool ( data = X_comb, label = y_comb, weight = comb_weights )
             
-            # Train weak learner with custom objective
-            model = CatBoost.train ( pool    = trn_pool ,
-                                     params  = params   ,
-                                     verbose = False    )
+            model    = CatBoost.train ( pool    = trn_pool ,
+                                        params  = params   ,
+                                        verbose = False    )
 
-            # Retrieve raw formula values (margins/logits) directly
-            margin = model.predict ( pool_orig , prediction_type = 'RawFormulaVal' )
-            if 1 < margin.ndim : margin = margin[:, 0]
+            margin = model.predict ( pool_orig, prediction_type = 'RawFormulaVal' )
+            if 1 < margin.ndim : margin = margin [ :, 0 ]
             
-            # Apply external learning rate scaling to margin update
-            step_ratio      = numpy.exp   ( numpy.clip ( margin , -5.0 , 5.0 ) )
-            current_w_orig *= numpy.power ( step_ratio , learning_rate )
-            
-            # Per-iteration weight normalization to prevent constant logit drift
+            step_ratio      = numpy.exp ( numpy.clip ( margin, -5.0, 5.0 ) )
+            current_w_orig *= numpy.power ( step_ratio, learning_rate )
             current_w_orig *= ( sum_w_orig / ( numpy.sum ( current_w_orig ) + 1e-12 ) )
-            
-            if ( ( it + 1 ) % 10 == 0 or ( it + 1 ) == n_estimators ) : 
-                ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
-                logger.info ( f" Iteration {it+1}/{n_estimators} -> weights min/max: {ratios_curr.min():.4f} / {ratios_curr.max():.4f}" )
             
             models.append ( model )
 
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
-        final_ratios = self._normalize_and_iter_clip ( final_ratios , w_orig , norm_targ )
+        final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
 
         return models, final_ratios
 
+    ## @brief Predict ratios directly using iterative CatBoost stream.
     def _predict_iterative_stream ( self, models, X ) :
+        """ Predict ratios directly using iterative CatBoost stream. """
         import catboost as CatBoost
         
-        learning_rate = self.params.get ( 'learning_rate' , CATB_LEARNING_RATE )
-        current_weights = numpy.ones ( len ( X ) , dtype = numpy.float32 )
-        pool          = CatBoost.Pool ( data = X )
+        learning_rate   = self.params.get ( 'learning_rate', CATB_LEARNING_RATE )
+        current_weights = numpy.ones ( len ( X ), dtype = numpy.float32 )
+        pool            = CatBoost.Pool ( data = X )
 
         for model in models :
-            margin = model.predict ( pool , prediction_type = 'RawFormulaVal' )
-            if 1 < margin.ndim : margin = margin[:, 0]
+            margin = model.predict ( pool, prediction_type = 'RawFormulaVal' )
+            if 1 < margin.ndim : margin = margin [ :, 0 ]
             
-            margin = numpy.clip ( margin , -5.0 , 5.0 )
-            
-            step_ratio = numpy.exp ( margin )
-            current_weights *= numpy.power ( step_ratio , learning_rate )
+            margin           = numpy.clip ( margin, -5.0, 5.0 )
+            step_ratio       = numpy.exp ( margin )
+            current_weights *= numpy.power ( step_ratio, learning_rate )
             
         return current_weights
-
-"""                
-    # =================================================================
-            if True : # =======================================================
-                # =============================================================
-                # Трюк «Феникса» для CatBoost: сохранение в байты/диск и очистка
-                import tempfile, os
-                with tempfile.NamedTemporaryFile(suffix='.cbm', delete=False) as tmp:
-                    tmp_name = tmp.name
-                
-                current_model.save_model(tmp_name)
-                del current_model
-                del trn_pool
-                
-                current_model = CatBoost.CatBoostClassifier()
-                current_model.load_model(tmp_name)
-                try:
-                    os.unlink(tmp_name)
-                except OSError:
-                    pass
-"""
-
-# =============================================================================
-## PyTorch  
-# =============================================================================
 
 # =============================================================================
 ## @class PyTorchIterativeReweighter
 #  Iterative weight boosting density reweighter using PyTorch (MLP weak learners).
 class PyTorchIterativeReweighter ( IterativeReweighter ) :
-    """ Iterative weight boosting density reweighter using PyTorch.
-    """
+    """ Iterative weight boosting density reweighter using PyTorch. """
+
     def __init__ ( self            , 
                    original        , 
                    target          , 
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        
+        """ Initialize PyTorch iterative density reweighter. """
         config = {
-            ## 
-            'n_estimators'            :  TORCH_ESTIMATORS       ,
-            'learning_rate'           :  TORCH_LEARNING_RATE    ,
-            'hidden_dim'              :  TORCH_HIDDEN_DIM       ,
-            'epochs_per_step'         :  TORCH_EPOCHS_PER_STEP  ,
-            'batch_size'              :  'auto'                 ,
-            'weight_decay'            :  1e-4                   ,
-            ## 
-            'verbosity'               :  0    ,
-            'n_jobs'                  :  1    , 
+            'n_estimators'    :  TORCH_ESTIMATORS       ,
+            'learning_rate'   :  TORCH_LEARNING_RATE    ,
+            'hidden_dim'      :  TORCH_HIDDEN_DIM       ,
+            'epochs_per_step' :  TORCH_EPOCHS_PER_STEP  ,
+            'batch_size'      :  'auto'                 ,
+            'weight_decay'    :  1e-4                   ,
+            'verbosity'       :  0                      ,
+            'n_jobs'          :  1                      , 
         }
         
         config.update ( kwargs )
-        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , TORCH_ESTIMATORS ) 
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round', TORCH_ESTIMATORS ) 
 
         n_rows     = num_samples ( target ) + num_samples ( original )        
-        batch_size = config.get ( 'batch_size' , None ) 
-        if   isinstance ( batch_size , string_types  ) and batch_size.lower()  == 'auto' : batch_size = None
-        elif isinstance ( batch_size , integer_types ) and not 2 <= batch_size <  n_rows : batch_size = None        
+        batch_size = config.get ( 'batch_size', None ) 
+        if   isinstance ( batch_size, string_types  ) and batch_size.lower () == 'auto' : batch_size = None
+        elif isinstance ( batch_size, integer_types ) and not 2 <= batch_size < n_rows   : batch_size = None        
         if batch_size is None : 
-            batch_size = 2 ** math.floor ( max ( 2 , math.log2 ( n_rows / 25 ) ) ) 
+            batch_size = 2 ** math.floor ( max ( 2, math.log2 ( n_rows / 25 ) ) ) 
             config [ 'batch_size' ] = batch_size 
 
-        super().__init__ ( original        = original        ,
-                           target          = target          ,
-                           original_weight = original_weight ,
-                           target_weight   = target_weight   , **config )
+        super ().__init__ ( original        = original        ,
+                            target          = target          ,
+                            original_weight = original_weight ,
+                            target_weight   = target_weight   , **config )
 
-    # =========================================================================
     @property
     def method ( self ) :
+        """ Return method identifier name. """
         return method_TORCH
 
-    # =========================================================================
-    def _fit_iterative_stream ( self               ,
-                                X_orig             ,
-                                w_orig             ,
-                                X_targ             ,
-                                w_targ             ) :
-        
+    ## @brief Execute iterative PyTorch boosting stream on fold data.
+    def _fit_iterative_stream ( self   ,
+                                X_orig ,
+                                w_orig ,
+                                X_targ ,
+                                w_targ ) :
+        """ Execute iterative PyTorch boosting stream on fold data. """
         import torch
         import torch.nn as nn
         import torch.optim as optim
 
-        # Set device (CPU is usually optimal for small reweighting MLPs due to overhead)
-        device = torch.device ( 'cpu' )
+        device     = torch.device ( 'cpu' )
+        n_orig     = len ( X_orig )
+        n_targ     = len ( X_targ )
+        n_features = X_orig.shape [ 1 ]
 
-        n_orig = len ( X_orig )
-        n_targ = len ( X_targ )
-        n_features = X_orig.shape[ 1 ]
-
-        X_comb = numpy.vstack ( [ X_orig, X_targ ] ).astype ( numpy.float32 )
-        
+        X_comb     = numpy.vstack ( [ X_orig, X_targ ] ).astype ( numpy.float32 )
         abs_w_orig = numpy.abs ( w_orig )
         abs_w_targ = numpy.abs ( w_targ )
         
         sum_w_orig = numpy.sum ( abs_w_orig )
         sum_w_targ = numpy.sum ( abs_w_targ )
-        
-        norm_targ = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
+        norm_targ  = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
 
-        y_comb = numpy.hstack ( [ numpy.zeros ( n_orig , dtype = numpy.float32 ) ,
-                                  numpy.ones  ( n_targ , dtype = numpy.float32  ) ] )
-
+        y_comb         = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
+                                          numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
         current_w_orig = abs_w_orig.copy ()
         
-        n_estimators    = self.params.get ( 'n_estimators'    , TORCH_ESTIMATORS      )
-        learning_rate   = self.params.get ( 'learning_rate'   , TORCH_LEARNING_RATE   )
-        hidden_dim      = self.params.get ( 'hidden_dim'      , TORCH_HIDDEN_DIM      )
-        epochs_per_step = self.params.get ( 'epochs_per_step' , TORCH_EPOCHS_PER_STEP )
-        batch_size      = self.params.get ( 'batch_size'      , 256                   )
-        weight_decay    = self.params.get ( 'weight_decay'    , 1e-4                  )
+        n_estimators    = self.params.get ( 'n_estimators'   , TORCH_ESTIMATORS      )
+        learning_rate   = self.params.get ( 'learning_rate'  , TORCH_LEARNING_RATE   )
+        hidden_dim      = self.params.get ( 'hidden_dim'     , TORCH_HIDDEN_DIM      )
+        epochs_per_step = self.params.get ( 'epochs_per_step', TORCH_EPOCHS_PER_STEP )
+        batch_size      = self.params.get ( 'batch_size'     , 256                   )
+        weight_decay    = self.params.get ( 'weight_decay'   , 1e-4                  )
 
-        # Define a simple weak learner MLP architecture
         class WeakMLP ( nn.Module ) :
             def __init__ ( self, input_dim, hidden_dim ) :
-                super().__init__ ()
+                super ().__init__ ()
                 self.net = nn.Sequential (
                     nn.Linear ( input_dim, hidden_dim ),
                     nn.Tanh   (),
                     nn.Linear ( hidden_dim, hidden_dim ),
                     nn.Tanh   (),
-                    nn.Linear ( hidden_dim, 1 ) # No Sigmoid!
+                    nn.Linear ( hidden_dim, 1 )
                 )
             def forward ( self, x ) :
                 return self.net ( x )
             
-            
-        models = []
+        models        = []
         X_orig_tensor = torch.tensor ( X_orig.astype ( numpy.float32 ), dtype = torch.float32 ).to ( device )
         X_comb_tensor = torch.tensor ( X_comb, dtype = torch.float32 ).to ( device )
         y_comb_tensor = torch.tensor ( y_comb, dtype = torch.float32 ).unsqueeze ( 1 ).to ( device )
 
         eps = 1e-4 
 
-        for it in progress_bar ( n_estimators , description = 'Boosting:' , silent = not self.progress ) :
+        for it in progress_bar ( n_estimators, description = 'Boosting:', silent = not self.progress ) :
             
-            comb_weights  = numpy.hstack ( [ current_w_orig , numpy.abs ( norm_targ ) ] )
-            comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
+            comb_weights   = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
+            comb_weights  /= ( numpy.sum ( comb_weights ) + 1e-12 )
             weights_tensor = torch.tensor ( comb_weights, dtype = torch.float32 ).unsqueeze ( 1 ).to ( device )
 
-            # Instantiate a fresh weak learner for this boosting step
-            model = WeakMLP ( n_features, hidden_dim ).to ( device )
+            model     = WeakMLP ( n_features, hidden_dim ).to ( device )
             optimizer = optim.Adam ( model.parameters (), lr = 0.01, weight_decay = weight_decay )
-            
-            ## criterion = nn.BCELoss ( reduction = 'none' )
             criterion = nn.BCEWithLogitsLoss ( reduction = 'none' )
 
-            # Train the weak learner for a few epochs on weighted combined data
             model.train ()
-            dataset = torch.utils.data.TensorDataset ( X_comb_tensor, y_comb_tensor, weights_tensor )
-            loader  = torch.utils.data.DataLoader ( dataset, batch_size = batch_size, shuffle = True )
+            dataset   = torch.utils.data.TensorDataset ( X_comb_tensor, y_comb_tensor, weights_tensor )
+            loader    = torch.utils.data.DataLoader ( dataset, batch_size = batch_size, shuffle = True )
 
             for epoch in range ( epochs_per_step ) :
                 for bx, by, bw in loader :
@@ -747,39 +669,35 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                     loss.backward ()
                     optimizer.step ()
 
-            # Evaluate predictions on original sample
             model.eval ()
             with torch.no_grad () :
                 p_orig = model ( X_orig_tensor ).cpu ().numpy ().ravel ()
 
-            p_orig = numpy.clip ( p_orig , eps , 1.0 - eps )
-            r_step = p_orig / ( 1.0 - p_orig )
+            p_orig          = numpy.clip ( p_orig, eps, 1.0 - eps )
+            r_step          = p_orig / ( 1.0 - p_orig )
+            current_w_orig *= numpy.power ( numpy.clip ( r_step, 1e-2, 1e+2 ), learning_rate )
 
-            current_w_orig *= numpy.power ( numpy.clip ( r_step , 1e-2 , 1e+2 ) , learning_rate )
-
-            # Store model state dict (lightweight storage instead of full object)
             models.append ( { 'state_dict' : model.state_dict (), 'input_dim' : n_features, 'hidden_dim' : hidden_dim } )
             
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
-        final_ratios = self._normalize_and_iter_clip ( final_ratios , w_orig , norm_targ )
+        final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
 
         return models, final_ratios
 
-    
-    # =========================================================================
+    ## @brief Accumulate predictions across sequential PyTorch models.
     def _predict_iterative_stream ( self, models, X ) :
+        """ Accumulate predictions across sequential PyTorch models. """
         import torch
         import torch.nn as nn
 
-        device = torch.device ( 'cpu' )
-        learning_rate = self.params.get ( 'learning_rate' , TORCH_LEARNING_RATE )
-        log_ratios    = numpy.zeros ( len ( X ) , dtype = numpy.float32 )
+        device        = torch.device ( 'cpu' )
+        learning_rate = self.params.get ( 'learning_rate', TORCH_LEARNING_RATE )
+        log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
         X_tensor      = torch.tensor ( X.astype ( numpy.float32 ), dtype = torch.float32 ).to ( device )
 
-        # No Sigmoid
         class WeakMLP ( nn.Module ) :
             def __init__ ( self, input_dim, hidden_dim ) :
-                super().__init__ ()
+                super ().__init__ ()
                 self.net = nn.Sequential (
                     nn.Linear ( input_dim, hidden_dim ),
                     nn.Tanh   (),
@@ -791,36 +709,35 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                 return self.net ( x )
 
         for m_dict in models :
-            model = WeakMLP ( m_dict[ 'input_dim' ], m_dict[ 'hidden_dim' ] ).to ( device )
-            model.load_state_dict ( m_dict[ 'state_dict' ] )
+            model = WeakMLP ( m_dict [ 'input_dim' ], m_dict [ 'hidden_dim' ] ).to ( device )
+            model.load_state_dict ( m_dict [ 'state_dict' ] )
             model.eval ()
 
             with torch.no_grad () :
                 logits = model ( X_tensor )
                 p      = torch.sigmoid ( logits ).cpu ().numpy ().ravel ()
 
-            p           = numpy.clip ( p , 1e-4 , 1.0 - 1e-4 )
+            p           = numpy.clip ( p, 1e-4, 1.0 - 1e-4 )
             r_step      = p / ( 1.0 - p )
-            log_ratios += numpy.log ( numpy.clip ( r_step , 1e-2 , 1e+2 ) ) * learning_rate
+            log_ratios += numpy.log ( numpy.clip ( r_step, 1e-2, 1e+2 ) ) * learning_rate
 
         return numpy.exp ( log_ratios )
 
-    
 # ============================================================================
 if '__main__' == __name__ :
         
     from ostap.utils.docme import docme
-    docme ( __name__ , logger = logger )
+    docme ( __name__, logger = logger )
 
     from ostap.stats.tools import ( hasLightGBM ,
                                     hasXGBoost  ,
                                     hasCatBoost ,
                                     hasPyTorch  ) 
 
-    if not hasLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
-    if not hasXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
-    if not hasCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
-    if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch  available!" ) 
+    if not hasLightGBM ( False ) : logger.warning ( "No LightGBM available!" ) 
+    if not hasXGBoost  ( False ) : logger.warning ( "No XGBoost  available!" ) 
+    if not hasCatBoost ( False ) : logger.warning ( "No CatBoost available!" ) 
+    if not hasPyTorch  ( False ) : logger.warning ( "No PyTorch  available!" ) 
 
 # =============================================================================
 #                                                                       The END 

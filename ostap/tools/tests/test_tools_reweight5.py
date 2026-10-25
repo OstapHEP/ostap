@@ -288,6 +288,7 @@ def run_reweight ( n_dim     = 3     ,
         rw3 = XGB  ( target                = target   ,
                      original              = original ,
                      ##
+                     n_splits              = 5       , 
                      n_estimators          = 300     ,
                      learning_rate         = 0.02    ,
                      ## max_depth             = 7       ,
@@ -352,7 +353,7 @@ def run_reweight ( n_dim     = 3     ,
         rw1 = GBRW ( target = target , original = original )
         reweighters.append ( rw1 )
         
-    if hasSkLearn ():
+    if False and hasSkLearn ():
         
         from ostap.tools.reweighters  import LogRegressionDensityReweighter as LOGREG 
 
