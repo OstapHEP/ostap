@@ -208,8 +208,9 @@ class NoContext(object) :
     ## context manager
     def __enter__ ( self         ) : return self 
     ## context manager 
-    def __exit__  ( self , *args ) : pass  
-
+    def __exit__  ( self , *args ) : pass
+    ## 
+    def __bool__  ( self         ) : return False 
 # ============================================================================
 ## very specific printer of object
 #  - o defined special print for functinos   
@@ -408,8 +409,9 @@ class SafeLoop ( object ) :
                    iterable ,
                    message  = 'Interrupted at step #%d\n' ,
                    output   = sys.stdout                  ) :
-        
-        if insinstance ( iterable , int ) and 0 <= iterable : iterable = range ( iterable )
+
+        ## allow non-negative integer to be a shortcut for range 
+        if isinstance ( iterable , int ) and 0 <= iterable : iterable = range ( iterable )
         ##         
         self.iterable = iterable
         self.message  = message
@@ -430,7 +432,8 @@ class SafeLoop ( object ) :
             # =================================================================
         except KeyboardInterrupt : # ==========================================
             # =================================================================
-            if self.message :
+            if self.message : # ===============================================
+                # =============================================================
                 msg = self.message
                 # =============================================================
                 try : # =======================================================
@@ -440,7 +443,7 @@ class SafeLoop ( object ) :
                 except : # ====================================================
                     # =========================================================
                     pass
-
+                # =============================================================
                 self.output.write ( msg )
                 if not msg.endswith ( '\n' ) : self.output.write ( '\n' )
                 self.output.flush ()

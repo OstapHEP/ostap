@@ -29,7 +29,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
 from   ostap.utils.core       import typename 
-import numpy
+import numpy, re 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -335,7 +335,50 @@ def np2vct ( data , weight = None ) :
         
     return RT ( values ,  covs ) 
         
+# =============================================================================
+## @brief Compute truncated mean with asymmetric low/high trimming along the specified axis.
+#  @param x Input array (e.g. fold predictions matrix of shape (N_folds, N_samples)).
+#  @param axis Dimension along which to sort and trim extremes.
+#  @param trim_low Number or fraction of elements to trim from the bottom (low end).
+#  @param trim_high Number or fraction of elements to trim from the top (high end). 
+#                 If None, defaults to `trim_low` (symmetric trimming).
+#  @return Aggregated array with trimmed mean.
+def truncated_mean ( x, axis = 0, trim_low = 1, trim_high = None ) :
+    """ Compute asymmetric truncated mean along the specified axis. """
+    
+    x = numpy.asarray ( x, dtype = numpy.float32 )
+    n_folds = x.shape [ axis ]
+    
+    # Fallback to standard mean if there are too few elements to trim safely
+    if n_folds < 3 : return numpy.mean ( x, axis = axis )
+    
+    # If trim_high is not specified, make it symmetric to trim_low
+    if trim_high is None : trim_high = trim_low
+        
+    # Sort predictions along the fold axis
+    sorted_x = numpy.sort ( x, axis = axis )
+    
+    # Determine number of elements to trim from the bottom (k_low)
+    k_low  = int ( trim_low  )
+    k_high = int ( trim_high )
+        
+    # Safety bounds: ensure we don't trim everything or overlap extremes
+    k_low  = max ( 0 , k_low   )
+    k_high = max ( 0 , k_high  )
+    if k_low + k_high >= n_folds : k_low = k_high = 0
+    
+    if k_low > 0 or k_high > 0 :
+        # Construct a dynamic slice tuple to support arbitrary dimensions safely
+        slices   = [ slice ( None ) ] * x.ndim
+        end_idx  = n_folds - k_high if k_high > 0 else None
+        slices [ axis ] = slice ( k_low, end_idx )
+        trimmed = sorted_x [ tuple ( slices ) ]
+    else :
+        trimmed = sorted_x
+        
+    return numpy.mean ( trimmed, axis = axis )
 
+    
 # ============================================================================
 if '__main__' == __name__ :
         

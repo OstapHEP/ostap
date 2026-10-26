@@ -288,7 +288,7 @@ def run_reweight ( n_dim     = 3     ,
         rw3 = XGB  ( target                = target   ,
                      original              = original ,
                      ##
-                     n_splits              = 5       , 
+                     n_splits              = 10       , 
                      n_estimators          = 300     ,
                      learning_rate         = 0.02    ,
                      ## max_depth             = 7       ,
@@ -298,21 +298,25 @@ def run_reweight ( n_dim     = 3     ,
                      ##
                      min_child_weight      = 1e-6    ,
                      max_delta_step        = 0.0     , 
-                     subsample             = 1.0    ,
+                     subsample             = 1.0     ,
                      ## 
                      gamma                 = 0.0     , 
                      reg_alpha             = 0.0     ,
-                     reg_lambda            = 0.0     , ## 1e-3    , ## 0.01 
+                     reg_lambda            = 0.0003  , ## 0.0     , ## 1e-3    , ## 0.01 
                      ##
                      ## grow_policy           = 'depthwise' , 
                      ## max_leaves            =  0      ,
                      ##
                      grow_policy           = 'lossguide' , 
                      max_leaves            =  31         ,
-                     max_depth             =   8         ,
+                     max_depth             =   5         ,
                      tree_method           = 'hist'   ,
                      ## tree_method           = 'exact'      ,
                      max_bin               = 1023        ,
+                     ## 
+                     voting                = 'trim:2' ,
+                     oof_mode              = False    , 
+                     progress              = False    , 
                     )
         
         reweighters.append ( rw3 )

@@ -267,13 +267,13 @@ class ProgressBar(object):
     ## Is this bar active?
     def __nonzero__ ( self ) :
         """ Is this bar active? """
-        return self.__min <= self.__amount < self.__max
+        return ( not self.__silent ) and self.__min <= self.__amount < self.__max
     
     # =========================================================================
     ## Is this bar active?
     def __bool__    ( self ) :
         """ Is this bar active? """
-        return self.__min <= self.__amount < self.__max
+        return ( not self.__silent ) and self.__min <= self.__amount < self.__max
 
     @property
     def amount ( self ) :
@@ -522,6 +522,18 @@ class RunningBar(object):
     def increment_amount ( self , add_amount = 1 ) :
         return self if self.silent else self.update_amount ( self.__amount + add_amount )
 
+    # =========================================================================
+    ## Is this bar active?
+    def __nonzero__ ( self ) :
+        """ Is this bar active? """
+        return not self.silent 
+    
+    # =========================================================================
+    ## Is this bar active?
+    def __bool__    ( self ) :
+        """ Is this bar active? """
+        return not self.silent 
+
     def update_amount ( self , new_amount = None ) :
         """ Update self.amount with 'new_amount', and then rebuild the bar string.
         """
@@ -655,6 +667,18 @@ class TextBar(object):
     def silent(self):
         return self.__silent
 
+    # =========================================================================
+    ## Is this bar active?
+    def __nonzero__ ( self ) :
+        """ Is this bar active? """
+        return not self.silent 
+    
+    # =========================================================================
+    ## Is this bar active?
+    def __bool__    ( self ) :
+        """ Is this bar active? """
+        return not self.silent 
+
     @property
     def text(self):
         return self.__text
@@ -766,10 +790,17 @@ def running_bar ( iterable , frequency = 0 , description = '' , **kwargs ) :
     >>> for i in running_bar  ( xrange(10000 ) ) :
     ...    do something here
     """
+    
+    if isinstance ( iterable , int ) and  0 <= iterable : iterable = range ( iterable )        
+    ## 
+    full = kwargs.pop ( 'full' , False ) 
+    
     with RunningBar ( frequency   = frequency   ,
                       description = description , **kwargs ) as bar :
-        for i in iterable :
-            yield i
+        
+        for count, item in enumerate ( iterable ) :
+            if full : yield count , item , None 
+            else    : yield item
             bar   += 1
                 
 # =============================================================================
@@ -786,9 +817,8 @@ def progress_bar ( iterable         ,
     >>> for i in progress_bar  ( range ( 10000 ) ) :
     ...      do something here
     """
-    if isinstance ( iterable , int ) and  0 <= iterable  :
-        iterable = range ( iterable )
-        
+    if isinstance ( iterable , int ) and  0 <= iterable : iterable = range ( iterable )
+    
     if   max_value is None and isinstance ( iterable , sized_types ) :
         max_value = len ( iterable ) 
     elif max_value is None and hasattr    ( iterable , '__len__'   ) :
@@ -796,14 +826,19 @@ def progress_bar ( iterable         ,
     elif max_value is None and hasattr    ( iterable , 'size'      ) :
         max_value = iterable.size()
 
+        
     if   max_value is None : bar = RunningBar  ( **kwargs )
     elif max_value <  1    : bar = RunningBar  ( **kwargs )
     else                   : bar = ProgressBar ( max_value = max_value , **kwargs ) 
 
+    ## 
+    full = kwargs.pop ( 'full' , False ) 
+
     with bar :
         bar.show ( force = True )
-        for item in iterable :
-            yield item
+        for count, item in enumerate ( iterable ) :
+            if full : yield count , item , None 
+            else    : yield item
             bar   += 1
                         
 # =============================================================================
@@ -822,7 +857,9 @@ def text_bar ( iterable , **kwargs ) :
     """
     ## 
     if isinstance ( iterable , int ) and  0 <= iterable  : iterable = range ( iterable )
-    ##    
+    ##
+    full = kwargs.pop ( 'full' , False ) 
+    ##     
     with TextBar ( **kwargs ) as bar : 
         for count , item in enumerate ( iterable ) :
             yield count, item, bar 

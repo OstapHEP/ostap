@@ -23,14 +23,15 @@ __all__     = (
     'PyTorchIterativeReweighter'   , # PyTorch-based iterative density reweighter
 ) 
 # =============================================================================
-from   ostap.core.ostap_types       import num_types, string_types, integer_types  
+from   ostap.core.ostap_types       import num_types, string_types, integer_types
 from   ostap.utils.core             import typename
+from   ostap.utils.basic            import safe_loop 
 from   ostap.logger.pretty          import nice_print 
-from   ostap.utils.progress_bar     import progress_bar
+from   ostap.utils.progress_bar     import progress_bar, text_bar 
 from   ostap.stats.utils            import num_samples, nEff 
 from   ostap.tools.base_reweighters import IterativeReweighter  
 import ostap.logger.symbols         as     S
-import numpy, math  
+import numpy, math, time   
 # =============================================================================
 # Logging setup
 # =============================================================================
@@ -318,11 +319,19 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             'n_jobs'           : self.params.get ( 'n_jobs'   , 1 ) , 
         }
         
-        
         neff0 = nEff ( X_orig, current_w_orig )
- 
-        for it in progress_bar ( n_estimators, description = 'Boosting:', silent = not self.progress ) :
-            
+        
+        if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = 'Boosting:', silent = not self.progress ) 
+        elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = 'Boosting:', silent =     self.silent   )
+        else               : the_bar = progress_bar ( n_estimators , full = True , description = 'Boosting:', silent = True  ) 
+        
+        ## for it in progress_bar ( n_estimators, description = 'Boosting:', silent = not self.progress ) :
+
+        t_start = time.time () 
+        ## Safe loop!
+        
+        for it , _ ,  bar in safe_loop ( the_bar ) :
+                        
             comb_weights  = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
             comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
             
@@ -336,48 +345,29 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             margin          = model.predict ( dmat_orig, output_margin = True )
             margin          = numpy.clip ( margin, -10.0, 10.0 )
             step_ratios     = numpy.exp  ( margin )
+            
+            # Accumulate weight boosts purely via learning rate scaling.
+            # Global mass conservation is handled strictly at the end via _normalize_and_clip.
             current_w_orig *= numpy.power ( numpy.clip ( step_ratios, 1e-5, 1e+5 ), learning_rate )
         
-            # 2. Compute exact step normalization factor alpha
-            sum_curr     = numpy.sum ( current_w_orig )
-            step_alpha   = sum_w_orig / ( sum_curr + 1e-12 )
-            
-            # 3. Apply step normalization factor to current weights
-            current_w_orig *= step_alpha
-            
-            # 4. Save log(alpha) directly into the Python Booster object
-            model.log_alpha = float ( numpy.log ( step_alpha ) )
-        
-            # Печать прогресса:
-            if not self.silent and ( it < 5  or ( it + 1 ) % 25 == 0 or ( it + 5 ) == n_estimators ) :
+            if bar and not self.silent and ( it < 5  or ( it + 1 ) % 50 == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
                 wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 3, with_sign = False, strip = True )
                 wmax        = nice_print ( float ( ratios_curr.max () ) , precision = 3, with_sign = False, strip = True )
                 ne0         = nice_print ( float ( neff0              ) , precision = 3, with_sign = False, strip = True )
                 ne          = nice_print ( float ( neff               ) , precision = 3, with_sign = False, strip = True )
+
+                dt = ( time.time () - t_start ) / ( it +1 )
+                message  = f"Iteration {it+1:4d}/{n_estimators:-4d} | min/max: {wmin}/{wmax} | nEff: {ne0} {S.arrow_right} {ne} | Time/tree: {dt:.2f}" 
+                bar     += message
                 
-                logger.info ( f"Iteration {it+1:4d}/{n_estimators:4d} | min/max: {wmin}/{wmax} | nEff: {ne0} {S.arrow_right} {ne}" )
-                
-                        
             models.append ( model )
             
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
         final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
 
         return models, final_ratios
-
-    ## @brief Predict single model ratios with per-fold baseline scale calibration.
-    def _predict_single_model ( self, models, X ) :
-        """ Predict probabilities for fold evaluation with per-fold scale calibration. """
-        ratios = self._predict_iterative_stream ( models, X )
-        
-        # Per-fold scale calibration: balance OOF baseline mean to 1.0
-        mean_r = numpy.mean ( ratios )
-        if 0 < mean_r : ratios = ratios / mean_r
-            
-        p = ratios / ( 1.0 + ratios )
-        return p.astype ( numpy.float32, copy = False )
 
     ## @brief Predict ratios directly using iterative XGBoost stream in log-space.
     def _predict_iterative_stream ( self, models, X ) :
@@ -390,12 +380,18 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         for model in models :
             margin      = model.predict ( dmat, output_margin = True )
             margin      = numpy.clip ( margin, -10.0, 10.0 )
-            step_log_alpha = getattr ( model, 'log_alpha', 0.0 )
-            log_ratios += margin * learning_rate + step_log_alpha
+            # Accumulate margins strictly with learning rate without redundant log_alpha scaling
+            log_ratios += margin * learning_rate
             
-        return numpy.exp ( numpy.clip ( log_ratios, -15.0, 15.0 ) )
+        ratios = numpy.exp ( numpy.clip ( log_ratios, -15.0, 15.0 ) )
+        
+        # Ensure local mean response equals 1.0 prior to global post-processing
+        mean_r = numpy.mean ( ratios )
+        if 0 < mean_r : ratios /= mean_r
+            
+        return ratios
 
-   
+    
 # =============================================================================
 ## @class CatBoostIterativeReweighter
 #  Iterative weight boosting density reweighter using CatBoost.

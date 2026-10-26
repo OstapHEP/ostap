@@ -17,7 +17,7 @@ __all__     = (
     'IterativeReweighter'      , # Base class for iterative reweighters
 ) 
 # =============================================================================
-from   ostap.core.ostap_types   import num_types 
+from   ostap.core.ostap_types   import num_types, string_types  
 from   ostap.utils.core         import typename
 from   ostap.utils.basic        import num_jobs
 from   ostap.logger.pretty      import nice_print 
@@ -29,9 +29,10 @@ from   ostap.stats.utils        import ( valid_weight       ,
                                          compatible_weights , 
                                          num_features       ,
                                          check_all          ,
-                                         nEff               )
+                                         nEff               ,
+                                         truncated_mean     )
 import ostap.logger.symbols   as     S
-import numpy, abc 
+import numpy, abc, re  
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.base_reweighters' )
@@ -41,32 +42,63 @@ else                       : logger = getLogger ( __name__ )
 #  @brief Encapsulates fold prediction aggregation (voting) strategies.
 #  @details Acts as a callable strategy pattern object that reduces a stacked fold 
 #           predictions matrix of shape (N_folds, N_samples) into an aggregated array 
-#           of shape (N_samples,) using predefined statistical reduction rules or custom callables.
-#  @param strategy Aggregation strategy name ('arithmetic', 'mean', 'median', 'geometric') 
-#                  or a custom callable expecting `(array, axis)`.
-class Voting ( object ) : 
+#           of shape (N_samples,) using predefined statistical reduction rules or custom callables,
+#           including arithmetic, geometric, median, and truncated mean aggregation.
+class Voting ( object ) :
     """ Encapsulates fold prediction aggregation (voting) strategies. """
-    def __init__ ( self , strategy = 'geometric' ) :
+    def __init__ ( self, strategy = 'geometric' ) :
+        """ Initialize voting strategy.
+            @param strategy Aggregation strategy name (e.g. 'arithmetic', 'mean', 'median', 'geometric', 
+                            'trim:1', 'truncated = 2') or a custom callable expecting `(array, axis)`.
+        """
+        # Default trim count if not specified explicitly
+        self.__trim_low  = 1
+        self.__trim_high = None
         
         if callable ( strategy ) :
             
             self.__func = strategy
             self.__name = getattr ( strategy, '__name__', 'custom' )
             
-        elif isinstance ( strategy, str ) :
-            v_str = strategy.lower ()
-            if   v_str in ( 'arithmetic', 'mean' ) : self.__func = numpy.mean
-            elif v_str == 'median'                 : self.__func = numpy.median
-            elif v_str == 'geometric' :
-                # Compute geometric mean across fold predictions in log-space to prevent numerical underflow
-                self.__func = lambda x, axis=0 : numpy.exp ( 
-                    numpy.mean ( numpy.log ( numpy.clip ( x, 1e-12, 1e+12 ) ) , axis = axis ) 
-                )
-            else :
-                raise ValueError ( "Invalid `voting` string strategy: %s" % strategy )
-            self.__name = v_str
-        else :
+            return
+
+        if not isinstance ( strategy , string_types ) :
             raise TypeError ( "Invalid `voting` type: %s" % type ( strategy ) )
+    
+        
+        v_lower = strategy.lower ().strip ()
+        
+        if   v_lower in ( 'arithmetic', 'mean' ) : 
+            self.__func = numpy.mean
+            self.__name = v_lower
+        elif v_lower == 'median' : 
+            self.__func = numpy.median
+            self.__name = v_lower
+        elif v_lower == 'geometric' :
+            # Compute geometric mean across fold predictions in log-space to prevent numerical underflow
+            self.__func = lambda x, axis=0 : numpy.exp ( 
+                numpy.mean ( numpy.log ( numpy.clip ( x, 1e-12, 1e+12 ) ) , axis = axis ) 
+            )
+            self.__name = v_lower
+                    
+        else :
+            
+            # Match pattern: optional spaces, trim or truncate(d), optional spaces, optional (: or =), digit
+            match = re.match ( r'^\s*(trim|truncate|truncated)\s*(?:([:=])\s*(\d+))?\s*$', strategy, re.IGNORECASE )
+            if not match : raise ValueError ( f"Invalid `voting` strategy string: {strategy}" )
+            
+            digit_str = match.group ( 3 )
+            if digit_str is not None :
+                try :
+                    self.__trim_low = int ( digit_str )
+                except ValueError :
+                    raise ValueError ( f"Invalid trim value in voting strategy string: {strategy}" )
+                
+                # Bind the standalone truncated_mean function
+                self.__func = lambda x, axis = 0 : truncated_mean ( 
+                    x, axis = axis, trim_low = self.__trim_low, trim_high = self.__trim_high 
+                )
+                self.__name = v_lower
 
     ## @property name
     #  @brief String identifier of the configured voting strategy.
@@ -95,8 +127,8 @@ class Voting ( object ) :
 #           aggregated via the configured `Voting` strategy.
 class DensityReweighter ( Reweighter, abc.ABC ) :
     """ Abstract base class for immutable, adaptive density-ratio reweighting. """
-    
-    ## @brief Initialize and fit the density ratio reweighter ensemble.
+
+## @brief Initialize and fit the density ratio reweighter ensemble.
     #  @param original Source feature matrix.
     #  @param target Target feature matrix.
     #  @param original_weight Source observation weights (supports signed weights).
@@ -104,6 +136,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     #  @param clip_threshold Upper threshold for clipping extreme density ratios.
     #  @param n_splits Number of cross-validation splits (K-Fold).
     #  @param voting Aggregation strategy for combining fold models during prediction.
+    #  @param oof_mode Flag controlling initial evaluation strategy: 
+    #                  True  - strict Out-Of-Fold evaluation (each sample evaluated by its validation fold model);
+    #                  False - training-ensemble smoothing (each sample averaged over all N-1 models where it was in train set).
     #  @param store_original_weights Flag to retain fitted original ratio arrays.
     #  @param progress Enable progress bar display during fold fitting.
     #  @param params Additional parameters passed to the parent class.
@@ -114,7 +149,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                    target_weight          = None         ,
                    clip_threshold         = 1.e+4        ,
                    n_splits               = 5            ,
-                   voting                 = 'geometric'  , 
+                   voting                 = 'arithmetic' , 
+                   oof_mode               = True         , 
                    store_original_weights = False        ,
                    progress               = True         , **params ) :
         """ Initialize and fit the density ratio reweighter ensemble. """
@@ -136,6 +172,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__clip_threshold      = float ( clip_threshold )
         self.__n_splits            = n_splits
         self.__voting              = Voting ( voting ) 
+        self.__oof_mode            = True if oof_mode else False
         
         # Public attributes for clean and direct access in subclasses
         self.fitted_models         = {}
@@ -172,47 +209,82 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                 ),
             )
         )
-
+        
+        neff_before = nEff       ( original    , original_weight             )
+        neff_after  = nEff       ( original    , original_reweighted_weights )
+        n1          = nice_print ( neff_before , precision = 3 , with_sign = False , strip = True )
+        n2          = nice_print ( neff_after  , precision = 3 , with_sign = False , strip = True )
+        
+        has_problem = False
+        
         # Validate numeric sanity of computed original ratios and effective statistics
-        if original_ratios is not None and 0 < len ( original_ratios ) : 
-            if not numpy.all ( numpy.isfinite ( original_ratios ) ) :
-                logger.error ( "%s: NaN/Inf found in original_ratios"     % typename ( self ) )
-            if numpy.any ( original_ratios < 0 ):
-                logger.error ( "%s: Negative values found for ratio r(x)" % typename ( self ) )
+        if original_ratios is not None and 0 < len ( original_ratios ) :
+            
+            if not numpy.all ( numpy.isfinite ( original_ratios ) ) : logger.error ( "%s: NaN/Inf found in original_ratios"     % typename ( self ) )
+            if numpy.any ( original_ratios < 0 )                    : logger.error ( "%s: Negative values found for ratio r(x)" % typename ( self ) )
 
             r_min = float ( numpy.min ( original_ratios ) )
             r_max = float ( numpy.max ( original_ratios ) )
             r_std = float ( numpy.std ( original_ratios ) )
 
             if numpy.isclose ( r_min, r_max, atol = 1e-5 ) or r_std < 1e-6 :
-                r1 = nice_print ( r_min )
-                r2 = nice_print ( r_std ) 
+                r1 = nice_print ( r_min , precision = 4 , with_sign = False , strip = True )
+                r2 = nice_print ( r_std , precision = 4 , with_sign = False , strip = True )
                 logger.warning ( "%s: All ratios are constant r(x) = %s (std=%s)" % ( self.method , r1 , r2 ) ) 
                 
-            neff_before = nEff ( original , original_weight             )
             neff_after  = nEff ( original , original_reweighted_weights )
-            
             if neff_after < 0.10 * neff_before :
-                n1 = nice_print ( neff_before )
-                n2 = nice_print ( neff_after  )                
                 logger.warning ( "%s: Large degradation of nEff %s %s %s" % ( self.method , n1 , S.arrow_right , n2 ) ) 
 
             clipped_count = numpy.sum ( original_ratios >= ( self.__clip_threshold * 0.99 ) )
             if 0 < clipped_count : 
                 frac = 100.0 * clipped_count / len ( original_ratios ) 
                 if 1 < frac : logger.warning ( "%s: Too many clipped events %.1f[%%]" % ( self.method , frac ) )
-                                 
+
+
+        ## get statistics of ratios&weights
         cnt1 = SE ()
         cnt2 = SE ()
         for r in original_ratios             : cnt1.add ( r )
         for w in original_reweighted_weights : cnt2.add ( w )
-        
+
+        if 1 < self.n_splits :
+            
+            averaged_reweighted_ratios  = self.weights ( original )
+            averaged_reweighted_weights = averaged_reweighted_ratios if original_weight is None else averaged_reweighted_ratios * original_weight
+            
+        else :
+            
+            averaged_reweighted_ratios  = None 
+            averaged_reweighted_weights = None 
+
+        if not averaged_reweighted_ratios  is None and not averaged_reweighted_weights is None :
+            
+            cnt3 = SE ()
+            cnt4 = SE ()
+            for r in averaged_reweighted_ratios  : cnt3.add ( r )
+            for w in averaged_reweighted_weights : cnt4.add ( w )
+
+            neff_fold  = nEff       ( original  , averaged_reweighted_weights )
+            n2_fold    = nice_print ( neff_fold , precision = 3 , with_sign = False , strip = True )
+                        
+            
+            counters = { 'Ratios/OOF'                        : cnt1 , 
+                         'Weights/OOF'                       : cnt2 , 
+                         'Ratios/%d-FOLD'  % self.n_splits   : cnt3 ,
+                         'Weights/%s-FOLD' % self.n_splits   : cnt4 }            
+            
+            title    = '%s Weights nEff: %s %s {OOF:%s & %d-FOLD:%s}' % ( self.method , n1 , S.arrow_right , n2 , self.n_splits , n2_fold )
+
+        else :
+            
+            counters = { 'Ratios'     : cnt1 , 'Weights' : cnt2 }
+            title    = '%s Weights nEff: %s %s %s' % ( self.method , n1 , S.arrow_right , n2 )
+
         if not self.silent :
-            counters = { 'Ratios' : cnt1 , 'Weights' : cnt2 }
-            title    = '%s weight info' % self.method 
             table    = table_counters ( counters , prefix = '# ' , title = title )
             logger.info ( '%s:\n%s' % ( title , table ) )  
-                                                
+            
         if store_original_weights :
             self.__original_ratios             = original_ratios
             self.__original_reweighted_weights = original_reweighted_weights
@@ -229,7 +301,14 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     @property 
     def voting ( self ) :
         """ `voting`: Configured voting strategy helper instance. """
-        return self.__voting 
+        return self.__voting
+    
+    ## @property oof_mode 
+    #  @brief OOF-mode
+    @property 
+    def oof_mode( self ) :
+        """ `oof_mode`: OOF-mode"""
+        return self.__oof_mode 
     
     ## @property original_ratios
     #  @brief Out-of-fold ratios for training original dataset.
@@ -278,8 +357,10 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         conf [ "clip_threshold"  ]             = self.__clip_threshold
         conf [ "voting"          ]             = self.__voting.name 
         conf [ "n_splits"        ]             = self.__n_splits
+        conf [ "oof_mode"        ]             = self.__oof_mode
         conf [ "original_ratios" ]             = self.__original_ratios             is not None
         conf [ "original_reweighted_weights" ] = self.__original_reweighted_weights is not None
+        
         return conf
 
     ## @brief Abstract method to train a single backend estimator on fold data.
@@ -430,49 +511,59 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         original_ratios[ nz_orig_mask ] = ratios_valid_norm
         original_reweighted_weights     = w_orig * original_ratios
 
+
+        # --- DEBUG PRINTS ---
+        print("DEBUG __fit_and_compute:")
+        print("  len(w_orig):", len(w_orig))
+        print("  len(nz_orig_mask):", len(nz_orig_mask), "True count:", numpy.sum(nz_orig_mask))
+        print("  len(ratios_valid):", len(ratios_valid))
+        print("  len(ratios_valid_norm):", len(ratios_valid_norm))
+        print("  ratios_valid_norm min/max:", numpy.min(ratios_valid_norm), numpy.max(ratios_valid_norm))
+        print("  original_ratios min/max:", numpy.min(original_ratios), numpy.max(original_ratios))
+        print("----------------------")
+        
         return original_ratios, original_reweighted_weights
 
-    ## @brief Execute K-Fold cross-validation for a specific non-negative stream.
-    #  @details Trains N models on (N-1)/N partitions. Accumulates Out-Of-Fold (OOF) 
-    #           predictions for the original source samples to evaluate closed-loop ratio estimates 
-    #           unbiased by training fold data.
+## @brief Execute K-Fold cross-validation for a specific non-negative stream.
+    #  @details Supports two evaluation modes depending on `oof_mode`:
+    #           - Strict OOF (`oof_mode=True`): Each sample gets a prediction strictly from its single 
+    #             validation fold model. Pure methodology, but prone to variance spikes on sparse distribution tails.
+    #           - Training Ensemble (`oof_mode=False`): Each sample is evaluated by averaging across all 
+    #             N-1 models for which it served as a training instance, bypassing single-model tail extrapolation spikes.
     #  @param stream_key Identifier for the stream (e.g. 'orig_pos').
     #  @param X_orig_sub Original feature subset.
     #  @param w_orig_sub Original weight subset.
     #  @param X_targ_sub Target feature subset.
     #  @param w_targ_sub Target weight subset.
-    #  @return Array of OOF predicted ratios.
+    #  @return Array of predicted density ratios.
     def _fit_eval_stream ( self       ,
                            stream_key ,
                            X_orig_sub ,
                            w_orig_sub ,
                            X_targ_sub ,
                            w_targ_sub ) :
-        """ Execute K-Fold cross-validation for a specific non-negative stream. """
-        
+        """ Execute K-Fold cross-validation with switchable OOF / training-ensemble mode. """
+
+        # Combine original and target feature matrices into a unified cross-validation dataset
         X_comb = numpy.vstack ( [ X_orig_sub, X_targ_sub ] )
         y_comb = numpy.hstack ( [ numpy.zeros ( len ( X_orig_sub ) , dtype = numpy.float32 ) ,
                                   numpy.ones  ( len ( X_targ_sub ) , dtype = numpy.float32 ) ] )
 
-        if w_orig_sub is None and w_targ_sub is None :
-            scale_factor         = numpy.float32 ( len ( X_targ_sub ) / len ( X_orig_sub ) )
-            w_orig_scaled_for_tr = numpy.full ( len ( X_orig_sub ), scale_factor, dtype = numpy.float32 )
-            w_comb               = numpy.hstack ( [ w_orig_scaled_for_tr, numpy.ones ( len ( X_targ_sub ), dtype = numpy.float32 ) ] )
-        else :
-            w_orig_abs = numpy.abs ( w_orig_sub ) if w_orig_sub is not None else numpy.ones ( len ( X_orig_sub ), dtype = numpy.float32 )
-            w_targ_abs = numpy.abs ( w_targ_sub ) if w_targ_sub is not None else numpy.ones ( len ( X_targ_sub ), dtype = numpy.float32 )
-            
-            sum_w_orig = numpy.sum ( w_orig_abs )
-            sum_w_targ = numpy.sum ( w_targ_abs )
-            
-            scale_factor = ( sum_w_targ / sum_w_orig ) if sum_w_orig > 0 else numpy.float32 ( 1.0 )
-            
-            w_orig_scaled = w_orig_abs * scale_factor
-            w_comb        = numpy.hstack ( [ w_orig_scaled , w_targ_abs ] )
-            w_comb        = w_comb * ( len ( X_comb ) / ( numpy.sum ( w_comb ) + 1e-12 ) )
+        w_orig_abs = numpy.abs ( w_orig_sub ) if w_orig_sub is not None else numpy.ones ( len ( X_orig_sub ), dtype = numpy.float32 )
+        w_targ_abs = numpy.abs ( w_targ_sub ) if w_targ_sub is not None else numpy.ones ( len ( X_targ_sub ), dtype = numpy.float32 )
+        
+        sum_w_orig = numpy.sum ( w_orig_abs, dtype = numpy.float64 )
+        sum_w_targ = numpy.sum ( w_targ_abs, dtype = numpy.float64 )
+        
+        # Scale factor aligning total target mass with total original mass
+        scale_factor = ( sum_w_targ / ( sum_w_orig + 1e-12 ) ) if sum_w_orig > 0 else numpy.float32 ( 1.0 )
+        w_orig_scaled = w_orig_abs * scale_factor
+        
+        w_comb_base     = numpy.hstack ( [ w_orig_scaled, w_targ_abs ] )
+        total_len       = len ( X_orig_sub ) + len ( X_targ_sub )
+        global_comb_sum = numpy.sum ( w_comb_base, dtype = numpy.float64 )
+        w_comb_global   = w_comb_base * ( total_len / ( global_comb_sum + 1e-12 ) )
                         
-        oof_raw = numpy.zeros ( len ( X_comb ), dtype = numpy.float32 )
-
         if 1 < self.n_splits :
             from sklearn.model_selection import StratifiedKFold
             skf     = StratifiedKFold ( n_splits     = self.n_splits     , 
@@ -485,41 +576,97 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             splits  = [ ( indices , indices ) ]
             n_folds = 1
 
-        stream_models = []
+        stream_models   = []
+        fold_preds_list = []
+        n_samples       = len ( X_orig_sub )
+        ratios          = numpy.ones ( n_samples, dtype = numpy.float32 )
 
-        for train_idx, fold_idx in progress_bar ( splits      ,
-                                                  max_value   = n_folds           ,
-                                                  description = 'Folds:'          , 
-                                                  silent      = not self.progress ) :
-            
-            X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
-            w_tr       = w_comb [ train_idx ] if w_comb is not None else None
-            
-            # Train model M_k strictly on (N-1)/N fold data
-            model = self._train_single_model ( X_tr, y_tr, w_tr )
-            stream_models.append ( model )
+        if self.__oof_mode :
+            # --- MODE 1: Strict Out-Of-Fold (OOF) Evaluation ---
+            # Each original sample is evaluated exclusively by the fold model where it was part of the validation set.
+            for train_idx, valid_idx in progress_bar ( splits      ,
+                                                       max_value   = n_folds           ,
+                                                       description = 'Folds (OOF):'    , 
+                                                       silent      = not self.progress ) :
+                X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
+                w_tr       = w_comb_global [ train_idx ] if w_comb_global is not None else None
+                
+                model = self._train_single_model ( X_tr, y_tr, w_tr )
+                stream_models.append ( model )
 
-            # Model M_k predicts ratios for its respective un-trained fold_idx
-            orig_in_fold_mask = fold_idx < len ( X_orig_sub )
-            orig_in_fold_idx  = fold_idx [ orig_in_fold_mask ]
+                orig_mask = valid_idx < n_samples
+                if not numpy.any ( orig_mask ) : continue
+                    
+                orig_indices_global = valid_idx [ orig_mask ]
+                orig_indices_local  = orig_indices_global
 
-            if 0 < len ( orig_in_fold_idx ) :
-                X_fold    = X_comb [ orig_in_fold_idx ]
-                raw_p     = self._predict_single_model ( model, X_fold )
+                X_val_fold = X_comb [ orig_indices_global ]
+                raw_p      = self._predict_single_model ( model, X_val_fold )
                 if 1 < raw_p.ndim : raw_p = raw_p [ :, 1 ]
-                oof_raw [ orig_in_fold_idx ] = raw_p.astype ( numpy.float32, copy = False )
+                
+                eps         = numpy.finfo ( numpy.float32 ).eps 
+                p_clipped   = numpy.clip ( raw_p, eps, numpy.float32 ( 1.0 ) - eps )
+                fold_ratios = p_clipped / ( numpy.float32 ( 1.0 ) - p_clipped )
+                
+                ratios [ orig_indices_local ] = fold_ratios.astype ( numpy.float32, copy = False )
+        else :
+            # --- MODE 2: Training-Ensemble Averaging (Cheating / Stabilized Mode) ---
+            # Each sample's ratio is averaged across all N-1 models for which it served as a training point.
+            for train_idx, valid_idx in progress_bar ( splits      ,
+                                                       max_value   = n_folds           ,
+                                                       description = 'Folds (Train Ens):', 
+                                                       silent      = not self.progress ) :
+                X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
+                w_tr       = w_comb_global [ train_idx ] if w_comb_global is not None else None
+                
+                model = self._train_single_model ( X_tr, y_tr, w_tr )
+                stream_models.append ( model )
 
+                # Predict on the entire original subset using the current fold model
+                raw_p = self._predict_single_model ( model, X_orig_sub )
+                if 1 < raw_p.ndim : raw_p = raw_p [ :, 1 ]
+                
+                eps         = numpy.finfo ( numpy.float32 ).eps 
+                p_clipped   = numpy.clip ( raw_p, eps, numpy.float32 ( 1.0 ) - eps )
+                fold_ratios = p_clipped / ( numpy.float32 ( 1.0 ) - p_clipped )
+                fold_preds_list.append ( fold_ratios )
+
+            if 1 < n_folds :
+                all_fold_ratios = numpy.vstack ( fold_preds_list )
+                
+                # Build mask identifying where each model was validation (to exclude it)
+                valid_mask_per_fold = numpy.zeros ( ( n_folds, n_samples ), dtype = bool )
+                for fold_idx, (train_idx, valid_idx) in enumerate ( splits ) :
+                    orig_mask = valid_idx < n_samples
+                    if numpy.any ( orig_mask ) :
+                        valid_mask_per_fold [ fold_idx, valid_idx [ orig_mask ] ] = True
+                
+                # Invert mask to keep only models where the sample was part of the training set
+                train_mask_per_fold = ~valid_mask_per_fold
+                sum_ratios   = numpy.zeros ( n_samples, dtype = numpy.float32 )
+                count_models = numpy.zeros ( n_samples, dtype = numpy.int32 )
+                
+                for fold_idx in range ( n_folds ) :
+                    mask = train_mask_per_fold [ fold_idx ]
+                    sum_ratios [ mask ]   += all_fold_ratios [ fold_idx, mask ]
+                    count_models [ mask ] += 1
+                    
+                count_models = numpy.maximum ( count_models, 1 )
+                ratios       = sum_ratios / count_models
+            else :
+                ratios = fold_preds_list [ 0 ]
+
+        # Save fitted state attributes for subsequent inference/evaluation
         self.fitted_models [ stream_key ] = stream_models 
         self.scale_factors [ stream_key ] = scale_factor
         self.priors        [ stream_key ] = numpy.float32 ( 1.0 )
-
-        p_orig = oof_raw[ : len ( X_orig_sub ) ]
         
-        eps            = numpy.finfo ( numpy.float32 ).eps 
-        p_orig_clipped = numpy.clip ( p_orig, eps , numpy.float32 ( 1.0 ) - eps )
-        ratios         = p_orig_clipped / ( numpy.float32 ( 1.0 ) - p_orig_clipped )
+        # Global post-processing & normalization of the ratios array
+        mean_ratio = numpy.mean ( ratios, dtype = numpy.float64 )
+        if 0 < mean_ratio > 0 : ratios = ratios / numpy.float32 ( mean_ratio )
         
         return ratios
+
 
     ## @brief Extract density ratios r(x) from a single fold's model.
     #  @details Acts as a polymorphic bridge for converting raw probability outputs 
@@ -594,6 +741,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                   original               ,
                   original_weight = None ) :
         """ Evaluate reweighting factors for unseen source feature samples. """
+        
         X_new_f32 = original.astype ( numpy.float32, copy = False )
 
         if not valid_data_shape   ( X_new_f32                   ) : raise TypeError ( "Invalid `original` type/shape: %s" % typename ( original ) )
