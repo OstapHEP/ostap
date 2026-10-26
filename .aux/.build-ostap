@@ -478,6 +478,10 @@ if command -v pip >/dev/null 2>&1; then
     python -m pip list --user
 fi
 
+if command -v check-dependencies  >/dev/null 2>&1; then
+    check-dependencies
+fi
+
 OSTAP_BUILDER="${make_command}"
 printf "%s PROJECT BUILDER : %s\n" "${prefix1}" "${OSTAP_BUILDER}"
 printf "%s ROOTSYS         : %s\n" "${prefix1}" "${ROOTSYS}"
