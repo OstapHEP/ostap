@@ -23,7 +23,8 @@ from   ostap.utils.core       import typename
 from   ostap.core.ostap_types import dictlike_types 
 from   ostap.stats.utils      import weight_trivial, num_samples, num_features, check_all , nEff   
 from   ostap.utils.config     import Config
-from   ostap.logger.pretty    import nice_print 
+from   ostap.logger.pretty    import nice_print
+from   ostap.stats.counters   import SE, table_counters  
 from   itertools              import zip_longest 
 import numpy, abc 
 # =============================================================================
@@ -192,7 +193,53 @@ class Reweighter(abc.ABC,Config) :
             """
         return self.weights ( original , original_weight )
      
-    
+    # =========================================================================
+    ## Helper method to produce summary table of weighs
+    def weight_summary ( self            ,
+                         original        ,
+                         original_weight = None ,
+                         final_weight    = None ) :
+        """ Helper method to produce summary table of weights
+        """
+        
+        neff_before = nEff ( original , original_weight )        
+        neff_after  = nEff ( original  , final_weight   )
+        
+        wcnt = SE ()
+        if not final_weight is None : 
+            for w in final_weight : wcnt.add ( w )
+        else :
+            wcnt = SE ( num_samples ( origin ) , 1 , 0 , 1 , 1 ) 
+        
+        counters = { '%s weights' % typename ( self ) : wcnt }
+            
+        nb    = nice_print ( neff_before , precision = 2 , with_sign = False , strip = True )
+        na    = nice_print ( neff_after  , precision = 2 , with_sign = False , strip = True )
+        
+        from ostap.logger.symbols import arrow_right 
+        title = '%s weights: #eff %s %s %s' % ( typename ( self ) , nb , arrow_right , na )
+        
+        table = table_counters ( counters , prefix = '# ' , title = title )
+        logger.info ( '%s:\n%s' % ( title , table ) )  
+
+    # =========================================================================
+    ## Helper method for normalization of fonal weigght: ``preserve the mass''
+    def preserve_mass ( slef, 
+                        original        ,
+                        original_weight ,
+                        final_weight    ) :
+        """ Helper method for normalization of the final weigght: ``preserve the mass''
+        """
+        ## number of samples
+        ## (1) sum of original weights 
+        sumw          = num_samples ( original ) if weight_trivial ( original_weight ) else numpy.sum ( original_weight )
+        
+        ## (2) scale the finale weight to the same sum: "preserve the mass"
+        sumf          = num_samples ( original ) if weight_trivial ( final_weight    ) else numpy.sum ( final_weight    )
+        final_weight *= sumw / sumf 
+        
+        return final_weight 
+            
 # =============================================================================
 ## @class CascadeReweighter
 #  Cascade density reweighter supporting heterogeneous estimators with smart padding.

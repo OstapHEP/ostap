@@ -128,7 +128,7 @@ class Voting ( object ) :
 class DensityReweighter ( Reweighter, abc.ABC ) :
     """ Abstract base class for immutable, adaptive density-ratio reweighting. """
 
-## @brief Initialize and fit the density ratio reweighter ensemble.
+    ## @brief Initialize and fit the density ratio reweighter ensemble.
     #  @param original Source feature matrix.
     #  @param target Target feature matrix.
     #  @param original_weight Source observation weights (supports signed weights).
@@ -184,110 +184,52 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         
         params [ 'n_jobs' ]        = num_jobs ( params )
                 
-        self.__original_ratios             = None
         self.__original_reweighted_weights = None
 
         super ().__init__ ( original        = original        ,
                             target          = target          , 
                             original_weight = original_weight ,
                             target_weight   = target_weight   , **params )
-        
+
         # Execute immediate fitting across positive streams and compute OOF initial weights
-        original_ratios, original_reweighted_weights = (
-            self.__fit_and_compute (
-                original.astype ( numpy.float32 , copy = False ),
-                (
-                    original_weight.astype ( numpy.float32, copy = False )
-                    if original_weight is not None
-                    else None
-                ),
-                target.astype   ( numpy.float32 , copy = False ),
-                (
-                    target_weight.astype  ( numpy.float32, copy = False )
-                    if target_weight is not None
-                    else None
-                ),
-            )
-        )
-        
-        neff_before = nEff       ( original    , original_weight             )
-        neff_after  = nEff       ( original    , original_reweighted_weights )
-        n1          = nice_print ( neff_before , precision = 3 , with_sign = False , strip = True )
-        n2          = nice_print ( neff_after  , precision = 3 , with_sign = False , strip = True )
-        
-        has_problem = False
-        
-        # Validate numeric sanity of computed original ratios and effective statistics
-        if original_ratios is not None and 0 < len ( original_ratios ) :
-            
-            if not numpy.all ( numpy.isfinite ( original_ratios ) ) : logger.error ( "%s: NaN/Inf found in original_ratios"     % typename ( self ) )
-            if numpy.any ( original_ratios < 0 )                    : logger.error ( "%s: Negative values found for ratio r(x)" % typename ( self ) )
-
-            r_min = float ( numpy.min ( original_ratios ) )
-            r_max = float ( numpy.max ( original_ratios ) )
-            r_std = float ( numpy.std ( original_ratios ) )
-
-            if numpy.isclose ( r_min, r_max, atol = 1e-5 ) or r_std < 1e-6 :
-                r1 = nice_print ( r_min , precision = 4 , with_sign = False , strip = True )
-                r2 = nice_print ( r_std , precision = 4 , with_sign = False , strip = True )
-                logger.warning ( "%s: All ratios are constant r(x) = %s (std=%s)" % ( self.method , r1 , r2 ) ) 
+        original_ratios, final_weight =  self.__fit_and_compute (
+            original.astype        ( numpy.float32 , copy = False ) ,
+            original_weight.astype ( numpy.float32 , copy = False ) if original_weight is not None else None , 
+            target.astype          ( numpy.float32 , copy = False ) ,
+            target_weight.astype   ( numpy.float32 , copy = False ) if target_weight   is not None  else None )
                 
-            neff_after  = nEff ( original , original_reweighted_weights )
-            if neff_after < 0.10 * neff_before :
-                logger.warning ( "%s: Large degradation of nEff %s %s %s" % ( self.method , n1 , S.arrow_right , n2 ) ) 
+        ## final weights 
+        final_weight  = self.preserve_mass ( original , original_weight , final_weight ) 
 
-            clipped_count = numpy.sum ( original_ratios >= ( self.__clip_threshold * 0.99 ) )
-            if 0 < clipped_count : 
-                frac = 100.0 * clipped_count / len ( original_ratios ) 
-                if 1 < frac : logger.warning ( "%s: Too many clipped events %.1f[%%]" % ( self.method , frac ) )
+        if not numpy.all ( numpy.isfinite ( original_ratios ) ) : logger.error ( "%s: NaN/Inf found in original_ratios" % typename ( self ) )
+        if not numpy.all ( numpy.isfinite ( final_weight    ) ) : logger.error ( "%s: NaN/Inf found in final_weight"    % typename ( self ) )
+        
+        r_min = float ( numpy.min ( original_ratios ) )
+        r_max = float ( numpy.max ( original_ratios ) )
+        r_std = float ( numpy.std ( original_ratios ) )
+        
+        if numpy.isclose ( r_min, r_max, atol = 1e-5 ) or r_std < 1e-6 :
+            r1 = nice_print ( r_min , precision = 4 , with_sign = False , strip = True )
+            r2 = nice_print ( r_std , precision = 4 , with_sign = False , strip = True )
+            logger.warning ( "%s: All ratios are constant r(x) = %s (std=%s)" % ( self.method , r1 , r2 ) ) 
+            
+        neff_before = nEff ( original , original_weight )
+        neff_after  = nEff ( original , final_weight    )
+        if neff_after < 0.10 * neff_before : logger.warning ( "%s: Huge degradation of #eff %s %s %s" % ( self.method , n1 , S.arrow_right , n2 ) ) 
+            
+        clipped_count = numpy.sum ( original_ratios >= ( self.__clip_threshold * 0.999 ) )
+        if 0 < clipped_count : 
+            frac = 100.0 * clipped_count / len ( original_ratios ) 
+            if 1 < frac : logger.warning ( "%s: Too many clipped events %.2f[%%]" % ( self.method , frac ) )
 
-
-        ## get statistics of ratios&weights
-        cnt1 = SE ()
-        cnt2 = SE ()
-        for r in original_ratios             : cnt1.add ( r )
-        for w in original_reweighted_weights : cnt2.add ( w )
-
-        if 1 < self.n_splits :
-            
-            averaged_reweighted_ratios  = self.weights ( original )
-            averaged_reweighted_weights = averaged_reweighted_ratios if original_weight is None else averaged_reweighted_ratios * original_weight
-            
-        else :
-            
-            averaged_reweighted_ratios  = None 
-            averaged_reweighted_weights = None 
-
-        if not averaged_reweighted_ratios  is None and not averaged_reweighted_weights is None :
-            
-            cnt3 = SE ()
-            cnt4 = SE ()
-            for r in averaged_reweighted_ratios  : cnt3.add ( r )
-            for w in averaged_reweighted_weights : cnt4.add ( w )
-
-            neff_fold  = nEff       ( original  , averaged_reweighted_weights )
-            n2_fold    = nice_print ( neff_fold , precision = 3 , with_sign = False , strip = True )
-                        
-            
-            counters = { 'Ratios/OOF'                        : cnt1 , 
-                         'Weights/OOF'                       : cnt2 , 
-                         'Ratios/%d-FOLD'  % self.n_splits   : cnt3 ,
-                         'Weights/%s-FOLD' % self.n_splits   : cnt4 }            
-            
-            title    = '%s Weights nEff: %s %s {OOF:%s & %d-FOLD:%s}' % ( self.method , n1 , S.arrow_right , n2 , self.n_splits , n2_fold )
-
-        else :
-            
-            counters = { 'Ratios'     : cnt1 , 'Weights' : cnt2 }
-            title    = '%s Weights nEff: %s %s %s' % ( self.method , n1 , S.arrow_right , n2 )
-
-        if not self.silent :
-            table    = table_counters ( counters , prefix = '# ' , title = title )
-            logger.info ( '%s:\n%s' % ( title , table ) )  
-            
-        if store_original_weights :
-            self.__original_ratios             = original_ratios
-            self.__original_reweighted_weights = original_reweighted_weights
+        if store_original_weights : 
+            self.__original_ratios             = original_ratios 
+            self.__original_reweighted_weights = final_weight 
+        
+        ## As a last step: produce summary of weights 
+        if self.verbose : self.weight_summary ( original        ,
+                                                original_weight ,
+                                                final_weight    ) 
 
     ## @property n_splits
     #  @brief Number of cross-validation folds.
@@ -358,7 +300,6 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         conf [ "voting"          ]             = self.__voting.name 
         conf [ "n_splits"        ]             = self.__n_splits
         conf [ "oof_mode"        ]             = self.__oof_mode
-        conf [ "original_ratios" ]             = self.__original_ratios             is not None
         conf [ "original_reweighted_weights" ] = self.__original_reweighted_weights is not None
         
         return conf
@@ -524,7 +465,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         
         return original_ratios, original_reweighted_weights
 
-## @brief Execute K-Fold cross-validation for a specific non-negative stream.
+    ## @brief Execute K-Fold cross-validation for a specific non-negative stream.
     #  @details Supports two evaluation modes depending on `oof_mode`:
     #           - Strict OOF (`oof_mode=True`): Each sample gets a prediction strictly from its single 
     #             validation fold model. Pure methodology, but prone to variance spikes on sparse distribution tails.
@@ -750,12 +691,24 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         if self.n_features != num_features ( X_new_f32 )          : raise TypeError ( "Invalid #features!!")
 
         if original_weight is None and self.__mode == "1-stream" :
+            
             ratios  = self._predict_stream_ratios ( "base", X_new_f32 )
             clipped = numpy.clip ( ratios,
                                    numpy.float32 ( 0.0 ) ,
                                    numpy.float32 ( self.__clip_threshold ) )
-            return clipped * self._norm_factor
-
+            
+            result  = clipped * self._norm_factor
+            
+            ## final weights 
+            final_weight  = result 
+            final_weight  = self.preserve_mass ( original , original_weight , final_weight )  
+            
+            ## summary table 
+            if self.verbose : self.weight_summary ( original        ,
+                                                    original_weight ,
+                                                    final_weight    ) 
+            return final_weight
+                    
         w_new_f32 = ( original_weight.astype ( numpy.float32, copy = False )
                       if original_weight is not None
                       else numpy.ones ( len ( original ), dtype = numpy.float32 ) )
@@ -808,6 +761,11 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         final_ratios            = numpy.zeros ( len ( w_new_f32 ), dtype = numpy.float32 )
         final_ratios[ nz_mask ] = self._apply_norm_factor ( clipped ) 
 
+        ## summary table 
+        if self.verbose : self.weight_summary ( original       ,
+                                                orginal_weight ,
+                                                final_ratios   ) 
+        
         return final_ratios if original_weight is None else final_ratios * w_new_f32
 
     ## @brief Apply global normalization factor to clipped ratios.

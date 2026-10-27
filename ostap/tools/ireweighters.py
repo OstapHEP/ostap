@@ -353,13 +353,15 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             if bar and not self.silent and ( it < 5  or ( it + 1 ) % 50 == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
-                wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 3, with_sign = False, strip = True )
-                wmax        = nice_print ( float ( ratios_curr.max () ) , precision = 3, with_sign = False, strip = True )
-                ne0         = nice_print ( float ( neff0              ) , precision = 3, with_sign = False, strip = True )
-                ne          = nice_print ( float ( neff               ) , precision = 3, with_sign = False, strip = True )
+                wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
+                wmax        = nice_print ( float ( ratios_curr.max () ) , precision = 2, with_sign = False, strip = True )
+                ne0         = nice_print ( float ( neff0              ) , precision = 2, with_sign = False, strip = True )
+                ne          = nice_print ( float ( neff               ) , precision = 2, with_sign = False, strip = True )
 
-                dt = ( time.time () - t_start ) / ( it +1 )
-                message  = f"Iteration {it+1:4d}/{n_estimators:-4d} | min/max: {wmin}/{wmax} | nEff: {ne0} {S.arrow_right} {ne} | Time/tree: {dt:.2f}" 
+                dt       = ( time.time () - t_start ) / ( it +1 )
+                if dt < 1 : dt = '%dms'  % ( math.ceil ( 1000 * dt ) )
+                else      : dt = '%.1fs' %                      dt                 
+                message  = f"Iteration {it+1:4d}/{n_estimators:-4d} | min/max: {wmin}/{wmax} | nEff: {ne0} {S.arrow_right} {ne} | Time/tree:{dt}" 
                 bar     += message
                 
             models.append ( model )
@@ -390,7 +392,6 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         if 0 < mean_r : ratios /= mean_r
             
         return ratios
-
     
 # =============================================================================
 ## @class CatBoostIterativeReweighter

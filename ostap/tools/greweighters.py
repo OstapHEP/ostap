@@ -47,9 +47,9 @@ has_sklearn = hasSkLearn()
 # =============================================================================
 method_GBRW  = 'HepML/%s' % ( S.wood       if S.wood        else 'GBRW'     )
 # 
-DEFAULT_ESTIMATORS   =  300  # High capacity: deep ensemble with low learning rate
-MAX_DEPTH            =    6  # Deep tree capacity for high dimensions / large statistics
-LEARNING_RATE        =  0.02 # Small step for stable density ratio convergence
+DEFAULT_ESTIMATORS   =   300 # High capacity: deep ensemble with low learning rate
+MAX_DEPTH            =     6 # Deep tree capacity for high dimensions / large statistics
+LEARNING_RATE        =  0.01 # Small step for stable density ratio convergence
 
 # ==============================================================================
 ## @class GBReweighter
@@ -83,13 +83,16 @@ class GBReweighter(Reweighter) :
         self.__n_splits = n_splits
         
         config = {            
-            "n_estimators"      : DEFAULT_ESTIMATORS , 
-            "learning_rate"     : LEARNING_RATE      ,
-            "max_depth"         : MAX_DEPTH          ,
-            "min_samples_leaf"  : 30                 ,            
-            "gb_args"           : { "subsample"     : 0.90 ,
-                                    "max_features"  : 0.95 }
+            "n_estimators"         : DEFAULT_ESTIMATORS , 
+            "learning_rate"        : LEARNING_RATE      ,
+            "max_depth"            : MAX_DEPTH          ,
+            "min_samples_leaf"     : 30                 ,
+            "loss_regularization"  : 5.0                ,
+            ##
+            "gb_args"              : { "subsample"      : 0.95 ,
+                                    "max_features"   : 0.95 }
         }
+        
         config.update ( params ) 
 
         check_all ( data1   = original          ,
@@ -98,11 +101,19 @@ class GBReweighter(Reweighter) :
                     weight2 = target_weight     ,
                     where   = typename ( self ) )   
 
+        ## for small number of features ignore 'max_features' argument 
         if num_features ( target ) <= 6 :
             gb_args = config.get ( 'gb_args' , {} )
-            gb_args [ 'max_features' ] = 1.00
+            gb_args.pop ( 'max_features' , None ) 
             config  [ 'gb_args'      ] = gb_args 
-            
+
+        ## for small number of samples ignore 'subsample' argument 
+        n_rows = num_samples ( original ) + num_samples ( target ) 
+        if 0 < self.n_splits and n_rows <= 10000 :
+            gb_args = config.get ( 'gb_args' , {} )
+            gb_args.pop ( 'subsample' , None ) 
+            config  [ 'gb_args'   ] = gb_args 
+                       
         Reweighter.__init__ ( self            ,
                               original        = original        ,
                               target          = target          , 
@@ -157,15 +168,28 @@ class GBReweighter(Reweighter) :
             
             gc.collect()
 
-        self.__original_ratios             = None
+    
         self.__original_reweighted_weights = None
+        
         if store_original_weights :
+            
             factors = self.__reweighter.predict_weights (
                 original , 
                 original_weight = original_weight )
-            self.__original_ratios             = factors 
-            self.__original_reweighted_weights = factors if weight_trivial ( original_weight ) else factors * original_weight
-    
+            
+            ## final weights 
+            final_weight  = factors if weight_trivial ( original_weight ) else factors * original_weight
+            
+            ## scale them to the same sum: "preserve the mass"
+            final_weight  = self.preserve_mass ( original , original_weight , final_weight ) 
+            
+            self.__original_reweighted_weights = final_weight 
+
+            ## produce summary of weights 
+            if self.verbose : self.weight_summary ( original        ,
+                                                    original_weight ,
+                                                    final_weight    ) 
+            
     # =========================================================================
     ## Get method identifier string.
     #  @return Method string identifier.
@@ -206,15 +230,6 @@ class GBReweighter(Reweighter) :
         return conf
     
     # =========================================================================
-    ## Get density ratio factors r(x) for original sample.
-    #  @return Array of density ratios.
-    @property
-    def original_ratios ( self ) :
-        """ Get density ratio factors r(x) for original sample.
-        """
-        return self.__original_ratios
-    
-    # =========================================================================
     ## Get final reweighted weights for original sample.
     #  @return Array of reweighted weights.
     @property
@@ -249,8 +264,18 @@ class GBReweighter(Reweighter) :
 
         factors = self.reweighter.predict_weights ( original        = original        ,
                                                     original_weight = original_weight )
-        return factors if weight_trivial ( original_weight ) else factors * original_weight
 
+        ## final weights 
+        final_weight = factors if weight_trivial ( original_weight ) else factors * original_weight
+        final_weight = self.preserve_mass ( original , original_weight , final_weight ) 
+        
+        ## produce summary table of weights 
+        if self.verbose : self.weight_summary ( original        ,
+                                                original_weight ,
+                                                final_weight    ) 
+    
+        return final_weight 
+    
 
 # ============================================================================
 if '__main__' == __name__ :

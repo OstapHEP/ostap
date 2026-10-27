@@ -715,7 +715,7 @@ class TextBar(object):
         if   h      : time_str = f"{h:02d}h{m:02d}'{s:02d}\""
         elif m      : time_str = f"{m:02d}'{s:02d}\""
         elif s >= 1 : time_str = f"{s:02d}\""
-        else: time_str = '0"'
+        else        : time_str = '0"'
 
         prefix_str  = f"{self.__prefix} " if self.__prefix else ""
         time_part   = f"🕒 {time_str}"
@@ -751,7 +751,7 @@ class TextBar(object):
         elif  minutes : timebar = f" {minutes:02d}'{secs:04.1f}\""
         else          : timebar = f" {secs:.2f}\"" 
 
-        timebar += f" {start.strftime('%a %d %b %Y, %I:%M%p')} ➔ {end.strftime('%a %d %b %Y, %I:%M%p')}"
+        timebar  += f" {start.strftime('%a %d %b %Y, %H:%M:%S')} ➔ {end.strftime('%a %d %b %Y, %H:%M:%S')}"
         
         prefix_str = f"{self.__prefix} " if self.__prefix else ""
         content    = f"{prefix_str}{self.__text} 🕒{timebar}"
