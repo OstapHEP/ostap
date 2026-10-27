@@ -532,15 +532,15 @@ class SQLiteDict(DictClass):
             logger.exception("failed to delete %s" % (self.filename))
 
     # =========================================================================
-    ## close dbase 
-    def __del__ ( self ) :
-        try:
-            self.close ( do_log = False ,  force = True )
-        except Exception:
-            # prevent error log flood in case of multiple SQLiteDicts
-            # closed after connection lost (exceptions are always ignored
-            # in __del__ method.
-            pass
+    ## ## close dbase 
+    ## def __del__ ( self ) :
+    ##    try:
+    ##        self.close ( do_log = False ,  force = True )
+    ##    except Exception:
+    ##        # prevent error log flood in case of multiple SQLiteDicts
+    ##        # closed after connection lost (exceptions are always ignored
+    ##        # in __del__ method.
+    ##        pass
         
 # =============================================================================
 # @class SQLiteMultithread

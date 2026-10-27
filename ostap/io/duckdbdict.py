@@ -253,9 +253,9 @@ class DuckDBLiteDict ( MutableMapping ) :
         
         self.__connect = None  
             
-    def __del__ ( self ) :  
-        if self.__connect : self.close ()
-        self.__connect = None 
+    ## def __del__ ( self ) :  
+    ##    if self.__connect : self.close ()
+    ##    self.__connect = None 
         
     ## context manager ENTER 
     def __enter__ ( self     ) : return self 

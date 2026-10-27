@@ -430,11 +430,11 @@ class CompressShelf (shelve.Shelf,CUBase) :
 
     # =========================================================================
     ## destructor 
-    def __del__ ( self ) :
-        """ Destructor 
-        """
-        ## close if opened 
-        if self.opened : self.close ()  
+    ## def __del__ ( self ) :
+    ##    """ Destructor 
+    ##    """
+    ##    ## close if opened 
+    ##    if self.opened : self.close ()  
 
     # =========================================================================
     ##  Iterator over available keys (patterns included).
