@@ -147,79 +147,73 @@ message ( "----> IA64       ?               : " ${OSTAP_HAS_IA64} )
 
 
 # ============================================================================
-### CHECK FOR AVX
+### CHECK FOR AVX, AVX2, and AVX-512
 # ============================================================================
 
 include(CheckCXXSourceRuns)
 
-# 2. Set the flags temporarily
+# Save the original CMAKE_REQUIRED_FLAGS to restore them later
 set(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
 
-# Temporarily add the compiler flag for AVX
+
+# ----------------------------------------------------------------------------
+# 1. CHECK FOR AVX (Advanced Vector Extensions)
+# ----------------------------------------------------------------------------
 if(MSVC)
     set(CMAKE_REQUIRED_FLAGS "/arch:AVX")
 else()
-    set(CMAKE_REQUIRED_FLAGS "-mavx") # For GCC / Clang
+    set(CMAKE_REQUIRED_FLAGS "-mavx")
 endif()
 
 check_cxx_source_runs("
     #include <immintrin.h>
     int main() {
+        // Initialize 256-bit vectors with double-precision floating-point numbers
         __m256d a = _mm256_set1_pd(1.0);
         __m256d b = _mm256_set1_pd(2.0);
+        // Perform an AVX addition instruction
         __m256d c = _mm256_add_pd(a, b);
-        return 0;
+        
+        // Use volatile pointer to prevent the compiler from optimizing the calculation away
+        volatile double* ptr = (volatile double*)&c;
+        return (ptr[0] == 3.0) ? 0 : 1;
     }
 " OSTAP_HAS_AVX)
 
-# Restore flags
-set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
 
-message ( "----> AVX        ?               : " ${OSTAP_HAS_AVX}  )
-
-# ============================================================================
-### CHECK FOR AVX2 
-# ============================================================================
-
-# Use 'Runs' instead of 'Compiles'
-include(CheckCXXSourceRuns)
-
-# 1. Test code that actually executes AVX2 instructions
-set(AVX2_RUN_CODE "
-    #include <immintrin.h>
-    int main() {
-        __m256i a = _mm256_set1_epi32(1);
-        __m256i b = _mm256_add_epi32(a, a);
-        // Volatile prevents the compiler from optimizing the math away
-        volatile int* ptr = (volatile int*)&b; 
-        return (ptr[0] == 2) ? 0 : 1; 
-    }
-")
-
-# 2. Set the flags temporarily
-set(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+# ----------------------------------------------------------------------------
+# 2. CHECK FOR AVX2
+# ----------------------------------------------------------------------------
 if(MSVC)
     set(CMAKE_REQUIRED_FLAGS "/arch:AVX2")
 else()
     set(CMAKE_REQUIRED_FLAGS "-mavx2")
 endif()
 
-# 3. Compile AND Execute the code
-check_cxx_source_runs("${AVX2_RUN_CODE}" OSTAP_HAS_AVX2)
+check_cxx_source_runs("
+    #include <immintrin.h>
+    int main() {
+        // Initialize 256-bit integer vectors and perform AVX2 addition
+        __m256i a = _mm256_set1_epi32(1);
+        __m256i b = _mm256_add_epi32(a, a);
+        
+        // Volatile prevents the compiler from dead-code elimination
+        volatile int* ptr = (volatile int*)&b; 
+        return (ptr[0] == 2) ? 0 : 1; 
+    }
+" OSTAP_HAS_AVX2)
 
-# Restore flags
-set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
 
-message ( "----> AVX2       ?               : " ${OSTAP_HAS_AVX2} )
+# ----------------------------------------------------------------------------
+# 3. CHECK FOR AVX-512 (Foundation)
+# ----------------------------------------------------------------------------
+if(MSVC)
+    set(CMAKE_REQUIRED_FLAGS "/arch:AVX512")
+else()
+    set(CMAKE_REQUIRED_FLAGS "-mavx512f")
+endif()
 
-# ============================================================================
-### CHECK FOR AVX-512  
-# ============================================================================
-
-include(CheckCXXSourceRuns)
-
-# 1. Test code that actually executes AVX-512 (Foundation) instructions
-set(AVX512_RUN_CODE "
+check_cxx_source_runs("
     #include <immintrin.h>
     int main() {
         // Using AVX-512F 512-bit registers and operations
@@ -231,23 +225,25 @@ set(AVX512_RUN_CODE "
         volatile double* ptr = (volatile double*)&c;
         return (ptr[0] == 3.0) ? 0 : 1;
     }
-")
+" OSTAP_HAS_AVX512)
 
-# 2. Set the flags temporarily
-set(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
-if(MSVC)
-    set(CMAKE_REQUIRED_FLAGS "/arch:AVX512")
-else()
-    set(CMAKE_REQUIRED_FLAGS "-mavx512f")
-endif()
 
-# 3. Compile AND Execute the code
-check_cxx_source_runs("${AVX512_RUN_CODE}" OSTAP_HAS_AVX512)
-
-# Restore flags
+# Restore the original compile flags
 set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
 
-message ( "----> AVX-512    ?               : " ${OSTAP_HAS_AVX512} )
+# Normalize results to 0/1 for clean display (empty means 0)
+foreach(_var OSTAP_HAS_AVX OSTAP_HAS_AVX2 OSTAP_HAS_AVX512)
+    if(NOT ${_var})
+        set(${_var} 0)
+    endif()
+endforeach()
+  
+# ============================================================================
+### PRINT DETECTION RESULTS
+# ============================================================================
+message ( "----> AVX        ?               : ${OSTAP_HAS_AVX}"    )
+message ( "----> AVX2       ?               : ${OSTAP_HAS_AVX2}"   )
+message ( "----> AVX-512    ?               : ${OSTAP_HAS_AVX512}" )
 
 # ===============================================================================
 

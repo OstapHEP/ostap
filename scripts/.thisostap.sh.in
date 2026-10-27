@@ -249,7 +249,7 @@ env_diff ()
                 }
             }
             ' <(echo "$env_before") <(echo "$env_after")
-        } | ostap-table -t "$title" -s '|' -a 'lw'
+        } | ostap-table -t "$title" -s '|' -a 'lcw'
     fi
 }
 # =====================================================================
