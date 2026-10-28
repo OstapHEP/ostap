@@ -20,11 +20,13 @@ __all__     = (
 ) # ===========================================================================
 # =============================================================================
 from   ostap.utils.core       import typename
-from   ostap.core.ostap_types import dictlike_types 
+from   ostap.core.ostap_types import dictlike_types
+from   ostap.utils.utils      import classprop 
 from   ostap.stats.utils      import weight_trivial, num_samples, num_features, check_all , nEff   
 from   ostap.utils.config     import Config
 from   ostap.logger.pretty    import nice_print
-from   ostap.stats.counters   import SE, table_counters  
+from   ostap.stats.counters   import SE, table_counters
+from   ostap.logger.symbols   import weight_scale as scale_symbol 
 from   itertools              import zip_longest 
 import numpy, abc 
 # =============================================================================
@@ -82,7 +84,15 @@ class Reweighter(abc.ABC,Config) :
         ## initialize the base 
         # =====================================================================
         Config.__init__ ( self , silent = silent , **params ) 
-
+        
+    # =========================================================================
+    ## short symbol/tag for reweighter 
+    @classprop
+    def symbol ( self ) :
+        """`symbol` : short symbol/tag for reweighter 
+        """
+        return scale_symbol
+    
     @property
     @abc.abstractmethod
     def method ( self ) :
@@ -211,13 +221,13 @@ class Reweighter(abc.ABC,Config) :
         else :
             wcnt = SE ( num_samples ( origin ) , 1 , 0 , 1 , 1 ) 
         
-        counters = { '%s weights' % typename ( self ) : wcnt }
+        counters = { '%s weights' % self.method : wcnt }
             
         nb    = nice_print ( neff_before , precision = 2 , with_sign = False , strip = True )
         na    = nice_print ( neff_after  , precision = 2 , with_sign = False , strip = True )
         
         from ostap.logger.symbols import arrow_right 
-        title = '%s weights: #eff %s %s %s' % ( typename ( self ) , nb , arrow_right , na )
+        title = '%s weights: #eff %s %s %s' % ( self.method , nb , arrow_right , na )
         
         table = table_counters ( counters , prefix = '# ' , title = title )
         logger.info ( '%s:\n%s' % ( title , table ) )  
@@ -366,9 +376,9 @@ class CascadeReweighter(Reweighter):
     #  @return List of method names/identifiers for each stage
     @property
     def method(self):
-        """Implementation of the abstract 'method' property"""
-        from ostap.logger.symbols import bold_arrow_right 
-        s = ' %s ' % bold_arrow_right  
+        """ Implementation of the abstract 'method' property"""
+        from ostap.logger.symbols import white_arrow_right as arrow_right 
+        s = ' %s ' % arrow_right  
         return s.join ( [ r.method for r in self.__reweighters ] )
 
     # =========================================================================

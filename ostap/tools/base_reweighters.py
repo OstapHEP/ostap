@@ -286,6 +286,11 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     def progress ( self ) :
         """ `progress`: Progress bar status flag. """
         return self.__progress
+
+    @property
+    def method ( self ) :
+        """ Return method identifier name. """
+        return '%s DRW' % self.symbol 
     
     ## @property config
     #  @brief Serialization configuration parameters dictionary.
@@ -823,6 +828,11 @@ class IterativeReweighter ( DensityReweighter ) :
                             clip_threshold         = clip_threshold         ,
                             store_original_weights = store_original_weights ,
                             progress               = progress               , **params )
+
+    @property
+    def method ( self ) :
+        """ Return method identifier name. """
+        return '%s IDRW' % self.symbol 
 
     ## @property norm_factor
     #  @brief Normalization scale handled internally per boosting step.

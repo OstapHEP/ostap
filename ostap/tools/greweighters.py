@@ -19,6 +19,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, string_types, integer_types  
 from   ostap.utils.core         import typename
+from   ostap.utils.utils        import classprop 
 from   ostap.utils.basic        import numcpu, NoContext
 from   ostap.logger.utils       import map2table_ex
 from   ostap.logger.pretty      import nice_print 
@@ -45,7 +46,7 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 has_sklearn = hasSkLearn() 
 # =============================================================================
-method_GBRW  = 'HepML/%s' % ( S.wood       if S.wood        else 'GBRW'     )
+GBRW_symbol          = S.wood if S.wood and S.show else 'GBRW'
 # 
 DEFAULT_ESTIMATORS   =   300 # High capacity: deep ensemble with low learning rate
 MAX_DEPTH            =     6 # Deep tree capacity for high dimensions / large statistics
@@ -189,16 +190,20 @@ class GBReweighter(Reweighter) :
             if self.verbose : self.weight_summary ( original        ,
                                                     original_weight ,
                                                     final_weight    ) 
-            
+
     # =========================================================================
-    ## Get method identifier string.
-    #  @return Method string identifier.
+    ## short symbol/tag for reweighter 
+    @classprop
+    def symbol ( self ) :
+        """`symbol` : short symbol/tag for reweighter 
+        """
+        return GBRW_symbol 
+            
     @property
     def method ( self ) :
-        """ Get method identifier string.
-        """
-        return method_GBRW
-                        
+        """ Return method identifier name. """
+        return '%s HepML' % self.symbol 
+
     # =========================================================================
     ## Get number of cross-validation splits.
     #  @return Integer count of CV folds.

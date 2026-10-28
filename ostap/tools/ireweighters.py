@@ -25,7 +25,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types       import num_types, string_types, integer_types
 from   ostap.utils.core             import typename
-from   ostap.utils.basic            import safe_loop 
+from   ostap.utils.basic            import safe_loop
+from   ostap.utils.utils            import classprop 
 from   ostap.logger.pretty          import nice_print 
 from   ostap.utils.progress_bar     import progress_bar, text_bar 
 from   ostap.stats.utils            import num_samples, nEff 
@@ -49,6 +50,14 @@ method_LR    = 'DRW/%s'   % ( S.ruler      if S.ruler       else 'LOGREG'   )
 method_GBRW  = 'HepML/%s' % ( S.wood       if S.wood        else 'GBRW'     )
 #
 epoch_symbol = ( '%s :' % S.repeat ) if S.show else 'Epoch:'
+
+# =============================================================================
+LightGBM_symbol = S.light_bulb  if S.show and S.light_bulb else 'LightGBM'
+XGBoost_symbol  = S.rocket      if S.show and S.rocket     else 'XGBoost'
+CatBoost_symbol = S.cat_face    if S.show and S.cat_face   else 'CatBoost'
+PyTorch_symbol  = S.flashlight  if S.show and S.flashlight else 'PyTorch'
+LogReg_symbol   = S.ruler       if S.show and S.ruler      else 'LogReg'
+
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================
@@ -107,10 +116,13 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
                             original_weight = original_weight ,
                             target_weight   = target_weight   , **config )
 
-    @property
-    def method ( self ) :
-        """ Return method identifier name. """
-        return 'DRW/LGBM-Iterative'
+    # =========================================================================
+    ## short symbol/tag for reweighter 
+    @classprop
+    def symbol ( self ) :
+        """`symbol` : short symbol/tag for reweighter 
+        """
+        return LightGBM_symbol 
 
     ## @brief Execute iterative LightGBM boosting stream on fold data.
     def _fit_iterative_stream ( self   ,
@@ -266,10 +278,13 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                             original_weight = original_weight ,
                             target_weight   = target_weight   , **config )
 
-    @property
-    def method ( self ) :
-        """ Return method identifier name. """
-        return method_XGB
+    # =========================================================================
+    ## short symbol/tag for reweighter 
+    @classprop
+    def symbol ( self ) :
+        """`symbol` : short symbol/tag for reweighter 
+        """
+        return XGBoost_symbol 
 
     ## @brief Execute iterative XGBoost boosting stream on fold data.
     def _fit_iterative_stream ( self   ,
@@ -447,10 +462,13 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
                             original_weight = original_weight ,
                             target_weight   = target_weight   , **config )
 
-    @property
-    def method ( self ) :
-        """ Return method identifier name. """
-        return method_CATB
+    # =========================================================================
+    ## short symbol/tag for reweighter 
+    @classprop
+    def symbol ( self ) :
+        """`symbol` : short symbol/tag for reweighter 
+        """
+        return CatBoost_symbol 
 
     ## @brief Execute iterative CatBoost boosting stream on fold data.
     def _fit_iterative_stream ( self   ,
@@ -584,10 +602,13 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                             original_weight = original_weight ,
                             target_weight   = target_weight   , **config )
 
-    @property
-    def method ( self ) :
-        """ Return method identifier name. """
-        return method_TORCH
+    # =========================================================================
+    ## short symbol/tag for reweighter 
+    @classprop
+    def symbol ( self ) :
+        """`symbol` : short symbol/tag for reweighter 
+        """
+        return PyTorch_symbol 
 
     ## @brief Execute iterative PyTorch boosting stream on fold data.
     def _fit_iterative_stream ( self   ,

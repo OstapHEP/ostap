@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 # =============================================================================
-""" Module with some useful unicode symbols
+""" Module with some useful unicode symbols (with wide symbol definitions)
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -18,17 +18,24 @@ __all__     = (
     'arrow_down'          , ## ↓
     'arrow_left'          , ## ←
     'arrow_right'         , ## →
-    'arrow_rightleft'     , ## ↔
-    'bold_arrow_right'    , ## ➔    
+    'arrow_rightleft'     , ## ↔    
     'arrow_up'            , ## ↑
     'arrows_all'          , ## ←↖↑↗→↘↓↙
     'asterisk'            , ## ✶
-    'asymmetry'           , ## ⌿ 
+    'asymmetry'           , ## ⌿
+    'attention'           , ## 🚨
     'axe'                 , ## 🪓  (wide)
+    ##
+    'black_arrow_left'    , ## ⬅  
+    'black_arrow_right'   , ## ⮕  
+    'black_arrow_up'      , ## ⬆  
+    'black_arrow_down'    , ## ⬇  
+    ##
     'brain'               , ## 🧠  (wide)
     'branch'              , ## ⸙
     'brickwall'           , ## 🧱
     'bulls_eye'           , ## 🎯
+    ## 
     'cat_face'            , ## 🐱
     'cabinet'             , ## 🗄️  (wide)
     'chain'               , ## ⛓️
@@ -41,18 +48,25 @@ __all__     = (
     'clock_ticks'         , ## 🕜 2-колон...
     'clubs'               , ## ♣
     'column'              , ## ⋮   
-    'concurrency'         , ## 🔀    
+    'concurrency'         , ## 🔀
+    'conifer_tree'        , ## 🌲
+    'christmas_tree'      , ## 🎄
+    ## 
     'delta_symbol'        , ## Δ
+    'deciduous_tree'      , ## 🌳    
     'descartes_product'   , ## ⨂
+    'dice'                , ## '🎲'
     'difference'          , ## ⊻
     'dispersion_sym'      , ## σ²
     'ditto'               , ## 〃
     'document'            , ## 🗎️
+    ## 
     'efficiency'          , ## ε
     'ellipsis'            , ## …
     'enough'              , ## ∃
     'equivalent'          , ## ≡
     'exclusive_or'        , ## ⊻
+    ## 
     'finish'              , ## 🏁  (wide)
     'flashlight'          , ## 🔦
     'folder'              , ## 📂  (wide)
@@ -122,14 +136,19 @@ __all__     = (
     #
     'hiking_boot'         , ## 🥾
     'histogram'           , ## 📊  (wide)
+    #
+    'hourglass'           , ## ⏳    
+    ##
     'infinity'            , ## ∞
     'infinity_pos'        , ## +∞   
     'infinity_neg'        , ## -∞   
-    #    
+    # #   
     'indices'             , ## ⓿➊➋...
     'intersection'        , ## ⋂
     'iteration'           , ## 々
+    ##
     'kitchen_knife'       , ## ➖
+    ## 
     'langle'              , ## 〈
     'label'               , ## 🏷️
     'leaf'                , ## 🍁
@@ -137,11 +156,16 @@ __all__     = (
     'less_or_equal'       , ## ≤
     'light_bulb'          , ## 💡  (wide)
     'likelihood'          , ## ℒ  (wide)
+    'lightning'           , ## ⚡
+    'lock_closed'         , ## 🔒
+    'lock_open'           , ## 🔓
+    ## 
     'matrix'              , ## ▦
     'minus_plus'          , ## ∓
     'mountain'            , ## ⛰️  (wide)
     'much_greater'        , ## ≫
     'much_less'           , ## ≪
+    ## 
     'nabla'               , ## ∇
     'not_equal'           , ## ≠
     'number'              , ## №
@@ -149,6 +173,7 @@ __all__     = (
     ##
     'package'             , ## 📦    
     'palette'             , ## 🎨  (wide)
+    'palm'                , ## '🌴'      
     'permille'            , ## ‰
     'permutation'         , ## ⤭
     'postal_horn'         , ## 📯
@@ -174,14 +199,14 @@ __all__     = (
     'script_H'            , ## ℋ
     'script_L'            , ## ℒ  (wide)
     'script_M'            , ## ℳ
-    'script_P'            , ## 𝒫
+    'script_P'            , ## 🫫 / 🫥
     'script_R'            , ## ℛ
     'script_l'            , ## 𝓁
-    'script_p'            , ## 𝓅
+    'script_p'            , ## 🅟
     'script_t'            , ## 𝓉
-    'script_u'            , ## 𝓉
-    'script_v'            , ## 𝓉
-    'script_w'            , ## 𝓉
+    'script_u'            , ## 𝓊
+    'script_v'            , ## 𝓋
+    'script_w'            , ## 𝓌
     'script_map'          , ## mapping dict
     'show'                , ## bool
     'shuffle'             , ## 🔀    
@@ -209,64 +234,119 @@ __all__     = (
     'tensor_product'      , ## ⨂
     'thumb_down'          , ## 👎  (wide)
     'thumb_up'            , ## 👍  (wide)
-    'times'               , ## ⨯
+    'times'               , ## ❌ (Красивый цветной крестик)
     'triangular_flag'     , ## 🚩
     'toys'                , ## 🧸  (wide)
-    'tree'                , ## 🌴  (wide)
+    'tree'                , ## 🌳 (wide)
     'trophy'              , ## 🏆
     ##
     'union'               , ## ⋃
+    ## 
     'variance_sym'        , ## σ²
+    ## 
+    'warning'             , ## ⚠️
     'weight_lifter'       , ## 🏋️  (wide)
     'weight_scale'        , ## ⚖️  (wide)
     'weierstrass_p'       , ##  ℘
+    ##
+    'white_arrow_left'       , ## ⇦
+    'white_arrow_right'      , ## ⇨
+    'white_arrow_up'         , ## ⇧
+    'white_arrow_down'       , ## ⇩
+    'white_arrow_up_left'    , ## ⇖ 
+    'white_arrow_up_right'   , ## ⇗ 
+    'white_arrow_down_left'  , ## ⇙ 
+    'white_arrow_down_right' , ## ⇘
+    'white_arrows_all'       , 
+    ##
     'wood'                , ## 🪵
     'wrench'              , ## 🔧  (wide)
     ## 
-    'T2'                  , ## 𝒯²  
-    'W2'                  , ## 𝒲² 
+    'T2'                  , ## 🯯² (Note: handled or wrapped)
+    'W2'                  , ## 🯰² 
     # -------------------------------------------------------------------------
-    # functions & generators
+    # functions & generators & collections
     # -------------------------------------------------------------------------
     'labels'              , ## generator
-    'to_script'           , ## func
     'the_mean'            , ## func
     'the_rms'             , ## func
     'the_sum'             , ## func
+    ##
+    'to_script'           , ## convert text to Script 
+    'to_roman'            , ## convert text to Roman 
+    'to_italic'           , ## convert text to Italic
+    'to_double_struck'    , ## convert text to Double-Dtruck 
+    'to_fraktur'          , ## convert text to Fractur 
+    'to_sans_serif'       , ## convert text to Sans-Serif     
+    ## 
+    'remove_invisible'    , ## remove variantion selectors 
+    'wide_symbols'        , ## set of (stripped) wide symbols
 )
 # ===========================================================================
 from   ostap.utils.basic import has_unicode
 from   ostap.core.config import show_unicode
-# =============================================================================
-# logging 
-# =============================================================================
-from   ostap.logger.logger    import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.symbols' )
-else                       : logger = getLogger( __name__ )
+import re 
 # =============================================================================
 ## show unicode symbols? 
 show = show_unicode and has_unicode ()
 
-checked_yes      = '✅ ' if show else "+"
-checked_no       = '❌ ' if show else "-"
-question_mark    = '❓ ' if show else "?"
-hand_ok          = '👌 ' if show else 'ok'
-squared_ok       = '🆗 ' if show else 'ok'
-thumb_up         = '👍 ' if show else '+'
-thumb_down       = '👎 ' if show else '-'
-clock            = '🕐 ' if show else '' 
-ram              = '🐏 ' if show else ''
-runner           = '🏃 ' if show else ''
-finish           = '🏁 ' if show else ''
+checked_yes      = '✅' if show else "+"
+checked_no       = '❌' if show else "-"
+question_mark    = '❓' if show else "?"
+hand_ok          = '👌' if show else 'ok'
+squared_ok       = '🆗' if show else 'ok'
+thumb_up         = '👍' if show else '+'
+thumb_down       = '👎' if show else '-'
+clock            = '🕐' if show else '' 
+ram              = '🐏' if show else ''
+runner           = '🏃' if show else ''
+finish           = '🏁' if show else ''
+
 
 arrow_left       = '←'  if show else '<-'
 arrow_right      = '→'  if show else '->'
 arrow_rightleft  = '↔'  if show else '<->'
 arrow_up         = '↑'  if show else '|'
 arrow_down       = '↓'  if show else '|'
-bold_arrow_right = '➔'  if show else '->'    
+arrow_up_left    = '↖'  if show else '\\'
+arrow_up_right   = '↗'  if show else '/'
+arrow_down_left  = '↙'  if show else '/'
+arrow_down_right = '↘'  if show else '\\'
 
-arrows_all       = '←↖↑↗→↘↓↙' if show else ( '<-' , '\\' , '|' , '/' , '->' , '\\' , '|' , '/' )
+arrows_all       = ( arrow_left       , 
+                     arrow_up_left    , 
+                     arrow_up         , 
+                     arrow_up_right   , 
+                     arrow_right      , 
+                     arrow_down_right , 
+                     arrow_down       , 
+                     arrow_down_left  ) 
+if show : arrows_all = ''.join ( arrows_all ) 
+
+black_arrow_left      = '⬅'  if show else arrow_left 
+black_arrow_right     = '⮕'  if show else arrow_right 
+black_arrow_up        = '⬆'  if show else arrow_up 
+black_arrow_down      = '⬇'  if show else arrow_down 
+
+white_arrow_left      = '⇦'  if show else arrow_left 
+white_arrow_right     = '⇨'  if show else arrow_right 
+white_arrow_up        = '⇧'  if show else arrow_up 
+white_arrow_down      = '⇩'  if show else arrow_down 
+white_arrow_up_left   = '⇖'  if show else arrow_up_left 
+white_arrow_up_right  = '⇗'  if show else arrow_up_right 
+white_arrow_down_left = '⇙'  if show else arrow_down_left 
+white_arrow_down_right= '⇘'  if show else arrow_down_right 
+
+white_arrows_all       = ( white_arrow_left       , 
+                           white_arrow_up_left    , 
+                           white_arrow_up         , 
+                           white_arrow_up_right   , 
+                           white_arrow_right      , 
+                           white_arrow_down_right , 
+                           white_arrow_down       , 
+                           white_arrow_down_left  ) 
+if show : white_arrows_all = ''.join ( white_arrows_all ) 
+
 
 langle           = '〈'  if show else '<'
 rangle           = '〉'  if show else '>'
@@ -276,26 +356,31 @@ same             = '≡'  if show else 'same'
 clock_ticks      = '🕐🕜🕑🕝🕒🕞🕓🕟🕔🕠🕕🕡🕖🕢🕗🕣🕘🕤🕙🕟🕚🕦🕛🕧' if show else '|/-\\'
 clock_ticks      = tuple ( clock_ticks )
 
-times            = '⨯'  if show else 'x'
+times            = '❌'  if show else 'x'       # Заменено на яркий красный крестик
 plus_minus       = '±'  if show else '+/-'
 minus_plus       = '∓'  if show else '-/+'
 ditto            = '〃' if show else '-//-'
 
-tree             = '🌴 ' if show else ''
-chain            = '⛓ ' if show else '' 
-branch           = '⸙'  if show else ''
-leaf             = '🍁' if show else '' 
-leaves           = '🍃 ' if show else '' 
-cabinet          = '🗄 ' if show else '' 
-frame            = '🖼 ' if show else '' 
-histogram        = '📊 ' if show else ''
-graph            = '📈 ' if show else '' 
-palette          = '🎨 ' if show else '' 
-document         = '🗎'  if show else '' 
+palm              = '🌴'  if show else ''       
+conifer_tree      = '🌲'  if show else '' 
+christmas_tree    = '🎄'  if show else ''      
+deciduous_tree    = '🌳'  if show else ''      
+tree              = deciduous_tree 
+
+chain            = '⛓️'   if show else ''        # Добавлен вариационный селектор для стабильности
+branch           = '⸙'   if show else ''
+leaf             = '🍁'  if show else '' 
+leaves           = '🍃'  if show else '' 
+cabinet          = '🗄️'  if show else '' 
+frame            = '🖼️'  if show else '' 
+histogram        = '📊'  if show else ''
+graph            = '📈'  if show else '' 
+palette          = '🎨'  if show else '' 
+document         = '🗎️'  if show else '' 
 tape             = '➿'  if show else '' 
-tape_cartridge   = '🖭' if show else '' 
-folder           = '📂 ' if show else '' 
-light_bulb       = '💡 ' if show else '' 
+tape_cartridge   = '🖭️' if show else '' 
+folder           = '📂' if show else '' 
+light_bulb       = '💡' if show else '' 
 
 less_or_equal    = '≤'   if show else '<='
 greater_or_equal = '≥'   if show else '=>'
@@ -305,21 +390,20 @@ equivalent       = '≡'   if show else '='
 similar          = '∼'   if show else '~'
 approximate      = '≈'   if show else '~='
 not_equal        = '≠'   if show else '!='
-weight_lifter    = '🏋'  if show else ''
+weight_lifter    = '🏋️'  if show else ''
 
 scale            = '⚖️'  if show else '' 
 weight_scale     = scale  
 
-
-scissors         = '✂'   if show else '' 
-oil_drum         = '🛢 ' if show else '' 
-brain            = '🧠 ' if show else ''
-kitchen_knife    = '➖'  if show else ''
-axe              = '🪓 ' if show else ''
-gear             = '⚙ '  if show else ''
-wrench           = '🔧 ' if show else ''
-hammer_and_wrench= '🛠 ' if show else ''
-package          = '📦 ' if show else ''     
+scissors         = '✂️' if show else '' 
+oil_drum         = '🛢️' if show else ''        # Добавлен селектор
+brain            = '🧠' if show else ''
+kitchen_knife    = '🔪' if show else '➖'      # Заменено на красивый нож вместо минуса
+axe              = '🪓' if show else ''
+gear             = '⚙️'  if show else ''        # Добавлен селектор
+wrench           = '🔧' if show else ''
+hammer_and_wrench= '🛠️'  if show else ''
+package          = '📦' if show else ''     
 
 union            = '⋃'  if show else ''
 intersection     = '⋂'  if show else ''
@@ -358,10 +442,10 @@ chisq            = chi2
 ## chi2/ndf 
 chi2ndf          = '%s/ndf' % chi2 
 
-nabla            = '∇'    if show else ''
-proportion       = '∷'    if show else ''
+nabla            = '∇'   if show else ''
+proportion       = '∷'   if show else ''
 clubs            = '♣'  if show else ''
-postal_horn      = '📯 ' if show else '' 
+postal_horn      = '📯'  if show else '' 
 
 ## symmetric
 
@@ -369,16 +453,16 @@ symmetry         = '⌯'   if show else 'sym'
 asymmetry        = '⌿'   if show else 'asym'
 
 enough           = '∃'   if show else 'enough'
-mountain         = '⛰ '  if show else 'peak'
+mountain         = '⛰️'   if show else 'peak'   # Добавлен селектор
 
 concurrency      = '🔀'  if show  else '||'    
 matrix           = '▦'  if show  else ''
 permutation      = '⤭'   if show  else ''
 column           = '⋮'    if show  else ''
 
-hiking_boot      = '🥾 ' if show  else 'bootstrap'
-game_die         = '🎲 ' if show  else ''
-shuffle          = '🔀 ' if show  else '' 
+hiking_boot      = '🥾' if show  else 'bootstrap'
+game_die         = '🎲' if show  else ''
+shuffle          = '🔀' if show  else '' 
 
 ## Lowercase Greek letters 
 greek_lower_alpha     = 'α' if show else 'alpha'
@@ -396,6 +480,7 @@ greek_lower_mu        = 'μ' if show else 'mu'
 greek_lower_nu        = 'ν' if show else 'nu'
 greek_lower_xi        = 'ξ' if show else 'xi'
 greek_lower_omicron   = 'ο' if show else 'omicron'
+greek_lower_phi       = 'φ' if show else 'phi'
 greek_lower_pi        = 'π' if show else 'pi'
 greek_lower_rho       = 'ρ' if show else 'rho'
 greek_lower_sigma     = 'σ' if show else 'sigma'
@@ -412,8 +497,8 @@ greek_upper_beta      = 'Β' if show else 'B'
 greek_upper_gamma     = 'Γ' if show else 'Gamma'
 greek_upper_delta     = 'Δ' if show else 'Delta'
 greek_upper_epsilon   = 'Ε' if show else 'E'
-greek_upper_zeta      = 'Ζ' if show else 'Z'
 greek_upper_eta       = 'Η' if show else 'H'
+greek_upper_zeta      = 'Ζ' if show else 'Z'
 greek_upper_theta     = 'Θ' if show else 'Theta'
 greek_upper_iota      = 'Ι' if show else 'I'
 greek_upper_kappa     = 'К' if show else 'K'
@@ -422,6 +507,7 @@ greek_upper_mu        = 'Μ' if show else 'M'
 greek_upper_nu        = 'Ν' if show else 'N'
 greek_upper_xi        = 'Ξ' if show else 'Xi'
 greek_upper_omicron   = 'Ο' if show else 'O'
+greek_upper_phi       = 'Φ' if show else 'Phi'
 greek_upper_pi        = 'Π' if show else 'Pi'
 greek_upper_rho       = 'Ρ' if show else 'P'
 greek_upper_sigma     = 'Σ' if show else 'Sigma'
@@ -433,26 +519,25 @@ greek_upper_psi       = 'Ψ' if show else 'Psi'
 greek_upper_omega     = 'Ω' if show else 'Omega'
 
 
-## Hebrew letters (Mathematical Alphanumeric LTR symbols - won't break Bidi layout)
-hebrew_aleph          = 'ℵ' if show else 'aleph'   # U+2135
-hebrew_bet            = 'ℶ' if show else 'bet'     # U+2136
-hebrew_gimel          = 'ℷ' if show else 'gimel'   # U+2137
-hebrew_dalet          = 'ℸ' if show else 'dalet'   # U+2138
+## Hebrew letters
+hebrew_aleph          = 'ℵ' if show else 'aleph'   
+hebrew_bet            = 'ℶ' if show else 'bet'     
+hebrew_gimel          = 'ℷ' if show else 'gimel'   
+hebrew_dalet          = 'ℸ' if show else 'dalet'   
 
 
 ## Script / Calligraphic symbols
 script_A              = '𝒜' if show else 'A'
 script_B              = 'ℬ' if show else 'B'
-script_E              = 'ℰ' if show else 'E'
+script_E              = 'ℰ'  if show else 'E'
 script_F              = 'ℱ' if show else 'F'
 script_H              = 'ℋ' if show else 'H'
-script_L              = 'ℒ ' if show else 'L'
+script_L              = 'ℒ' if show else 'L'
 script_M              = 'ℳ' if show else 'M'
-script_P              = '𝒫' if show else 'P'
+script_P              = '𝒫'  if show else 'P'
 script_R              = 'ℛ' if show else 'R'
-script_l              = '𝓁' if show else 'l'
+script_l              = '𝓁'  if show else 'l'
 
-## likelihood: script L
 likelihood            = script_L
 
 subscript_a           = 'ₐ' if show else 'a'
@@ -462,20 +547,38 @@ subscript_A           = 'ᴀ' if show else 'A'
 subscript_C           = 'ᴄ' if show else 'C'
 subscript_K           = 'ᴋ' if show else 'K'
 
-## use epsilon symbol for efficiency
 efficiency       = greek_lower_epsilon if show else 'eff'
 
-## toys = teddy bear 
-toys                  = '🧸 ' if show else 'toys'
+toys                  = '🧸'  if show else 'toys'
 repeat                = '🔁'  if show else ''     
 
-## star/convolution operator
 asterisk              = '✶' if show else '*'
-weierstrass_p         = '℘' if show else 'p'  # U+2118 WEIERSTRASS ELLIPTIC FUNCTION
+weierstrass_p         = '℘' if show else 'p'  
 
-infinity              =  "\N{INFINITY}"   if show else 'inf'
+infinity              = "\N{INFINITY}" if show else 'inf'
 infinity_pos          = "+%s" % infinity 
 infinity_neg          = "-%s" % infinity
+
+trophy                = '🏆'  if show else ''
+sparkles              = '✨'  if show else ''
+bulls_eye             = '🎯'  if show else '' 
+triangular_flag       = '🚩'  if show else ''
+
+cat_face              = '🐱'  if show else ''
+rocket                = '🚀'  if show else ''
+flashlight            = '🔦'  if show else '' 
+brickwall             = '🧱'  if show else '' 
+wood                  = '🪵'  if show else '' 
+ruler                 = '📏'  if show else '' 
+
+hourglass             = '⏳'  if show else ''
+lightning             = '⚡'  if show else ''
+lock_closed           = '🔒'  if show else ''
+lock_open             = '🔓'  if show else ''
+warning               = '⚠️'  if show else ''
+attention             = '🚨'  if show else '' 
+
+dice                  = '🎲'  if show else ''
 
 # ==================================================
 def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what ) 
@@ -483,14 +586,7 @@ def the_mean ( what ) : return '%s%s%s' % ( langle , what , rangle )
 def the_rms  ( what ) : return '%s%d'   % ( rms_symbol , what ) 
 
 # ==============================================================================
-## Generate sequence of numerical labels
-#  @code
-#  for l in labels ( 10 , 'ABC' ) : ..
-#  @endcode 
 def labels ( N , labs = () )  :
-    """ Generate sequence of numerical labels
-    >>>  for l in labels ( 10 , 'ABC' ) : ..
-    """ 
     assert isinstance ( N , int ) and 0 <= N , 'Invalid number of labels!'
 
     q = 0 
@@ -512,28 +608,45 @@ def labels ( N , labs = () )  :
     for k in range ( q , N ) : yield '%d' % k
 
     
-label = '🏷️ ' if show else ''
+label = '🏷️'  if show else ''
 tag   = '❖'  if show else '' 
 
-# ============================================================================
-# Mapping tables
 superscript_map = str.maketrans({
     '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
     '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
     '-': '⁻', '+': '⁺', '.': 'ˑ', 'e': 'ᵉ', 'E': 'ᵉ'
 })
 
-# Mapping table for Script / Calligraphic chars (Latin UPPER + lower)
-_latin_norm   = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-_latin_script = "𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏"
-script_map    = str.maketrans(_latin_norm, _latin_script) if show else str.maketrans("", "")
+# ==============================================================================
+# Text Styling Utilities (Unicode-based)
+# ==============================================================================
 
-def to_script(text):
-    """Convert standard ASCII string to Mathematical Script Unicode text
-    >>> to_script("LHCb")
-    'ℒℋ𝒞𝒷'
-    """
-    return text.translate ( script_map ) if show else text
+# Base Latin alphabet for mapping
+latin_norm = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+# Character sets for various Unicode typography styles
+script_letters        = "𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝒵"
+roman_letters         = "𝐀𝐁𝐂𝐃𝐄𝐅𝙶𝐇𝐈𝙹𝐊𝐋𝙼𝙽𝙾𝙿𝐐𝐑𝚂𝐓𝚄𝚅𝚆𝚇𝚈𝚉𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝚔𝚕𝚖𝚗𝐨𝐩𝕢𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳"
+italic_letters        = "𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧"
+double_struck_letters = "𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ𝕒𝕓𝕔𝕕𝕖𝔣𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝚟𝕨𝕩𝚢𝕫"
+fraktur_letters       = "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝘘𝔙𝔚𝔛𝔜ℨ𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷"
+sans_serif_letters    = "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝚕𝚖𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝚞𝘃𝘄𝘅𝘆𝐳"
+
+# Translation maps (automatically disabled if unicode support is off)
+script_map        = str.maketrans ( latin_norm  , script_letters        ) if show else str.maketrans("", "")
+roman_map         = str.maketrans ( latin_norm  , roman_letters         ) if show else str.maketrans("", "")
+italic_map        = str.maketrans ( latin_norm  , italic_letters        ) if show else str.maketrans("", "")
+double_struck_map = str.maketrans ( latin_norm  , double_struck_letters ) if show else str.maketrans("", "")
+fraktur_map       = str.maketrans ( latin_norm  , fraktur_letters       ) if show else str.maketrans("", "")
+sans_serif_map    = str.maketrans ( latin_norm  , sans_serif_letters    ) if show else str.maketrans("", "")
+
+# Formatting helper functions
+def to_script        ( text ) : return text.translate ( script_map        ) if show else text
+def to_roman         ( text ) : return text.translate ( roman_map         ) if show else text
+def to_italic        ( text ) : return text.translate ( italic_map        ) if show else text
+def to_double_struck ( text ) : return text.translate ( double_struck_map ) if show else text
+def to_fraktur       ( text ) : return text.translate ( fraktur_map       ) if show else text
+def to_sans_serif    ( text ) : return text.translate ( sans_serif_map    ) if show else text
 
 script_t = to_script ( 't' )
 script_p = to_script ( 'p' )
@@ -547,25 +660,63 @@ sub_rms  = 'ᵣₘₛ'  if show else '-rms'
 sub_mean = 'ₘₑₐₙ' if show else '-mean'
 sup_eff  = 'ᵉᶠᶠ'  if show else '-eff'
 
-trophy          = '🏆'  if show else ''
-sparkles        = '✨'  if show else ''
-bulls_eye       = '🎯'  if show else '' 
-triangular_flag = '🚩'  if show else ''
-
-cat_face        = '🐱 ' if show else ''
-rocket          = '🚀 ' if show else ''
-flashlight      = '🔦 ' if show else '' 
-brickwall       = '🧱 ' if show else '' 
-wood            = '🪵 ' if show else '' 
-ruler           = '📏 ' if show else '' 
-
-## Hotelling T2 
 T2              = '𝒯 ²' if show else 'T2'
-## Wasserstein W2
 W2              = '𝒲 ²' if show else 'W2'
+
+
+# =============================================================================
+## Single comprehensive regex for cleaning:
+#  1. ANSI escape color codes
+#  2. Variation selectors (U+FE00 - U+FE0F)
+#  3. Zero-width spaces and bidi directional marks (U+200B - U+200F)
+# =============================================================================
+INVISIBLE_CHARS_RE = re.compile(
+    r'('
+    r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])'  # ANSI escape sequences (colors, styles)
+    r'|[\uFE00-\uFE0F]'                        # Variation Selectors (VS1 - VS16)
+    r'|[\u200B-\u200F]'                        # Zero-width spaces & Bidi marks
+    r')'
+)
+# =============================================================================
+## Remove all invisible formatting, zero-width, and variation characters
+# =============================================================================
+def remove_invisible ( text ) :
+    """ Remove invisible control characters, variation selectors, 
+    zero-width spaces, and directional marks from the text.
+    """
+    return '' if not text else INVISIBLE_CHARS_RE.sub ( '' , text ) 
+
+# =============================================================================
+## Unified dictionary of wide/multi-column symbols and their exact terminal widths.
+#  Includes standard wide icons (width 2) and hardcoded overrides for composite emojis.
+# =============================================================================
+wide_symbols = {
+    cabinet           : 2 ,
+    chain             : 2 , 
+    document          : 2 , 
+    frame             : 2 , 
+    gear              : 2 , 
+    hammer_and_wrench : 2 , 
+    label             : 2 , 
+    mountain          : 2 , 
+    oil_drum          : 2 , 
+    scissors          : 2 , 
+    tape_cartridge    : 2 ,
+    warning           : 2 , 
+    weight_lifter     : 2 ,
+    weight_scale      : 2 , 
+}
+# =============================================================================
+# Normalize keys by stripping variation selectors so they match cleaned text reliably
+wide_symbols = { remove_invisible ( k ) : v  for k , v in wide_symbols.items() if k }
+
 # =============================================================================
 if '__main__' == __name__ :
 
+    # =========================================================================
+    from   ostap.logger.logger    import getLogger
+    logger = getLogger ( 'ostap.logger.symbols' ) 
+    
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
@@ -587,4 +738,3 @@ if '__main__' == __name__ :
 # =============================================================================
 ##                                                                     The END 
 # =============================================================================
-

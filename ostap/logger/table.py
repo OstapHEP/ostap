@@ -39,6 +39,7 @@ __all__     = (
 from   ostap.core.ostap_types import string_types 
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size, zip_longest 
+from   ostap.logger.symbols   import wide_symbols, remove_invisible  
 import ostap.core.config      as     config
 import textwrap, wcwidth, re, sys, unicodedata 
 # =============================================================================
@@ -48,36 +49,36 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.table' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
-CLEANUP_RE = re.compile(r'[\uFE00-\uFE0F\u200E\u200F\u202A-\u202E\u2066-\u2069]')
+## Visible width of the string 
 # =============================================================================
-## visible width of the string 
-def  visible_width ( what ) :
-    """ Visible width of the string
-    """    
-    if not what: return 0
+def visible_width ( what ) :
+    """ Calculate the true visible width of a string in a terminal,
+    using single-pass clean_text sanitization and direct dictionary lookup 
+    for wide symbols.
+    """
+    if not what : return 0
     
-    text = decolorize ( what )
-    text = CLEANUP_RE.sub('', text)
-    if not text : return 0
+    # Sanitize string ( strips ANSI colors, variation selectors, zero-width & bidi chars)
+    text = remove_invisible ( what )
+    if not text: return 0
     
-    text = text.replace('\uFE0F', '').replace('\uFE0E', '')
-
-    ## w = wcwidth.wcswidth ( text )
-    ## if w < 0 : return len ( text ) 
-    ## return w 
-
     width = 0
+    
+    # Iterate through each clean character directly
     for char in text:
-        # make use of wcwidth
-        w = wcwidth.wcswidth(char)
+        # Check if this single character has a custom width override in our dictionary
+        if char in wide_symbols :
+            width += wide_symbols [ char ]
+            continue
+        
+        # Fallback to standard wcwidth / East Asian Width
+        w = wcwidth.wcwidth ( char )
         if 0 <= w : width += w
         else:
-            # Fallback:
-            # check Unicode East Asian Width
             ea = unicodedata.east_asian_width(char)
-            if ea in ('W', 'F') : width += 2 # Wide / Fullwidth
-            else                : width += 1 # Narrow / Neutral / etc.
-
+            if ea in ('W', 'F') : width += 2 
+            else                : width += 1 
+            
     return width
 
 
@@ -109,8 +110,28 @@ if not terminaltables : # =====================================================
 ## Monkey-patch # =============================================================
 if terminaltables : #==========================================================
     # =========================================================================
-    terminaltables.width_and_alignment.visible_width = visible_width
-# =============================================================================
+    ## Robust Monkey-patch for terminaltables
+    # =========================================================================
+    try: # ====================================================================
+        # =====================================================================
+        # 1. Patch the base module property
+        terminaltables.width_and_alignment.visible_width = visible_width
+        
+        # 2. Forcefully override the function reference inside modules that imported it directly
+        for mod_name in dir ( terminaltables ) :
+            mod = getattr ( terminaltables , mod_name , None )
+            if mod and hasattr ( mod, 'visible_width' ) :
+                setattr ( mod , 'visible_width', visible_width )
+            
+        # 3. Specifically patch ascii_table and base if they exist
+        for sub_mod_namepr in  ( 'ascii_table', 'base', 'other_table' ) :
+            sub_mod = getattr  ( terminaltables , sub_mod_namepr , None )
+            if sub_mod and hasattr ( sub_mod , 'visible_width' ) :
+                setattr ( sub_mod , 'visible_width', visible_width)
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        pass 
 
 # ==============================================================================
 ## available table styles 

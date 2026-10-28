@@ -78,7 +78,7 @@ def make_datasets ( n_target    = 5000 ,
     original2 = numpy.random.normal ( loc = 0.0   , scale = 1.3 , size = ( n_original2 , n_dim ) )
     
     # 2. Target dataset: slightly shifted normal distribution
-    target = numpy.random.normal    ( loc = 0.10  , scale = 1.0 , size = ( n_target , n_dim ) )
+    target = numpy.random.normal    ( loc = 0.10  , scale = 0.9 , size = ( n_target , n_dim ) )
     
     # 3.Add some mild & smooth correlations     
     rr = numpy.random.uniform ( low = -0.40 , high = 0.30 , size= n_dim )    
@@ -150,14 +150,22 @@ def run_reweight ( n_dim       = 3     ,
                 logger.attention ( 'Read datasets from %s' % dbname )
                 
     if target is None or original1 is None or original2 is None : 
-        target , original1 , original2  = make_datasets ( n_dim = n_dim , seed = seed ) 
+        target , original1 , original2  = make_datasets ( n_target    = n_target    ,
+                                                          n_original1 = n_original1 ,
+                                                          n_original2 = n_original2 ,                                                          
+                                                          n_dim       = n_dim       ,
+                                                          seed        = seed        ) 
         logger.attention ( 'New datasets are regenerated and saved into %s' % dbname )
         with DBASE.open ( dbname ) as db :
             db [ 'target'    ] = target
             db [ 'original1' ] = original1
             db [ 'original2' ] = original2
             db [ 'seed'      ] = seed
-            db.ls() 
+            db.ls()
+
+    ## combined original 
+    original3 = numpy.vstack ( ( original1 , original2 ) )
+
 
     reweighters = [ None ]
     reweighters = [] 
@@ -302,10 +310,10 @@ def run_reweight ( n_dim       = 3     ,
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw1 = GBRW ( target              = target         ,
                      original            = original1      ,
-                     n_estimators        = 300            ,
+                     n_estimators        = 500            ,
                      learning_rate       = 0.01           , 
-                     max_depth           = 5              ,
-                     min_samples_leaf    = 10             ,
+                     max_depth           = 6              ,
+                     min_samples_leaf    = 5              ,
                      loss_regularization = 5              ) 
         
         reweighters.append ( rw1 )
@@ -338,8 +346,6 @@ def run_reweight ( n_dim       = 3     ,
     
     header    = [] 
     rows      = []  
-
-    original3 = numpy.vstack ( ( original1 , original2 ) )
 
     
     for rw in reweighters :
@@ -386,7 +392,7 @@ if '__main__' == __name__ :
     ## if numcpu() <= 8 : run_reweight ( 3 ,  3000 , 123456 )
     ## else             : run_reweight ( 3 ,  3000 )
     
-    run_reweight ( 3 , 3000 , 5000 , 5000 ) 
+    run_reweight ( 3 , 3000 , 7000 , 8000 ) 
     
 # =============================================================================
 
