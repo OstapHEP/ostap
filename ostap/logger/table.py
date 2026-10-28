@@ -39,49 +39,15 @@ __all__     = (
 from   ostap.core.ostap_types import string_types 
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size, zip_longest 
-from   ostap.logger.symbols   import wide_symbols, remove_invisible  
+from   ostap.logger.symbols   import visible_width 
 import ostap.core.config      as     config
-import textwrap, wcwidth, re, sys, unicodedata 
+import textwrap, sys
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.table' )
 else                       : logger = getLogger( __name__             )
-# =============================================================================
-## Visible width of the string 
-# =============================================================================
-def visible_width ( what ) :
-    """ Calculate the true visible width of a string in a terminal,
-    using single-pass clean_text sanitization and direct dictionary lookup 
-    for wide symbols.
-    """
-    if not what : return 0
-    
-    # Sanitize string ( strips ANSI colors, variation selectors, zero-width & bidi chars)
-    text = remove_invisible ( what )
-    if not text: return 0
-    
-    width = 0
-    
-    # Iterate through each clean character directly
-    for char in text:
-        # Check if this single character has a custom width override in our dictionary
-        if char in wide_symbols :
-            width += wide_symbols [ char ]
-            continue
-        
-        # Fallback to standard wcwidth / East Asian Width
-        w = wcwidth.wcwidth ( char )
-        if 0 <= w : width += w
-        else:
-            ea = unicodedata.east_asian_width(char)
-            if ea in ('W', 'F') : width += 2 
-            else                : width += 1 
-            
-    return width
-
-
 # =============================================================================
 terminaltables = None
 # =============================================================================
@@ -242,7 +208,7 @@ def the_table ( rows                          ,
 
     title_bw = decolorize    ( title    ).strip ()
     title    = allright      ( title_bw )    
-    twidth   = visible_width ( title    ) ## visible lengtt of the title 
+    twidth   = visible_width ( title    ) ## visible length of the title 
     pwidth   = visible_width ( prefix   ) ## visible length of the prefix 
 
     if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]

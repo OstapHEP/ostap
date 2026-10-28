@@ -277,15 +277,18 @@ __all__     = (
     'to_italic'           , ## convert text to Italic
     'to_double_struck'    , ## convert text to Double-Dtruck 
     'to_fraktur'          , ## convert text to Fractur 
-    'to_sans_serif'       , ## convert text to Sans-Serif     
+    'to_sans_serif'       , ## convert text to Sans-Serif  
+    'to_bold'             , ## convert text to Bold 
+    'to_bold_italic'      , ## convert text to Bold Italic   
     ## 
     'remove_invisible'    , ## remove variantion selectors 
     'wide_symbols'        , ## set of (stripped) wide symbols
+    'visible_width'       , ## visible width of the character string 
 )
 # ===========================================================================
 from   ostap.utils.basic import has_unicode
 from   ostap.core.config import show_unicode
-import re 
+import sys, re, wcwidth, unicodedata
 # =============================================================================
 ## show unicode symbols? 
 show = show_unicode and has_unicode ()
@@ -631,14 +634,18 @@ italic_letters        = "𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀�
 double_struck_letters = "𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ𝕒𝕓𝕔𝕕𝕖𝔣𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝚟𝕨𝕩𝚢𝕫"
 fraktur_letters       = "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝘘𝔙𝔚𝔛𝔜ℨ𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷"
 sans_serif_letters    = "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝚕𝚖𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝚞𝘃𝘄𝘅𝘆𝐳"
+bold_italic_letters   = "".join(chr(0x1D468 + i) for i in range(26)) + "".join(chr(0x1D482 + i) for i in range(26))
+bold_letters          = "".join(chr(0x1D400 + i) for i in range(26)) + "".join(chr(0x1D41A + i) for i in range(26))
 
 # Translation maps (automatically disabled if unicode support is off)
-script_map        = str.maketrans ( latin_norm  , script_letters        ) if show else str.maketrans("", "")
-roman_map         = str.maketrans ( latin_norm  , roman_letters         ) if show else str.maketrans("", "")
-italic_map        = str.maketrans ( latin_norm  , italic_letters        ) if show else str.maketrans("", "")
-double_struck_map = str.maketrans ( latin_norm  , double_struck_letters ) if show else str.maketrans("", "")
-fraktur_map       = str.maketrans ( latin_norm  , fraktur_letters       ) if show else str.maketrans("", "")
-sans_serif_map    = str.maketrans ( latin_norm  , sans_serif_letters    ) if show else str.maketrans("", "")
+script_map        = str.maketrans ( latin_norm  , script_letters        ) if show else str.maketrans ( "" , "" )
+roman_map         = str.maketrans ( latin_norm  , roman_letters         ) if show else str.maketrans ( "" , "" )
+italic_map        = str.maketrans ( latin_norm  , italic_letters        ) if show else str.maketrans ( "" , "" )
+double_struck_map = str.maketrans ( latin_norm  , double_struck_letters ) if show else str.maketrans ( "" , "" )
+fraktur_map       = str.maketrans ( latin_norm  , fraktur_letters       ) if show else str.maketrans ( "" , "" )
+sans_serif_map    = str.maketrans ( latin_norm  , sans_serif_letters    ) if show else str.maketrans ( "" , "" )
+bold_italic_map   = str.maketrans ( latin_norm  , bold_italic_letters   ) if show else str.maketrans ( "" , "" ) 
+bold_map          = str.maketrans ( latin_norm  , bold_letters          ) if show else str.maketrans ( "" , "" )
 
 # Formatting helper functions
 def to_script        ( text ) : return text.translate ( script_map        ) if show else text
@@ -647,6 +654,9 @@ def to_italic        ( text ) : return text.translate ( italic_map        ) if s
 def to_double_struck ( text ) : return text.translate ( double_struck_map ) if show else text
 def to_fraktur       ( text ) : return text.translate ( fraktur_map       ) if show else text
 def to_sans_serif    ( text ) : return text.translate ( sans_serif_map    ) if show else text
+def to_bold_italic   ( text ) : return text.translate ( bold_italic_map   ) if show else text 
+def to_bold          ( text ) : return text.translate ( bold_map          ) if show else text
+
 
 script_t = to_script ( 't' )
 script_p = to_script ( 'p' )
@@ -709,6 +719,46 @@ wide_symbols = {
 # =============================================================================
 # Normalize keys by stripping variation selectors so they match cleaned text reliably
 wide_symbols = { remove_invisible ( k ) : v  for k , v in wide_symbols.items() if k }
+
+## conver to frozendict if/when possible
+if ( 3 , 15 ) <= sys.version_info :  
+    wide_symbols = frozendict( wide_symbols )
+    
+# =============================================================================
+## Visible width of the string 
+#   Calculate the true visible width of a string in a terminal,
+#   using single-pass clean_text sanitization and direct dictionary lookup 
+#   for wide symbols.
+def visible_width ( what ) :
+    """ Calculate the true visible width of a string in a terminal,
+    using single-pass clean_text sanitization and direct dictionary lookup 
+    for wide symbols.
+    """
+    if not what : return 0
+    
+    # Sanitize string ( strips ANSI colors, variation selectors, zero-width & bidi chars)
+    text = remove_invisible ( what )
+    if not text: return 0
+    
+    width = 0
+    
+    # Iterate through each clean character directly
+    for char in text:
+        # Check if this single character has a custom width override in our dictionary
+        if char in wide_symbols :
+            width += wide_symbols [ char ]
+            continue
+        
+        # Fallback to standard wcwidth / East Asian Width
+        w = wcwidth.wcwidth ( char )
+        if 0 <= w : width += w
+        else:
+            ea = unicodedata.east_asian_width ( char )
+            if ea in ('W', 'F') : width += 2 
+            else                : width += 1 
+            
+    return width
+
 
 # =============================================================================
 if '__main__' == __name__ :
