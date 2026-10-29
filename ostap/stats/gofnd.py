@@ -106,15 +106,15 @@ class GoF(AGoF,Config) :
                    genconf  = {}    ) : 
         ##
         if not isinstance ( estimator  , AGoFnp ) : raise TypeError  ( "Invalid type  for `estimator` : %s" % typename ( estimator ) )
-        if not isinstance ( mcFactor   , int    ) : raise TypeError  ( "Invalid type  for `mcFactor`  : %s" % typename ( mcFactor ) )
-        if not 1 <= mcFactor                      : raise ValueError ( "Invalid value for `mcFactor` : %d" %            mcFactor   )
+        if not isinstance ( mcFactor   , int    ) : raise TypeError  ( "Invalid type  for `mcFactor`  : %s" % typename ( mcFactor  ) )
+        if not 1 <= mcFactor                      : raise ValueError ( "Invalid value for `mcFactor`  : %d" %            mcFactor     )
         ##
         self.__estimator  = estimator 
         self.__mcFactor   = mcFactor 
         self.__sample     = True if sample else False
         self.__genconf    = genconf
 
-        silent = estimator.silent if hasattr ( estimator , 'silent' ) else False 
+        silent = estimator.silent if hasattr ( estimator , 'silent' ) else True  
         Config.__init__ ( self , silent = silent )
         
     # =======================================================================
@@ -465,10 +465,10 @@ class MIX(GoF) :
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     def __init__ ( self                 ,
                    nToys       = 1000   ,
-                   silent      = False  ,
                    parallel    = False  ,
                    n_neighbors = 10     ,
-                   mcFactor    = 20     , **params ) : 
+                   mcFactor    = 20     ,
+                   silent      = True   , **params ) : 
         """ Create Mixed Sample Estimator
     
         Parameters  
@@ -543,9 +543,9 @@ class PPD(GoF) :
                    nToys     = 1000       ,
                    psi       = 'gaussian' ,
                    sigma     = 0.10       ,
-                   silent    = False      ,
                    parallel  = False      ,
-                   mcFactor  = 20         , **params ) : 
+                   mcFactor  = 20         ,
+                   silent    = True       , **params ) : 
         """ Create the Point-to-Point Dissimilarity estimator
         
         Parameters  
@@ -563,10 +563,9 @@ class PPD(GoF) :
                                                psi      = psi      ,
                                                sigma    = sigma    ,
                                                parallel = parallel ,
-                                               silent   = silent   , **params ) ,                          
+                                               silent   = True     , **params ) ,                          
                          mcFactor = mcFactor )
 
-    
 # =============================================================================
 ## @class DNN
 #  Distance-to-Nearest-Neighour GoF-method 
@@ -598,7 +597,7 @@ class DNN(GoF) :
                    nToys    = 500   ,
                    sample   = False ,
                    parallel = False , 
-                   silent   = False ,
+                   silent   = True  ,
                    progress = True  ) : 
         
         ## initialize the base 
@@ -1017,7 +1016,7 @@ class BayesianIC(NLL) :
                    nToys    = 100   , 
                    sample   = False ,
                    parallel = False ,
-                   silent   = False ,
+                   silent   = True  ,
                    progress = True  ) :
 
         if   isinstance ( data , ROOT.RooDataSet ) : data = len ( data )
@@ -1105,7 +1104,7 @@ class ADVAL_LightGBM(GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    progress   = True  ,
                    mcFactor   = 20    , 
                    ADVAL_TYPE = None  , **params ) : 
@@ -1211,7 +1210,7 @@ class ADVAL_HistoGBoost(ADVAL_LightGBM) :
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
-                   silent    = False  ,
+                   silent    = True   ,
                    progress  = True   , **params ) : 
     
         """ Create the Adversarial Validation estimator 
@@ -1253,7 +1252,7 @@ class ADVAL_GBoost(ADVAL_LightGBM) :
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
-                   silent    = False  ,
+                   silent    = True   ,
                    progress  = True   , **params ) : 
     
         """ Create the Adversarial Validation estimator 
@@ -1296,7 +1295,7 @@ class ADVAL_XGBoost(ADVAL_LightGBM) :
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
-                   silent    = False  ,
+                   silent    = True   ,
                    progress  = True   , **params ) : 
     
         """ Create the Adversarial Validation estimator 
@@ -1338,7 +1337,7 @@ class ADVAL_RandomForest(ADVAL_LightGBM) :
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
-                   silent    = False  ,
+                   silent    = True   ,
                    progress  = True   , **params ) : 
     
         """ Create the Adversarial Validation estimator 
@@ -1380,7 +1379,7 @@ class ADVAL_CatBoost(ADVAL_LightGBM) :
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
-                   silent    = False  ,
+                   silent    = True   ,
                    progress  = True   , **params ) : 
             
         """ Create the Adversarial Validation estimator 
@@ -1422,7 +1421,7 @@ class ADVAL_PyTorch(ADVAL_LightGBM) :
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
-                   silent    = False  ,
+                   silent    = True   ,
                    progress  = True   , **params ) : 
             
         """ Create the Adversarial Validation estimator 
@@ -1464,7 +1463,7 @@ class ADVAL_Keras(ADVAL_LightGBM) :
                    mcFactor  = 20     , 
                    nToys     = 400    ,
                    parallel  = False  ,
-                   silent    = False  ,
+                   silent    = True   ,
                    progress  = True   , **params ) : 
             
         """ Create the Adversarial Validation estimator 
@@ -1496,10 +1495,10 @@ class KolmogorovSmirnov(GoF) :
     ## create the estimator
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     #  @param nToys    : (int)  number of permutations/toys 
-    def __init__ ( self               , * , 
+    def __init__ ( self           , *     , 
                    nToys          = 400   ,
                    parallel       = False ,
-                   silent         = False ,
+                   silent         = True  ,
                    progress       = True  ,
                    ESTIMATOR_TYPE = None  ,
                    mcFactor       = 20    , **params     ) : 
@@ -1586,10 +1585,10 @@ class Kuiper ( KolmogorovSmirnov ) :
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of bootstrapping/toys     
     """
-    def __init__ ( self               , * , 
+    def __init__ ( self           , *     , 
                    nToys          = 400   ,
                    parallel       = False ,
-                   silent         = False ,
+                   silent         = True  ,
                    progress       = True  ,
                    mcFactor       = 20    , **params    ) : 
         
@@ -1632,10 +1631,10 @@ class CramerVonMises ( KolmogorovSmirnov ) :
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of bootstrapping/toys     
     """
-    def __init__ ( self               , * , 
+    def __init__ ( self           , *     , 
                    nToys          = 400   ,
                    parallel       = False ,
-                   silent         = False ,
+                   silent         = True  ,
                    progress       = True  ,
                    mcFactor       = 20    , **params    ) : 
         
@@ -1655,10 +1654,10 @@ class BerkJones ( KolmogorovSmirnov ) :
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of bootstrapping/toys     
     """
-    def __init__ ( self               , * , 
+    def __init__ ( self                   , *  , 
                    nToys          = 400   ,
                    parallel       = False ,
-                   silent         = False ,
+                   silent         = True  ,
                    progress       = True  ,
                    mcFactor       = 20    , **params    ) : 
         
@@ -1678,10 +1677,10 @@ class ZA ( KolmogorovSmirnov ) :
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of bootstrapping/toys     
     """
-    def __init__ ( self               , * , 
+    def __init__ ( self                   , *  , 
                    nToys          = 400   ,
                    parallel       = False ,
-                   silent         = False ,
+                   silent         = True  ,
                    progress       = True  ,
                    mcFactor       = 20    , **params    ) : 
         
@@ -1701,10 +1700,10 @@ class ZC ( KolmogorovSmirnov ) :
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of bootstrapping/toys     
     """
-    def __init__ ( self               , * , 
+    def __init__ ( self                   , * , 
                    nToys          = 400   ,
                    parallel       = False ,
-                   silent         = False ,
+                   silent         = True  ,
                    progress       = True  ,
                    mcFactor       = 20    , **params    ) : 
         
@@ -1724,10 +1723,10 @@ class ZK ( KolmogorovSmirnov ) :
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     - nToys    : (int)   number of bootstrapping/toys     
     """
-    def __init__ ( self               , * , 
+    def __init__ ( self                   , * , 
                    nToys          = 400   ,
                    parallel       = False ,
-                   silent         = False ,
+                   silent         = True  ,
                    progress       = True  ,
                    mcFactor       = 20    , **params    ) : 
         
@@ -1739,7 +1738,6 @@ class ZK ( KolmogorovSmirnov ) :
                            ESTIMATOR_TYPE = ZK    ,
                            mcFactor       = mcFactor , **params )
         
-
 # =============================================================================
 ## @class KullbackLeibler 
 #  Use "Kullback-Leibler" method to estimate the Goodness-of-Fit
@@ -1761,7 +1759,7 @@ class KullbackLeibler(GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    symmetric  = True  , 
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
@@ -1805,7 +1803,7 @@ class Jeffrey(GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    symmetric  = True  , 
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
@@ -1848,7 +1846,7 @@ class JensenShannon (GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    symmetric  = True  , 
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
@@ -1891,7 +1889,7 @@ class Mahalanobis(GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     
@@ -1932,7 +1930,7 @@ class Hotelling(GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     
@@ -1973,7 +1971,7 @@ class Bhattacharyya(GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     
@@ -2014,7 +2012,7 @@ class Wasserstein(GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     
@@ -2056,7 +2054,7 @@ class Hellinger(GoF) :
     def __init__ ( self               , * , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     
@@ -2099,7 +2097,7 @@ class Chi2(GoF) :
                    binning            , 
                    nToys      = 400   ,
                    parallel   = False ,
-                   silent     = False ,
+                   silent     = True  ,
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     

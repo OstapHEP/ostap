@@ -49,8 +49,7 @@ from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.utils         import chunked
 from   ostap.math.math_base      import np2raw, FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
 from   ostap.trees.utils         import Tree, Chain
-from   ostap.logger.symbols      import ( script_v ,
-                                          sub_mean , sub_rms ,
+from   ostap.logger.symbols      import ( sub_mean , sub_rms ,
                                           sub_min  , sub_max ,
                                           tree     as tree_symbol   ,
                                           branch   as branch_symbol ,

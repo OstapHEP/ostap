@@ -409,15 +409,13 @@ else
 
 fi
 
-printf "%s LCG VERSION        : %s\n" "${prefix}" "${LCG}"
-printf "%s LCG PLATFORM       : %s\n" "${prefix}" "${PLATFORM}"
-printf "%s LCG BUILD          : %s\n" "${prefix}" "${LCG_BUILD}"
-
-printf "%s ROOTSYS            : %s\n" "${prefix}" "${ROOTSYS}"
-
-printf "%s OSTAP_SOURCE       : %s\n" "${prefix}" "${OSTAP_SOURCE}"
-printf "%s OSTAP_INSTALL      : %s\n" "${prefix}" "${OSTAP_INSTALL}"
-printf "%s OSTAP_BUILD        : %s\n" "${prefix}" "${OSTAP_BUILD}"
+printf "%s LCG VERSION    : %s\n" "${prefix}" "${LCG}"
+printf "%s LCG PLATFORM   : %s\n" "${prefix}" "${PLATFORM}"
+printf "%s LCG BUILD      : %s\n" "${prefix}" "${LCG_BUILD}"
+printf "%s ROOTSYS        : %s\n" "${prefix}" "${ROOTSYS}"
+printf "%s OSTAP_SOURCE   : %s\n" "${prefix}" "${OSTAP_SOURCE}"
+printf "%s OSTAP_INSTALL  : %s\n" "${prefix}" "${OSTAP_INSTALL}"
+printf "%s OSTAP_BUILD    : %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 old_prefix="${prefix}"
 old_prefix_error="${prefix_error}"
@@ -437,17 +435,16 @@ fi
 prefix="${old_prefix}"
 prefix_error="${old_prefix_error}"
 
-printf "%s LCG VERSION        : %s\n" "${prefix}" "${LCG}"
-printf "%s LCG PLATFORM       : %s\n" "${prefix}" "${PLATFORM}"
-printf "%s LCG BUILD          : %s\n" "${prefix}" "${LCG_BUILD}"
-printf "%s LCG_SETUP          : %s\n" "${prefix}" "${LCG_SETUP}"
+printf "%s LCG VERSION    : %s\n" "${prefix}" "${LCG}"
+printf "%s LCG PLATFORM   : %s\n" "${prefix}" "${PLATFORM}"
+printf "%s LCG BUILD      : %s\n" "${prefix}" "${LCG_BUILD}"
+printf "%s LCG_SETUP      : %s\n" "${prefix}" "${LCG_SETUP}"
 
 if [ "$result" -eq 0 ]; then
-    printf "%s RESULT             : SUCCESS\n" "${prefix}"
+    printf "%s RESULT         : SUCCESS\n" "${prefix}"
 else
-    printf "%s RESULT             : %s\n" "${prefix_error}" "${result}"
+    printf "%s RESULT         : %s\n" "${prefix_error}" "${result}"
 fi
-
 
 # =====================================================================
 env_after=$(printenv|sort)

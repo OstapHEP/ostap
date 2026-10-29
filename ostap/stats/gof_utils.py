@@ -31,20 +31,18 @@ from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.core.ostap_types   import string_types, num_types, numpy_floats  
 from   ostap.math.math_base     import axis_range
 from   ostap.math.math_ve       import significance
-from   ostap.stats.utils        import weight_trivial
+from   ostap.stats.utils        import ( weight_trivial  ,
+                                         full_header     ,
+                                         short_header    ,
+                                         t_header        )
 from   ostap.stats.counters     import SE, WSE, ECDF
-from   ostap.stats.tools        import hasSkLearn 
-from   ostap.logger.symbols     import ( plus_minus  , greek_lower_sigma ,
-                                         subscript_A , subscript_K , subscript_C , 
-                                         likelihood  , script_t    , script_p    ,
-                                         sub_min     , sub_max     ,
-                                         sub_mean    , sub_rms     , 
-                                         infinity_pos as pos_infinity_symbol     )                                         
+from   ostap.stats.tools        import hasSkLearn
 from   ostap.logger.pretty      import pretty_row 
 from   ostap.plotting.color     import Orange, Green, Blue
 from   packaging.version        import Version
 import ostap.math.linalg 
-import ostap.logger.table       as     T 
+import ostap.logger.table       as     T
+import ostap.logger.symbols     as     S 
 import ROOT, numpy, scipy    
 # =============================================================================
 # logging 
@@ -65,7 +63,7 @@ try : # =======================================================================
 except ImportError :
     # =========================================================================
     s2u = None 
-# =============================================================================
+    # =============================================================================
 ## pair-wise distances between two datasets 
 pairwise_distance = None # ====================================================
 # =============================================================================
@@ -296,9 +294,10 @@ def nEff ( weights ) :
     """ Get the effective number of entries for 1D-array
     n_eff = ( sum ( x )  ) ^2 / sum ( x^2 )
     """
-    s1 = numpy.sum ( weights      , dtype = float )
-    s2 = numpy.sum ( weights ** 2 , dtype = float )
-    return s1 * s1 / s2
+    w_arr = numpy.asarray     ( weight , dtype = numpy.float64 )
+    sumw  = float ( numpy.sum ( w_arr  , dtype = numpy.float64 ) ) 
+    sumw2 = float ( numpy.dot ( w_arr  , w_arr ) ) 
+    return ( sumw * sumw ) / sumw2 
 
 # =============================================================================
 ## Normalize/standartize several numpy arrays such that mean and rms for the pooled sample
@@ -532,29 +531,33 @@ def normalize_weights_to_N ( weight1 ,
 # =============================================================================
 ## Short labels for various statitical estimators 
 Labels = {
-    'KS'  : 'Kolmogorov-Smirnov'   ,
-    'K'   : 'Kuiper'               ,
-    'AD'  : 'Anderson-Darling'     ,
-    'CM'  : 'Cramer-von Mises'     ,
-    'ZK'  : "Zhang Z%s" % subscript_K ,
-    'ZA'  : "Zhang Z%s" % subscript_A ,
-    'ZC'  : "Zhang Z%s" % subscript_C ,        
-    'BJ'  : 'Berk-Jones'           ,        
-    'NLL' : '-log%s' % likelihood  ,
-    'AIC' : 'Akaike IC'            ,
-    'BIC' : 'Bayesian IC'          ,    
+    'KS'  : 'Kolmogorov-Smirnov'        ,
+    'K'   : 'Kuiper'                    ,
+    'AD'  : 'Anderson-Darling'          ,
+    'CM'  : 'Cramer-von Mises'          ,
+    'ZK'  : "Zhang Z%s" % S.subscript_K ,
+    'ZA'  : "Zhang Z%s" % S.subscript_A ,
+    'ZC'  : "Zhang Z%s" % S.subscript_C ,        
+    'BJ'  : 'Berk-Jones'                ,
+    'U2'  : 'Watson U²'                 ,
+    'R'   : 'Rosenblatt'                ,    
+    'NLL' : '-log%s'    % S.likelihood  ,
+    'AIC' : 'Akaike IC'                 ,
+    'BIC' : 'Bayesian IC'               ,    
 }
 # =============================================================================
 ## lower-case shortcuts:
 Keys = {    
-    'KS'  : ( 'ks'  , 'kolmogorov' , 'kolmogorovsmirnov' ) , 
-    'K'   : ( 'k'   , 'kuiper'                           ) , 
-    'AD'  : ( 'ad'  , 'anderson'   , 'andersondarling'   ) , 
-    'CM'  : ( 'cm'  , 'cramer'     , 'cramervonmises'    ) , 
-    'ZK'  : ( 'zk'  , 'zhangk'     , 'zhangzk'           ) , 
-    'ZA'  : ( 'za'  , 'zhanga'     , 'zhangza'           ) , 
-    'ZC'  : ( 'zc'  , 'zhangc'     , 'zhangzc'           ) , 
-    'BJ'  : ( 'bj'  , 'berkjones'  , 'berk'              ) , 
+    'KS'  : ( 'ks'  , 'kolmogorov' , 'kolmogorovsmirnov'  , 'smirnov'   ) , 
+    'K'   : ( 'k'   , 'kuiper'                                          ) , 
+    'AD'  : ( 'ad'  , 'anderson'   , 'andersondarling'     , 'darling'  ) , 
+    'CM'  : ( 'cm'  , 'cramer'     , 'cramervonmises'      , 'vonmises' ) , 
+    'ZK'  : ( 'zk'  , 'zhangk'     , 'zhangzk'             ) , 
+    'ZA'  : ( 'za'  , 'zhanga'     , 'zhangza'             ) , 
+    'ZC'  : ( 'zc'  , 'zhangc'     , 'zhangzc'             ) , 
+    'BJ'  : ( 'bj'  , 'berkjones'  , 'berk'                ) ,
+    'U2'  : ( 'u2'  , 'watsonu2'   , 'u2watson' , 'watson' ) ,
+    'R'   : ( 'r'   , 'rosenblatt' ) ,     
     'NLL' : ( 'nll' ,              ) , 
     'AIC' : ( 'aic' , 'akaike'     ) ,  
     'BIC' : ( 'bic' , 'bayesian'   ) , 
@@ -590,23 +593,6 @@ def clip_pvalue ( pvalue , clip = 0.5 ) :
 # =============================================================================
 pvalue_types = num_types + ( VE , ) 
 # =============================================================================
-col_t_value = '%s-value'      %   script_t
-col_t_mean  = '%s%s'          % ( script_t , sub_mean ) 
-col_t_rms   = '%s%s'          % ( script_t , sub_rms  ) 
-col_t_min   = '%s%s'          % ( script_t , sub_min  )
-col_t_max   = '%s%s'          % ( script_t , sub_max  )
-col_t_unit  = '%s-unit'       %   script_t 
-col_p_value = '%s-value [%%]' %   script_p
-col_n_sigma = '#%s'           %   greek_lower_sigma
-the_header  = ( col_t_value ,
-                col_t_mean  ,
-                col_t_rms   ,
-                col_t_min   ,
-                col_t_max   ,
-                col_t_unit  ,
-                col_p_value ,
-                col_n_sigma )
-# =============================================================================
 ## Format the row for 2S/GoF tables
 #  @code
 #  tvalue = ...
@@ -638,7 +624,7 @@ def format_row ( tvalue    = None ,
         
     if has_tvalue and has_pvalue and has_counter :
         
-        header = the_header
+        header     = full_header
 
         mean       = counter.mean   ()
         rms        = counter.rms    () 
@@ -655,11 +641,11 @@ def format_row ( tvalue    = None ,
 
         pvalue  = pvalue * 100
 
-        if isinstance ( pvalue , VE )   : pvalue  = '%6.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
+        if isinstance ( pvalue , VE )   : pvalue  = '%6.2f %s %.2f' % ( pvalue.value() , S.plus_minus , pvalue.error () )
         else                            : pvalue  = '%6.2f'         %   float ( pvalue )
         
-        if   99 < float ( nsigma      ) : nsigma = pos_infinity_symbol 
-        elif isinstance ( nsigma , VE ) : nsigma = '%.2f %s %.2f'   % ( nsigma.value() , plus_minus , nsigma.error () )
+        if   99 < float ( nsigma      ) : nsigma = S.infinity_pos 
+        elif isinstance ( nsigma , VE ) : nsigma = '%.2f %s %.2f'   % ( nsigma.value() , S.plus_minus , nsigma.error () )
         else                            : nsigma = '%.2f'           %   float ( nsigma ) 
 
         row = row + ( unit , pvalue , nsigma )
@@ -668,10 +654,7 @@ def format_row ( tvalue    = None ,
 
     elif has_tvalue and has_pvalue :
         
-        header    = ( col_t_value , 
-                      col_t_unit  ,
-                      col_p_value ,
-                      col_n_sigma ) 
+        header     = short_header 
 
         items      = tvalue, 
         row, unit  = pretty_row  ( *items , width = width , precision = precision )
@@ -682,11 +665,11 @@ def format_row ( tvalue    = None ,
         if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
         
         pvalue  = pvalue * 100 
-        if isinstance ( pvalue , VE )   : pvalue  = '%6.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
+        if isinstance ( pvalue , VE )   : pvalue  = '%6.2f %s %.2f' % ( pvalue.value() , S.plus_minus , pvalue.error () )
         else                            : pvalue  = '%6.2f'         % float ( pvalue )
 
-        if   99 < float ( nsigma      ) : nsigma = pos_infinity_symbol 
-        elif isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )        
+        if   99 < float ( nsigma      ) : nsigma  = S.infinity_pos
+        elif isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , S.plus_minus , nsigma.error () )        
         else                            : nsigma  = '%.2f'          % float ( nsigma ) 
         
         row     = row + ( unit , pvalue , nsigma )
@@ -694,7 +677,7 @@ def format_row ( tvalue    = None ,
 
     elif has_tvalue :
         
-        header     = col_t_value , col_t_unit 
+        header     = t_header 
         items      = tvalue, 
         row, unit  = pretty_row  ( *items , width = width , precision = precision )
         unit       = '[%s]' % unit if unit else unit

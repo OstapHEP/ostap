@@ -12,7 +12,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
-    'GoFnp'           , ## A base class for numpy-related family of methods to probe goodness-of-fit
+    'GoFnp' , ## A base class for numpy-related family of methods to probe goodness-of-fit
 )
 # =============================================================================
 from   ostap.core.ostap_types   import num_types 

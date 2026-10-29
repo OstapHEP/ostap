@@ -215,7 +215,10 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             
         neff_before = nEff ( original , original_weight )
         neff_after  = nEff ( original , final_weight    )
-        if neff_after < 0.10 * neff_before : logger.warning ( "%s: Huge degradation of #eff %s %s %s" % ( self.method , n1 , S.arrow_right , n2 ) ) 
+        if neff_after < 0.10 * neff_before :
+            nb = nice_print ( neff_before , precision = 2 , with_sign = False , strip = True )
+            na = nice_print ( neff_after  , precision = 2 , with_sign = False , strip = True )
+            logger.warning ( "%s: Huge degradation of #eff %s %s %s" % ( self.method , nb , S.arrow_right , na ) ) 
             
         clipped_count = numpy.sum ( original_ratios >= ( self.__clip_threshold * 0.999 ) )
         if 0 < clipped_count : 

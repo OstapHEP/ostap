@@ -24,10 +24,9 @@ __all__     = (
 # =============================================================================
 from   ostap.utils.core         import typename
 from   ostap.math.math_base     import data2vct 
-from   ostap.stats.utils        import weight_trivial , check_all                                           
+from   ostap.stats.utils        import weight_trivial , check_all, p_value_string                                         
 from   ostap.stats.counters     import EffCounter, ECDF 
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.logger.symbols     import script_p 
 import ostap.logger.symbols     as     S 
 import numpy, math, abc 
 # =============================================================================
@@ -281,7 +280,7 @@ class PVALUE (abc.ABC) :
 
         if not silent :
             goftype = typename ( self.gof ) 
-            logger.info ( 'GoF %s-value [%s]: #%d parallel subjobs to run' % ( S.script_p , goftype , njobs ) )
+            logger.info ( 'GoF %s [%s]: #%d parallel subjobs to run' % ( p_value_string , goftype , njobs ) )
             
         counter = EffCounter()
         tvalues = () 

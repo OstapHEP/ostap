@@ -38,7 +38,6 @@ import os, sys, socket, ROOT
 # =============================================================================
 MetaInfo = namedtuple ( 'MetaInfo'  , ( 'User' , 'Ostap' , 'Python' , 'ROOT'  ) ) 
 RootInfo = namedtuple ( 'RootInfo'  , ( 'major' , 'minor' , 'patch'           ) ) 
-
 # =============================================================================
 ## Who am I ?
 #  @cdoe

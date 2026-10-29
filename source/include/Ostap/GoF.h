@@ -126,6 +126,63 @@ namespace Ostap
         }
         return result + 1 / ( 12.0 * N ) ;
       } ;
+    
+    // ========================================================================
+    /** Watson's U^2 estimator for input sorted array \f$ F( x_i) \f$ 
+     *  - Rotationally invariant modification of the Cramer-von Mises test, 
+     *    incorporating a centering term based on the mean of the evaluated CDF values.
+     *  @param begin begin-iterator for input sorted array of CDF( x(i) ) 
+     *  @param end   end-iterator for input sorted array of CDF( x(i) ) 
+     *  @return value of Watson's U^2 estimator 
+     */
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
+    inline double
+    watson_u2
+    ( ITERATOR begin , 
+      ITERATOR end   )
+    {
+      const std::size_t N = std::distance ( begin , end ) ;
+      double sum1 = 0.0 ;
+      double sum_f = 0.0 ;
+      
+      auto first = begin;
+      for ( std::size_t i = 0 ; first != end ; ++i, ++first )
+      {
+	const double f = *first ;
+	sum_f += f;
+	sum1 += std::pow ( f - ( i + 0.5 ) / N , 2 ) ;
+      }
+      const double f_bar = sum_f / N ;
+      // Watson's U^2 statistic calculation including mean-centering correction
+      return sum1 + 1.0 / ( 12.0 * N ) - N * std::pow ( f_bar - 0.5 , 2 ) ;
+    } ;
+    // ========================================================================
+    /** Rosenblatt's integral estimator for input sorted array \f$ F( x_i) \f$ 
+     *  - Evaluates cumulative quadratic discrepancies against expected uniform order statistics.
+     *  @param begin begin-iterator for input sorted array of CDF( x(i) ) 
+     *  @param end   end-iterator for input sorted array of CDF( x(i) ) 
+     *  @return value of Rosenblatt estimator 
+     */
+    template <class ITERATOR ,
+              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
+    inline double
+    rosenblatt
+    ( ITERATOR begin , 
+      ITERATOR end   )
+    {
+      const std::size_t N = std::distance ( begin , end ) ;
+      double result = 0.0 ;
+      for ( std::size_t i = 0 ; begin != end ; ++i, ++begin )
+      {
+	const double f = *begin ;
+	const double expected = ( i + 1.0 ) / ( N + 1.0 ) ;
+	result += std::pow ( f - expected , 2 ) ;
+      }
+      return result ;
+    } ;
     // ========================================================================
     /** Zhang's Z_K estimator for input sorted array \f$ F( x_i) \f$ 
      * - (sorted) input array of CDF ( x_i ) 
@@ -301,6 +358,29 @@ namespace Ostap
     cramer_von_mises
     ( const Ostap::Utils::Buffer<DATA>& buffer )
     { return cramer_von_mises ( buffer.begin() , buffer.end () ) ; }
+    // ========================================================================
+    /** Watson's U^2 estimator for input sorted array \f$ F( x_i) \f$ 
+     *  - Rotationally invariant modification of the Cramer-von Mises test, 
+     *    incorporating a centering term based on the mean of the evaluated CDF values.
+     *  @return value of Watson's U^2 estimator 
+     */
+    template <class DATA>
+    inline double
+    watson_u2
+    ( const Ostap::Utils::Buffer<DATA>& buffer )
+    { return watson_u2 ( buffer.begin() , buffer.end () ) ; }
+    // ========================================================================    
+    /** Rosenblatt's integral estimator for input sorted array \f$ F( x_i) \f$ 
+     *  - Evaluates cumulative quadratic discrepancies against expected uniform order statistics.
+     *  @param begin begin-iterator for input sorted array of CDF( x(i) ) 
+     *  @param end   end-iterator for input sorted array of CDF( x(i) ) 
+     *  @return value of Rosenblatt estimator 
+     */
+    template <class DATA>
+    inline double
+    rosenblatt
+    ( const Ostap::Utils::Buffer<DATA>& buffer )
+    { return rosenblatt ( buffer.begin() , buffer.end () ) ; }    
     // =========================================================================
     /** Zhang's Z_A estimator for input sorted array \f$ F( x_i) \f$ 
      * - (sorted) input array of CDF ( x_i ) 
@@ -339,8 +419,6 @@ namespace Ostap
     ZC 
     ( const Ostap::Utils::Buffer<DATA>& buffer )
     { return ZC ( buffer.begin() , buffer.end () ) ; }
-    // ========================================================================
-
     // ========================================================================
     /** Berk-Jones estimator
      *  @see https://en.wikipedia.org/wiki/Berk-Jones_test

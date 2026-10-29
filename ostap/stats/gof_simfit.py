@@ -26,11 +26,12 @@ from   ostap.math.math_base     import axis_range, product
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.core         import typename   
 from   ostap.stats.counters     import SE, EffCounter, ECDF
-from   ostap.logger.pretty      import pretty_float
+from   ostap.logger.pretty      import pretty_float, format_pow10 
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
-from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma, clock, toys , script_t , script_p 
-from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, combine_pvalues 
+from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma, clock, toys
+from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, combine_pvalues
+from   ostap.stats.utils        import full_header, t_header 
 from   ostap.fitting.simfit     import SimFit 
 from   ostap.stats.gof          import AGoF
 from   ostap.stats.gof1d        import ( GoF1D , vct_clip      ,
@@ -1163,10 +1164,10 @@ class GoFSimFit(GoFSimFitBase) :
 
         ## no toys, no p-values, ...
         if not self.__ecdfs or not self.__counters : 
-            rows = [ ('Category' , '%s-value' % script_t , 'Factor' ) ] 
+            rows = [ ('Category' , ) + t_header ] 
             for  key, tv in self.tvalues().items() :
                 tt , expo = pretty_float ( tv , precision = precision , width = width ) 
-                row = key, tt , '10^{%d}' % expo if expo else ''
+                row = key, tt , format_pow10 ( expo ) if expo else ''
                 rows.append ( row )
             rows  = T.remove_empty_columns ( rows )
             return T.table  ( rows , title  = title , prefix = prefix , alignment = 'lcc' )
@@ -1262,13 +1263,7 @@ class GoFSimFit(GoFSimFitBase) :
             
             rows [ -6 : ] = sorted ( rows [ -6 : ] )
         
-        header = ( 'Category' , 
-                  '%s-value'      % script_t , 
-                  '%s-mean'       % script_t , 
-                  '%s-rms'        % script_t , 
-                  '%s-min'        % script_t , 
-                  '%s-max'        % script_t , 'unit' , 
-                  '%s-value [%%]' % script_t , '#%s' % greek_lower_sigma )
+        header = ( 'Category' , ) + full_header 
         rows   = [ header ] + rows 
         rows   = T.remove_empty_columns ( rows ) 
         title = title if title else 'SimFit-GoF statistics #%d' % self.nToys

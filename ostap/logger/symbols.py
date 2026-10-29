@@ -201,12 +201,6 @@ __all__     = (
     'script_M'            , ## ℳ
     'script_P'            , ## 🫫 / 🫥
     'script_R'            , ## ℛ
-    'script_l'            , ## 𝓁
-    'script_p'            , ## 🅟
-    'script_t'            , ## 𝓉
-    'script_u'            , ## 𝓊
-    'script_v'            , ## 𝓋
-    'script_w'            , ## 𝓌
     'script_map'          , ## mapping dict
     'show'                , ## bool
     'shuffle'             , ## 🔀    
@@ -234,20 +228,21 @@ __all__     = (
     'tensor_product'      , ## ⨂
     'thumb_down'          , ## 👎  (wide)
     'thumb_up'            , ## 👍  (wide)
-    'times'               , ## ❌ (Красивый цветной крестик)
+    'times'               , ## × 
+    'times_colored'       , ## ❌ (Красивый цветной крестик)
     'triangular_flag'     , ## 🚩
     'toys'                , ## 🧸  (wide)
     'tree'                , ## 🌳 (wide)
     'trophy'              , ## 🏆
     ##
-    'union'               , ## ⋃
+    'union'                  , ## ⋃
     ## 
-    'variance_sym'        , ## σ²
+    'variance_sym'           , ## σ²
     ## 
-    'warning'             , ## ⚠️
-    'weight_lifter'       , ## 🏋️  (wide)
-    'weight_scale'        , ## ⚖️  (wide)
-    'weierstrass_p'       , ##  ℘
+    'warning'                , ## ⚠️
+    'weight_lifter'          , ## 🏋️  (wide)
+    'weight_scale'           , ## ⚖️  (wide)
+    'weierstrass_p'          , ##  ℘
     ##
     'white_arrow_left'       , ## ⇦
     'white_arrow_right'      , ## ⇨
@@ -282,7 +277,7 @@ __all__     = (
     'to_bold_italic'      , ## convert text to Bold Italic   
     ## 
     'remove_invisible'    , ## remove variantion selectors 
-    'wide_symbols'        , ## set of (stripped) wide symbols
+    'exceptional_symbols' , ## set of exceptional wide symbols
     'visible_width'       , ## visible width of the character string 
 )
 # ===========================================================================
@@ -359,7 +354,8 @@ same             = '≡'  if show else 'same'
 clock_ticks      = '🕐🕜🕑🕝🕒🕞🕓🕟🕔🕠🕕🕡🕖🕢🕗🕣🕘🕤🕙🕟🕚🕦🕛🕧' if show else '|/-\\'
 clock_ticks      = tuple ( clock_ticks )
 
-times            = '❌'  if show else 'x'       # Заменено на яркий красный крестик
+times            = '×'  if show else 'x'   
+times_colored    = '❌' if show else times 
 plus_minus       = '±'  if show else '+/-'
 minus_plus       = '∓'  if show else '-/+'
 ditto            = '〃' if show else '-//-'
@@ -625,8 +621,7 @@ superscript_map = str.maketrans({
 # ==============================================================================
 
 # Base Latin alphabet for mapping
-latin_norm = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-
+latin_norm            = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 # Character sets for various Unicode typography styles
 script_letters        = "𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝒵"
 roman_letters         = "𝐀𝐁𝐂𝐃𝐄𝐅𝙶𝐇𝐈𝙹𝐊𝐋𝙼𝙽𝙾𝙿𝐐𝐑𝚂𝐓𝚄𝚅𝚆𝚇𝚈𝚉𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝚔𝚕𝚖𝚗𝐨𝐩𝕢𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳"
@@ -634,8 +629,8 @@ italic_letters        = "𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀�
 double_struck_letters = "𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ𝕒𝕓𝕔𝕕𝕖𝔣𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝚟𝕨𝕩𝚢𝕫"
 fraktur_letters       = "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝘘𝔙𝔚𝔛𝔜ℨ𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷"
 sans_serif_letters    = "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝚕𝚖𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝚞𝘃𝘄𝘅𝘆𝐳"
-bold_italic_letters   = "".join(chr(0x1D468 + i) for i in range(26)) + "".join(chr(0x1D482 + i) for i in range(26))
-bold_letters          = "".join(chr(0x1D400 + i) for i in range(26)) + "".join(chr(0x1D41A + i) for i in range(26))
+bold_italic_letters   = "".join ( chr ( 0x1D468 + i ) for i in range ( 26 ) ) + "".join ( chr ( 0x1D482 + i ) for i in range ( 26 ) )
+bold_letters          = "".join ( chr ( 0x1D400 + i ) for i in range ( 26 ) ) + "".join ( chr ( 0x1D41A + i ) for i in range ( 26 ) )
 
 # Translation maps (automatically disabled if unicode support is off)
 script_map        = str.maketrans ( latin_norm  , script_letters        ) if show else str.maketrans ( "" , "" )
@@ -657,12 +652,6 @@ def to_sans_serif    ( text ) : return text.translate ( sans_serif_map    ) if s
 def to_bold_italic   ( text ) : return text.translate ( bold_italic_map   ) if show else text 
 def to_bold          ( text ) : return text.translate ( bold_map          ) if show else text
 
-
-script_t = to_script ( 't' )
-script_p = to_script ( 'p' )
-script_u = to_script ( 'u' )
-script_v = to_script ( 'v' )
-script_w = to_script ( 'w' )
 
 sub_min  = 'ₘᵢₙ'  if show else '-min'
 sub_max  = 'ₘₐₓ'  if show else '-max'
@@ -700,7 +689,7 @@ def remove_invisible ( text ) :
 ## Unified dictionary of wide/multi-column symbols and their exact terminal widths.
 #  Includes standard wide icons (width 2) and hardcoded overrides for composite emojis.
 # =============================================================================
-wide_symbols = {
+exceptional_symbols = {
     cabinet           : 2 ,
     chain             : 2 , 
     document          : 2 , 
@@ -718,11 +707,11 @@ wide_symbols = {
 }
 # =============================================================================
 # Normalize keys by stripping variation selectors so they match cleaned text reliably
-wide_symbols = { remove_invisible ( k ) : v  for k , v in wide_symbols.items() if k }
+exceptional_symbols = { remove_invisible ( k ) : v  for k , v in exceptional_symbols.items() if k }
 
 ## conver to frozendict if/when possible
 if ( 3 , 15 ) <= sys.version_info :  
-    wide_symbols = frozendict( wide_symbols )
+    exceptional_symbols = frozendict ( exceptional_symbols )
     
 # =============================================================================
 ## Visible width of the string 
@@ -745,8 +734,8 @@ def visible_width ( what ) :
     # Iterate through each clean character directly
     for char in text:
         # Check if this single character has a custom width override in our dictionary
-        if char in wide_symbols :
-            width += wide_symbols [ char ]
+        if char in exceptional_symbols :
+            width += exceptional_symbols [ char ]
             continue
         
         # Fallback to standard wcwidth / East Asian Width

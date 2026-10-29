@@ -24,11 +24,25 @@ __all__     = (
     'check_all'           , ## check ALL
     'nEff'                , ## Compute effective sample size (Kish's design effect formula)
     'np2vct'              , ## numpy arrays into SVectorWithError
-    'eff_size'            , ## effective size of two samples 
+    'eff_size'            , ## effective size of two samples
+    ##
+    'p_value_string'      , ## nice representatio of p-value
+    't_value_string'      , ## nice representatio of t-value
+    't_mean_string'       , ## nice representatio of t-mean 
+    't_min_string'        , ## nice representatio of t-min 
+    't_max_string'        , ## nice representatio of t-max 
+    't_unit_string'       , ## nice representatio of t-unit 
+    'n_sigma_string'      , ## nice representaito of #sigma     
+    'p_value_percent'     , ## nice representatio of p-value in [%]
+    'full_header'         , ## the header for statistical table (full) 
+    'short_header'        , ## the header for statistical table (short) 
+    't_header'            , ## the header for statistical table (only t-values)
+    'w_header'            , ## "header" for min/max weights 
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
-from   ostap.utils.core       import typename 
+from   ostap.utils.core       import typename
+import ostap.logger.symbols   as     S 
 import numpy, re 
 # =============================================================================
 # logging 
@@ -36,6 +50,40 @@ import numpy, re
 from ostap.logger.logger import getLogger, logAttention 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.utils' )
 else                       : logger = getLogger( __name__ )
+# =============================================================================
+p_italic       = S.to_bold_italic ( 'p' )
+t_italic       = S.to_bold_italic ( 't' ) 
+w_italic       = S.to_bold_italic ( 'w' ) 
+# =============================================================================                               
+p_value_string  = '%s-value' %   p_italic 
+t_value_string  = '%s-value' %   t_italic
+t_mean_string   = '%s%s'     % ( t_italic , '-mean' ) ## S.sub_mean )
+t_rms_string    = ( '%s(%s)' % ( S.greek_lower_sigma , t_italic ) ) if S.show else ( '%s%s'  % ( t_italic , '-rms' ) )  
+t_min_string    = '%s%s'     % ( t_italic , '-min'  ) ## S.sub_min  )
+t_max_string    = '%s%s'     % ( t_italic , '-max'  ) ## S.sub_max  )
+t_unit_string   = '%s%s'     % ( t_italic , '-unit' )
+n_sigma_string  = '#%s'      %   S.greek_lower_sigma
+p_value_percent = '%s[%%]'   %   p_value_string  ## p-value [%
+w_min_string    = '%s%s'     %  ( w_italic , '-min' ) ##  S.sub_min )
+w_max_string    = '%s%s'     %  ( w_italic , '-max' ) ## S.sub_max )
+w_minmax        = w_min_string, w_max_string 
+## the header to statistics table
+full_header     = ( t_value_string  , 
+                    t_mean_string   , 
+                    t_rms_string    ,
+                    t_min_string    ,
+                    t_max_string    ,
+                    t_unit_string   ,
+                    p_value_percent ,
+                    n_sigma_string  )
+short_header    = ( t_value_string  , 
+                    t_unit_string   ,
+                    p_value_percent ,
+                    n_sigma_string  )
+t_header        = ( t_value_string  , t_unit_string )
+w_header        = w_min_string, w_max_string 
+# =============================================================================
+
 # =============================================================================
 ## Trivial weight ? 
 #  - None
@@ -343,7 +391,10 @@ def np2vct ( data , weight = None ) :
 #  @param trim_high Number or fraction of elements to trim from the top (high end). 
 #                 If None, defaults to `trim_low` (symmetric trimming).
 #  @return Aggregated array with trimmed mean.
-def truncated_mean ( x, axis = 0, trim_low = 1, trim_high = None ) :
+def truncated_mean ( x         , *    ,
+                     axis      = 0    ,
+                     trim_low  = 1    ,
+                     trim_high = None ) :
     """ Compute asymmetric truncated mean along the specified axis. """
     
     x = numpy.asarray ( x, dtype = numpy.float32 )
@@ -377,7 +428,6 @@ def truncated_mean ( x, axis = 0, trim_low = 1, trim_high = None ) :
         trimmed = sorted_x
         
     return numpy.mean ( trimmed, axis = axis )
-
     
 # ============================================================================
 if '__main__' == __name__ :

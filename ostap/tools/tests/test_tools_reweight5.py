@@ -30,11 +30,10 @@ os.environ [ 'OMP_WAIT_POLICY'      ] = 'PASSIVE'
 os.environ [ 'MKL_THREADING_LAYER'  ] = 'GNU' 
 # =============================================================================
 from   ostap.utils.root_utils   import batch_env 
-from   ostap.logger.symbols     import script_p
 from   ostap.utils.core         import typename 
 from   ostap.utils.basic        import numcpu
 from   ostap.logger.pretty      import nice_print
-from   ostap.stats.utils        import nEff, num_samples  
+from   ostap.stats.utils        import nEff, num_samples, p_value_percent, w_header    
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
                                          hasPyTorch  , hasHepML   )
@@ -225,8 +224,7 @@ def run_reweight ( n_dim       = 3     ,
         reweighters.append ( rw2 )
         
 
-        
-    if  False and hasXGBoost  () :
+    if  hasXGBoost  () :
         
         ## from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         ## rw3 = XGB  ( target                = target   ,
@@ -249,8 +247,8 @@ def run_reweight ( n_dim       = 3     ,
                      ## tree_method           = 'exact' ,
                      ## max_bin               = 1023    ,
                      ##
-                     min_child_weight      = 1e-6    ,
-                     max_delta_step        = 0.0     , 
+                     min_child_weight      = 1e-3    ,
+                     max_delta_step        = 9.0     , 
                      subsample             = 1.0     ,
                      ## 
                      gamma                 = 0.0     , 
@@ -258,19 +256,19 @@ def run_reweight ( n_dim       = 3     ,
                      reg_lambda            = 0.0000  , ## 0.0     , ## 1e-3    , ## 0.01 
                      ##
                      grow_policy           = 'depthwise' ,
-                     max_depth             =  8          ,
+                     max_depth             =  7          ,
                      ## 
                      ## max_leaves            =  0      ,
                      ##
                      ## grow_policy           = 'lossguide' , 
-                     ## max_leaves            =  63         ,
-                     tree_method           = 'hist'   ,
-                     ## tree_method           = 'exact'      ,
+                     max_leaves            =  63         ,
+                     ## tree_method           = 'hist'   ,
+                     tree_method           = 'exact'      ,
                      max_bin               = 1023        ,
                      ## 
                      voting                = 'trim:1' ,
                      oof_mode              = False    , 
-                     progress              = False    , 
+                     progress              = False    ,
                     )
         
         reweighters.append ( rw3 )
@@ -306,15 +304,15 @@ def run_reweight ( n_dim       = 3     ,
         reweighters.append ( rw5 )
                       
 
-    if hasHepML    () :
+    if False and hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw1 = GBRW ( target              = target         ,
                      original            = original1      ,
-                     n_estimators        = 500            ,
+                     n_estimators        = 300            ,
                      learning_rate       = 0.01           , 
-                     max_depth           = 6              ,
+                     max_depth           = 7              ,
                      min_samples_leaf    = 5              ,
-                     loss_regularization = 5              ) 
+                     loss_regularization = 1              ) 
         
         reweighters.append ( rw1 )
         
@@ -346,13 +344,12 @@ def run_reweight ( n_dim       = 3     ,
     
     header    = [] 
     rows      = []  
-
     
     for rw in reweighters :
             
-        for original in ( original1 , ) : 
-                          ## original2 ,
-                          ## original3 ) :
+        for original in ( original1 , 
+                          original2 ,
+                          original3 ) :
         
             if rw : logger.info ( 'Using REWEIGHTER %s %s ' % ( typename ( rw ) , rw.method ) )
             
@@ -379,9 +376,9 @@ def run_reweight ( n_dim       = 3     ,
                 row     = ( rw_type , c.method , neff ) + tuple ( row ) + ( wmin , wmax )             
                 rows.append ( row )
 
-            header =  ( 'Reweighter' , 'Comparator' , '#eff' ) + header + ( 'w-min' , 'w-max' ) 
+            header =  ( 'Reweighter' , 'Comparator' , '#eff' ) + header + w_header 
             if rows [ 0 ] != header :  rows         = [ header ] + rows
-            title = 'Test results : %s-values [%%]' % script_p
+            title = 'Test results : %s' % p_value_percent 
             table = T.table ( rows , title = title , prefix = '# ' )
             logger.info ( '%s\n%s' % ( title , table ) )
 
@@ -395,7 +392,6 @@ if '__main__' == __name__ :
     run_reweight ( 3 , 3000 , 7000 , 8000 ) 
     
 # =============================================================================
-
         
 # =============================================================================
 ##                                                                      The END 

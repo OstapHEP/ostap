@@ -22,7 +22,9 @@ __all__     = (
     'ZK'                 , ## ZK                GoF estimator
     'ZA'                 , ## ZA                GoF estimator
     'ZC'                 , ## ZC                GoF estimator
-    'berk_jones'         , ## Berk-Jones        GoF estimator 
+    'berk_jones'         , ## Berk-Jones        GoF estimator
+    'watson_u2'          , ## Watson U2         GoF estimator
+    'rosenblatt'         , ## Rosenblatt        GoF estimator    
     'GoF1D'              , ## helper utility for GoF estimate 
     'GoF1DToys'          , ## helper utility for GoF estimate with toys
     'GoF_1D'             , ## using AGoF interface ...
@@ -36,6 +38,7 @@ from   ostap.math.math_base     import axis_range, np2raw, isequal, data2vct
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.core         import typename   
+from   ostap.utils.basic        import safe_loop 
 from   ostap.stats.counters     import SE, ECDF
 from   ostap.math.math_ve       import significance
 from   ostap.stats.gof_utils    import ( Labels      , Keys      ,
@@ -135,7 +138,6 @@ def anderson_darling ( cdf_data ) :
     
     return -n - ( result / n )
 
-
 # =============================================================================
 ## Get Cramer-von Mises statistics CM^2
 #  @code
@@ -164,7 +166,8 @@ def cramer_von_mises ( cdf_data  ) :
     
     ## for short arrays plain vanilla python is OK 
     result  = sum ( ( Fi - ( i + 0.5 ) / n ) ** 2 for ( i, Fi ) in enumerate ( cdf_data ) ) 
-    return result + 1 / ( 12.0 * n ) 
+    return result + 1 / ( 12.0 * n )
+
 # =============================================================================
 ## Get Kuiper's statistic K
 #  @code
@@ -330,8 +333,6 @@ def berk_jones ( cdf_data ) :
 
     n = len ( cdf_data )
 
-    """
-    
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
         if cdf_data.dtype in ( numpy.float32 , float ) :
@@ -342,16 +343,71 @@ def berk_jones ( cdf_data ) :
     ## Long arrays to be converted to numpy 
     if NL < n : return berk_jones ( numpy.asarray ( cdf_data , dtype = float ) )
 
-    """
-    
     kp = Ostap.GoF.K_plus
     
     ## for short arrays plain vanilla python is OK
     result = max ( kp ( Fi , ( i + 1.0 ) / n ) for ( i , Fi ) in enumerate ( cdf_data ) )
     
-    ## print ( 'BJ' , min ( result ) , max(result ) )     
-    ## result = max ( kp ( ( i + 1.0 ) / n , Fi ) for ( i , Fi ) in enumerate ( cdf_data ) )
+    return result
+
+# =============================================================================
+## Get Watson's U^2 statistics
+#  @see https://doi.org/10.1111/1467-9868.00337
+#  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
+#  @return Watson's U^2 statistics
+def watson_u2 ( cdf_data ) :
+    """ Get Watson's U^2 statistics 
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
+    >>> cdf_data =...
+    >>> u2 = watson_u2 ( cdf_data )    
+    """
+    n = len ( cdf_data )
     
+    ## Long numpy arrays 
+    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.watson_u2 ( the_buffer )
+        
+    ## Long arrays to be converted to numpy 
+    if NL < n : return watson_u2 ( numpy.asarray ( cdf_data , dtype = float ) ) 
+    
+    ## for short arrays plain vanilla python is OK 
+    sum1 = 0.0
+    sum_f = 0.0
+    for i, Fi in enumerate ( cdf_data ) :
+        sum_f += Fi
+        sum1 += ( Fi - ( i + 0.5 ) / n ) ** 2
+        
+    f_bar = sum_f / n
+    return sum1 + 1.0 / ( 12.0 * n ) - n * ( f_bar - 0.5 ) ** 2
+
+# =============================================================================
+## Get Rosenblatt's integral statistics
+#  @see https://doi.org/10.1111/1467-9868.00337
+#  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
+#  @return Rosenblatt's statistics
+def rosenblatt ( cdf_data ) :
+    """ Get Rosenblatt's integral statistics 
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
+    >>> cdf_data =...
+    >>> rb = rosenblatt ( cdf_data )    
+    """
+    n = len ( cdf_data )
+    
+    ## Long numpy arrays 
+    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.rosenblatt ( the_buffer )
+        
+    ## Long arrays to be converted to numpy 
+    if NL < n : return rosenblatt ( numpy.asarray ( cdf_data , dtype = float ) ) 
+    
+    ## for short arrays plain vanilla python is OK 
+    result = sum ( ( Fi - ( i + 1.0 ) / ( n + 1.0 ) ) ** 2 for ( i , Fi ) in enumerate ( cdf_data ) )
     return result
 
 # =========================================================================
@@ -445,6 +501,8 @@ class GoF1D(object) :
             'ZA'  : ZA                 ( cdf_data ) , 
             'ZC'  : ZC                 ( cdf_data ) ,
             'BJ'  : berk_jones         ( cdf_data ) ,
+            'U2'  : watson_u2          ( cdf_data ) ,
+            'R'   : rosenblatt         ( cdf_data ) ,            
         }
         ##
         if fitresult and isinstance ( fitresult , ROOT.RooFitResult ) :
@@ -630,6 +688,22 @@ class GoF1D(object) :
         """        
         return self.__estimators.get ( 'BJ' , None ) 
 
+    # =========================================================================
+    ## Watson U2 statistic
+    @property 
+    def watson_estimator ( self ) :
+        """ Get Watson U2 statistic
+        """        
+        return self.__estimators.get ( 'U2' , None ) 
+
+    # =========================================================================
+    ## Rosenblatt statistic
+    @property 
+    def rosenblatt_estimator ( self ) :
+        """ Get Rosenblatt statistic
+        """        
+        return self.__estimators.get ( 'R' , None ) 
+       
     # =========================================================================
     ## Get NLL statistic 
     @property 
@@ -844,7 +918,7 @@ class GoF1DToys(GoF1D) :
         use_NLL = 'NLL' in self.estimators  or 'AIC' in self.estimators  or 'BIC' in self.estimators
         
         cnt = SE() 
-        for i in progress_bar ( nToys , silent = not progress  , description = 'Toys:') :
+        for i in safe_loop ( progress_bar ( nToys , silent = not progress  , description = 'Toys:') ) :
 
             self.pdf.load_params ( self.parameters , silent = True )            
             dset     = self.pdf.generate ( self.N  , sample = True )
@@ -883,6 +957,8 @@ class GoF1DToys(GoF1D) :
             za       = ZA                 ( cdf_data )
             zc       = ZC                 ( cdf_data )
             bj       = berk_jones         ( cdf_data )
+            u2       = watson_u2          ( cdf_data )
+            r        = rosenblatt         ( cdf_data )
 
             counters [ 'KS'  ] += ks
             counters [ 'K'   ] += k
@@ -892,6 +968,8 @@ class GoF1DToys(GoF1D) :
             counters [ 'ZA'  ] += za
             counters [ 'ZC'  ] += zc
             counters [ 'BJ'  ] += bj
+            counters [ 'U2'  ] += u2
+            counters [ 'R'   ] += r 
             
             results  [ 'KS'  ].append ( ks  )    
             results  [ 'K'   ].append ( k   )
@@ -901,6 +979,8 @@ class GoF1DToys(GoF1D) :
             results  [ 'ZA'  ].append ( za  ) 
             results  [ 'ZC'  ].append ( zc  ) 
             results  [ 'BJ'  ].append ( bj  ) 
+            results  [ 'U2'  ].append ( u2  ) 
+            results  [ 'R'   ].append ( r   ) 
 
             cnt += ks
             
@@ -1007,7 +1087,23 @@ class GoF1DToys(GoF1D) :
     def kuiper ( self ) :
         """ Get Kuiper statistics 
         """        
-        return self.result ( 'K' ) 
+        return self.result ( 'K' )
+
+    # =========================================================================
+    ## Get Watson U2 statistics
+    @property 
+    def watson ( self ) :
+        """ Get Watson U2 statistics 
+        """        
+        return self.result ( 'U2' )     
+
+    # =========================================================================
+    ## Get Rosenblatt statistics
+    @property 
+    def rosenblatt ( self ) :
+        """ Get Rosenblatt statistics 
+        """        
+        return self.result ( 'R' )     
 
     # =========================================================================
     ## merge two objects:
@@ -1153,7 +1249,13 @@ class GoF1DToys(GoF1D) :
         elif key in Keys [ 'BJ' ] and 'BJ' in self.ecdfs : 
             result = self.result  ( 'BJ' )
             ecdf   = self.ecdfs   [ 'BJ' ]
-            ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
+            ## logger.info ( 'Toy results for Berk-Jones estimate' )
+        elif key in Keys [ 'U2' ] and 'U2' in self.ecdfs : 
+            result = self.result  ( 'U2' )
+            ecdf   = self.ecdfs   [ 'U2' ]
+        elif key in Keys [ 'R'  ] and 'R' in self.ecdfs : 
+            result = self.result  ( 'R' )
+            ecdf   = self.ecdfs   [ 'R' ]            
         elif key in Keys [ 'NLL' ] and 'NLL' in self.ecdfs : 
             result = self.result  ( 'NLL' )
             ecdf   = self.ecdfs   [ 'NLL' ]

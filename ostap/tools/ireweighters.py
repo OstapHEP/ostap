@@ -227,11 +227,11 @@ def xgboost_density_ratio_obj ( preds, dtrain ) :
     if weights is None or len ( weights ) == 0 :
         weights = numpy.ones_like ( labels )
         
-    margin = numpy.clip ( preds, -10.0, 10.0 )
+    margin = numpy.clip ( preds  , -15.0, 15.0 )
     exp_m  = numpy.exp  ( margin )
     
-    grad   = numpy.where ( labels == 1.0, -1.0, exp_m )
-    hess   = numpy.where ( labels == 1.0,  1e-5, exp_m + 1.e-5 )
+    grad   = numpy.where ( labels == 1.0 , -1.0  , exp_m )
+    hess   = numpy.where ( labels == 1.0 ,  1e-5 , exp_m + 1.e-5 )
     
     grad *= weights
     hess *= weights
@@ -358,12 +358,12 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                                        obj             = xgboost_density_ratio_obj )
             
             margin          = model.predict ( dmat_orig, output_margin = True )
-            margin          = numpy.clip ( margin, -10.0, 10.0 )
+            margin          = numpy.clip ( margin, -15.0, 15.0 )
             step_ratios     = numpy.exp  ( margin )
             
             # Accumulate weight boosts purely via learning rate scaling.
             # Global mass conservation is handled strictly at the end via _normalize_and_clip.
-            current_w_orig *= numpy.power ( numpy.clip ( step_ratios, 1e-5, 1e+5 ), learning_rate )
+            current_w_orig *= numpy.power ( numpy.clip ( step_ratios, 1e-6, 1e+6 ), learning_rate )
         
             if bar and not self.silent and ( it < 5  or ( it + 1 ) % 50 == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
@@ -396,7 +396,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
 
         for model in models :
             margin      = model.predict ( dmat, output_margin = True )
-            margin      = numpy.clip ( margin, -10.0, 10.0 )
+            margin      = numpy.clip ( margin, -15.0, 15.0 )
             # Accumulate margins strictly with learning rate without redundant log_alpha scaling
             log_ratios += margin * learning_rate
             

@@ -24,8 +24,8 @@ from   collections            import namedtuple
 from   ostap.core.ostap_types import sequence_types, sized_types, dictlike_types  
 from   ostap.utils.core       import typename 
 from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
-from   ostap.stats.utils      import weight_trivial, check_all 
-from   ostap.stats.gof_utils  import clip_pvalue, the_header 
+from   ostap.stats.utils      import weight_trivial, check_all, full_header 
+from   ostap.stats.gof_utils  import clip_pvalue 
 from   ostap.math.math_ve     import significance
 from   ostap.stats.gof        import AGoFnp
 from   ostap.stats.counters   import ECDF, WECDF
@@ -295,7 +295,7 @@ def data_compare ( comparator   ,
             row       = ( c.method , ) + row
             rows.append ( row )
             
-        header = ( 'Method' , ) + the_header
+        header = ( 'Method' , ) + full_header
         rows   = [ header ] + rows            
         title  = title if title else "Two-Sample comparison"
         rows   = T.remove_empty_columns ( rows )
@@ -564,7 +564,7 @@ def compare_variable ( what        ,
     
         row   = chi2ndf_symbol , chi2ndf   ,  '' , '' , '' , '' , '' , pvalue , nsigma
         
-        header = ( 'Method' , ) + the_header 
+        header = ( 'Method' , ) + full_header 
         rows   = [ header ] + [ row ] + rows
         
         if   what2 == what : title = title if title else "Two-Sample test: %s"           %   what 
