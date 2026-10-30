@@ -34,7 +34,7 @@ from   ostap.core.ostap_types   import string_types
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import VE, Ostap, hID 
-from   ostap.math.math_base     import axis_range, np2raw, isequal, data2vct 
+from   ostap.math.math_base     import axis_range, np2raw, isequal, data2vct, isfinite  
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.core         import typename   
@@ -56,8 +56,8 @@ import ROOT, math, numpy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof1d' )
-else                       : logger = getLogger( __name__ )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.gof1d' )
+else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-1D-fit studies' )
 # =============================================================================
@@ -69,12 +69,14 @@ GoF_methods = ( "KS" ,  ## Kolmogorov-Smirnov
                 "ZK" ,  ## Zhang's Z_K-estimator 
                 "ZA" ,  ## Zhang's Z_A-estimatoe 
                 "ZC" ,  ## Zhang's Z_C-estimator 
-                "BJ" )  ## Berk-Jones -estimator 
+                "BJ" ,  ## Berk-Jones -estimator
+                "U2" ,  ## Watson U2  estimator 
+                "R"  )  ## Rosenblatt estmator
 # =============================================================================
 ## @var NL
 #  use C++ if length of data exceeds NL, otherwise Python is OK 
-NL  = 1000
-
+NL           = 1000
+numpy_floats = numpy.float32 , numpy.float64
 # =============================================================================
 ## Get Kolmogorov-Smirnov statistics KS
 #  @code
@@ -93,15 +95,13 @@ def kolmogorov_smirnov ( cdf_data ) :
     n = len ( cdf_data )
     
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw : 
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
-            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
-            return Ostap.GoF.kolmogorov_smirnov ( the_buffer )
-
-    ## Long arrays to be converted to numpy 
-    if NL < n : return kolmogorov_smirnov ( numpy.asarray ( cdf_data , dtype = float ) )
-
+            the_buffer = Ostap.Utils.make_buffer  ( raw_buffer , n )
+            return Ostap.GoF.kolmogorov_smirnov   ( the_buffer )        
+        return kolmogorov_smirnov ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) )
+    
     ## for short arrays plain vanilla python is OK 
     result = max ( max ( ( i + 1.0 ) / n - Fi , Fi - float ( i ) / n ) for ( i , Fi )  in enumerate ( cdf_data )  ) ## ** 2 
     return result
@@ -123,15 +123,13 @@ def anderson_darling ( cdf_data ) :
     n = len ( cdf_data )
     
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw :
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer     = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.anderson_darling ( the_buffer )
-        
-    ## Long arrays to be converted to numpy 
-    if NL < n : return anderson_darling ( numpy.asarray ( cdf_data , dtype = float ) )
-
+        return anderson_darling ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) ) 
+    
     ## Plain Python fix:
     flog   = math.log
     result = sum ( ( 2 * i + 1.0 ) * flog ( Fi ) + ( 2 * ( n - i ) - 1.0 ) * flog ( 1.0 - Fi ) for ( i , Fi ) in enumerate ( cdf_data ) ) 
@@ -155,14 +153,12 @@ def cramer_von_mises ( cdf_data  ) :
     n       = len ( cdf_data )
 
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw :
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
-            return Ostap.GoF.cramer_von_mises  ( the_buffer )
-        
-    ## Long arrays to be converted to numpy 
-    if NL < n : return cramer_von_mises ( numpy.asarray ( cdf_data , dtype = float ) )
+            return Ostap.GoF.cramer_von_mises  ( the_buffer )        
+        return cramer_von_mises ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) )
     
     ## for short arrays plain vanilla python is OK 
     result  = sum ( ( Fi - ( i + 0.5 ) / n ) ** 2 for ( i, Fi ) in enumerate ( cdf_data ) ) 
@@ -185,14 +181,12 @@ def kuiper ( cdf_data ) :
     n       = len ( cdf_data )
     
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw :
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.kuiper  ( the_buffer )
-        
-    ## Long arrays to be converted to numpy 
-    if NL < n : return kuiper ( numpy.asarray ( cdf_data , dtype = float ) )
+        return kuiper ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) )
     
     ## for short arrays plain vanilla python is OK 
     d_plus  = max ( ( i + 1.0 ) / n - Fi for ( i, Fi ) in enumerate ( cdf_data ) )
@@ -216,14 +210,12 @@ def ZA  ( cdf_data ) :
     n       = len ( cdf_data )
     
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw :
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.ZA  ( the_buffer )
-        
-    ## Long arrays to be converted to numpy 
-    if NL < n : return ZA ( numpy.asarray ( cdf_data , dtype = float ) )
+        return ZA ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) )
     
     ## for short arrays plain vanilla python is OK 
     flog    = math.log
@@ -247,14 +239,12 @@ def ZK  ( cdf_data ) :
     n      = len ( cdf_data )
 
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw :
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.ZK  ( the_buffer )
-        
-    ## Long arrays to be converted to numpy 
-    if NL < n : return ZK ( numpy.asarray ( cdf_data , dtype = float ) ) 
+        return ZK ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) ) 
     
     ## for short arrays plain vanilla python is OK 
     flog   = math.log 
@@ -279,14 +269,12 @@ def ZC  ( cdf_data ) :
     n      = len ( cdf_data )
     
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw:
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.ZC  ( the_buffer )
-        
-    ## Long arrays to be converted to numpy 
-    if NL < n : return ZC ( numpy.asarray ( cdf_data , dtype = float ) ) 
+        return ZC ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) ) 
     
     ## for short arrays plain vanilla python is OK 
     flog   = math.log
@@ -332,22 +320,31 @@ def berk_jones ( cdf_data ) :
     """
 
     n = len ( cdf_data )
+    if 0 == n : return 0.0
 
-    ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw :
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
-            return Ostap.GoF.berk_jones ( the_buffer )
-
-    ## Long arrays to be converted to numpy 
-    if NL < n : return berk_jones ( numpy.asarray ( cdf_data , dtype = float ) )
-
-    kp = Ostap.GoF.K_plus
+            return Ostap.GoF.berk_jones  ( the_buffer )
+        return berk_jones ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) )
     
-    ## for short arrays plain vanilla python is OK
-    result = max ( kp ( Fi , ( i + 1.0 ) / n ) for ( i , Fi ) in enumerate ( cdf_data ) )
+    kp     = Ostap.GoF.K_plus
+    km     = Ostap.GoF.K_minus
     
+    result = -1.0
+
+    for i , Fi in enumerate ( cdf_data ) :
+        
+        p_high = ( i + 1.0 ) / n
+        p_low  = float ( i ) / n
+        
+        bj_plus  = kp ( p_high , Fi )
+        bj_minus = km ( p_low  , Fi )
+        
+        if isfinite ( bj_plus  ) : result = max ( result , bj_plus  )
+        if isfinite ( bj_minus ) : result = max ( result , bj_minus )
+        
     return result
 
 # =============================================================================
@@ -364,21 +361,20 @@ def watson_u2 ( cdf_data ) :
     n = len ( cdf_data )
     
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw :
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.watson_u2 ( the_buffer )
-        
-    ## Long arrays to be converted to numpy 
-    if NL < n : return watson_u2 ( numpy.asarray ( cdf_data , dtype = float ) ) 
+        return watson_u2 ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) ) 
     
     ## for short arrays plain vanilla python is OK 
-    sum1 = 0.0
+    sum1  = 0.0
     sum_f = 0.0
     for i, Fi in enumerate ( cdf_data ) :
+        
         sum_f += Fi
-        sum1 += ( Fi - ( i + 0.5 ) / n ) ** 2
+        sum1  += ( Fi - ( i + 0.5 ) / n ) ** 2
         
     f_bar = sum_f / n
     return sum1 + 1.0 / ( 12.0 * n ) - n * ( f_bar - 0.5 ) ** 2
@@ -397,14 +393,12 @@ def rosenblatt ( cdf_data ) :
     n = len ( cdf_data )
     
     ## Long numpy arrays 
-    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , float ) :
+    if NL < n and np2raw :
+        if isinstance ( cdf_data , numpy.ndarray ) and cdf_data.dtype in numpy_floats and cdf_data.flags.c_contiguous :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.rosenblatt ( the_buffer )
-        
-    ## Long arrays to be converted to numpy 
-    if NL < n : return rosenblatt ( numpy.asarray ( cdf_data , dtype = float ) ) 
+        return rosenblatt ( numpy.ascontiguousarray ( cdf_data , dtype = numpy.float64 ) ) 
     
     ## for short arrays plain vanilla python is OK 
     result = sum ( ( Fi - ( i + 1.0 ) / ( n + 1.0 ) ) ** 2 for ( i , Fi ) in enumerate ( cdf_data ) )

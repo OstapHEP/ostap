@@ -165,7 +165,8 @@ __all__     = (
     'mountain'            , ## ⛰️  (wide)
     'much_greater'        , ## ≫
     'much_less'           , ## ≪
-    ## 
+    ##  
+    'nan_symbol'          , ## ❌ (Красивый цветной крестик)
     'nabla'               , ## ∇
     'not_equal'           , ## ≠
     'number'              , ## №
@@ -259,9 +260,9 @@ __all__     = (
     ## 
     'T2'                  , ## 🯯² (Note: handled or wrapped)
     'W2'                  , ## 🯰² 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # functions & generators & collections
-    # -------------------------------------------------------------------------
+    # =========================================================================
     'labels'              , ## generator
     'the_mean'            , ## func
     'the_rms'             , ## func
@@ -280,7 +281,7 @@ __all__     = (
     'exceptional_symbols' , ## set of exceptional wide symbols
     'visible_width'       , ## visible width of the character string 
 )
-# ===========================================================================
+# =============================================================================
 from   ostap.utils.basic import has_unicode
 from   ostap.core.config import show_unicode
 import sys, re, wcwidth, unicodedata
@@ -557,6 +558,7 @@ weierstrass_p         = '℘' if show else 'p'
 infinity              = "\N{INFINITY}" if show else 'inf'
 infinity_pos          = "+%s" % infinity 
 infinity_neg          = "-%s" % infinity
+nan_symbol            = times_colored if show else 'NaN'
 
 trophy                = '🏆'  if show else ''
 sparkles              = '✨'  if show else ''

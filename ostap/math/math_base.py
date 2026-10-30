@@ -1084,6 +1084,7 @@ def np2raw ( data ) :
     """
     assert numpy and isinstance ( data , numpy.ndarray ) , \
         "np2raw: argument must be `numpy.ndarray`"
+    
     size   = len ( data ) 
     dtype  = data.dtype
     

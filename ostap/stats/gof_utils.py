@@ -23,9 +23,11 @@ __all__     = (
     'nearest_distances'  , ## get all nearest distances 
     's2u'                , ## convert structured numpy array into non-structured
     'combine_pvalues'    , ## combine p-values 
+    'combine_methods'    , ## available methods for p-value combination 
     ##
 )
 # =============================================================================
+from   ostap.core.meta_info     import python_info 
 from   ostap.core.core          import Ostap, VE, SE 
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.core.ostap_types   import string_types, num_types, numpy_floats  
@@ -48,8 +50,8 @@ import ROOT, numpy, scipy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof_utils' )
-else                       : logger = getLogger( __name__ )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.gof_utils' )
+else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies' )#
 # =============================================================================
@@ -563,6 +565,10 @@ Keys = {
     'BIC' : ( 'bic' , 'bayesian'   ) , 
     }
 # =============================================================================
+if ( 3 , 15 ) <= python_info : # ==============================================
+    Labels = frozendict ( Labels )
+    Keys   = frozendict ( Keys   )    
+# =============================================================================
 assert Labels.keys() == Keys.keys() , "Mismatch between Labels & Keys structures!"
 # =============================================================================
 __all_1D_names = cidict ( transform = cidict_fun )
@@ -791,14 +797,21 @@ def draw_ecdf ( ecdf          ,
     ## 
     return result, vline, hline 
 
-# ==============================================================================
-from scipy.stats import combine_pvalues as _combine_pvs_ # =====================
+# =============================================================================
+from scipy.stats import combine_pvalues as _combine_pvs_ # ====================
+# =============================================================================
+## scipy methods used to combine p-values 
+combine_methods = 'fisher' , 'stouffer'
+# =============================================================================
+if Version ( "1.6"  ) <= Version ( scipy.__version__ ) : # ====================
+    # =========================================================================
+    combine_methods = combine_methods  + ( "tippett" , "mudholkar_george" ) 
 # ==============================================================================
 if Version ( "1.10" ) <= Version ( scipy.__version__ ) : # =====================
     # ==========================================================================
-    ## combine p-values using certain method 
+    ## combine p-values using certain combination method 
     def _combine_pvalues ( data , method = "fisher" ) :
-        """ Combine p-values using certain method """
+        """ Combine p-values using certain combination method """
         return _combine_pvs_ ( data , method = method ).pvalue
     # ==========================================================================
 else : # =======================================================================
@@ -811,7 +824,10 @@ else : # =======================================================================
 # ==============================================================================
 ## combine p-values 
 #  - use toys to propagate the uncertainties 
-def combine_pvalues ( pvalues , method , tol = 1.e-8 , N = 400 ) :
+def combine_pvalues ( pvalues ,
+                      method  ,
+                      tol     = 1.e-8 ,
+                      N       = 400   ) :
     """ Combine p-values
     - use toys to propagate the uncertainties 
     """

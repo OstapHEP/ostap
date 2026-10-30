@@ -50,7 +50,10 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.math_base   import frexp10, ldexp10 
-from   ostap.logger.symbols   import plus_minus, times, superscript_map 
+from   ostap.logger.symbols   import ( plus_minus      , times       ,
+                                       superscript_map , nan_symbol  , 
+                                       infinity_pos as posinf_symbol ,  
+                                       infinity_neg as neginf_symbol ) 
 from   ostap.utils.core       import typename 
 import math 
 # =============================================================================
@@ -266,9 +269,9 @@ def fmt_pretty_float ( value             , * ,
     value = float ( value )
 
     ## finite?
-    if   math.isinf ( value ) : return "%s" , 0
-    elif math.isnan ( value ) : return "%s" , 0
-
+    if   math.isinf ( value ) : return ( neginf_symbol , 0 ) if  ( value < 0 ) else posinf_symbol     
+    elif math.isnan ( value ) : return nan_symbol , 0
+    
     ## get the format 
     return fmt_pretty_values ( value                 ,
                                width     = width     ,

@@ -272,9 +272,18 @@ namespace Ostap
     double K_plus 
     ( const double t , 
       const double x ) ;
+    // ========================================================================
+    /** K- function for Berk&Jones estimator
+     *  @see https://en.wikipedia.org/wiki/Berk-Jones_test
+     */
+    inline double K_minus 
+    ( const double t , 
+      const double x )
+    { return K_plus ( 1 - t , 1 - x ) ; } 
     
     // =======================================================================
-    /** Berk-Jones estimator
+    /** Classic (Two-Sided) Berk-Jones goodness-of-fit estimator.
+     *  Berk-Jones estimator
      *  @see https://en.wikipedia.org/wiki/Berk-Jones_test
      *  - In statistical hypothesis testing, a goodness-of-fit test compares an
      *  empirical distribution function (EDF) to a theoretical cumulative
@@ -285,26 +294,53 @@ namespace Ostap
      *  maximum likelihood ratio approach. It still belongs to the family of
      *  supremum-type statistics but also incorporates information-theoretic properties,
      *  specifically the Kullback-Leibler divergence     
+     
+     *  Unlike the Kolmogorov-Smirnov test which is sensitive mostly in the center,
+     *  the Berk-Jones (BJ) test focuses on detecting sparse deviations in the 
+     *  extreme tails of a distribution using a pointwise likelihood-ratio approach.
+     *  
+     *  @see https://en.wikipedia.org/wiki/Berk-Jones_test
+     *  @see Berk, R. H., & Jones, D. H. (1979). Relatively Optimal Combinations of Test Statistics.
+     *  
+     *  @param begin Begin-iterator for the sorted input array of theoretical CDF values F_0(x_i).
+     *  @param end   End-iterator for the sorted input array of theoretical CDF values F_0(x_i).
+     *  @return Value of the classical two-sided Berk-Jones statistic.
      */
     template <class ITERATOR ,
-              typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
-              typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
+	      typename VALUE = typename std::iterator_traits<ITERATOR>::value_type    ,
+	      typename       = std::enable_if_t<std::is_convertible_v<VALUE, double>> >
     inline double
     berk_jones
     ( ITERATOR begin , 
       ITERATOR end   )
+    {
+      const std::size_t N = std::distance ( begin , end ) ;
+      if ( N == 0 ) { return 0.0 ; }
+      
+      double result = - std::numeric_limits<double>::max() ;
+      
+      for ( std::size_t i = 0 ; begin != end ; ++i , ++begin )
       {
-        const std::size_t N = std::distance ( begin , end ) ;
-        double result = - std::numeric_limits<double>::max() ;
-        for ( std::size_t i = 0 ; begin !=end ; ++i , ++begin )
-        {
-          const double p = ( i + 1.0 ) / N ; 
-          const double q = *begin ;
-          result = std::max ( result , K_plus ( p , q ) ) ;
-        }
-        return result ; // * result ;
-      } ;
-
+	// Define the empirical distribution function (EDF) boundaries for the i-th cell.
+	const double p_high = ( i + 1.0 ) / N ; // Top of the EDF step
+	const double p_low  = ( double )i / N ; // Bottom of the EDF step
+	const double q      = *begin ;          // Theoretical CDF value F_0(x_i)
+	
+	// 1. Upward Deviation (F_n > F_0)
+	const double bj_plus  = K_plus ( p_high , q ) ;
+	
+	// 2. Downward Deviation (F_n < F_0) using the symmetry property:
+	// K_minus(t, x) == K_plus(1 - t, 1 - x)
+	const double bj_minus = K_minus ( p_low , q ) ;
+	
+	// Filter out safe boundary penalties (infinity flags) and accumulate the supremum
+	if ( std::isfinite (  bj_plus ) ) { result = std::max ( result , bj_plus  ) ; }
+	if ( std::isfinite ( bj_minus ) ) { result = std::max ( result , bj_minus ) ; }
+	//
+      }
+      return result ;
+    } ;
+      
     // ========================================================================
     // overloads with buffers 
     // ========================================================================

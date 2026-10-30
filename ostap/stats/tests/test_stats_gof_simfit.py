@@ -30,6 +30,7 @@ from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          GoFSimFitType   , 
                                          GoFSimFit1D     , 
                                          GoFSimFit1DToys )
+from   ostap.stats.utils        import t_value_string 
 from   ostap.stats.tools        import hasLightGBM, hasXGBoost, hasCatBoost
 from   ostap.stats.gof1d        import GoF_1D
 import ostap.stats.gofnd        as     GnD 
@@ -193,7 +194,7 @@ def test_gof_simfit () :
     results.append ( r  ) 
 
     # =============================================================================
-    ## Use 1D GOF machinery
+    ## Use 1D GoF machinery
     # =============================================================================
     gof = GoFSimFit1D ( model_sim      ,
                         dataset        ,
@@ -202,7 +203,7 @@ def test_gof_simfit () :
     with use_canvas ( 'test_gof_simfit1: GoF-A' ) : gof.draw ( 'A' )
     with use_canvas ( 'test_gof_simfit1: GoF-B' ) : gof.draw ( 'B' )
         
-    title = 'GoF for 1D SimFit' 
+    title = 'GoF for 1D SimFit: %s' % t_value_string  
     logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )
 
     toys = GoFSimFit1DToys ( gof )

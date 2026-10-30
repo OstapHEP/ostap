@@ -295,7 +295,7 @@ _markup_ = (
 )
 
 # ================================================================================
-## Very simeel markup-like tranformations
+## Very simple markup-like tranformations
 #  - <code>  __ text __  </code> underline 
 #  - <code> *** text *** </code> bold and blink
 #  - <code>  ** text **  </code> bold and italic
