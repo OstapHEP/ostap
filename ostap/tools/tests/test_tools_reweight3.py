@@ -21,7 +21,7 @@ os.environ [ "OMP_NUM_THREADS"      ]  = "1"
 os.environ [ "MKL_NUM_THREADS"      ]  = "1"
 os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
 # =============================================================================
-from   ostap.core.pyrouts       import Ostap, VE  
+from   ostap.core.pyrouts       import Ostap  
 from   ostap.histos.histos      import h1_axis, h2_axes, h3_axes 
 from   ostap.utils.timing       import timing
 from   ostap.logger.colorized   import allright
@@ -29,14 +29,12 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.env          import get_env
-from   ostap.logger.symbols     import ( iteration , plus_minus ,
-                                         script_p  , sup_eff    , 
-                                         triangular_flag as start_symbol , 
-                                         trophy          as final_symbol ) 
-
+from   ostap.logger.symbols     import iteration
 from   ostap.utils.memory       import memory_usage, delta_ram
-from   ostap.utils.basic        import numcpu 
+from   ostap.utils.basic        import numcpu
+from   ostap.logger.pretty      import nice_print 
 from   ostap.utils.progress_bar import progress_bar 
+from   ostap.stats.utils        import p_value_percent, full_header 
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
                                          hasPyTorch  , hasKeras   , 
@@ -338,7 +336,7 @@ if False and hasKeras () and 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent 
 comparators = comparators
 # ============================================================================
 ## The table of global comparison statistics 
-header    = ( '#%s' % iteration , '#%s' % sup_eff ) + tuple ( c.method for c in comparators ) 
+header    = ( '#%s' % iteration , '#eff' , 'Comparator' ) + full_header 
 glob_stat = [ header ]
 alignment = 'lc' + 'c' * len ( comparators )           
 
@@ -384,12 +382,10 @@ mc_z  = h1_axis ( [ zmax/iz*i for i in range ( iz + 1 ) ] )
 ## check database 
 if not os.path.exists( dbname ) :
     logger.attention ( "Create new weights DBASE `%s'" % dbname ) 
-    with DBASE.open ( dbname , 'c' ) : ##  create new empty db 
-        pass 
+    with DBASE.open ( dbname , 'c' ) : pass ##  create new empty db 
 else :
     logger.attention ( "Existing weights DBASE `%s' will be (re)used" % dbname ) 
-    with DBASE.open ( dbname , 'r' ) as db : 
-        db.ls() 
+    with DBASE.open ( dbname , 'r' ) as db :  db.ls() 
 
 # =============================================================================
 ## name of weight variable 
@@ -528,15 +524,15 @@ for iter in range ( 1 , maxIter + 1 ) :
                                       importance  = True , 
                                       silent      = True )
             
-            n_eff = mcds.nEff () 
-            trow  = [ '%d' % iter , '%.1f' % n_eff ] 
+            n_eff  = mcds.nEff () 
+            neff   = nice_print ( n_eff , precision = 2 , with_sign = False , strip = True )  
             for r in results :
-                pv100 = VE ( r.pvalue ) * 100            
-                trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
-            glob_stat.append ( tuple ( trow ) )
-            
-            title = 'Global DATA/MC similarity %s-values [%%]' % script_p
-            table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
+                row = ( '%d' % iter , neff , r.method ) + r.table_row
+                glob_stat.append  ( row ) 
+
+            title = 'Global DATA/MC similarity %s' % p_value_percent
+            rows  = T.remove_empty_columns ( glob_stat )
+            table = T.table ( rows , title = title , prefix = '# ' , alignment = alignment )
             logger.info ( '%s\n%s' % ( title , table ) )
                    
     ## explicitely clear and delete dataset
@@ -665,7 +661,7 @@ if hasCatBoost (): # ==========================================================
 # =============================================================================
 ## (5) home-made reweighter based on PyTorch
 # =============================================================================
-if hasPyTorch(): # ============================================================
+if False and hasPyTorch(): # ============================================================
     # =========================================================================
     logger.info ( 'Use PyTorch  for control reweighting' ) 
     from ostap.tools.reweighters     import PyTorchDensityReweighter   as TORCH
@@ -701,7 +697,7 @@ if hasSkLearn : # =============================================================
 # ============================================================================
 ## Compare the quality of all reweighters 
 # ============================================================================
-header    = ( 'Weight' , '#%s' % sup_eff ) + tuple ( c.method for c in comparators ) 
+header    = ( 'Weight' , '#eff' , 'Comparator' ) + full_header 
 glob_stat = [ header ]
 for weight in weights :
     
@@ -726,15 +722,15 @@ for weight in weights :
                               cuts2       = weight ,
                               silent      = True   )
     
-    n_eff = mctree.nEff ( weight ) 
-    trow  = [ weight , '%.1f' % n_eff ] 
+    n_eff  = mctree.nEff ( weight ) 
+    neff   = nice_print ( n_eff , precision = 2 , with_sign = False , strip = True  ) 
     for r in results :
-        pv100 = VE ( r.pvalue ) * 100            
-        trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
-    glob_stat.append ( tuple ( trow ) )
+        row = ( weight , neff , r.method )  + r.table_row 
+        glob_stat.append ( row  )
     
-    title = 'Global DATA/MC similarity: %s-values [%%]' % script_p
-    table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
+    title = 'Global DATA/MC similarity: %s' % p_value_percent
+    rows  = T.remove_empty_columns ( glob_stat )
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = alignment )
     logger.info ( '%s\n%s' % ( title , table ) )
     
 # =============================================================================

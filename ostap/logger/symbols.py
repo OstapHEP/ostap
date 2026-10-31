@@ -26,6 +26,7 @@ __all__     = (
     'attention'           , ## 🚨
     'axe'                 , ## 🪓  (wide)
     ##
+    'bar_chart'           , ## 📊
     'black_arrow_left'    , ## ⬅  
     'black_arrow_right'   , ## ⮕  
     'black_arrow_up'      , ## ⬆  
@@ -149,6 +150,7 @@ __all__     = (
     ##
     'kitchen_knife'       , ## ➖
     ## 
+    'ladder'              , ## 🪜
     'langle'              , ## 〈
     'label'               , ## 🏷️
     'leaf'                , ## 🍁
@@ -280,6 +282,7 @@ __all__     = (
     'remove_invisible'    , ## remove variantion selectors 
     'exceptional_symbols' , ## set of exceptional wide symbols
     'visible_width'       , ## visible width of the character string 
+    'fixed_width'         , ## format to the fixed vizible width 
 )
 # =============================================================================
 from   ostap.utils.basic import has_unicode
@@ -381,7 +384,8 @@ tape             = '➿'  if show else ''
 tape_cartridge   = '🖭️' if show else '' 
 folder           = '📂' if show else '' 
 light_bulb       = '💡' if show else '' 
-
+bar_chart        = '📊' if show else '' 
+ 
 less_or_equal    = '≤'   if show else '<='
 greater_or_equal = '≥'   if show else '=>'
 much_less        = '≪'   if show else '<<'
@@ -391,16 +395,17 @@ similar          = '∼'   if show else '~'
 approximate      = '≈'   if show else '~='
 not_equal        = '≠'   if show else '!='
 weight_lifter    = '🏋️'  if show else ''
-
+ladder           = '🪜'  if show else '' 
+ 
 scale            = '⚖️'  if show else '' 
 weight_scale     = scale  
 
 scissors         = '✂️' if show else '' 
-oil_drum         = '🛢️' if show else ''        # Добавлен селектор
+oil_drum         = '🛢️' if show else ''       
 brain            = '🧠' if show else ''
-kitchen_knife    = '🔪' if show else '➖'      # Заменено на красивый нож вместо минуса
+kitchen_knife    = '🔪' if show else ''     
 axe              = '🪓' if show else ''
-gear             = '⚙️'  if show else ''        # Добавлен селектор
+gear             = '⚙️'  if show else ''        
 wrench           = '🔧' if show else ''
 hammer_and_wrench= '🛠️'  if show else ''
 package          = '📦' if show else ''     
@@ -749,6 +754,27 @@ def visible_width ( what ) :
             else                : width += 1 
             
     return width
+
+def fixed_width ( text , target_width = 10 , align = "left" ):
+    """ Pad a text string (which may contain emojis or wide Unicode symbols) 
+    to a fixed visual width in the terminal using the visible_width function.
+    """
+    # 1. Get the actual visual width of the string in the terminal
+    w = visible_width ( text )
+    
+    # If the text is already wider or equal to the target, return as is
+    if target_width <= w  : return text
+    
+    # 2. Calculate the missing spaces needed for alignment
+    padding = " " * (target_width - w)
+    
+    # 3. Assemble the string based on the chosen alignment
+    if   'left' == align : return text + padding
+    elif 'righ' == align : return padding + text
+    
+    left_pad = " " * ((target_width - w) // 2)
+    right_pad = " " * (target_width - w - len(left_pad))
+    return left_pad + text + right_pad
 
 
 # =============================================================================

@@ -105,7 +105,7 @@ __all__      = (
 # =============================================================================
 from   ostap.core.ostap_types import sized_types 
 from   ostap.utils.basic      import isatty, is_ci, interactive , terminal_size
-from   ostap.logger.symbols   import clock_ticks, runner, finish, clock, arrow_right     
+from   ostap.logger.symbols   import clock_ticks, runner, finish, clock, arrow_right, visible_width
 from   ostap.logger.colorized import allright, infostr 
 import sys , os, time, datetime 
 # =============================================================================
@@ -242,8 +242,9 @@ class ProgressBar(object):
         self.__width  = ncols if ncols > 10 else width
         
         self.__prefix = kwargs.get ( 'description' , '' )  ## description
-        self.__width -= len ( self.__prefix )
-        
+        ## self.__width -= len ( self.__prefix ) 
+        self.__width -= visible_width ( self.__prefix )  
+          
         ##  current amount 
         self.__amount    = self.__min ## ??    
         ## current bar 
@@ -288,7 +289,7 @@ class ProgressBar(object):
     # =========================================================================
     ## Increment self.amount
     def increment_amount ( self , add_amount = 1 ) :
-        """ Incremeemt self.__amount """ 
+        """ Increment self.__amount """ 
         return self.update_amount ( add_amount + self.__amount )
 
     # =========================================================================

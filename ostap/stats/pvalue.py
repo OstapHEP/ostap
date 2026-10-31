@@ -23,6 +23,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.utils.core         import typename
+from   ostap.utils.basic        import safe_loop
 from   ostap.math.math_base     import data2vct 
 from   ostap.stats.utils        import weight_trivial , check_all, p_value_string                                         
 from   ostap.stats.counters     import EffCounter, ECDF 
@@ -38,9 +39,9 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Utilities to get p-values for Two-Samples & Goodness-of-Fit tests' ) 
 # =============================================================================
-permutation_symbol = ( '%s:' % S.shuffle     ) if S.show else 'Permutations:'
-bootstrap_symbol   = ( '%s:' % S.hiking_boot ) if S.show else 'Bootstrapping:'
-toys_symbol        = ( '%s:' % S.toys        ) if S.show else 'Toys:'
+permutation_symbol = S.shuffle     if S.show and S.shuffle     else 'Permutations'
+bootstrap_symbol   = S.hiking_boot if S.show and S.hiking_boot else 'Bootstrapping'
+toys_symbol        = S.toys        if S.show and S.toys        else 'Toys'
 # =============================================================================
 ## Sampling without replacement (Permutations)
 def _permutations ( rng , n1 , n2  ) :
@@ -106,9 +107,9 @@ def make_resampling ( sampler     ,
     rng = numpy.random.default_rng ( random_seed )
 
     from ostap.utils.progress_bar import progress_bar
-    for _ in progress_bar ( N           ,
-                            silent      = silent and not progress ,
-                            description = description             ) :
+    for _ in safe_loop ( progress_bar ( N           ,
+                                        silent      = silent and not progress ,
+                                        description = description             ) ) :
         
         ## the sampling!
         idx1 , idx2 = sampler ( rng , n1 , n2 )
@@ -218,7 +219,7 @@ class PVALUE (abc.ABC) :
         self.weight1     = weight1
         self.weight2     = weight2
         self.random_seed = random_seed 
-        self.description = description
+        self.description = S.fixed_width ( self.gof.method , 4 ) + description + ':'
         
     # =========================================================================
     ## Serialize the object for multiprocessing
@@ -345,15 +346,15 @@ class PERMUTATOR (PVALUE) :
         """        
         counter = EffCounter()
         tvalues = []
-
         for data1 , data2 , weight1 , weight2 in make_permutations ( N ,
-                                                                     self.ds1                   ,
-                                                                     self.ds2                   ,
-                                                                     weight1     = self.weight1 ,
-                                                                     weight2     = self.weight2 ,
-                                                                     progress    = progress     ,   
-                                                                     silent      = silent       ,
-                                                                     random_seed = self.random_seed ) :
+                                                                     self.ds1                       ,
+                                                                     self.ds2                       ,
+                                                                     weight1     = self.weight1     ,
+                                                                     weight2     = self.weight2     ,
+                                                                     progress    = progress         ,   
+                                                                     silent      = silent           ,
+                                                                     random_seed = self.random_seed , 
+                                                                     description = self.description ) :
             
             ## Note: normalize = False is required for sliced evaluation
             tv       = self.gof.tvalue ( data1     ,
@@ -407,7 +408,8 @@ class BOOTSTRAPPER (PERMUTATOR) :
                                                                   weight2     = self.weight2     ,
                                                                   progress    = progress         ,   
                                                                   silent      = silent           ,
-                                                                  random_seed = self.random_seed ) :
+                                                                  random_seed = self.random_seed , 
+                                                                  description = self.description ) : 
                         
             ## Note: normalize = False is required for sliced evaluation
             tv = self.gof.tvalue ( data1     ,

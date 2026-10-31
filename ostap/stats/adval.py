@@ -67,16 +67,17 @@ DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
 MAX_DEPTH                  =   5
 # =============================================================================
-method_LGBM  = 'AdVal/%s' % ( S.light_bulb           if S.light_bulb  else 'LightGBM' ) 
-method_XGB   = 'AdVal/%s' % ( S.rocket               if S.rocket      else 'XGBoost'  ) 
-method_CATB  = 'AdVal/%s' % ( S.cat_face             if S.cat_face    else 'CatBoost' ) 
-method_HGBC  = 'AdVal/%s' % ( S.proportion + S.nabla if S.show        else 'HGBC'     ) 
-method_GBC   = 'AdVal/%s' % ( S.nabla                if S.show        else 'GBC'      )
-method_RF    = 'AdVal/%s' % ( S.tree                 if S.show        else 'RF'       ) 
-method_TORCH = 'AdVal/%s' % ( S.flashlight           if S.flashlight  else 'TORCH'    ) 
-method_KERAS = 'AdVal/%s' % ( S.postal_horn          if S.postal_horn else 'KERAS'    )
+method_LGBM  = S.light_bulb   if S.show and S.light_bulb  else 'LightGBM'  
+method_XGB   = S.rocket       if S.show and S.rocket      else 'XGBoost'   
+method_CATB  = S.cat_face     if S.show and S.cat_face    else 'CatBoost'  
+method_HGBC  = S.bar_chart    if S.show and S.bar_chart   else 'HGBC'      
+method_GBC   = S.nabla        if S.show and S.nabla       else 'GBC'      
+method_RF    = S.palm         if S.show and S.palm        else 'RF' 
+method_TORCH = S.flashlight   if S.show and S.flashlight  else 'TORCH'     
+method_KERAS = S.postal_horn  if S.show and S.postal_horn else 'KERAS'    
 # =============================================================================
 epoch_symbol = ( '%s :' % S.repeat ) if S.show else 'Epoch:'
+
 
 # =============================================================================
 ## Evaluate whether strong regularization is required for BDT-based models.
