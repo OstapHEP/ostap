@@ -172,6 +172,8 @@ __all__     = (
     'nabla'               , ## ∇
     'not_equal'           , ## ≠
     'number'              , ## №
+    'n_sigma_expr'        , ## f'#{greek_lower_sigma}' if show else '#sigma'
+    ##  
     'oil_drum'            , ## 🛢️  (wide)
     ##
     'package'             , ## 📦    
@@ -182,6 +184,11 @@ __all__     = (
     'postal_horn'         , ## 📯
     'plus_minus'          , ## ±
     'proportion'          , ## ∷
+    ##
+    'p_italic'             , ## 𝑝
+    'p_value_expr'         , ## f'{p_italic}-value'
+    'p_value_percent_expr' , ## f'{p_value_expr} [%]'
+    ##
     'quadratic_sum'       , ## ⨁ 
     'question_mark'       , ## ❓  (wide)
     'ram'                 , ## 🐏  (wide)
@@ -191,6 +198,7 @@ __all__     = (
     'rocket'              , ## 🚀
     'ruler'               , ## 📏
     'runner'              , ## 🏃  (wide)
+    ##
     'same'                , ## ≡
     'scale'               , ## ⚖️  (wide)
     'scissors'            , ## ✂️
@@ -225,6 +233,7 @@ __all__     = (
     'sum_symbol'          , ## ∑    
     'superscript_map'     , ## mapping dict
     'symmetry'            , ## ⌯
+    #
     'tag'                 , ## ❖
     'tape'                , ## ➿
     'tape_cartridge'      , ## 🖭️
@@ -238,10 +247,23 @@ __all__     = (
     'tree'                , ## 🌳 (wide)
     'trophy'              , ## 🏆
     ##
+    't_italic'            , ## 𝑡
+    't_value_expr'        , ## f'{t_italic}-value'
+    't_mean_expr'         , ## f'{t_italic}-mean'
+    't_min_expr'          , ## f'{t_italic}-min'
+    't_max_expr'          , ## f'{t_italic}-max'
+    't_rms_expr'          , ## f'{greek_lower_sigma}({t_italic})' if show else f"{t_italic}-rms"
+    't_unit_expr'         , ## f'{t_italic}-unit'
+    ##
     'union'                  , ## ⋃
     ## 
     'variance_sym'           , ## σ²
-    ## 
+    'v_italic'               , ## �
+    'v_min_expr'             , ## f'{v_italic}-min'
+    'v_max_expr'             , ## f'{v_italic}-max'
+    'v_mean_expr'            , ## f'{v_italic}-mean'
+    'v_rms_expr'             , ## f'{greek_lower_sigma}({v_italic})' if show else f"{v_italic}-rms"
+    ##
     'warning'                , ## ⚠️
     'weight_lifter'          , ## 🏋️  (wide)
     'weight_scale'           , ## ⚖️  (wide)
@@ -260,6 +282,12 @@ __all__     = (
     'wood'                , ## 🪵
     'wrench'              , ## 🔧  (wide)
     ## 
+    'w_italic'               , ## 𝑤
+    'w_min_expr'             , ## f'{w_italic}-min'
+    'w_max_expr'             , ## f'{w_italic}-max'
+    'w_mean_expr'            , ## f'{w_italic}-mean'
+    'w_rms_expr'             , ## f'{greek_lower_sigma}({w_italic})' if show else f"{w_italic}-rms"
+    ##
     'T2'                  , ## 🯯² (Note: handled or wrapped)
     'W2'                  , ## 🯰² 
     # =========================================================================
@@ -669,6 +697,33 @@ sup_eff  = 'ᵉᶠᶠ'  if show else '-eff'
 T2              = '𝒯 ²' if show else 'T2'
 W2              = '𝒲 ²' if show else 'W2'
 
+
+t_italic     = to_bold_italic ( 't' )
+p_italic     = to_bold_italic ( 'p' )
+w_italic     = to_bold_italic ( 'w' )
+v_italic     = to_bold_italic ( 'v' )
+
+t_value_expr         = f'{t_italic}-value'
+t_mean_expr          = f'{t_italic}-mean'
+t_min_expr           = f'{t_italic}-min' 
+t_max_expr           = f'{t_italic}-max'
+t_rms_expr           = f'{greek_lower_sigma}({t_italic})' if show else f"{t_italic}-rms"
+t_unit_expr          = f'{t_italic}-unit'
+
+p_value_expr         = f'{p_italic}-value'
+p_value_percent_expr = f'{p_value_expr} [%]'
+
+n_sigma_expr         = f'#{greek_lower_sigma}' if show else '#sigma'
+
+w_min_expr           = f'{w_italic}-min'
+w_max_expr           = f'{w_italic}-max'
+w_mean_expr          = f'{w_italic}-mean'
+w_rms_expr           = f'{greek_lower_sigma}({w_italic})' if show else f"{w_italic}-rms"
+
+v_min_expr           = f'{v_italic}-min'
+v_max_expr           = f'{v_italic}-max'
+v_mean_expr          = f'{v_italic}-mean'
+v_rms_expr           = f'{greek_lower_sigma}({v_italic})' if show else f"{v_italic}-rms"
 
 # =============================================================================
 ## Single comprehensive regex for cleaning:

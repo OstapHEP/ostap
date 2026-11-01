@@ -24,28 +24,15 @@ __all__     = (
     'CatBoostDensityReweighter'      , # CatBoost-based density reweighter
     'PyTorchDensityReweighter'       , # PyTorch-based density reweighter
     'LogRegressionDensityReweighter' , # Density reweighter based on Logistic Regression
-    'GBReweighter'                   , # Reweighter based on GBReweighter from hep_ml    
 ) 
 # =============================================================================
-from   ostap.core.ostap_types   import num_types, string_types, integer_types  
-from   ostap.utils.core         import typename
-from   ostap.utils.basic        import numcpu, NoContext
-from   ostap.logger.utils       import map2table_ex
-from   ostap.logger.pretty      import nice_print 
-from   ostap.utils.progress_bar import progress_bar, text_bar
-from   ostap.tools.reweighter   import Reweighter
-from   ostap.stats.utils        import ( weight_trivial     ,
-                                         valid_weight       ,
-                                         valid_data_shape   ,
-                                         compatible_weights , 
-                                         num_features       ,
-                                         num_samples        ,
-                                         check_all          ,
-                                         nEff               )
+from   ostap.core.ostap_types       import string_types, integer_types  
+from   ostap.utils.basic            import numcpu
+from   ostap.stats.utils            import num_features, num_samples        
 from   ostap.stats.tools            import hasSkLearn 
 from   ostap.tools.base_reweighters import DensityReweighter  
-import ostap.logger.symbols     as     S
-import numpy, abc, math, gc  
+import ostap.logger.symbols         as     S
+import numpy, math, gc  
 # =============================================================================
 # Logging setup
 # =============================================================================

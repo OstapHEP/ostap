@@ -63,7 +63,7 @@ from   ostap.fitting.fit1d      import PEAK
 from   ostap.utils.ranges       import vrange
 from   ostap.utils.core         import typename 
 from   ostap.logger.utils       import print_args 
-import ROOT, math
+import ROOT, math, re 
 # =============================================================================
 from   ostap.logger.logger      import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
@@ -2848,7 +2848,24 @@ class RooKeys1D_pdf(PDF1) :
     def nsigma    ( self )  :
         """`nsigma' : `nsigma' parameter for RooNDKeysPdf"""
         return self.__nsigma
-    
+     
+
+# =============================================================================
+## popular backgroubd models
+# =============================================================================
+PATTERN_POLY         = re.compile ( r'(polynomial|poly|pol|p)\s*[-=]?\s*(?P<degree>\d{1,2})'                                            , re.IGNORECASE ) 
+PATTERN_EXPO         = re.compile ( r'(expo|exp|e)\s*[-=]?\s*(?P<degree>\d{1,2})'                                                       , re.IGNORECASE )
+PATTERN_INCR         = re.compile ( r'(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,2})'                                   , re.IGNORECASE )
+PATTERN_DECR         = re.compile ( r'(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,2})'                                   , re.IGNORECASE )
+PATTERN_CONVEX       = re.compile ( r'(convex|cnvx|cnv|cx)\s*[-=]?\s*(?P<degree>\d{1,2})'                                               , re.IGNORECASE )
+PATTERN_CONCAVE      = re.compile ( r'(concave|cncv|cnc|cv)\s*[-=]?\s*(?P<degree>\d{1,2})'                                              , re.IGNORECASE )
+PATTERN_CONVEX_DECR  = re.compile ( r'(convex|cnvx|cnv|cx)\s*[-+_&]?\s*(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,3})'  , re.IGNORECASE )
+PATTERN_CONVEX_INCR  = re.compile ( r'(convex|cnvx|cnv|cx)\s*[-+_&]?\s*(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,3})'  , re.IGNORECASE )
+PATTERN_CONCAVE_DECR = re.compile ( r'(concave|cncv|cnc|cv)\s*[-+_&]?\s*(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,3})' , re.IGNORECASE )
+PATTERN_CONCAVE_INCR = re.compile ( r'(concave|cncv|cnc|cv)\s*[-+_&]?\s*(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,3})' , re.IGNORECASE )
+PATTERN_ROOCHEBYSHEV = re.compile ( r'(roochebyshev|roocheb|rchebyshev|chebyshev|rcheb|cheb|rc)\s*[-=]?\s*(?P<degree>\d{1,2})'          , re.IGNORECASE )
+PATTERN_ROOPOLY      = re.compile ( r'(roopolynomial|rpolynomial|roopoly|rpoly|rp|r)\s*[-=]?\s*(?P<degree>\d{1,2})'                     , re.IGNORECASE )
+
 # =============================================================================
 ## create popular 1D `background'  function
 #  @param bkg  the type of background function/PDF
@@ -3006,85 +3023,75 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
 
         if   bkg in ( '' , 'const' , 'constant' , 'flat' , 'uniform' , 'p0' , 'pol0' , 'poly0' ) :
             return make_bkg ( 0 , name , xvar    , logger = logger , **kwargs ) 
+        
         elif bkg in ( 'e' , 'exp' , 'expo' , 'e0' , 'exp0' , 'expo0' ) :
-            return Bkg_pdf ( name , xvar = xvar  , power = 0 , **kwargs )        
+            return Bkg_pdf ( name , xvar = xvar  , power = 0 , **kwargs )       
+         
         elif bkg in ( 'e+' , 'exp+' , 'expo+' ) : 
             model = Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )
             model.tau.setMin ( 0 )            
             return model 
+        
         elif bkg in ( 'e-' , 'exp-' , 'expo-' ) :
             model = Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )
             model.tau.setMax ( 0 ) 
             return model
-        
-        import re        
-        poly = re.search ( r'(poly|pol|p)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
-        if poly :
-            degree = -1 * abs ( int ( poly.group ( 'degree' ) ) ) 
+          
+        elif ( poly := PATTERN_POLY.match ( bkg ) ) and ( degree := poly.group ( 'degree' ) ) :
+            degree = -1 * abs ( int ( degree ) ) 
             return make_bkg ( degree  , name ,  xvar , logger = logger , **kwargs  )
         
-        expo = re.search ( r'(expo|exp|e)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
-        if expo :
-            degree =            int ( expo.group ( 'degree' ) ) 
+        elif ( expo := PATTERN_EXPO.match ( bkg ) ) and ( degree := expo.group ( 'degree' ) ) :
+            degree = int ( degree )
             return make_bkg ( degree  , name ,  xvar , logger = logger , **kwargs  )
         
-        incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
-        if incr : 
-            degree = int ( incr.group ( 'degree' ) )
+        elif ( desc := PATTERN_INCR.match ( bkg ) ) and ( degree := desc.group ( 'degree' ) ) :
+            degree = int ( degree )
             bkg    = Monotonic_pdf ( name , xvar , power  = degree , increasing = True )
             return make_bkg ( bkg ,  name , xvar , logger = logger , **kwargs  )
         
-        decr = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
-        if decr : 
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_DECR.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) :
+            degree = int ( degree )
             bkg    = Monotonic_pdf ( name , xvar , power  = degree , increasing = False )
             return make_bkg ( bkg ,  name , xvar , logger = logger , **kwargs  )
         
-        decr = re.search ( r'(convex|cx)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_CONVEX.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) :
+            degree = int ( degree )
             bkg    = ConvexOnly_pdf ( name , xvar , power  = degree , convex = True )
             return make_bkg ( bkg ,   name , xvar , logger = logger , **kwargs  )
 
-        decr = re.search ( r'(concave|cv)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_CONCAVE.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) :   
+            degree = int ( degree )
             bkg    = ConvexOnly_pdf ( name , xvar , power  = degree , convex = False )
             return make_bkg ( bkg ,   name , xvar , logger = logger , **kwargs  )
 
-        decr = re.search ( r'(convex|cx)(( *)|(_*))(decreasing|dec)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_CONVEX_DECR.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) : 
+            degree = int ( degree )
             bkg    = Convex_pdf (   name , xvar , power  = degree , increasing = False, convex = True )
             return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
             
-        decr = re.search ( r'(convex|cx)(( *)|(_*))(increasing|inc)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_CONVEX_INCR.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) : 
+            degree = int ( degree )
             bkg    = Convex_pdf (   name , xvar , power  = degree , increasing = True , convex = True )
             return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
             
-        decr = re.search ( r'(concave|cv)(( *)|(_*))(decreasing|dec)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_CONCAVE_DECR.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) :
+            degree = int ( degree )
             bkg    = Convex_pdf (   name , xvar , power  = degree , increasing = False, convex = False )
             return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
             
-        decr = re.search ( r'(concave|cv)(( *)|(_*))(increasing|inc)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_CONCAVE_INCR.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) :
+            degree = int ( degree )
             bkg    = Convex_pdf (   name , xvar , power  = degree , increasing = True , convex = False )
             return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
 
-        decr = re.search ( r'(roochebyshev|roocheb|chebyshev|cheb|rc)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_ROOCHEBYSHEV.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) : 
+            degree = int ( degree )
             bkg    = RooCheb_pdf (  name , xvar , power = degree )
             return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
         
-        decr = re.search ( r'(roopoly|rp|r)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
-        if decr :
-            degree = int ( decr.group ( 'degree' ) )
+        elif ( descr := PATTERN_ROOPOLY.match ( bkg ) ) and ( degree := descr.group ( 'degree' ) ) :
+            degree = int ( degree )
             bkg    = RooPoly_pdf (  name , xvar , power  = degree )
             return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
 

@@ -28,7 +28,7 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.root_utils   import batch_env
 from   ostap.histos.histos      import h1_axis, h2_axes
-from   ostap.logger.symbols     import iteration, plus_minus, script_p, trophy 
+from   ostap.logger.symbols     import iteration, plus_minus, p_value_percent_expr , trophy 
 from   ostap.logger.pretty      import pretty_float 
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.progress_bar import progress_bar
@@ -393,7 +393,7 @@ for r in results :
     trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
 glob_stat.append ( tuple ( trow ) )
     
-title = 'Global DATA/MC similarity: %s-values [%%]' % script_p 
+title = 'Global DATA/MC similarity: %s' % p_value_percent_expr  
 table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = 'll'+(20*'c')) 
 logger.info ( '%s\n%s' % ( title , table ) )
 
@@ -477,7 +477,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
         glob_stat.append ( tuple ( trow ) )
         
-        title = 'Global DATA/MC similarity: %s-values [%%]' % script_p 
+        title = 'Global DATA/MC similarity: %s' % p_value_percent_expr 
         table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = 'll'+(20*'c')) 
         logger.info ( '%s\n%s' % ( title , table ) )
         
@@ -569,7 +569,7 @@ for r in results :
     trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
 glob_stat.append ( tuple ( trow ) )
 
-title = 'Global DATA/MC similarity: %s-values [%%]' % script_p 
+title = 'Global DATA/MC similarity: %s' % p_value_percent_expr
 table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = 'll'+(10*'c')) 
 logger.info ( '%s\n%s' % ( title , table ) )
 

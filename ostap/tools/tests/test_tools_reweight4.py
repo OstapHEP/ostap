@@ -14,19 +14,19 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2025-09-15"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.pyrouts     import Ostap, VE 
+from   ostap.core.pyrouts     import VE 
 from   ostap.histos.histos    import h1_axis, h2_axes, h3_axes 
 from   ostap.utils.timing     import timing
 from   ostap.utils.basic      import numcpu 
-from   ostap.logger.colorized import attention, allright
+from   ostap.logger.colorized import allright
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.root_utils import batch_env 
 from   ostap.utils.cleanup    import CleanUp
 from   ostap.utils.memory     import memory_usage, delta_ram
-from   ostap.logger.symbols   import ( iteration      , sup_eff  ,
-                                       plus_minus     , script_p ,
-                                       triangular_flag as start_symbol , 
-                                       trophy          as final_symbol ) 
+from   ostap.logger.symbols   import ( iteration      , sup_eff              ,
+                                       plus_minus     , p_value_percent_expr ,
+                                       triangular_flag as start_symbol       , 
+                                       trophy          as final_symbol       ) 
 from   ostap.stats.tools      import ( hasLightGBM , hasXGBoost ,
                                        hasCatBoost , hasSkLearn ,
                                        hasHepML    ) 
@@ -449,7 +449,7 @@ with timing ( 'Compare DATA & initial MC-dataset:' , logger = logger ) :
         trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
     glob_stat.append ( tuple ( trow ) )
     
-    title = 'Global DATA/MC similarity %s-values [%%] before reweighting' % script_p
+    title = 'Global DATA/MC similarity %s before reweighting' % p_value_percent_expr
     table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
     logger.info ( '%s\n%s' % ( title , table ) )
     
@@ -504,7 +504,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
         glob_stat.append ( tuple ( trow ) )
         
-        title = 'Global DATA/MC similarity %s-values [%%]' % script_p
+        title = 'Global DATA/MC similarity %s' % p_value_percent_expr
         table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
         logger.info ( '%s\n%s' % ( title , table ) )
 
@@ -583,7 +583,7 @@ with timing ( 'Compare DATA & final weighted MC-tree:' , logger = logger ) :
         trow .append ( '%6.2f%s%.2f' % ( pv100.value () , plus_minus , pv100.error () ) )
     glob_stat.append ( tuple ( trow ) )
     
-    title = 'Global DATA/MC similarity %s-values [%%]' % script_p
+    title = 'Global DATA/MC similarity %s' % p_value_percent_expr
     table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = alignment )
     logger.info ( '%s\n%s' % ( title , table ) )
 

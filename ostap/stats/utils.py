@@ -26,14 +26,6 @@ __all__     = (
     'np2vct'              , ## numpy arrays into SVectorWithError
     'eff_size'            , ## effective size of two samples
     ##
-    'p_value_string'      , ## nice representatio of p-value
-    't_value_string'      , ## nice representatio of t-value
-    't_mean_string'       , ## nice representatio of t-mean 
-    't_min_string'        , ## nice representatio of t-min 
-    't_max_string'        , ## nice representatio of t-max 
-    't_unit_string'       , ## nice representatio of t-unit 
-    'n_sigma_string'      , ## nice representaito of #sigma     
-    'p_value_percent'     , ## nice representatio of p-value in [%]
     'full_header'         , ## the header for statistical table (full) 
     'short_header'        , ## the header for statistical table (short) 
     't_header'            , ## the header for statistical table (only t-values)
@@ -50,38 +42,22 @@ import numpy, re
 from ostap.logger.logger import getLogger, logAttention 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.utils' )
 else                       : logger = getLogger( __name__ )
-# =============================================================================
-p_italic       = S.to_bold_italic ( 'p' )
-t_italic       = S.to_bold_italic ( 't' ) 
-w_italic       = S.to_bold_italic ( 'w' ) 
-# =============================================================================                               
-p_value_string  = '%s-value' %   p_italic 
-t_value_string  = '%s-value' %   t_italic
-t_mean_string   = '%s%s'     % ( t_italic , '-mean' ) ## S.sub_mean )
-t_rms_string    = ( '%s(%s)' % ( S.greek_lower_sigma , t_italic ) ) if S.show else ( '%s%s'  % ( t_italic , '-rms' ) )  
-t_min_string    = '%s%s'     % ( t_italic , '-min'  ) ## S.sub_min  )
-t_max_string    = '%s%s'     % ( t_italic , '-max'  ) ## S.sub_max  )
-t_unit_string   = '%s%s'     % ( t_italic , '-unit' )
-n_sigma_string  = '#%s'      %   S.greek_lower_sigma
-p_value_percent = '%s [%%]'  %   p_value_string  ## p-value [%
-w_min_string    = '%s%s'     %  ( w_italic , '-min' ) ##  S.sub_min )
-w_max_string    = '%s%s'     %  ( w_italic , '-max' ) ## S.sub_max )
-w_minmax        = w_min_string, w_max_string 
-## the header to statistics table
-full_header     = ( t_value_string  , 
-                    t_mean_string   , 
-                    t_rms_string    ,
-                    t_min_string    ,
-                    t_max_string    ,
-                    t_unit_string   ,
-                    p_value_percent ,
-                    n_sigma_string  )
-short_header    = ( t_value_string  , 
-                    t_unit_string   ,
-                    p_value_percent ,
-                    n_sigma_string  )
-t_header        = ( t_value_string  , t_unit_string )
-w_header        = w_min_string, w_max_string 
+# ============================================================================
+## the headers to statistics table
+full_header     = ( S.t_value_expr         , 
+                    S.t_mean_expr          , 
+                    S.t_rms_expr           ,
+                    S.t_min_expr           ,
+                    S.t_max_expr           ,
+                    S.t_unit_expr          ,
+                    S.p_value_percent_expr ,
+                    S.n_sigma_expr         )
+short_header    = ( S.t_value_expr         , 
+                    S.t_unit_expr          ,
+                    S.p_value_percent_expr ,
+                    S.n_sigma_expr         )
+t_header        = S.t_value_expr  , S.t_unit_expr           
+w_header        = S.w_min_expr    , S.w_max_expr
 # =============================================================================
 
 # =============================================================================

@@ -21,8 +21,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import string_types, dictlike_types 
 from   ostap.fitting.pdfbasic   import PDF1, APDF1
-from   ostap.core.core          import VE, Ostap
-from   ostap.math.math_base     import axis_range, product 
+from   ostap.core.core          import VE
+from   ostap.math.math_base     import axis_range
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.core         import typename   
 from   ostap.stats.counters     import SE, EffCounter, ECDF
@@ -31,7 +31,7 @@ from   ostap.logger.colorized   import markup
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
 from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, combine_pvalues, combine_methods 
-from   ostap.stats.utils        import full_header, t_header, t_unit_string , t_value_string 
+from   ostap.stats.utils        import full_header, t_header
 from   ostap.fitting.simfit     import SimFit 
 from   ostap.stats.gof          import AGoF
 from   ostap.stats.gof1d        import ( GoF1D , vct_clip      ,
@@ -44,11 +44,10 @@ from   ostap.stats.gof1d        import ( GoF1D , vct_clip      ,
 from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.utils.timing       import timing 
 from   collections              import defaultdict, namedtuple
-import ostap.stats.gofnd        as     GoFnD
 import ostap.logger.symbols     as     S 
 import ostap.logger.table       as     T
 import ostap.fitting.roofit
-import ROOT, math, numpy, copy  
+import ROOT, numpy, copy  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -263,7 +262,8 @@ class GoFSimFit1D(GoFSimFitBase) :
         keys = tuple ( self.gofs.keys() )
         
         header = "Statistics" ,  
-        for k in keys : header += ( S.to_bold_italic ( str ( k ) ) + ': ' + t_value_string , t_unit_string )
+        t1, t2 = t_header  
+        for k in keys : header += ( S.to_bold_italic ( str ( k ) ) + ': ' + t1 , t2 )
         
         rows = []
 
@@ -294,7 +294,7 @@ class GoFSimFit1D(GoFSimFitBase) :
             rows.append ( row )
 
         rows  = [ header ] + sorted ( rows ) 
-        title = title if title else 'Goodness of 1D (Sim)Fit %s' % t_value_string
+        title = title if title else 'Goodness of 1D (Sim)Fit %s' % S.t_value_expr 
         rows  = T.remove_empty_columns ( rows )
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccccccccccccccc' , style = style  )
 

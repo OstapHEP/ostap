@@ -586,7 +586,6 @@ mctree     = ROOT.TChain ( tag_mc   , files = testdata )
 
 from ostap.tools.data_reweighter import DataReweighter
 
-
 weights = [ '' ]
 
 if weighter : weights.append ( weight_name ) 
