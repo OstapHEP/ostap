@@ -2853,18 +2853,18 @@ class RooKeys1D_pdf(PDF1) :
 # =============================================================================
 ## popular backgroubd models
 # =============================================================================
-PATTERN_POLY         = re.compile ( r'(polynomial|poly|pol|p)\s*[-=]?\s*(?P<degree>\d{1,2})'                                            , re.IGNORECASE ) 
-PATTERN_EXPO         = re.compile ( r'(expo|exp|e)\s*[-=]?\s*(?P<degree>\d{1,2})'                                                       , re.IGNORECASE )
-PATTERN_INCR         = re.compile ( r'(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,2})'                                   , re.IGNORECASE )
-PATTERN_DECR         = re.compile ( r'(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,2})'                                   , re.IGNORECASE )
-PATTERN_CONVEX       = re.compile ( r'(convex|cnvx|cnv|cx)\s*[-=]?\s*(?P<degree>\d{1,2})'                                               , re.IGNORECASE )
-PATTERN_CONCAVE      = re.compile ( r'(concave|cncv|cnc|cv)\s*[-=]?\s*(?P<degree>\d{1,2})'                                              , re.IGNORECASE )
-PATTERN_CONVEX_DECR  = re.compile ( r'(convex|cnvx|cnv|cx)\s*[-+_&]?\s*(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,3})'  , re.IGNORECASE )
-PATTERN_CONVEX_INCR  = re.compile ( r'(convex|cnvx|cnv|cx)\s*[-+_&]?\s*(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,3})'  , re.IGNORECASE )
-PATTERN_CONCAVE_DECR = re.compile ( r'(concave|cncv|cnc|cv)\s*[-+_&]?\s*(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,3})' , re.IGNORECASE )
-PATTERN_CONCAVE_INCR = re.compile ( r'(concave|cncv|cnc|cv)\s*[-+_&]?\s*(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,3})' , re.IGNORECASE )
-PATTERN_ROOCHEBYSHEV = re.compile ( r'(roochebyshev|roocheb|rchebyshev|chebyshev|rcheb|cheb|rc)\s*[-=]?\s*(?P<degree>\d{1,2})'          , re.IGNORECASE )
-PATTERN_ROOPOLY      = re.compile ( r'(roopolynomial|rpolynomial|roopoly|rpoly|rp|r)\s*[-=]?\s*(?P<degree>\d{1,2})'                     , re.IGNORECASE )
+PATTERN_POLY         = re.compile ( r'\s*(polynomial|poly|pol|p)\s*[-=]?\s*(?P<degree>\d{1,2})\s*'                                            , re.IGNORECASE ) 
+PATTERN_EXPO         = re.compile ( r'\s*(expo|exp|e)\s*[-=]?\s*(?P<degree>\d{1,2})\s*'                                                       , re.IGNORECASE )
+PATTERN_INCR         = re.compile ( r'\s*(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,2})\s*'                                   , re.IGNORECASE )
+PATTERN_DECR         = re.compile ( r'\s*(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,2})\s*'                                   , re.IGNORECASE )
+PATTERN_CONVEX       = re.compile ( r'\s*(convex|cnvx|cnv|cx)\s*[-=]?\s*(?P<degree>\d{1,2})\s*'                                               , re.IGNORECASE )
+PATTERN_CONCAVE      = re.compile ( r'\s*(concave|cncv|cnc|cv)\s*[-=]?\s*(?P<degree>\d{1,2})\s*'                                              , re.IGNORECASE )
+PATTERN_CONVEX_DECR  = re.compile ( r'\s*(convex|cnvx|cnv|cx)\s*[-+_&]?\s*(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,3})\s*'  , re.IGNORECASE )
+PATTERN_CONVEX_INCR  = re.compile ( r'\s*(convex|cnvx|cnv|cx)\s*[-+_&]?\s*(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,3})\s*'  , re.IGNORECASE )
+PATTERN_CONCAVE_DECR = re.compile ( r'\s*(concave|cncv|cnc|cv)\s*[-+_&]?\s*(decreasing|decrease|decr|dec|d)\s*[-=]?\s*(?P<degree>\d{1,3})\s*' , re.IGNORECASE )
+PATTERN_CONCAVE_INCR = re.compile ( r'\s*(concave|cncv|cnc|cv)\s*[-+_&]?\s*(increasing|increase|incr|inc|i)\s*[-=]?\s*(?P<degree>\d{1,3})\s*' , re.IGNORECASE )
+PATTERN_ROOCHEBYSHEV = re.compile ( r'\s*(roochebyshev|roocheb|rchebyshev|chebyshev|rcheb|cheb|rc)\s*[-=]?\s*(?P<degree>\d{1,2})\s*'          , re.IGNORECASE )
+PATTERN_ROOPOLY      = re.compile ( r'\s*(roopolynomial|rpolynomial|roopoly|rpoly|rp|r)\s*[-=]?\s*(?P<degree>\d{1,2})\s*'                     , re.IGNORECASE )
 
 # =============================================================================
 ## create popular 1D `background'  function
