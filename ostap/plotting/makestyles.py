@@ -26,8 +26,8 @@ __all__ = (
     )
 # =============================================================================
 from   ostap.core.meta_info import root_info 
+from   ostap.utils.basic    import classprop 
 from   ostap.utils.cidict   import cidict, cidict_fun
-from   ostap.utils.utils    import classprop 
 import ostap.plotting.color
 import ROOT, ctypes 
 # =============================================================================

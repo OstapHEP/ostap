@@ -38,7 +38,7 @@ from   ostap.math.math_base     import axis_range, np2raw, isequal, data2vct, is
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.core         import typename   
-from   ostap.utils.basic        import safe_loop 
+from   ostap.utils.basic        import safe_loop, classprop 
 from   ostap.stats.counters     import SE, ECDF
 from   ostap.math.math_ve       import significance
 from   ostap.stats.gof_utils    import ( Labels      , Keys      ,
@@ -62,16 +62,16 @@ else                       : logger = getLogger ( __name__ )
 logger.debug ( 'Simple utilities for goodness-of-1D-fit studies' )
 # =============================================================================
 ## implemented methods
-GoF_methods = ( "KS" ,  ## Kolmogorov-Smirnov 
-                "K"  ,  ## Kuiper
-                "AD" ,  ## Anderson-Darling 
-                "CM" ,  ## Cramer-von-Mises 
-                "ZK" ,  ## Zhang's Z_K-estimator 
-                "ZA" ,  ## Zhang's Z_A-estimatoe 
-                "ZC" ,  ## Zhang's Z_C-estimator 
-                "BJ" ,  ## Berk-Jones -estimator
-                "U2" ,  ## Watson U2  estimator 
-                "R"  )  ## Rosenblatt estmator
+GoF_methods = ( "AD" , ## Anderson-Darling                
+                "BJ" , ## Berk-Jones -estimator
+                "CM" , ## Cramer-von-Mises
+                "K"  , ## Kuiper
+                "KS" , ## Kolmogorov-Smirnov 
+                "R"  , ## Rosenblatt estmator
+                "U2" , ## Watson U2  estimator 
+                "ZK" , ## Zhang's Z_K-estimator 
+                "ZA" , ## Zhang's Z_A-estimatoe 
+                "ZC" ) ## Zhang's Z_C-estimator 
 # =============================================================================
 ## @var NL
 #  use C++ if length of data exceeds NL, otherwise Python is OK 
@@ -1295,11 +1295,28 @@ class GoF_1D(AGoF) :
         self.__cdf        = kwargs.pop ( 'cdf'        , {} ) 
         self.__parameters = kwargs.pop ( 'parameters' , {} ) 
         self.__kwargs     = kwargs  
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return '1D'
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return self.what 
         
     @property
     def what  ( self ) : 
         """`what`: the actual GoF method"""
         return self.__what
+    
     @property
     def kwargs ( self ) : 
         """`kwargs` : arguments for `GoF1DToys.run`"""

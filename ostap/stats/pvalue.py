@@ -218,8 +218,9 @@ class PVALUE (abc.ABC) :
         self.ds2         = ds2
         self.weight1     = weight1
         self.weight2     = weight2
-        self.random_seed = random_seed 
-        self.description = S.fixed_width ( self.gof.method , 4 ) + description + ':'
+        self.random_seed = random_seed
+        if description : self.description = description + ' ' + S.fixed_width ( self.gof.symbol , 4 ) + ':'
+        else           : self.description =                     S.fixed_width ( self.gof.symbol , 4 ) + ':'
         
     # =========================================================================
     ## Serialize the object for multiprocessing

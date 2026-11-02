@@ -29,7 +29,90 @@ __all__     = (
     'full_header'         , ## the header for statistical table (full) 
     'short_header'        , ## the header for statistical table (short) 
     't_header'            , ## the header for statistical table (only t-values)
-    'w_header'            , ## "header" for min/max weights 
+    'w_header'            , ## "header" for min/max weights
+    ##
+    'symbol_LGBM'         , ## symbold for LigthGBM 
+    'symbol_XGB'          , ## symbol for XGBoost 
+    'symbol_CATB'         , ## symbol for CatBoost 
+    'symbol_HGBC'         , ## symbol for HistoGradinetBoost 
+    'symbol_GBC'          , ## symbol for GradientBoost 
+    'symbol_RF'           , ## symbol for RandomForest 
+    'symbol_TORCH'        , ## symbol for PyTorch 
+    'symbol_KERAS'        , ## symbol for Keras 
+    'symbol_USTAT'        , ## symbol for uStat
+    'symbol_CHI2'         , ## symbol for chi2
+    ##
+    'symbol_MIX'          , ## symbol for NMixed-Sample
+    'symbol_PPD'          , ## symbol for Point-to-Point Dissimilarity 
+    'symbol_DNN'          , ## symbol for Distance-to-Nearest Neighbor 
+    ## 
+    'symbol_KL'           , ## symbol for Kullback-Leibler 
+    'symbol_J'            , ## symbol for Jeffrey 
+    'symbol_JS'           , ## symbol for Jensen-Shannon 
+    'symbol_M'            , ## symbol for Mahalanobis 
+    'symbol_T2'           , ## symbol for Hotelling T2 
+    'symbol_B'            , ## symbol for Bhattacharyya'               
+    'symbol_H'            , ## symbol for Hellinger 
+    'symbol_W2'           , ## symbol for Wasserstein 
+    'symbol_W_1'          , ## symbol for Wasserstein-1 
+    'symbol_W_2'          , ## symbol for Wasserstein-2
+    'symbol_R'            , ## symbol for Rosenblatt 
+    'symbol_U2'           , ## Symbol for Watson U2 
+
+    ##
+    'symbol_NLL'          , ## symbol for NLL 
+    'symbol_AIC'          , ## symbol for Akainke IC 
+    'symbol_BIC'          , ## symbol for Bayesian IS     
+    ##
+    'symbol_KS'           , ## symbol for Kolmogorov-Smirnov 
+    'symbol_K'            , ## symbol for Kuiper 
+    'symbol_AD'           , ## symbol for Anderson-Darling 
+    'symbol_CVM'          , ## symbol for Cramers-von Mises
+    'symbol_BJ'           , ## symbol for Berk-Jones 
+    'symbol_ZA'           , ## symbol for Zhang ZA 
+    'symbol_ZC'           , ## symbol for Zhang ZC 
+    'symbol_ZK'           , ## symbol fo Zhang ZK 
+    ##
+    'method_LGBM'         , ##           LightGBM method 
+    'method_XGB'          , ##            XGBoost method 
+    'method_CATB'         , ##           CatBoost method 
+    'method_HGBC'         , ## HistoGradientBoost method 
+    'method_GBC'          , ##      GradientBoost method 
+    'method_RF'           , ##       RandomForest method 
+    'method_TORCH'        , ##            PyTorch method 
+    'method_KERAS'        , ##              Keras method     
+    'method_USTAT'        , ##              uStat method 
+    'method_CHI2'         , ##               Chi2 method 
+    ##
+    'method_MIX'          , ##                 Mixed-Sample method 
+    'method_PPD'          , ## Point-to-Point Dissimilarity method 
+    'method_DNN'          , ## Distance-to-Nearest Neighbor method
+    ## 
+    'method_KL'           , ##             Kullback-Leibler method 
+    'method_J'            , ##                      Jeffrey method  
+    'method_JS'           , ##               Jensen-Shannon method 
+    'method_M'            , ##                  Mahalanobis method 
+    'method_B'            , ##                Bhattacharyya method 
+    'method_H'            , ##                    Hellinger method 
+    'method_T2'           , ##                    Hotteling method                       
+    'method_W2'           , ##                  Wasserstein method
+    'method_W_1'          , ##                 Wassertein/1 method 
+    'method_W_2'          , ##                 Wassertein/2 method 
+    'method_R'            , ##                   Rosenblatt method 
+    'method_U2'           , ##                    Watson U2 method 
+    ##
+    'method_NLL'          , ## Negative log-likelihood 
+    'method_AIC'          , ## Akaike IC
+    'method_BIC'          , ## Bayesian IC'
+    ##
+    'method_KS'           , ## Kolmogoros-Smirnov     
+    'method_K'            , ## Kuiper                
+    'method_AD'           , ## Anderson-Darling
+    'method_CVM'          , ## Cramer-von Mises'        
+    'method_BJ'           , ## Berk-Kones'             
+    'method_ZA'           , ## zhang ZA 
+    'method_ZC'           , ## zhang ZC 
+    'method_ZK'           , ## zhang ZK 
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
@@ -42,6 +125,95 @@ import numpy, re
 from ostap.logger.logger import getLogger, logAttention 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.utils' )
 else                       : logger = getLogger( __name__ )
+# ============================================================================
+symbol_name  = S.bolditalic 
+method_name  = S.italic
+
+symbol_EPOCH = f'{S.repeat} :' if S.show and S.repeat else 'Epoch:'
+
+symbol_LGBM  = symbol_name ( S.light_bulb   if S.show and S.light_bulb     else 'LightGBM' ) 
+symbol_XGB   = symbol_name ( S.rocket       if S.show and S.rocket         else 'XGBoost'  ) 
+symbol_CATB  = symbol_name ( S.cat_face     if S.show and S.cat_face       else 'CatBoost' ) 
+symbol_HGBC  = symbol_name ( S.bar_chart    if S.show and S.bar_chart      else 'HGBC'     ) 
+symbol_GBC   = symbol_name ( S.nabla        if S.show and S.nabla          else 'GBC'      ) 
+symbol_RF    = symbol_name ( S.palm         if S.show and S.palm           else 'RF'       )
+symbol_TORCH = symbol_name ( S.flashlight   if S.show and S.flashlight     else 'TORCH'    ) 
+symbol_KERAS = symbol_name ( S.postal_horn  if S.show and S.postal_horn    else 'KERAS'    ) 
+symbol_USTAT = symbol_name ( S.pushpin      if S.show and S.pushpin        else 'USTAT'    ) 
+symbol_CHI2  = symbol_name ( S.chi2         if S.show and S.chi2           else 'Chi2'     ) 
+
+symbol_MIX   = symbol_name ( S.shuffle      if S.show and S.shuffle        else 'MIX'      ) 
+symbol_PPD   = symbol_name ( S.ruler        if S.show and S.ruler          else 'PPD'      ) 
+symbol_DNN   = symbol_name ( S.compass      if S.show and S.compass        else 'DNN'      ) 
+
+symbol_KL    = symbol_name ( 'K-L' )
+symbol_J     = symbol_name ( 'J'   )
+symbol_JS    = symbol_name ( 'J-S' )
+symbol_M     = symbol_name ( 'M'   )
+symbol_T2    = symbol_name ( 'T2'  )
+symbol_B     = symbol_name ( 'B'   )
+symbol_H     = symbol_name ( 'H'   )
+symbol_W2    = symbol_name ( 'W2'  )
+symbol_W_1   = symbol_name ( f'W{S.sub_one}' if S.show else 'W_1' )
+symbol_W_2   = symbol_name ( f'W{S.sub_two}' if S.show else 'W_2' )
+symbol_R     = symbol_name ( 'R')
+symbol_U2    = symbol_name ( f'F{S.sup_two}' if S.show else 'U2'  )
+
+symbol_NLL   = symbol_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'NLL' ) 
+symbol_AIC   = symbol_name ( 'AIC' ) 
+symbol_BIC   = symbol_name ( 'BIC' ) 
+
+symbol_KS    = symbol_name ( 'K-S' )
+symbol_K     = symbol_name ( 'K'   )
+symbol_AD    = symbol_name ( 'A-D' )
+symbol_CVM   = symbol_name ( 'CvM' )
+symbol_BJ    = symbol_name ( 'B-J' )
+symbol_ZA    = symbol_name ( f'Z{S.subscript_A}' )
+symbol_ZC    = symbol_name ( f'Z{S.subscript_C}' )
+symbol_ZK    = symbol_name ( f'Z{S.subscript_K}' )
+
+
+method_LGBM  = method_name ( 'LightGBM'           )
+method_XGB   = method_name ( 'XGBoost'            ) 
+method_CATB  = method_name ( 'CatBoost'           ) 
+method_HGBC  = method_name ( 'HistoGradientBoost' ) 
+method_GBC   = method_name ( 'GradientBoost'      ) 
+method_RF    = method_name ( 'RandomForest'       )
+method_TORCH = method_name ( 'PyTorch'            )
+method_KERAS = method_name ( 'Keras'              ) 
+method_USTAT = method_name ( 'uStat'              )
+method_CHI2  = S.chi2         if S.show and S.chi2        else 'Chi2'
+
+method_MIX   = method_name ( 'Mixed-Sample'                  )
+method_PPD   = method_name ( 'Point-to-Point Dissimilarity'  )
+method_DNN   = method_name ( 'Distance-to-Nearest Neighbour' )
+
+method_KL    = method_name ( 'Kullback-Leibler'              )
+method_J     = method_name ( 'Jeffrey'                       )
+method_JS    = method_name ( 'Jensen-Shannon'                )
+method_M     = method_name ( 'Mahalanobis'                   )
+method_T2    = method_name ( 'Hotteling'                     )
+method_B     = method_name ( 'Bhattacharyya'                 )
+method_H     = method_name ( 'Hellinger'                     )
+method_W2    = method_name ( 'Wasserstein'                   )
+method_W_1   = method_name ( f'Wasserstein{S.sub_one}'       )
+method_W_2   = method_name ( f'Wasserstein{S.sub_two}'       )
+method_R     = method_name ( 'Rosenblatt'                    )
+method_U2    = method_name ( f'Watson U{S.sup_two}'          )
+
+method_NLL   = method_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'Negative Delta Likelihood' ) 
+method_AIC   = method_name ( 'Akaike IC'   )
+method_BIC   = method_name ( 'Bayesian IC' )
+
+method_KS    = method_name ( 'Kolmogoros-Smirnov'      )
+method_K     = method_name ( 'Kuiper'                  )
+method_AD    = method_name ( 'Anderson-Darling'        )
+method_CVM   = method_name ( 'Cramer-von Mises'        )
+method_BJ    = method_name ( 'Berk-Kones'              )
+method_ZA    = method_name ( f"Zhang Z{S.subscript_A}" )
+method_ZC    = method_name ( f"Zhang Z{S.subscript_C}" )
+method_ZK    = method_name ( f"Zhang Z{S.subscript_K}" )
+
 # ============================================================================
 ## the headers to statistics table
 full_header     = ( S.t_value_expr         , 

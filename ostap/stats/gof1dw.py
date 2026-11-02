@@ -13,6 +13,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-16"
 __all__     = (
+    # =========================================================================
     'KolmogorovSmirnov'  , ## Kolmogorov-Sminov GoF estimator 
     'Kuiper'             , ## Kuiper            GoF estimator 
     'AndersonDarling'    , ## Anderson-Darling  GoF estimator 
@@ -22,11 +23,15 @@ __all__     = (
     'ZA'                 , ## ZA                GoF estimator
     'ZC'                 , ## ZC                GoF estimator
     'Wasserstein1'       , ## Wasserstein-1     GoF estimator 
-    'Wasserstein2'       , ## Wasserstein-2     GoF estimator 
+    'Wasserstein2'       , ## Wasserstein-2     GoF estimator
+    'Rosenblatt'         , ## Rosenblatt        GoF estimator
+    'Watson'             , ## Watson-U2         GoF estimator    
+    # =========================================================================
 )
 # =============================================================================
 from   ostap.stats.gof_np      import GoFnp
 import ostap.stats.twosamples2 as     TS2 
+import ostap.stats.utils       as     U 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -43,7 +48,6 @@ class BootstrapGoF ( GoFnp ) :
     """ 1D GoFnp base class to get p-value via BootStrap/Permutation
     """
     def __init__ ( self             ,
-                   method           ,
                    estimator        ,
                    nToys     = 1000 , 
                    **kwargs         ) :
@@ -51,9 +55,7 @@ class BootstrapGoF ( GoFnp ) :
         self.__estimator = estimator        
         kwargs [ 'normalize' ] = False
         
-        GoFnp.__init__ ( self ,
-                         method = method ,
-                         nToys  = nToys  , **kwargs )
+        GoFnp.__init__ ( self , nToys  = nToys  , **kwargs )
     
     @property
     def estimator ( self ) :
@@ -122,9 +124,23 @@ class KolmogorovSmirnov(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Kolmogorov-Smirnov statistics
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = 'Kolmogorov-Smirnov'   ,
-                                estimator = TS2.kolmogorov_smirnov , **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.kolmogorov_smirnov , **kwargs )
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_KS
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_KS 
 
 # =============================================================================
 ## @class Kuiper
@@ -134,9 +150,23 @@ class Kuiper(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Kuiper' statistics
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = 'Kuiper'   ,
-                                estimator = TS2.kuiper , **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.kuiper , **kwargs )
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_K
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_K 
 
 # =============================================================================
 ## @class CramerVonMises
@@ -146,10 +176,24 @@ class CramerVonMises(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Cramer-von Mises' statistics
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = 'Cramer-von Mises'   ,
-                                estimator = TS2.cramer_von_mises , **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.cramer_von_mises , **kwargs )
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_CVM
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_CVM 
+        
 # =============================================================================
 ## @class AndersonDarling
 #  Two (weighted) sample test using Anderson-Darling' statistics
@@ -158,10 +202,24 @@ class AndersonDarling(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Anderson-Darling' statistics
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = 'Anderson-Darling'   ,
-                                estimator = TS2.anderson_darling, **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.anderson_darling, **kwargs )
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_AD 
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_AD  
+
 # =============================================================================
 ## @class BerkJones
 #  Two (weighted) sample test using Berk-Jones' statistics
@@ -170,10 +228,24 @@ class BerkJones(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Berk-Jones statistics
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = 'Berk-Jones'   ,
-                                estimator = TS2.berk_jones, **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.berk_jones, **kwargs )
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_BJ
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_BJ  
+        
 # =============================================================================
 ## @class ZA
 #  Two (weighted) sample test using Zhang' ZA statistics
@@ -182,9 +254,23 @@ class ZA(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Zhang's ZA statistics
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = "Zhang' ZA" ,
-                                estimator = TS2.ZA      , **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.ZA      , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_ZA
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_ZA  
 
 # =============================================================================
 ## @class ZC
@@ -194,9 +280,23 @@ class ZC(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Zhang's ZC statistics
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = "Zhang' ZC" ,
-                                estimator = TS2.ZC      , **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.ZC      , **kwargs )
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_ZC
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_ZC
 
 # =============================================================================
 ## @class ZK
@@ -206,9 +306,23 @@ class ZK(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Zhang's ZK statistics
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = "Zhang' ZK" ,
-                                estimator = TS2.ZK      , **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.ZK , **kwargs )
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_ZK
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_ZK
 
 # =============================================================================
 ## @class Wasserstein1 
@@ -218,9 +332,23 @@ class Wasserstein1(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using the First Wasserstein distance
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = "Wasserstein-1"  ,
-                                estimator = TS2.wasserstein1 , **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.wasserstein1 , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_W_1
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_W_1
 
 # =============================================================================
 ## @class Wasserstein2
@@ -230,10 +358,76 @@ class Wasserstein2(BootstrapGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using the second Wasserstein distance
         """
-        BootstrapGoF.__init__ ( self ,
-                                method    = "Wasserstein-2"  ,
-                                estimator = TS2.wasserstein2 , **kwargs )
+        BootstrapGoF.__init__ ( self , estimator = TS2.wasserstein2 , **kwargs )
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_W_2
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_W_2
+
+# =============================================================================
+## @class Rosenblatt 
+#  Two (weighted) sample test using the Rosenblatt 
+class Rosenblatt(BootstrapGoF) :
+    """ Two (weighted) sample test using Rosenblatt distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using the Rosenblatt distance
+        """
+        BootstrapGoF.__init__ ( self , estimator = TS2.rosenblatt , **kwargs )
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_R
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_R
+
+# =============================================================================
+## @class Watson
+#  Two (weighted) sample test using the Watson U2
+class Watson(BootstrapGoF) :
+    """ Two (weighted) sample test using Watsondistance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using the Watson distance
+        """
+        BootstrapGoF.__init__ ( self , estimator = TS2.watson_u2 , **kwargs )
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_U@
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_U2
+
 # =============================================================================
 if '__main__' == __name__ :
     

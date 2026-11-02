@@ -19,8 +19,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, string_types, integer_types  
 from   ostap.utils.core         import typename
-from   ostap.utils.utils        import classprop 
-from   ostap.utils.basic        import numcpu, NoContext
+from   ostap.utils.basic        import numcpu, NoContext, classprop 
 from   ostap.logger.utils       import map2table_ex
 from   ostap.logger.pretty      import nice_print 
 from   ostap.utils.progress_bar import progress_bar, text_bar

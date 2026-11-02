@@ -170,6 +170,32 @@ namespace Ostap
     double wasserstein2       ( const ECDF&  e1 , const WECDF& e2 ) ;
     double wasserstein2       ( const WECDF& e1 , const ECDF&  e2 ) ;
     // ========================================================================
+    /** @brief Rosenblatt-type two-sample test statistic (\f$R\f$).
+     *
+     *  Calculates cumulative squared discrepancies between two empirical CDFs 
+     *  evaluated on the pooled sample points:
+     *  \f[ R = \sum_i (F_1(x_i) - F_2(x_i))^2 \f]
+     *
+     *  @see Rosenblatt, M. (1952)
+     */
+    double rosenblatt         ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double rosenblatt         ( const WECDF& e1 , const WECDF& e2 ) ;
+    double rosenblatt         ( const ECDF&  e1 , const WECDF& e2 ) ;
+    double rosenblatt         ( const WECDF& e1 , const ECDF&  e2 ) ;
+    // ========================================================================
+    /** @brief Watson's two-sample test statistic (\f$U^2\f$).
+     *
+     *  A Cramér-von Mises type variant invariant under cyclic transformations:
+     *  \f[ U^2 = \int_{-\infty}^{\infty} \left( (F_1(x) - F_2(x)) - \bar{D} \right)^2 dH(x) \f]
+     *
+     *  @see https://en.wikipedia.org/wiki/Watson_test
+     *  @note Watson, G.S. (1961, 1962).
+     */
+    double watson_u2          ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double watson_u2          ( const WECDF& e1 , const WECDF& e2 ) ;
+    double watson_u2          ( const ECDF&  e1 , const WECDF& e2 ) ;
+    double watson_u2          ( const WECDF& e1 , const ECDF&  e2 ) ;    
+    // ========================================================================
   } //                                        The end  of namespace Ostap::Math
   // ==========================================================================
 } //                                                 The end of namespace Ostap

@@ -43,7 +43,6 @@ class GoFnp (AGoFnp,Config) :
                    nToys     = 100    ,
                    silent    = True   , 
                    parallel  = True   ,
-                   method    = 'GoF'  ,
                    progress  = True   ,
                    normalize = True   , **params ) : 
         
@@ -56,8 +55,6 @@ class GoFnp (AGoFnp,Config) :
         self.__progress  = True if progress  else False
         self.__normalize = True if normalize else False 
         ## 
-        self.__method    = method
-
         ## Empirical CDF for t-value distribution from permutations/toys"""
         self.__ecdf      = None
         self.__counter   = None
@@ -83,14 +80,15 @@ class GoFnp (AGoFnp,Config) :
     def config ( self ) :
         """`config` : get all configuration parameters"""
         conf = {} 
-        conf.update ( self.params )
+        conf.update ( super().config  )        
         conf [ 'nToys'                      ] = self.nToys
         conf [ 'progress'                   ] = self.progress
         conf [ 'parallel'                   ] = self.parallel
         conf [ 'normalize'                  ] = self.normalize
-        conf [ 'method'                     ] = self.method  
         conf [ 'weights_supported'          ] = self.weights_supported
         conf [ 'two_samples'                ] = self.two_samples 
+        conf [ 'method'                     ] = self.method  
+        conf [ 'symbol'                     ] = self.symbol  
         return conf 
     
     # =========================================================================
@@ -108,12 +106,7 @@ class GoFnp (AGoFnp,Config) :
     @property
     def progress ( self ) :
         """`progress` : show progress bar?"""
-        return self.__progress 
-    # ========================================================================
-    @property
-    def method ( self ) :
-        """`method` : the actual GoF method """
-        return self.__method
+        return self.__progress
     
     # =======================================================================
     ##  Unpack data ( consvert from structured to unstructured arrays)

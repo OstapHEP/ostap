@@ -44,7 +44,8 @@ from   ostap.plotting.color     import Orange, Green, Blue
 from   packaging.version        import Version
 import ostap.math.linalg 
 import ostap.logger.table       as     T
-import ostap.logger.symbols     as     S 
+import ostap.logger.symbols     as     S
+import ostap.stats.utils        as     U 
 import ROOT, numpy, scipy    
 # =============================================================================
 # logging 
@@ -533,19 +534,19 @@ def normalize_weights_to_N ( weight1 ,
 # =============================================================================
 ## Short labels for various statitical estimators 
 Labels = {
-    'KS'  : 'Kolmogorov-Smirnov'        ,
-    'K'   : 'Kuiper'                    ,
-    'AD'  : 'Anderson-Darling'          ,
-    'CM'  : 'Cramer-von Mises'          ,
-    'ZK'  : "Zhang Z%s" % S.subscript_K ,
-    'ZA'  : "Zhang Z%s" % S.subscript_A ,
-    'ZC'  : "Zhang Z%s" % S.subscript_C ,        
-    'BJ'  : 'Berk-Jones'                ,
-    'U2'  : 'Watson U²'                 ,
-    'R'   : 'Rosenblatt'                ,    
-    'NLL' : '-log%s'    % S.likelihood  ,
-    'AIC' : 'Akaike IC'                 ,
-    'BIC' : 'Bayesian IC'               ,    
+    'KS'  : U.method_KS  ,  
+    'K'   : U.method_K   , 
+    'AD'  : U.method_AD  ,
+    'CM'  : U.method_CVM , 
+    'ZA'  : U.method_ZA  , 
+    'ZC'  : U.method_ZC  , 
+    'ZK'  : U.method_ZK  , 
+    'BJ'  : U.method_BJ  , 
+    'U2'  : U.method_U2  ,
+    'R'   : U.method_R   ,    
+    'NLL' : U.method_NLL ,
+    'AIC' : U.method_AIC ,
+    'BIC' : U.method_BIC ,  
 }
 # =============================================================================
 ## lower-case shortcuts:
@@ -575,7 +576,7 @@ __all_1D_names = cidict ( transform = cidict_fun )
 for k,vv in Keys.items() :
     for v in vv : __all_1D_names [ v ] = k
 # =============================================================================
-## Get the internal  name for extrnal 1D-method
+## Get the internal  name for external 1D-method
 def method_1D ( mm ) :
     """ Get the internal  name for external 1D-method
     """

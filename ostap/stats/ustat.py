@@ -66,7 +66,7 @@ __all__     = (
 # ============================================================================
 from   ostap.core.ostap_types   import integer_types, num_types, string_types   
 from   ostap.core.core          import Ostap, hID
-from    ostap.utils.cidict      import cidict_fun 
+from   ostap.utils.cidict       import cidict_fun 
 from   ostap.utils.config       import Config 
 from   ostap.stats.counters     import EffCounter
 from   ostap.stats.gof          import AGoF
@@ -74,7 +74,8 @@ from   ostap.stats.gof_utils    import  draw_ecdf
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.core         import typename 
-from   ostap.utils.basic        import numcpu
+from   ostap.utils.basic        import numcpu, classprop
+import ostap.stats.utils        as     U 
 import ostap.histos.histos
 import ROOT, ctypes
 # =============================================================================
@@ -319,6 +320,7 @@ class USTAT(AGoF,Config) :
         
         Config.__init__ ( self , silent = silent or progress ) 
 
+        
     ## Are weights supported by this GoF estimator?
     @property 
     def weights_supported ( self ) :
@@ -332,6 +334,22 @@ class USTAT(AGoF,Config) :
         """`progress` : show progress bar?
         """
         return self.__progress 
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_USTAT 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_name ( U.method_USTAT + '/' + self.algorithm )
     
     # =======================================================================
     ## get all configration parameters
@@ -339,14 +357,16 @@ class USTAT(AGoF,Config) :
     def config ( self ) :
         conf = {}
         conf.update ( super().config )
-        conf [ 'nToys'     ] = self.__nToys   
-        conf [ 'sample'    ] = self.__sample  
-        conf [ 'parallel'  ] = self.__parallel
-        conf [ 'sample'    ] = self.__sample  
-        conf [ 'histo'     ] = self.__histo
-        conf [ 'progress'  ] = self.__progress 
-        conf [ 'algorithm' ] = self.__algorithm
-        conf [ 'weights_supported'         ] = self.weights_supported
+        conf [ 'nToys'             ] = self.__nToys   
+        conf [ 'sample'            ] = self.__sample  
+        conf [ 'parallel'          ] = self.__parallel
+        conf [ 'sample'            ] = self.__sample  
+        conf [ 'histo'             ] = self.__histo
+        conf [ 'progress'          ] = self.__progress 
+        conf [ 'algorithm'         ] = self.__algorithm
+        conf [ 'weights_supported' ] = self.weights_supported
+        conf [ 'symbol'            ] = self.symbol 
+        conf [ 'method'            ] = self.method 
         return conf
 
     # =========================================================================

@@ -31,7 +31,17 @@ __all__     = (
     'with_colors'      , ## Is colorization enabled?
     'set_with_colors'  , ## Enable/Disable colorization
     ##
-    'markup'           , ## some primitive markup  
+    'underline'        , ## underline expression
+    'boldblink'        , ## bold&blink
+    'bolditalic'       , ## bold&italic
+    'bold'             , ## bold
+    'italic'           , ## bold
+    'blink'            , ## blink 
+    'crossout'         , ## crossout 
+    'reverse'          , ## reverse
+    ## 
+    'markup'           , ## primitive markup
+    ## 
     )
 # =============================================================================
 import os, sys, re 
@@ -273,25 +283,29 @@ def info_info ( what ) :
                             bg_bright  = False  )
 
 
+
 # =============================================================================
+## Ooversimplified markup tranformation (a'la github)
+
+## underlyne expression 
+def underline  ( expression ) : return f"{UNDERLINE_SEQ}{expression}{RESET_SEQ}"        if expression else expression 
+def boldblink  ( expression ) : return f"{BOLD_SEQ}{BLINK_SEQ}{expression}{RESET_SEQ}"  if expression else expression 
+def bolditalic ( expression ) : return f"{BOLD_SEQ}{ITALIC_SEQ}{expression}{RESET_SEQ}" if expression else expression 
+def bold       ( expression ) : return f"{BOLD_SEQ}{expression}{RESET_SEQ}"             if expression else expression 
+def italic     ( expression ) : return f"{ITALIC_SEQ}{expression}{RESET_SEQ}"           if expression else expression 
+def blink      ( expression ) : return f"{BLINK_SEQ}{expression}{RESET_SEQ}"            if expression else expression 
+def crossout   ( expression ) : return f"{CROSS_SEQ}{expression}{RESET_SEQ}"            if expression else expression 
+def reverse    ( expression ) : return f"{REVERSE_SEQ}{expression}{RESET_SEQ}"          if expression else expression 
+ 
 ## Apply some oversimplified markup tranformation (a'la github)
-_markup_ = (
-    ## undeline      :           __ text __   
-    ( re.compile ( r'(?P<UL>__.+?__)'         ) , 2 , '%s%%s%s'   % ( UNDERLINE_SEQ ,              RESET_SEQ ) ) ,
-    ## bold & blink  :          *** text *** 
-    ( re.compile ( r'(?P<UL>\*\*\*.+?\*\*\*)' ) , 3 , '%s%s%%s%s' % ( BOLD_SEQ      , BLINK_SEQ   , RESET_SEQ ) ) , 
-    ## bold & italic :           ** text ** 
-    ( re.compile ( r'(?P<UL>\*\*.+?\*\*)'     ) , 2 , '%s%s%%s%s' % ( BOLD_SEQ      , ITALIC_SEQ  , RESET_SEQ ) ) ,
-    ## bold          :            * text * 
-    ( re.compile ( r'(?P<UL>\*.+?\*)'         ) , 1 , '%s%%s%s'   % ( BOLD_SEQ      ,               RESET_SEQ ) ) ,
-    ## italic        :            _ text _ 
-    ( re.compile ( r'(?P<UL>~.+?~)'           ) , 1 , '%s%%s%s'   % ( ITALIC_SEQ    ,               RESET_SEQ ) ) ,
-    ## blink         :            > text < 
-    ( re.compile ( r'(?P<UL>>.+?<)'           ) , 1 , '%s%%s%s'   % ( BLINK_SEQ      ,              RESET_SEQ ) ) ,
-    ## cross-out/sstrike-out :   -- text __ 
-    ( re.compile ( r'(?P<UL>--.+?--)'         ) , 2 , '%s%%s%s'   % ( CROSS_SEQ      ,              RESET_SEQ ) ) , 
-    ## reverse       :           < text >
-    ( re.compile ( r'(?P<UL>\^.+?\^)'         ) , 1 , '%s%%s%s'   % ( REVERSE_SEQ    ,              RESET_SEQ ) ) , 
+_markup_ = ( ( re.compile ( r'(?P<UL>__.+?__)'         ) , 2 , underline  ) , ## undeline             :   __ text __   
+             ( re.compile ( r'(?P<UL>\*\*\*.+?\*\*\*)' ) , 3 , boldblink  ) , ## bold & blink         :  *** text ***
+             ( re.compile ( r'(?P<UL>\*\*.+?\*\*)'     ) , 2 , bolditalic ) , ## bold & italic        :   ** text **
+             ( re.compile ( r'(?P<UL>\*.+?\*)'         ) , 1 , bold       ) , ## bold                 :    * text *
+             ( re.compile ( r'(?P<UL>~.+?~)'           ) , 1 , italic     ) , ## italic               :    _ text _
+             ( re.compile ( r'(?P<UL>>.+?<)'           ) , 1 , blink      ) , ## blink                :    > text < 
+             ( re.compile ( r'(?P<UL>--.+?--)'         ) , 2 , crossout   ) , ## cross-out/strike-out :   -- text -- 
+             ( re.compile ( r'(?P<UL>\^.+?\^)'         ) , 1 , reverse    ) , ## reverse              :    < text >
 )
 
 # ================================================================================
@@ -321,12 +335,12 @@ def markup ( what ) :
     ## if colorizing is isabled
     enabled = with_colors()
     
-    for c , l , fmt in _markup_ :
+    for c , l , fun in _markup_ :
         qq = tuple ( s for s in re.findall ( c , what ) )
         for s in qq :
             q    = s [ l : -l ]
-            ## transform ( or just remove indicators)
-            r    = fmt % q if enabled else q 
+            ## transform (or just remove indicators)
+            r    = fun ( q ) if enabled else q 
             what = what.replace ( s , r )
         
     return what

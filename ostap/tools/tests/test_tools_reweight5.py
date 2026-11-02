@@ -33,10 +33,11 @@ from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.core         import typename 
 from   ostap.utils.basic        import numcpu
 from   ostap.logger.pretty      import nice_print
-from   ostap.stats.utils        import nEff, num_samples, p_value_percent, w_header    
+from   ostap.stats.utils        import nEff, num_samples, w_header    
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
                                          hasPyTorch  , hasHepML   )
+from   ostap.logger.symbols     import p_value_percent_expr 
 from   ostap.tools.reweighter   import CascadeReweighter as  CASCADE
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
@@ -378,7 +379,7 @@ def run_reweight ( n_dim       = 3     ,
 
             header =  ( 'Reweighter' , 'Comparator' , '#eff' ) + header + w_header 
             if rows [ 0 ] != header :  rows         = [ header ] + rows
-            title = 'Test results : %s' % p_value_percent 
+            title = 'Test results : %s' % p_value_percent_expr 
             table = T.table ( rows , title = title , prefix = '# ' )
             logger.info ( '%s\n%s' % ( title , table ) )
 

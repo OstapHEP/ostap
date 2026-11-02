@@ -41,6 +41,7 @@ __all__     = (
 from   collections            import defaultdict 
 from   ostap.core.ostap_types import string_types
 from   ostap.utils.core       import typename
+from   ostap.utils.basic      import classprop 
 from   ostap.stats.utils      import ( weight_trivial , nEff         , 
                                        num_samples    , num_features , 
                                        check_all      )
@@ -49,7 +50,7 @@ from   ostap.stats.gof_np     import GoFnp
 from   ostap.logger.pretty    import nice_print 
 from   ostap.stats.tools      import hasSkLearn 
 ## 
-import ostap.logger.symbols   as     S
+import ostap.stats.utils      as     U
 import numpy, abc
 # =============================================================================
 # Logging setup 
@@ -66,19 +67,6 @@ from   sklearn.metrics        import mean_squared_error
 DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
 MAX_DEPTH                  =   5
-# =============================================================================
-method_LGBM  = S.light_bulb   if S.show and S.light_bulb  else 'LightGBM'  
-method_XGB   = S.rocket       if S.show and S.rocket      else 'XGBoost'   
-method_CATB  = S.cat_face     if S.show and S.cat_face    else 'CatBoost'  
-method_HGBC  = S.bar_chart    if S.show and S.bar_chart   else 'HGBC'      
-method_GBC   = S.nabla        if S.show and S.nabla       else 'GBC'      
-method_RF    = S.palm         if S.show and S.palm        else 'RF' 
-method_TORCH = S.flashlight   if S.show and S.flashlight  else 'TORCH'     
-method_KERAS = S.postal_horn  if S.show and S.postal_horn else 'KERAS'    
-# =============================================================================
-epoch_symbol = ( '%s :' % S.repeat ) if S.show else 'Epoch:'
-
-
 # =============================================================================
 ## Evaluate whether strong regularization is required for BDT-based models.
 #  Evaluates feature dimension, Kish's effective sample size, and sPlot weight noise.
@@ -220,8 +208,7 @@ class ADVAL_base (GoFnp):
                    nToys      = 400   ,
                    parallel   = True  ,
                    normalize  = True  ,
-                   n_splits   = 5     , 
-                   method     = "Adversarial Validation (Regression)" , **params ) :
+                   n_splits   = 5     , **params ) :
 
         # =====================================================================
         if   not isinstance ( n_splits , int ) : raise TypeError ( "Invalid `n_splits` type  : %s" % typename ( n_splits ) )
@@ -247,8 +234,7 @@ class ADVAL_base (GoFnp):
         self.__regularized         = defaultdict(int)
 
         GoFnp.__init__ ( self            ,
-                         nToys  = nToys  ,
-                         method = method , **params )
+                         nToys  = nToys  , **params )
                 
     # =========================================================================
     @property
@@ -469,15 +455,30 @@ class ADVAL_LGBM (ADVAL_base) :
         config [ 'force_row_wise' ] = row_wise            
         
         ADVAL_base.__init__ ( self, 
-                              nToys     = nToys    ,
-                              normalize = False    ,
-                              method    = method_LGBM , **config   ) 
+                              nToys     = nToys  ,
+                              normalize = False  , **config   ) 
         
         if 'n_jobs' in self.params :
             self.params [ 'num_threads' ] = self.params.pop ( 'n_jobs' , 1 )
         if self.silent :
             self.params [ 'verbosity'   ] = -1 
             self.params [ 'verbose'     ] = -1 
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_LGBM  
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_LGBM
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -593,9 +594,8 @@ class ADVAL_XGB (ADVAL_base) :
         config.update ( params ) 
         
         ADVAL_base.__init__ ( self, 
-                              nToys     = nToys    ,
-                              normalize = False    ,
-                              method    = method_XGB , **config   ) 
+                              nToys     = nToys ,
+                              normalize = False , **config   ) 
 
         if 'n_jobs' in self.params :
             self.params [ 'nthread' ] = self.params.pop ( 'n_jobs' , 1 )
@@ -603,6 +603,22 @@ class ADVAL_XGB (ADVAL_base) :
         if self.silent : self.params [ 'verbosity' ] = 0
             
             
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_XGB 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_XGB 
+
     # =========================================================================
     ## Parameters for strong regularization
     #  @code
@@ -719,13 +735,28 @@ class ADVAL_CATB (ADVAL_base) :
         config.update ( params )
         import catboost as CatBoost 
         ADVAL_base.__init__ ( self, 
-                              nToys     = nToys    ,
-                              normalize = False    ,
-                              method    = method_CATB , **config   ) 
+                              nToys     = nToys ,
+                              normalize = False , **config   ) 
 
         ## 
         if 'n_jobs' in self.params :
             self.params [ 'thread_count' ] = self.params.pop ( 'n_jobs' , 1 )
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_CATB 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_CATB
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -811,8 +842,8 @@ class ADVAL_CATB (ADVAL_base) :
 # =============================================================================
 ## @class ADVAL_HGBC (Regression)
 class ADVAL_HGBC (ADVAL_base) : 
-    def __init__ ( self             ,
-                   nToys    = 400   , **params ) :
+    def __init__ ( self           ,
+                   nToys    = 400 , **params ) :
         
         config = {  'loss'              : 'squared_error',
                     'learning_rate'     : 0.03   ,
@@ -835,12 +866,27 @@ class ADVAL_HGBC (ADVAL_base) :
             if 'neg_root_mean_squared_error' == config.get ( 'scoring') : config [ 'scoring' ] = 'loss'  
             
         ADVAL_base.__init__ ( self, 
-                              nToys     = nToys    ,
-                              normalize = False    ,
-                              method    = method_HGBC , **config   ) 
+                              nToys     = nToys ,
+                              normalize = False , **config   ) 
 
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_HGBC
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_HGBC
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -946,12 +992,27 @@ class ADVAL_GBC (ADVAL_base) :
             if 'squared_error' == config.get ( 'loss' ) : config [ 'loss'    ] = 'ls' 
         
         ADVAL_base.__init__ ( self, 
-                              nToys     = nToys    ,
-                              normalize = False    ,
-                              method    = method_GBC , **config   ) 
+                              nToys     = nToys ,
+                              normalize = False , **config   ) 
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_GBC 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_GBC
+
     # =========================================================================
     ## Parameters for strong regularization
     #  @code
@@ -1050,10 +1111,25 @@ class ADVAL_RF (ADVAL_base) :
             if 'squared_error' == config.get ( 'criterion' ) : config [ 'criterion' ] = 'mse' 
         
         ADVAL_base.__init__ ( self, 
-                              nToys     = nToys    ,
-                              normalize = False    ,                              
-                              method    = method_RF, **config   ) 
+                              nToys     = nToys ,
+                              normalize = False , **config ) 
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_RF 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_RF
+
     # =========================================================================
     ## Parameters for strong regularization
     #  @code
@@ -1136,7 +1212,8 @@ class ADVAL_RF (ADVAL_base) :
 
 # =============================================================================
 ## @class ADVAL_TORCH (Regression)
-class ADVAL_TORCH (ADVAL_base) : 
+class ADVAL_TORCH (ADVAL_base) :
+    
     def __init__ ( self             ,
                    nToys    = 100   , **params   ) :
 
@@ -1150,9 +1227,24 @@ class ADVAL_TORCH (ADVAL_base) :
         config.update ( params ) 
 
         ADVAL_base.__init__ ( self, 
-                              nToys     = nToys    ,
-                              normalize = True     , 
-                              method    = method_TORCH, **config   ) 
+                              nToys     = nToys ,
+                              normalize = True  , **config   ) 
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_TORCH 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_TORCH
 
     # =========================================================================
     ## Parameters for strong regularization
@@ -1301,10 +1393,25 @@ class ADVAL_KERAS (ADVAL_base) :
                     'dropout'               :   0.1  }
 
         ADVAL_base.__init__ ( self, 
-                              nToys     = nToys    ,
-                              normalize = True     , 
-                              method    = method_KERAS, **config   ) 
+                              nToys     = nToys ,
+                              normalize = True  , **config   ) 
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_KERAS 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_KERAS 
+
     # =========================================================================
     ## Parameters for strong regularization
     def regularization ( self       ,

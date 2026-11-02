@@ -57,7 +57,7 @@ __all__     = (
 from   collections          import namedtuple
 from   ostap.math.math_base import Ostap, iszero , next_double, prev_double
 from   ostap.math.ve        import VE
-from   ostap.utils.utils    import classprop, memoize 
+from   ostap.utils.basic    import classprop, memoize 
 import math, abc, array, sys, bisect   
 # =============================================================================
 # logging 

@@ -41,6 +41,7 @@ __all__     = (
     ##
     'counted'              , ## helper to count function calls 
     'memoize'              , ## lightweight cache
+    'classprop'            , ## class property decorator
     ##
     'SafeLoop'             , ## A safe loop wrapper that catches KeyboardInterrupt 
     'safe_loop'            , ## A safe loop wrapper that catches KeyboardInterrupt 
@@ -299,7 +300,6 @@ def counted ( fun ):
     wrapped.calls = 0
     return wrapped
 
-
 # =============================================================================
 if   ( 3 , 9 ) <= python_info : # =============================================
     # =========================================================================
@@ -467,6 +467,35 @@ def safe_loop ( iterable ,
     ...
     """
     return SafeLoop ( iterable , message = message , output = output )
+
+
+# =============================================================================
+if  ( 3 , 12 ) <= python_info : # =============================================
+    # =========================================================================
+    ## (READONLY) class property decorator
+    #  @see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
+    class classprop :
+        """ (READONLY) Class property decorator
+        - see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
+        """
+        def __init__(self, func):
+            self.fget = func
+        def __get__(self, instance, owner):
+            return self.fget(owner)
+    # =========================================================================
+else : # ( 3 , 9 ) <= python_info : # ========================================
+    # =========================================================================
+    ## class property decorator
+    #  @code
+    #  @classprop
+    #  def A ( cls ) : ...  
+    #  @endcode
+    def classprop ( func ) :
+        """ Class property
+        @classprop
+        def A ( cls ) : ...
+        """
+        return classmethod ( property ( func ) ) 
 
 # =============================================================================
 if __name__ == '__main__' :

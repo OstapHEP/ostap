@@ -21,7 +21,7 @@ __all__     = (
 # =============================================================================
 from   ostap.utils.core       import typename
 from   ostap.core.ostap_types import dictlike_types
-from   ostap.utils.utils      import classprop 
+from   ostap.utils.basic      import classprop 
 from   ostap.stats.utils      import weight_trivial, num_samples, num_features, check_all , nEff   
 from   ostap.utils.config     import Config
 from   ostap.logger.pretty    import nice_print

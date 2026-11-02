@@ -53,7 +53,6 @@ __all__     = (
     'choices'            , ## `random.choices` function
     ## 
     'memoize'            , ## Simple lightweight unbounded cache
-    'absproperty'        , ## abstract property decorator
     'classprop'          , ## class property decorator
     'numcalls'           , ## decorator for #ncalls
     ##
@@ -67,9 +66,9 @@ __all__     = (
 from   itertools              import repeat, chain, islice
 from   ostap.core.meta_info   import python_info 
 from   ostap.utils.timing     import timing, timer
-from   ostap.utils.basic      import ( isatty   , with_ipython , 
-                                      NoContext , zip_longest  , 
-                                      counted   , memoize      )  
+from   ostap.utils.basic      import ( isatty    , with_ipython , classprop ,  
+                                       NoContext , zip_longest  , 
+                                       counted   , memoize      )  
 from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
@@ -807,47 +806,6 @@ else : # ==================================================================
             # Yield the current batch
             yield tuple ( batch ) 
               
-# =========================================================================
-## absract property decorator
-#  @code
-#  @absproperty
-#  def A ( self ) : ...  
-#  @endcode
-def absproperty ( func ) :
-    """ Abstract property
-    @absproperty
-    def A ( self ) : ...
-    """
-    return property ( abc.abstractmethod ( func ) ) 
-    
-# =============================================================================
-if  ( 3 , 12 ) <= python_info : # =============================================
-    # =========================================================================
-    ## class property decorator
-    #  @see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
-    class classprop :
-        """ Class property decorator
-        - see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
-        """
-        def __init__(self, func):
-            self.fget = func
-        def __get__(self, instance, owner):
-            return self.fget(owner)
-    # =========================================================================
-else : # ( 3 , 9 ) <= python_info : # ========================================
-    # =========================================================================
-    ## class property decorator
-    #  @code
-    #  @classprop
-    #  def A ( cls ) : ...  
-    #  @endcode
-    def classprop ( func ) :
-        """ Class property
-        @classprop
-        def A ( cls ) : ...
-        """
-        return classmethod ( property ( func ) ) 
-
 # =============================================================================
 ## @class CallThem
 #  Use sequence of callables as single callable

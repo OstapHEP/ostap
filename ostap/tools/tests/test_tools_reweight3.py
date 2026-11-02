@@ -29,18 +29,17 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.env          import get_env
-from   ostap.logger.symbols     import iteration
+from   ostap.logger.symbols     import iteration, p_value_percent_expr 
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.basic        import numcpu
 from   ostap.logger.pretty      import nice_print 
 from   ostap.utils.progress_bar import progress_bar 
-from   ostap.stats.utils        import p_value_percent, full_header 
+from   ostap.stats.utils        import full_header 
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
                                          hasPyTorch  , hasKeras   , 
-                                         hasHepML    ) 
+                                         hasHepML    )
 import ostap.io.zipshelve       as     DBASE
-import ostap.logger.table       as     T 
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
 import ostap.parallel.kisa
@@ -530,7 +529,7 @@ for iter in range ( 1 , maxIter + 1 ) :
                 row = ( '%d' % iter , neff , r.method ) + r.table_row
                 glob_stat.append  ( row ) 
 
-            title = 'Global DATA/MC similarity %s' % p_value_percent
+            title = 'Global DATA/MC similarity %s' % p_value_percent_expr
             rows  = T.remove_empty_columns ( glob_stat )
             table = T.table ( rows , title = title , prefix = '# ' , alignment = alignment )
             logger.info ( '%s\n%s' % ( title , table ) )
@@ -727,7 +726,7 @@ for weight in weights :
         row = ( weight , neff , r.method )  + r.table_row 
         glob_stat.append ( row  )
     
-    title = 'Global DATA/MC similarity: %s' % p_value_percent
+    title = 'Global DATA/MC similarity: %s' % p_value_percent_expr
     rows  = T.remove_empty_columns ( glob_stat )
     table = T.table ( rows , title = title , prefix = '# ' , alignment = alignment )
     logger.info ( '%s\n%s' % ( title , table ) )

@@ -68,6 +68,7 @@ __all__     = (
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
 from   ostap.core.cpu_info      import HAS_AVX2 
 from   ostap.utils.core         import typename  
+from   ostap.utils.basic        import classprop
 from   ostap.stats.gof          import AGoF, AGoFnp 
 from   ostap.core.core          import Ostap, VE 
 from   ostap.math.math_base     import axis_range
@@ -81,6 +82,7 @@ from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.stats.gof_utils    import format_row, draw_ecdf  
 from   ostap.stats.utils        import weight_trivial
 from   ostap.fitting.pdfbasic   import APDF1, PDF1 
+import ostap.stats.utils        as     U 
 import ostap.stats.gof_np       as     GNP
 import ostap.logger.table       as     T 
 import ROOT, numpy, math  
@@ -94,7 +96,7 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
 ## @class GoF
-#  A base class for family of methods to probe Goodness-of-Git
+#  A base class for family of methods to probe Goodness-of-Fit
 class GoF(AGoF,Config) :
     """ A base class for family of methods to probe Goodness-of-Fit
     """
@@ -483,7 +485,15 @@ class MIX(GoF) :
                                                n_neighbors = n_neighbors ,
                                                silent      = silent      , **params ) ,                          
                        mcFactor = mcFactor )
-                
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return GNP.MIXnp.symbol
+            
 # =============================================================================
 ## @class PPD
 #  Implementation of concrete method "Point-To-Point Dissimilarity"
@@ -565,7 +575,15 @@ class PPD(GoF) :
                                                parallel = parallel ,
                                                silent   = True     , **params ) ,                          
                          mcFactor = mcFactor )
-
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return GNP.PPDnp.symbol
+    
 # =============================================================================
 ## @class DNN
 #  Distance-to-Nearest-Neighour GoF-method 
@@ -610,6 +628,14 @@ class DNN(GoF) :
                        mcFactor = 1      , 
                        sample   = sample )
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return GNP.DNNnp.symbol
+    
     # =========================================================================
     ## Calculate t-value for Goodness-of-Fit 
     #  @code
@@ -751,6 +777,20 @@ class NLL(AGoF,Config) :
 
         Config.__init__ ( self , silent = silent ) 
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_NLL
+    
+    @property
+    def method ( self ) :
+        """`method` : the actual GoF-method 
+        """
+        return U.method_NLL
+
     ## Are weights supported by this GoF estimator?
     @property 
     def weights_supported ( self ) :
@@ -1000,6 +1040,20 @@ class AkaikeIC(NLL) :
     ## get the actual t-value from the fit-result 
     def the_tvalue   ( self , fitresult ) : return fitresult.aic () 
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_AIC
+    
+    @property
+    def method ( self ) :
+        """`method` : the actual GoF-method 
+        """
+        return U.method_AIC
+
 # =============================================================================
 ## @class BayesianIC
 #  Use Bayesian information criterion as `estimate` for Goodness-of-Fit
@@ -1035,6 +1089,20 @@ class BayesianIC(NLL) :
                        parallel  = parallel  , 
                        silent    = silent    ,
                        progress  = progress  ) 
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_BIC
+    
+    @property
+    def method ( self ) :
+        """`method` : the actual GoF-method 
+        """
+        return U.method_BIC
 
     # =======================================================================
     ## get all configration parameters
@@ -1129,7 +1197,15 @@ class ADVAL_LightGBM(GoF) :
                                                 silent   = silent   ,
                                                 progress = progress , **params ) ,                       
                        mcFactor = mcFactor )
-        
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_LGBM
+    
     @property
     def t_value ( self ) : return self.gof.t_value
     @property
@@ -1228,6 +1304,14 @@ class ADVAL_HistoGBoost(ADVAL_LightGBM) :
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_HGBC
+    
 # =============================================================================
 ## @class ADVAL_GBoost
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
@@ -1270,7 +1354,14 @@ class ADVAL_GBoost(ADVAL_LightGBM) :
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
         
-
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_GBC 
+    
 # =============================================================================
 ## @class ADVAL_XGBoost
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
@@ -1312,7 +1403,15 @@ class ADVAL_XGBoost(ADVAL_LightGBM) :
                                   parallel   = parallel ,
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
-
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_XGB 
+    
 # =============================================================================
 ## @class ADVAL_RandomForest
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
@@ -1355,6 +1454,14 @@ class ADVAL_RandomForest(ADVAL_LightGBM) :
                                   silent     = silent     ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_RF
+    
 # ============================================================================
 ## @class ADVAL_CatBoost
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
@@ -1397,8 +1504,16 @@ class ADVAL_CatBoost(ADVAL_LightGBM) :
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
             
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_CATB
+    
 # ============================================================================
-## @class ADVAL_PyToarch
+## @class ADVAL_PyTorch
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
 #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
 #  @see ADVAL_TORCH
@@ -1438,7 +1553,15 @@ class ADVAL_PyTorch(ADVAL_LightGBM) :
                                   parallel   = parallel ,
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
-            
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_TORCH
+    
 # ============================================================================
 ## @class ADVAL_Keras
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
@@ -1481,6 +1604,13 @@ class ADVAL_Keras(ADVAL_LightGBM) :
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_KERAS
         
 # =============================================================================
 ## @class KolmogorovSmirnov
@@ -1513,7 +1643,15 @@ class KolmogorovSmirnov(GoF) :
                                                     silent   = silent   ,
                                                     progress = progress , **params ) ,                       
                        mcFactor = mcFactor )
-        
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_KS
+                
     @property
     def t_value ( self ) : return self.gof.t_value
     @property
@@ -1592,14 +1730,22 @@ class Kuiper ( KolmogorovSmirnov ) :
                    progress       = True  ,
                    mcFactor       = 20    , **params    ) : 
         
-        from ostap.stats.gof1dw import Kuiper as KS
+        from ostap.stats.gof1dw import Kuiper as KK
         super().__init__ ( nToys          = nToys    ,
                            parallel       = parallel ,
                            silent         = silent   ,
                            progress       = progress ,
-                           ESTIMATOR_TYPE = KS       ,
+                           ESTIMATOR_TYPE = K        ,
                            mcFactor       = mcFactor , **params )
-
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_K
+                
 # =============================================================================
 ## @class AndersonDarling
 #  Goodness of 1D (weighted) fit estimator using Anderson-Darling test 
@@ -1622,6 +1768,14 @@ class AndersonDarling ( KolmogorovSmirnov ) :
                            progress       = progress ,
                            ESTIMATOR_TYPE = AD       ,
                            mcFactor       = mcFactor , **params )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_AD
 
 # =============================================================================
 ## @class CramerVonMises
@@ -1646,6 +1800,14 @@ class CramerVonMises ( KolmogorovSmirnov ) :
                            ESTIMATOR_TYPE = CvM      ,
                            mcFactor       = mcFactor , **params )
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_CVM
+    
 # =============================================================================
 ## @class BerkJones 
 #  Goodness of 1D (weighted) fit estimator using Berk-Jones test 
@@ -1669,9 +1831,17 @@ class BerkJones ( KolmogorovSmirnov ) :
                            ESTIMATOR_TYPE = BJ     ,
                            mcFactor       = mcFactor , **params )
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_BJ
+    
 # =============================================================================
 ## @class ZA
-#  Goodness of 1D (weighted) fit estimator using Zhang' ZAtest 
+#  Goodness of 1D (weighted) fit estimator using Zhang' ZA test 
 class ZA ( KolmogorovSmirnov ) : 
     """ Goodness of 1D (weighted) fit estimator using Zhang' ZA test 
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
@@ -1691,7 +1861,15 @@ class ZA ( KolmogorovSmirnov ) :
                            progress       = progress ,
                            ESTIMATOR_TYPE = ZA    ,
                            mcFactor       = mcFactor , **params )
-
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_ZA
+    
 # =============================================================================
 ## @class ZC
 #  Goodness of 1D (weighted) fit estimator using Zhang' ZC test 
@@ -1715,6 +1893,14 @@ class ZC ( KolmogorovSmirnov ) :
                            ESTIMATOR_TYPE = ZC    ,
                            mcFactor       = mcFactor , **params )
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_ZC
+    
 # =============================================================================
 ## @class ZK
 #  Goodness of 1D (weighted) fit estimator using Zhang' ZK test 
@@ -1737,7 +1923,77 @@ class ZK ( KolmogorovSmirnov ) :
                            progress       = progress ,
                            ESTIMATOR_TYPE = ZK    ,
                            mcFactor       = mcFactor , **params )
+      
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_ZK
+
+# =============================================================================
+## @class Wasserstein1 
+#  Goodness of 1D (weighted) fit estimator using Wasserstein-1  
+class Wasserstein1 ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Wasserstein-1  
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self                   , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = True  ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
         
+        from ostap.stats.gof1dw import Wasserstein1 as W1  
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = W1    ,
+                           mcFactor       = mcFactor , **params )
+      
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_W_1
+
+# =============================================================================
+## @class Wasserstein1 
+#  Goodness of 1D (weighted) fit estimator using Wasserstein-2
+class Wasserstein2 ( KolmogorovSmirnov ) : 
+    """ Goodness of 1D (weighted) fit estimator using Wasserstein-2  
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of bootstrapping/toys     
+    """
+    def __init__ ( self                   , * , 
+                   nToys          = 400   ,
+                   parallel       = False ,
+                   silent         = True  ,
+                   progress       = True  ,
+                   mcFactor       = 20    , **params    ) : 
+        
+        from ostap.stats.gof1dw import Wasserstein1 as W2  
+        super().__init__ ( nToys          = nToys    ,
+                           parallel       = parallel ,
+                           silent         = silent   ,
+                           progress       = progress ,
+                           ESTIMATOR_TYPE = W2    ,
+                           mcFactor       = mcFactor , **params )
+      
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_W_2
+
 # =============================================================================
 ## @class KullbackLeibler 
 #  Use "Kullback-Leibler" method to estimate the Goodness-of-Fit
@@ -1781,7 +2037,14 @@ class KullbackLeibler(GoF) :
                                          silent    = silent    ,
                                          progress  = progress  , **params ) ) 
                               
-
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_KL
+  
 # =============================================================================
 ## @class Jeffrey
 #  Use Jeffrey' aka symmetrized "Kullback-Leibler" method to estimate the Goodness-of-Fit
@@ -1824,6 +2087,14 @@ class Jeffrey(GoF) :
                                          parallel  = parallel  ,
                                          silent    = silent    ,
                                          progress  = progress  , **params ) ) 
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_J 
 
 # =============================================================================
 ## @class JensenShannon
@@ -1868,6 +2139,14 @@ class JensenShannon (GoF) :
                                          silent    = silent    ,
                                          progress  = progress  , **params ) ) 
     
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_JS
+
 # =============================================================================
 ## @class Mahalanobis
 #  Use "Mahalanobis" method to estimate the Goodness-of-Fit
@@ -1909,6 +2188,14 @@ class Mahalanobis(GoF) :
                                          silent   = silent   ,
                                          progress = progress , **params ) )
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_M
+
 # =============================================================================
 ## @class Hotelling
 #  Use "Hotelling" method to estimate the Goodness-of-Fit
@@ -1950,6 +2237,14 @@ class Hotelling(GoF) :
                                          silent   = silent   ,
                                          progress = progress , **params ) ) 
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_T2
+
 # =============================================================================
 ## @class Bhattacharyya
 #  Use Bhatatcharyya method to estimate the Goodness-of-Fit
@@ -1990,6 +2285,14 @@ class Bhattacharyya(GoF) :
                                          parallel = parallel ,
                                          silent   = silent   ,
                                          progress = progress , **params ) ) 
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_B
 
 # =============================================================================
 ## @class Wasserstein
@@ -2033,6 +2336,14 @@ class Wasserstein(GoF) :
                                          progress = progress , **params ) ) 
 
         
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_W2
+
 # =============================================================================
 ## @class Hellinger
 #  Use Hellinger method to estimate the Goodness-of-Fit
@@ -2074,6 +2385,13 @@ class Hellinger(GoF) :
                                          silent   = silent   ,
                                          progress = progress , **params ) ) 
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_H
 
 # =============================================================================
 ## @class Chi2
@@ -2118,6 +2436,13 @@ class Chi2(GoF) :
                                          silent   = silent   ,
                                          progress = progress , **params ) ) 
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_CHI2 
         
 # =============================================================================
 if '__main__' == __name__ :

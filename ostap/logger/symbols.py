@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 # =============================================================================
-""" Module with some useful unicode symbols (with wide symbol definitions)
+""" Module with some useful unicode symbols
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -48,7 +48,8 @@ __all__     = (
     'clock'               , ## 🕐  (wide)
     'clock_ticks'         , ## 🕜 2-колон...
     'clubs'               , ## ♣
-    'column'              , ## ⋮   
+    'column'              , ## ⋮
+    'compass'             , ## 🧭
     'concurrency'         , ## 🔀
     'conifer_tree'        , ## 🌲
     'christmas_tree'      , ## 🎄
@@ -184,6 +185,8 @@ __all__     = (
     'postal_horn'         , ## 📯
     'plus_minus'          , ## ±
     'proportion'          , ## ∷
+    'pushpin'             , ## 📍
+    'puzzle'              , ## 🧩
     ##
     'p_italic'             , ## 𝑝
     'p_value_expr'         , ## f'{p_italic}-value'
@@ -212,7 +215,6 @@ __all__     = (
     'script_M'            , ## ℳ
     'script_P'            , ## 🫫 / 🫥
     'script_R'            , ## ℛ
-    'script_map'          , ## mapping dict
     'show'                , ## bool
     'shuffle'             , ## 🔀    
     'similar'             , ## ∼
@@ -229,9 +231,13 @@ __all__     = (
     'sub_max'             , ## ₘₐₓ
     'sub_mean'            , ## ₘₑₐₙ
     'sub_rms'             , ## ᵣₘₛ
+    'sub_one'             , ## ₁ 
+    'sub_two'             , ## ₂
+    'sup_one'             , ## ¹
+    'sup_two'             , ## ²
+    'sup_two'             , ## ₂    
     'sup_eff'             , ## ᵉᶠᶠ
     'sum_symbol'          , ## ∑    
-    'superscript_map'     , ## mapping dict
     'symmetry'            , ## ⌯
     #
     'tag'                 , ## ❖
@@ -243,6 +249,7 @@ __all__     = (
     'times'               , ## × 
     'times_colored'       , ## ❌ (Красивый цветной крестик)
     'triangular_flag'     , ## 🚩
+    'triangular_ruler'    , ## 📐
     'toys'                , ## 🧸  (wide)
     'tree'                , ## 🌳 (wide)
     'trophy'              , ## 🏆
@@ -305,7 +312,21 @@ __all__     = (
     'to_fraktur'          , ## convert text to Fractur 
     'to_sans_serif'       , ## convert text to Sans-Serif  
     'to_bold'             , ## convert text to Bold 
-    'to_bold_italic'      , ## convert text to Bold Italic   
+    'to_bold_italic'      , ## convert text to Bold Italic
+    ## 
+    'to_subscript'        , ## convert text to sub-script 
+    'to_superscript'      , ## convert text to super-script 
+    ##
+    'map_superscript'     , ## text -> super-script 
+    'map_subscript'       , ## text -> sub-script 
+    'map_script'          , ## text -> script
+    'map_roman'           , ## text -> roman 
+    'map_italic'          , ## text -> italic 
+    'map_double_struck'   , ## text -> double-struck 
+    'map_fraktur'         , ## text -> fraktur 
+    'map_sans_serif'      , ## text -> sans-serif  
+    'map_bold_italic'     , ## text -> bold-italic 
+    'map_bold'            , ## text -> bold 
     ## 
     'remove_invisible'    , ## remove variantion selectors 
     'exceptional_symbols' , ## set of exceptional wide symbols
@@ -313,8 +334,17 @@ __all__     = (
     'fixed_width'         , ## format to the fixed vizible width 
 )
 # =============================================================================
-from   ostap.utils.basic import has_unicode
-from   ostap.core.config import show_unicode
+from   ostap.utils.basic      import has_unicode
+from   ostap.core.config      import show_unicode
+from   ostap.logger.colorized import ( underline  , ## underline expression
+                                       boldblink  , ## bold&blink
+                                       bolditalic , ## bold&italic
+                                       bold       , ## bold
+                                       italic     , ## italic 
+                                       blink      , ## blink 
+                                       crossout   , ## crossout 
+                                       reverse    , ## reverse
+                                       markup     ) ## primitive markup
 import sys, re, wcwidth, unicodedata
 # =============================================================================
 ## show unicode symbols? 
@@ -437,6 +467,10 @@ gear             = '⚙️'  if show else ''
 wrench           = '🔧' if show else ''
 hammer_and_wrench= '🛠️'  if show else ''
 package          = '📦' if show else ''     
+
+pushpin          = '📍' if show else '' 
+puzzle           = '🧩' if show else '' 
+triangular_ruler = '📐' if show else ''
 
 union            = '⋃'  if show else ''
 intersection     = '⋂'  if show else ''
@@ -604,6 +638,7 @@ flashlight            = '🔦'  if show else ''
 brickwall             = '🧱'  if show else '' 
 wood                  = '🪵'  if show else '' 
 ruler                 = '📏'  if show else '' 
+compass               = '🧭'  if show else '' 
 
 hourglass             = '⏳'  if show else ''
 lightning             = '⚡'  if show else ''
@@ -645,11 +680,33 @@ def labels ( N , labs = () )  :
 label = '🏷️'  if show else ''
 tag   = '❖'  if show else '' 
 
-superscript_map = str.maketrans({
+# ==============================================================================
+## Sub&superscripts 
+# ==============================================================================
+dct_subscript   = {
+    '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+    '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+    '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎',
+    'a': 'ₐ', 'e': 'ₑ', 'o': 'ₒ', 'x': 'ₓ', 'h': 'ₕ',
+    'k': 'ₖ', 'l': 'ₗ', 'm': 'ₘ', 'n': 'ₙ', 'p': 'ₚ',
+    's': 'ₛ', 't': 'ₜ', 'w': '₝', 'y': '₞'
+}
+dct_superscript = {
     '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
     '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
-    '-': '⁻', '+': '⁺', '.': 'ˑ', 'e': 'ᵉ', 'E': 'ᵉ'
-})
+    '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾',
+    'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ',
+    'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ',
+    'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ',
+    'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ',
+    'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ'
+}
+##
+map_subscript   = str.maketrans ( dct_subscript   )
+map_superscript = str.maketrans ( dct_superscript )
+
+def to_subscript   ( text ) : return text.translate ( map_subscript   ) if show else text 
+def to_superscript ( text ) : return text.translate ( map_superscript ) if show else text 
 
 # ==============================================================================
 # Text Styling Utilities (Unicode-based)
@@ -668,24 +725,24 @@ bold_italic_letters   = "".join ( chr ( 0x1D468 + i ) for i in range ( 26 ) ) + 
 bold_letters          = "".join ( chr ( 0x1D400 + i ) for i in range ( 26 ) ) + "".join ( chr ( 0x1D41A + i ) for i in range ( 26 ) )
 
 # Translation maps (automatically disabled if unicode support is off)
-script_map        = str.maketrans ( latin_norm  , script_letters        ) if show else str.maketrans ( "" , "" )
-roman_map         = str.maketrans ( latin_norm  , roman_letters         ) if show else str.maketrans ( "" , "" )
-italic_map        = str.maketrans ( latin_norm  , italic_letters        ) if show else str.maketrans ( "" , "" )
-double_struck_map = str.maketrans ( latin_norm  , double_struck_letters ) if show else str.maketrans ( "" , "" )
-fraktur_map       = str.maketrans ( latin_norm  , fraktur_letters       ) if show else str.maketrans ( "" , "" )
-sans_serif_map    = str.maketrans ( latin_norm  , sans_serif_letters    ) if show else str.maketrans ( "" , "" )
-bold_italic_map   = str.maketrans ( latin_norm  , bold_italic_letters   ) if show else str.maketrans ( "" , "" ) 
-bold_map          = str.maketrans ( latin_norm  , bold_letters          ) if show else str.maketrans ( "" , "" )
+map_script           = str.maketrans ( latin_norm  , script_letters        ) if show else str.maketrans ( "" , "" )
+map_roman            = str.maketrans ( latin_norm  , roman_letters         ) if show else str.maketrans ( "" , "" )
+map_italic           = str.maketrans ( latin_norm  , italic_letters        ) if show else str.maketrans ( "" , "" )
+map_double_struck    = str.maketrans ( latin_norm  , double_struck_letters ) if show else str.maketrans ( "" , "" )
+map_fraktur          = str.maketrans ( latin_norm  , fraktur_letters       ) if show else str.maketrans ( "" , "" )
+map_sans_serif       = str.maketrans ( latin_norm  , sans_serif_letters    ) if show else str.maketrans ( "" , "" )
+map_bold_italic      = str.maketrans ( latin_norm  , bold_italic_letters   ) if show else str.maketrans ( "" , "" ) 
+map_bold             = str.maketrans ( latin_norm  , bold_letters          ) if show else str.maketrans ( "" , "" )
 
 # Formatting helper functions
-def to_script        ( text ) : return text.translate ( script_map        ) if show else text
-def to_roman         ( text ) : return text.translate ( roman_map         ) if show else text
-def to_italic        ( text ) : return text.translate ( italic_map        ) if show else text
-def to_double_struck ( text ) : return text.translate ( double_struck_map ) if show else text
-def to_fraktur       ( text ) : return text.translate ( fraktur_map       ) if show else text
-def to_sans_serif    ( text ) : return text.translate ( sans_serif_map    ) if show else text
-def to_bold_italic   ( text ) : return text.translate ( bold_italic_map   ) if show else text 
-def to_bold          ( text ) : return text.translate ( bold_map          ) if show else text
+def to_script        ( text ) : return text.translate ( map_script        ) if show else text
+def to_roman         ( text ) : return text.translate ( map_roman         ) if show else text
+def to_italic        ( text ) : return text.translate ( map_italic        ) if show else text
+def to_double_struck ( text ) : return text.translate ( map_double_struck ) if show else text
+def to_fraktur       ( text ) : return text.translate ( map_fraktur       ) if show else text
+def to_sans_serif    ( text ) : return text.translate ( map_sans_serif    ) if show else text
+def to_bold_italic   ( text ) : return text.translate ( map_bold_italic   ) if show else text 
+def to_bold          ( text ) : return text.translate ( map_bold          ) if show else text
 
 
 sub_min  = 'ₘᵢₙ'  if show else '-min'
@@ -693,6 +750,11 @@ sub_max  = 'ₘₐₓ'  if show else '-max'
 sub_rms  = 'ᵣₘₛ'  if show else '-rms'
 sub_mean = 'ₘₑₐₙ' if show else '-mean'
 sup_eff  = 'ᵉᶠᶠ'  if show else '-eff'
+
+sub_one  = '₁'    if show else '1'
+sub_two  = '₂'    if show else '2' 
+sup_one  = '¹'    if show else '1'
+sup_two  = '²'    if show else '2'
 
 T2              = '𝒯 ²' if show else 'T2'
 W2              = '𝒲 ²' if show else 'W2'

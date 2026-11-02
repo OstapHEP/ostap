@@ -19,13 +19,15 @@ __all__     = (
 from   ostap.core.ostap_types import sequence_types 
 from   ostap.core.core        import Ostap
 from   ostap.utils.core       import typename 
+from   ostap.utils.basic      import classprop 
 from   ostap.stats.gofnp      import GoFnp
 from   ostap.stats.utils      import ( weight_trivial ,
                                        check_all      , 
                                        num_features   ,
-                                       num_samples    , nEff ) 
+                                       num_samples    ,
+                                       nEff           ) 
 from   ostap.histos.axes      import axis_from_edges, h1_axis, h2_axes, h3_axes
-from   ostap.logger.symbols   import chi2 as chi2_symbol
+import ostap.stats.utils      as     U 
 import ROOT, numpy, math   
 # =============================================================================
 # logging 
@@ -67,11 +69,8 @@ class Chi2 ( GoFnp ) :
         else :
             raise TypeError ( "Invalid `binning` structure: %s/%s" % ( typename ( bininng ) , binning ) )
                         
-        kwargs [ 'normalize' ] = False
-        
-        GoFnp.__init__ ( self ,
-                         method = chi2_symbol ,
-                         nToys  = nToys       , **kwargs )
+        kwargs [ 'normalize' ] = False        
+        GoFnp.__init__ ( self , nToys  = nToys , **kwargs )
         
     @property
     def dimension ( self ) :
@@ -85,6 +84,22 @@ class Chi2 ( GoFnp ) :
         """
         return self.__axes
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_CHI2
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_CHI2
+    
     # ==================================================================================
     @property
     def config ( self ) :

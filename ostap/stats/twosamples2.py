@@ -22,7 +22,9 @@ __all__     = (
     'ZC'                 , ## Zhang's ZC         2-sample  test 
     'ZK'                 , ## Zhang's ZK         2-sample  test
     'wasserstein1'       , ## The first Wasserstein 2-sample test
-    'wasserstein2'       , ## The second Wasserstein 2-sample test    
+    'wasserstein2'       , ## The second Wasserstein 2-sample test
+    'rosenblatt'         , ## Rosenblatt 2-sample test 
+    'watson_u2'          , ## Watsoon U2 2-sample test 
 ) 
 # =============================================================================
 from   ostap.stats.utils    import ( weight_trivial     ,
@@ -235,6 +237,65 @@ def wasserstein2 ( data1           ,
     ecdf2 = data2ecdf ( data2 , weight2 )
     ## 
     return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 , eps )
+
+# =============================================================================
+## Calculates First Wasserstein distance (\f$W_1\f$ / Earth Mover's Distance).
+#
+#  Calculates the square root of the integrated squared differences between empirical CDFs:
+#  \f[ W_2(F_1, F_2) = \left( \int_{-\infty}^{\infty} (F_1(x) - F_2(x))^2 \, dx \right)^{1/2} \f]
+#
+#
+#  @see https://en.wikipedia.org/wiki/Wasserstein_metric
+def wasserstein2 ( data1           , 
+                   data2           ,
+                   weight1 = None  ,
+                   weight2 = None  ) : 
+    """ Calculates the Second Wasserstein distance .
+    @see https://en.wikipedia.org/wiki/Wasserstein_metric
+    """
+    ##
+    ecdf1 = data2ecdf ( data1 , weight1 )
+    ecdf2 = data2ecdf ( data2 , weight2 )
+    ## 
+    return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 , eps )
+
+# =============================================================================
+## @brief Rosenblatt-type two-sample test statistic (\f$R\f$).
+#  Calculates cumulative squared discrepancies between two empirical CDFs 
+#  evaluated on the pooled sample points:
+#   \f[ R = \sum_i (F_1(x_i) - F_2(x_i))^2 \f]
+# 
+#   @see Rosenblatt, M. (1952)
+def rosenblatt ( data1           , 
+                 data2           ,
+                 weight1 = None  ,
+                 weight2 = None  ) : 
+    """ Calculates Rosenblatt distance .
+    """
+    ##
+    ecdf1 = data2ecdf ( data1 , weight1 )
+    ecdf2 = data2ecdf ( data2 , weight2 )
+    ## 
+    return Ostap.Math.rosenblatt ( ecdf1 , ecdf2 , eps )
+
+# =============================================================================
+## @brief Watson's two-sample test statistic (\f$U^2\f$).
+#
+#   A Cramér-von Mises type variant invariant under cyclic transformations:
+#  \f[ U^2 = \int_{-\infty}^{\infty} \left( (F_1(x) - F_2(x)) - \bar{D} \right)^2 dH(x) \f]
+#  @see https://en.wikipedia.org/wiki/Watson_test
+#   @note Watson, G.S. (1961, 1962).
+def watson_u2 ( data1           , 
+                 data2           ,
+                 weight1 = None  ,
+                 weight2 = None  ) : 
+    """ Calculates Watson U2 distance .
+    """
+    ##
+    ecdf1 = data2ecdf ( data1 , weight1 )
+    ecdf2 = data2ecdf ( data2 , weight2 )
+    ## 
+    return Ostap.Math.watson_u2 ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
 if '__main__' == __name__ :

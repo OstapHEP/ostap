@@ -17,7 +17,8 @@ __all__     = (
     'AGoFnp'    , ## an abstract base cladd for Goodness-of-Fit estimators
     )
 # =============================================================================
-import ROOT, abc  
+from   ostap.utils.basic import classprop 
+import abc  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -112,7 +113,24 @@ class AGoF(abc.ABC) :
         >>> t_value , p_value = gof.pvalue ( pdf , data ) 
         """
         return NotImplemented
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return ''
     
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    @abc.abstractmethod
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return NotImplemented
+
     # ==========================================================================
     ## Get GoF results in form of the table
     #  @code
@@ -273,6 +291,15 @@ class AGoFnp(abc.ABC) :
         >>> gof = ...
         >>> ds1 , ds2 = ...
         >>> t , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
+        """
+        return NotImplemented
+
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    @abc.abstractmethod
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
         """
         return NotImplemented
 

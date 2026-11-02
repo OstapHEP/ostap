@@ -43,7 +43,7 @@ from   ostap.core.ostap_types   import string_types, num_types
 from   ostap.core.core          import Ostap, hID  
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.core         import typename
-from   ostap.utils.basic        import numcpu, num_jobs, run_parallel 
+from   ostap.utils.basic        import numcpu, num_jobs, run_parallel, classprop  
 from   ostap.utils.config       import Config
 from   ostap.stats.gof          import AGoFnp
 from   ostap.stats.gofnp        import GoFnp
@@ -58,7 +58,7 @@ from   ostap.stats.gof_utils    import ( normalize_pooled   ,
                                          nearest_neighbors  , 
                                          nearest_distances  , 
                                          draw_ecdf          , s2u )
-import ostap.logger.symbols    as      S
+import ostap.stats.utils       as      U 
 import ostap.math.math_base           
 import ROOT, numpy
 # =============================================================================
@@ -70,18 +70,6 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
-method_MIX =           S.to_bold_italic ( 'MIX' ) if S.show else 'MIX'
-method_PPD =           S.to_bold_italic ( 'PPD' ) if S.show else 'PPD'
-method_DNN =           S.to_bold_italic ( 'DNN' ) if S.show else 'DNN'
-method_KL  =           S.to_bold_italic ( 'K-L' ) if S.show else 'Kullback-Leibler'
-method_J   =           S.to_bold_italic ( 'J'   ) if S.show else 'Jeffrey'
-method_JS  =           S.to_bold_italic ( 'J-S' ) if S.show else 'Jensen-Shannon'
-method_M   =           S.to_bold_italic ( 'M'   ) if S.show else 'Mahalanobis'
-method_B   =           S.to_bold_italic ( 'B'   ) if S.show else 'Bhattacharyya'
-method_H   =           S.to_bold_italic ( 'H '  ) if S.show else 'Hellinger'
-method_T2  = ( '%s²' % S.to_bold_italic ( 'T' ) ) if S.show else 'Hotelling'
-method_W2  = ( '%s²' % S.to_bold_italic ( 'W' ) ) if S.show else 'Wasserstein'
-# ============================================================================
 ## define configuration for psi-function for PPD method
 #   - distance type of <code>cdist</code>
 #   - transformation function for `pairwise_distance' soutput
@@ -158,14 +146,29 @@ class MIXnp(GoFnp) :
         ## (re)define n_jobs     
         params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )
 
-        ## initialize the base 
+        ## initialize the base
+        params [ 'normalize' ] = True 
         GoFnp.__init__ ( self                      , 
                          nToys        = nToys      ,
                          parallel     = parallel   , 
-                         method       = method_MIX ,
-                         normalize    = True       , 
                          n_neighbors  = self.k_max , **params )
-
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_MIX 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_MIX 
+    
     # =========================================================================
     ## Are weights supported by this estimator?
     @property
@@ -309,12 +312,27 @@ class PPDnp(GoFnp) :
         scale = -0.5 / ( self.sigma ** 2 ) 
         self.__distance_type , _ , _ = psi_conf ( psi , scale )
 
-        GoFnp.__init__ ( self                   ,
-                         nToys     = nToys      ,
-                         parallel  = parallel   , 
-                         normalize = True       ,
-                         method    = method_PPD , **params )
+        params [ 'normalize' ] = True 
+        GoFnp.__init__ ( self                 ,
+                         nToys     = nToys    ,
+                         parallel  = parallel , **params )
                 
+   # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_PPD 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_PPD 
+    
     # ==================================================================================
     @property
     def config ( self ) :
@@ -534,10 +552,9 @@ class DNNnp(GoFnp) :
         elif isinstance ( histo , int      ) and 1 < histo :
             self.__histo = ROOT.TH1D ( hID () , 'U-values' , histo , -0.05 , 1.05 ) 
 
-        GoFnp.__init__ ( self                     ,
-                         nToys       = nToys      ,
-                         parallel    = parallel   , 
-                         method      = method_DNN , **params )
+        GoFnp.__init__ ( self                  ,
+                         nToys       = nToys    ,
+                         parallel    = parallel , **params )
         
     # ==================================================================================
     @property
@@ -547,6 +564,22 @@ class DNNnp(GoFnp) :
         conf [ 'histo' ] = self.__histo
         return conf 
             
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_DNN 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_DNN
+    
     # =========================================================================
     ## Are weights supported by this estimator?
     @property
@@ -718,19 +751,17 @@ class DistanceTest(GoFnp) :
     def __init__ ( self        , *     , 
                    nToys       = 1000  ,
                    parallel    = True  , 
-                   method      = "<UNSPECIFIED>" , 
                    check_vct   = True  ,
                    normalize   = True  , **params ) :         
         
         ## check data-vectors ?
         self.__check_vct    = True if check_vct else False
         self.__invalid_data = 0 
-        ## initialize the base 
+        ## initialize the base
+        params [ 'normalize' ] = True ## normailzation is FORCED
         GoFnp.__init__ ( self                            , 
                          nToys        = nToys            ,
                          parallel     = parallel         , ## parallel is true 
-                         method       = method           ,
-                         normalize    = True             , ## normailzation is FORCED
                          check_vct    = self.__check_vct , **params )
         
     # =========================================================================
@@ -794,11 +825,6 @@ class KullbackLeibler(DistanceTest) :
     """ Use (asymmetric) Kullback-Leibler divergency to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self  , **params ) :         
-        
-        ## initialize the base 
-        super() .__init__ ( method = method_KL , **params )
-
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -824,6 +850,22 @@ class KullbackLeibler(DistanceTest) :
         
         return v1.kullback_leibler ( v2 ) 
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_KL
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_KL
+    
 # ============================================================================
 ## @class Jeffrey
 #  Use Jeffrey' (aka symmetric Kullback-Leibler divergency  to discriminiate the datasets 
@@ -832,11 +874,6 @@ class Jeffrey(DistanceTest) :
     """ Use Jeffrey's (aka symmetric Kullback-Leibler) divergency to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self , **params ) :         
-        
-        ## initialize the base 
-        super() .__init__ ( method = method_J , **params )
-
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -860,7 +897,23 @@ class Jeffrey(DistanceTest) :
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
         
-        return v1.jeffrey ( v2 ) 
+        return v1.jeffrey ( v2 )
+    
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_J
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_J
 
 # ============================================================================
 ## @class JensenShannon
@@ -870,11 +923,6 @@ class JensenShannon(DistanceTest) :
     """ Use Jensen-Shannon's - another form of symmetric Kullback-Leibler) divergency to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self , **params ) :         
-        
-        ## initialize the base 
-        super() .__init__ ( method = method_JS , **params )
-
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -902,6 +950,22 @@ class JensenShannon(DistanceTest) :
         n2 = num_samples ( uds2 ) if weight_trivial ( weight2 ) else float ( numpy.sum ( weight2 ) ) 
         
         return v1.jensen_shannon ( v2 , n1 , n2 ) 
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_JS  
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_JS 
     
 # =============================================================================
 ## @class Mahalanobis
@@ -911,11 +975,6 @@ class Mahalanobis(DistanceTest) :
     """ Use Mahalanobis distance to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self , **params ) :         
-        
-        ## initialize the base 
-        super().__init__ ( method = method_M , **params )
-
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -943,6 +1002,22 @@ class Mahalanobis(DistanceTest) :
         n2 = num_samples ( uds2 ) if weight_trivial ( weight2 ) else float ( numpy.sum ( weight2 ) ) 
         
         return v1.mahalanobis ( v2 , n1 , n2 )
+
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_M
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_M 
     
 # ============================================================================
 ## @class Hotelling  
@@ -952,11 +1027,6 @@ class Hotelling(DistanceTest) :
     """ Use Hotelling's t-squared statistics to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self        , **params ) : 
-
-        ## initialize the base 
-        super() .__init__ ( method = method_T2 , **params )
-        
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -986,6 +1056,22 @@ class Hotelling(DistanceTest) :
                         
         return v1.hotelling ( v2 , n1 , n2 ) 
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_T2 
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_T2 
+
 # ============================================================================
 ## @class Bhattacharyya 
 #  Use Bhattacharyya' statistics to discriminiate the datasets
@@ -994,10 +1080,6 @@ class Bhattacharyya(DistanceTest) :
     """ Use Bhatatcharyya' statistics to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self        , **params ) :
-        ## initialize the base 
-        super() .__init__ ( method = method_B  , **params )
-        
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -1027,6 +1109,22 @@ class Bhattacharyya(DistanceTest) :
                         
         return v1.bhattacharyya ( v2 , n1 , n2 ) 
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_B
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_B 
+    
 # ============================================================================
 ## @class Wasserstein
 #  Use Wasserstein' statistics to discriminiate the datasets
@@ -1035,10 +1133,6 @@ class Wasserstein(DistanceTest) :
     """ Use Wassertein' statistics to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self        , **params ) :
-        ## initialize the base 
-        super() .__init__ ( method = method_W2 , **params )
-        
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -1068,6 +1162,21 @@ class Wasserstein(DistanceTest) :
                 
         return v1.wasserstein ( v2 , n1 , n2 ) 
     
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_W2
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_W2 
 
 # ============================================================================
 ## @class Hellinger
@@ -1077,10 +1186,6 @@ class Hellinger(DistanceTest) :
     """ Use Hellinger' statistics to discriminiate the dataset
     - attention it is *VERY* crude "estimator"
     """    
-    def __init__ ( self        , **params ) :
-        ## initialize the base 
-        super() .__init__ ( method = method_H , **params )
-        
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def tvalue ( self      , 
@@ -1110,6 +1215,21 @@ class Hellinger(DistanceTest) :
                 
         return v1.hellinger ( v2 , n1 , n2 ) 
 
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_H
+    
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_H
 
 ## import Chi2 
 from   ostap.stats.gofchi2      import Chi2 
