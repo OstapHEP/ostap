@@ -2849,7 +2849,6 @@ class RooKeys1D_pdf(PDF1) :
         """`nsigma' : `nsigma' parameter for RooNDKeysPdf"""
         return self.__nsigma
      
-
 # =============================================================================
 ## popular backgroubd models
 # =============================================================================

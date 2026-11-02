@@ -51,7 +51,7 @@ __all__     = (
 from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.math.math_base   import frexp10, ldexp10 
 from   ostap.logger.symbols   import ( plus_minus      , times       ,
-                                       superscript_map , nan_symbol  , 
+                                       to_superscript  , nan_symbol  , 
                                        infinity_pos as posinf_symbol ,  
                                        infinity_neg as neginf_symbol ) 
 from   ostap.utils.core       import typename 
@@ -86,7 +86,7 @@ def format_pow10 ( value , show_sign = True ) :
     if isinstance ( value , int ) : val_str = "%+d" % value if show_sign else "%d" % value 
     else                          : val_str = "%+g" % value if show_sign else "%g" % value
     ## 
-    return "10%s" % val_str.translate ( superscript_map )
+    return "10%s" % to_superscript ( val_str ) 
 
 
 # =============================================================================
