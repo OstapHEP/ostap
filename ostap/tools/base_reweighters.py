@@ -30,8 +30,9 @@ from   ostap.stats.utils        import ( valid_weight       ,
                                          num_features       ,
                                          check_all          ,
                                          nEff               ,
-                                         truncated_mean     )
-import ostap.logger.symbols   as     S
+                                         truncated_mean     ,
+                                         method_name        )
+import ostap.logger.symbols     as     S
 import numpy, abc, re  
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
@@ -64,8 +65,7 @@ class Voting ( object ) :
 
         if not isinstance ( strategy , string_types ) :
             raise TypeError ( "Invalid `voting` type: %s" % type ( strategy ) )
-    
-        
+            
         v_lower = strategy.lower ().strip ()
         
         if   v_lower in ( 'arithmetic', 'mean' ) : 
@@ -142,17 +142,17 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     #  @param store_original_weights Flag to retain fitted original ratio arrays.
     #  @param progress Enable progress bar display during fold fitting.
     #  @param params Additional parameters passed to the parent class.
-    def __init__ ( self                                  , * ,
-                   original                              ,
-                   target                                ,
-                   original_weight        = None         , 
-                   target_weight          = None         ,
-                   clip_threshold         = 1.e+4        ,
-                   n_splits               = 5            ,
-                   voting                 = 'arithmetic' , 
-                   oof_mode               = True         , 
-                   store_original_weights = False        ,
-                   progress               = True         , **params ) :
+    def __init__ ( self                              , * ,
+                   original                          ,
+                   target                            ,
+                   original_weight        = None     , 
+                   target_weight          = None     ,
+                   clip_threshold         = 1.e+4    ,
+                   n_splits               = 5        ,
+                   voting                 = 'trim:1' , 
+                   oof_mode               = False    , 
+                   store_original_weights = False    ,
+                   progress               = True     , **params ) :
         """ Initialize and fit the density ratio reweighter ensemble. """
         
         if not isinstance ( n_splits, int ) : raise TypeError  ( "Invalid `n_splits' type %s"  % typename ( n_splits ) )
@@ -293,7 +293,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     @property
     def method ( self ) :
         """ Return method identifier name. """
-        return '%s DRW' % self.symbol 
+        return method_name ( 'Density Reweighter' ) 
     
     ## @property config
     #  @brief Serialization configuration parameters dictionary.
@@ -832,10 +832,11 @@ class IterativeReweighter ( DensityReweighter ) :
                             store_original_weights = store_original_weights ,
                             progress               = progress               , **params )
 
+
     @property
     def method ( self ) :
         """ Return method identifier name. """
-        return '%s IDRW' % self.symbol 
+        return method_name ( 'Iterative/Boosting Reweighter' ) 
 
     ## @property norm_factor
     #  @brief Normalization scale handled internally per boosting step.

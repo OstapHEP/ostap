@@ -386,7 +386,7 @@ results  = data_compare ( comparators ,
                           importance  = True , 
                           silent      = True )
 
-n_eff = mctree.nEff () 
+n_eff = mctree.nEff ()
 trow  = [ '' , '%.1f' % n_eff ] 
 for r in results :
     pv100 = VE ( r.pvalue ) * 100            

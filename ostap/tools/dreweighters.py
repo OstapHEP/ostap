@@ -27,10 +27,11 @@ __all__     = (
 ) 
 # =============================================================================
 from   ostap.core.ostap_types       import string_types, integer_types  
-from   ostap.utils.basic            import numcpu
+from   ostap.utils.basic            import numcpu, classprop
 from   ostap.stats.utils            import num_features, num_samples        
 from   ostap.stats.tools            import hasSkLearn 
 from   ostap.tools.base_reweighters import DensityReweighter  
+import ostap.stats.utils            as     U
 import ostap.logger.symbols         as     S
 import numpy, math, gc  
 # =============================================================================
@@ -44,14 +45,11 @@ has_sklearn = hasSkLearn ()
 # =============================================================================
 ## Decorations 
 # =============================================================================
-method_LGBM  = 'DRW/%s'   % ( S.light_bulb if S.light_bulb  else 'LightGBM' ) 
-method_XGB   = 'DRW/%s'   % ( S.rocket     if S.rocket      else 'XGBoost'  ) 
-method_CATB  = 'DRW/%s'   % ( S.cat_face   if S.cat_face    else 'CatBoost' ) 
-method_TORCH = 'DRW/%s'   % ( S.flashlight if S.flashlight  else 'TORCH'    ) 
-method_LR    = 'DRW/%s'   % ( S.ruler      if S.ruler       else 'LOGREG'   ) 
-method_GBRW  = 'HepML/%s' % ( S.wood       if S.wood        else 'GBRW'     )
-#
-epoch_symbol = ( '%s :' % S.repeat ) if S.show else 'Epoch:'
+method_LGBM    =  U.method_name ( 'LightGBM/Density' )
+method_XGB     =  U.method_name ( 'XGBoost/Density'  )
+method_CATB    =  U.method_name ( 'CatBoost/Density' )
+method_TORCH   =  U.method_name ( 'PyTorch/Density'  )
+method_LOGREG  =  U.method_name ( 'Logistic/Density' )
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================
@@ -121,13 +119,21 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
             **config
         )
 
-    ## @property method
-    #  @brief Return the method identifier name.
+    # =========================================================================
+    ## @property symbol
+    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    #  @return String identifier/symbol used for logging and visual presentation.
+    @classprop
+    def symbol ( self ) :
+        """ Short symbol/tag for reweighter. """
+        return U.symbol_LGBM
+        
     @property
     def method ( self ) :
         """ Return the method identifier name. """
         return method_LGBM 
 
+    # =========================================================================
     ## @brief Train single LightGBM model on fold data.
     #  @param X_train Training features array (N-1)/N.
     #  @param y_train Training binary labels.
@@ -165,6 +171,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
 
         return model
 
+    # =========================================================================
     ## @brief Predict probabilities using a LightGBM model.
     #  @param model Trained LightGBM booster instance.
     #  @param X Features array.
@@ -221,13 +228,23 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
             **config
         )
 
-    ## @property method
+    # =========================================================================
+    ## @property symbol
+    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    #  @return String identifier/symbol used for logging and visual presentation.
+    @classprop
+    def symbol ( self ) :
+        """ Short symbol/tag for reweighter. """
+        return U.symbol_XGB
+        
+    # =========================================================================
     #  @brief Return the method identifier name.
     @property
     def method ( self ) :
         """ Return the method identifier name. """
         return method_XGB 
 
+    # =========================================================================
     ## @brief Train single XGBoost booster on fold data.
     #  @param X_train Training features array (N-1)/N.
     #  @param y_train Training binary labels.
@@ -334,6 +351,15 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         """ `gpu`: result of catboost.utils.get_gpu_device_count """
         return self.__gpu
     
+    # =========================================================================
+    ## @property symbol
+    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    #  @return String identifier/symbol used for logging and visual presentation.
+    @classprop
+    def symbol ( self ) :
+        """ Short symbol/tag for reweighter. """
+        return U.symbol_CATB
+
     @property
     def method ( self ) :
         """ Return method name identifier. """
@@ -458,6 +484,15 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                             progress        = False           , **config )
 
         torch.set_num_threads ( 1 )
+
+    # =========================================================================
+    ## @property symbol
+    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    #  @return String identifier/symbol used for logging and visual presentation.
+    @classprop
+    def symbol ( self ) :
+        """ Short symbol/tag for reweighter. """
+        return U.symbol_TORCH
 
     @property
     def method ( self ) :
@@ -712,10 +747,19 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
                             target_weight          = target_weight          ,
                             store_original_weights = store_original_weights , **config )
         
+    # =========================================================================
+    ## @property symbol
+    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    #  @return String identifier/symbol used for logging and visual presentation.
+    @classprop
+    def symbol ( self ) :
+        """ Short symbol/tag for reweighter. """
+        return U.symbol_LOGREG
+
     @property
     def method ( self ) :
         """ Return method identifier name. """
-        return method_LR 
+        return method_LOGREG
 
     ## @brief Train single Logistic Regression model on fold data.
     #  @param X_train Training features array (N-1)/N.

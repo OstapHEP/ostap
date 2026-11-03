@@ -50,7 +50,7 @@ __all__     = (
 ) # ===========================================================================
 # =============================================================================
 from   ostap.core.meta_info import python_info, whoami
-from   ostap.utils.core     import isfunction
+from   ostap.utils.core     import isfunction, classprop 
 from   itertools            import zip_longest
 import multiprocessing      as     mp_
 import sys, os, shutil, psutil, functools
@@ -467,35 +467,6 @@ def safe_loop ( iterable ,
     ...
     """
     return SafeLoop ( iterable , message = message , output = output )
-
-
-# =============================================================================
-if  ( 3 , 12 ) <= python_info : # =============================================
-    # =========================================================================
-    ## (READONLY) class property decorator
-    #  @see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
-    class classprop :
-        """ (READONLY) Class property decorator
-        - see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
-        """
-        def __init__(self, func):
-            self.fget = func
-        def __get__(self, instance, owner):
-            return self.fget(owner)
-    # =========================================================================
-else : # ( 3 , 9 ) <= python_info : # ========================================
-    # =========================================================================
-    ## class property decorator
-    #  @code
-    #  @classprop
-    #  def A ( cls ) : ...  
-    #  @endcode
-    def classprop ( func ) :
-        """ Class property
-        @classprop
-        def A ( cls ) : ...
-        """
-        return classmethod ( property ( func ) ) 
 
 # =============================================================================
 if __name__ == '__main__' :

@@ -56,8 +56,7 @@ import numpy, abc
 # Logging setup 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.adval' )
-else                       : logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.stats.adval' )
 # =============================================================================
 logger.debug ( 'Implement Adversarial Validation (Regression mode)' )
 # =============================================================================
@@ -79,6 +78,10 @@ def BDT_needs_regularization ( X , W = None ) :
     """ Determines whether strong regularization is necessary for tree-based 
         Adversarial Validation models.
     """
+
+    ## ATTENTNION!
+    return False ## ATTENTION!!!
+
     nf   = num_features ( X )
     nraw = num_samples  ( X )
     neff = nEff         ( X , W )
@@ -128,6 +131,10 @@ def NN_needs_regularization ( X , W = None ):
     """ Determines whether strong regularization (e.g., dropout, weight decay) 
         is required specifically for Neural Networks handling weighted datasets.
     """
+    
+    ## ATTENTNION!
+    return False ## ATTENTION!!!
+
     nf   = num_features ( X )
     nraw = num_samples  ( X )
     neff = nEff         ( X , W )
@@ -234,8 +241,7 @@ class ADVAL_base (GoFnp):
         self.__regularized         = defaultdict(int)
 
         GoFnp.__init__ ( self            ,
-                         nToys  = nToys  , **params )
-                
+                         nToys  = nToys  , **params )                
     # =========================================================================
     @property
     def n_splits ( self ) :
@@ -267,8 +273,11 @@ class ADVAL_base (GoFnp):
     def two_samples ( self ) :
         return True
 
+    ## importance featurs (if suppported by backend) 
     @property 
     def importance_features ( self ) :
+        """`importance_features`: Importance features (if suppported by backend)
+        """
         return self.__importance_features
 
     ## prepare the table of importance features 
@@ -281,7 +290,7 @@ class ADVAL_base (GoFnp):
         
         rows  = [ ( 'Feature/#' , 'Importance [%]' ) ]
         rows += [ ( str ( feature ) , '%.2f' % float ( gain ) ) for feature, gain in self.importance_features.items () ] 
-        title = title if title else "%s importance" % typename ( self )
+        title = title if title else "%s importance" % self.method
         import ostap.logger.table as T
         return T.table ( rows               ,
                          title     = title  ,
@@ -289,7 +298,6 @@ class ADVAL_base (GoFnp):
                          alignment = 'cc'   ,  
                          style     = style  )
     
-
     @abc.abstractmethod 
     def work ( self    ,
                X_train , Y_train , W_train ,
@@ -452,11 +460,10 @@ class ADVAL_LGBM (ADVAL_base) :
             row_wise, col_wise = True, False 
 
         config [ 'force_col_wise' ] = col_wise 
-        config [ 'force_row_wise' ] = row_wise            
+        config [ 'force_row_wise' ] = row_wise
         
-        ADVAL_base.__init__ ( self, 
-                              nToys     = nToys  ,
-                              normalize = False  , **config   ) 
+        config [ 'normalize'      ] = False         
+        ADVAL_base.__init__ ( self  , nToys = nToys , **config   )
         
         if 'n_jobs' in self.params :
             self.params [ 'num_threads' ] = self.params.pop ( 'n_jobs' , 1 )
@@ -593,9 +600,8 @@ class ADVAL_XGB (ADVAL_base) :
                 }
         config.update ( params ) 
         
-        ADVAL_base.__init__ ( self, 
-                              nToys     = nToys ,
-                              normalize = False , **config   ) 
+        config [ 'normalize'      ] = False         
+        ADVAL_base.__init__ ( self , nToys = nToys , **config   ) 
 
         if 'n_jobs' in self.params :
             self.params [ 'nthread' ] = self.params.pop ( 'n_jobs' , 1 )
@@ -733,10 +739,10 @@ class ADVAL_CATB (ADVAL_base) :
         elif 'random_state' in params : params [ 'random_seed' ] = params.pop ( 'random_state' , None  )
 
         config.update ( params )
-        import catboost as CatBoost 
-        ADVAL_base.__init__ ( self, 
-                              nToys     = nToys ,
-                              normalize = False , **config   ) 
+        import catboost as CatBoost
+
+        config [ 'normalize'      ] = False                 
+        ADVAL_base.__init__ ( self,  nToys = nToys , **config   ) 
 
         ## 
         if 'n_jobs' in self.params :
@@ -865,9 +871,8 @@ class ADVAL_HGBC (ADVAL_base) :
             if 'squared_error'               == config.get ( 'loss'   ) : config [ 'loss'    ] = 'least_squares' 
             if 'neg_root_mean_squared_error' == config.get ( 'scoring') : config [ 'scoring' ] = 'loss'  
             
-        ADVAL_base.__init__ ( self, 
-                              nToys     = nToys ,
-                              normalize = False , **config   ) 
+        config [ 'normalize'  ] = False                 
+        ADVAL_base.__init__ ( self , nToys = nToys , **config   ) 
 
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
@@ -991,9 +996,8 @@ class ADVAL_GBC (ADVAL_base) :
         if Version ( sklearn.__version__ ) < Version ( '1.0' ) :
             if 'squared_error' == config.get ( 'loss' ) : config [ 'loss'    ] = 'ls' 
         
-        ADVAL_base.__init__ ( self, 
-                              nToys     = nToys ,
-                              normalize = False , **config   ) 
+        config [ 'normalize'  ] = False                 
+        ADVAL_base.__init__ ( self  , nToys = nToys , **config ) 
         
         if 'n_jobs' in self.params : self.params.pop ( 'n_jobs' , None )
         
@@ -1110,9 +1114,8 @@ class ADVAL_RF (ADVAL_base) :
         if Version ( sklearn.__version__ ) < Version ( '1.0' ) :
             if 'squared_error' == config.get ( 'criterion' ) : config [ 'criterion' ] = 'mse' 
         
-        ADVAL_base.__init__ ( self, 
-                              nToys     = nToys ,
-                              normalize = False , **config ) 
+        config [ 'normalize'  ] = False                 
+        ADVAL_base.__init__ ( self, nToys = nToys , **config ) 
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -1226,9 +1229,8 @@ class ADVAL_TORCH (ADVAL_base) :
 
         config.update ( params ) 
 
-        ADVAL_base.__init__ ( self, 
-                              nToys     = nToys ,
-                              normalize = True  , **config   ) 
+        config [ 'normalize'  ] = True                  
+        ADVAL_base.__init__ ( self , nToys  = nToys , **config   ) 
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -1392,9 +1394,8 @@ class ADVAL_KERAS (ADVAL_base) :
                     'early_stopping_rounds' :  15    , 
                     'dropout'               :   0.1  }
 
-        ADVAL_base.__init__ ( self, 
-                              nToys     = nToys ,
-                              normalize = True  , **config   ) 
+        config [ 'normalize'  ] = True                  
+        ADVAL_base.__init__ ( self , nToys  = nToys , **config   ) 
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -1533,7 +1534,6 @@ if '__main__' == __name__ :
     if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch  available!" ) 
     if not hasKeras    ( False ) : logger.warning  ( "No Keras    available!" ) 
   
-    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

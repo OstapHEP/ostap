@@ -44,13 +44,14 @@ else                       : logger = getLogger ( __name__                   )
 # =============================================================================
 ## comparison result  
 ComparisonResult     = namedtuple ( 'ComparisonResult'  ,
-                                    ( 'method'     ,
+                                    ( 'symbol'     ,
+                                      'method'     ,
                                       'tvalue'     ,
                                       'pvalue'     ,
                                       'nsigma'     ,
                                       'importance' ,
                                       'table_row'  ) ,
-                                    defaults = ( '<UNKNOWN>' , -1e+9 , -1 , -1 , {} , '' ) )
+                                    defaults = ( '' , '<UNKNOWN>' , -1e+9 , -1 , -1 , {} , '' ) )
 # =============================================================================
 ## 1D-histogram comparison result  
 HistoComparisonResult = namedtuple ( 'HistoComparisonResult'  ,
@@ -127,7 +128,8 @@ def numpy_compare ( comparator ,
     pv      = clip_pvalue  ( pvalue ) 
     nsigma  = significance ( pv     ) ## convert  it to significance
 
-    return ComparisonResult ( method     = comparator.method           ,
+    return ComparisonResult ( symbol     = comparator.symbol           ,
+                              method     = comparator.method           ,
                               tvalue     = tvalue                      ,
                               pvalue     = pvalue                      ,
                               nsigma     = nsigma                      ,

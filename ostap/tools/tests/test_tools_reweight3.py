@@ -31,7 +31,7 @@ from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.env          import get_env
 from   ostap.logger.symbols     import iteration, p_value_percent_expr 
 from   ostap.utils.memory       import memory_usage, delta_ram
-from   ostap.utils.basic        import numcpu
+from   ostap.utils.basic        import numcpu, is_ci 
 from   ostap.logger.pretty      import nice_print 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.stats.utils        import full_header 
@@ -48,10 +48,7 @@ import ROOT, random, math, os, numpy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_reweight3' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_tools_reweight3' )
 # =============================================================================    
 logger.info ( 'Test for 3D-Reweighting machinery')
 # ============================================================================
@@ -75,23 +72,34 @@ tag_mc      = 'MC_tree'
 
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
 
-small = numcpu () <= 8
+light       = False 
+small       = numcpu () <= 8
 
-small = True
+# =============================================================================
+if   is_ci () : # =============================================================
+    # =========================================================================
+    logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    light   = True
+    # =========================================================================
+elif numcpu () <= 8 : # ======================================================
+    # =========================================================================
+    logger.warning ( "Machine is not powerful enough: reduce soem tests" )
+    small   = True     
+    light   = True 
 
-if small : 
+if light or small : 
     
-    NDATA1      =  1000 ## 00
-    NDATA2      =  1000 ## 00
-    NDATA3      =  1000 ## 00
-    NMC         =  3000 ## 00
+    NDATA1      =  1000 
+    NDATA2      =  1000 
+    NDATA3      =  1000 
+    NMC         =  3000 
     
 else :
      
-    NDATA1      =  5000 ## 00
-    NDATA2      =  5000 ## 00
-    NDATA3      =  5000 ## 00
-    NMC         = 25000 ## 00
+    NDATA1      =  5000 
+    NDATA2      =  5000 
+    NDATA3      =  5000 
+    NMC         = 25000 
     
 xmax        = 15.0
 ymax        = 12.0 
@@ -290,17 +298,17 @@ if hasLightGBM() :
     from ostap.stats.adval        import ADVAL_LGBM  as CMP 
     comparators += ( CMP ( **cconf ) , ) 
     
-if hasXGBoost() :
+if not light and hasXGBoost() :
     logger.info ( 'Use XGBoost       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_XGB  as CMP
     comparators += ( CMP ( **cconf ) , ) 
 
-if hasCatBoost () :
+if not light and hasCatBoost () :
     logger.info ( 'Use CatBoost      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_CATB  as CMP 
     comparators += ( CMP ( **cconf ) , ) 
 
-if hasSkLearn () :
+if not light and hasSkLearn () :
 
     cconf ['nToys'] = 20 
 
@@ -316,14 +324,14 @@ if hasSkLearn () :
     from ostap.stats.adval        import ADVAL_RF    as CMP3    
     comparators += ( CMP3 ( **cconf ) , )
     
-if hasPyTorch () :
+if not light and hasPyTorch () :
     
     logger.info ( 'Use PyTorch       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_TORCH  as CMP
     cconf ['nToys'] = 10 
     comparators += ( CMP ( **cconf ) , )
 
-if False and hasKeras () and 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent = True ) : 
+if False and not light and hasKeras () and 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent = True ) : 
     
     logger.info ( 'Use Keras         for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_KERAS  as CMP
@@ -446,9 +454,7 @@ plots  = [
 memory_init = memory_usage() 
 converged   = False
 
-maxIter     = 6 if small else 11
-
-maxIter     = 4
+maxIter     = 4 if ( light or small ) else 11
 
 weighter    = None
 
@@ -626,7 +632,7 @@ if hasLightGBM()  : # =========================================================
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-if hasXGBoost () : # ============================================================
+if not light and hasXGBoost () : # ============================================
     # =========================================================================
     logger.info ( 'Use XGBoost  for control reweighting' ) 
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
@@ -642,7 +648,7 @@ if hasXGBoost () : # ===========================================================
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
 # =============================================================================
-if hasCatBoost (): # ==========================================================
+if not light and hasCatBoost (): # ============================================
     # =========================================================================
     logger.info ( 'Use CatBoost for control reweighting' ) 
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
@@ -659,7 +665,7 @@ if hasCatBoost (): # ==========================================================
 # =============================================================================
 ## (5) home-made reweighter based on PyTorch
 # =============================================================================
-if False and hasPyTorch(): # ============================================================
+if False and not light and hasPyTorch(): # ===================================-
     # =========================================================================
     logger.info ( 'Use PyTorch  for control reweighting' ) 
     from ostap.tools.reweighters     import PyTorchDensityReweighter   as TORCH

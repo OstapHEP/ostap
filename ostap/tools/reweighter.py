@@ -152,6 +152,7 @@ class Reweighter(abc.ABC,Config) :
         conf.update ( super().config  )
         
         conf [ 'method'       ] = self.method
+        conf [ 'symbol'       ] = self.symbol 
         conf [ 'random_state' ] = self.random_state 
         conf [ 'n_features'   ] = self.n_features
         
@@ -163,7 +164,8 @@ class Reweighter(abc.ABC,Config) :
         if self.n_original != self.nEff_original : conf [ 'nEff_original' ] = nice_print ( self.nEff_original , precision = 3 , with_sign = False , strip = True )  
         if self.n_target   != self.sumw_target   : conf [ 'sumw_target'   ] = nice_print ( self.sumw_target   , precision = 3 , with_sign = False , strip = True )  
         if self.n_original != self.sumw_original : conf [ 'sumw_original' ] = nice_print ( self.sumw_original , precision = 3 , with_sign = False , strip = True )  
-        
+
+
         return conf 
                     
     # =========================================================================

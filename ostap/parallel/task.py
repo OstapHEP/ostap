@@ -116,15 +116,15 @@ class Task(TaskBase) :
     """
     ## @attention ensure that the important attributes are available even before __init__
     def __new__( cls , *args , **kwargs):
-        obj = super ( Task , cls).__new__( cls )
+        obj = super ( Task , cls ).__new__( cls )
         ## define the local trash 
         ## 
-        obj.__directory   = None
+        obj.__directory      = None
         ## 
-        obj.__environment = {}
-        obj.__prepend_to  = {}
-        obj.__append_to   = {}
-        obj.__dot_in_path = None
+        obj.__environment    = {}
+        obj.__prepend_to     = {}
+        obj.__append_to      = {}
+        obj.__dot_in_path    = None
         ## 
         obj.__batch          = None  
         obj.__batch_set      = False
@@ -353,8 +353,7 @@ class GenericTask(Task) :
 
         assert merger or collector , \
             "GenericTask: neither `merger' nor `collector' are defined!"
-        
-        
+                
         self.__processor   = processor
         self.__merger      = merger
         self.__collector   = collector
@@ -830,7 +829,6 @@ def task_executor ( item ) :
     if task.dot_in_path and not '.' in sys.path :
         sys.path  = ['.'] + sys.path
         logger.debug ( "Task %s: '.' is added to sys.path" % jobid )
-
 
     from ostap.utils.basic      import NoContext
     from ostap.utils.root_utils import Batch, ImplicitMT       

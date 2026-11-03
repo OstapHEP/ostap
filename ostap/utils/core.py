@@ -20,13 +20,15 @@ __all__     = (
     ##
     'isfunction'   , ## is it a function (or lambda) ?
     'islambda'     , ## is it a lambda?
-    'ismethod'     , ## is it a method? (taked frmo inspecr) 
+    'ismethod'     , ## is it a method? (taked frmo inspecr)
+    #
+    'classprop'    , ## decorator to get (READ-ONLY) class property 
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
-from types   import FunctionType, LambdaType
-from inspect import ismethod
-import cppyy, functools
+from   types   import FunctionType, LambdaType
+from   inspect import ismethod
+import cppyy, functools, sys 
 # =============================================================================
 ## Determine whether `cls` is a pure C++ class/struct registered in cppyy/ROOT.
 #  
@@ -113,7 +115,36 @@ def typename ( o ) :
     qname = getattr ( to , '__qualname__' , None )
     if qname and qname != 'CPPOverload': return qname
     return getattr ( o , '__name__'  , None ) or getattr ( to , '__name__' ) 
-    
+
+
+# =============================================================================
+if ( 3 , 12 ) <= sys.version_info : # =========================================
+    # =========================================================================
+    ## (READONLY) class property decorator
+    #  @see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
+    class classprop :
+        """ (READONLY) Class property decorator
+        - see https://stackoverflow.com/questions/76249636/class-properties-in-python-3-11
+        """
+        def __init__(self, func):
+            self.fget = func
+        def __get__(self, instance, owner):
+            return self.fget(owner)
+    # =========================================================================
+else : # ( 3 , 9 ) <= python_info : # ========================================
+    # =========================================================================
+    ## class property decorator
+    #  @code
+    #  @classprop
+    #  def A ( cls ) : ...  
+    #  @endcode
+    def classprop ( func ) :
+        """ Class property
+        @classprop
+        def A ( cls ) : ...
+        """
+        return classmethod ( property ( func ) ) 
+
 # =============================================================================
 if __name__ == '__main__' :
 

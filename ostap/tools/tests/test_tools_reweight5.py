@@ -31,7 +31,7 @@ os.environ [ 'MKL_THREADING_LAYER'  ] = 'GNU'
 # =============================================================================
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.core         import typename 
-from   ostap.utils.basic        import numcpu
+from   ostap.utils.basic        import numcpu, is_ci 
 from   ostap.logger.pretty      import nice_print
 from   ostap.stats.utils        import nEff, num_samples, w_header    
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
@@ -48,15 +48,28 @@ import os, numpy, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_reweight5' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_tools_reweight5' )
 # =============================================================================    
 logger.info ( 'Test for nD-Reweighting machinery')
 # ============================================================================
 ## set batch from environment 
 batch_env ( logger )
+# =============================================================================
+light, small  = False , numcpu () <= 8 
+# =============================================================================
+if   is_ci () : # =============================================================
+    # =========================================================================
+    logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    light   = True
+    # =========================================================================
+elif numcpu () <= 8 : # =======================================================
+    # =========================================================================
+    logger.warning ( "Machine is not powerful enough: reduce some tests" )
+    small   = True     
+    light   = True 
+
+light, small = True , True 
+
 # =============================================================================
 def make_datasets ( n_target    = 5000 ,
                     n_original1 = None ,
@@ -115,11 +128,12 @@ if hasLightGBM () :
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
     comparators += ( COMPARATOR5  ( parallel = True , nToys = 25 ) , ) 
 
-if hasXGBoost  () :  
+if not light and hasXGBoost  () :  
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6  ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
 
-if hasSkLearn (): 
+if not light and hasSkLearn ():
+    
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
     comparators += ( COMPARATOR8  ( parallel = True , nToys = 25 ) , )
     
@@ -170,8 +184,8 @@ def run_reweight ( n_dim       = 3     ,
     reweighters = [ None ]
     reweighters = [] 
     
-    if False and hasCatBoost () :
-
+    if hasCatBoost () :
+        
         """
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
         rw4 = CATB ( target               = target      , 
@@ -192,21 +206,22 @@ def run_reweight ( n_dim       = 3     ,
 
         from ostap.tools.reweighters  import CatBoostIterativeReweighter as CATB
         rw4 = CATB ( target        = target      , 
-                     original      = original    ,
+                     original      = original1   ,
                      ## 
-                     leaf_estimation_iterations =    1 , 
-                     min_data_in_leaf           =    2 ,
-                     learning_rate              = 0.05 ,
-                     max_depth                  =    8 , 
+                     ## leaf_estimation_iterations =    1 , 
+                     min_data_in_leaf           =    5 ,
+                     learning_rate              = 0.02 ,
+                     max_depth                  =    6 , 
                      n_estimators               =  300 ,
-                     max_delsta_step            =    1 ,
-                     l2_leaf_reg                =  1.0 , 
+                     max_delta_step             =    0 ,
+                     l2_leaf_reg                =  5.0 , 
                      ##
+                     progress = False 
                     )       
 
         reweighters.append ( rw4 )
         
-    if False and hasLightGBM () :
+    if hasLightGBM () :
         
         ## from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         ## rw2 = LGBM ( target                = target   ,
@@ -220,8 +235,17 @@ def run_reweight ( n_dim       = 3     ,
 
         from ostap.tools.reweighters  import LightGBMIterativeReweighter as  LGBM
         rw2 = LGBM ( target                = target    ,
-                     original              = original1 )
-
+                     original              = original1 , 
+                     ##
+                     n_estimators            = 300      ,
+                     learning_rate           = 0.02     ,
+                     max_depth               = 6        ,
+                     ## 
+                     min_data_in_leaf        = 10       , # Снизить с 30 до 10
+                     min_sum_hessian_in_leaf = 1e-4     , # Снизить с 1e-2 до 1e-5 (или 0.0)
+                     lambda_l2               = 0.0      , # Пока убрать сильную L2-регуляризацию для теста
+                     ## 
+                     progress              = False    )
         reweighters.append ( rw2 )
         
 
@@ -349,8 +373,9 @@ def run_reweight ( n_dim       = 3     ,
     for rw in reweighters :
             
         for original in ( original1 , 
-                          original2 ,
-                          original3 ) :
+                          ## original2 ,
+                          ## original3
+                         ) :
         
             if rw : logger.info ( 'Using REWEIGHTER %s %s ' % ( typename ( rw ) , rw.method ) )
             
@@ -372,15 +397,16 @@ def run_reweight ( n_dim       = 3     ,
                 header , row = c.the_row ()
                 
                 neff    = nEff ( original , original_weight ) 
-                rw_type = '' if rw is None else rw.method            
+                rw_type = '' if rw is None else rw.method
+                rw_symb = '' if rw is None else rw.symbol                 
                 neff    = nice_print ( neff , precision = 2 , with_sign = False , strip = True ) 
-                row     = ( rw_type , c.method , neff ) + tuple ( row ) + ( wmin , wmax )             
+                row     = ( rw_symb , rw_type , c.symbol, c.method , neff ) + tuple ( row ) + ( wmin , wmax )             
                 rows.append ( row )
 
-            header =  ( 'Reweighter' , 'Comparator' , '#eff' ) + header + w_header 
+            header =  ( '' , 'Reweighter' , '' , 'Comparator'  , '#eff' ) + header + w_header 
             if rows [ 0 ] != header :  rows         = [ header ] + rows
             title = 'Test results : %s' % p_value_percent_expr 
-            table = T.table ( rows , title = title , prefix = '# ' )
+            table = T.table ( rows , title = title , prefix = '# ' , alignment = 'clclccccccccccccccccccccccccc' )
             logger.info ( '%s\n%s' % ( title , table ) )
 
 

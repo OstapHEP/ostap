@@ -38,7 +38,8 @@ __all__     = (
     'symbol_GBC'          , ## symbol for GradientBoost 
     'symbol_RF'           , ## symbol for RandomForest 
     'symbol_TORCH'        , ## symbol for PyTorch 
-    'symbol_KERAS'        , ## symbol for Keras 
+    'symbol_KERAS'        , ## symbol for Keras
+    'symbol_LOGREG'       , ## symbol fo rLogistic Regression 
     'symbol_USTAT'        , ## symbol for uStat
     'symbol_CHI2'         , ## symbol for chi2
     ##
@@ -73,14 +74,15 @@ __all__     = (
     'symbol_ZC'           , ## symbol for Zhang ZC 
     'symbol_ZK'           , ## symbol fo Zhang ZK 
     ##
-    'method_LGBM'         , ##           LightGBM method 
-    'method_XGB'          , ##            XGBoost method 
-    'method_CATB'         , ##           CatBoost method 
-    'method_HGBC'         , ## HistoGradientBoost method 
-    'method_GBC'          , ##      GradientBoost method 
-    'method_RF'           , ##       RandomForest method 
-    'method_TORCH'        , ##            PyTorch method 
-    'method_KERAS'        , ##              Keras method     
+    'method_LGBM'         , ##            LightGBM method 
+    'method_XGB'          , ##             XGBoost method 
+    'method_CATB'         , ##            CatBoost method 
+    'method_HGBC'         , ##  HistoGradientBoost method 
+    'method_GBC'          , ##       GradientBoost method 
+    'method_RF'           , ##        RandomForest method 
+    'method_TORCH'        , ##             PyTorch method 
+    'method_KERAS'        , ##               Keras method
+    'method_LOGREG'       , ## Logistic Regression method 
     'method_USTAT'        , ##              uStat method 
     'method_CHI2'         , ##               Chi2 method 
     ##
@@ -131,16 +133,17 @@ method_name  = S.italic
 
 symbol_EPOCH = f'{S.repeat} :' if S.show and S.repeat else 'Epoch:'
 
-symbol_LGBM  = symbol_name ( S.light_bulb   if S.show and S.light_bulb     else 'LightGBM' ) 
-symbol_XGB   = symbol_name ( S.rocket       if S.show and S.rocket         else 'XGBoost'  ) 
-symbol_CATB  = symbol_name ( S.cat_face     if S.show and S.cat_face       else 'CatBoost' ) 
-symbol_HGBC  = symbol_name ( S.bar_chart    if S.show and S.bar_chart      else 'HGBC'     ) 
-symbol_GBC   = symbol_name ( S.nabla        if S.show and S.nabla          else 'GBC'      ) 
-symbol_RF    = symbol_name ( S.palm         if S.show and S.palm           else 'RF'       )
-symbol_TORCH = symbol_name ( S.flashlight   if S.show and S.flashlight     else 'TORCH'    ) 
-symbol_KERAS = symbol_name ( S.postal_horn  if S.show and S.postal_horn    else 'KERAS'    ) 
-symbol_USTAT = symbol_name ( S.pushpin      if S.show and S.pushpin        else 'USTAT'    ) 
-symbol_CHI2  = symbol_name ( S.chi2         if S.show and S.chi2           else 'Chi2'     ) 
+symbol_LGBM   = symbol_name ( S.light_bulb   if S.show and S.light_bulb     else 'LightGBM' ) 
+symbol_XGB    = symbol_name ( S.rocket       if S.show and S.rocket         else 'XGBoost'  ) 
+symbol_CATB   = symbol_name ( S.cat_face     if S.show and S.cat_face       else 'CatBoost' ) 
+symbol_HGBC   = symbol_name ( S.bar_chart    if S.show and S.bar_chart      else 'HGBC'     ) 
+symbol_GBC    = symbol_name ( S.nabla        if S.show and S.nabla          else 'GBC'      ) 
+symbol_RF     = symbol_name ( S.palm         if S.show and S.palm           else 'RF'       )
+symbol_TORCH  = symbol_name ( S.flashlight   if S.show and S.flashlight     else 'TORCH'    ) 
+symbol_KERAS  = symbol_name ( S.postal_horn  if S.show and S.postal_horn    else 'KERAS'    ) 
+symbol_LOGREG = symbol_name ( S.ruler        if S.show and S.ruler          else 'LOGREG'   ) 
+symbol_USTAT  = symbol_name ( S.pushpin      if S.show and S.pushpin        else 'USTAT'    ) 
+symbol_CHI2   = symbol_name ( S.chi2         if S.show and S.chi2           else 'Chi2'     ) 
 
 symbol_MIX   = symbol_name ( S.shuffle      if S.show and S.shuffle        else 'MIX'      ) 
 symbol_PPD   = symbol_name ( S.ruler        if S.show and S.ruler          else 'PPD'      ) 
@@ -150,14 +153,14 @@ symbol_KL    = symbol_name ( 'K-L' )
 symbol_J     = symbol_name ( 'J'   )
 symbol_JS    = symbol_name ( 'J-S' )
 symbol_M     = symbol_name ( 'M'   )
-symbol_T2    = symbol_name ( 'T2'  )
+symbol_T2    = symbol_name ( f'T{S.sup_two}' if S.show else 'T2'  )
 symbol_B     = symbol_name ( 'B'   )
 symbol_H     = symbol_name ( 'H'   )
-symbol_W2    = symbol_name ( 'W2'  )
+symbol_W2    = symbol_name ( f'W{S.sup_two}' if S.show else 'W2'  )
 symbol_W_1   = symbol_name ( f'W{S.sub_one}' if S.show else 'W_1' )
 symbol_W_2   = symbol_name ( f'W{S.sub_two}' if S.show else 'W_2' )
 symbol_R     = symbol_name ( 'R')
-symbol_U2    = symbol_name ( f'F{S.sup_two}' if S.show else 'U2'  )
+symbol_U2    = symbol_name ( f'U{S.sup_two}' if S.show else 'U2'  )
 
 symbol_NLL   = symbol_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'NLL' ) 
 symbol_AIC   = symbol_name ( 'AIC' ) 
@@ -173,16 +176,17 @@ symbol_ZC    = symbol_name ( f'Z{S.subscript_C}' )
 symbol_ZK    = symbol_name ( f'Z{S.subscript_K}' )
 
 
-method_LGBM  = method_name ( 'LightGBM'           )
-method_XGB   = method_name ( 'XGBoost'            ) 
-method_CATB  = method_name ( 'CatBoost'           ) 
-method_HGBC  = method_name ( 'HistoGradientBoost' ) 
-method_GBC   = method_name ( 'GradientBoost'      ) 
-method_RF    = method_name ( 'RandomForest'       )
-method_TORCH = method_name ( 'PyTorch'            )
-method_KERAS = method_name ( 'Keras'              ) 
-method_USTAT = method_name ( 'uStat'              )
-method_CHI2  = S.chi2         if S.show and S.chi2        else 'Chi2'
+method_LGBM   = method_name ( 'LightGBM'            )
+method_XGB    = method_name ( 'XGBoost'             ) 
+method_CATB   = method_name ( 'CatBoost'            ) 
+method_HGBC   = method_name ( 'HistoGradientBoost'  ) 
+method_GBC    = method_name ( 'GradientBoost'       ) 
+method_RF     = method_name ( 'RandomForest'        )
+method_TORCH  = method_name ( 'PyTorch'             )
+method_KERAS  = method_name ( 'Keras'               ) 
+method_LOGREG = method_name ( 'Logistic Regression' ) 
+method_USTAT  = method_name ( 'uStat'               )
+method_CHI2   = method_name ( S.chi2  if S.show and S.chi2  else 'Chi2' ) 
 
 method_MIX   = method_name ( 'Mixed-Sample'                  )
 method_PPD   = method_name ( 'Point-to-Point Dissimilarity'  )
@@ -192,12 +196,12 @@ method_KL    = method_name ( 'Kullback-Leibler'              )
 method_J     = method_name ( 'Jeffrey'                       )
 method_JS    = method_name ( 'Jensen-Shannon'                )
 method_M     = method_name ( 'Mahalanobis'                   )
-method_T2    = method_name ( 'Hotteling'                     )
+method_T2    = method_name ( f'Hotteling T{S.sup_two}'       )
 method_B     = method_name ( 'Bhattacharyya'                 )
 method_H     = method_name ( 'Hellinger'                     )
-method_W2    = method_name ( 'Wasserstein'                   )
-method_W_1   = method_name ( f'Wasserstein{S.sub_one}'       )
-method_W_2   = method_name ( f'Wasserstein{S.sub_two}'       )
+method_W2    = method_name ( f'Wasserstein W{S.sup_two}'     )
+method_W_1   = method_name ( f'Wasserstein W{S.sub_one}'     )
+method_W_2   = method_name ( f'Wasserstein E{S.sub_two}'     )
 method_R     = method_name ( 'Rosenblatt'                    )
 method_U2    = method_name ( f'Watson U{S.sup_two}'          )
 

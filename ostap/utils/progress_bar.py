@@ -653,7 +653,7 @@ class TextBar(object):
         self.__output          = output
         self.__text            = text
         self.__final_message   = final_message
-        self.__prefix          = allright ( kwargs.get ( 'description' , '' ) ) 
+        self.__prefix          = kwargs.get ( 'description' , '' ) 
         self.__last_len        = 0
         
         self.__min_interval    = kwargs.get ( 'min_interval' , 0.1 ) 

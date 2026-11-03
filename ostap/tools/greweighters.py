@@ -31,7 +31,8 @@ from   ostap.stats.utils        import ( weight_trivial     ,
                                          num_features       ,
                                          num_samples        ,
                                          check_all          ,
-                                         nEff               )
+                                         nEff               , 
+                                         method_name        ) 
 from   ostap.stats.tools            import hasSkLearn 
 from   ostap.tools.base_reweighters import DensityReweighter  
 import ostap.logger.symbols     as     S
@@ -50,6 +51,9 @@ GBRW_symbol          = S.wood if S.wood and S.show else 'GBRW'
 DEFAULT_ESTIMATORS   =   300 # High capacity: deep ensemble with low learning rate
 MAX_DEPTH            =     6 # Deep tree capacity for high dimensions / large statistics
 LEARNING_RATE        =  0.01 # Small step for stable density ratio convergence
+
+THRESHOLD_NSAMPLES   = 50000
+THRESHOLD_NFEATURES  = 10 
 
 # ==============================================================================
 ## @class GBReweighter
@@ -102,18 +106,19 @@ class GBReweighter(Reweighter) :
                     where   = typename ( self ) )   
 
         ## for small number of features ignore 'max_features' argument 
-        if num_features ( target ) <= 6 :
+        if num_features ( target ) <= THRESHOLD_NFEATURES  :
             gb_args = config.get ( 'gb_args' , {} )
             gb_args.pop ( 'max_features' , None ) 
             config  [ 'gb_args'      ] = gb_args 
 
-        ## for small number of samples ignore 'subsample' argument 
-        n_rows = num_samples ( original ) + num_samples ( target ) 
-        if 0 < self.n_splits and n_rows <= 10000 :
+        ## Ignore 'subsample' argument for small samples or splitting/folsig regime 
+        n_rows = num_samples ( original ) + num_samples ( target )
+        if n_rows < THRESHOLD_NSAMPLES or 1 < self.n_split :
             gb_args = config.get ( 'gb_args' , {} )
             gb_args.pop ( 'subsample' , None ) 
             config  [ 'gb_args'   ] = gb_args 
-                       
+
+            
         Reweighter.__init__ ( self            ,
                               original        = original        ,
                               target          = target          , 
@@ -201,8 +206,8 @@ class GBReweighter(Reweighter) :
     @property
     def method ( self ) :
         """ Return method identifier name. """
-        return '%s HepML' % self.symbol 
-
+        return method_name ( 'GBReweighter./HepML' )
+    
     # =========================================================================
     ## Get number of cross-validation splits.
     #  @return Integer count of CV folds.
