@@ -41,12 +41,11 @@ import numpy, abc, math, gc
 # Logging setup
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.greweighters' )
-else                       : logger = getLogger( __name__ )
+logger = getLogger ( 'ostap.tools.greweighters' )
 # =============================================================================
 has_sklearn = hasSkLearn() 
 # =============================================================================
-GBRW_symbol          = S.wood if S.wood and S.show else 'GBRW'
+GBRW_symbol          = S.wood if S.wood and S.show and S.wood else 'GBRW'
 # 
 DEFAULT_ESTIMATORS   =   300 # High capacity: deep ensemble with low learning rate
 MAX_DEPTH            =     6 # Deep tree capacity for high dimensions / large statistics
@@ -113,7 +112,7 @@ class GBReweighter(Reweighter) :
 
         ## Ignore 'subsample' argument for small samples or splitting/folsig regime 
         n_rows = num_samples ( original ) + num_samples ( target )
-        if n_rows < THRESHOLD_NSAMPLES or 1 < self.n_split :
+        if n_rows < THRESHOLD_NSAMPLES or 1 < self.n_splits :
             gb_args = config.get ( 'gb_args' , {} )
             gb_args.pop ( 'subsample' , None ) 
             config  [ 'gb_args'   ] = gb_args 

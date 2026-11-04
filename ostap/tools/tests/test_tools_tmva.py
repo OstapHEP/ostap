@@ -10,7 +10,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-10-25 
 # =============================================================================
-"""Test for TVMA machinery in  Ostap
+""" Test for TVMA machinery in  Ostap
  -  train TMVA
  -  use TMVA in 5 different ways 
 """
@@ -22,7 +22,6 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 from   ostap.utils.timing       import timing
 from   ostap.core.core          import SE, hID 
-from   ostap.utils.basic        import numcpu, is_ci 
 from   ostap.stats.counters     import table_counters
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.tmva         import Reader, addTMVAResponse
