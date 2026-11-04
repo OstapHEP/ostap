@@ -16,17 +16,14 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.core          import SE
-from   ostap.stats.counters     import table_counters   
 from   ostap.utils.timing       import timing
-from   ostap.utils.progress_bar import progress_bar 
 from   ostap.utils.cleanup      import CleanUp
-from   ostap.tools.tmva         import Reader, addTMVAResponse
+from   ostap.tools.tmva         import addTMVAResponse
 from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.utils4tests  import light_tests
 import ostap.trees.trees 
 import ostap.io.root_file 
-import ROOT, array, os, random, math  
+import ROOT, array, random, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -36,7 +33,8 @@ logger = getLogger ( 'ostap.test_tools_tmva3' )
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-light , weak  = light_tests ( 8 )
+light , weak = light_tests ( 8 )
+random_freq  = 0.10
 
 # ==============================================================================
 ## prepare traing and testing data for TMVA 

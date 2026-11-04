@@ -32,7 +32,8 @@ logger = getLogger ( 'ostap.test_tools_chopping2' )
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-light , weak  = light_tests ( 8 )
+light , weak = light_tests ( 8 )
+random_freq  = 0.10
 
 if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
 elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )

@@ -30,7 +30,7 @@ from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.utils4tests  import light_tests
 import ostap.trees.trees 
 import ostap.io.root_file 
-import ROOT, os, random, math  
+import ROOT, random, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -40,7 +40,8 @@ logger = getLogger ( 'ostap.test_tools_tmva' )
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-light , weak  = light_tests ( 8 )
+light , weak = light_tests ( 8 )
+random_freq  = 0.10
 
 # =============================================================================
 ## Prepare trainig and testing data for TMVA 

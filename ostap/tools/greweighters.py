@@ -112,7 +112,7 @@ class GBReweighter(Reweighter) :
 
         ## Ignore 'subsample' argument for small samples or splitting/folsig regime 
         n_rows = num_samples ( original ) + num_samples ( target )
-        if n_rows < THRESHOLD_NSAMPLES or 1 < self.n_splits :
+        if n_rows < THRESHOLD_NSAMPLES or 1 < self.__n_splits :
             gb_args = config.get ( 'gb_args' , {} )
             gb_args.pop ( 'subsample' , None ) 
             config  [ 'gb_args'   ] = gb_args 

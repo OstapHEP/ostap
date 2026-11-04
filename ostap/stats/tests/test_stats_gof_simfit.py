@@ -24,7 +24,6 @@ from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.core         import typename
-from   ostap.utils.basic        import numcpu, is_ci  
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          GoFSimFitType   , 
@@ -33,6 +32,7 @@ from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
 from   ostap.logger.symbols     import t_value_expr  
 from   ostap.stats.tools        import hasLightGBM, hasXGBoost, hasCatBoost
 from   ostap.stats.gof1d        import GoF_1D
+from   ostap.utils.utils4tests  import light_tests, active_test 
 import ostap.stats.gofnd        as     GnD 
 import ostap.logger.table       as     T 
 import ostap.io.zipshelve       as     DBASE
@@ -49,21 +49,13 @@ logger = getLogger ( 'ostap.test_stats_gof_simfit' )
 batch_env ( logger )
 # =============================================================================
 
-light, small = False , numcpu () <= 8
+light, weak = light_tests ( 8 ) 
 random_freq  = 0.10
 
 # =============================================================================
-if   is_ci () : # =============================================================
-    # =========================================================================
-    logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
-    light   = True
-    # =========================================================================
-elif numcpu () <= 8 : # ======================================================
-    # =========================================================================
-    logger.warning ( "Machine is not powerful enough: reduce some tests" )
-    small   = True     
-    light   = True 
-
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests" )
+  
 
 # =============================================================================
 ## make simple test variables/observables  
@@ -80,13 +72,12 @@ dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )
 
 
 # ============================================================================
-small = numcpu () <= 8
 
 
-NS1  = 2000
-NB1  =  100
-NS2  =  200
-NB2  = 1000     
+NS1  = 1000 if ( light or weak ) else 2000
+NB1  =  100 if ( light or weak ) else  200
+NS2  =  200 if ( light or weak ) else  400
+NB2  = 1000 if ( light or weak ) else 2000    
 
 # =============================================================================
 ## high statistic, low-background "control channel"
@@ -221,7 +212,7 @@ def test_gof_simfit () :
     logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )
 
     toys = GoFSimFit1DToys ( gof )
-    toys.run ( 900 , silent = False , parallel = True )
+    toys.run ( 100 if ( light or weak) else 900 , silent = False , parallel = True )
 
     title = 'GoF for 1D SimFit (%d toys)' % toys.nToys  
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
@@ -237,7 +228,7 @@ def test_gof_simfit () :
     # =============================================================================
 
     # =============================================================================
-    if small : # ==================================================================
+    if weak : # ==================================================================
         # =========================================================================
         nToys    =  8 ## realistic values should be well in excess of 100
         mcFactor =  2 ## realistic values should be well in excess of 10
@@ -251,31 +242,31 @@ def test_gof_simfit () :
     
     gof_configs = []
     
-    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.MIX   ( mcFactor = mcFactor               ) )
-    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.1 ) ) 
-    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.2 ) ) 
-    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.5 ) ) 
-    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.DNN   () ) 
-    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.USTAT () ) 
+    if active_test ( random_freq ) : gof_configs.append ( GnD.MIX   ( mcFactor = mcFactor               ) )
+    if active_test ( random_freq ) : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.1 ) ) 
+    if active_test ( random_freq ) : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.2 ) ) 
+    if active_test ( random_freq ) : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.5 ) ) 
+    if active_test ( random_freq ) : gof_configs.append ( GnD.DNN   () ) 
+    if active_test ( random_freq ) : gof_configs.append ( GnD.USTAT () ) 
 
     # =========================================================================
     ## LightGBM ?
     # =========================================================================
-    if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM() :
+    if active_test ( random_freq ) and hasLightGBM() :
         from   ostap.stats.gofnd import ADVAL_LightGBM as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
         
     # =========================================================================
     ## XGBoost?
     # =========================================================================
-    if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost () :
+    if active_test ( random_freq ) and hasXGBoost () :
         from   ostap.stats.gofnd import ADVAL_XGBoost as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
 
     # =========================================================================
     ## CatBoost?
     # =========================================================================
-    if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost () :
+    if active_test ( random_freq ) and hasCatBoost () :
         from   ostap.stats.gofnd import ADVAL_CatBoost as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
         

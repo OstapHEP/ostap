@@ -138,9 +138,11 @@ if '__main__' == __name__ :
         
     test_models       ()
 
-    if active_test ( random.freq ) : test_Tsallis   ()
-    if active_test ( random.freq ) : test_QGSM      ()
-    if active_test ( random.freq ) : test_Hagedorn  ()
+    random_freq = 0.2
+    
+    if active_test ( random_freq ) : test_Tsallis   ()
+    if active_test ( random_freq ) : test_QGSM      ()
+    if active_test ( random_freq ) : test_Hagedorn  ()
 
     ## check that everything is serializeable 
     test_db ()

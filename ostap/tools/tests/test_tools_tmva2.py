@@ -36,7 +36,8 @@ logger = getLogger ( 'ostap.test_tools_tmva2' )
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-light , weak  = light_tests ( 8 )
+light , weak = light_tests ( 8 )
+random_freq  = 0.10
 
 # ==============================================================================
 ## prepare traing and testing data for TMVA 

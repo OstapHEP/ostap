@@ -592,7 +592,7 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    from   ostap.utils.utils4tests  import light_tests
+    from   ostap.utils.utils4tests  import light_tests, active_test 
     
     if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
     elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )

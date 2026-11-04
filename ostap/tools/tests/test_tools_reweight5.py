@@ -39,6 +39,7 @@ from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasPyTorch  , hasHepML   )
 from   ostap.logger.symbols     import p_value_percent_expr 
 from   ostap.tools.reweighter   import CascadeReweighter as  CASCADE
+from   ostap.utils.utils4tests  import light_testst,   active_test
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
@@ -55,21 +56,15 @@ logger.info ( 'Test for nD-Reweighting machinery')
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-light, small  = False , numcpu () <= 8 
-# =============================================================================
-if   is_ci () : # =============================================================
-    # =========================================================================
-    logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
-    light   = True
-    # =========================================================================
-elif numcpu () <= 8 : # =======================================================
-    # =========================================================================
-    logger.warning ( "Machine is not powerful enough: reduce some tests" )
-    small   = True     
-    light   = True 
+light, weak = light_testst ( 8 )
 
-light, small = True , True 
-random_freq  = 0.15
+random_freq = 0.10
+ 
+# =============================================================================
+if  light :logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests" )
+
+
 
 # =============================================================================
 def make_datasets ( n_target    = 5000 ,
@@ -110,47 +105,47 @@ from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATORA ,
                                         Mahalanobis     as COMPARATORD ,
                                         Hotelling       as COMPARATORE , 
                                         Bhattacharyya   as COMPARATORF , 
-                                        Wassestein      as COMPARATORG , 
+                                        Wasserstein     as COMPARATORG , 
                                         Hellinger       as COMPARATORH ) 
 
 from ostap.stats.data_compare import data_compare
 comparators = ()
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORA ( parallel = True , nToys = 100 ) , )
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORB ( parallel = True , nToys = 100 ) , )
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORC ( parallel = True , nToys = 100 ) , )
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORD ( parallel = True , nToys = 100 ) , )
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORE ( parallel = True , nToys = 100 ) , )
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORF ( parallel = True , nToys = 100 ) , )
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORG ( parallel = True , nToys = 100 ) , )
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORH ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators += ( COMPARATORA ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators += ( COMPARATORB ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators += ( COMPARATORC ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators += ( COMPARATORD ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators += ( COMPARATORE ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators += ( COMPARATORF ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators += ( COMPARATORG ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators += ( COMPARATORH ( parallel = True , nToys = 100 ) , )
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost  () :
+if active_test ( random_freq ) and hasCatBoost  () :
     
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
     comparators += ( COMPARATOR7  ( parallel = True , nToys = 25 ) , ) 
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM () :
+if active_test ( random_freq ) and hasLightGBM () :
     
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
     comparators += ( COMPARATOR5  ( parallel = True , nToys = 25 ) , ) 
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost  () :
+if active_test ( random_freq ) and hasXGBoost  () :
     
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6  ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn ():
+if active_test  ( random_freq ) and hasSkLearn ():
     
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
     comparators += ( COMPARATOR8  ( parallel = True , nToys = 25 ) , )
     
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn ():
+if active_test ( random_freq ) and hasSkLearn ():
 
     from ostap.stats.adval        import ADVAL_GBC   as COMPARATOR9
     comparators += ( COMPARATOR9  ( parallel = True , nToys = 25 ) , ) 
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn ():
+if active_test ( random_freq ) and hasSkLearn ():
 
     from ostap.stats.adval        import ADVAL_RF   as COMPARATOR10
     comparators += ( COMPARATOR10 ( parallel = True , nToys = 25 ) , ) 

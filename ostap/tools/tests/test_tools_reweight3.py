@@ -285,36 +285,37 @@ if not os.path.exists ( testdata ) :
 import ostap.stats.gof_np as GnP
 cconf       = { 'parallel' : False , 'nToys' : 25 , 'silent' : True , 'progress' : True }
 comparators = ()
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Chi2            ( **cconf ) ,
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.KullbaclLeibler ( **cconf ) ,
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Jeffrey         ( **cconf ) ,
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.JensonShannon   ( **cconf ) ,
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Mahalanobis     ( **cconf ) ,
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Hotelling       ( **cconf ) ,
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Bhattacharyya   ( **cconf ) ,
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Wasserstein     ( **cconf ) ,
-if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Helinger        ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.Chi2            ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.KullbaclLeibler ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.Jeffrey         ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.JensonShannon   ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.Mahalanobis     ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.Hotelling       ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.Bhattacharyya   ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.Wasserstein     ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.Helinger        ( **cconf ) ,
+if not comparators : comparators += GnP.Chi2 ( **cconf ) ,  ## at least one comparator is needed
 
 # =========================================================================
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM () :
+if active_test ( random_freq ) and hasLightGBM () :
     
     logger.info ( 'Use LightGBM      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_LGBM  as CMP 
     comparators += ( CMP ( **cconf ) , ) 
     
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost () :
+if active_test ( random_freq ) and hasXGBoost () :
     
     logger.info ( 'Use XGBoost       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_XGB  as CMP
     comparators += ( CMP ( **cconf ) , ) 
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost () :
+if active_test ( random_freq ) and hasCatBoost () :
     
     logger.info ( 'Use CatBoost      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_CATB  as CMP 
     comparators += ( CMP ( **cconf ) , ) 
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
+if active_test ( random_freq ) and hasSkLearn () :
 
     cconf ['nToys'] = 20 
 
@@ -322,7 +323,7 @@ if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
     from ostap.stats.adval        import ADVAL_HGBC  as CMP1 
     comparators += ( CMP1 ( **cconf ) , )
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
+if active_test ( random_freq ) and hasSkLearn () :
 
     cconf ['nToys'] = 20 
     
@@ -330,7 +331,7 @@ if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
     from ostap.stats.adval        import ADVAL_GBC   as CMP2
     comparators += ( CMP2 ( **cconf ) , ) 
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
+if active_test ( random_freq ) and hasSkLearn () :
 
     cconf ['nToys'] = 20 
     
@@ -338,7 +339,7 @@ if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
     from ostap.stats.adval        import ADVAL_RF    as CMP3    
     comparators += ( CMP3 ( **cconf ) , )
 
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasPyTorch () :
+if active_test ( random_freq ) and hasPyTorch () :
     
     cconf ['nToys'] = 10 
 

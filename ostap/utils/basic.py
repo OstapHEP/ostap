@@ -43,8 +43,6 @@ __all__     = (
     'memoize'              , ## lightweight cache
     'classprop'            , ## class property decorator
     ##
-    'light_test'           , ## use "Light" version of tests 
-    ## 
     'SafeLoop'             , ## A safe loop wrapper that catches KeyboardInterrupt 
     'safe_loop'            , ## A safe loop wrapper that catches KeyboardInterrupt 
     ##
