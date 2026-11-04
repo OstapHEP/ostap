@@ -45,7 +45,7 @@ nominal_mean    = 0.4
 nominal_sigma   = 0.1
 
 nominal_S       = 1000 if ( light or weak ) else 2000
-nominal_B       =  100 of ( light ot weak ) else  200
+nominal_B       =  100 if ( light or weak ) else  200
 
 nominal_F       = float ( nominal_S ) / ( nominal_S + nominal_B )
 
