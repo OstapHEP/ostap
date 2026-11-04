@@ -21,10 +21,7 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_models_3D' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_models_3D' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
@@ -55,7 +52,7 @@ def test_gauss3D() :
                                  theta  = ( 1.0 , -1  , 10 ) ,
                                  psi    = ( 1.3 , -1  , 10 ) )
     
-    dataset = model.generate(1000)
+    dataset = model.generate ( 1000 )
     
     result , _ = model.fitTo ( dataset , silent = True )
     result , _ = model.fitTo ( dataset , silent = True )
@@ -80,19 +77,19 @@ def test_db() :
     logger = getLogger ( 'test_db' ) 
     logger.info('Saving all objects into DBASE')
     with timing('Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
-        db['m_x'     ] = m_x
-        db['m_y'     ] = m_y
-        db['m_y'     ] = m_z
+        db [ 'm_x'     ] = m_x
+        db [ 'm_y'     ] = m_y
+        db [ 'm_y'     ] = m_z
         for m in models :
-            db['model:' + m.name ] = m
-            db['roo_tot:%s' % m.name ] = m.pdf
+            db [ 'model:' + m.name ] = m
+            db [ 'roo_tot:%s' % m.name ] = m.pdf
             for i,s in enumerate ( m.signals ) :
-                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+                db [ 'roo_sig%d:%s' % ( i , m.name ) ] = s
             for i, b in enumerate ( m.backgrounds ) : 
-                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+                db [ 'roo_bkg%d:%s' % ( i , m.name ) ] = s
             for a in m.alist1 : 
-                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
-        db['models'  ] = models
+                db [ 'cmp:%s/%s' % ( m.name , a.name ) ] = a
+        db [ 'models'  ] = models
         db.ls()
         
    

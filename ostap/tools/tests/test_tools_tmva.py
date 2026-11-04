@@ -22,24 +22,26 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 from   ostap.utils.timing       import timing
 from   ostap.core.core          import SE, hID 
+from   ostap.utils.basic        import numcpu, is_ci 
 from   ostap.stats.counters     import table_counters
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.tmva         import Reader, addTMVAResponse
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.root_utils   import batch_env
+from   ostap.utils.utils4tests  import light_tests
 import ostap.trees.trees 
 import ostap.io.root_file 
-import ROOT, os, random 
+import ROOT, os, random, math  
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : logger = getLogger ( 'ostap.test_tools_tmva' )
-else                       : logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_tools_tmva' )
 # ==============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
+light , weak  = light_tests ( 8 )
 
 # =============================================================================
 ## Prepare trainig and testing data for TMVA 
@@ -112,6 +114,36 @@ def prepare_data ( nB = 1000 , nS = 1000 , nF = 5 )  :
 
     return tuple ( files ) 
 
+
+# =============================================================================
+## list of methods to be used 
+the_methods = ( # type               name   configuration
+    ( ROOT.TMVA.Types.kMLP        , "MLP1"         ,
+      "H:!V:EstimatorType=CE:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
+    ( ROOT.TMVA.Types.kMLP        , "MLP2"        ,
+      "H:!V:EstimatorType=CE:VarTransform=G,D,G,D,G,D:NCycles=200:HiddenLayers=N+5,N:TestRate=5:!UseRegulator" ) ,
+    ( ROOT.TMVA.Types.kBDT        , "BDTG1"       ,
+      "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
+    ( ROOT.TMVA.Types.kBDT        , "BDTG2"       ,
+      "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4:VarTransform=G,D,G,D,G,D" ) , 
+    ( ROOT.TMVA.Types.kBDT        , "BDTG3"        ,
+      "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4" ) , 
+    ( ROOT.TMVA.Types.kBDT        , "BDTB"        ,
+      "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
+    ( ROOT.TMVA.Types.kBDT        , "BDTA"        ,
+      "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
+    ( ROOT.TMVA.Types.kCuts       , "Cuts"        ,
+      "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
+    ( ROOT.TMVA.Types.kFisher     , "Fisher"      ,
+      "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
+    ( ROOT.TMVA.Types.kFisher     , "FisherG"     ,
+      "H:!V:Fisher:VarTransform=G,D,G,D,G,D:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
+    ( ROOT.TMVA.Types.kSVM        , "SVM"         ,
+      "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
+    ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  ,
+      "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50" )
+)
+
 # =============================================================================
 def test_tmva () :
     """ Test TMVA machinery
@@ -121,10 +153,16 @@ def test_tmva () :
     
     logger.info('Prepare data for training/testing')
 
-    nB = 1000
-    nS = 1000
-    nF = 10
+    nB = 5000
+    nS = 5000
+    nF = 5
     
+    if light or weak :
+        
+        nB = 1000
+        nS = 1000
+        nF =    2
+
     data_files = prepare_data ( nB , nS , nF )
     
     logger.info('Create and train TMVA')
@@ -139,39 +177,15 @@ def test_tmva () :
     #
     ## book TMVA trainer
     #
+    methods = the_methods 
+    if light or weak :
+        count   = math.ceil ( random_freq * len ( methods ) )
+        methods = tuple ( sorted ( random.sample ( methods , count ) ) ) 
+        
     from ostap.tools.tmva import Trainer 
     trainer = Trainer (
         name    = 'TestTMVA' ,   
-        methods = [ # type               name   configuration
-            ( ROOT.TMVA.Types.kMLP        , "MLP"         ,
-              "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
-            ( ROOT.TMVA.Types.kMLP        , "MLPT"        ,
-              "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5,N:TestRate=5:!UseRegulator:VarTransform=G,D,G,D,G,D" ) ,
-            ( ROOT.TMVA.Types.kBDT        , "BDTG0"       ,
-              "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
-            ( ROOT.TMVA.Types.kBDT        , "BDTGT"       ,
-              "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4:VarTransform=G,D,G,D,G,D" ) , 
-            ( ROOT.TMVA.Types.kBDT        , "BDTG"        ,
-              "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=4" ) , 
-            ( ROOT.TMVA.Types.kBDT        , "BDTB"        ,
-              "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
-            ( ROOT.TMVA.Types.kBDT        , "BDTD"        ,
-              "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
-            ( ROOT.TMVA.Types.kCuts       , "Cuts"        ,
-              "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
-            ( ROOT.TMVA.Types.kFisher     , "Fisher"      ,
-              "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
-            ( ROOT.TMVA.Types.kFisher     , "FisherG"     ,
-              "H:!V:Fisher:VarTransform=G,D,G,D,G,D:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
-            ( ROOT.TMVA.Types.kSVM        , "SVM"         ,
-              "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
-            ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  ,
-              "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=30:NSmoothBkg[0]=30:NSmoothBkg[1]=30:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D,G,D,G,D" ) ,
-            ## it does not work :-( 
-            ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS' , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
-            ## ( ROOT.TMVA.Types.kKNN        , 'KNN'   , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
-            ##
-        ] ,
+        methods = methods    ,
         ## 
         variables = input_vars , ## Variables for training
         ## 
@@ -337,9 +351,15 @@ def test_tmva () :
 
 # =============================================================================
 if '__main__' == __name__ :
-
-    with timing ( 'test_tmva', logger = logger ) :
-        test_tmva () 
+    
+    from   ostap.utils.utils4tests  import light_tests, active_test 
+    
+    light, weak = light_tests ( 8 ) 
+    
+    if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+    
+    with timing ( 'test_tmva', logger = logger ) : test_tmva () 
         
 # =============================================================================
 ##                                                                      The END

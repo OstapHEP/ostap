@@ -53,16 +53,21 @@ class Reweighter(abc.ABC,Config) :
                    original_weight = None  ,
                    target_weight   = None  , 
                    silent          = False ,
-                   random_state    = None  , **params  ) :
+                   random_state    = None  ,
+                   mass_preserve   = True  , **params  ) :
         """ Abstract base class for Advanced Reweigters
         """
 
         if not random_state is None and not isinstance ( random_state , int ) :
             raise TypeError  ( "Invalid `random_state' type %s" % typename ( random_state ) )
-        
-        self.__random_state = random_state
 
-        # =====================================================================
+        # ====================================================================
+        ## preserve the weight normalzation:
+        #  - sum of final weights is requal to the sum of orginal weights 
+        self.__mass_preserve = True if mass_preserve else False 
+        self.__random_state  = random_state
+
+        # ====================================================================
         ## Check the input data
         # ====================================================================
         check_all ( original        ,
@@ -70,8 +75,7 @@ class Reweighter(abc.ABC,Config) :
                     original_weight ,
                     target_weight   , typename ( self ) )
 
-        self.__n_features    = num_features ( target   )
-        
+        self.__n_features    = num_features ( target   )        
         self.__n_target      = num_samples  ( target   )
         self.__n_original    = num_samples  ( original )
         
@@ -103,6 +107,11 @@ class Reweighter(abc.ABC,Config) :
     def random_state ( self ) :
         """`random_state` : random number seed for shuffling/splitting/k-fold/..."""
         return self.__random_state
+    
+    @property
+    def mass_preserve ( self ) :
+        """`mass_preserve` : preserve the weight normalizaiton: sum of final weights equalto sum of original weights"""
+        return self.__mass_preserve 
 
     @property
     def n_features ( self ) :
@@ -151,14 +160,17 @@ class Reweighter(abc.ABC,Config) :
         conf = {}
         conf.update ( super().config  )
         
-        conf [ 'method'       ] = self.method
-        conf [ 'symbol'       ] = self.symbol 
-        conf [ 'random_state' ] = self.random_state 
-        conf [ 'n_features'   ] = self.n_features
+        conf [ 'symbol'        ] = self.symbol 
+        conf [ 'method'        ] = self.method
         
-        conf [ 'n_target'     ] = nice_print ( self.n_target   , precision = 3 , with_sign = False , strip = True ) 
-        conf [ 'n_original'   ] = nice_print ( self.n_original , precision = 3 , with_sign = False , strip = True ) 
-        conf [ 'n_total'      ] = nice_print ( self.n_total    , precision = 3 , with_sign = False , strip = True ) 
+        conf [ 'mass_preserve' ] = self.mass_preserve
+        
+        conf [ 'random_state'  ] = self.random_state 
+        conf [ 'n_features'    ] = self.n_features
+        
+        conf [ 'n_target'      ] = nice_print ( self.n_target   , precision = 3 , with_sign = False , strip = True ) 
+        conf [ 'n_original'    ] = nice_print ( self.n_original , precision = 3 , with_sign = False , strip = True ) 
+        conf [ 'n_total'       ] = nice_print ( self.n_total    , precision = 3 , with_sign = False , strip = True ) 
         
         if self.n_target   != self.nEff_target   : conf [ 'nEff_target'   ] = nice_print ( self.nEff_target   , precision = 3 , with_sign = False , strip = True ) 
         if self.n_original != self.nEff_original : conf [ 'nEff_original' ] = nice_print ( self.nEff_original , precision = 3 , with_sign = False , strip = True )  
@@ -235,21 +247,31 @@ class Reweighter(abc.ABC,Config) :
         logger.info ( '%s:\n%s' % ( title , table ) )  
 
     # =========================================================================
-    ## Helper method for normalization of fonal weigght: ``preserve the mass''
-    def preserve_mass ( slef, 
+    ## Helper method for normalization of final weigght: ``preserve the mass''
+    #  - final sum of weights is equal to the original sum pf weights 
+    def preserve_mass ( self            , 
                         original        ,
                         original_weight ,
                         final_weight    ) :
         """ Helper method for normalization of the final weigght: ``preserve the mass''
+          - final sum of weights is equal to the original sum pf weights 
         """
-        ## number of samples
-        ## (1) sum of original weights 
-        sumw          = num_samples ( original ) if weight_trivial ( original_weight ) else numpy.sum ( original_weight )
+
+        ## ATTENTION! 
+        if not self.mass_preserve : return final_weight  ## ATTENTION! 
+
+        ## (1) number of original esntries 
+        n_original    = num_samples ( original )
         
-        ## (2) scale the finale weight to the same sum: "preserve the mass"
-        sumf          = num_samples ( original ) if weight_trivial ( final_weight    ) else numpy.sum ( final_weight    )
+        ## (2) sum of original weights
+        sumw          = n_original if weight_trivial ( original_weight ) else numpy.sum ( original_weight )
+        
+        ## (3) sum of final  weights
+        sumf          = n_original if weight_trivial ( final_weight    ) else numpy.sum ( final_weight    )
+        
+        ## (4) scale the final weight to the same sum: "preserve the mass"
         final_weight *= sumw / sumf 
-        
+                
         return final_weight 
             
 # =============================================================================

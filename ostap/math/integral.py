@@ -197,8 +197,7 @@ def adaptive_integral ( rule_name           ,
     the rule is reapplied to subinterval
     """
     ##
-    if other :
-        logger.warning ( "Adaptive[%s]: ignored parameters: %s" % ( rule_name , list ( other .keys() ) ) )
+    if other : logger.warning ( "Adaptive[%s]: ignored parameters: %s" % ( rule_name , list ( other .keys() ) ) )
     
     assert callable    ( fun  )                                        , "`fun'  must be callable!" 
     assert callable    ( rule )                                        , "`rule' must be callable!" 
@@ -663,7 +662,8 @@ def integral_quad ( fun              ,
     other [ 'limit' ] = other.pop ( 'limit' , 1000 )              
     
     with  warnings.catch_warnings ( **wconf ) as ws :
-        warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )        
+        ## warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )        
+        warnings.simplefilter ( 'ignore' , **wfilter )        
         result = scipy_quad ( func            ,
                               xmin            ,
                               xmax            ,
@@ -1138,7 +1138,8 @@ def integral_dblquad ( fun  ,
     else      : func = fun
     
     with  warnings.catch_warnings ( **wconf ) as ws :
-        warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )                
+        ## warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )                
+        warnings.simplefilter ( 'ignore' , **wfilter )                
         result = scipy_dblquad ( func ,
                                  ymin , ymax     ,
                                  lambda x : xmin ,
@@ -1216,7 +1217,8 @@ def integral_tplquad ( fun  ,
     else      : func = fun
     
     with  warnings.catch_warnings ( **wconf ) as ws :
-        warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )                
+        ## warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )                
+        warnings.simplefilter ( 'ignore' , **wfilter )                
         result = scipy_tplquad ( func ,
                                  zmin , zmax ,
                                  lambda z   : ymin ,

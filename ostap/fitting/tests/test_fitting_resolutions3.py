@@ -19,20 +19,24 @@ from   ostap.fitting.simfit     import combined_data
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.timing       import wait 
 from   ostap.utils.root_utils   import batch_env
-from   ostap.fitting.roofit     import FIXVAR 
+from   ostap.fitting.roofit     import FIXVAR
+from   ostap.utils.utils4tests  import light_tests
+
 import ostap.fitting.models     as     Models 
 import ROOT, random
 # ============================================================================= 
 from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ :
-    logger = getLogger ( 'ostap.test_fitting_resolution3' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_resolution3' )
 # ============================================================================= 
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
+light, weak = light_tests ( 8 ) 
 
+if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+
+# =============================================================================
 
 GeV = 1.0
 MeV = 0.001 * GeV
@@ -43,6 +47,9 @@ m_K   = 497   * MeV
 
 dm   = ROOT.RooRealVar('dm'  ,'delta-mass'  , -25 * MeV  , 25    * MeV         ) 
 mass = ROOT.RooRealVar('dmKK','mass(KK)'    ,  2 * m_K  , 2 * m_K + 100 * MeV  )
+
+NMC   =  2000 if ( light or weak ) else 100000
+NDATA =  1000 if ( light or weak ) else  50000
 
 # ===============================================================================
 ## 1a:  prepare MC dataset
@@ -60,7 +67,8 @@ gen_reso = Models.ResoCB2 ( 'R0'                ,
                            
 
 ## MC - dataset
-ds_MC = gen_reso.generate ( 100000 ) 
+
+ds_MC = gen_reso.generate ( NMC ) 
 
 # ===============================================================================
 ## 1b: prepare DATA dataset
@@ -97,8 +105,7 @@ model.S     = 1000
 model.B     =  100
 
 #
-ds_DATA     = model.generate ( 50000 ) 
-
+ds_DATA     = model.generate ( NDATA ) 
 
 # ===============================================================================
 ## 2a: Create fit resolution model (MC)
@@ -184,7 +191,6 @@ rSIM , fSIM = model_sim.fitTo ( dataset , silent = True )
 title = 'Simultaneous fit(1) to DATA&MC'
 logger.info ( '%s\n%s' % ( title , rSIM.table ( title = title , prefix = '# ' ) ) ) 
 
-
 phi_DATA.m0   .release() 
 reso_MC.sigma .release() 
 
@@ -197,7 +203,6 @@ logger.info ( '%s\n%s' % ( title , rSIM.table ( title = title , prefix = '# ' ) 
 with use_canvas ( 'test_resoltuion3' ) : 
     with wait ( 3 ) : fMC   = model_sim.draw ( 'MC'   , dataset , nbins = 100 )
     with wait ( 3 ) : fDATA = model_sim.draw ( 'DATA' , dataset , nbins = 100 )
-
 
 # =============================================================================
 ##                                                                      The END 

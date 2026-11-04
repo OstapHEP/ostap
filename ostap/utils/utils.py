@@ -66,6 +66,7 @@ __all__     = (
 from   itertools              import repeat, chain, islice
 from   ostap.core.meta_info   import python_info 
 from   ostap.utils.timing     import timing, timer
+from   ostap.utils.core       import typename 
 from   ostap.utils.basic      import ( isatty    , with_ipython , classprop ,  
                                        NoContext , zip_longest  , 
                                        counted   , memoize      )  
@@ -74,11 +75,6 @@ from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        dictlike_types , listlike_types )
 from   ostap.utils.memory     import memory, virtualMemory, Memory
 import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime, operator, threading  ## attention here!!
-# =============================================================================
-from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.utils' )
-else                       : logger = getLogger ( __name__            )
-del getLogger
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
@@ -409,7 +405,6 @@ class SplitRange(object) :
     def __len__ ( self ) :
         return self.__size 
     
-
 # =============================================================================
 ## split range into smaller chunks:
 #  @code
@@ -878,6 +873,58 @@ class AttrGetter(object):
     __repr__ = __str__ 
 
 # =============================================================================
+## Loop with prescale
+#  @code
+#  ## take each 5th element 
+#  for i in prescale ( iterable , fraction = 5    ) :
+#  ...
+#  ## take each 20%s of element (randomly) 
+#  for i in prescale ( iterable , fraction = 0.2  ) :
+#  ...    
+#  @endcode 
+def prescale ( iterable     ,
+               fraction = 1 ) :
+    """ Loop with prescale
+    - (1) take each 5th element 
+    >>> for item in prescale ( iterable , fraction = 5     ) :
+    ...
+    
+    - (2) randomly take 20% of element 
+    >>> for item in prescale ( iterable , fraction = 0.20  ) :
+    ...
+    """
+
+    if isinstance ( iterable , int ) and 0 < iterable :
+        iterable = range ( iterable  )
+
+    if isinstance ( fraction , int ) : 
+        
+        if   0 == fraction : return   
+        elif 1 == fraction :
+            for item in iterable : yield item 
+        elif 1 <  fraction :
+            for i , item in enumerate ( iterable , start = 1 ) :
+                if 0 == ( i % fraction ) : yield item
+                
+        else : raise ValueError ( "Invalid integer value for `fraction' %d" % fraction )
+
+    elif isinstance ( fraction , float ) :
+        
+        if   0 == fraction : return
+        elif 1 == fraction :
+            for item in iterable : yield item 
+        elif 0 < fraction < 1 :
+            for item in iterable :
+                if random.uniform ( 0, 1 ) < fraction : yield item
+                
+        else : raise ValueError ( "Invalid float value for `fraction' %s" % fraction )
+        
+    else :
+
+        raise TypeError ( "Invalid type for `fraction' %s" % typename ( fraction ) ) 
+
+
+# =============================================================================
 ## @class NumCalls
 #  Count a number of  times a callable object is invoked
 class NumCalls (object):
@@ -897,7 +944,6 @@ class NumCalls (object):
 # ==============================================================================        
 #  Count a number of  times a callable object is invoked
 numcalls = NumCalls
-
 
 # ==============================================================================
 ## Copy file with the progress
@@ -946,7 +992,10 @@ def copy_with_progress ( source  , destination ) :
 
 # =============================================================================
 if '__main__' == __name__ :
-    
+
+    from   ostap.logger.logger import getLogger
+    logger = getLogger ( 'ostap.utils.utils' )
+
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     

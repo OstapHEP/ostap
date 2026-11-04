@@ -27,10 +27,7 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_dataset' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_dataset' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )

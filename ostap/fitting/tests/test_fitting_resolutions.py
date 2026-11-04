@@ -26,10 +26,7 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_resolutions' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_resolutions' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
@@ -45,7 +42,7 @@ reso = ResoHypatia       ( 'H'    , mass   ,
                            lambd  =  -1.0  ,
                            sigma0 =   0.01 )
 
-dataset = reso.generate ( 10000 )
+dataset = reso.generate ( 2000 )
 logger.info ('DATASET\n%s' % dataset.table ( prefix = "# " ) ) 
 
 stats = {} 
@@ -681,7 +678,6 @@ def dump_models () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
-
     
     logger = getLogger ( 'test_db' )
 
@@ -710,62 +706,86 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
+    from   ostap.utils.utils4tests  import light_tests, active_test 
     
+    light, weak = light_tests ( 8 ) 
+    
+    if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+    
+    random_freq = 0.10
+
     with timing ("Gauss"     , logger ) :  
         test_gauss          () ## single Gaussian resolution model
-
-    with timing ("2-Gauss"   , logger ) :  
-        test_2gauss         () ## double Gaussian resolution model
+        
+    with timing ("2-Gauss"   , logger ) :
+        if active_test ( random_freq ) : 
+            test_2gauss         () ## double Gaussian resolution model
         
     with timing ("Apo "      , logger ) :  
-        test_apo            () ## symmetric Apollonios resoltuion model
+        if active_test ( random_freq ) : 
+            test_apo            () ## symmetric Apollonios resoltuion model
         
     with timing ("CB2"       , logger ) :  
-        test_cb2            () ## double-sided Crystal Ball resoltuion model
+        if active_test ( random_freq ) : 
+            test_cb2            () ## double-sided Crystal Ball resoltuion model
         
     with timing ("Sech"      , logger ) :  
-        test_sech           () ## hyperbolic secant resolution model
+        if active_test ( random_freq ) : 
+            test_sech           () ## hyperbolic secant resolution model
 
     with timing ("Logistic"  , logger ) :  
-        test_logistic        () ## logistic resolution model
+        if active_test ( random_freq ) : 
+            test_logistic        () ## logistic resolution model
 
     with timing ("GenLogisticIV"  , logger ) :  
-        test_genlogistic4    () ## logistic resolution model
+        if active_test ( random_freq ) : 
+            test_genlogistic4    () ## logistic resolution model
 
     with timing ("Bukin"     , logger ) :  
-        test_bukin          () ## Bukin resolution model
-    
+        if active_test ( random_freq ) : 
+            test_bukin          () ## Bukin resolution model
+        
     with timing ("SinhAsinh" , logger ) :  
-        test_sinhasinh      () ## SinhAsinh resolution model
+        if active_test ( random_freq ) : 
+            test_sinhasinh      () ## SinhAsinh resolution model
 
     with timing ("JohnsonSU" , logger ) :  
-        test_johnsonSU      () ## JohnsonSU resolution model
+        if active_test ( random_freq ) : 
+            test_johnsonSU      () ## JohnsonSU resolution model
 
     with timing ("Hyperbolic" , logger ) :  
-        test_hyperbolic     () ## Hyperbolic resolution model
+        if active_test ( random_freq ) : 
+            test_hyperbolic     () ## Hyperbolic resolution model
     
     with timing ("GenHyperbolic" , logger ) :  
-        test_genhyperbolic  () ## generalised Hyperbolic resolution model
+        if active_test ( random_freq ) : 
+            test_genhyperbolic  () ## generalised Hyperbolic resolution model
 
     with timing ("Hypatia" , logger ) :  
-        test_hypatia        () ## generalised Hyperbolic resolution model
-
+        if active_test ( random_freq ) : 
+            test_hypatia        () ## generalised Hyperbolic resolution model
+            
     with timing ("GenGaussV1" , logger ) :  
-        test_gengaussv1     ()   ## Das resolution model
-    
+        if active_test ( random_freq ) : 
+            test_gengaussv1     ()   ## Das resolution model
+            
     with timing ("Das"        , logger ) :  
-        test_das           ()   ## Das resolution model
-
+        if active_test ( random_freq ) : 
+            test_das           ()   ## Das resolution model
+            
     with timing ("Bukin2" , logger ) :  
-        test_bukin2         ()   ## Bukin2 resolution model
-
+        if active_test ( random_freq ) : 
+            test_bukin2         ()   ## Bukin2 resolution model
+            
     with timing ("NormalLaplace" , logger ) :  
-        test_normlapl      ()   ## Normal Laplace resolution model
+        if active_test ( random_freq ) : 
+            test_normlapl      ()   ## Normal Laplace resolution model
 
     with timing ("BatesShape" , logger ) :  
-        test_bates_shape    ()   ## Bates Shape resolution model
+        if active_test ( random_freq ) : 
+            test_bates_shape    ()   ## Bates Shape resolution model
 
-    
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  
         test_db ()          

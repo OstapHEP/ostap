@@ -14,9 +14,10 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.root_utils import batch_env 
-from   ostap.math.integral    import Integral   
+from   ostap.plotting.canvas   import use_canvas
+from   ostap.utils.basic       import numcpu
+from   ostap.math.integral     import Integral   
+from   ostap.utils.root_utils  import batch_env
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
@@ -25,16 +26,14 @@ import ROOT, random, numpy, scipy, math
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'ostap.test_histos_parameterisation2' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_histos_parameterisation2' )
 # =============================================================================
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 ## set batch form environment 
 batch_env ( logger )
 # =============================================================================
+
 from ostap.histos.param import legendre_sum, chebyshev_sum
 from ostap.core.core    import hID, fID 
 from ostap.utils.timing import timing
@@ -514,35 +513,43 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
     logger.info ( 100*'*')
 
-    test_bernstein          ()
 
-    test_legendre           ()
-    test_chebyshev          ()
-    test_monomial           ()
-
-    test_fourier            ()
-    test_cosine             ()
-
-    test_positive           ()
-    test_monotonic          () 
-    test_convex             () 
-    test_convex_poly        ()
-
-    test_rational           ()
-    test_brational          ()
-
-    test_positive_spline    ()
-    test_monotonic_spline   ()
-    test_convex_spline      ()
-    test_convex_only_spline ()
-
-    test_karlin_shapley     ()
-    test_karlin_studden     ()
+    from   ostap.utils.utils4tests  import light_tests, active_test 
     
-    test_legendre_fast      ()
-    test_legendre2_fast     ()
-    test_legendre3_fast     ()
+    light, weak = light_tests ( 8 ) 
     
+    if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+    
+    random_freq = 0.10
+    
+    if active_test ( random_freq ) : test_bernstein          ()
+    if active_test ( random_freq ) : test_legendre           ()
+    if active_test ( random_freq ) : test_chebyshev          ()
+    if active_test ( random_freq ) : test_monomial           ()
+
+    if active_test ( random_freq ) : test_fourier            ()
+    if active_test ( random_freq ) : test_cosine             ()
+    
+    if active_test ( random_freq ) : test_positive           ()
+    if active_test ( random_freq ) : test_monotonic          () 
+    if active_test ( random_freq ) : test_convex             ()
+    if active_test ( random_freq ) : test_convex_poly        ()
+
+    if active_test ( random_freq ) : test_rational           ()
+    if active_test ( random_freq ) : test_brational          ()
+
+    if active_test ( random_freq ) : test_positive_spline    ()
+    if active_test ( random_freq ) : test_monotonic_spline   ()
+    if active_test ( random_freq ) : test_convex_spline      ()
+    if active_test ( random_freq ) : test_convex_only_spline ()
+    
+    if active_test ( random_freq ) : test_karlin_shapley     ()
+    if active_test ( random_freq ) : test_karlin_studden     ()
+
+    if active_test ( random_freq ) : test_legendre_fast      ()
+    if active_test ( random_freq ) : test_legendre2_fast     ()
+    if active_test ( random_freq ) : test_legendre3_fast     ()
     
 # =============================================================================
 ##                                                                      The END 

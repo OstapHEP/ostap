@@ -24,7 +24,7 @@ __all__     = (
     'with_ipython'         , ## do we run IPython ?
     'interactive'          , ## interactive processing?
     'isatty'               , ## is the stream ``isatty'' ?
-    'is_ci'                , ##
+    'is_ci'                , ## continuous integration? GitHub actions? Azurre? 
     'main_process'         , ## is the current process main?
     ##
     'terminal_size'        , ## get the size of terminal cosole
@@ -43,6 +43,8 @@ __all__     = (
     'memoize'              , ## lightweight cache
     'classprop'            , ## class property decorator
     ##
+    'light_test'           , ## use "Light" version of tests 
+    ## 
     'SafeLoop'             , ## A safe loop wrapper that catches KeyboardInterrupt 
     'safe_loop'            , ## A safe loop wrapper that catches KeyboardInterrupt 
     ##
@@ -50,7 +52,8 @@ __all__     = (
 ) # ===========================================================================
 # =============================================================================
 from   ostap.core.meta_info import python_info, whoami
-from   ostap.utils.core     import isfunction, classprop 
+from   ostap.utils.core     import isfunction, classprop
+from   ostap.utils.env      import boolean_false_values 
 from   itertools            import zip_longest
 import multiprocessing      as     mp_
 import sys, os, shutil, psutil, functools
@@ -121,7 +124,7 @@ def is_ci () :
         'CI'                     , ## Generic CI (Travis, CircleCI, etc.)
         'CONTINUOUS_INTEGRATION'   ## Generic CI flag
     )
-    return any ( os.environ.get ( var ) for var in ci_vars )
+    return any ( ( val := os.environ.get ( var , '' ) ) and val.lower() not in boolean_false_values for var in ci_vars )
 
 # ==============================================================================
 ## does the atream support unicode? 

@@ -69,6 +69,7 @@ elif numcpu () <= 8 : # =======================================================
     light   = True 
 
 light, small = True , True 
+random_freq  = 0.15
 
 # =============================================================================
 def make_datasets ( n_target    = 5000 ,
@@ -109,36 +110,47 @@ from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATORA ,
                                         Mahalanobis     as COMPARATORD ,
                                         Hotelling       as COMPARATORE , 
                                         Bhattacharyya   as COMPARATORF , 
-                                        Hellinger       as COMPARATORG ) 
+                                        Wassestein      as COMPARATORG , 
+                                        Hellinger       as COMPARATORH ) 
 
-from ostap.stats.data_compare import data_compare     
-comparators = ( COMPARATORA ( parallel = True , nToys = 100 ) ,
-                COMPARATORB ( parallel = True , nToys = 100 ) ,
-                COMPARATORC ( parallel = True , nToys = 100 ) , 
-                COMPARATORD ( parallel = True , nToys = 100 ) , 
-                COMPARATORE ( parallel = True , nToys = 100 ) , 
-                COMPARATORF ( parallel = True , nToys = 100 ) , 
-                COMPARATORG ( parallel = True , nToys = 100 ) )
+from ostap.stats.data_compare import data_compare
+comparators = ()
 
-if hasCatBoost () :  
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORA ( parallel = True , nToys = 100 ) , )
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORB ( parallel = True , nToys = 100 ) , )
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORC ( parallel = True , nToys = 100 ) , )
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORD ( parallel = True , nToys = 100 ) , )
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORE ( parallel = True , nToys = 100 ) , )
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORF ( parallel = True , nToys = 100 ) , )
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORG ( parallel = True , nToys = 100 ) , )
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) :  comparators += ( COMPARATORH ( parallel = True , nToys = 100 ) , )
+
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost  () :
+    
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
     comparators += ( COMPARATOR7  ( parallel = True , nToys = 25 ) , ) 
+
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM () :
     
-if hasLightGBM () :
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
     comparators += ( COMPARATOR5  ( parallel = True , nToys = 25 ) , ) 
 
-if not light and hasXGBoost  () :  
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost  () :
+    
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
     comparators += ( COMPARATOR6  ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
 
-if not light and hasSkLearn ():
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn ():
     
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
     comparators += ( COMPARATOR8  ( parallel = True , nToys = 25 ) , )
     
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn ():
+
     from ostap.stats.adval        import ADVAL_GBC   as COMPARATOR9
     comparators += ( COMPARATOR9  ( parallel = True , nToys = 25 ) , ) 
+
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn ():
 
     from ostap.stats.adval        import ADVAL_RF   as COMPARATOR10
     comparators += ( COMPARATOR10 ( parallel = True , nToys = 25 ) , ) 

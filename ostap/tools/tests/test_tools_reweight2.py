@@ -22,7 +22,7 @@ os.environ [ "OPENBLAS_NUM_THREADS" ]  = "1"
 # =============================================================================
 from   ostap.core.core          import VE  
 from   ostap.utils.timing       import timing
-from   ostap.utils.basic        import numcpu 
+from   ostap.utils.basic        import numcpu, is_ci  
 from   ostap.logger.colorized   import allright  
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.cleanup      import CleanUp
@@ -33,6 +33,7 @@ from   ostap.logger.pretty      import pretty_float
 from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.stats.tools        import hasLightGBM, hasXGBoost, hasCatBoost
+from   ostap.utils.utils4tests  import light_tests, active_test 
 import ostap.stats.gof_np       as     GnP 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T
@@ -49,6 +50,11 @@ logger.info ( 'Test for 2D-Reweighting machinery')
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
+light , weak  = light_tests ( 8 )
+
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+# =============================================================================
 
 testdata      = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight2-' )
 tag_data      = 'DATA2_histogram'
@@ -64,15 +70,11 @@ if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
 import ostap.parallel.kisa
 
-if 8 <= numcpu () : 
 
-    N1 = 1000000
-    N2 =   50000
+N1 = 10000
+N2 =  5000
 
-    N1 = 10000
-    N2 =  5000
-    
-else :
+if light or weak : 
     
     N1 = 2000 
     N2 = 2000 
@@ -284,8 +286,6 @@ assert hmc .ymax() == ymax , 'YMAX is invalid!'
 assert hmcx.xmax() == xmax , 'XMAX is invalid!'
 assert hmcy.xmax() == ymax , 'XMAX is invalid!'
 
-## prepare re-weighting machinery 
-maxIter = 15
 
 ## check database 
 if not os.path.exists( dbname ) :
@@ -329,29 +329,36 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
                                          silent    = True           ) 
 
 # ===============================================================================
-cconf = { 'parallel' : True , 'nToys' : 100 , 'silent' : True , 'progress' : True } 
+cconf = { 'parallel' : True , 'nToys' : 64 , 'silent' : True , 'progress' : True } 
 ## comparators
-comparators = [
-    GnP.Mahalanobis     ( **cconf ) ,
-    GnP.Hotelling       ( **cconf ) ,
-    GnP.KullbackLeibler ( **cconf ) ,    
-    ]
+comparators = []
+if active_test ( random_freq ) : comparators.append ( GnP.KullbackLeibler ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.Jeffrey         ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.JensenShannon   ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.Mahalanobis     ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.Hotelling       ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.Bhatyacharyya   ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.Wasserstein     ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.Hellinger       ( **cconf ) ) 
 # ===============================================================================
-if hasLightGBM ()  : # ==========================================================
+if active_test ( random_freq ) and hasLightGBM ()  : 
     # ===========================================================================
     from ostap.stats.adval        import ADVAL_LGBM as COMPARATOR
     comparators.append ( COMPARATOR ( **cconf ) ) 
+
 # ===============================================================================
-if hasXGBoost  ()  : # ==========================================================
+if active_test ( random_freq ) and hasXGBoost  ()  : 
     # ===========================================================================
     from ostap.stats.adval        import ADVAL_XGB as COMPARATOR
     comparators.append ( COMPARATOR ( **cconf ) ) 
 # ===============================================================================
-if hasCatBoost  ()  : # ==========================================================
+if active_test ( random_freq ) and hasCatBoost  ()  : 
     # ===========================================================================
     from ostap.stats.adval        import ADVAL_CATB as COMPARATOR
     comparators.append ( COMPARATOR ( **cconf ) ) 
     # ==========================================================================
+if not comparators : comparators.append ( GnP.KullbackLeibler ( **cconf ) )
+
 comparators = tuple ( comparators ) 
     
 # ==============================================================================
@@ -397,8 +404,7 @@ title = 'Global DATA/MC similarity: %s' % p_value_percent_expr
 table = T.table ( glob_stat , title = title , prefix = '# ' , alignment = 'll'+(20*'c')) 
 logger.info ( '%s\n%s' % ( title , table ) )
 
-
-maxIter   = 5
+maxIter   = 4 if ( light or weak ) else 8
 verbose   = False 
 
 memory_init = memory_usage() 
@@ -563,6 +569,7 @@ results  = data_compare ( comparators ,
                           expressions =  ( 'x' , 'y' ) ,
                           cuts2       = weight_name    , 
                           importance  = True )
+
 trow  = [ trophy , '%.1f' % n_eff ] 
 for r in results :
     pv100 = VE ( r.pvalue ) * 100            

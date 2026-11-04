@@ -14,7 +14,8 @@
 from   ostap.core.core          import Ostap, std, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing, wait  
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.root_utils   import batch_env 
+from   ostap.utils.root_utils   import batch_env
+from   ostap.utils.utils4tests  import light_tests
 import ostap.fitting.models     as     Models 
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.roofit 
@@ -23,15 +24,18 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_models2_2D' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_models2_2D' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
 root_version = ROOT.ROOT.GetROOT().GetVersionInt()
+# =============================================================================
+light , weak  = light_tests ( 8 )
+
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+
 # =============================================================================
 ## make simple test mass 
 m_x     = ROOT.RooRealVar ( 'mass_x' , 'Some test mass(X)' , 3 , 3.2 )
@@ -43,10 +47,10 @@ dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )
 
 m = VE(3.100,0.015**2)
 
-N_ss = 5000
-N_sb =  500
-N_bs =  500
-N_bb = 1000
+N_ss = 1000 if ( light or weak ) else 5000
+N_sb =  100 if ( light or weak ) else  500
+N_bs =  100 if ( light or weak ) else  500
+N_bb =  200 if ( light or weak ) else 1000
 
 random.seed(0)
 
@@ -587,18 +591,44 @@ def test_db() :
         
 # =============================================================================
 if '__main__' == __name__ :
+
+    from   ostap.utils.utils4tests  import light_tests
+    
+    if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+
+    random_freq = 0.2
     
     from ostap.utils.timing import timing
-    with timing ('test_const'       , logger ) : test_const       ()          
-    with timing ('test_p2xp2'       , logger ) : test_p2xp2       ()          
-    with timing ('test_p1xp1_BB'    , logger ) : test_p1xp1_BB    ()          
-    with timing ('test_p1xp1_BBss'  , logger ) : test_p1xp1_BBss  ()          
-    with timing ('test_p1xp1_BBsym' , logger ) : test_p1xp1_BBsym ()          
-    with timing ('test_pbxpb_BB'    , logger ) : test_pbxpb_BB    ()          
-    with timing ('test_pbxpb_BBs'   , logger ) : test_pbxpb_BBs   ()          
-    with timing ('test_pbxpb_BBsym' , logger ) : test_pbxpb_BBsym ()          
-    with timing ('test_psxps_BBs'   , logger ) : test_psxps_BBs   ()          
-    with timing ('test_psxps_BBsym' , logger ) : test_psxps_BBsym ()          
+    with timing ('test_const'       , logger ) :
+        if active_test ( random_freas ) : test_const       ()
+        
+    with timing ('test_p2xp2'       , logger ) :
+        if active_test ( random_freq ) : test_p2xp2       ()
+        
+    with timing ('test_p1xp1_BB'    , logger ) :
+        if active_test ( random_frew ) : test_p1xp1_BB    ()
+        
+    with timing ('test_p1xp1_BBss'  , logger ) :
+        if active_test ( random_freq ) : test_p1xp1_BBss  ()
+        
+    with timing ('test_p1xp1_BBsym' , logger ) :
+        if active_test ( random_freq ) : test_p1xp1_BBsym ()
+        
+    with timing ('test_pbxpb_BB'    , logger ) :
+        if active_test ( random_freq ) : test_pbxpb_BB    ()
+        
+    with timing ('test_pbxpb_BBs'   , logger ) :
+        if active_test ( random_freq ) : test_pbxpb_BBs   ()
+        
+    with timing ('test_pbxpb_BBsym' , logger ) :
+        if active_test ( random_freq ) : test_pbxpb_BBsym ()
+        
+    with timing ('test_psxps_BBs'   , logger ) :
+        if active_test ( random_freq ) : test_psxps_BBs   ()
+        
+    with timing ('test_psxps_BBsym' , logger ) :
+        if active_test ( random_freq ) : test_psxps_BBsym ()          
 
     with timing ('Save to DB' ) : test_db ()          
     

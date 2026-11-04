@@ -62,7 +62,7 @@ reso = ResoHypatia       ( 'H'    , mass  ,
 ##                           zeta   =  10   , 
 ##                           kappa  =  0.1  )
 
-dataset = reso.generate ( 10000 )
+dataset = reso.generate ( 2000 )
 
 logger.info ('DATASET\n%s' % dataset.table ( prefix = "# " ) ) 
 
@@ -714,62 +714,88 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
+    from   ostap.utils.utils4tests  import light_tests, active_test 
     
-    with timing ("Gauss"     , logger ) :  
-        test_gauss      () ## single Gaussian resolution model
+    light, weak = light_tests ( 8 ) 
+    
+    if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+    
+    random_freq = 0.10
+    
+    with timing ("Gauss"     , logger ) :
+        if active_test ( random_freq ) :             
+            test_gauss      () ## single Gaussian resolution model
         
     with timing ("Apo"       , logger ) :  
-        test_apo        () ## Apollonios resoltuion model
+        if active_test ( random_freq ) :             
+            test_apo        () ## Apollonios resoltuion model
 
     with timing ("ApoA"       , logger ) :  
-        test_apoA       () ## Apollonios resoltuion model
-        
+        if active_test ( random_freq ) :             
+            test_apoA       () ## Apollonios resoltuion model
+            
     with timing ("CB2"       , logger ) :  
-        test_cb2        () ## double-sided Crystal Ball resoltuion model
-
+        if active_test ( random_freq ) :             
+            test_cb2        () ## double-sided Crystal Ball resoltuion model
+            
     with timing ("CB2A"      , logger ) :  
-        test_cb2a       () ## double-sided Crystal Ball resoltuion model
-
+        if active_test ( random_freq ) :             
+            test_cb2a       () ## double-sided Crystal Ball resoltuion model
+            
         
     with timing ("Bukin"     , logger ) :  
-        test_bukin      () ## Bukin resolution model
-    
+        if active_test ( random_freq ) :             
+            test_bukin      () ## Bukin resolution model
+            
     with timing ("JohnsonSU" , logger ) :  
-        test_johnsonSU  () ## JohnsonSU resolution model
-
+        if active_test ( random_freq ) :             
+            test_johnsonSU  () ## JohnsonSU resolution model
+            
     with timing ("SinhAsinh" , logger ) :  
-        test_sinhasinh  () ## SinhAsinh resolution model
-
+        if active_test ( random_freq ) :             
+            test_sinhasinh  () ## SinhAsinh resolution model
+            
     with timing ("Hyperbolic" , logger ) :  
-        test_hyperbolic  () ## Hyperbolic resolution model
+        if active_test ( random_freq ) :             
+            test_hyperbolic  () ## Hyperbolic resolution model
     
     with timing ("GenHyperbolic" , logger ) :  
-        test_genhyperbolic  () ## Generalised Hyperbolic resolution model
+        if active_test ( random_freq ) :             
+            test_genhyperbolic  () ## Generalised Hyperbolic resolution model
 
     with timing ("Hypatia" , logger ) :  
-        test_hypatia        () ## Hypatia resoltuion model
-        
+        if active_test ( random_freq ) :             
+            test_hypatia        () ## Hypatia resoltuion model
+            
     with timing ("Das"      , logger ) :  
-        test_das           () ## Das resolution model
-
+        if active_test ( random_freq ) :             
+            test_das           () ## Das resolution model
+            
     with timing ("Bukin2"  , logger ) :  
-        test_bukin2      ()  ## Bukin2 resolution model
-
+        if active_test ( random_freq ) :             
+            test_bukin2      ()  ## Bukin2 resolution model
+            
     with timing ("Normal Laplace"  , logger ) :  
-        test_normlapl      ()   ## Normal Laplace resolution model
-
+        if active_test ( random_freq ) :             
+            test_normlapl      ()   ## Normal Laplace resolution model
+            
     with timing ("GenLogisticIV"  , logger ) :  
-        test_genlogistic4  ()   ## Generalized Logistic Type IV resolution model
-
+        if active_test ( random_freq ) :             
+            test_genlogistic4  ()   ## Generalized Logistic Type IV resolution model
+            
     with timing ("PearsonIV"  , logger ) :  
-        test_pearsonIV      ()   ## PearsonIV resolution model
+        if active_test ( random_freq ) :             
+            test_pearsonIV      ()   ## PearsonIV resolution model
         
     with timing ("SkewGenT"  , logger ) :  
-        test_skewgenT       ()   ## SkewGenT resolution model
+        if active_test ( random_freq ) :             
+            test_skewgenT       ()   ## SkewGenT resolution model
         
     with timing ("SkewGenError"  , logger ) :  
-        test_skewgenerror   ()   ## SkewGenError resolution model
-
+        if active_test ( random_freq ) :             
+            test_skewgenerror   ()   ## SkewGenError resolution model
+            
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  
         test_db ()          

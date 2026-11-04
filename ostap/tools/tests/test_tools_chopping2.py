@@ -18,23 +18,24 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.timing       import timing
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
-from   ostap.utils.basic        import numcpu
+from   ostap.utils.utils4tests  import light_tests
 import ostap.core.core        
 import ostap.io.root_file
 import ostap.trees.trees
-import ROOT, os, array, random  
+import ROOT, os, array, random, math   
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_chopping2' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_tools_chopping2' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
+light , weak  = light_tests ( 8 )
+
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
 
 # =============================================================================
 ## Prepare trainig and testing data for TMVA 
@@ -149,13 +150,24 @@ def prepare_data ( nB = 2000 , nS = 1000 , nF = 5 ) :
 
     return tuple ( files ) 
 
+# ===========================================================================
+## prepare input data 
 
+nB = 10000
+nS =  5000
+nF =     5 
 
-data_files = prepare_data ()
+if light or weak :
+    
+    nB = 2000
+    nS = 1000
+    nF =    2
+
+data_files = prepare_data ( nB , nS , nF )
 
 # ===========================================================================
 ##   number of    categories 
-N  = 3 if numcpu () <= 8 else 7 
+N  = 3 if ( light or weak ) else 7 
 logger.info('Create and train TMVA')
 
 # ============================================================================
@@ -165,22 +177,29 @@ cSignal = ROOT.TChain ( 'S' , files = data_files )
 cBkg    = ROOT.TChain ( 'B' , files = data_files )
 #
 
+the_methods = ( # type               name   configuration
+    ( ROOT.TMVA.Types.kMLP        , "MLP1"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+1:TestRate=5:!UseRegulator" ) ,
+    ( ROOT.TMVA.Types.kMLP        , "MLP5"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
+    ( ROOT.TMVA.Types.kBDT        , "BDTG2"      , "H:!V:NTrees=200:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
+    ( ROOT.TMVA.Types.kBDT        , "BDTG4"      , "H:!V:NTrees=200:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=4" ) , 
+    ( ROOT.TMVA.Types.kCuts       , "Cuts"       , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
+    ( ROOT.TMVA.Types.kFisher     , "Fisher"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
+    ( ROOT.TMVA.Types.kLikelihood , "Likelihood" , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" )
+    )
+
+methods = the_methods 
+if light or weak :
+    count   = math.ceil ( random_freq  * len ( methods ) )
+    methods = tuple ( sorted ( random.sample ( methods , count ) ) ) 
+
 ## book TMVA trainer
 from ostap.tools.chopping import Trainer 
 trainer = Trainer (
     N        = N                 , ## ATTENTION! 
     category = "137*evt+813*run" , ## ATTENTION!
     ## other  arguments as for ``plain'' TMVA
-    name    = 'TestChopping2' ,   
-    methods = [ # type               name   configuration
-    ( ROOT.TMVA.Types.kMLP        , "MLP1"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+1:TestRate=5:!UseRegulator" ) ,
-    ## ( ROOT.TMVA.Types.kMLP        , "MLP5"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
-    ## ( ROOT.TMVA.Types.kBDT        , "BDTG2"      , "H:!V:NTrees=200:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" ) , 
-    ## ( ROOT.TMVA.Types.kBDT        , "BDTG4"      , "H:!V:NTrees=200:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=4" ) , 
-    ## ( ROOT.TMVA.Types.kCuts       , "Cuts"       , "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
-    ## ( ROOT.TMVA.Types.kFisher     , "Fisher"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
-    ## ( ROOT.TMVA.Types.kLikelihood , "Likelihood" , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" )
-    ] ,
+    name     = 'TestChopping2' ,   
+    methods  = methods         ,
     ## 
     variables       = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training
     signal_vars     = { 'VARX' : 'VARS' } , 
@@ -210,7 +229,6 @@ trainer = Trainer (
     background_train_fraction = 0.85 ,
     ##
     workdir        = CleanUp.tempdir ( prefix = 'ostap-chopping-workdir-' ) , ##  working directory 
-    ## parallel_conf  = { 'ncpus' : 0 , 'ppservers' : 'auto' }
     )
 
 # train it!  

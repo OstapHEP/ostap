@@ -12,25 +12,23 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.utils.timing          import timing 
+from   ostap.utils.timing          import timing
 from   ostap.plotting.canvas       import use_canvas
 from   ostap.utils.root_utils      import batch_env 
 from   ostap.utils.core            import typename 
 import ostap.fitting.models        as     Models 
-import ROOT 
+import ROOT, random  
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_distributions' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_distributions' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
 
+# =============================================================================
 x = ROOT.RooRealVar ( 'x' , 'x-variable' , -5 , 10 ) 
 y = ROOT.RooRealVar ( 'y' , 'y-variable' , -5 ,  5 ) 
 
@@ -53,10 +51,14 @@ def _check_the_model_ ( model_type ) :
 
 # =============================================================================
 def test_models () :
-
+    
+    from   ostap.utils.utils4tests  import light_tests, active_test 
+    random_freq = 0.10
+    
     from   ostap.fitting.distributions import models
     logger.info ( 'Test distributions' )
-    for model in models : _check_the_model_ ( model ) 
+    for model in models :
+        if active_test ( random_freq ) : _check_the_model_ ( model ) 
         
 # =============================================================================
 def test_Tsallis () :
@@ -127,11 +129,18 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
     
-    test_models       ()
+    from   ostap.utils.utils4tests  import light_tests, active_test 
     
-    test_Tsallis      ()
-    test_QGSM         ()
-    test_Hagedorn     ()
+    light, weak = light_tests ( 8 ) 
+    
+    if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+        
+    test_models       ()
+
+    if active_test ( random.freq ) : test_Tsallis   ()
+    if active_test ( random.freq ) : test_QGSM      ()
+    if active_test ( random.freq ) : test_Hagedorn  ()
 
     ## check that everything is serializeable 
     test_db ()

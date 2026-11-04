@@ -15,7 +15,8 @@ __all__    = () ## nothing to import
 from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.root_utils   import batch_env  
+from   ostap.utils.root_utils   import batch_env
+from   ostap.utils.utils4tests  import light_tests
 import ostap.fitting.models     as     Models 
 import ostap.fitting.toys       as     Toys
 import ostap.fitting.roofit 
@@ -24,15 +25,11 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_simfit1' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_simfit' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-#
        
 # =============================================================================
 def test_toys_simfit_1 () :

@@ -24,7 +24,7 @@ from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.core         import typename
-from   ostap.utils.basic        import numcpu 
+from   ostap.utils.basic        import numcpu, is_ci  
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
                                          GoFSimFitType   , 
@@ -43,15 +43,29 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_stats_gof_simfit' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_stats_gof_simfit' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-#
+
+light, small = False , numcpu () <= 8
+random_freq  = 0.10
+
+# =============================================================================
+if   is_ci () : # =============================================================
+    # =========================================================================
+    logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    light   = True
+    # =========================================================================
+elif numcpu () <= 8 : # ======================================================
+    # =========================================================================
+    logger.warning ( "Machine is not powerful enough: reduce some tests" )
+    small   = True     
+    light   = True 
+
+
+# =============================================================================
 ## make simple test variables/observables  
 mass1    = ROOT.RooRealVar ( 'test_mass1' , 'Some test mass-1' , 0 , 5  )
 mass2    = ROOT.RooRealVar ( 'test_mass2' , 'Some test mass-2' , 0 , 5  )
@@ -235,30 +249,33 @@ def test_gof_simfit () :
 
     gofs = [] 
     
-    gof_configs = [ GnD.MIX   ( mcFactor = mcFactor               ) , 
-                    GnD.PPD   ( mcFactor = mcFactor , sigma = 0.1 ) , 
-                    GnD.DNN   () ,
-                    GnD.USTAT ()
-                   ]
+    gof_configs = []
+    
+    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.MIX   ( mcFactor = mcFactor               ) )
+    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.1 ) ) 
+    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.2 ) ) 
+    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.PPD   ( mcFactor = mcFactor , sigma = 0.5 ) ) 
+    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.DNN   () ) 
+    if not light or random.unifom ( 0 , 1 ) < random_freq : gof_configs.append ( GnD.USTAT () ) 
 
     # =========================================================================
     ## LightGBM ?
     # =========================================================================
-    if hasLightGBM() :
+    if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM() :
         from   ostap.stats.gofnd import ADVAL_LightGBM as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
         
     # =========================================================================
     ## XGBoost?
     # =========================================================================
-    if hasXGBoost () :
+    if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost () :
         from   ostap.stats.gofnd import ADVAL_XGBoost as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
 
     # =========================================================================
     ## CatBoost?
     # =========================================================================
-    if hasCatBoost () :
+    if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost () :
         from   ostap.stats.gofnd import ADVAL_CatBoost as GOF  
         gof_configs.append (  GOF ( parallel = True ) )
         
@@ -304,19 +321,19 @@ def test_db() :
 
     logger.info('Saving all objects into DBASE')
     with timing('Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
-        db['mass1'    ] = mass1
-        db['mass2'    ] = mass2
-        db['vars1'    ] = varset1
-        db['vars2'    ] = varset2
-        db['dataset1' ] = dataset1
-        db['dataset2' ] = dataset2
-        db['sample'   ] = sample 
+        db [ 'mass1'    ] = mass1
+        db [ 'mass2'    ] = mass2
+        db [ 'vars1'    ] = varset1
+        db [ 'vars2'    ] = varset2
+        db [ 'dataset1' ] = dataset1
+        db [ 'dataset2' ] = dataset2
+        db [ 'sample'   ] = sample 
         for m in models :
             logger.info ( 'save %s\n%s '% ( m.name , m )  )  
             db [ 'model:'     + m.name ] = m
-        db['models'  ] = models
-        for r in results : db['result' + r.name ] = r 
-        db['results' ] = results
+        db [ 'models'  ] = models
+        for r in results : db [ 'result' + r.name ] = r 
+        db [ 'results' ] = results
         db.ls()
 
 # =============================================================================

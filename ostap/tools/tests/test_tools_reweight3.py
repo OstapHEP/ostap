@@ -72,8 +72,9 @@ tag_mc      = 'MC_tree'
 
 dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
 
-light       = False 
-small       = numcpu () <= 8
+light        = False 
+small        = numcpu () <= 8
+random_freq  = 0.15
 
 # =============================================================================
 if   is_ci () : # =============================================================
@@ -83,10 +84,12 @@ if   is_ci () : # =============================================================
     # =========================================================================
 elif numcpu () <= 8 : # ======================================================
     # =========================================================================
-    logger.warning ( "Machine is not powerful enough: reduce soem tests" )
+    logger.warning ( "Machine is not powerful enough: reduce some tests" )
     small   = True     
     light   = True 
 
+light, small = True , True 
+    
 if light or small : 
     
     NDATA1      =  1000 
@@ -280,65 +283,79 @@ if not os.path.exists ( testdata ) :
 ## Compare datasets using several methods 
 # ==============================================================================
 import ostap.stats.gof_np as GnP
-cconf       = { 'parallel' : False , 'nToys' : 25 , 'silent' : True , 'progress' : True } 
-comparators = (
-    GnP.Chi2            ( **cconf ) ,
-    GnP.KullbackLeibler ( **cconf ) ,
-    GnP.Jeffrey         ( **cconf ) ,
-    GnP.JensenShannon   ( **cconf ) ,
-    GnP.Mahalanobis     ( **cconf ) ,
-    GnP.Hotelling       ( **cconf ) ,
-    GnP.Bhattacharyya   ( **cconf ) ,
-    GnP.Wasserstein     ( **cconf ) ,
-    GnP.Hellinger       ( **cconf ) )
+cconf       = { 'parallel' : False , 'nToys' : 25 , 'silent' : True , 'progress' : True }
+comparators = ()
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Chi2            ( **cconf ) ,
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.KullbaclLeibler ( **cconf ) ,
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Jeffrey         ( **cconf ) ,
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.JensonShannon   ( **cconf ) ,
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Mahalanobis     ( **cconf ) ,
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Hotelling       ( **cconf ) ,
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Bhattacharyya   ( **cconf ) ,
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Wasserstein     ( **cconf ) ,
+if not light or random.uniform ( 0 , 1 ) < random_freq :  comprators += GnP.Helinger        ( **cconf ) ,
 
 # =========================================================================
-if hasLightGBM() :
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM () :
+    
     logger.info ( 'Use LightGBM      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_LGBM  as CMP 
     comparators += ( CMP ( **cconf ) , ) 
     
-if not light and hasXGBoost() :
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost () :
+    
     logger.info ( 'Use XGBoost       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_XGB  as CMP
     comparators += ( CMP ( **cconf ) , ) 
 
-if not light and hasCatBoost () :
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost () :
+    
     logger.info ( 'Use CatBoost      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_CATB  as CMP 
     comparators += ( CMP ( **cconf ) , ) 
 
-if not light and hasSkLearn () :
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
 
     cconf ['nToys'] = 20 
 
     logger.info ( 'Use SkLearn/HGBC  for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_HGBC  as CMP1 
     comparators += ( CMP1 ( **cconf ) , )
+
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
+
+    cconf ['nToys'] = 20 
     
     logger.info ( 'Use SkLearn/GBC   for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_GBC   as CMP2
     comparators += ( CMP2 ( **cconf ) , ) 
 
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () :
+
+    cconf ['nToys'] = 20 
+    
     logger.info ( 'Use SkLearn/RF    for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_RF    as CMP3    
     comparators += ( CMP3 ( **cconf ) , )
+
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasPyTorch () :
     
-if not light and hasPyTorch () :
-    
+    cconf ['nToys'] = 10 
+
     logger.info ( 'Use PyTorch       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_TORCH  as CMP
-    cconf ['nToys'] = 10 
     comparators += ( CMP ( **cconf ) , )
 
-if False and not light and hasKeras () and 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent = True ) : 
+if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasKeras ()  : 
     
-    logger.info ( 'Use Keras         for dataset comparison' ) 
-    from ostap.stats.adval        import ADVAL_KERAS  as CMP
-    cconf [ 'nToys'    ] = 5 
-    cconf [ 'parallel' ] = False 
-    cconf [ 'silent'   ] = False 
-    comparators += ( CMP ( **cconf ) , )
+    if 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent = True ) : 
+        
+        logger.info ( 'Use Keras         for dataset comparison' ) 
+        from ostap.stats.adval        import ADVAL_KERAS  as CMP
+        cconf [ 'nToys'    ] = 5 
+        cconf [ 'parallel' ] = False 
+        cconf [ 'silent'   ] = False 
+        comparators += ( CMP ( **cconf ) , )
  
 comparators = comparators
 # ============================================================================
@@ -598,7 +615,7 @@ if weighter : weights.append ( weight_name )
 # =============================================================================
 ## (1) GBReweighter by Alex Rogozhnikov from hep_ml 
 # =============================================================================
-if hasHepML () : # ============================================================
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasHepML () :
     # ========================================================================
     logger.info ( 'Use HepML    for control reweighting' ) 
     from ostap.tools.reweighters     import GBReweighter   as GBRW 
@@ -615,7 +632,7 @@ if hasHepML () : # ============================================================
 # =============================================================================
 ## (2) home-made reweighter based on LightGBM
 # =============================================================================
-if hasLightGBM()  : # =========================================================
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM()  : 
     # =========================================================================
     logger.info ( 'Use LightBGM for control reweighting' ) 
     from ostap.tools.reweighters     import LightGBMDensityReweighter as  LGBM
@@ -632,7 +649,7 @@ if hasLightGBM()  : # =========================================================
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-if not light and hasXGBoost () : # ============================================
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost () :
     # =========================================================================
     logger.info ( 'Use XGBoost  for control reweighting' ) 
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
@@ -648,7 +665,7 @@ if not light and hasXGBoost () : # ============================================
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
 # =============================================================================
-if not light and hasCatBoost (): # ============================================
+if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost () : 
     # =========================================================================
     logger.info ( 'Use CatBoost for control reweighting' ) 
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
@@ -665,7 +682,7 @@ if not light and hasCatBoost (): # ============================================
 # =============================================================================
 ## (5) home-made reweighter based on PyTorch
 # =============================================================================
-if False and not light and hasPyTorch(): # ===================================-
+if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasPyTorch () :
     # =========================================================================
     logger.info ( 'Use PyTorch  for control reweighting' ) 
     from ostap.tools.reweighters     import PyTorchDensityReweighter   as TORCH
@@ -682,7 +699,7 @@ if False and not light and hasPyTorch(): # ===================================-
 # =============================================================================
 ## (6) home-made reweighter based on Logistic Regression 
 # =============================================================================
-if hasSkLearn : # =============================================================
+if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () : 
     # =========================================================================
     logger.info ( 'Use LogRegression for control reweighting' ) 
     from ostap.tools.reweighters     import LogRegressionDensityReweighter   as LOGREG

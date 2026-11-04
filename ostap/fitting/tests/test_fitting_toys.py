@@ -14,7 +14,7 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.pyrouts       import hID, VE 
+from   ostap.core.pyrouts       import hID, VE
 from   ostap.utils.timing       import timing
 from   ostap.utils.memory       import memory 
 from   ostap.plotting.canvas    import use_canvas
@@ -32,20 +32,21 @@ import ROOT, time, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_toys' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_toys' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-#
+from   ostap.utils.utils4tests  import light_tests, active_test     
+light, weak = light_tests ( 8 ) 
+# =============================================================================
 
 nominal_mean    = 0.4
 nominal_sigma   = 0.1
-nominal_S       = 1000
-nominal_B       = 100
+
+nominal_S       = 1000 if ( light or weak ) else 2000
+nominal_B       =  100 of ( light ot weak ) else  200
+
 nominal_F       = float ( nominal_S ) / ( nominal_S + nominal_B )
 
 mass            = ROOT.RooRealVar  ( 'mass' , '', 0 , 1 )  
@@ -64,11 +65,12 @@ model_NE.F      = nominal_F
 
 fit_config      = { 'silent'   : True  , 'refit'  : 5 }
 
-
 toy_results     = {}
 
 ds = model.generate ( nominal_S + nominal_B )
 model.fitTo ( ds , **fit_config )
+
+NTOYS = 100 if  ( light or weak ) else 1000
 
 # ==============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
@@ -104,7 +106,7 @@ def test_toys ( ) :
     with timing ( 'Toys      analysis' , logger = logger )  :        
         results , stats = Toys.make_toys  (
             pdf         = model      ,            
-            nToys       = 1000       ,
+            nToys       = NTOYS      ,
             data        = [ mass ]   ,
             gen_config  = { 'nEvents' : ( nominal_S + nominal_B ) , 'sample'  : True } ,
             fit_config  = fit_config ,
@@ -160,7 +162,7 @@ def test_toys2 ( ) :
         results , stats = Toys.make_toys2 (
             gen_pdf     = gen_gauss   ,
             fit_pdf     = fit_gauss   ,
-            nToys       = 1000        ,
+            nToys       = NTOYS       ,
             data        = [ mass ]    , 
             gen_config  = { 'nEvents' : 100 , 'sample' : True } ,
             fit_config  = fit_config  ,
@@ -281,7 +283,7 @@ def test_toys4 ( ) :
               'KURTOSIS' : fit_gauss.kurtosis , 
               'MAXIMUM'  : fit_gauss.maximum  } 
 
-    N = 1000 
+    N = NTOYS 
     with Toys.FunToys ( fit_gauss , r ) as toys :
         counters = toys.run ( funcs , nToys = N  , progress = True )
         
@@ -308,7 +310,6 @@ def test_jackknife_NE1 ( ) :
     logger.info ( 'Jackknife analysis for non-extended model' ) 
                   
     pdf = model_NE
-
     
     fit_pars  = { 'F'        : nominal_F     ,
                   'sigma_GG' : nominal_sigma ,
@@ -441,7 +442,6 @@ def test_bootstrap_NE1 ( ) :
     pdf.load_params ( fit_pars , silent = True )     
     with timing ( 'Bootstrap analysis (non-extended)' , logger = logger )  :        
 
-
         data    = pdf.generate ( nominal_S + nominal_B , sample = False )
         title = 'Data Test-Bootstrap'
         logger.info ( '%s:\n%s' % ( title , data.table ( prefix = '# ' , title = title ) ) ) 
@@ -451,7 +451,7 @@ def test_bootstrap_NE1 ( ) :
 
             ## reset all parameters 
             pdf.load_params ( fit_pars , silent = True )     
-        
+
             results, stats = Toys.make_bootstrap ( pdf        = pdf        ,
                                                    size       = 400        , 
                                                    data       = data       ,
@@ -593,7 +593,7 @@ def test_significance ( ) :
         results , stats = Toys.make_toys2 (
             gen_pdf     = bkg_only     ,
             fit_pdf     = model        ,
-            nToys       = 2000         ,
+            nToys       = NTOYS        ,
             data        = [ mass ]     , 
             gen_config  = { 'nEvents'  : NB , 'sample' : True } ,
             fit_config  = fit_config   ,
@@ -650,60 +650,80 @@ def test_db () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with memory ( 'test_toys'          , logger = logger ) as mtt : test_toys          ()
-    with memory ( 'test_toys2'         , logger = logger ) as mt2 : test_toys2         ()
-    with memory ( 'test_toys3'         , logger = logger ) as mt3 : test_toys3         ()
-    with memory ( 'test_toys4'         , logger = logger ) as mt4 : test_toys4         ()
+    from   ostap.utils.utils4tests  import light_tests, active_test 
+    
+    light, weak = light_tests ( 8 ) 
+    
+    if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+    
+    random_freq = 0.10
 
-    with memory ( 'test_jackknife_NE1' , logger = logger ) as mj1 : test_jackknife_NE1 ()
-    with memory ( 'test_jackknife_NE2' , logger = logger ) as mj2 : test_jackknife_NE2 ()
-    with memory ( 'test_jackknife_EXT' , logger = logger ) as mje : test_jackknife_EXT ()
-    with memory ( 'test_bootstrap_NE1' , logger = logger ) as mb1 : test_bootstrap_NE1 ()
-    with memory ( 'test_bootstrap_NE2' , logger = logger ) as mb2 : test_bootstrap_NE2 ()
-    with memory ( 'test_bootstrap_EXT' , logger = logger ) as mbe : test_bootstrap_EXT ()
-    
-    with memory ( 'test_significance'  , logger = logger ) as mts : test_significance  ()
-    with memory ( 'test_db'            , logger = logger ) as mdb : test_db            ()
-    
-    
     rows = [ ( 'Test' , 'Memory [MB]' ) ]
-
-    row  = 'Toys'          , '%.1f' % mtt.delta 
-    rows.append ( row )
-
-    row  = 'Toys2'         , '%.1f' % mt2.delta 
-    rows.append ( row )\
+    
+    if active_test ( random_freq ) : 
+        with memory ( 'test_toys'          , logger = logger ) as mtt : test_toys          ()
+        row  = 'Toys'          , '%.1f' % mtt.delta 
+        rows.append ( row )
         
-    row  = 'Toys3'         , '%.1f' % mt3.delta 
-    rows.append ( row )
+    if active_test ( random_freq ) : 
+        with memory ( 'test_toys2'         , logger = logger ) as mt2 : test_toys2         ()
+        row  = 'Toys2'         , '%.1f' % mt2.delta 
+        rows.append ( row )\
+            
+    if active_test ( random_freq ) : 
+        with memory ( 'test_toys3'         , logger = logger ) as mt3 : test_toys3         ()
+        row  = 'Toys3'         , '%.1f' % mt3.delta 
+        rows.append ( row )
+        
+        
+    if active_test ( random_freq ) : 
+        with memory ( 'test_toys4'         , logger = logger ) as mt4 : test_toys4         ()
+        row  = 'Toys4'         , '%.1f' % mt4.delta 
+        rows.append ( row )
 
-    row  = 'Toys4'         , '%.1f' % mt4.delta 
-    rows.append ( row )
-
-    row  = 'Jackknife_NE1' , '%.1f' % mj1.delta 
-    rows.append ( row )
-
-    row  = 'Jackknife_NE2' , '%.1f' % mj2.delta 
-    rows.append ( row )
-
-    row  = 'Jackknife_EXT' , '%.1f' % mje.delta 
-    rows.append ( row )
     
-    row  = 'Bootstrap_NE1' , '%.1f' % mb1.delta 
-    rows.append ( row )
-
-    row  = 'Bootstrap_NE2' , '%.1f' % mb2.delta 
-    rows.append ( row )
-
-    row  = 'Bootstrap_EXT' , '%.1f' % mbe.delta 
-    rows.append ( row )
+    if active_test ( random_freq ) : 
+        with memory ( 'test_jackknife_NE1' , logger = logger ) as mj1 : test_jackknife_NE1 ()        
+        row  = 'Jackknife_NE1' , '%.1f' % mj1.delta 
+        rows.append ( row )
+        
+    if active_test ( random_freq ) : 
+        with memory ( 'test_jackknife_NE2' , logger = logger ) as mj2 : test_jackknife_NE2 ()
+        row  = 'Jackknife_NE2' , '%.1f' % mj2.delta 
+        rows.append ( row )
+        
+    if active_test ( random_freq ) : 
+        with memory ( 'test_jackknife_EXT' , logger = logger ) as mje : test_jackknife_EXT ()
+        row  = 'Jackknife_EXT' , '%.1f' % mje.delta 
+        rows.append ( row )
+        
+    if active_test ( random_freq ) :         
+        with memory ( 'test_bootstrap_NE1' , logger = logger ) as mb1 : test_bootstrap_NE1 ()
+        row  = 'Bootstrap_NE1' , '%.1f' % mb1.delta 
+        rows.append ( row )
+        
+    if active_test ( random_freq ) : 
+        with memory ( 'test_bootstrap_NE2' , logger = logger ) as mb2 : test_bootstrap_NE2 ()
+        row  = 'Bootstrap_NE2' , '%.1f' % mb2.delta 
+        rows.append ( row )
     
-    row  = 'Significance'  , '%.1f' % mts.delta 
-    rows.append ( row )
+    if active_test ( random_freq ) : 
+        with memory ( 'test_bootstrap_EXT' , logger = logger ) as mbe : test_bootstrap_EXT ()        
+        row  = 'Bootstrap_EXT' , '%.1f' % mbe.delta 
+        rows.append ( row )
+        
+    if active_test ( random_freq ) : 
+        with memory ( 'test_significance'  , logger = logger ) as mts : test_significance  ()
+        row  = 'Significance'  , '%.1f' % mts.delta 
+        rows.append ( row )
+        
+    if active_test ( random_freq ) : 
+        with memory ( 'test_db'            , logger = logger ) as mdb : test_db            ()
+        row  = 'test_db'       , '%.1f' % mdb.delta 
+        rows.append ( row )
+        
     
-    row  = 'test_db'       , '%.1f' % mdb.delta 
-    rows.append ( row )
-
     title = 'Memory usage for various toys'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' ) 
     logger.info ( '%s:\n%s' % ( title , table ) )

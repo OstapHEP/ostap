@@ -157,6 +157,24 @@ fi
 # =============================================================================
 
 OSTAP_BATCH=True COLUMNS=130 TERM=dumb ctest -j${ncpus} --output-on-failure --test-output-size-failed 5000000
+CTEST_STATUS=$?
+
+FILE="Testing/Temporary/CTestCostData.txt"
+if [ -f "$FILE" ] && [ -r "$FILE" ]; then
+    if command -v ostap-table >/dev/null 2>&1; then
+        awk 'NF >= 3 && $1 != "---"' "$FILE" | \
+        sort -k 3,3n | \
+        awk 'BEGIN {print "# | Name | time[s]"} {printf "%d | %s | %.1f\n", NR, $1, $3}' | \
+        ostap-table -t "CTest Execution Times"
+    else
+        awk 'NF >= 3 && $1 != "---"' "$FILE" | \
+        sort -k 3,3n | \
+        awk 'BEGIN {print "# | Name | time[s]"} {printf "%d | %s | %.1f\n", NR, $1, $3}' | \
+        column -t -s '|'
+    fi    
+fi
+
+exit $CTEST_STATUS
 
 # =============================================================================
 #                                                                       The END

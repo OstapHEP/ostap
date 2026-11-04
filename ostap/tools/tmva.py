@@ -645,7 +645,7 @@ class Trainer(object):
         
         if 0 > opts.find ( "AnalysisType=" ) :
             opts += ":AnalysisType=Classification"
-            self.logger.debug('Booking options are appended with ":AnalysisType=Classification"' )
+            self.logger.debug ( 'Booking options are appended with ":AnalysisType=Classification"' )
 
         opts = opts_replace ( opts , 'V:'               ,     self.verbose )
         opts = opts_replace ( opts , 'Silent:'          , not self.verbose )
@@ -1749,12 +1749,15 @@ class Trainer(object):
             dataloader.PrepareTrainingAndTestTree ( sig_cuts , bkg_cuts , self.configuration )
             
             for m in self.methods :
-                bo = m[2].split(':')
-                bo.sort() 
-                if  self.verbose : self.logger.info  ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
-                else             : self.logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
-                mm    = [ i for i in m ]
-                mm[0] = int ( mm [ 0 ] )  
+                bo = m [ 2 ].split ( ':' )
+                bo.sort () 
+                if  self.verbose : self.logger.info  ( "Book %11s[%s] method %s" % ( m [ 1 ] , m [ 0 ] , bo ) )
+                else             : self.logger.debug ( "Book %11s[%s] method %s" % ( m [ 1 ] , m [ 0 ] , bo ) )
+                mm       = [ i for i in m ]
+
+                if root_info < ( 6 , 38 ) : mm [ 0 ] = int ( mm [ 0 ] )
+                else                      : mm [ 0 ] = ROOT.TMVA.Factory.MethodName ( mm [ 0 ] ) 
+                                
                 factory.BookMethod ( dataloader , *mm )
 
             # ==========================================================================

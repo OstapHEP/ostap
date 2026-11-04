@@ -22,29 +22,17 @@ from   ostap.utils.root_utils   import batch_env
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-import ROOT
+import ROOT, scipy 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'ostap.test_histos_parameterisation3' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_histos_parameterisation3' )
 # =============================================================================
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 ## set batch form environment 
 batch_env ( logger )
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import scipy
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    scipy = None 
-    
 # =============================================================================
 
 h1   = ROOT.TH1F ( hID () , 'decreasing convex ' , 100 , 0 , 1 ) ; h1.Sumw2 () 
@@ -74,6 +62,7 @@ entries = 1000000
 
 ## random.seed(10) 
 for i in range ( 0 , entries ) :
+    
     h1.Fill ( f1.GetRandom() )
     h2.Fill ( f2.GetRandom() )
     h3.Fill ( f3.GetRandom() )
@@ -267,17 +256,26 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using RooFit')
     logger.info ( 100*'*')
 
-    test_positive_pdf          ()
-    test_monotonic_pdf         ()
-    test_convex_pdf            ()
-    test_convexonly_pdf        ()
+    from   ostap.utils.utils4tests  import light_tests, active_test 
     
-    test_rational_pdf          ()
+    light, weak = light_tests ( 8 ) 
+    
+    if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+    
+    random_freq = 0.10
+    
+    if active_test ( random_freq  ) : test_positive_pdf          ()
+    if active_test ( random_freq  ) : test_monotonic_pdf         ()
+    if active_test ( random_freq  ) : test_convex_pdf            ()
+    if active_test ( random_freq  ) : test_convexonly_pdf        ()
+    
+    if active_test ( random_freq  ) : test_rational_pdf          ()
 
-    test_positive_spline_pdf   () 
-    test_monotonic_spline_pdf  () 
-    test_convex_spline_pdf     () 
-    test_convexonly_spline_pdf () 
+    if active_test ( random_freq  ) : test_positive_spline_pdf   () 
+    if active_test ( random_freq  ) : test_monotonic_spline_pdf  () 
+    if active_test ( random_freq  ) : test_convex_spline_pdf     () 
+    if active_test ( random_freq  ) : test_convexonly_spline_pdf () 
 
 # =============================================================================
 ##                                                                      The END 

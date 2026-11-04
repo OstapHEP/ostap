@@ -16,6 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import cpp, VE, dsID, rooSilent 
+from   ostap.utils.basic        import numcpu
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
@@ -29,15 +30,14 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_models' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_models' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-#
+
+
+# =============================================================================        
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 2.9 , 3.3 )
 
@@ -2206,10 +2206,10 @@ def test_db() :
 # ==============================================================================
 def dump_models () :
     
-    header =  'Model'   , \
-             'mean'     , 'mode' , 'midpoint' , 'median' , \
-             'rms'      , 'fwhm' ,  \
-             'skewness' , 'kurtosis'
+    header =  (  'Model'    , 
+                 'mean'     , 'mode'     , 'midpoint' , 'median' , 
+                 'rms'      , 'fwhm'     ,  
+                 'skewness' , 'kurtosis' ) 
     
     rows = [ header ] 
     for m in sorted ( stats  ) :
@@ -2221,214 +2221,224 @@ def dump_models () :
 
 # =============================================================================
 if '__main__' == __name__ :
+        
+    from   ostap.utils.utils4tests  import light_tests, active_test 
+    
+    light, weak = light_tests ( 8 ) 
+    
+    if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+    
+    random_freq = 0.10
 
+    
     ## simple Gaussian PDF                       + background
     with timing ('test_gauss'          , logger ) :
-        test_gauss          () 
-
+        if active_test ( random_freq ) : test_gauss          () 
+            
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
-        test_crystalball    () 
+        if active_test ( random_freq ) : test_crystalball    () 
         
     ## right-side Crystal Ball                   + background
     with timing ('test_crystalball_RS' , logger ) :
-        test_crystalball_RS () 
+        if active_test ( random_freq ) : test_crystalball_RS () 
 
     ## double side Crystal Ball                  + background
     with timing ('test_crystalball_DS' , logger ) :
-        test_crystalball_DS () 
+        if active_test ( random_freq ) : test_crystalball_DS () 
 
     ## Needham function (CB with alpha=f(sigma)) + background 
     with timing ('test_needham'        , logger ) :
-        test_needham        ()
+        if active_test ( random_freq ) : test_needham        ()
 
     ## Crystal Ball/A                              + background
     with timing ('test_crystalballa'   , logger ) :
-        test_crystalballa   () 
+        if active_test ( random_freq ) : test_crystalballa   () 
 
     ## double side Crystal Ball/A                  + background
     with timing ('test_crystalball_DSA' , logger ) :
-        test_crystalball_DSA () 
+        if active_test ( random_freq ) : test_crystalball_DSA () 
 
     ## double side Crystal Ball/E                  + background
     with timing ('test_crystalball_DSE' , logger ) :
-        test_crystalball_DSE () 
+        if active_test ( random_freq ) : test_crystalball_DSE () 
         
     ## Apollonios function                       + background 
     with timing ('test_apollonios'     , logger ) :
-        test_apollonios     () 
+        if active_test ( random_freq ) : test_apollonios     () 
 
     ## modified ApolloniosL function              + background
     with timing ('test_apolloniousL'   , logger ) :
-        test_apolloniosL    () 
+        if active_test ( random_freq ) : test_apolloniosL    () 
     
     ## bifurcated Gaussian function              + background
     with timing ('test_bifurcated'     , logger ) :
-        test_bifurcated     () 
+        if active_test ( random_freq ) : test_bifurcated     () 
 
     ## double     Gaussian function              + background
     with timing ('test_2gauss'         , logger ) :
-        test_2gauss         () 
+        if active_test ( random_freq ) : test_2gauss         () 
 
     ## generalized Gaussian function V1          + background
     with timing ('test_gengauss_v1'    , logger ) :
-        test_gengauss_v1    () 
+        if active_test ( random_freq ) : test_gengauss_v1    () 
         
     ## generalized Gaussian function V2          + background
     with timing ('test_gengauss_v2'    , logger ) :
-        test_gengauss_v2    () 
+        if active_test ( random_freq ) : test_gengauss_v2    () 
 
     ## skew gaussian                             + background
     with timing ('test_skewgauss'      , logger ) :
-        test_skewgauss      () 
+        if active_test ( random_freq ) : test_skewgauss      () 
         
     ## q-Gaussian function                       + background
     with timing ('test_qgauss'         , logger ) :
-        test_qgauss         () 
+        if active_test ( random_freq ) : test_qgauss         () 
         
     ## k-Gaussian function                       + background
     with timing ('test_kgauss'         , logger ) :
-        test_kgauss         () 
+        if active_test ( random_freq ) : test_kgauss         () 
 
     ## Novisibirsk + background
     with timing ('test_novosibirsk'          , logger ) :
-        test_novosibirsk     ()
+        if active_test ( random_freq ) : test_novosibirsk     ()
 
     ## Bukin - skew Gaussian core with exponential tails  + background         
     with timing ('test_bukin'          , logger ) :
-        test_bukin          ()
+        if active_test ( random_freq ) : test_bukin          ()
 
     ## Student-t shape                           + background 
     with timing ('test_studentT'       , logger ) :
-        test_studentT       () 
+        if active_test ( random_freq ) : test_studentT       () 
     
     ## Bifurcated Student-t shape                + background
     with timing ('test_bifstudentT'    , logger ) :
-        test_bifstudentT    ()
+        if active_test ( random_freq ) : test_bifstudentT    ()
         
     ## PearsonIV                                      + background
     with timing ('test_PearsonIV'          , logger ) :
-        test_PearsonIV ()
+        if active_test ( random_freq ) : test_PearsonIV      ()
     
     ## SkewGenT                                      + background
     with timing ('test_SkewGenT'          , logger ) :
-        test_SkewGenT () 
+        if active_test ( random_freq ) : test_SkewGenT       () 
 
     ## SkewGenError                                      + background
     with timing ('test_SkewGenError'          , logger ) :
-        test_SkewGenError () 
+        if active_test ( random_freq ) : test_SkewGenError   () 
         
     ## Sinh-Asinh distribution                   + background
     with timing ('test_sinhasinh'      , logger ) :
-        test_sinhasinh      () 
+        if active_test ( random_freq ) : test_sinhasinh      () 
     
     ## Johnson-SU distribution                   + background 
     with timing ('test_johnsonSU'      , logger ) :
-        test_johnsonSU      () 
+        if active_test ( random_freq ) : test_johnsonSU      () 
     
     ## Modified Gaussian used by ATLAS/Zeus      + background 
     with timing ('test_atlas'          , logger ) :
-        test_atlas          () 
+        if active_test ( random_freq ) : test_atlas          () 
 
     ## Das                                       + background 
     with timing ('test_das'             , logger ) :
-        test_das            () 
+        if active_test ( random_freq ) : test_das            () 
 
     ## ADas                                       + background 
     with timing ('test_adas'             , logger ) :
-        test_adas           () 
+        if active_test ( random_freq ) : test_adas           () 
 
     ## BatesShape
     with timing ( 'test_bates_shape'  , logger ) :
-        test_bates_shape      () 
+        if active_test ( random_freq ) : test_bates_shape    () 
 
     ## Hat                                       + background 
     with timing ('test_hat'             , logger ) :
-        test_hat            () 
+        if active_test ( random_freq ) : test_hat            () 
 
     ## Up                                       + background 
     with timing ('test_up'             , logger ) :
-        test_up            () 
+        if active_test ( random_freq ) : test_up             () 
 
     ## FupN                                       + background 
     with timing ('test_fupN'             , logger ) :
-        test_fupn          () 
+        if active_test ( random_freq ) : test_fupn           () 
 
     ## Sech (1/cosh)  distribution               + background    
     with timing ('test_sech'           , logger )  : 
-        test_sech           ()
+        if active_test ( random_freq ) : test_sech           ()
 
     ## Logistic distribution                     + background 
     with timing ('test_logistic'       , logger ) :
-        test_logistic       () 
+        if active_test ( random_freq ) : test_logistic       () 
 
     ## GenLogisticIV distribution                     + background 
     with timing ('test_genlogistic4'       , logger ) :
-        test_genlogistic4    () 
+        if active_test ( random_freq ) : test_genlogistic4   () 
 
     ## Asymmetric hyperbolic secant distribution + background         
     with timing ('test_losev'          , logger ) :
-        test_losev          () 
+        if active_test ( random_freq ) : test_losev          () 
 
     ## Slash-function                            + background 
     with timing ('test_slash'          , logger ) :
-        test_slash          () 
+        if active_test ( random_freq ) : test_slash          () 
 
     ## Raising Cosine                            + background 
     with timing ('test_raisngcosine'   , logger ) :
-        test_raisngcosine   () 
+        if active_test ( random_freq ) : test_raisngcosine   () 
 
     ## Laplace-function                            + background 
     with timing ('test_laplace'        , logger ) :
-        test_laplace        () 
+        if active_test ( random_freq ) : test_laplace        () 
 
     ## ExGauss                                       + background 
     with timing ('test_ExGauss'             , logger ) :
-        test_exgauss            () 
+        if active_test ( random_freq ) : test_exgauss        () 
 
     ## ExGauss2                                      + background 
     with timing ('test_ExGauss2'             , logger ) :
-        test_exgauss2           ()
+        if active_test ( random_freq ) : test_exgauss2       ()
         
     ## Bukin2                                       + background 
     with timing ('test_Bukin2'             , logger ) :
-        test_bukin2            () 
+        if active_test ( random_freq ) : test_bukin2         () 
 
     ## Normal Laplace                                       + background
     with timing ('test_NormalLaplas'        , logger ) :
-        test_normlapl           ()
+        if active_test ( random_freq ) : test_normlapl       ()
     
     ## Meixner                                       + background
     with timing ('test_Meixner'        , logger ) :
-        test_meixner           () 
+        if active_test ( random_freq ) : test_meixner        () 
 
     ## Hyperbolic                                 + background 
     with timing ('test_hyperbolic'     , logger ) :
-        test_hyperbolic        () 
+        if active_test ( random_freq ) : test_hyperbolic     () 
         
     ## Generalised Hyperbolic                      + background 
     with timing ('test_genhyperbolic'     , logger ) :
-        test_genhyperbolic     () 
+        if active_test ( random_freq ) : test_genhyperbolic  () 
         
     ## Voigt profile                             + background
     with timing ('test_voigt'          , logger ) :
-        test_voigt          () 
+        if active_test ( random_freq ) : test_voigt          () 
     
     ## Pseudo-Voigt(approximation to Voigt)      + background
     with timing ('test_pvoigt'         , logger ) :
-        test_pvoigt         () 
+        if active_test ( random_freq ) : test_pvoigt         () 
         
     ## Breit-Wigner(+resolution)                 + background 
     with timing ('test_bw'             , logger ) :
-        test_bw             () 
+       if active_test ( random_freq ) : test_bw             () 
     
     ## FisherZ
     with timing ('test_FisherZ'           , logger ) :
-        test_FisherZ           ()
+        if active_test ( random_freq ) : test_FisherZ       ()
     
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
-        test_hypatia           ()
+        if active_test ( random_freq ) : test_hypatia       ()
 
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :

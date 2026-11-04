@@ -14,7 +14,8 @@
 from   ostap.core.core          import Ostap, std, VE, dsID, rooSilent 
 from   ostap.utils.timing       import timing, wait  
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.root_utils   import batch_env  
+from   ostap.utils.root_utils   import batch_env
+from   ostap.utils.utils4tests  import light_tests
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
@@ -23,14 +24,17 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_models4_2D' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_models4_2D' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
+light , weak  = light_tests ( 8 )
+
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+# =============================================================================
+
 ## make simple test mass 
 m_x     = ROOT.RooRealVar ( 'mass_x' , 'Some test mass(X)' , 3 , 3.2 )
 m_y     = ROOT.RooRealVar ( 'mass_y' , 'Some test mass(Y)' , 3 , 3.2 )
@@ -39,14 +43,15 @@ m_y     = ROOT.RooRealVar ( 'mass_y' , 'Some test mass(Y)' , 3 , 3.2 )
 varset  = ROOT.RooArgSet  ( m_x , m_y )
 dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )  
 
-m = VE(3.100,0.015**2)
+m = VE ( 3.100 , 0.015 ** 2 )
 
-N_ss = 5000
-N_sb =  500
-N_bs =  500
-N_bb = 1000
 
-random.seed(0)
+N_ss = 1000 if ( light or weak ) else 5000
+N_sb =  100 if ( light or weak ) else  500
+N_bs =  100 if ( light or weak ) else  500
+N_bb =  200 if ( light or weak ) else 1000
+
+random.seed ( 0 )
 
 ## fill it : 5000 events  Gauss * Gauss 
 for i in range(0,N_ss) : 
@@ -89,8 +94,6 @@ signal1.mean  = m.value ()
 signal1.sigma = m.error ()
 signal2.mean  = m.value ()
 signal2.sigma = m.error ()
-
-
     
 knots = std.vector('double')()
 knots.push_back (      m_x.xmin()              )
@@ -148,20 +151,20 @@ def test_db() :
     logger = getLogger ( 'test_db' ) 
     logger.info('Saving all objects into DBASE')
     with timing( 'Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
-        db['m_x'     ] = m_x
-        db['m_y'     ] = m_y
-        db['vars'    ] = varset
+        db [ 'm_x'     ] = m_x
+        db [ 'm_y'     ] = m_y
+        db [ 'vars'    ] = varset
         for m in models :
-            db['model:' + m.name ] = m
-            db['roo_tot:%s' % m.name ] = m.pdf
+            db [ 'model:' + m.name ] = m
+            db [ 'roo_tot:%s' % m.name ] = m.pdf
             for i,s in enumerate ( m.signals ) :
-                db['roo_sig%d:%s' % ( i , m.name ) ] = s
+                db [ 'roo_sig%d:%s' % ( i , m.name ) ] = s
             for i, b in enumerate ( m.backgrounds ) : 
-                db['roo_bkg%d:%s' % ( i , m.name ) ] = s
+                db [ 'roo_bkg%d:%s' % ( i , m.name ) ] = s
             for a in m.alist1 : 
-                db['cmp:%s/%s' % ( m.name , a.name ) ] = a
-        db['models'  ] = models
-        db['dataset' ] = dataset
+                db [ 'cmp:%s/%s' % ( m.name , a.name ) ] = a
+        db [ 'models'  ] = models
+        db [ 'dataset' ] = dataset
         db.ls()
         
 # =============================================================================

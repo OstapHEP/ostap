@@ -15,6 +15,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.basic        import numcpu
 from   ostap.histos.param       import legendre_sum, chebyshev_sum
 from   ostap.core.core          import hID , fID, SE, Ostap  
 from   ostap.utils.timing       import timing
@@ -24,36 +25,20 @@ import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
 import ostap.logger.table       as     T 
-import ROOT, random, time
+import ROOT, random, time, numpy, scipy 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'ostap.test_histos_parameterisation' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_histos_parameterisation' )
 # =============================================================================
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 ## set batch form environment 
 batch_env ( logger )
 # =============================================================================
-use_scipy = False
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy 
-    import scipy
-    use_scipy = True
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    use_scipy = False 
-    logger.warning ("Numpy/scipy-dependent test are disabled!")
-    
-# =============================================================================
 
+# =============================================================================
 h1 = ROOT.TH1F ( hID () , 'decreasing convex ' , 100 , 0 , 1 ) ; h1.Sumw2 () 
 h2 = ROOT.TH1F ( hID () , 'increasing convex ' , 100 , 0 , 1 ) ; h2.Sumw2 () 
 h3 = ROOT.TH1F ( hID () , 'increasing concave' , 100 , 0 , 1 ) ; h3.Sumw2 () 
@@ -350,9 +335,6 @@ def test_rational_fun () :
 def test_fourier_sum() :
     
     logger = getLogger("test_fourier_sum")
-    if not use_scipy :
-        logger.warning("No numpy/scipy is avilable, skip the test test")
-        return
 
     hh = [ h for h in histos if hasattr ( h , 'fourier_sum' ) ]
     with timing ( 'Fourier-sum[10]' , logger ) :
@@ -368,9 +350,6 @@ def test_fourier_sum() :
 def test_cosine_sum() :
 
     logger = getLogger("test_cosine_sum")
-    if not use_scipy :
-        logger.warning("No numpy/scipy is avilable, skip the test test")
-        return
 
     hh = [ h for h in histos if hasattr ( h , 'cosine_sum' ) ]
     with timing ( 'Cosine-sum[10]' , logger ) :
@@ -644,30 +623,39 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using histogram values only (in general fast)')
     logger.info ( 100*'*')
 
-    test_bernstein_sum_orig ()
-    test_bernstein_sum_fill ()
-    test_bernstein_sum      ()
-
-    test_bernsteineven_sum  ()
     
-    test_legendre_sum_orig  ()
-    test_legendre_sum_fill  ()
-    test_legendre_sum       ()
+    from   ostap.utils.utils4tests  import light_tests, active_test     
+    light, weak = light_tests ( 8 ) 
     
-    test_chebyshev_sum_orig ()
-    test_chebyshev_sum_fill ()
-    test_chebyshev_sum      ()
+    if  light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
     
-    test_rational_fun       ()
+    random_freq = 0.10
 
-    test_fourier_sum        ()
-    test_cosine_sum         ()
+    if active_test ( random_freq )  : test_bernstein_sum_orig ()
+    if active_test ( random_freq )  : test_bernstein_sum_fill ()
+    if active_test ( random_freq )  : test_bernstein_sum      ()
 
-    test_legendre_2D        () 
-    test_bernstein_2D       () 
+    if active_test ( random_freq )  : test_bernsteineven_sum  ()
+    
+    if active_test ( random_freq )  : test_legendre_sum_orig  ()
+    if active_test ( random_freq )  : test_legendre_sum_fill  ()
+    if active_test ( random_freq )  : test_legendre_sum       ()
+    
+    if active_test ( random_freq )  : test_chebyshev_sum_orig ()
+    if active_test ( random_freq )  : test_chebyshev_sum_fill ()
+    if active_test ( random_freq )  : test_chebyshev_sum      ()
+    
+    if active_test ( random_freq )  : test_rational_fun       ()
 
-    test_legendre_3D        () 
-    test_bernstein_3D       () 
+    if active_test ( random_freq )  : test_fourier_sum        ()
+    if active_test ( random_freq )  : test_cosine_sum         ()
+
+    if active_test ( random_freq )  : test_legendre_2D        () 
+    if active_test ( random_freq )  : test_bernstein_2D       () 
+
+    if active_test ( random_freq )  : test_legendre_3D        () 
+    if active_test ( random_freq )  : test_bernstein_3D       () 
     
 # =============================================================================
 ##                                                                      The END 

@@ -55,6 +55,7 @@ __all__     = (
     ## 
     'OSTAP_PROTOCOL'     , ## Ostap pickling protocol
     'OSTAP_RANDOM_SEED'  , ## Ostap random seed 
+    'OSTAP_LIGHT_TESTS'  , ## run "light" version of Ostap tests  
 )
 # =============================================================================
 import os
@@ -96,12 +97,13 @@ OSTAP_RANDOM_SEED   = 'OSTAP_RANDOM_SEED'  ## Ostap random seed
 OSTAP_DIR           = 'OSTAP_DIR'
 ## 
 OSTAP_DBTYPES       = 'OSTAP_DBTYPES'      ## preferred DB types for newly created databases 
-
+##
+OSTAP_LIGHT_TESTS   = 'OSTAP_LIGHT_TEST'   ## run light version of Ostap tests  
 # =============================================================================
 ## list of "boolean false" values 
-boolean_false_values = ( '0' , 'false' , 'no'  , 'not' , 'none' , 'nope' , 'off' , '' , 'disable' , 'disabled' )
+boolean_false_values = frozenset ( ( '0' , 'false' , 'no'  , 'not' , 'none' , 'nope' , 'off' , '' , 'disable' , 'disabled' ) ) 
 ## list of "boolean true"  values
-boolean_true_values  = ( '1' , 'true'  , 'yes' , 'sure' , 'yep' ,           'on' , 'enable' , 'enabled' ) 
+boolean_true_values  = frozenset ( ( '1' , 'true'  , 'yes' , 'sure' , 'yep' ,           'on' , 'enable' , 'enabled' ) ) 
 # =============================================================================
 ## transformation:  no blanks, no understores, no dashes 
 #  - case-insensitive
@@ -120,13 +122,14 @@ def boolean_true ( value )  :
     - in lst  of "true"  values
     - not in lst of "false" values and True  
     """
-    if isinstance ( value , bool )      : return True if value else False
+    if   value is None                  : return False
+    elif isinstance ( value , bool )    : return True if value else False
     value_ = transform ( value ) 
     if   value_ in boolean_true_values  : return True 
     elif value_ in boolean_false_values : return False
     return True if value_ else False
 # =============================================================================
-## Can the value be interprted as "boolean false"?
+## Can the value be interpreted as "boolean false"?
 #  - bool
 #  - in lst  of "false" values
 #  - not in lst of "true" values or False
@@ -136,11 +139,12 @@ def boolean_false ( value )  :
     - in lst  of "false" values
     - not in lst of "true" values or False
     """
-    if isinstance ( value , bool )       : return True if not value else False 
+    if   value is None                   : return True 
+    elif isinstance ( value , bool )     : return True if not value else False 
     value_ = transform ( value )
-    if value_    in boolean_false_values : return True  
+    if   value_  in boolean_false_values : return True  
     elif value_  in boolean_true_values  : return False 
-    return True if not value_ else False  
+    return True  if not value_ else False  
 # =============================================================================
 ## case-insensitive check for existence of the environment variable
 #  - case-insensitive

@@ -14,7 +14,8 @@
 from   ostap.core.core          import Ostap, std, VE, dsID, rooSilent
 from   ostap.utils.timing       import timing, wait  
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.root_utils   import batch_env  
+from   ostap.utils.root_utils   import batch_env
+from   ostap.utils.utils4tests  import light_tests
 import ostap.fitting.models     as     Models 
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.roofit 
@@ -23,15 +24,17 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  : 
-    logger = getLogger ( 'test_fitting_models3_2D' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_fitting_models3_2D' )
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-# 
+light , weak  = light_tests ( 8 )
+
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests"    )
+# =============================================================================
+
 ## make simple test mass 
 m_x     = ROOT.RooRealVar ( 'mass_x' , 'Some test mass(X)' , 3 , 3.2 )
 m_y     = ROOT.RooRealVar ( 'mass_y' , 'Some test mass(Y)' , 3 , 3.2 )
@@ -40,13 +43,14 @@ m_y     = ROOT.RooRealVar ( 'mass_y' , 'Some test mass(Y)' , 3 , 3.2 )
 varset  = ROOT.RooArgSet  ( m_x , m_y )
 dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )  
 
-m = VE(3.100,0.015**2)
+m = VE ( 3.100 , 0.015 ** 2 )
 
-N_ss = 10000
-N_sb =  2500
-N_bs =  2500
-N_bb =  5000
+N_ss = 2000 if ( light or weak ) else 10000
+N_sb =  500 if ( light or weak ) else  2500
+N_bs =  500 if ( light or weak ) else  2500
+N_bb = 1000 if ( light or weak ) else  5000
 
+    
 random.seed(0)
 
 ## fill it : 5000 events  Gauss * Gauss 
