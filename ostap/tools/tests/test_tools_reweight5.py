@@ -39,12 +39,12 @@ from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasPyTorch  , hasHepML   )
 from   ostap.logger.symbols     import p_value_percent_expr 
 from   ostap.tools.reweighter   import CascadeReweighter as  CASCADE
-from   ostap.utils.utils4tests  import light_testst,   active_test
+from   ostap.utils.utils4tests  import light_tests,   active_test
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
 import ostap.parallel.kisa
-import os, numpy, random  
+import os, numpy, math , random  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -56,45 +56,86 @@ logger.info ( 'Test for nD-Reweighting machinery')
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-light, weak = light_testst ( 8 )
+light, weak = light_tests ( 8 )
 
 random_freq = 0.10
  
 # =============================================================================
-if  light :logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
-elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests" )
-
-
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests" )
 
 # =============================================================================
+import numpy
+import numpy
+
 def make_datasets ( n_target    = 5000 ,
                     n_original1 = None ,
                     n_original2 = None ,
-                    n_dim       =    3 ,
-                    seed        = None ) :
-    """ Temporarily simplified datasets for baseline validation:
-        smooth distributions with moderate shifts and no sharp boundaries.
+                    n_dim       = 3    ,
+                    seed        = None ,
+                    low         = -2.0 , 
+                    high        = +2.0 ,
+                    scale_targ  =  0.5 ,
+                    scale_orig  =  1.0 ) :
     """
-    numpy.random.seed ( seed )
+    Generates target, original1, and original2 datasets strictly bounded within 
+    a hypercube [low, high]^d using smoothly decaying, truncated Gaussians.
     
-    if isinstance ( n_target , int ) and 1000 <= n_target : pass
-    else : raise ValueError ( "Invalis n_target %s" % n_target )
+    - Originals: Shared wide truncated Gaussian pool split into original1 & original2.
+    - Target:    Narrower truncated Gaussian with local event shifts and 
+                 non-linear quadratic correlations.
+    """
+    rng = numpy.random.default_rng ( seed )
+    
+    if scale_orig <= scale_targ :
+        raise ValueError ( "scale_orig must be greater than scale_targ to keep weights stable." )
+
+    if isinstance ( n_target, int ) and 1000 <= n_target : pass
+    else : raise ValueError ( "Invalid n_target %s" % n_target )
         
     if n_original1 is None or n_original1 < n_target : n_original1 = n_target 
     if n_original2 is None or n_original2 < n_target : n_original2 = n_original1 
 
-    original1 = numpy.random.normal ( loc = 0.0   , scale = 1.3 , size = ( n_original1 , n_dim ) )    
-    original2 = numpy.random.normal ( loc = 0.0   , scale = 1.3 , size = ( n_original2 , n_dim ) )
-    
-    # 2. Target dataset: slightly shifted normal distribution
-    target = numpy.random.normal    ( loc = 0.10  , scale = 0.9 , size = ( n_target , n_dim ) )
-    
-    # 3.Add some mild & smooth correlations     
-    rr = numpy.random.uniform ( low = -0.40 , high = 0.30 , size= n_dim )    
-    for n in range ( 1 , n_dim ) :
-        target [ : , n ] = target [ : , n ] + rr [ n ]  * ( target [ : , n - 1 ] ** 2 )        
+    def generate_filtered ( n_needed , scale , is_target = False , rr = None ) :
+        
+        collected = []
+        factor    = 2.0
+        
+        while sum ( len ( chunk ) for chunk in collected ) < n_needed :
+            remaining = n_needed - sum ( len ( chunk ) for chunk in collected )
+            n_gen     = int ( remaining * factor )
+            
+            if not is_target : data = rng.normal ( loc = 0.0, scale = scale, size = ( n_gen, n_dim ) )
+            else :
+                event_locs = rng.normal ( loc = 0.0        , scale = 0.10  , size = ( n_gen, n_dim ) )
+                data       = rng.normal ( loc = event_locs , scale = scale , size = ( n_gen, n_dim ) )
+                
+                for n in range ( 1, n_dim ) :
+                    data [ : , n ] = data [ : , n ] + rr [ n ] * ( data [ : , n - 1 ] ** 2 )
+            
+            mask       = numpy.all ( ( data >= low ) & ( data <= high ) , axis = 1 )
+            valid_data = data [ mask ]
+            
+            if 0 < len ( valid_data ) : collected.append ( valid_data )
+                
+            factor *= 1.5
+            
+        result = numpy.vstack ( collected )
+        return result [ : n_needed ]
 
-    return target , original1, original2 
+    # 1. Generate a single combined pool for both originals to ensure they share 
+    # the exact same distribution pool, then split them into original1 and original2.
+    total_originals_needed = n_original1 + n_original2
+    combined_originals     = generate_filtered ( total_originals_needed , scale = scale_orig , is_target = False )
+    
+    original1 = combined_originals [ : n_original1 ]
+    original2 = combined_originals [ n_original1 : ]
+
+    # 2. Target dataset
+    rr     = rng.uniform ( low = -0.5 , high = +0.5 , size = n_dim )
+    target = generate_filtered ( n_target , scale = scale_targ, is_target = True, rr = rr )
+
+    return target, original1, original2
 
 # ==============================================================================
 ## Compare datasets using several methods 
@@ -109,47 +150,51 @@ from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATORA ,
                                         Hellinger       as COMPARATORH ) 
 
 from ostap.stats.data_compare import data_compare
-comparators = ()
+comparators = []
 
-if active_test ( random_freq ) :  comparators += ( COMPARATORA ( parallel = True , nToys = 100 ) , )
-if active_test ( random_freq ) :  comparators += ( COMPARATORB ( parallel = True , nToys = 100 ) , )
-if active_test ( random_freq ) :  comparators += ( COMPARATORC ( parallel = True , nToys = 100 ) , )
-if active_test ( random_freq ) :  comparators += ( COMPARATORD ( parallel = True , nToys = 100 ) , )
-if active_test ( random_freq ) :  comparators += ( COMPARATORE ( parallel = True , nToys = 100 ) , )
-if active_test ( random_freq ) :  comparators += ( COMPARATORF ( parallel = True , nToys = 100 ) , )
-if active_test ( random_freq ) :  comparators += ( COMPARATORG ( parallel = True , nToys = 100 ) , )
-if active_test ( random_freq ) :  comparators += ( COMPARATORH ( parallel = True , nToys = 100 ) , )
+if active_test ( random_freq ) :  comparators .append ( COMPARATORA ( parallel = True , nToys = 100 ) )
+if active_test ( random_freq ) :  comparators .append ( COMPARATORB ( parallel = True , nToys = 100 ) ) 
+if active_test ( random_freq ) :  comparators .append ( COMPARATORC ( parallel = True , nToys = 100 ) )
+if active_test ( random_freq ) :  comparators .append ( COMPARATORD ( parallel = True , nToys = 100 ) )
+if active_test ( random_freq ) :  comparators .append ( COMPARATORE ( parallel = True , nToys = 100 ) )
+if active_test ( random_freq ) :  comparators .append ( COMPARATORF ( parallel = True , nToys = 100 ) )
+if active_test ( random_freq ) :  comparators .append ( COMPARATORG ( parallel = True , nToys = 100 ) )
+if active_test ( random_freq ) :  comparators .append ( COMPARATORH ( parallel = True , nToys = 100 ) )
+
+if not comparators : comparators .append ( COMPARATORA ( parallel = True , nToys = 100 ) )
 
 if active_test ( random_freq ) and hasCatBoost  () :
     
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
-    comparators += ( COMPARATOR7  ( parallel = True , nToys = 25 ) , ) 
+    comparators .append ( COMPARATOR7  ( parallel = True , nToys = 30 ) ) 
 
 if active_test ( random_freq ) and hasLightGBM () :
     
     from ostap.stats.adval        import ADVAL_LGBM  as COMPARATOR5
-    comparators += ( COMPARATOR5  ( parallel = True , nToys = 25 ) , ) 
+    comparators .append ( COMPARATOR5  ( parallel = True , nToys = 30 ) ) 
 
 if active_test ( random_freq ) and hasXGBoost  () :
     
     from ostap.stats.adval        import ADVAL_XGB  as COMPARATOR6
-    comparators += ( COMPARATOR6  ( parallel = False , nToys = 25 , n_jobs = 1) , ) 
+    comparators .append ( COMPARATOR6  ( parallel = False , nToys = 30 , n_jobs = 1 ) ) 
 
 if active_test  ( random_freq ) and hasSkLearn ():
     
     from ostap.stats.adval        import ADVAL_HGBC  as COMPARATOR8
-    comparators += ( COMPARATOR8  ( parallel = True , nToys = 25 ) , )
+    comparators .append ( COMPARATOR8  ( parallel = True , nToys = 30 ) )
     
-if active_test ( random_freq ) and hasSkLearn ():
+if False and active_test ( random_freq ) and hasSkLearn ():
 
     from ostap.stats.adval        import ADVAL_GBC   as COMPARATOR9
-    comparators += ( COMPARATOR9  ( parallel = True , nToys = 25 ) , ) 
+    comparators .appemd  ( COMPARATOR9  ( parallel = True , nToys = 25 ) ) 
 
-if active_test ( random_freq ) and hasSkLearn ():
+if False and active_test ( random_freq ) and hasSkLearn ():
 
     from ostap.stats.adval        import ADVAL_RF   as COMPARATOR10
-    comparators += ( COMPARATOR10 ( parallel = True , nToys = 25 ) , ) 
-    
+    comparators .append ( COMPARATOR10 ( parallel = True , nToys = 25 ) ) 
+
+comparators = tuple ( comparators )
+
 # ============================
 def run_reweight ( n_dim       = 3     ,
                    n_target    = 10000 , 
@@ -184,14 +229,14 @@ def run_reweight ( n_dim       = 3     ,
             db [ 'seed'      ] = seed
             db.ls()
 
-    ## combined original 
-    original3 = numpy.vstack ( ( original1 , original2 ) )
+    ## (LARGE) combined original 
+    original3  = numpy.vstack ( ( original1 , original2 ) )
 
-
+    
     reweighters = [ None ]
     reweighters = [] 
     
-    if hasCatBoost () :
+    if False and hasCatBoost () :
         
         """
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
@@ -228,7 +273,7 @@ def run_reweight ( n_dim       = 3     ,
 
         reweighters.append ( rw4 )
         
-    if hasLightGBM () :
+    if False and hasLightGBM () :
         
         ## from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         ## rw2 = LGBM ( target                = target   ,
@@ -266,7 +311,7 @@ def run_reweight ( n_dim       = 3     ,
         ##             tree_method           = 'exact'  )
         
         ## reweighters.append ( rw3 )
-
+        
         from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB 
         rw3 = XGB  ( target                = target    ,
                      original              = original1 ,
@@ -279,28 +324,31 @@ def run_reweight ( n_dim       = 3     ,
                      ## tree_method           = 'exact' ,
                      ## max_bin               = 1023    ,
                      ##
-                     min_child_weight      = 1e-3    ,
-                     max_delta_step        = 9.0     , 
+                     min_child_weight      = 1e-4    ,
+                     max_delta_step        = 0.0     , 
                      subsample             = 1.0     ,
                      ## 
                      gamma                 = 0.0     , 
                      reg_alpha             = 0.0     ,
-                     reg_lambda            = 0.0000  , ## 0.0     , ## 1e-3    , ## 0.01 
+                     reg_lambda            = 1e-4    , ## 0.0     , ## 1e-3    , ## 0.01 
                      ##
                      grow_policy           = 'depthwise' ,
-                     max_depth             =  7          ,
+                     max_depth             =  6          ,
                      ## 
                      ## max_leaves            =  0      ,
                      ##
                      ## grow_policy           = 'lossguide' , 
                      max_leaves            =  63         ,
-                     ## tree_method           = 'hist'   ,
-                     tree_method           = 'exact'      ,
+                     tree_method           = 'hist'   ,
+                     ## tree_method           = 'exact'      ,
                      max_bin               = 1023        ,
                      ## 
-                     voting                = 'trim:1' ,
-                     oof_mode              = False    , 
-                     progress              = False    ,
+                     ## voting                = 'trim::1' ,
+                     ## voting                = 'trim'    ,
+                     ## voting                = 'geometric'  ,
+                     voting                = 'mean'    ,
+                     oof_mode              = False     , 
+                     progress              = False     ,
                     )
         
         reweighters.append ( rw3 )
@@ -379,7 +427,7 @@ def run_reweight ( n_dim       = 3     ,
     
     for rw in reweighters :
             
-        for original in ( original1 , 
+        for original in ( original2 , 
                           ## original2 ,
                           ## original3
                          ) :
@@ -417,6 +465,16 @@ def run_reweight ( n_dim       = 3     ,
             logger.info ( '%s\n%s' % ( title , table ) )
 
 
+
+            # =================================================================
+            # can we save reweighters into database ?
+            with DBASE.tmpdb () as db :
+                
+                ## for rw in reweighters : db [  typename ( rw ) ] = rw                
+                ## db [ 'reweighters' ] = reweighters
+                
+                db.ls () 
+    
 # =============================================================================
 if '__main__' == __name__ :
 

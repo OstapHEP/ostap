@@ -62,7 +62,7 @@ class Reweighter(abc.ABC,Config) :
             raise TypeError  ( "Invalid `random_state' type %s" % typename ( random_state ) )
 
         # ====================================================================
-        ## preserve the weight normalzation:
+        ## preserve the weight normalization:
         #  - sum of final weights is requal to the sum of orginal weights 
         self.__mass_preserve = True if mass_preserve else False 
         self.__random_state  = random_state

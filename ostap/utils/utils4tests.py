@@ -75,7 +75,7 @@ def active_test ( fraction = 0.10 , mincpu = 8 ) :
     """ Should we run this prescaled test ? 
     """
     light , _ = light_tests  ( mincpu )
-    if not light : return True
+    if not light  : return True
     return accept ( fraction )
 
   

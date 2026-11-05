@@ -36,8 +36,12 @@ import ostap.logger.symbols     as     S
 import numpy, abc, re  
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.base_reweighters' )
-else                       : logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.tools.base_reweighters' )
+# =============================================================================
+re_voting = re.compile ( 
+    r'^\s*(?:trim|truncate|truncated)\s*(?:[:=]\s*(?P<low>\d*)\s*(?:[:=]\s*(?P<high>\d*))?)?\s*$' , 
+    re.IGNORECASE 
+)
 # =============================================================================
 ## @class Voting
 #  @brief Encapsulates fold prediction aggregation (voting) strategies.
@@ -83,23 +87,27 @@ class Voting ( object ) :
                     
         else :
             
-            # Match pattern: optional spaces, trim or truncate(d), optional spaces, optional (: or =), digit
-            match = re.match ( r'^\s*(trim|truncate|truncated)\s*(?:([:=])\s*(\d+))?\s*$', strategy, re.IGNORECASE )
-            if not match : raise ValueError ( f"Invalid `voting` strategy string: {strategy}" )
-            
-            digit_str = match.group ( 3 )
-            if digit_str is not None :
-                try :
-                    self.__trim_low = int ( digit_str )
-                except ValueError :
-                    raise ValueError ( f"Invalid trim value in voting strategy string: {strategy}" )
-                
-                # Bind the standalone truncated_mean function
-                self.__func = lambda x, axis = 0 : truncated_mean ( 
-                    x, axis = axis, trim_low = self.__trim_low, trim_high = self.__trim_high 
-                )
-                self.__name = v_lower
+            # Match pattern
+            if not ( match := re_voting .match (  strategy ) ) : raise ValueError ( f"Invalid `voting` strategy string: {strategy}" )
 
+            low , high = 1 , 1
+            
+            if ':' in strategy or '=' in strategy :
+                
+                low  = match.group ( 'low'  )
+                high = match.group ( 'high' )
+                low  = int ( low  ) if low  else 0
+                high = int ( high ) if high else 0
+                
+            self.__trim_low  = low 
+            self.__trim_high = high 
+            
+            # Bind the standalone truncated_mean function with independent low/high bounds
+            self.__func = lambda x, axis = 0 : truncated_mean ( 
+                x, axis = axis, trim_low = self.__trim_low, trim_high = self.__trim_high 
+            )
+            self.__name = v_lower
+            
     ## @property name
     #  @brief String identifier of the configured voting strategy.
     @property
@@ -126,7 +134,8 @@ class Voting ( object ) :
 #           Subsequent calls to `weights()` on unseen data leverage all N trained models 
 #           aggregated via the configured `Voting` strategy.
 class DensityReweighter ( Reweighter, abc.ABC ) :
-    """ Abstract base class for immutable, adaptive density-ratio reweighting. """
+    """ Abstract base class for immutable, adaptive density-ratio reweighting.
+    """
 
     ## @brief Initialize and fit the density ratio reweighter ensemble.
     #  @param original Source feature matrix.
@@ -179,7 +188,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.priors                = {}
         self.__target_weights_info = {}
         self._norm_factor          = numpy.float32 ( 1.0 )
-        self.__mode                = None
+        self.__mode                = '-not-defined-yet-'
         self.scale_factors         = {}
         
         params [ 'n_jobs' ]        = num_jobs ( params )
@@ -661,7 +670,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         stacked_ratios = numpy.vstack ( fold_preds )
         
         # Apply Voting strategy helper to aggregate predictions across the fold axis
-        ensemble_ratios = self.voting ( stacked_ratios, axis = 0 )
+        ensemble_ratios = self.voting ( stacked_ratios , axis = 0 )
         ensemble_ratios = ensemble_ratios.astype ( numpy.float32, copy = False )
         
         return self._postprocess_ensemble_ratios ( ensemble_ratios )

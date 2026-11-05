@@ -31,7 +31,6 @@ from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.env          import get_env
 from   ostap.logger.symbols     import iteration, p_value_percent_expr 
 from   ostap.utils.memory       import memory_usage, delta_ram
-from   ostap.utils.basic        import numcpu, is_ci 
 from   ostap.logger.pretty      import nice_print 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.stats.utils        import full_header 
@@ -39,6 +38,7 @@ from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
                                          hasPyTorch  , hasKeras   , 
                                          hasHepML    )
+from   ostap.utils.utils4tests  import light_tests, active_test 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
@@ -55,58 +55,40 @@ logger.info ( 'Test for 3D-Reweighting machinery')
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight3-' )
-
-tag_data_3d = 'DATA_3D_histogram'
-
-tag_data_xy = 'DATA_XY_histogram'
-tag_data_yz = 'DATA_YZ_histogram'
-tag_data_xz = 'DATA_XZ_histogram'
-
-tag_data_x  = 'DATA_X_histogram'
-tag_data_y  = 'DATA_Y_histogram'
-tag_data_z  = 'DATA_Z_histogram'
-
-tag_data    = 'DATA_tree'
-tag_mc      = 'MC_tree'
-
-dbname      = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
-
-light        = False 
-small        = numcpu () <= 8
-random_freq  = 0.15
+light , weak = light_tests ()
+random_freq  = 0.10
 
 # =============================================================================
-if   is_ci () : # =============================================================
-    # =========================================================================
-    logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
-    light   = True
-    # =========================================================================
-elif numcpu () <= 8 : # ======================================================
-    # =========================================================================
-    logger.warning ( "Machine is not powerful enough: reduce some tests" )
-    small   = True     
-    light   = True 
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests" )
 
-light, small = True , True 
+# =============================================================================
+
+testdata     = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight3-' )
+
+tag_data_3d  = 'DATA_3D_histogram'
+
+tag_data_xy  = 'DATA_XY_histogram'
+tag_data_yz  = 'DATA_YZ_histogram'
+tag_data_xz  = 'DATA_XZ_histogram'
+
+tag_data_x   = 'DATA_X_histogram'
+tag_data_y   = 'DATA_Y_histogram'
+tag_data_z   = 'DATA_Z_histogram'
+
+tag_data     = 'DATA_tree'
+tag_mc       = 'MC_tree'
+
+dbname       = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight3-'   )
+
+NDATA1       =  1000 if ( light or weak ) else  5000 
+NDATA2       =  1000 if ( light or weak ) else  5000 
+NDATA3       =  1000 if ( light or weak ) else  5000 
+NMC          =  4000 if ( light or weak ) else 20000 
     
-if light or small : 
-    
-    NDATA1      =  1000 
-    NDATA2      =  1000 
-    NDATA3      =  1000 
-    NMC         =  3000 
-    
-else :
-     
-    NDATA1      =  5000 
-    NDATA2      =  5000 
-    NDATA3      =  5000 
-    NMC         = 25000 
-    
-xmax        = 15.0
-ymax        = 12.0 
-zmax        = 10.0 
+xmax         = 15.0
+ymax         = 12.0 
+zmax         = 10.0 
 
 ## prepare data for test 
 def prepare_data ( ) : 
@@ -286,14 +268,14 @@ import ostap.stats.gof_np as GnP
 cconf       = { 'parallel' : False , 'nToys' : 25 , 'silent' : True , 'progress' : True }
 comparators = ()
 if active_test ( random_freq ) :  comparators += GnP.Chi2            ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.KullbaclLeibler ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.KullbackLeibler ( **cconf ) ,
 if active_test ( random_freq ) :  comparators += GnP.Jeffrey         ( **cconf ) ,
 if active_test ( random_freq ) :  comparators += GnP.JensonShannon   ( **cconf ) ,
 if active_test ( random_freq ) :  comparators += GnP.Mahalanobis     ( **cconf ) ,
 if active_test ( random_freq ) :  comparators += GnP.Hotelling       ( **cconf ) ,
 if active_test ( random_freq ) :  comparators += GnP.Bhattacharyya   ( **cconf ) ,
 if active_test ( random_freq ) :  comparators += GnP.Wasserstein     ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.Helinger        ( **cconf ) ,
+if active_test ( random_freq ) :  comparators += GnP.Hellinger       ( **cconf ) ,
 if not comparators : comparators += GnP.Chi2 ( **cconf ) ,  ## at least one comparator is needed
 
 # =========================================================================
@@ -472,7 +454,7 @@ plots  = [
 memory_init = memory_usage() 
 converged   = False
 
-maxIter     = 4 if ( light or small ) else 11
+maxIter     = 4 if ( light or weak ) else 11
 
 weighter    = None
 
@@ -616,7 +598,7 @@ if weighter : weights.append ( weight_name )
 # =============================================================================
 ## (1) GBReweighter by Alex Rogozhnikov from hep_ml 
 # =============================================================================
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasHepML () :
+if active_test ( random_freq ) and hasHepML () :
     # ========================================================================
     logger.info ( 'Use HepML    for control reweighting' ) 
     from ostap.tools.reweighters     import GBReweighter   as GBRW 
@@ -633,7 +615,7 @@ if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasHepML () :
 # =============================================================================
 ## (2) home-made reweighter based on LightGBM
 # =============================================================================
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM()  : 
+if active_test ( random_freq ) and hasLightGBM()  : 
     # =========================================================================
     logger.info ( 'Use LightBGM for control reweighting' ) 
     from ostap.tools.reweighters     import LightGBMDensityReweighter as  LGBM
@@ -650,7 +632,7 @@ if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasLightGBM()  :
 # =============================================================================
 ## (3) home-made reweighter based on XGBoost  
 # =============================================================================
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost () :
+if active_test ( random_freq ) and hasXGBoost () :
     # =========================================================================
     logger.info ( 'Use XGBoost  for control reweighting' ) 
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
@@ -666,7 +648,7 @@ if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasXGBoost () :
 # =============================================================================
 ## (4) home-made reweighter based on CatBoost  
 # =============================================================================
-if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost () : 
+if active_test ( random_freq ) and hasCatBoost () : 
     # =========================================================================
     logger.info ( 'Use CatBoost for control reweighting' ) 
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
@@ -683,7 +665,7 @@ if ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasCatBoost () :
 # =============================================================================
 ## (5) home-made reweighter based on PyTorch
 # =============================================================================
-if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasPyTorch () :
+if active_test ( random_freq ) and hasPyTorch () :
     # =========================================================================
     logger.info ( 'Use PyTorch  for control reweighting' ) 
     from ostap.tools.reweighters     import PyTorchDensityReweighter   as TORCH
@@ -700,7 +682,7 @@ if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasPyTo
 # =============================================================================
 ## (6) home-made reweighter based on Logistic Regression 
 # =============================================================================
-if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasSkLearn () : 
+if active_test ( random_freq ) and hasSkLearn () : 
     # =========================================================================
     logger.info ( 'Use LogRegression for control reweighting' ) 
     from ostap.tools.reweighters     import LogRegressionDensityReweighter   as LOGREG

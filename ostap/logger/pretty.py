@@ -60,8 +60,7 @@ import math
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.pretty' )
-else                       : logger = getLogger( __name__                )
+logger = getLogger( 'ostap.logger.pretty' )
 # =============================================================================
 logger.debug ( "Helper functions for pretty prints of some objects" )
 # =============================================================================
@@ -656,7 +655,7 @@ def pretty_print ( what              , * ,
                               precision = precision ,
                               latex     = latex     , **kwargs )
     
-    raise TypeError( "pretty_print: invalid `what` type: %s:" % typename ( what ) )
+    raise TypeError ( "pretty_print: invalid `what` type: %s:" % typename ( what ) )
 
 # =======================================================================
 ## Nice print for the object

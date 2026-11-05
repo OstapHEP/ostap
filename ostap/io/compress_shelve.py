@@ -66,8 +66,7 @@ from   collections          import defaultdict
 import sys, os, abc, shelve, glob, time, datetime, zipfile, tarfile 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
-else                      : logger = getLogger ( __name__                   )
+logger = getLogger ( 'ostap.io.compress_shelve' )
 # =============================================================================
 ## encoding 
 ENCODING = 'utf-8'

@@ -601,13 +601,13 @@ if '__main__' == __name__ :
     
     from ostap.utils.timing import timing
     with timing ('test_const'       , logger ) :
-        if active_test ( random_freas ) : test_const       ()
+        if active_test ( random_freq ) : test_const       ()
         
     with timing ('test_p2xp2'       , logger ) :
         if active_test ( random_freq ) : test_p2xp2       ()
         
     with timing ('test_p1xp1_BB'    , logger ) :
-        if active_test ( random_frew ) : test_p1xp1_BB    ()
+        if active_test ( random_freq ) : test_p1xp1_BB    ()
         
     with timing ('test_p1xp1_BBss'  , logger ) :
         if active_test ( random_freq ) : test_p1xp1_BBss  ()

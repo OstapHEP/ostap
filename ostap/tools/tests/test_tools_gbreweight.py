@@ -14,35 +14,42 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.pyrouts     import hID
-from   ostap.histos.histos    import h1_axis, h2_axes 
-from   ostap.math.math_base   import axis_range
-from   ostap.utils.ranges     import vrange
-from   ostap.utils.root_utils import batch_env 
-from   ostap.utils.timing     import timing
-from   ostap.trees.data_utils import Data 
-from   ostap.logger.colorized import attention, allright  
-from   ostap.utils.cleanup    import CleanUp
-from   ostap.stats.tools      import hasHepML 
-import ostap.io.zipshelve     as     DBASE
+from   ostap.core.pyrouts      import hID
+from   ostap.histos.histos     import h1_axis, h2_axes 
+from   ostap.math.math_base    import axis_range
+from   ostap.utils.ranges      import vrange
+from   ostap.utils.root_utils  import batch_env 
+from   ostap.utils.timing      import timing
+from   ostap.trees.data_utils  import Data 
+from   ostap.logger.colorized  import attention, allright  
+from   ostap.utils.cleanup     import CleanUp
+from   ostap.stats.tools       import hasHepML
+from   ostap.utils.utils4tests import light_tests,   active_test
+import ostap.io.zipshelve      as     DBASE
+import ostap.parallel.kisa
 import ROOT, array, random, math, os, time 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_gbreweight' )
-else : 
-    logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.test_tools_gbreweight' )
 # =============================================================================    
 logger.info ( 'Test for 2D-Reweighting machinery using GBReweighter')
 # ============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
+light, weak = light_tests ( 8 )
+
+random_freq = 0.10
+ 
+# =============================================================================
+if  light :logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak : logger.warning ( "Machine is not powerful enough: reduce some tests" )
+
 
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-gbreweight-' )
-dbname     = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-gbreweight-'   )
+dbname     = CleanUp.tempfile ( suffix = '.db'   , prefix ='ostap-test-tools-gbreweight-' )
 
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'
@@ -52,10 +59,8 @@ tag_mc     = 'MC_tree'
 if os.path.exists ( testdata ) : os.remove ( testdata ) 
 ## if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
-import ostap.parallel.kisa
-
-N1   = 10000
-N2   = 1000
+N1   = 1000 if ( light or weak ) else 10000
+N2   =  200 if ( light or weak ) else  2000
 
 xmax = 20.0
 ymax = 15.0 
@@ -223,9 +228,9 @@ def prepare_file () :
         
     return testdata 
 
+
 def prepare_data ( nfiles = 10 )  :
-    
-    
+        
     seed      =  1234567890 
     random.seed ( seed ) 
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
@@ -235,7 +240,7 @@ def prepare_data ( nfiles = 10 )  :
 # =============================================================================
 def test_gbreweight() :
 
-    logger = getLogger("test_gbreweight")
+    logger = getLogger ( "test_gbreweight" )
 
     has_hepml = hasHepML()
     if not has_hepml :
@@ -247,9 +252,11 @@ def test_gbreweight() :
     from ostap.tools.reweighters     import GBReweighter as GBRW
     # =========================================================================
     
-    with timing ( "Prepare input data" , logger = logger ) :
-        testfiles = prepare_data ( 10 )
+    NF = 2  if ( light or weak ) else 10
     
+    with timing ( "Prepare input data" , logger = logger ) :
+        testfiles = prepare_data ( NF )
+
     # =========================================================================
     ## Input data/mc samples 
     # =========================================================================

@@ -28,8 +28,7 @@ import sys, os, collections
 import ostap.io.shelve_ext
 # =============================================================================
 from   ostap.logger.logger  import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.dbase' )
-else                      : logger = getLogger ( __name__         )
+logger = getLogger ( 'ostap.io.dbase' )
 # =============================================================================
 try : # =======================================================================
     # =========================================================================

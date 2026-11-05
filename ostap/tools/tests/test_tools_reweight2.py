@@ -333,14 +333,17 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 cconf = { 'parallel' : True , 'nToys' : 64 , 'silent' : True , 'progress' : True } 
 ## comparators
 comparators = []
+if active_test ( random_freq ) : comparators.append ( GnP.Chi2            ( **cconf ) ) 
 if active_test ( random_freq ) : comparators.append ( GnP.KullbackLeibler ( **cconf ) ) 
 if active_test ( random_freq ) : comparators.append ( GnP.Jeffrey         ( **cconf ) ) 
 if active_test ( random_freq ) : comparators.append ( GnP.JensenShannon   ( **cconf ) ) 
 if active_test ( random_freq ) : comparators.append ( GnP.Mahalanobis     ( **cconf ) ) 
 if active_test ( random_freq ) : comparators.append ( GnP.Hotelling       ( **cconf ) ) 
-if active_test ( random_freq ) : comparators.append ( GnP.Bhatyacharyya   ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.Bhattacharyya   ( **cconf ) ) 
 if active_test ( random_freq ) : comparators.append ( GnP.Wasserstein     ( **cconf ) ) 
-if active_test ( random_freq ) : comparators.append ( GnP.Hellinger       ( **cconf ) ) 
+if active_test ( random_freq ) : comparators.append ( GnP.Hellinger       ( **cconf ) )
+if not comparators : comparators.append ( GnP.Chi2 ( **cconf )  ) ## at least one comparator is needed
+
 # ===============================================================================
 if active_test ( random_freq ) and hasLightGBM ()  : 
     # ===========================================================================
@@ -358,7 +361,6 @@ if active_test ( random_freq ) and hasCatBoost  ()  :
     from ostap.stats.adval        import ADVAL_CATB as COMPARATOR
     comparators.append ( COMPARATOR ( **cconf ) ) 
     # ==========================================================================
-if not comparators : comparators.append ( GnP.KullbackLeibler ( **cconf ) )
 
 comparators = tuple ( comparators ) 
     

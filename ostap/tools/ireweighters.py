@@ -37,9 +37,8 @@ import numpy, math, time
 # =============================================================================
 # Logging setup
 # =============================================================================
-from ostap.logger.logger import getLogger, logAttention 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.ireweighters' )
-else                       : logger = getLogger ( __name__ )
+from ostap.logger.logger import getLogger, logAttention
+logger = getLogger ( 'ostap.tools.ireweighters' )
 # =============================================================================
 ## Decorations 
 # =============================================================================
@@ -273,7 +272,8 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
     #  @return An array of predicted density ratios.
     def _predict_iterative_stream ( self, models, X ) :
         """ Accumulate predictions across sequential LightGBM models. """
-        learning_rate = self.params.get ( 'learning_rate', 0.05 )
+        
+        learning_rate = self.params.get ( 'learning_rate', LGBM_LEARNING_RATE )
         log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
 
         for model in models :
@@ -284,32 +284,12 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
 
         return numpy.exp ( log_ratios )
 
-# =============================================================================
-## @brief Custom Density Ratio Objective for XGBoost.
-def xgboost_density_ratio_obj ( preds, dtrain ) :
-    """ Direct Density Ratio Estimation (DRE) custom objective for XGBoost. """
-    labels  = dtrain.get_label  ()
-    weights = dtrain.get_weight ()
-    
-    if weights is None or len ( weights ) == 0 :
-        weights = numpy.ones_like ( labels )
-        
-    margin = numpy.clip ( preds  , -15.0, 15.0 )
-    exp_m  = numpy.exp  ( margin )
-    
-    grad   = numpy.where ( labels == 1.0 , -1.0  , exp_m )
-    hess   = numpy.where ( labels == 1.0 ,  1e-5 , exp_m + 1.e-5 )
-    
-    grad *= weights
-    hess *= weights
-    
-    return grad, hess
 
 # =============================================================================
 ## @class XGBoostIterativeReweighter
 #  Iterative weight boosting density reweighter using XGBoost.
 class XGBoostIterativeReweighter ( IterativeReweighter ) :
-    """ Iterative weight boosting density reweighter using XGBoost backkend
+    """ Iterative weight boosting density reweighter using XGBoost backend
     """
 
     def __init__ ( self            , 
@@ -327,7 +307,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             ## 
             'tree_method'       :  'hist'            , 
             'max_bin'           :  1023              , 
-            'grow_policy'       : 'depthwise'        , ## 'lossguide' as alternative 
+            'grow_policy'       : 'depthwise'        , 
             ##
             'max_leaves'        :  63                , 
             'min_child_weight'  :  1e-3              , 
@@ -346,16 +326,14 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         if 'silent' in config and config.get ( 'silent' ) : config [ 'verbosity' ] = 0        
         if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round', XGB_ESTIMATORS ) 
         
-        ## Ignore 'subsample' argument for small smapels or splitting/folsig regime 
+        ## Ignore 'subsample' argument for small samples or splitting/folds regime 
         n_rows = num_samples ( original ) + num_samples ( target )
         if n_rows < THRESHOLD_NSAMPLES or 1 < config.get ( 'n_splits' , 5 ) : config [ 'subsample'         ] = 1.0
 
         if num_features      ( original ) < THRESHOLD_NFEATURES             : config [ 'colsamples_bytree' ] = 1.0
 
-        ## use exact methois if statistic is not too large 
-        if n_rows < 10000 : config [ 'tree_method']  = 'exact'
-
-        
+        ## Use exact method if statistics is not large enought  
+        if n_rows < 10000 : config [ 'tree_method' ]  = 'exact'
 
         super ().__init__ ( original        = original        ,
                             target          = target          ,
@@ -363,19 +341,18 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                             target_weight   = target_weight   , **config )
 
     # =========================================================================
-    ## short symbol/tag for reweighter 
+    ## Short symbol/tag for reweighter 
     @classprop
     def symbol ( self ) :
-        """`symbol` : short symbol/tag for reweighter 
-        """
+        """ `symbol` : short symbol/tag for reweighter """
         return U.symbol_XGB
 
     @property
     def method ( self ) :
         """ Return method identifier name. """
         return method_XGB
-    
-    ## @brief Execute iterative XGBoost boosting stream on fold data.
+
+    ## @brief Execute iterative XGBoost boosting stream on fold data using margins.
     def _fit_iterative_stream ( self   ,
                                 X_orig ,
                                 w_orig ,
@@ -401,59 +378,63 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         n_estimators  = self.params.get ( 'n_estimators' , XGB_ESTIMATORS    )
         learning_rate = self.params.get ( 'learning_rate', XGB_LEARNING_RATE )
         max_depth     = self.params.get ( 'max_depth'    , XGB_MAX_DEPTH     )
-        max_leaves    = self.params.get ( 'max_leaves'   , 31                )
+        max_leaves    = self.params.get ( 'max_leaves'   , 63                )
     
-        models    = []
-        dmat_orig = XGBoost.DMatrix ( X_orig )
+        models = []
 
         params = {
+            ## 
+            'objective'        : 'binary:logistic' , 
+            'eval_metric'      : 'logloss'         ,
+            ## 
             'tree_method'      : self.params.get ( 'tree_method'      , 'hist'      ) , 
             'max_bin'          : self.params.get ( 'max_bin'          , 1023        ) ,
-            'min_child_weight' : self.params.get ( 'min_child_weight' , 1e-2        ) ,
-            'max_delta_step'   : self.params.get ( 'max_delta_step'   , 0.0         ) ,
+            ## 
+            'min_child_weight' : self.params.get ( 'min_child_weight' , 1e-3        ) ,
+            'max_delta_step'   : self.params.get ( 'max_delta_step'   , 9.0         ) , 
             'subsample'        : self.params.get ( 'subsample'        , 1.0         ) ,
-            'colsample_bytree' : self.params.get ( 'colsample_bytree' , 1.0         ) ,            
-            'gamma'            : self.params.get ( 'gamma'            , 0.0         ) , 
+            'colsample_bytree' : self.params.get ( 'colsample_bytree' , 1.0         ) ,
+            ##
+            'gamma'            : self.params.get ( 'gamma'            , 0.0         ) ,             
             'reg_alpha'        : self.params.get ( 'reg_alpha'        , 0.0         ) , 
-            'reg_lambda'       : self.params.get ( 'reg_lambda'       , 0.001       ) ,            
+            'reg_lambda'       : self.params.get ( 'reg_lambda'       , 0.0         ) ,
+            ## 
             'max_depth'        : max_depth ,
             'learning_rate'    : 1.0       ,
-            'grow_policy'      : self.params.get ( 'grow_policy', 'lossguide' ) , 
+            ##
+            'grow_policy'      : self.params.get ( 'grow_policy', 'depthwise' ) , 
             'max_leaves'       : max_leaves , 
-            'verbosity'        : self.params.get ( 'verbosity', 0 ) , 
+            'verbosity'        : 0                 , 
             'n_jobs'           : self.params.get ( 'n_jobs'   , 1 ) , 
         }
         
-        neff0       = nEff ( X_orig, current_w_orig )
+        neff0 = nEff ( X_orig, current_w_orig )
         
         description = boosting_symbol + ' ' + S.fixed_width ( self.symbol , 3 ) + ':'        
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
         else               : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = True  ) 
-        
-        ## for it in progress_bar ( n_estimators, description = 'Boosting:', silent = not self.progress ) :
 
         t_start = time.time () 
-        ## Safe loop!        
+        eps     = 1e-4
+
         for it , _ ,  bar in safe_loop ( the_bar ) :
                         
             comb_weights  = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
             comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
             
-            trn_data = XGBoost.DMatrix ( X_comb, label = y_comb, weight = comb_weights )
+            dmat_comb = XGBoost.DMatrix ( X_comb, label = y_comb, weight = comb_weights )
             
-            model    = XGBoost.train ( params          = params,
-                                       dtrain          = trn_data,
-                                       num_boost_round = 1,
-                                       obj             = xgboost_density_ratio_obj )
+            model = XGBoost.train ( params          = params,
+                                    dtrain          = dmat_comb,
+                                    num_boost_round = 1 )
             
-            margin          = model.predict ( dmat_orig, output_margin = True )
-            margin          = numpy.clip ( margin, -15.0, 15.0 )
-            step_ratios     = numpy.exp  ( margin )
+            dmat_orig = XGBoost.DMatrix ( X_orig )
+            p_orig    = model.predict ( dmat_orig )
+            p_orig    = numpy.clip ( p_orig, eps, 1.0 - eps )
+            r_step    = p_orig / ( 1.0 - p_orig )
             
-            # Accumulate weight boosts purely via learning rate scaling.
-            # Global mass conservation is handled strictly at the end via _normalize_and_clip.
-            current_w_orig *= numpy.power ( numpy.clip ( step_ratios, 1e-6, 1e+6 ), learning_rate )
+            current_w_orig *= numpy.power ( numpy.clip ( r_step, 1e-2, 1e+2 ), learning_rate )
         
             if bar and not self.silent and ( it < 5  or ( it + 1 ) % PRINT_FREQ == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
@@ -463,7 +444,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                 ne0         = nice_print ( float ( neff0              ) , precision = 2, with_sign = False, strip = True )
                 ne          = nice_print ( float ( neff               ) , precision = 2, with_sign = False, strip = True )
 
-                dt       = ( time.time () - t_start ) / ( it +1 )
+                dt       = ( time.time () - t_start ) / ( it + 1 )
                 if dt < 1 : dt = '%dms'  % ( math.ceil ( 1000 * dt ) )
                 else      : dt = '%.1fs' %                      dt                 
                 message  = f"Iteration {it+1:4d}/{n_estimators:-4d} | min/max: {wmin}/{wmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/tree:{dt}" 
@@ -476,27 +457,23 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
 
         return models, final_ratios
 
-    ## @brief Predict ratios directly using iterative XGBoost stream in log-space.
+    # =========================================================================
+    ## @brief Accumulate predictions across sequential XGBoost models.
     def _predict_iterative_stream ( self, models, X ) :
-        """ Predict ratios directly using iterative XGBoost stream in log-space. """
+        """ Accumulate predictions across sequential XGBoost models. """
         import xgboost as XGBoost
         dmat          = XGBoost.DMatrix ( X )
         learning_rate = self.params.get ( 'learning_rate', XGB_LEARNING_RATE )
         log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
 
         for model in models :
-            margin      = model.predict ( dmat, output_margin = True )
-            margin      = numpy.clip ( margin, -15.0, 15.0 )
-            # Accumulate margins strictly with learning rate without redundant log_alpha scaling
-            log_ratios += margin * learning_rate
-            
-        ratios = numpy.exp ( numpy.clip ( log_ratios, -15.0, 15.0 ) )
-        
-        # Ensure local mean response equals 1.0 prior to global post-processing
-        mean_r = numpy.mean ( ratios )
-        if 0 < mean_r : ratios /= mean_r
-            
-        return ratios
+            p           = model.predict ( dmat )
+            p           = numpy.clip ( p, 1e-4, 1.0 - 1e-4 )
+            r_step      = p / ( 1.0 - p )
+            log_ratios += numpy.log ( numpy.clip ( r_step, 1e-2, 1e+2 ) ) * learning_rate
+
+        return numpy.exp ( log_ratios )
+
     
 # =============================================================================
 ## @class CatBoostIterativeReweighter

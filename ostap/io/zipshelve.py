@@ -242,9 +242,9 @@ class TmpZipShelf(ZipShelf,TmpDB):
         self.kwargs.update ( conf )
         
     ## close and delete the file 
-    def close ( self )  :
-        ZipShelf.close ( self )
-        TmpDB.clean    ( self ) 
+    ## def close ( self )  :
+    ##    ## ZipShelf.close ( self )
+    ##    TmpDB.clean    ( self ) 
             
 # =============================================================================
 ## helper function to open TEMPORARY ZipShelve data base#
