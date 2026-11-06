@@ -2362,8 +2362,7 @@ namespace Ostap
     double norm_shatten
     ( const ROOT::Math::SMatrix<T,D1,D2,R>& matrix ,
       const double                          p      = 2 ) ;
-    
-    
+        
     // ========================================================================
     // Vector operations 
     // ========================================================================

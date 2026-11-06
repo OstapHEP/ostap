@@ -28,9 +28,11 @@ __all__     = (
     'LightGBMIterativeReweighter'    , # LightGBM-based iterative density reweighter
     'XGBoostIterativeReweighter'     , # XGBoost-based  iterative density reweighter
     'CatBoostIterativeReweighter'    , # CatBoost-based iterative density reweighter
+    'PyTorchIterativeReweighter'     , # PyTorch-based  iterative density reweighter
     ## 
-    'GBReweighter'                   , # Reweighter based on GBReweighter from hep_ml    
-) 
+    'GBReweighter'                   , # Reweighter based on GBReweighter from hep_ml by Alex Rogozhnikov
+    ## 
+) # ===========================================================================
 # =============================================================================
 from  ostap.tools.dreweighters import  ( LightGBMDensityReweighter      , 
                                          XGBoostDensityReweighter       , 
@@ -39,7 +41,8 @@ from  ostap.tools.dreweighters import  ( LightGBMDensityReweighter      ,
                                          LogRegressionDensityReweighter )
 from  ostap.tools.ireweighters import  ( LightGBMIterativeReweighter    , 
                                          XGBoostIterativeReweighter     , 
-                                         CatBoostIterativeReweighter    )
+                                         CatBoostIterativeReweighter    ,
+                                         PyTorchIterativeReweighter     )
 from  ostap.tools.greweighters import GBReweighter
 # =============================================================================
 # Logging setup

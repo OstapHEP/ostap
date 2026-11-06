@@ -261,16 +261,16 @@ def run_reweight ( n_dim       = 3     ,
                      original      = original1   ,
                      ## 
                      ## leaf_estimation_iterations =    1 , 
-                     min_data_in_leaf           =    5 ,
+                     min_data_in_leaf           =    1 ,
                      learning_rate              = 0.02 ,
                      max_depth                  =    6 , 
                      n_estimators               =  300 ,
-                     max_delta_step             =    0 ,
-                     l2_leaf_reg                =  5.0 , 
+                     l2_leaf_reg                =  1e-3 , 
                      ##
+                     voting                     = 'mean'    ,
                      progress = False 
-                    )       
-
+                    )
+        
         reweighters.append ( rw4 )
         
     if False and hasLightGBM () :
@@ -301,7 +301,7 @@ def run_reweight ( n_dim       = 3     ,
         reweighters.append ( rw2 )
         
 
-    if  hasXGBoost  () :
+    if  False and hasXGBoost  () :
         
         ## from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         ## rw3 = XGB  ( target                = target   ,
@@ -353,7 +353,7 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw3 )
         
-    if False and hasPyTorch () :
+    if hasPyTorch () :
 
         """
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
@@ -379,7 +379,15 @@ def run_reweight ( n_dim       = 3     ,
 
         from ostap.tools.reweighters  import PyTorchIterativeReweighter as TORCH
         rw5 = TORCH ( target        = target        ,
-                      original      = original      )
+                      original      = original1     ,
+                      ##
+                      n_splits        = 1             ,
+                      n_estimators    = 500           ,
+                      hidden_layers   = ( 32 , )      ,
+                      epochs_per_step = 25            ,
+                      learning_rate   = 0.05          , 
+                      progress        = False         ,
+                     )
         
         reweighters.append ( rw5 )
                       
@@ -460,11 +468,10 @@ def run_reweight ( n_dim       = 3     ,
 
             header =  ( '' , 'Reweighter' , '' , 'Comparator'  , '#eff' ) + header + w_header 
             if rows [ 0 ] != header :  rows         = [ header ] + rows
-            title = 'Test results : %s' % p_value_percent_expr 
-            table = T.table ( rows , title = title , prefix = '# ' , alignment = 'clclccccccccccccccccccccccccc' )
+            title = 'Test results : %s' % p_value_percent_expr
+            table = T.remove_empty_columns ( rows ) 
+            table = T.table ( table , title = title , prefix = '# ' , alignment = 'clclccccccccccccccccccccccccc' )
             logger.info ( '%s\n%s' % ( title , table ) )
-
-
 
             # =================================================================
             # can we save reweighters into database ?

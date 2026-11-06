@@ -270,6 +270,7 @@ __all__     = (
     'v_max_expr'             , ## f'{v_italic}-max'
     'v_mean_expr'            , ## f'{v_italic}-mean'
     'v_rms_expr'             , ## f'{greek_lower_sigma}({v_italic})' if show else f"{v_italic}-rms"
+    'v_unit_expr'            , ## f'{v_italic}-unit '
     ##
     'warning'                , ## ⚠️
     'weight_lifter'          , ## 🏋️  (wide)
@@ -294,6 +295,7 @@ __all__     = (
     'w_max_expr'             , ## f'{w_italic}-max'
     'w_mean_expr'            , ## f'{w_italic}-mean'
     'w_rms_expr'             , ## f'{greek_lower_sigma}({w_italic})' if show else f"{w_italic}-rms"
+    'w_unit_expr'            , ## f'{w_italic}-unit '
     ##
     'T2'                  , ## 🯯² (Note: handled or wrapped)
     'W2'                  , ## 🯰² 
@@ -781,11 +783,13 @@ w_min_expr           = f'{w_italic}-min'
 w_max_expr           = f'{w_italic}-max'
 w_mean_expr          = f'{w_italic}-mean'
 w_rms_expr           = f'{greek_lower_sigma}({w_italic})' if show else f"{w_italic}-rms"
+w_unit_expt          = f'{w_italic}-unit'
 
 v_min_expr           = f'{v_italic}-min'
 v_max_expr           = f'{v_italic}-max'
 v_mean_expr          = f'{v_italic}-mean'
 v_rms_expr           = f'{greek_lower_sigma}({v_italic})' if show else f"{v_italic}-rms"
+v_unit_expr          = f'{v_italic}-unit'
 
 # =============================================================================
 ## Single comprehensive regex for cleaning:

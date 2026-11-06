@@ -233,7 +233,7 @@ short_header    = ( S.t_value_expr         ,
                     S.p_value_percent_expr ,
                     S.n_sigma_expr         )
 t_header        = S.t_value_expr  , S.t_unit_expr           
-w_header        = S.w_min_expr    , S.w_max_expr
+w_header        = S.w_min_expr    , S.w_max_expr , S.w_unit_expt
 # =============================================================================
 
 # =============================================================================

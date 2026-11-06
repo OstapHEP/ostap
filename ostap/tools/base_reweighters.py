@@ -158,7 +158,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                    target_weight          = None     ,
                    clip_threshold         = 1.e+4    ,
                    n_splits               = 5        ,
-                   voting                 = 'trim:1' , 
+                   voting                 = 'mean'   , 
                    oof_mode               = False    , 
                    store_original_weights = False    ,
                    progress               = True     , **params ) :
