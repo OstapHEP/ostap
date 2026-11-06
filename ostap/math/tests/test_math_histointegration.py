@@ -11,7 +11,9 @@
 from   ostap.core.core          import Ostap, hID, SE 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.timing       import timing
-from   ostap.utils.root_utils   import batch_env 
+from   ostap.logger.pretty      import format_pow10 
+from   ostap.utils.root_utils   import batch_env
+from   ostap.utils.utils4tests  import light_tests, active_test 
 import ostap.math.integral      as     I 
 import ostap.math.integrator    as     II
 import ostap.logger.table       as     T 
@@ -21,34 +23,42 @@ import ROOT, random
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_histo_integration' ) 
-else                       : logger = getLogger ( __name__                        )
+logger = getLogger ( 'ostap.test_math_histo_integration' ) 
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
-#
+light , weak = light_tests ()
+random_freq  = 0.33
+
+# =============================================================================
+if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests" )
 
 
 def test_histo1_integration () :
 
-
     logger = getLogger ( 'test_histo1_integration' )
 
-    cnts = {} 
-    for k in range ( 4 ) :
+    cnts = {}
+    rng = ( 1 , 2 )  if ( light or weak ) else ( 0 , 4 ) 
+
+    for k in range ( *rng ) :
         for e in ( True , False ) : 
             cnts [ k, e ]  = SE()
 
-    N          = 200
-    NB         = 20
-    xmin, xmax = -5 , 5 
-    for k in progress_bar ( range ( 100 ) ) :
+    N          = 1000 
+    NB         = 20  
+    
+    xmin, xmax = -3 , 3
+    
+    NTOYS      = 10 if ( light or weak ) else 100 
+    for k in progress_bar ( NTOYS ) :
         
         h1  = ROOT.TH1D ( hID() , '' , NB , xmin , xmax )
         for i in range ( N ) :
             x = random.gauss(0,1)
-            while not xmin < x < xmax : x = random.gauss(0,1)                
+            while not xmin < x < xmax : x = random.gauss ( 0 , 1 )                
             h1.Fill ( x ) 
 
         ii = N * 1.0 * ( xmax - xmin ) / NB 
@@ -58,8 +68,12 @@ def test_histo1_integration () :
             hh    = Ostap.Math.Histo1D ( h1 , *key ) 
             r1    = hh.integral ()
             cnt  += ( r1 - ii ) / ii 
-                    
-    rows = [ ('Index' , 'mean [10^-3]' , 'rms [10^-3]' , 'min/max [10^-3]' ) ]
+
+            
+    rows = [ ('Index' ,
+              'mean [%s]'    % format_pow10 ( -3 ) ,
+              'rms [%s]'     % format_pow10 ( -3 ) ,
+              'min/max [%s]' % format_pow10 ( -3 ) ) ]
     for key in sorted ( cnts ) :
         cnt = cnts [ key ]
 
@@ -81,7 +95,6 @@ def test_histo1_integration () :
     logger.info ( '%s:\n%s' % ( title , table ) ) 
     
 
-
 # =============================================================================
 def test_histo2_integration () :
     
@@ -89,19 +102,22 @@ def test_histo2_integration () :
 
     cnts = {} 
 
-    cnts  = {} 
-    for i in range ( 4 ) :
-        for j in range ( 4 ) :
+    rng = ( 1 , 2 )  if ( light or weak ) else ( 0 , 4 ) 
+
+    for i in range ( *rng ) :
+        for j in range ( *rng ) :
             for e in ( True , False ) : 
                 cnts  [ i,j,e ]  = SE()
                 
-    N          = 5000
-    NX         = 20
-    NY         = 20
-    xmin, xmax = -5 , 5 
-    ymin, ymax = -5 , 5 
+    N          = 1000 if ( light or weak ) else 5000
+    NX         = 10   if ( light or weak ) else 20 
+    NY         = 10   if ( light or weak ) else 20
+    
+    xmin, xmax = -3 , 3 
+    ymin, ymax = -3 , 3 
 
-    for k in progress_bar ( 50 ) :
+    NTOYS      = 10 if ( light or weak ) else 50
+    for k in progress_bar ( NTOYS ) :
         
         h2  = ROOT.TH2D ( hID() , '' , NX , xmin , xmax  , NY , ymin , ymax )
         for i in range  ( N  ) :
@@ -120,7 +136,10 @@ def test_histo2_integration () :
             cnt  += ( r1 - ii ) / ii 
             
             
-    rows = [ ('Index' , 'mean [10^-3]' , 'rms [10^-3]' , 'min/max [10^-3]' ) ]
+    rows = [ ('Index' ,
+              'mean [%s]'    % format_pow10 ( -3 ) ,
+              'rms [%s]'     % format_pow10 ( -3 ) ,
+              'min/max [%s]' % format_pow10 ( -3 ) ) ]
     for key in sorted ( cnts ) :
         cnt = cnts [ key ]
 
@@ -146,22 +165,28 @@ def test_histo3_integration () :
     
     logger = getLogger ( 'test_histo3_integration' )
 
-    cnts = {} 
-    for i in range ( 4 ) :
-        for j in range ( 4 ) :
-            for k in range ( 4 ) :
+    cnts = {}
+
+    rng = ( 1 , 2 )  if ( light or weak ) else ( 0 , 4 ) 
+    
+    for i in range ( *rng ) :
+        for j in range ( *rng  ) :
+            for k in range ( *rng  ) :
                 for e in ( True , False ) : 
                     cnts [ i,j,k,e ]  = SE()
                 
-    N          = 10000
-    NX         = 20
-    NY         = 20
-    NZ         = 20
-    xmin, xmax = -5 , 5 
-    ymin, ymax = -5 , 5 
-    zmin, zmax = -5 , 5 
+    N          = 2000 if ( light or weak ) else 10000
+    NX         = 10   if ( light or weak ) else 20
+    NY         = 10   if ( light or weak ) else 20
+    NZ         = 10   if ( light or weak ) else 20
+    
+    xmin, xmax = -3 , 3 
+    ymin, ymax = -3 , 3 
+    zmin, zmax = -3 , 3 
 
-    for k in progress_bar ( 10 ) :
+    NTOYS      = 5 if ( light or weak ) else 10
+    
+    for k in progress_bar ( NTOYS ) :
         
         h3  = ROOT.TH3D ( hID() , '' ,
                           NX , xmin , xmax  ,
@@ -184,8 +209,10 @@ def test_histo3_integration () :
             r1    = hh.integral ()
             cnt  += ( r1 - ii ) / ii 
 
-
-    rows = [ ('Index' , 'mean [10^-3]' , 'rms [10^-3]' , 'min/max [10^-3]' ) ]
+    rows = [ ('Index' ,
+              'mean [%s]'    % format_pow10 ( -3 ) ,
+              'rms [%s]'     % format_pow10 ( -3 ) ,
+              'min/max [%s]' % format_pow10 ( -3 ) ) ]
     for key in sorted ( cnts ) :
         cnt = cnts [ key ]
 
@@ -205,20 +232,18 @@ def test_histo3_integration () :
     title = '3D integration'
     table = T.table ( rows , prefix = '# ' , title = title , alignment = 'cccc' )
     logger.info ( '%s:\n%s' % ( title , table ) ) 
-
-
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing  ( 'histo1_integration' , logger = logger ) : 
-        test_histo1_integration()
+    with timing  ( 'histo1_integration' , logger = logger ) :
+        if active_test ( random_freq ) : test_histo1_integration()
         
     with timing  ( 'histo2_integration' , logger = logger ) : 
-        test_histo2_integration() 
+        if active_test ( random_freq ) : test_histo2_integration()
 
     with timing  ( 'histo3_integration' , logger = logger ) : 
-        test_histo3_integration() 
+        if active_test ( random_freq ) : test_histo3_integration()
 
 # =============================================================================
 ##                                                                      The END 

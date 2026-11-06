@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -84,7 +83,7 @@ dbname       = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-rew
 NDATA1       =  1000 if ( light or weak ) else  5000 
 NDATA2       =  1000 if ( light or weak ) else  5000 
 NDATA3       =  1000 if ( light or weak ) else  5000 
-NMC          =  4000 if ( light or weak ) else 20000 
+NMC          =  5000 if ( light or weak ) else 25000 
     
 xmax         = 15.0
 ymax         = 12.0 
@@ -266,36 +265,38 @@ if not os.path.exists ( testdata ) :
 # ==============================================================================
 import ostap.stats.gof_np as GnP
 cconf       = { 'parallel' : False , 'nToys' : 25 , 'silent' : True , 'progress' : True }
-comparators = ()
-if active_test ( random_freq ) :  comparators += GnP.Chi2            ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.KullbackLeibler ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.Jeffrey         ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.JensonShannon   ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.Mahalanobis     ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.Hotelling       ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.Bhattacharyya   ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.Wasserstein     ( **cconf ) ,
-if active_test ( random_freq ) :  comparators += GnP.Hellinger       ( **cconf ) ,
-if not comparators : comparators += GnP.Chi2 ( **cconf ) ,  ## at least one comparator is needed
+comparators = [] 
+if active_test ( random_freq ) :  comparators .append ( GnP.Chi2            ( **cconf ) )
+if active_test ( random_freq ) :  comparators .append ( GnP.KullbackLeibler ( **cconf ) ) 
+if active_test ( random_freq ) :  comparators .append ( GnP.Jeffrey         ( **cconf ) ) 
+if active_test ( random_freq ) :  comparators .append ( GnP.JensenShannon   ( **cconf ) ) 
+if active_test ( random_freq ) :  comparators .append ( GnP.Mahalanobis     ( **cconf ) ) 
+if active_test ( random_freq ) :  comparators .append ( GnP.Hotelling       ( **cconf ) )
+if active_test ( random_freq ) :  comparators .append ( GnP.Bhattacharyya   ( **cconf ) ) 
+if active_test ( random_freq ) :  comparators .append ( GnP.Wasserstein     ( **cconf ) )
+if active_test ( random_freq ) :  comparators .append ( GnP.Hellinger       ( **cconf ) )
+
+if not comparators :
+    comparators.append ( GnP.Chi2 ( **cconf ) ) ## at least one comparator is needed
 
 # =========================================================================
 if active_test ( random_freq ) and hasLightGBM () :
     
     logger.info ( 'Use LightGBM      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_LGBM  as CMP 
-    comparators += ( CMP ( **cconf ) , ) 
+    comparators .append ( CMP ( **cconf ) )
     
 if active_test ( random_freq ) and hasXGBoost () :
     
     logger.info ( 'Use XGBoost       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_XGB  as CMP
-    comparators += ( CMP ( **cconf ) , ) 
+    comparators .append ( CMP ( **cconf ) ) 
 
 if active_test ( random_freq ) and hasCatBoost () :
     
     logger.info ( 'Use CatBoost      for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_CATB  as CMP 
-    comparators += ( CMP ( **cconf ) , ) 
+    comparators .append  ( CMP ( **cconf ) )
 
 if active_test ( random_freq ) and hasSkLearn () :
 
@@ -303,7 +304,7 @@ if active_test ( random_freq ) and hasSkLearn () :
 
     logger.info ( 'Use SkLearn/HGBC  for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_HGBC  as CMP1 
-    comparators += ( CMP1 ( **cconf ) , )
+    comparators .append ( CMP1 ( **cconf ) )
 
 if active_test ( random_freq ) and hasSkLearn () :
 
@@ -311,7 +312,7 @@ if active_test ( random_freq ) and hasSkLearn () :
     
     logger.info ( 'Use SkLearn/GBC   for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_GBC   as CMP2
-    comparators += ( CMP2 ( **cconf ) , ) 
+    comparators .append ( CMP2 ( **cconf ) ) 
 
 if active_test ( random_freq ) and hasSkLearn () :
 
@@ -319,7 +320,7 @@ if active_test ( random_freq ) and hasSkLearn () :
     
     logger.info ( 'Use SkLearn/RF    for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_RF    as CMP3    
-    comparators += ( CMP3 ( **cconf ) , )
+    comparators .append  ( CMP3 ( **cconf ) )
 
 if active_test ( random_freq ) and hasPyTorch () :
     
@@ -327,7 +328,7 @@ if active_test ( random_freq ) and hasPyTorch () :
 
     logger.info ( 'Use PyTorch       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_TORCH  as CMP
-    comparators += ( CMP ( **cconf ) , )
+    comparators .append ( CMP ( **cconf ) )
 
 if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasKeras ()  : 
     
@@ -338,9 +339,11 @@ if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasKera
         cconf [ 'nToys'    ] = 5 
         cconf [ 'parallel' ] = False 
         cconf [ 'silent'   ] = False 
-        comparators += ( CMP ( **cconf ) , )
- 
-comparators = comparators
+        comparators .append  ( CMP ( **cconf ) )
+
+        
+comparators = tuple ( comparators )
+
 # ============================================================================
 ## The table of global comparison statistics 
 header    = ( '#%s' % iteration , '#eff' , 'Comparator' ) + full_header 
@@ -701,7 +704,7 @@ if active_test ( random_freq ) and hasSkLearn () :
 # ============================================================================
 ## Compare the quality of all reweighters 
 # ============================================================================
-header    = ( 'Weight' , '#eff' , 'Comparator' ) + full_header 
+header    = ( 'Weight' , '#eff' , '' , 'comparator' ) + full_header 
 glob_stat = [ header ]
 for weight in weights :
     
@@ -729,7 +732,7 @@ for weight in weights :
     n_eff  = mctree.nEff ( weight ) 
     neff   = nice_print ( n_eff , precision = 2 , with_sign = False , strip = True  ) 
     for r in results :
-        row = ( weight , neff , r.method )  + r.table_row 
+        row = ( weight , neff , r.symbol , r.method )  + r.table_row 
         glob_stat.append ( row  )
     
     title = 'Global DATA/MC similarity: %s' % p_value_percent_expr

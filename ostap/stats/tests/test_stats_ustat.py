@@ -23,7 +23,6 @@ else                       : logger = getLogger ( __name__            )
 batch_env ( logger ) 
 # =============================================================================
 
-
 histos = set() 
 
 # =============================================================================
@@ -44,7 +43,6 @@ def test_stats_ustat_G2D () :
 
         
     for n in ( 100 , 200 , 500 , 1000 ) : ## , 5000 , 10000  ) :
-
 
         title  = "TEST    2D: N=%4d " % n 
         with timing ( title , logger = logger ) , use_canvas ( title , wait = 5 ) :
@@ -136,8 +134,6 @@ def test_stats_ustat_G3D () :
                 ROOT.SetOwnership ( data , True ) 
             del data
             
-
-
 # =============================================================================
 if '__main__' == __name__ :
 

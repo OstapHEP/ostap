@@ -56,6 +56,7 @@ __all__     = (
     'OSTAP_PROTOCOL'     , ## Ostap pickling protocol
     'OSTAP_RANDOM_SEED'  , ## Ostap random seed 
     'OSTAP_LIGHT_TESTS'  , ## run "light" version of Ostap tests  
+    'OSTAP_FULL_TESTS'   , ## fice "full" version of Ostap tests  
 )
 # =============================================================================
 import os
@@ -98,7 +99,8 @@ OSTAP_DIR           = 'OSTAP_DIR'
 ## 
 OSTAP_DBTYPES       = 'OSTAP_DBTYPES'      ## preferred DB types for newly created databases 
 ##
-OSTAP_LIGHT_TESTS   = 'OSTAP_LIGHT_TEST'   ## run light version of Ostap tests  
+OSTAP_LIGHT_TESTS   = 'OSTAP_LIGHT_TESTS'  ## run light version of Ostap tests  
+OSTAP_FULL_TESTS    = 'OSTAP_FULL_TESTS'   ## force  "full" version of Ostap tests  
 # =============================================================================
 ## list of "boolean false" values 
 boolean_false_values = frozenset ( ( '0' , 'false' , 'no'  , 'not' , 'none' , 'nope' , 'off' , '' , 'disable' , 'disabled' ) ) 

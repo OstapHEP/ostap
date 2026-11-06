@@ -23,14 +23,16 @@ from   ostap.utils.root_utils import batch_env
 import ostap.utils.env        as     E 
 import random 
 # =============================================================================
-## cache soem local information
-_light_tests_ = is_ci  () or ( ( v := E.get_env ( E.OSTAP_LIGHT_TESTS , '' ).strip() ) and v.lower() in E.boolean_true_values ) 
+## cache local information
+_light_tests_ = is_ci  () or E.get_env ( E.OSTAP_LIGHT_TESTS , ''  ).strip().lower() in E.boolean_true_values 
+_full_tests_  =              E.get_env ( E.OSTAP_FULL_TESTS  , ''  ).strip().lower() in E.boolean_true_values
 _ncpus_       = numcpu ()
 
 # ==============================================================================
 ## Should we run "light" version of the tests ?
 #  - Continious integration (GitHub, GitLab, Azurre, ...)
-#  - check OSTAP_LIGHT_TESTS  environment varibale
+#  - check OSTAP_FULL_TESTS   environment variable
+#  - check OSTAP_LIGHT_TESTS  environment variable
 #  - number of CPUS i excess of mincpu
 #  @code
 #  light , weak = light_tests () 
@@ -38,15 +40,17 @@ _ncpus_       = numcpu ()
 def light_tests ( mincpu = 8 ) :
     """ Should we run "light" version of tests ?
     - Continious integration (GitHub, GitLab, Azurre, ...)
-    - check OSTAP_LGHT_TESTS  environment varibale
+    - check OSTAP_FULL_TESTS  environment variable
+    - check OSTAP_LIGHT_TESTS environment variable
     - number of CPUS i excess of mincpu
 
     >>> light , weak = light_tests () 
     """
-    light = _light_tests_
     weak  = _ncpus_ <= mincpu
-    
-    return light or weak , weak 
+
+    light = False if _full_tests_ else _light_tests_
+
+    return light , weak
 
 # =============================================================================
 ## Get randm boolean according to "accept_fraction 
@@ -74,8 +78,9 @@ def accept ( fraction = 0.10 ) :
 def active_test ( fraction = 0.10 , mincpu = 8 ) :
     """ Should we run this prescaled test ? 
     """
-    light , _ = light_tests  ( mincpu )
-    if not light  : return True
+    light , weak = light_tests  ( mincpu )
+    if not light : return True
+    ## if not weak  : return True
     return accept ( fraction )
 
   
@@ -90,7 +95,6 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
-
     light, weak = light_tests ( 8 )
     logger.info  ( 'LIGHT tests   : %s' % light )
     logger.info  ( 'WEAK  machine : %s' % weak  )

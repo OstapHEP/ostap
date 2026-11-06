@@ -30,24 +30,21 @@ Key features include:
 
 Dependencies
 ------------
-- _mandatory_: [ROOT] version `<6.22` or `>=6.24`, [RooFit]
-- _highly desirable_: [numpy]
-   - mandatory for Fast Fourier Transform, used in histogram/function parameterization;
-   - optional for some other issues, in particular for the prime number treatment;  
-- _optional_: [scipy]
-   - numerical integration (quadratures, cubatures), root finding, minimization; 
-   - `ostap` offers home-made replacements, but the native methods from `scipy` are more efficient;
+- _mandatory_: python version `>=3.8`
+- _mandatory_: [ROOT] version `>=6.26`, [RooFit]
+- _mandatory_: [numpy]
+- _mandatory_: [scipy]
 - _optional_: [pathos], [dill], [multiprocess] and [ppt]
    - needed for parallel processing; 
    - `ostap` offers a [multiprocessing]-based replacement with reduced functionality; 
-- _optional_: [terminaltables]
+- _optional_: [terminaltables3] or [terminaltables]
    - nice format of tables 
          - in particular for nice printout for `TTree`, `TChain`, `RooDataSet`, ... ;
    - `ostap` offers a home-made replacement with a bit reduced functionalty.  
 - _desirable_: [more_itertoos]
    - `chunked` stuff is used in parallelization for spliting jobs into chunks 
    - `ostap` offers a home-made replacement  
-- _optional_ (only for python3,  `3.6<=version` ) : [berkeleydb]
+- _optional_ : [berkeleydb]
    - python interface to Berkeley DB (`libdb` needs to be installed!)
 - _optional_ (only for python3,  `3.3<=version<3.10` ) : [bsddb3]
    - python interface to Berkeley DB (`libdb` needs to be installed!)
@@ -68,6 +65,7 @@ The possible  setup options are described  [here](INSTALL.md)
 [multiprocess]: https://github.com/uqfoundation/multiprocess
 [ppt]: https://github.com/uqfoundation/ppft
 [multiprocessing]:https://docs.python.org/2/library/multiprocessing.html
+[terminaltables3]: https://pypi.org/project/terminaltables
 [terminaltables]: https://pypi.org/project/terminaltables
 [more_itertools]: https://pypi.org/project/more-itertools/
 [berkeleydb]: https://pypi.org/project/berkeleydb/

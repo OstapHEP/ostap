@@ -49,7 +49,7 @@ message ( " ********************************************************************
 set(OSTAP_VERSION_MAJOR  3)
 set(OSTAP_VERSION_MINOR  8)
 set(OSTAP_VERSION_PATCH  6)
-set(OSTAP_VERSION_TWEAK 15)
+set(OSTAP_VERSION_TWEAK 16)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
@@ -144,8 +144,6 @@ message ( "----> AMD 3DNOW+ ?               : " ${OSTAP_AMD_3DNOW_PLUS} )
 cmake_host_system_information(RESULT OSTAP_HAS_IA64    QUERY HAS_IA64)
 message ( "----> IA64       ?               : " ${OSTAP_HAS_IA64} )
 
-
-
 # ============================================================================
 ### CHECK FOR AVX, AVX2, and AVX-512
 # ============================================================================
@@ -155,14 +153,13 @@ include(CheckCXXSourceRuns)
 # Save the original CMAKE_REQUIRED_FLAGS to restore them later
 set(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
 
-
-# ----------------------------------------------------------------------------
+# ============================================================================
 # 1. CHECK FOR AVX (Advanced Vector Extensions)
-# ----------------------------------------------------------------------------
+# ============================================================================
 if(MSVC)
-    set(CMAKE_REQUIRED_FLAGS "/arch:AVX")
+  set(CMAKE_REQUIRED_FLAGS "/arch:AVX")
 else()
-    set(CMAKE_REQUIRED_FLAGS "-mavx")
+  set(CMAKE_REQUIRED_FLAGS "-mavx")
 endif()
 
 check_cxx_source_runs("
@@ -180,14 +177,13 @@ check_cxx_source_runs("
     }
 " OSTAP_HAS_AVX)
 
-
-# ----------------------------------------------------------------------------
+# ============================================================================
 # 2. CHECK FOR AVX2
-# ----------------------------------------------------------------------------
+# ============================================================================
 if(MSVC)
-    set(CMAKE_REQUIRED_FLAGS "/arch:AVX2")
+  set(CMAKE_REQUIRED_FLAGS "/arch:AVX2")
 else()
-    set(CMAKE_REQUIRED_FLAGS "-mavx2")
+  set(CMAKE_REQUIRED_FLAGS "-mavx2")
 endif()
 
 check_cxx_source_runs("
@@ -204,13 +200,14 @@ check_cxx_source_runs("
 " OSTAP_HAS_AVX2)
 
 
-# ----------------------------------------------------------------------------
+
+# ============================================================================
 # 3. CHECK FOR AVX-512 (Foundation)
-# ----------------------------------------------------------------------------
+# ============================================================================
 if(MSVC)
-    set(CMAKE_REQUIRED_FLAGS "/arch:AVX512")
+  set(CMAKE_REQUIRED_FLAGS "/arch:AVX512")
 else()
-    set(CMAKE_REQUIRED_FLAGS "-mavx512f")
+  set(CMAKE_REQUIRED_FLAGS "-mavx512f")
 endif()
 
 check_cxx_source_runs("
@@ -227,26 +224,24 @@ check_cxx_source_runs("
     }
 " OSTAP_HAS_AVX512)
 
-
 # Restore the original compile flags
 set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
 
 # Normalize results to 0/1 for clean display (empty means 0)
 foreach(_var OSTAP_HAS_AVX OSTAP_HAS_AVX2 OSTAP_HAS_AVX512)
-    if(NOT ${_var})
-        set(${_var} 0)
-    endif()
+  if(NOT ${_var})
+    set(${_var} 0)
+  endif()
 endforeach()
-  
+
 # ============================================================================
-### PRINT DETECTION RESULTS
+## PRINT DETECTION RESULTS
 # ============================================================================
 message ( "----> AVX        ?               : ${OSTAP_HAS_AVX}"    )
 message ( "----> AVX2       ?               : ${OSTAP_HAS_AVX2}"   )
 message ( "----> AVX-512    ?               : ${OSTAP_HAS_AVX512}" )
 
 # ===============================================================================
-
 
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake

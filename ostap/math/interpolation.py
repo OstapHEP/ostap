@@ -136,7 +136,10 @@ __all__     = (
     'Berrut1st'             , ## rational Berrut's 1st interpolant 
     'Berrut2nd'             , ## rational Berrut's 2nd interpolant 
     'Barycentric'           , ## polynomian true Barycentric interpolant 
-    'FloaterHormann'        , ## rational Floater-Hormann interpolant 
+    'FloaterHormann'        , ## rational Floater-Hormann interpolant
+    ## B-spline interpolation 
+    'bspline_interpolate'   , # B-spline iterpolation
+    'SplineInterpolator'    , ## spline interpoalation fo mscipy  
     )
 # =============================================================================
 from    ostap.core.ostap_types import ( is_integer     ,
@@ -152,8 +155,7 @@ import  ostap.math.reduce
 import  ROOT, math, sys, abc, array 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation' )
-else                       : logger = getLogger ( __name__                   )
+logger = getLogger ( 'ostap.math.interpolation' )
 # =============================================================================
     
 # =============================================================================
@@ -846,30 +848,11 @@ for t in ( Ostap.Math.Berrut1st      ,
 # =============================================================================
 ## Bernstein & BSpline interpolation
 # =============================================================================
-from ostap.math.bernstein import interpolate as interpolate_bernstein
-from ostap.math.bspline   import interpolate as interpolate_bspline
-# =============================================================================
-try : # =======================================================================
-    from ostap.math.bspline import interpolation as bspline_interpolate
-    __all__ =  __all__ + ( 'bspline_interpolate', )
-    # =========================================================================
-except ImportError: # =========================================================
-    # =========================================================================
-    pass
-# =============================================================================
-
-# =============================================================================
-## Scipy-based spline interpolation
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    from ostap.math.sp_interpolation import SplineInterpolator
-    __all__ =  __all__ + ( 'SplineInterpolator', )
-    # =========================================================================
-except  ImportError : # =======================================================
-    # =========================================================================
-    pass 
-
+from ostap.math.bernstein        import interpolate        as interpolate_bernstein
+from ostap.math.bspline          import interpolate        as interpolate_bspline
+from ostap.math.bspline          import interpolation      as bspline_interpolate
+from ostap.math.sp_interpolation import SplineInterpolator
+#
 # =============================================================================
 from operator import mul as op_mul
 from operator import add as op_add 

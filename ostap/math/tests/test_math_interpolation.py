@@ -12,6 +12,7 @@
 from   ostap.math.interpolation import ( interpolate , points  ,
                                          interpolate_bernstein ,
                                          interpolate_bspline   )
+from   ostap.math.interpolation import bspline_interpolate
 from   ostap.math.math_base     import doubles 
 from   ostap.core.core          import Ostap,  SE
 from   ostap.math.models        import f1_draw 
@@ -26,8 +27,7 @@ import random,math
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_interpolation' ) 
-else                       : logger = getLogger ( __name__                        )
+logger = getLogger ( 'ostap.test_math_interpolation' ) 
 # =============================================================================
 ## set batch from environment 
 batch_env ( logger )
@@ -51,16 +51,6 @@ def more_uniform ( a , b , N , N1 = 10 ) :
         bi =  ai +          d
         
         yield random.uniform ( ai, bi )
-
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    from   ostap.math.interpolation import bspline_interpolate
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    bspline_interpolate = None # ==============================================
-    logger.warning ( "``bspline_interpolate'' is not available" )
 
 # =============================================================================
 ## calculate "distance" between two functions 
@@ -584,32 +574,41 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ( 'test_cos'    , logger = logger ) : 
-        test_cos                ()
+    from   ostap.utils.utils4tests  import light_tests, active_test 
+
+    light , weak = light_tests ()
+    random_freq  = 0.20
+    
+    # =============================================================================
+    if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
+    elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests" )
+    
+    with timing ( 'test_cos'    , logger = logger ) :
+        if active_test ( random_freq ) : test_cos                ()
         
     with timing ( 'test_abssin' , logger = logger ) : 
-        test_abssin             ()
+        if active_test ( random_freq ) : test_abssin             ()
         
     with timing ( 'test_PW'     , logger = logger ) : 
-        test_PW                 ()
+        if active_test ( random_freq ) : test_PW                 ()
         
     with timing ( 'test_gauss'     , logger = logger ) : 
-        test_gauss              ()
+        if active_test ( random_freq ) : test_gauss              ()
         
     with timing ( 'test_runge'     , logger = logger ) : 
-        test_runge              ()
+        if active_test ( random_freq ) : test_runge              ()
 
     with timing ( 'test_random_grid_sin'     , logger = logger ) : 
-        test_random_grid_sin    ()
+        if active_test ( random_freq ) : test_random_grid_sin    ()
         
     with timing ( 'test_random_grid_abssin'     , logger = logger ) : 
-        test_random_grid_abssin ()
+        if active_test ( random_freq ) : test_random_grid_abssin ()
         
     with timing ( 'test_random_grid_sin2'     , logger = logger ) : 
-        test_random_grid_sin2   ()
+        if active_test ( random_freq ) : test_random_grid_sin2   ()
         
     with timing ( 'test_random_grid_gauss'     , logger = logger ) : 
-        test_random_grid_gauss  ()
+        if active_test ( random_freq ) : test_random_grid_gauss  ()
 
     ## check finally that everything is serializeable:
     with timing ( 'test_pickle'     , logger = logger ) : 
