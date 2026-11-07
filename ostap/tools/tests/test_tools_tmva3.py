@@ -165,7 +165,7 @@ def test_tmva3 () :
     nS = 5000
     nF = 5
 
-    if light : 
+    if light or weak : 
         nB = 1000
         nS = 1000
         nF = 2
@@ -183,7 +183,7 @@ def test_tmva3 () :
     from ostap.tools.tmva import Trainer
 
     methods = the_methods 
-    if light :
+    if light or weak :
         count   = math.ceil ( random_freq * len ( methods ) )
         methods = tuple ( sorted ( random.sample ( methods , count ) ) ) 
 

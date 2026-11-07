@@ -33,7 +33,8 @@ __all__     = (
     ## Formatters
     ##
     'pretty_float'       , ## pretty representation for floating value
-    'pretty_error'       , ## pretty represetnation for floating value with (symmetric) error 
+    'pretty_floats'      , ## pretty representation for several floating values
+    'pretty_error'       , ## pretty representation for floating value with (symmetric) error 
     'pretty_error2'      , ## pretty representation for floating value with asymmetric errors
     'pretty_errors'      , ## pretty representation for asymmetric errors
     ## 
@@ -48,7 +49,7 @@ __all__     = (
     'pretty_row'         , ## ready to use row and unit 
 )
 # =============================================================================
-from   ostap.core.ostap_types import integer_types, num_types
+from   ostap.core.ostap_types import integer_types, num_types, sequence_types
 from   ostap.math.math_base   import frexp10, ldexp10 
 from   ostap.logger.symbols   import ( plus_minus      , times       ,
                                        to_superscript  , nan_symbol  , 
@@ -118,7 +119,7 @@ def fmt_pretty_values ( *values             ,
     from ostap.math.math_base import iszero, frexp10
     the_format =  '%%+%d.%df' if with_sign else '%%%d.%df'
     
-    # ИСПРАВЛЕНИЕ: Используем max(0, ...), чтобы убрать жёсткое требование `and 2 <= precision`
+    # 
     if   100 <= av < 1000 : return the_format % ( width , max ( 0 , precision - 2 ) ) , 0 
     elif 10  <= av < 100  : return the_format % ( width , max ( 0 , precision - 1 ) ) , 0 
     elif 0.1 <= av < 10   : return the_format % ( width , precision                 ) , 0 
@@ -379,24 +380,74 @@ def pretty_float ( value             , * ,
 
     v = float ( value )
     
-    if   math.isinf ( v ) : return '+inf' if 0 < v else '-inf' , 0    
-    elif math.isnan ( v ) : return 'NaN' , 0
-
-    ## get format 
-    fmt , expo = fmt_pretty_float ( value     = v         ,
+    if  math.isnan ( v ) : 
+        symbol = 'NaN' if latex else nan_symbol 
+        return symbol , 0
+    elif math.isinf ( v ) :
+        if 0 < v : symbol = r'+\infty' if latex else posinf_symbol 
+        else     : symbol = r'-\infty' if latex else neginf_symbol
+        return symbol , 0    
+    
+    ## regular 
+    fmt , expo = fmt_pretty_float ( value     = v        ,
                                     width     = width     ,
                                     precision = precision ,
                                     with_sign = with_sign ,
                                     latex     = latex     )
-    if expo :
-        scale = 10 ** expo
-        v /= scale
+    if expo : v /= 10 ** expo
+    result   = fmt % v
+    if strip : result = result.strip()
+    return result , expo
 
-    result = fmt % v
-    if strip : result = result.strip
+# =============================================================================
+## Nice printout of the floating numbers (string + exponent)
+#  @code
+#  s , expo = pretty_floats ( number1 , number2 , number3 ) 
+#  @endcode
+#  @return nice stirng and the separate exponent 
+def pretty_floats ( *values           , 
+                    width     = 6     ,
+                    precision = 4     ,
+                    with_sign = True  ,
+                    strip     = False , 
+                    latex     = False ) :
+    """ Nice printout of the floating number
+    - return nice string and the separate exponent 
+    >>> s , expo = pretty_floats ( number1 , number2 , number3 )
+    """
+    if not values : 
+        return () , 0
     
-    return  result , expo 
-
+    if not all ( isinstance ( v , num_types ) for v in values ) :
+        raise TypeError ( "Invalid type of `values' : [%s]" % ( ', '.join ( typename ( v ) for v in values if not isinstance ( v , num_types ) ) ) )
+    
+    float_values  = tuple ( float ( v ) for v in values )
+   
+    fmt , expo, scale  = '%g' , 0 , 1 
+    
+    vmax = max ( ( abs ( v ) for v in float_values if math.isfinite ( v ) ) , default = None )
+    if vmax is not None:
+        fmt , expo = fmt_pretty_float ( value     = vmax       ,
+                                        width     = width      ,
+                                        precision = precision  ,
+                                        with_sign = with_sign  ,
+                                        latex     = latex      ) 
+        scale = 10 ** expo if expo else 1
+        
+    results = [] 
+    for v in float_values :
+        if math.isfinite ( v ) :
+            item = ( fmt % ( v / scale ) ) if expo else ( fmt % v ) 
+            if strip : item = item.strip()     
+            results.append  ( item )
+        elif  math.isnan    ( v ) : results.append ( 'NaN' if latex else nan_symbol )
+        else : 
+            if 0 < v : symbol = r'+\infty' if latex else posinf_symbol
+            else     : symbol = r'-\infty' if latex else neginf_symbol 
+            results.append ( symbol )
+       
+    return tuple ( results ) , expo
+    
 # ===============================================================================
 ## nice printout of value with (singular, symetric) error  ( string + exponent)
 #  @code
@@ -654,6 +705,11 @@ def pretty_print ( what              , * ,
                               width     = width     ,
                               precision = precision ,
                               latex     = latex     , **kwargs )
+    elif isinstance ( what , sequence_types ) and all ( isinstance ( v , num_types ) for v in what ) :
+        return pretty_floats ( *what                 ,
+                               width     = width     ,
+                               precision = precision ,
+                               latex     = latex     , **kwargs )   
     
     raise TypeError ( "pretty_print: invalid `what` type: %s:" % typename ( what ) )
 
