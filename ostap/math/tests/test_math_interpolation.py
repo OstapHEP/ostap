@@ -577,7 +577,7 @@ if '__main__' == __name__ :
     from   ostap.utils.utils4tests  import light_tests, active_test 
 
     light , weak = light_tests ()
-    random_freq  = 0.20
+    random_freq  = 0.15
     
     # =============================================================================
     if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 

@@ -783,7 +783,7 @@ w_min_expr           = f'{w_italic}-min'
 w_max_expr           = f'{w_italic}-max'
 w_mean_expr          = f'{w_italic}-mean'
 w_rms_expr           = f'{greek_lower_sigma}({w_italic})' if show else f"{w_italic}-rms"
-w_unit_expt          = f'{w_italic}-unit'
+w_unit_expr          = f'{w_italic}-unit'
 
 v_min_expr           = f'{v_italic}-min'
 v_max_expr           = f'{v_italic}-max'

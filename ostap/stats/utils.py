@@ -120,7 +120,7 @@ __all__     = (
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
 from   ostap.utils.core       import typename
 import ostap.logger.symbols   as     S 
-import numpy, re 
+import numpy
 # =============================================================================
 # logging 
 # =============================================================================
@@ -233,7 +233,7 @@ short_header    = ( S.t_value_expr         ,
                     S.p_value_percent_expr ,
                     S.n_sigma_expr         )
 t_header        = S.t_value_expr  , S.t_unit_expr           
-w_header        = S.w_min_expr    , S.w_max_expr , S.w_unit_expt
+w_header        = S.w_min_expr    , S.w_max_expr , S.w_unit_expr
 # =============================================================================
 
 # =============================================================================

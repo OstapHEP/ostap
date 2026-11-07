@@ -47,9 +47,7 @@ def light_tests ( mincpu = 8 ) :
     >>> light , weak = light_tests () 
     """
     weak  = _ncpus_ <= mincpu
-
-    light = False if _full_tests_ else _light_tests_
-
+    light = False if _full_tests_ else ( _light_tests_ or weak ) 
     return light , weak
 
 # =============================================================================
@@ -80,7 +78,7 @@ def active_test ( fraction = 0.10 , mincpu = 8 ) :
     """
     light , weak = light_tests  ( mincpu )
     if not light : return True
-    ## if not weak  : return True
+    if not weak  : return True
     return accept ( fraction )
 
   

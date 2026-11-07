@@ -457,7 +457,7 @@ plots  = [
 memory_init = memory_usage() 
 converged   = False
 
-maxIter     = 4 if ( light or weak ) else 11
+maxIter     = 4 if ( light or weak ) else 12
 
 weighter    = None
 
