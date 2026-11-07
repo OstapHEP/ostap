@@ -43,8 +43,9 @@ endif()
 
 add_library ( root_pyroot INTERFACE IMPORTED)
     
-find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
-if  (Python3_FOUND)
+find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development OPTIONAL_COMPONENTS NumPy ) 
+
+if  (Python3_FOUND ) 
 else()
   message ( FATAL_ERROR "Python3 is NOT FOUND!" ) 
 endif()

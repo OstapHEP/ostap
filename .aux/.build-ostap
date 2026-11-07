@@ -159,7 +159,7 @@ if [ -n "${OSTAP_SOURCE}" ] && \
    [ -f "${OSTAP_SOURCE}/CMakeLists.txt" ]; then
 
     OSTAP_SOURCE=$(canonical_path "${OSTAP_SOURCE}")
-    printf "%s Use OSTAP_SOURCE      = %s\n" "${prefix1}" "${OSTAP_SOURCE}"
+    printf "%s Use OSTAP_SOURCE      : %s\n" "${prefix1}" "${OSTAP_SOURCE}"
 else
     printf "%s No valid source directory is found! %s\n" "${prefix1_error}" "${OSTAP_SOURCE}"
     unset OSTAP_SOURCE OSTAP_BUILD OSTAP_INSTALL
@@ -182,7 +182,7 @@ if [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
     return 212 2>/dev/null || exit 212
 fi
 
-printf "%s Use OSTAP_INSTALL     = %s\n" "${prefix1}" "${OSTAP_INSTALL}"
+printf "%s Use OSTAP_INSTALL     : %s\n" "${prefix1}" "${OSTAP_INSTALL}"
 
 # =========================================================================
 ## Valid build directory (1)?
@@ -192,7 +192,7 @@ ostap_build_upper=$(echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]')
 if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
 
     ## OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
-    printf "%s Use OSTAP_BUILD       = %s\n" "${prefix1}" "${OSTAP_BUILD}"
+    printf "%s Use OSTAP_BUILD       : %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 
@@ -202,7 +202,7 @@ elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
 
     OSTAP_BUILD=$(canonical_path "${OSTAP_SOURCE}/build")
-    printf "%s Use OSTAP_BUILD       = %s\n" "${prefix1}" "${OSTAP_BUILD}"
+    printf "%s Use OSTAP_BUILD       : %s\n" "${prefix1}" "${OSTAP_BUILD}"
 
 elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
 

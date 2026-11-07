@@ -109,6 +109,8 @@ printf "%s LCG version=%s PLATFORM=%s\n" "${prefix}" "${LCG}" "${PLATFORM}"
 ## Wake up the cvmfs fuse mount (on Windows WSL or dormant CVMFS mounts)
 # ================================================================================
 run=1
+
+run=1
 while [ "$run" -le 50 ]; do
 
     for the_dir in \
@@ -121,25 +123,18 @@ while [ "$run" -le 50 ]; do
         "/cvmfs/sft.cern.ch/lcg/views/${LCG}" \
         "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}"
     do
-        if [ ! -d "$the_dir" ]; then
-            ( ( ls -al "$the_dir" >/dev/null 2>&1 ) ;
-              ( cd "$the_dir" >/dev/null 2>&1 && ls -al . >/dev/null 2>&1 ) ;
-              ( ls -al "$the_dir" >/dev/null 2>&1 ) )
-        fi
+        ls -al "$the_dir" >/dev/null 2>&1
     done 
 
     for the_file in \
         /cvmfs/sft.cern.ch/lcg/views/setupViews.sh \
         /cvmfs/sft.cern.ch/lcg/views/setupViews.csh
     do
-        ( ( ls -al "$the_file" >/dev/null 2>&1 ) ;
-          ( cat    "$the_file" >/dev/null 2>&1 ) ; 
-          ( ls -al "$the_file" >/dev/null 2>&1 ) )
+        ls -al "$the_file" >/dev/null 2>&1
+        cat    "$the_file" >/dev/null 2>&1
     done
 
-    ( ( ls -al "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh" > /dev/null 2>&1 ) ;
-      ( cat    "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh" > /dev/null 2>&1 ) ;
-      ( ls -al "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh" > /dev/null 2>&1 ) )
+    ls -al "/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh" > /dev/null 2>&1
 
     if [ -d /cvmfs/sft.cern.ch ] && \
        [ -d /cvmfs/sft.cern.ch/lcg ] && \
@@ -151,7 +146,7 @@ while [ "$run" -le 50 ]; do
        [ -f /cvmfs/sft.cern.ch/lcg/views/setupViews.csh ]; then
         break
     else
-        printf "%s Make a try to wake up cvmfs #%s\n" "${prefix}" "${run}"
+        printf "Make a try to wake up cvmfs #%s\n" "${run}"
         sleep 2
     fi
     run=$((run + 1))
@@ -282,7 +277,7 @@ done
 
 if [ -n "${source_found}" ] && [ -d "${source_found}" ]; then
     OSTAP_SOURCE=$(canonical_path "${source_found}")
-    printf "%s Use OSTAP_SOURCE   = '%s'\n" "${prefix}" "${OSTAP_SOURCE}"
+    printf "%s Use OSTAP_SOURCE      : '%s'\n" "${prefix}" "${OSTAP_SOURCE}"
 else
     printf "%s No ostap source directory found!\n" "${prefix_error}"
     return 114 2>/dev/null || exit 114
@@ -297,7 +292,7 @@ ostap_build_upper=$(echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]')
 if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
 
     OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
-    printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
+    printf "%s Use OSTAP_BUILD       : %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 
@@ -309,7 +304,7 @@ elif [ -d "${OSTAP_SOURCE}/build" ] && [ -w "${OSTAP_SOURCE}/build" ]; then
     
     OSTAP_BUILD="${OSTAP_SOURCE}/build"
     OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
-    printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
+    printf "%s Use OSTAP_BUILD       : %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
 
@@ -329,40 +324,112 @@ fi
 ## Check build directory validation
 if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]; then
     OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
-    printf "%s Use OSTAP_BUILD    = %s\n" "${prefix}" "${OSTAP_BUILD}"
+    printf "%s Use OSTAP_BUILD       : %s\n" "${prefix}" "${OSTAP_BUILD}"
 else
     printf "%s No valid build directory is found! %s\n" "${prefix_error}" "${OSTAP_BUILD}"
     return 115 2>/dev/null || exit 115
 fi     
 
+# Function to ensure a working CMake binary is available.
+# Automatically detects OS (Linux / macOS), downloads the correct official 
+# static release to a fresh /tmp directory, and updates PATH.
+ensure_working_cmake() {
+    # Check if cmake exists and executes successfully
+    if ! command -v cmake &> /dev/null || ! cmake --version &> /dev/null; then
+        echo "----> CMake not found or broken. Detecting OS and downloading..."
+        
+        local runtime_dir="/tmp/cmake_runtime_$$"
+        mkdir -p "$runtime_dir" && cd "$runtime_dir"
+
+        # Fetch the latest stable version tag from GitHub API
+        local latest_version
+        latest_version=$(curl -s "https://api.github.com/repos/Kitware/CMake/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+
+        if [ -z "$latest_version" ]; then
+            latest_version="3.31.5"
+        fi
+
+        # Detect operating system and choose the correct asset archive name
+        local os_type
+        os_type="$(uname -s)"
+        local archive_name=""
+
+        if [ "$os_type" = "Linux" ]; then
+            archive_name="cmake-${latest_version}-linux-x86_64.tar.gz"
+        elif [ "$os_type" = "Darwin" ]; then
+            # macOS universal binary works for both Apple Silicon (M1/M2/M3/M4) and Intel Macs
+            archive_name="cmake-${latest_version}-macos-universal.tar.gz"
+        else
+            echo "----> Error: Unsupported operating system: $os_type" >&2
+            cd - > /dev/null
+            rm -rf "$runtime_dir"
+            return 1
+        fi
+
+        echo "----> Downloading CMake ${latest_version} for ${os_type}..."
+        local url="https://github.com/Kitware/CMake/releases/download/v${latest_version}/${archive_name}"
+
+        if command -v curl &> /dev/null; then
+            curl -L "$url" -o cmake.tar.gz
+        elif command -v wget &> /dev/null; then
+            wget "$url" -O cmake.tar.gz
+        else
+            echo "----> Error: Neither curl nor wget is available." >&2
+            cd - > /dev/null
+            rm -rf "$runtime_dir"
+            return 1
+        fi
+
+        # Extract archive adjusting path structure for macOS vs Linux app bundles if needed
+        if [ "$os_type" = "Darwin" ]; then
+            # macOS official tarball contains a .app bundle structure inside: cmake-X.Y.Z-macos-universal/CMake.app/Contents/...
+            tar -xzf cmake.tar.gz --strip-components=3 --wildcards "*/CMake.app/Contents/bin/*"
+        else
+            tar -xzf cmake.tar.gz --strip-components=1
+        fi
+
+        rm -f cmake.tar.gz
+        cd - > /dev/null
+        
+        export PATH="$runtime_dir/bin:$PATH"
+        echo "----> CMake successfully set up in: $runtime_dir/bin"
+    else
+        echo "----> Working CMake found: $(which cmake)"
+    fi
+}
+
+
+ensure_working_cmake || { printf "%s Failed to ensure a working CMake binary.\n" "${prefix_error}"; return 116 2>/dev/null || exit 116; }
+
+
 ## Check CMAKE & NINJA
 if command -v cmake >/dev/null 2>&1; then
-    printf "%s CMAKE              : %s\n" "${prefix}" "$(command -v cmake)"
-    printf "%s CMAKE version      : %s\n" "${prefix}" "$(cmake --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    printf "%s CMAKE                 : %s\n" "${prefix}" "$(command -v cmake)"
+    printf "%s CMAKE version         : %s\n" "${prefix}" "$(cmake --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CMAKE is not found!\n" "${prefix_error}"
     return 116 2>/dev/null || exit 116
 fi
 
 if command -v ctest >/dev/null 2>&1; then
-    printf "%s CTEST              : %s\n" "${prefix}" "$(command -v ctest)"
-    printf "%s CTEST version      : %s\n" "${prefix}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    printf "%s CTEST                 : %s\n" "${prefix}" "$(command -v ctest)"
+    printf "%s CTEST version         : %s\n" "${prefix}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CTEST is not found!\n" "${prefix_error}"
     return 117 2>/dev/null || exit 117
 fi
 
 if command -v cpack >/dev/null 2>&1; then
-    printf "%s CPACK              : %s\n" "${prefix}" "$(command -v cpack)"
-    printf "%s CPACK version      : %s\n" "${prefix}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    printf "%s CPACK                 : %s\n" "${prefix}" "$(command -v cpack)"
+    printf "%s CPACK version         : %s\n" "${prefix}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CPACK is not found!\n" "${prefix_error}"
     return 118 2>/dev/null || exit 118
 fi
 
 if command -v ninja >/dev/null 2>&1; then
-    printf "%s NINJA              : %s\n" "${prefix}" "$(command -v ninja)"
-    printf "%s NINJA version      : %s\n" "${prefix}" "$(ninja --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    printf "%s NINJA                 : %s\n" "${prefix}" "$(command -v ninja)"
+    printf "%s NINJA version         : %s\n" "${prefix}" "$(ninja --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s NINJA is not found!\n" "${prefix_error}"
     return 119 2>/dev/null || exit 119
@@ -409,13 +476,13 @@ else
 
 fi
 
-printf "%s LCG VERSION    : %s\n" "${prefix}" "${LCG}"
-printf "%s LCG PLATFORM   : %s\n" "${prefix}" "${PLATFORM}"
-printf "%s LCG BUILD      : %s\n" "${prefix}" "${LCG_BUILD}"
-printf "%s ROOTSYS        : %s\n" "${prefix}" "${ROOTSYS}"
-printf "%s OSTAP_SOURCE   : %s\n" "${prefix}" "${OSTAP_SOURCE}"
-printf "%s OSTAP_INSTALL  : %s\n" "${prefix}" "${OSTAP_INSTALL}"
-printf "%s OSTAP_BUILD    : %s\n" "${prefix}" "${OSTAP_BUILD}"
+printf "%s LCG VERSION           : %s\n" "${prefix}" "${LCG}"
+printf "%s LCG PLATFORM          : %s\n" "${prefix}" "${PLATFORM}"
+printf "%s LCG BUILD             : %s\n" "${prefix}" "${LCG_BUILD}"
+printf "%s ROOTSYS               : %s\n" "${prefix}" "${ROOTSYS}"
+printf "%s OSTAP_SOURCE          : %s\n" "${prefix}" "${OSTAP_SOURCE}"
+printf "%s OSTAP_INSTALL         : %s\n" "${prefix}" "${OSTAP_INSTALL}"
+printf "%s OSTAP_BUILD           : %s\n" "${prefix}" "${OSTAP_BUILD}"
 
 old_prefix="${prefix}"
 old_prefix_error="${prefix_error}"
@@ -435,15 +502,15 @@ fi
 prefix="${old_prefix}"
 prefix_error="${old_prefix_error}"
 
-printf "%s LCG VERSION    : %s\n" "${prefix}" "${LCG}"
-printf "%s LCG PLATFORM   : %s\n" "${prefix}" "${PLATFORM}"
-printf "%s LCG BUILD      : %s\n" "${prefix}" "${LCG_BUILD}"
-printf "%s LCG_SETUP      : %s\n" "${prefix}" "${LCG_SETUP}"
+printf "%s LCG VERSION           : %s\n" "${prefix}" "${LCG}"
+printf "%s LCG PLATFORM          : %s\n" "${prefix}" "${PLATFORM}"
+printf "%s LCG BUILD             : %s\n" "${prefix}" "${LCG_BUILD}"
+printf "%s LCG_SETUP             : %s\n" "${prefix}" "${LCG_SETUP}"
 
 if [ "$result" -eq 0 ]; then
-    printf "%s RESULT         : SUCCESS\n" "${prefix}"
+    printf "%s RESULT          : SUCCESS\n" "${prefix}"
 else
-    printf "%s RESULT         : %s\n" "${prefix_error}" "${result}"
+    printf "%s RESULT          : %s\n" "${prefix_error}" "${result}"
 fi
 
 # =====================================================================
