@@ -139,7 +139,7 @@ __all__     = (
     'FloaterHormann'        , ## rational Floater-Hormann interpolant
     ## B-spline interpolation 
     'bspline_interpolate'   , # B-spline iterpolation
-    'SplineInterpolator'    , ## spline interpoalation fo mscipy  
+    'SplineInterpolator'    , ## spline interpoalation from scipy  
     )
 # =============================================================================
 from    ostap.core.ostap_types import ( is_integer     ,
@@ -851,8 +851,95 @@ for t in ( Ostap.Math.Berrut1st      ,
 from ostap.math.bernstein        import interpolate        as interpolate_bernstein
 from ostap.math.bspline          import interpolate        as interpolate_bspline
 from ostap.math.bspline          import interpolation      as bspline_interpolate
-from ostap.math.sp_interpolation import SplineInterpolator
-#
+
+from scipy.interpolate           import InterpolatedUnivariateSpline  as scipy_IUS 
+# =========================================================================
+## simple class for scipy-based interpolation  
+class SplineInterpolator(object) :
+    """ Simple class for scipy-based interpolation
+    >>> x = ... ##
+    >>> y = ... ##
+    >>> sp = SplineInterpolator ( (x,y) , 3 )
+    """
+    # =====================================================================
+    ## Create the interpolator
+    #  @code
+    #  >>> x = ... ##
+    #  >>> y = ... ##
+    #  >>> sp = SplineInterpolator ( (x,y) , 3 )
+    #  @endcode
+    def __init__ ( self , data , order = 3 , ext = 0 ) :
+        """ Create the interpolator
+        >>> x = ... ##
+        >>> y = ... ##
+        >>> sp = SplineInterpolator ( ( x , y ) , 3 )
+        """
+        
+        x , y = data
+        
+        ## create the interpolation spline 
+        self.__spline = scipy_IUS ( x   = x     ,
+                                    y   = y     ,
+                                    k   = order ,
+                                    ext = ext   )
+        self.__antiderivative = None
+        self.__derivative     = None
+    
+    # ======================================================================
+    ## the main method:
+    #  @code
+    #  >>> spline = ...
+    #  >>> result = spline ( x ) 
+    #  @endcode 
+    def __call__ ( self , x ) :
+        """ The main method:
+        >>> spline = ...
+        >>> result = spline ( x )
+        """
+        return self.__spline ( x )
+        
+    @property
+    def derivative ( self ) :
+        """`derivative' : get the spline object for defivative
+        """
+        if not self.__derivative :
+            self.__derivative = self.__spline.derivative()
+        return self.__derivative
+        
+    @property
+    def antiderivative ( self ) :
+        """`antiderivative' : get the spline object for indefinite itegral"""
+        if not self.__antiderivative :
+            self.__antiderivative = self.__spline.antiderivative()
+        return self.__antiderivative
+    
+    # =========================================================================
+    ## get the integral
+    #  @code 
+    #  >>> spline = ...
+    #  >>> o = spline.integral()        ## indefinite integral
+    #  >>> r = spline.integral( a , b ) ##   definite integral form a to b
+    #  @endcode 
+    def integral ( self , a = None , b = None ) :
+        """ Get the integral
+        >>> spline = ...
+        >>> o = spline.integral()        ## indefinite integral
+        >>> r = spline.integral( a , b ) ##   definite integral form a to b         
+         """
+        
+        if   a is None and b is None : return self.antiderivative
+        
+        assert ( not a is None ) and ( not b is None ) ,\
+            'lower and upper edged must be splicified!'
+    
+        return self.__spline.integral ( a , b )  
+
+    @property
+    def spline ( self ) :
+        """`spline' : get the underlying bspline/scipy object"""
+        return self.__spline
+
+
 # =============================================================================
 from operator import mul as op_mul
 from operator import add as op_add 
