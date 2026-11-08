@@ -296,7 +296,7 @@ if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]
 
 elif [ -n "${OSTAP_BUILD}" ] && [ "${ostap_build_upper}" = "TMP" ]; then
 
-    OSTAP_BUILD=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX")
+    OSTAP_BUILD=$(mktemp -d --tmpdir ostap-$(date '+%Y%m%d')-OSTAP-BUILD-DIR-XXXXXX)
     OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
 
@@ -315,7 +315,7 @@ elif [ -w "${OSTAP_SOURCE}" ] && [ ! -d "${OSTAP_SOURCE}/build" ]; then
 
 else
 
-    OSTAP_BUILD=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX")
+    OSTAP_BUILD=$(mktemp -d --tmpdir ostap-$(date '+%Y%m%d')-OSTAP-BUILD-DIR-XXXXXX)
     OSTAP_BUILD=$(canonical_path "${OSTAP_BUILD}")
     printf "%s Build directory is created %s\n" "${prefix}" "${OSTAP_BUILD}"
 
@@ -328,78 +328,83 @@ if [ -n "${OSTAP_BUILD}" ] && [ -d "${OSTAP_BUILD}" ] && [ -w "${OSTAP_BUILD}" ]
 else
     printf "%s No valid build directory is found! %s\n" "${prefix_error}" "${OSTAP_BUILD}"
     return 115 2>/dev/null || exit 115
-fi     
+fi 
 
-# Function to ensure a working CMake binary is available.
-# Automatically detects OS (Linux / macOS), downloads the correct official 
-# static release to a fresh /tmp directory, and updates PATH.
-ensure_working_cmake() {
-    # Check if cmake exists and executes successfully
-    if ! command -v cmake &> /dev/null || ! cmake --version &> /dev/null; then
-        echo "----> CMake not found or broken. Detecting OS and downloading..."
-        
-        local runtime_dir="/tmp/cmake_runtime_$$"
-        mkdir -p "$runtime_dir" && cd "$runtime_dir"
 
-        # Fetch the latest stable version tag from GitHub API
-        local latest_version
-        latest_version=$(curl -s "https://api.github.com/repos/Kitware/CMake/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+if ! command -v cmake >/dev/null 2>&1 || \
+   ! command -v ctest >/dev/null 2>&1 || \
+   ! command -v cpack >/dev/null 2>&1 || \
+   ! cmake --version >/dev/null 2>&1; then
 
-        if [ -z "$latest_version" ]; then
-            latest_version="3.31.5"
+    printf "%s CMake components missing or broken. Fetching release tarball...\n" "${prefix_error}"
+    runtime_dir=$(mktemp -d --tmpdir ostap-$(date '+%Y%m%d')-OSTAP-CMAKE-XXXXXX)
+ 
+    (
+        cd "${runtime_dir}" || exit 1
+
+        if command -v curl >/dev/null 2>&1; then
+            latest_version=$(curl -s --connect-timeout 10 --max-time 15 -H "User-Agent: ostap-build-script" "https://api.github.com/repos/Kitware/CMake/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        elif command -v wget >/dev/null 2>&1; then
+            latest_version=$(wget -qO- --timeout=10 --header="User-Agent: ostap-build-script" "https://api.github.com/repos/Kitware/CMake/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        else
+            latest_version=""
         fi
 
-        # Detect operating system and choose the correct asset archive name
-        local os_type
-        os_type="$(uname -s)"
-        local archive_name=""
+        if [ -n "${latest_version}" ]; then
+            printf "%s Latest version successfully resolved dynamically: %s\n" "${prefix}" "${latest_version}"
+        else
+            latest_version="3.31.5"
+            printf "%s Failed to resolve version dynamically, falling back to default: %s\n" "${prefix_error}" "${latest_version}"
+        fi
 
-        if [ "$os_type" = "Linux" ]; then
+        os_type="$(uname -s)"
+        if [ "${os_type}" = "Linux" ]; then
             archive_name="cmake-${latest_version}-linux-x86_64.tar.gz"
-        elif [ "$os_type" = "Darwin" ]; then
-            # macOS universal binary works for both Apple Silicon (M1/M2/M3/M4) and Intel Macs
+        elif [ "${os_type}" = "Darwin" ]; then
             archive_name="cmake-${latest_version}-macos-universal.tar.gz"
         else
-            echo "----> Error: Unsupported operating system: $os_type" >&2
-            cd - > /dev/null
-            rm -rf "$runtime_dir"
-            return 1
+            exit 1
         fi
 
-        echo "----> Downloading CMake ${latest_version} for ${os_type}..."
-        local url="https://github.com/Kitware/CMake/releases/download/v${latest_version}/${archive_name}"
+        major_minor=$(echo "${latest_version}" | cut -d. -f1,2)
+        url="https://cmake.org/files/v${major_minor}/${archive_name}"
+        printf "%s Download URL: %s\n" "${prefix}" "${url}"
 
-        if command -v curl &> /dev/null; then
-            curl -L "$url" -o cmake.tar.gz
-        elif command -v wget &> /dev/null; then
-            wget "$url" -O cmake.tar.gz
+        if command -v curl >/dev/null 2>&1; then
+            curl -sL --connect-timeout 15 --max-time 300 -H "User-Agent: ostap-build-script" "${url}" -o cmake.tar.gz
+        elif command -v wget >/dev/null 2>&1; then
+            wget -q --timeout=15 --tries=3 --header="User-Agent: ostap-build-script" "${url}" -O cmake.tar.gz
         else
-            echo "----> Error: Neither curl nor wget is available." >&2
-            cd - > /dev/null
-            rm -rf "$runtime_dir"
-            return 1
+            exit 1
         fi
 
-        # Extract archive adjusting path structure for macOS vs Linux app bundles if needed
-        if [ "$os_type" = "Darwin" ]; then
-            # macOS official tarball contains a .app bundle structure inside: cmake-X.Y.Z-macos-universal/CMake.app/Contents/...
-            tar -xzf cmake.tar.gz --strip-components=3 --wildcards "*/CMake.app/Contents/bin/*"
+        [ ! -s cmake.tar.gz ] && exit 1
+        gzip -t cmake.tar.gz >/dev/null 2>&1 || exit 1
+
+        if [ "${os_type}" = "Darwin" ]; then
+            mkdir -p bin
+            tar -xf cmake.tar.gz
+            extracted_dir=$(ls -d cmake-*-macos-universal 2>/dev/null)
+            cp -R "${extracted_dir}/CMake.app/Contents/bin/"* bin/
         else
-            tar -xzf cmake.tar.gz --strip-components=1
+            mkdir -p temp_extracted
+            gzip -dc cmake.tar.gz | tar -x -C temp_extracted --strip-components=1
+            mv temp_extracted/* .
+            rm -rf temp_extracted
         fi
 
         rm -f cmake.tar.gz
-        cd - > /dev/null
-        
-        export PATH="$runtime_dir/bin:$PATH"
-        echo "----> CMake successfully set up in: $runtime_dir/bin"
-    else
-        echo "----> Working CMake found: $(which cmake)"
-    fi
-}
+    ) || {
+        rm -rf "${runtime_dir}"
+        printf "%s Failed to ensure a working CMake binary.\n" "${prefix_error}"
+        return 116 2>/dev/null || exit 116
+    }
+    
+    export PATH="${runtime_dir}/bin:${PATH}"
+    printf "%s CMake, CTest, and CPack successfully set up in: %s/bin\n" "${prefix}" "${runtime_dir}"
+fi
 
 
-ensure_working_cmake || { printf "%s Failed to ensure a working CMake binary.\n" "${prefix_error}"; return 116 2>/dev/null || exit 116; }
 
 
 ## Check CMAKE & NINJA
@@ -456,6 +461,7 @@ done
 ## Parameter #5: install directory
 # ===================================================================================
 OSTAP_INSTALL="${5:-${OSTAP_INSTALL}}"
+ostap_install_upper=$(echo "${OSTAP_INSTALL}" | tr '[:lower:]' '[:upper:]')
 
 if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTALL}" ]; then
 
@@ -463,6 +469,12 @@ if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTA
     printf "%s Clean  OSTAP_INSTALL directory        %s\n" "${prefix}" "${OSTAP_INSTALL}"
     ( cd "${OSTAP_INSTALL}" && \
       rm -rf -- .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
+
+elif [ -n "${OSTAP_INSTALL}" ] && [ "${ostap_install_upper}" = "TMP" ]; then
+
+    OSTAP_INSTALL=$(mktemp -d --tmpdir ostap-$(date '+%Y%m%d')-OSTAP-INSTALL-DIR-XXXXXX)
+    OSTAP_INSTALL=$(canonical_path "${OSTAP_INSTALL}")
+    printf "%s Install directory is created %s\n" "${prefix}" "${OSTAP_INSTALL}"
 
 elif [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ ! -w "${OSTAP_INSTALL}" ]; then
 

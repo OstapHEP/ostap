@@ -148,16 +148,15 @@ class Method(object) :
         mm = self.__methods.get ( targs , None )
         if not mm : 
             try : 
-                mm = self.__factory ( *targs )
+                mm = self.__factory ( *targs ) ()
             except TypeError :
                 return None
             
-            if mm :
-                self.__methods[ targs ] = mm 
+            if mm : self.__methods[ targs ] = mm 
+            else  : return None
+            
+        return mm.operation if ( mm and hasattr ( mm , 'operation' )  ) else None 
 
-        return mm.operation if mm else None 
-
-    
     def __call__ ( self , a  , b = None ) :
         return self.method ( a , b )
 

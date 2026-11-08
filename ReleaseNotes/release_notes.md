@@ -1,5 +1,9 @@
 # v3.8.6.16
 
+  1. Fix tests
+
+# v3.8.6.16
+
 ## New features
 
    1. Add the first and second Wasserstein' distances

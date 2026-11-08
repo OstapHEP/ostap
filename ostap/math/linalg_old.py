@@ -19,14 +19,13 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.ostap_types import num_types, is_integer
-from   ostap.math.math_base   import isequal,iszero
+from   ostap.math.math_base   import isequal , iszero
 import ROOT, cppyy 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg' )
-else                       : logger = getLogger ( __name__            )
+logger = getLogger ( 'ostap.math.linalg_old' )
 # =============================================================================
 ## get  i,j element from matrix-like object
 #  @code
@@ -34,7 +33,7 @@ else                       : logger = getLogger ( __name__            )
 #  value = matrix ( mtrx , 1 , 2 ) 
 #  @endcode 
 def matrix ( mtrx , i , j ) :
-    """Get  i,j element from matrix-like object
+    """ Get  i,j element from matrix-like object
     >>> mtrx  = ...
     >>> value = matrix ( m , 1 , 2 ) 
     """
@@ -224,7 +223,7 @@ def _get_mult_op_ ( klass1 , klass2 ) :
 
     ## try to load the operators 
     try :
-        ops = Ostap.Math.MultiplyOp ( klass1 , klass2 )
+        ops = Ostap.Math.MultiplyOp ( klass1 , klass2 )()
         _mult_ops_ [ t ] = ops
         return ops                       ## RETURN 
     except TypeError:
@@ -246,10 +245,10 @@ def _get_eq_op_ ( klass1 , klass2 ) :
 
     ## try to load the operators 
     try :
-        ops = Ostap.Math.EqualityOp ( klass1 , klass2 )
+        ops = Ostap.Math.EqualityOp ( klass1 , klass2 )() 
         _eq_ops_ [ t ] = ops
         return ops                       ## RETURN 
-    except TypeError:
+    except Exception as e:
         return None                      ## RETURN
     
     return None                          ## RETURN
@@ -370,22 +369,26 @@ def _vector_cross_ ( a, b ) :
 #  print vector1 == [ 0, 2, 3 ]
 #  @endcode 
 def _vector_eq_ ( a , b ) :
-    """Equality for vectors
+    """ Equality for vectors
     >>> vector1 = ...
     >>> vector2 = ...
     >>> print vector1 == vector2
     >>> print vector1 == ( 0, 2, 3 )
     >>> print vector1 == [ 0, 2, 3 ]
     """
+
     if         a    is      b          : return True
     elif not hasattr ( b , '__len__' ) : return False 
     elif  len ( a ) != len ( b )       : return False        
-    #
+    ## 
     ops = _get_eq_op_ ( a.__class__ , b.__class__ )
     if ops : return ops.equal ( a , b )  ## RETURN
     ## compare elements  
-    for i in range ( len( a ) ) :
-        if not isequal ( a[i] , b[i] ) : return False
+    
+    for ai, bi in zip ( a , b ) :
+        ai = float ( ai  )
+        bi = float ( bi )
+        if not isequal ( ai , bi  ) : return False
         
     return True 
     
@@ -979,8 +982,8 @@ if '__main__' == __name__ :
     logger.info ( 's22 == s22*1.0 : %s ' % (  s22 == s22 * 1.0 ) )
     logger.info ( 's22 != s22*1.1 : %s ' % (  s22 != s22 * 1.1 ) )
     
-    logger.info ( ' l1 == (0,1,2) : %s ' % (  l1 == ( 0 , 1 , 2 ) ) )
-    logger.info ( ' l1 == [0,1,2] : %s ' % (  l1 == [ 0 , 1 , 2 ] ) )
+    ##logger.info ( ' l1 == (0,1,2) : %s ' % (  l1 == ( 0 , 1 , 2 ) ) )
+    ##logger.info ( ' l1 == [0,1,2] : %s ' % (  l1 == [ 0 , 1 , 2 ] ) )
     
 
     m22[0,0] = 1
