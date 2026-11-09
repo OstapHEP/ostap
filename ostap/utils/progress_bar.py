@@ -103,6 +103,8 @@ __all__      = (
     "text_bar"        ## helper function for TextBar 
     )
 # =============================================================================
+from tracemalloc import start
+
 from   ostap.core.ostap_types import sized_types 
 from   ostap.utils.basic      import isatty, is_ci, interactive , terminal_size
 from   ostap.logger.symbols   import clock_ticks, runner, finish, clock, arrow_right, visible_width
@@ -607,10 +609,15 @@ class RunningBar(object):
         elif minutes : timebar = ' %02d\'%04.1f"'               % (         minutes , secs )
         else         : timebar = ' %.2f"'                       %                     secs 
 
-        timebar += ' ' + start.strftime ('%a %d %b %Y, %I:%M%p')
-        timebar += ' ' + arrow_right 
-        timebar += ' ' + end.strftime   ('%a %d %b %Y, %I:%M%p')
-        
+        if start.date() == end.date():
+            timebar += ' ' + start.strftime('%a %d %b %Y, %I:%M%p')
+            timebar += ' ' + arrow_right
+            timebar += ' ' + end.strftime('%I:%M%p')  # Только время без даты
+        else:
+            timebar += ' ' + start.strftime('%a %d %b %Y, %I:%M%p')
+            timebar += ' ' + arrow_right
+            timebar += ' ' + end.strftime('%a %d %b %Y, %I:%M%p')
+
         self.__output.flush ()
         self.__output.write( self.prefix + ( _done_ % self.__amount ) + ' ' + clock + timebar + '\n' ) 
         self.__output.flush ()
@@ -752,7 +759,16 @@ class TextBar(object):
         elif  minutes : timebar = f" {minutes:02d}'{secs:04.1f}\""
         else          : timebar = f" {secs:.2f}\"" 
 
-        timebar  += f" {start.strftime('%a %d %b %Y, %H:%M:%S')} ➔ {end.strftime('%a %d %b %Y, %H:%M:%S')}"
+        if start.date() == end.date():
+            timebar += (
+                f" {start.strftime('%a %d %b %Y, %H:%M:%S')} ➔"
+                f" {end.strftime('%H:%M:%S')}"
+            )
+        else:
+            timebar += (
+                f" {start.strftime('%a %d %b %Y, %H:%M:%S')} ➔"
+                f" {end.strftime('%a %d %b %Y, %H:%M:%S')}"
+            )
         
         prefix_str = f"{self.__prefix} " if self.__prefix else ""
         content    = f"{prefix_str}{self.__text} 🕒{timebar}"
