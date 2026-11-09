@@ -1,4 +1,13 @@
-# v3.8.6.16
+## New features
+
+   1.  Update `PyTorchIterativeReweighter`
+   
+## Bug fixes
+
+## Backward incompatible
+
+
+# v3.8.6.18
 
   1. Fix tests
 

@@ -27,7 +27,8 @@ from   ostap.core.ostap_types       import num_types, string_types, integer_type
 from   ostap.utils.core             import typename
 from   ostap.utils.basic            import safe_loop
 from   ostap.utils.utils            import classprop 
-from   ostap.logger.pretty          import nice_print 
+from   ostap.logger.pretty          import nice_print
+from   ostap.math.math_base         import pos_infinity  
 from   ostap.utils.progress_bar     import progress_bar, text_bar 
 from   ostap.stats.utils            import num_samples, num_features, nEff
 from   ostap.tools.base_reweighters import IterativeReweighter  
@@ -58,7 +59,7 @@ LGBM_MAX_DEPTH        =    6 # Deep tree capacity for high dimensions / large st
 LGBM_LEARNING_RATE    = 0.02 # Small step for stable density ratio convergence
 
 XGB_ESTIMATORS        =  300 # High capacity: deep ensemble with low learning rate
-XGB_MAX_DEPTH         =    7 # Deep tree capacity for high dimensions / large statistics
+XGB_MAX_DEPTH         =    7 # Deep tree capacity for high dimensions / large statistic
 XGB_LEARNING_RATE     = 0.02 # Small step for stable density ratio convergence
 XGB_MAX_LEAVES        =   63 # 
 
@@ -73,10 +74,13 @@ TORCH_HIDDEN_DIM      =  128 # Hidden layer size for small MLP weak learners
 TORCH_WEIGHT_DECAY    = 1e-5 
 TORCH_BATCH_SIZE      = 'auto'
 TORCH_MAX_BATCH_SIZE  = 2 ** 16 
-TORCH_HIDDEN_LAYERS   = 128 , 64 # Default to 2 hidden layers for enough capacity
+TORCH_HIDDEN_LAYERS   = 32 ,  # ## single hiddle layer with 32 nodes 
 
-TORCH_EPOCHS_PER_STEP = 30    # Training epochs per boosting step
-TORCH_HIDDEN_LAYERS   = 512 ,
+TORCH_OPTIMIZER_ADAM  = 'adam'
+TORCH_OPTIMIZER_LBFGS = 'lbfgs'
+TORCH_OPTIMIZERS      = TORCH_OPTIMIZER_ADAM , TORCH_OPTIMIZER_LBFGS
+TORCH_OPTIMIZER       = TORCH_OPTIMIZER_LBFGS 
+TORCH_LBFGS_CHUNK     = 200_000
 
 THRESHOLD_NSAMPLES    = 50000
 THRESHOLD_NFEATURES   = 10
@@ -124,8 +128,10 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
             'feature_fraction'        :  1.0                , 
             'lambda_l2'               :  0.0                ,                        
             'verbosity'               : -1                  ,
+            'print_freq'              : PRINT_FREQ          , 
             'n_jobs'                  :  1                  ,
-            'n_splits'                :  5                  , 
+            'n_splits'                :  5                  ,
+            
         }
         
         config.update ( kwargs )
@@ -223,6 +229,8 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
             'verbosity'               : self.params.get ( 'verbosity'               , -1               ) , 
             'n_jobs'                  : self.params.get ( 'n_jobs'                  ,  1               ) , 
         }
+        
+        print_freq = self.params.get ( 'print_freq' , PRINT_FREQ )
 
         neff0 = nEff ( X_orig, current_w_orig )
 
@@ -249,7 +257,7 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
             log_r_step      = numpy.clip ( raw_vals   , *LOG_STEP_CLIPS )
             current_w_orig *= numpy.exp  ( log_r_step * learning_rate   )
 
-            if bar and not self.silent and ( it < 5  or ( it + 1 ) % PRINT_FREQ == 0 or ( it + 5 ) == n_estimators ) :
+            if bar and not self.silent and ( it < 5  or ( it + 1 ) % print_freq == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
                 wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
@@ -344,9 +352,11 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             'colsamples_bytree' :  1.0               , 
             'reg_alpha'         :  0.0               , 
             'reg_lambda'        :  0.0               , 
-            'verbosity'         :  0                 , 
+            'verbosity'         :  0                 ,
+            'print_freq'        : PRINT_FREQ         , 
             'n_jobs'            :  1                 ,
             'n_splits'          :  5                 ,
+            
         }
 
         config.update ( kwargs )
@@ -443,6 +453,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             'n_jobs'           : self.params.get ( 'n_jobs'           , 1               ) , 
             'verbosity'        : 0                 , 
         }
+        print_freq        = self.params.get ( 'print_freq' , PRINT_FREQ )
         
         neff0 = nEff ( X_orig, current_w_orig )
         
@@ -471,7 +482,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             log_r_step      = numpy.clip ( raw_vals, *LOG_STEP_CLIPS )
             current_w_orig *= numpy.exp ( log_r_step * learning_rate )
         
-            if bar and not self.silent and ( it < 5  or ( it + 1 ) % PRINT_FREQ == 0 or ( it + 5 ) == n_estimators ) :
+            if bar and not self.silent and ( it < 5  or ( it + 1 ) % print_freq == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
                 wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
@@ -549,7 +560,7 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
         config = {
             'n_estimators'               :  CATB_ESTIMATORS    ,
             'learning_rate'              :  CATB_LEARNING_RATE ,
-            'depth'                      :  CATB_MAX_DEPTH     ,
+            'max_depth'                  :  CATB_MAX_DEPTH     ,
             'grow_policy'                :  'SymmetricTree'    ,
             'l2_leaf_reg'                :  0.001              ,
             'subsample'                  :  1.0                ,
@@ -558,6 +569,7 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
             'leaf_estimation_iterations' :  1                  ,
             'min_data_in_leaf'           :  1                  ,
             'verbose'                    :  False              ,
+            'print_freq'                 : PRINT_FREQ          , 
             'thread_count'               :  1                  ,
             'n_splits'                   :  5                  , 
         }
@@ -652,7 +664,8 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
             'thread_count'              : self.params.get ( 'n_jobs', 1 )                 ,
             'leaf_estimation_method'    : 'Newton'                                        ,
         }
-
+        print_freq        = self.params.get ( 'print_freq' , PRINT_FREQ )
+        
         neff0 = nEff ( X_orig, current_w_orig )
 
         description = boosting_symbol + ' ' + S.fixed_width ( self.symbol , 3 ) + ':'        
@@ -680,7 +693,7 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
             log_r_step      = numpy.clip ( raw_vals   , *LOG_STEP_CLIPS )
             current_w_orig *= numpy.exp  ( log_r_step * learning_rate   )
 
-            if bar and not self.silent and ( it < 5  or ( it + 1 ) % PRINT_FREQ == 0 or ( it + 5 ) == n_estimators ) :
+            if bar and not self.silent and ( it < 5  or ( it + 1 ) % print_freq == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
                 wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
@@ -755,44 +768,89 @@ def optimal_batch_size ( n_samples      ,
     
     return min ( batch_size , max_batch_size )
 
+
 # =============================================================================
 ## @class PyTorchIterativeReweighter
 #  @brief Iterative weight boosting density reweighter using PyTorch (MLP weak learners).
 #  @details Implements sequential gradient boosting for density ratio estimation 
-#           r(x) = p(x) / (1 - p(x)) using feature-dependent MLP weak learners.
-# =============================================================================
+#           \f$r(x) = \frac{p(x)}{1-p(x)}\f$ using feature-dependent Multi-Layer 
+#           Perceptron (MLP) weak learners. Supports flexible optimization backends 
+#           (Adam and quasi-Newton L-BFGS) with automatic static chunking for large datasets.
 class PyTorchIterativeReweighter ( IterativeReweighter ) :
-    """ Iterative weight boosting density reweighter using PyTorch with spatial variance control. """
+    """ Iterative weight boosting density reweighter using PyTorch backend.
+    
+    This class sequentially trains PyTorch MLP weak learners to estimate 
+    density ratios between target and original feature distributions. It 
+    supports dynamic batch size optimization, spatial variance control via 
+    zero-mean centering, and early stopping based on sliding loss improvement.
+    """
 
+    # =========================================================================
+    ## @brief Initialize the PyTorch iterative density reweighter instance.
+    #  @details Sets up hyperparameter configuration defaults, validates batch size, 
+    #           configures the computation device (CPU or GPU), and initializes 
+    #           the underlying IterativeReweighter framework.
+    #  @param self Instance of the class.
+    #  @param original Source feature matrix (N-dimensional array or dataframe).
+    #  @param target Target feature matrix (N-dimensional array or dataframe).
+    #  @param original_weight Optional observation weights for the source dataset.
+    #  @param target_weight Optional observation weights for the target dataset.
+    #  @param kwargs Additional keyword arguments for PyTorch configuration:
+    #         - n_estimators (int): Number of boosting steps (default: 300).
+    #         - hidden_layers (tuple): Architecture of hidden layers (default: (128, 64)).
+    #         - learning_rate (float): Learning rate for density ratio boosting step (default: 0.02).
+    #         - device (str or torch.device): Computation device ('cpu', 'cuda', or None for auto-detection).
+    # =========================================================================
     def __init__ ( self            , 
                    original        , 
                    target          , 
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        """ Initialize PyTorch iterative density reweighter. """
+        """ Initialize PyTorch iterative density reweighter with customized hyperparameter defaults.
+
+        Merges user arguments with default configurations, resolves batch size constraints,
+        configures execution device, and initializes parent cross-validation infrastructure.
+        """
+        import torch
+
         config = {
             'n_estimators'    :  TORCH_ESTIMATORS       ,
-            'epochs_per_step' :  TORCH_EPOCHS_PER_STEP  ,
             'hidden_layers'   :  TORCH_HIDDEN_LAYERS    ,
             'learning_rate'   :  TORCH_LEARNING_RATE    ,
             'weight_decay'    :  TORCH_WEIGHT_DECAY     , 
-            'batch_size'      :  TORCH_BATCH_SIZE       , 
+            'batch_size'      :  TORCH_BATCH_SIZE       ,
+            'lbfgs_chunk'     :  TORCH_LBFGS_CHUNK      ,
+            'device'          :  None                   , # Auto-detect GPU/CPU if not specified
+            ##
+            'epochs_per_step' :  TORCH_EPOCHS_PER_STEP  ,
+            'min_epoches'     :  5                      ,
+            'min_delta'       :  1e-4                   ,
+            'patience'        :  5                      ,
+            ## 
+            'optimizer'       :  TORCH_OPTIMIZER        , # Default optimizer type ('adam' or 'lbfgs')
+            # 
             'verbosity'       :  0                      ,
+            'print_freq'      : PRINT_FREQ              , 
             'n_jobs'          :  1                      , 
         }
         
         config.update ( kwargs )
+        # Alias resolution for backward compatibility
         if 'num_boost_round' in config : config [ 'n_estimators'  ] = config.pop ( 'num_boost_round', TORCH_ESTIMATORS ) 
-        # Support backward compatibility if user passes hidden_dim instead of hidden_layers
         if 'hidden_dim'      in config : config [ 'hidden_layers' ] = config.pop ( 'hidden_dim'     , ( 128, 64 )      )
+
+        # Automatic GPU / CPU device selection in constructor
+        user_device = config.get ( 'device', None )
+        if user_device is None                        : config [ 'device' ] = torch.device ( 'cuda' if torch.cuda.is_available () else 'cpu' )
+        elif isinstance ( user_device, string_types ) : config [ 'device' ] = torch.device ( user_device )
 
         n_rows     = num_samples  ( target ) + num_samples ( original )
         n_features = num_features ( target )
 
         batch_size = config.get ( 'batch_size' , 'auto' ) 
         
-        # Validate user-provided integer batch size
+        # Validate user-provided integer batch size or dynamically compute optimal size
         if isinstance ( batch_size, integer_types ) and 2 <= batch_size <= min ( n_rows , TORCH_MAX_BATCH_SIZE ) :
             if batch_size & ( batch_size - 1 ) : batch_size = 2 ** math.floor ( math.log2 ( batch_size ) )
         else : 
@@ -805,31 +863,48 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                             original_weight = original_weight ,
                             target_weight   = target_weight   , **config )
 
+    # =========================================================================
+    ## @brief Get the short symbol/tag representing the PyTorch reweighter method.
+    #  @return String identifier symbol used for logging and console visual display.
+    # =========================================================================
     @classprop
     def symbol ( self ) :
-        """ Short symbol/tag for reweighter. """
+        """ Return short symbol/tag for reweighter console visual representation. """
         return U.symbol_TORCH
 
+    # =========================================================================
+    ## @brief Get the full method identifier name.
+    #  @return Method string tag.
+    # =========================================================================
     @property
     def method ( self ) :
         """ Return method identifier name. """
         return method_TORCH
 
-    # -------------------------------------------------------------------------
-    # Dynamic MLP class factory with arbitrary hidden layer tuple support
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    ## @brief Factory method generating a dynamic PyTorch Module class for weak learners.
+    #  @details Constructs a dynamic `WeakMLP` subclass supporting arbitrary hidden layer 
+    #           architectures. Includes BatchNorm1d for input normalization and forces 
+    #           `bias=False` on the output linear layer to eliminate global offset learning.
+    #  @return WeakMLP class inheriting from `torch.nn.Module`.
+    # =========================================================================
     def get_MLP_class ( self ) :
-        """ Dynamically import torch and return the WeakMLP class. """
+        """ Dynamically import torch and construct the WeakMLP PyTorch Module class.
+        
+        Returns:
+            class: A PyTorch nn.Module class tailored for spatial density ratio step learning.
+        """
         import torch
 
         class WeakMLP ( torch.nn.Module ) :
+            """ Weak Multi-Layer Perceptron neural network module. """
             def __init__ ( self, input_dim, hidden_layers = ( 128, ) ) :
                 super ().__init__ ()
                 
                 if isinstance ( hidden_layers, int ) :
                     hidden_layers = ( hidden_layers, )
 
-                # Normalize input features to prevent gradient saturation
+                # Input feature batch normalization to prevent gradient scaling anomalies
                 self.bn = torch.nn.BatchNorm1d ( input_dim )
                 
                 layers = []
@@ -845,29 +920,48 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                     
                 self.hidden_net = torch.nn.Sequential ( *layers )
                 
-                # CRITICAL: bias=False prevents the network from learning a single 
-                # global scalar shift, forcing it to rely on spatial features.
+                # CRITICAL: Setting bias=False forces the model to rely purely on spatial 
+                # feature correlations rather than fitting a constant background offset.
                 self.fc_out = torch.nn.Linear ( curr_dim, 1, bias = False ) 
                 torch.nn.init.xavier_uniform_ ( self.fc_out.weight )
 
             def forward ( self, x ) :
+                """ Execute forward pass through BatchNorm, hidden layers, and linear head. """
                 h = self.bn ( x )
                 h = self.hidden_net ( h )
                 return self.fc_out ( h )
                 
         return WeakMLP
 
+    # =========================================================================
+    ## @brief Execute the iterative PyTorch boosting stream on a specific cross-validation fold.
+    #  @details Sequentially fits PyTorch MLP weak learners, computes logit predictions,
+    #           applies zero-mean centering, clips log-ratio steps to [-7.0, 7.0], 
+    #           and updates sample weights via exponential scaling. Supports static chunking for L-BFGS.
+    #  @param self Instance of the class.
+    #  @param X_orig Original feature subset matrix for current fold.
+    #  @param w_orig Original sample weights subset for current fold.
+    #  @param X_targ Target feature subset matrix for current fold.
+    #  @param w_targ Target sample weights subset for current fold.
+    #  @return Tuple `(models, final_ratios)` containing list of model dicts and final ratio array.
+    # =========================================================================
     def _fit_iterative_stream ( self   ,
                                 X_orig ,
                                 w_orig ,
                                 X_targ ,
                                 w_targ ) :
-        """ Execute iterative PyTorch boosting stream on fold data. """
+        """ Execute iterative PyTorch boosting stream on fold data.
+        
+        Performs sequential weak learner optimization with early stopping, dynamic loss 
+        tracking, weight normalization, and zero-mean spatial calibration.
+        """
         import torch
         import torch.nn as nn
         import torch.optim as optim
 
-        device     = torch.device ( 'cpu' )
+        device     = self.params.get ( 'device' , 'cuda' if torch.cuda.is_available () else 'cpu' )        
+        device     = torch.device ( device )
+        
         n_orig     = len ( X_orig )
         n_targ     = len ( X_targ )
         n_features = X_orig.shape [ 1 ]
@@ -887,17 +981,28 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         n_estimators      = self.params.get ( 'n_estimators'       , TORCH_ESTIMATORS      )
         learning_rate     = self.params.get ( 'learning_rate'      , TORCH_LEARNING_RATE   )
         hidden_layers     = self.params.get ( 'hidden_layers'      , TORCH_HIDDEN_LAYERS   )
-        epochs_per_step   = self.params.get ( 'epochs_per_step'    , TORCH_EPOCHS_PER_STEP )
         batch_size        = self.params.get ( 'batch_size'         , TORCH_BATCH_SIZE      )
+        lbfgs_chunk       = self.params.get ( 'lbfgs_chunk'        , TORCH_LBFGS_CHUNK     )
         weight_decay      = self.params.get ( 'weight_decay'       , TORCH_WEIGHT_DECAY    )
-        adam_learnig_rate = self.params.get ( 'adam_learning_rate' , 0.01                  )
+        
+        optimizer_type    = self.params.get ( 'optimizer'          , TORCH_OPTIMIZER       )
+        optimizer_type    = optimizer_type.strip().lower().replace('-','')        
+        if not optimizer_type in TORCH_OPTIMIZERS :
+            raise TypeError ( "Unknown `optimizer': %s" % optimizer_type ) 
+
+        optimizer_learning_rate = self.params.get ( 'optimizer_learning_rate' , 0.01 )
+        print_freq        = self.params.get ( 'print_freq'         , PRINT_FREQ )
+
+        epochs_per_step   = self.params.get ( 'epochs_per_step'    , TORCH_EPOCHS_PER_STEP )
+        min_epoches       = self.params.get ( 'min_epoches'        , 5                     )
+        min_delta         = self.params.get ( 'min_delta'          , 1e-4                  )
+        patience          = self.params.get ( 'patience'           , 5                     )
         
         models        = []
         X_orig_tensor = torch.tensor ( X_orig.astype ( numpy.float32 ), dtype = torch.float32 ).to ( device )
         X_comb_tensor = torch.tensor ( X_comb, dtype = torch.float32 ).to ( device )
         y_comb_tensor = torch.tensor ( y_comb, dtype = torch.float32 ).unsqueeze ( 1 ).to ( device )
 
-        # Get the dynamically defined model class
         WeakMLPClass = self.get_MLP_class ()
 
         neff0       = nEff ( X_orig, current_w_orig )        
@@ -907,39 +1012,123 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
         else               : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = True  )
         
-        t_start = time.time () 
-        for it , _ , bar in safe_loop ( the_bar ) : 
+        t_start   = time.time ()
+        prev_loss = 0  
+        for step , index , bar in safe_loop ( the_bar ) : 
             
             comb_weights   = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
             comb_weights  /= ( numpy.sum ( comb_weights ) + 1e-12 )
             weights_tensor = torch.tensor ( comb_weights, dtype = torch.float32 ).unsqueeze ( 1 ).to ( device )
 
-            # Instantiate model using the dynamically loaded class
             model     = WeakMLPClass ( n_features, hidden_layers ).to ( device )
-            optimizer = optim.Adam ( model.parameters (), lr = adam_learnig_rate , weight_decay = weight_decay )
             criterion = nn.BCEWithLogitsLoss ( reduction = 'none' )
-
             model.train ()
-            dataset   = torch.utils.data.TensorDataset ( X_comb_tensor, y_comb_tensor, weights_tensor )
-            loader    = torch.utils.data.DataLoader    ( dataset, batch_size = batch_size, shuffle = True )
 
-            running_loss = 0.0            
-            for epoch in safe_loop ( epochs_per_step ) :
-                epoch_loss = 0.0
-                batches    = 0  
-                for bx, by, bw in loader :
-                    optimizer.zero_grad ()
-                    preds = model ( bx )
-
-                    # In-batch weight normalization to keep gradient scale independent of N
-                    bw_norm = bw / ( torch.sum ( bw ) + 1e-12 )
-                    loss    = torch.sum ( criterion ( preds, by ) * bw_norm )
+            if optimizer_type == 'lbfgs' :
+                
+                optimizer = optim.LBFGS ( model.parameters ()                      ,
+                                          lr             = optimizer_learning_rate ,
+                                          max_iter       = epochs_per_step         ,
+                                          line_search_fn = 'strong_wolfe'          )
+                
+                if lbfgs_chunk < n_orig :
+                    orig_idx = numpy.random.choice ( n_orig, size = lbfgs_chunk , replace = False )
+                    t_size   = min ( n_targ, int ( lbfgs_chunk * n_targ / n_orig ) )
+                    targ_idx = numpy.random.choice ( n_targ, size = t_size, replace = False )
                     
+                    X_chunk = numpy.vstack ( [ X_orig[orig_idx], X_targ[targ_idx] ] ).astype ( numpy.float32 )
+                    y_chunk = numpy.hstack ( [ numpy.zeros ( len(orig_idx), dtype=numpy.float32 ), numpy.ones ( len(targ_idx), dtype=numpy.float32 ) ] )
+                    w_chunk = numpy.hstack ( [ current_w_orig[orig_idx], numpy.abs ( norm_targ[targ_idx] ) ] )
+                    w_chunk /= ( numpy.sum ( w_chunk ) + 1e-12 )
+                else :
+                    X_chunk = X_comb
+                    y_chunk = y_comb
+                    w_chunk = comb_weights
+
+                X_chunk_tensor = torch.tensor ( X_chunk, dtype = torch.float32 ).to ( device )
+                y_chunk_tensor = torch.tensor ( y_chunk, dtype = torch.float32 ).unsqueeze ( 1 ).to ( device )
+                w_chunk_tensor = torch.tensor ( w_chunk, dtype = torch.float32 ).unsqueeze ( 1 ).to ( device )
+
+                # 1. Compute initial loss on the chunk BEFORE L-BFGS optimization
+                with torch.no_grad () :
+                    preds_init = model ( X_chunk_tensor )
+                    loss_init  = torch.sum ( criterion ( preds_init, y_chunk_tensor ) * w_chunk_tensor )
+                    if 0 < weight_decay :
+                        l2_reg_init = sum ( torch.sum ( p ** 2 ) for p in model.parameters() )
+                        loss_init = loss_init + 0.5 * weight_decay * l2_reg_init
+                    initial_loss = float ( loss_init.item () )
+
+                def closure () :
+                    optimizer.zero_grad ()
+                    preds = model ( X_chunk_tensor )
+                    loss  = torch.sum ( criterion ( preds, y_chunk_tensor ) * w_chunk_tensor )
+                    if 0 < weight_decay :
+                        l2_reg = sum ( torch.sum ( p ** 2 ) for p in model.parameters() )
+                        loss = loss + 0.5 * weight_decay * l2_reg
                     loss.backward ()
-                    optimizer.step ()
-                    epoch_loss += loss.item ()
-                    batches    += 1
-                running_loss = epoch_loss / max ( batches, 1 )
+                    return loss
+
+                optimizer.step ( closure )
+                
+                # 2. Compute final loss on the chunk AFTER L-BFGS optimization
+                with torch.no_grad () :
+                    preds_final = model ( X_chunk_tensor )
+                    loss_final  = torch.sum ( criterion ( preds_final, y_chunk_tensor ) * w_chunk_tensor )
+                    if 0 < weight_decay :
+                        l2_reg_final = sum ( torch.sum ( p ** 2 ) for p in model.parameters() )
+                        loss_final = loss_final + 0.5 * weight_decay * l2_reg_final
+                    running_loss = float ( loss_final.item () )
+                    best_loss    = running_loss
+                    nepoches     = 1
+                    
+            else :
+                
+                optimizer = optim.Adam  ( model.parameters ()                      ,
+                                          lr             = optimizer_learning_rate ,
+                                          weight_decay   = weight_decay            )
+                
+                dataset   = torch.utils.data.TensorDataset ( X_comb_tensor, y_comb_tensor, weights_tensor )
+                loader    = torch.utils.data.DataLoader    ( dataset, batch_size = batch_size, shuffle = True )
+
+                initial_loss     = None 
+                running_loss     = 0.0
+                best_loss        = pos_infinity 
+                patience_counter = 0
+                nepoches         = 0
+                
+                for epoch in safe_loop ( epochs_per_step ) :
+                    nepoches   += 1 
+                    epoch_loss  = 0.0
+                    batches     = 0  
+                    for bx, by, bw in loader :
+                        optimizer.zero_grad ()
+                        preds   = model ( bx )
+                        bw_norm = bw / ( torch.sum ( bw ) + 1e-12 )
+                        loss    = torch.sum ( criterion ( preds, by ) * bw_norm )
+                        
+                        current_loss = loss.item ()
+                        loss.backward  ()
+                        optimizer.step ()
+                        
+                        if initial_loss is None : 
+                            initial_loss = float ( current_loss )
+                                            
+                        epoch_loss += current_loss 
+                        batches    += 1
+                        
+                    running_loss = float ( epoch_loss / max ( batches, 1 ) ) 
+                    
+                    if min_epoches <= epoch :
+                        if running_loss + min_delta < best_loss :
+                            best_loss        =  running_loss
+                            patience_counter =  0  
+                        else:
+                            patience_counter += 1 
+                            
+                        if patience <= patience_counter : break
+
+            delta_loss = running_loss - prev_loss
+            prev_loss  = running_loss
 
             model.eval ()
             with torch.no_grad () :
@@ -956,7 +1145,7 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
             log_r_step      = numpy.clip ( raw_vals, *LOG_STEP_CLIPS )
             current_w_orig *= numpy.exp  ( log_r_step * learning_rate )
 
-            if bar and not self.silent and ( it < 5  or ( it + 1 ) % PRINT_FREQ == 0 or ( it + 5 ) == n_estimators ) :
+            if bar and not self.silent and ( step < 5  or ( step + 1 ) % print_freq == 0 or ( step + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
                 wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
@@ -964,13 +1153,24 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                 ne0         = nice_print ( float ( neff0              ) , precision = 2, with_sign = False, strip = True )
                 ne          = nice_print ( float ( neff               ) , precision = 2, with_sign = False, strip = True )
 
-                dt       = ( time.time () - t_start ) / ( it + 1 )
-                if dt < 1 : dt = '%dms'  % ( math.ceil ( 1000 * dt ) )
-                else      : dt = '%.1fs' %                      dt
+                dt       = ( time.time () - t_start ) / ( step + 1 )
+                if dt < 0.1 : dt = '%dms'  % ( math.ceil ( 1000 * dt ) )
+                else        : dt = '%.1fs' %                      dt
 
-                loss_str = nice_print ( float ( running_loss ), precision = 3, with_sign = False, strip = True )
-                message  = f"Step {it+1:4d}/{n_estimators:<4d} | loss: {loss_str} | min/max: {wmin}/{wmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}"
-                bar     += message
+                init_str  = nice_print ( initial_loss , precision = 3 , with_sign = False , strip = True )
+                loss_str  = nice_print ( running_loss , precision = 3 , with_sign = False , strip = True )
+                best_str  = nice_print ( best_loss    , precision = 3 , with_sign = False , strip = True ) if best_loss != running_loss else "="
+                delta_str = nice_print ( delta_loss   , precision = 3 , with_sign = True  , strip = True )
+                
+                message   = f"Step {step+1:4d}/{n_estimators:<4d}"
+                if best_str != loss_str : message  += f" | loss: {init_str} {S.arrow_right} {loss_str}/{best_str}"
+                else                    : message  += f" | loss: {init_str} {S.arrow_right} {loss_str}"                
+                message  += f" | {S.delta_symbol}: {delta_str}"
+                if nepoches != epochs_per_step : message += f" | #epochs/step:{nepoches}"
+                message  += f" | wmin/wmax: {wmin}/{wmax}"
+                message  += f" | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}"
+                
+                bar      += message
     
             models.append ( { 
                 'state_dict'    : model.state_dict () , 
@@ -984,20 +1184,36 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
 
         return models, final_ratios
 
+    # =========================================================================
+    ## @brief Accumulate raw logit predictions across sequential PyTorch models.
+    #  @details Evaluates each trained PyTorch weak learner on unseen feature matrix X, 
+    #           subtracts its stored spatial zero-centering shift, clips log-ratio steps 
+    #           to [-7.0, 7.0], accumulates them scaled by learning rate, and returns 
+    #           final exponential density ratio predictions.
+    #  @param self Instance of the class.
+    #  @param models List of trained PyTorch model state dicts comprising sequential chain.
+    #  @param X Feature matrix of unseen samples to evaluate.
+    #  @return Array of predicted density ratios r(x).
+    # =========================================================================
     def _predict_iterative_stream ( self, models, X ) :
-        """ Accumulate raw logit predictions across sequential PyTorch models. """
+        """ Accumulate raw logit predictions across sequential PyTorch models.
+        
+        Evaluates saved weak learners, applies zero-mean spatial corrections, 
+        and computes cumulative density ratios in log-exponential space.
+        """
         import torch
 
-        device        = torch.device ( 'cpu' )
+        # Retrieve device dynamically from model parameters
+        device        = self.params.get ( 'device', 'cuda' if torch.cuda.is_available () else 'cpu' )
+        device        = torch.device ( device )
+        
         learning_rate = self.params.get ( 'learning_rate', TORCH_LEARNING_RATE )
         log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
         X_tensor      = torch.tensor ( X.astype ( numpy.float32 ), dtype = torch.float32 ).to ( device )
 
-        # Get the dynamically defined model class
         WeakMLPClass = self.get_MLP_class ()
 
         for m_dict in models :
-            # Fetch hidden_layers, fallback to hidden_dim for backward compatibility with old saves
             h_layers = m_dict.get ( 'hidden_layers', TORCH_HIDDEN_LAYERS  )
             
             model = WeakMLPClass ( m_dict [ 'input_dim' ], h_layers ).to ( device )
@@ -1007,7 +1223,6 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
             with torch.no_grad () :
                 raw_vals = model ( X_tensor ).cpu ().numpy ().ravel ()
 
-            # Apply the shift calculated during training to ensure batch-independent inference
             train_shift = m_dict.get ( 'shift', 0.0 )
             raw_vals    = raw_vals - train_shift
             

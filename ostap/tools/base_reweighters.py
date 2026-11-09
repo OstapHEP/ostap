@@ -809,7 +809,6 @@ class IterativeReweighter ( DensityReweighter ) :
     #  @param target_weight Target observation weights.
     #  @param n_estimators Number of boosting iterations per fold.
     #  @param learning_rate Boosting learning rate.
-    #  @param max_depth Maximum tree depth for tree-based backends.
     #  @param clip_threshold Ratio clipping threshold.
     #  @param store_original_weights Retain original reweighted arrays.
     #  @param progress Enable progress bar display.
@@ -821,7 +820,6 @@ class IterativeReweighter ( DensityReweighter ) :
                    target_weight          = None  ,
                    n_estimators           = 150   ,
                    learning_rate          = 0.05  ,
-                   max_depth              = 4     ,
                    clip_threshold         = 1.e+4 ,
                    store_original_weights = True  ,
                    progress               = True  , **params ) :
@@ -830,7 +828,6 @@ class IterativeReweighter ( DensityReweighter ) :
         # Inject core boosting hyperparameters into parameter dictionary
         params [ 'n_estimators'  ] = n_estimators
         params [ 'learning_rate' ] = learning_rate
-        params [ 'max_depth'     ] = max_depth
         
         # Delegate initialization and immediate fitting to parent DensityReweighter
         super ().__init__ ( original               = original               ,

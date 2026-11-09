@@ -168,14 +168,14 @@ class Reweighter(abc.ABC,Config) :
         conf [ 'random_state'  ] = self.random_state 
         conf [ 'n_features'    ] = self.n_features
         
-        conf [ 'n_target'      ] = nice_print ( self.n_target   , precision = 3 , with_sign = False , strip = True ) 
-        conf [ 'n_original'    ] = nice_print ( self.n_original , precision = 3 , with_sign = False , strip = True ) 
-        conf [ 'n_total'       ] = nice_print ( self.n_total    , precision = 3 , with_sign = False , strip = True ) 
+        conf [ 'n_target'      ] = nice_print ( self.n_target   , precision = 4 , with_sign = False , strip = True ) 
+        conf [ 'n_original'    ] = nice_print ( self.n_original , precision = 4 , with_sign = False , strip = True ) 
+        conf [ 'n_total'       ] = nice_print ( self.n_total    , precision = 4 , with_sign = False , strip = True ) 
         
-        if self.n_target   != self.nEff_target   : conf [ 'nEff_target'   ] = nice_print ( self.nEff_target   , precision = 3 , with_sign = False , strip = True ) 
-        if self.n_original != self.nEff_original : conf [ 'nEff_original' ] = nice_print ( self.nEff_original , precision = 3 , with_sign = False , strip = True )  
-        if self.n_target   != self.sumw_target   : conf [ 'sumw_target'   ] = nice_print ( self.sumw_target   , precision = 3 , with_sign = False , strip = True )  
-        if self.n_original != self.sumw_original : conf [ 'sumw_original' ] = nice_print ( self.sumw_original , precision = 3 , with_sign = False , strip = True )  
+        if self.n_target   != self.nEff_target   : conf [ 'nEff_target'   ] = nice_print ( self.nEff_target   , precision = 4 , with_sign = False , strip = True ) 
+        if self.n_original != self.nEff_original : conf [ 'nEff_original' ] = nice_print ( self.nEff_original , precision = 4 , with_sign = False , strip = True )  
+        if self.n_target   != self.sumw_target   : conf [ 'sumw_target'   ] = nice_print ( self.sumw_target   , precision = 4 , with_sign = False , strip = True )  
+        if self.n_original != self.sumw_original : conf [ 'sumw_original' ] = nice_print ( self.sumw_original , precision = 4 , with_sign = False , strip = True )  
 
 
         return conf 

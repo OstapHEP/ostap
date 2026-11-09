@@ -301,7 +301,7 @@ def run_reweight ( n_dim       = 3     ,
         reweighters.append ( rw2 )
         
 
-    if  False and hasXGBoost  () :
+    if False and hasXGBoost  () :
         
         ## from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         ## rw3 = XGB  ( target                = target   ,
@@ -381,12 +381,14 @@ def run_reweight ( n_dim       = 3     ,
         rw5 = TORCH ( target        = target        ,
                       original      = original1     ,
                       ##
-                      n_splits        = 1             ,
-                      n_estimators    = 500           ,
-                      hidden_layers   = ( 32 , )      ,
-                      epochs_per_step = 25            ,
-                      learning_rate   = 0.05          , 
-                      progress        = False         ,
+                      ## n_splits                = 1         ,
+                      ## n_estimators            = 300       ,
+                      hidden_layers           = ( 16 , )  ,
+                      ## epochs_per_step         = 100       ,
+                      ## learning_rate           = 0.02      ,
+                      optimizer               = 'lbfgs'   , 
+                      ## optimizer_learning_rate = 0.01      , 
+                      progress                = False     ,
                      )
         
         reweighters.append ( rw5 )
