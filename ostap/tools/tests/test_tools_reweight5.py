@@ -252,7 +252,7 @@ def run_reweight ( n_dim       = 3     ,
         reweighters.append ( rw )
         
         
-    if active_test ( radom_freq ) and hasLightGBM () :
+    if active_test ( random_freq ) and hasLightGBM () :
         
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         rw = LGBM ( target                = target    ,
@@ -260,7 +260,7 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw )
 
-    if active_test ( radom_freq ) and hasLightGBM () :
+    if active_test ( random_freq ) and hasLightGBM () :
         
         from ostap.tools.reweighters  import LightGBMIterativeReweighter as  LGBM
         rw = LGBM ( target                = target    ,
@@ -270,7 +270,7 @@ def run_reweight ( n_dim       = 3     ,
         reweighters.append ( rw )
         
 
-    if active_test ( radom_freq ) and hasXGBoost  () :
+    if active_test ( random_freq ) and hasXGBoost  () :
         
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         rw = XGB  ( target                = target    ,
@@ -279,7 +279,7 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw )
         
-    if active_test ( radom_freq ) and hasXGBoost  () :
+    if active_test ( random_freq ) and hasXGBoost  () :
 
         from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB 
         rw = XGB  ( target                = target    ,
@@ -289,7 +289,7 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw )
         
-    if active_test ( radom_freq ) and hasPyTorch () :
+    if active_test ( random_freq ) and hasPyTorch () :
 
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
         rw = TORCH ( target        = target        ,
@@ -298,7 +298,7 @@ def run_reweight ( n_dim       = 3     ,
         reweighters.append ( rw )
 
         
-    if active_test ( radom_freq ) and hasPyTorch () :
+    if active_test ( random_freq ) and hasPyTorch () :
 
         from ostap.tools.reweighters  import PyTorchIterativeReweighter as TORCH
         rw = TORCH ( target        = target        ,
@@ -311,7 +311,7 @@ def run_reweight ( n_dim       = 3     ,
         reweighters.append ( rw )
                       
 
-    if active_test ( radom_freq ) and hasHepML    () :
+    if active_test ( random_freq ) and hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw = GBRW ( target              = target         ,
                     original            = original1      ,
@@ -319,7 +319,7 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw )
         
-    if active_test ( radom_freq ) and hasSkLearn ():
+    if active_test ( random_freq ) and hasSkLearn ():
         
         from ostap.tools.reweighters  import LogRegressionDensityReweighter as LOGREG 
         

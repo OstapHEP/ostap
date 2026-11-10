@@ -375,8 +375,8 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round', XGB_ESTIMATORS ) 
         
         n_rows = num_samples ( original ) + num_samples ( target )
-        if n_rows < THRESHOLD_NSAMPLES or 1 < config.get ( 'n_splits' , 5 ) : config [ 'subsample'         ] = 1.0
-        if num_features      ( original ) < THRESHOLD_NFEATURES             : config [ 'colsamples_bytree' ] = 1.0
+        if n_rows < THRESHOLD_NSAMPLES or 1 < config.get ( 'n_splits' , 5 ) : config.pop ( 'subsample'         , None ) 
+        if num_features      ( original ) < THRESHOLD_NFEATURES             : config.pop ( 'colsamples_bytree' , None )
 
         if n_rows < 10000 : config [ 'tree_method' ]  = 'exact'
 
@@ -599,6 +599,10 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
         if n_rows < THRESHOLD_NSAMPLES or 1 < config.get ( 'n_splits' , 5 ) : config [ 'subsample' ] = 1.0
         if num_features    ( original ) < THRESHOLD_NFEATURES               : config [ 'rsm'       ] = 1.0
 
+        if 'bayesian' == config.get ( 'bootstrap_type' , '' ).strip().lower()  :
+            config.pop ( 'subsample'  , None )
+            config.pop ( 'rsm'        , None )
+                    
         super ().__init__ ( original        = original        ,
                             target          = target          ,
                             original_weight = original_weight ,

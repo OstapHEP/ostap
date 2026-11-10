@@ -346,12 +346,12 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
                    'max_depth'           : CATB_MAX_DEPTH                   ,
                    'l2_leaf_reg'         : 0.1                              ,
                    'min_data_in_leaf'    : 5                                ,
-                   'bootstrap_type'      : 'MVS'                            ,
                    'mvs_reg'             : 2.0                              , 
                    'random_strength'     : 0.01                             ,
                    'boosting_type'       : 'Plain'                          ,
-                   'bootstrap_type'      : 'Bayesian'                       ,
-                   'bagging_temperature' : 1.0                               , 
+                   ## 'bootstrap_type'      : 'MVS'                         ,
+                   'bootstrap_type'      : 'Bayesian'                       , ## MVS ? 
+                   'bagging_temperature' : 1.0                              , 
                    'device'              : 'GPU' if 0 < self.gpu else 'CPU' , 
                    'verbose'             : False
                   }
@@ -363,15 +363,20 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         if 'n_estimators'      in config : config [ 'iterations'       ] = config.pop ( 'n_estimators'      )
         if 'depth'             in config : config [ 'max_depth'        ] = config.pop ( 'depth'             ) 
         
-        if 'num_boost_round'  in config : config [ 'n_estimators'   ] = config.pop ( 'num_boost_round'      ) 
-        if 'colsample_bytree' in config : config [ 'rsm'            ] = config.pop ( 'colsample_by_tree' , 1.0 )         
+        if 'num_boost_round'  in config : config [ 'n_estimators'      ] = config.pop ( 'num_boost_round'      ) 
+        if 'colsample_bytree' in config : config [ 'rsm'               ] = config.pop ( 'colsample_by_tree' , 1.0 )         
 
         n_rows = num_samples ( original ) + num_samples ( target )
-        if n_rows < THRESHOLD_NSAMPLES or 1 < config.get ( 'n_splits' , 5 ) : config [ 'subsample' ] = 1.0
-        if num_features    ( original ) < THRESHOLD_NFEATURES               : config [ 'rsm'       ] = 1.0
+        if n_rows < THRESHOLD_NSAMPLES or 1 < config.get ( 'n_splits' , 5 ) : config.pop ( 'subsample' , None )
+        if num_features    ( original ) < THRESHOLD_NFEATURES               : config.pop ( 'rsm'       , None ) 
 
         if self.gpu <= 0 : config [ 'device' ] = 'CPU'
+
+        if 'bayesian' == config.get( 'bootstrap_type' , '' ).strip().lower()  :
+            config.pop ( 'subsample' , None )
+            config.pop ( 'rsm'       , None )
         
+            
         super ().__init__ ( original               = original               ,
                             target                 = target                 ,
                             original_weight        = original_weight        ,
