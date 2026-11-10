@@ -243,6 +243,31 @@ for h in ( ROOT.TH1F , ROOT.TH1D ,
         ## h.__init__   = _h_new_init_  
 
 # =============================================================================
+## reset = Reset+Sumw2
+#  Reset the histoirgam but ensure Sumw2
+#  @code
+#  histo = ...
+#  histo.reset() 
+#  @endcode
+#  @see `ROOT.TH1.Reset`
+#  @see `ROOT.TH1.GetSumw2`
+#  @see `ROOT.TH1.Sumw2`
+def _h_reset_ ( histo , option = '' ) :
+    """ reset: Reset+Sumw2
+    Reset the histoirgam but ensure Sumw2
+    >>> histo = ...
+    >>> histo.reset() 
+    - see `ROOT.TH1.Reset`
+    - see `ROOT.TH1.GetSumw2`
+    - see `ROOT.TH1.Sumw2`
+    """
+    histo.Reset ( option )
+    if not histo.GetSumw2() : histo.Sumw2()
+    return histo 
+
+ROOT.TH1.reset = _h_reset_
+
+# =============================================================================
 # Decorate histogram axis and iterators 
 # =============================================================================
 
@@ -10107,6 +10132,8 @@ _new_methods_  += (
     ROOT.TH2F.__init__ , 
     ROOT.TH3F.__init__ ,
     #
+    ROOT.TH1 .reset    , 
+    ## 
     ROOT.TH3F.Clone    ,
     ROOT.TH1F.Clone    ,
     ROOT.TH2F.Clone    ,

@@ -26,7 +26,7 @@ from   ostap.stats.utils      import weight_trivial, num_samples, num_features, 
 from   ostap.utils.config     import Config
 from   ostap.logger.pretty    import nice_print
 from   ostap.stats.counters   import SE, table_counters
-from   ostap.logger.symbols   import weight_scale as scale_symbol 
+from   ostap.logger.symbols   import weight_scale as scale_symbol, waterfall as cascade_symbol 
 from   itertools              import zip_longest 
 import numpy, abc 
 # =============================================================================
@@ -247,14 +247,14 @@ class Reweighter(abc.ABC,Config) :
         logger.info ( '%s:\n%s' % ( title , table ) )  
 
     # =========================================================================
-    ## Helper method for normalization of final weigght: ``preserve the mass''
+    ## Helper method for normalization of final weight: ``preserve the mass''
     #  - final sum of weights is equal to the original sum pf weights 
     def preserve_mass ( self            , 
                         original        ,
                         original_weight ,
                         final_weight    ) :
-        """ Helper method for normalization of the final weigght: ``preserve the mass''
-          - final sum of weights is equal to the original sum pf weights 
+        """ Helper method for normalization of the final weight: ``preserve the mass''
+          - final sum of weights is equal to the original sum of weights 
         """
 
         ## ATTENTION! 
@@ -300,8 +300,6 @@ class CascadeReweighter(Reweighter):
     #  @param params Additional keyword arguments for base classes
     def __init__ ( self, *, 
                    stages          = ()    ,
-                   classes         = ()    ,
-                   configs         = ()    ,
                    original                , 
                    target                  , 
                    original_weight = None  , 
@@ -314,7 +312,7 @@ class CascadeReweighter(Reweighter):
         self.__reweighters = []
         
         # =====================================================================
-        # Initialize the base class (performs check_all validations and sets n_features)[cite: 1]
+        # Initialize the base class (performs check_all validations and sets n_features)
         super().__init__( original        = original        ,
                           target          = target          , 
                           original_weight = original_weight , 
@@ -322,13 +320,7 @@ class CascadeReweighter(Reweighter):
                           silent          = silent          , 
                           random_state    = random_state    , **params)
         
-        if   isinstance ( stages  , type ) and issubclass ( stages  , Reweighter ) : stages  = [ ( stages, {} ) ]
-        elif isinstance ( stages  , Reweighter )                                   : stages  = [   stages       ]
-        if   isinstance ( classes , type ) and issubclass ( classes , Reweighter ) : classes = [   classes      ] 
-        elif isinstance ( classes , Reweighter )                                   : classes = [   classes      ] 
-
-        if not stages and not classes : 
-            raise ValueError ( "Neither 'stages' nor 'classes' are provided!")
+        if not stages : raise ValueError ( "Neither 'stages' nor 'classes' are provided!")
         
         the_stages = []
 
@@ -346,24 +338,6 @@ class CascadeReweighter(Reweighter):
             if not isinstance ( cnf , dictlike_types )                           : raise TypeError ( "Invalid `stages` type!"  )
             the_stages.append ( ( cl , cnf ) ) 
             
-        last = None 
-        for cl, cnf in zip_longest ( classes , configs , fillvalue = None ) :
-            if cl is None : cl  = last
-            if not cnf    : cnf = {}
-            if  not isinstance ( cnf , dictlike_types ) : raise TypeError ( "Invalid `configs` type!" )
-
-            ## instance ? 
-            if cl and isinstance ( cl , Reweighter ) :
-                pars = { 'silent' : cl.silent , 'random_state' : cl.random_state }                
-                pars.update ( cl.params )
-                pars.update ( cnf  ) 
-                cl  = type  ( cl   )
-                cnf = pars
-            elif not issubclass ( cl , Reweighter      ) : raise TypeError ( "Invalid `classes` type!" )
-            ## 
-            the_stages.append ( ( cl , cnf ) ) 
-            last = cl
-
         n_orig = num_samples ( original )
         n_targ = num_samples ( target   )
         
@@ -394,6 +368,20 @@ class CascadeReweighter(Reweighter):
         ## convert to tuple 
         self.__reweighters = tuple ( self.__reweighters )
 
+        ## produce summary table of weights 
+        if self.verbose : self.weight_summary ( original        ,
+                                                original_weight ,
+                                                w_orig          ) 
+        
+        
+    # =========================================================================
+    ## short symbol/tag for reweighter 
+    @classprop
+    def symbol ( self ) :
+        """`symbol` : short symbol/tag for reweighter 
+        """
+        return cascade_symbol
+
     # =========================================================================
     ## @property
     #  @brief Underlying methods/engines of all cascade stages
@@ -402,8 +390,8 @@ class CascadeReweighter(Reweighter):
     def method(self):
         """ Implementation of the abstract 'method' property"""
         from ostap.logger.symbols import white_arrow_right as arrow_right 
-        s = ' %s ' % arrow_right  
-        return s.join ( [ r.method for r in self.__reweighters ] )
+        s = '%s ' % arrow_right  
+        return 'Cascade: ' + ( s.join ( [ r.symbol for r in self.__reweighters ] ) ) 
 
     # =========================================================================
     ## @brief Get/predict new weights for (new) original dataset
@@ -421,8 +409,15 @@ class CascadeReweighter(Reweighter):
         for stage in self.__reweighters:
             w_final = stage.weights ( original ,
                                       original_weight = w_final )
-            
-        return w_final
+
+        final_weight = w_final
+        
+        ## produce summary table of weights 
+        if self.verbose : self.weight_summary ( original        ,
+                                                original_weight ,
+                                                final_weight    ) 
+        
+        return final_weight 
 
 # ============================================================================
 if '__main__' == __name__ :

@@ -247,10 +247,10 @@ def cnt_row ( counter , key = '' ) :
     if isinstance ( nEff , integer_types ) : nEff , expo0 = '%d' % nEff , 0 
     else                                   : nEff , expo0 = pretty_float ( nEff )
 
-    vsum , expo1  = vsum.pretty_print ( parentheses = False ) 
-    mean , expo2  = mean.pretty_print ( parentheses = False ) 
-    rms  , expo3  = pretty_float      ( rms )
-    fmtx , expo4  = fmt_pretty_values ( minv , maxv , with_sign = True )
+    vsum , expo1  = vsum.pretty_print ( parentheses = False , precision = 4 ) 
+    mean , expo2  = mean.pretty_print ( parentheses = False , precision = 4 ) 
+    rms  , expo3  = pretty_float      ( rms                 , precision = 4 )
+    fmtx , expo4  = fmt_pretty_values ( minv , maxv         , precision = 4 , with_sign = True )
     
     mnmx          = '%s/%s' % ( fmtx , fmtx )
     if expo4 : scale = 1.0/(10**expo4)

@@ -44,56 +44,39 @@ re_voting = re.compile (
 )
 # =============================================================================
 ## @class Voting
-#  @brief Encapsulates fold prediction aggregation (voting) strategies.
-#  @details Acts as a callable strategy pattern object that reduces a stacked fold 
-#           predictions matrix of shape (N_folds, N_samples) into an aggregated array 
-#           of shape (N_samples,) using predefined statistical reduction rules or custom callables,
-#           including arithmetic, geometric, median, and truncated mean aggregation.
+#  Encapsulates fold prediction aggregation (voting) strategies.
+#  @details Encapsulates standard voting strategies ('arithmetic', 'mean', 'median', 
+#           'geometric', 'trim:N') for reducing stacked fold predictions matrices 
+#           of shape (N_folds, N_samples) into an aggregated array of shape (N_samples,).
 class Voting ( object ) :
     """ Encapsulates fold prediction aggregation (voting) strategies. """
+    
+    # =========================================================================
+    ## Initialize voting strategy.
+    #  @param self Instance of the class.
+    #  @param strategy Aggregation strategy name (e.g. 'arithmetic', 'mean', 'median', 'geometric', 
+    #                  'trim:1', 'truncated = 2').
     def __init__ ( self, strategy = 'geometric' ) :
-        """ Initialize voting strategy.
-            @param strategy Aggregation strategy name (e.g. 'arithmetic', 'mean', 'median', 'geometric', 
-                            'trim:1', 'truncated = 2') or a custom callable expecting `(array, axis)`.
-        """
-        # Default trim count if not specified explicitly
-        self.__trim_low  = 1
-        self.__trim_high = None
-        
-        if callable ( strategy ) :
-            
-            self.__func = strategy
-            self.__name = getattr ( strategy, '__name__', 'custom' )
-            
-            return
-
+        """ Initialize voting strategy. """
         if not isinstance ( strategy , string_types ) :
             raise TypeError ( "Invalid `voting` type: %s" % type ( strategy ) )
             
-        v_lower = strategy.lower ().strip ()
+        self.__name      = strategy.lower ().strip ()
+        self.__trim_low  = 1
+        self.__trim_high = None
         
-        if   v_lower in ( 'arithmetic', 'mean' ) : 
-            self.__func = numpy.mean
-            self.__name = v_lower
-        elif v_lower == 'median' : 
-            self.__func = numpy.median
-            self.__name = v_lower
-        elif v_lower == 'geometric' :
-            # Compute geometric mean across fold predictions in log-space to prevent numerical underflow
-            self.__func = lambda x, axis=0 : numpy.exp ( 
-                numpy.mean ( numpy.log ( numpy.clip ( x, 1e-12, 1e+12 ) ) , axis = axis ) 
-            )
-            self.__name = v_lower
-                    
+        v_lower = self.__name
+        
+        if   v_lower in ( 'arithmetic', 'mean' ) : self.__vote_func = self.vote_mean
+        elif v_lower == 'median'                 : self.__vote_func = self.vote_median
+        elif v_lower == 'geometric'              : self.__vote_func = self.vote_geometric
         else :
-            
-            # Match pattern
-            if not ( match := re_voting .match (  strategy ) ) : raise ValueError ( f"Invalid `voting` strategy string: {strategy}" )
+            # Match pattern for truncated/trim strategies
+            if not ( match := re_voting.match ( strategy ) ) : 
+                raise ValueError ( f"Invalid `voting` strategy string: {strategy}" )
 
             low , high = 1 , 1
-            
             if ':' in strategy or '=' in strategy :
-                
                 low  = match.group ( 'low'  )
                 high = match.group ( 'high' )
                 low  = int ( low  ) if low  else 0
@@ -101,27 +84,40 @@ class Voting ( object ) :
                 
             self.__trim_low  = low 
             self.__trim_high = high 
-            
-            # Bind the standalone truncated_mean function with independent low/high bounds
-            self.__func = lambda x, axis = 0 : truncated_mean ( 
-                x, axis = axis, trim_low = self.__trim_low, trim_high = self.__trim_high 
-            )
-            self.__name = v_lower
-            
-    ## @property name
-    #  @brief String identifier of the configured voting strategy.
+            self.__vote_func = self.vote_trimmed
+
+    # =========================================================================
+    ## String identifier of the configured voting strategy.
     @property
     def name ( self ) :
         """ `name`: String identifier of the configured voting strategy. """
         return self.__name
 
-    ## @brief Apply the voting aggregation function to stacked fold predictions.
+    @staticmethod
+    def vote_mean ( x, axis = 0 ) :
+        return numpy.mean ( x, axis = axis )
+
+    @staticmethod
+    def vote_median ( x, axis = 0 ) :
+        return numpy.median ( x, axis = axis )
+
+    @staticmethod
+    def vote_geometric ( x, axis = 0 ) :
+        return numpy.exp ( numpy.mean ( numpy.log ( numpy.clip ( x, 1e-12, 1e+12 ) ) , axis = axis ) )
+
+    def vote_trimmed ( self, x, axis = 0 ) :
+        return truncated_mean ( x, axis = axis, trim_low = self.__trim_low, trim_high = self.__trim_high )
+
+    # =========================================================================
+    ## Apply the voting aggregation function to stacked fold predictions.
+    #  @param self Instance of the class.
     #  @param x Matrix of fold predictions with shape (N_folds, N_samples).
     #  @param axis Dimension along which to aggregate predictions across folds.
     #  @return Aggregated prediction array of shape (N_samples,).
     def __call__ ( self, x, axis = 0 ) :
         """ Apply the voting aggregation function to stacked fold predictions. """
-        return self.__func ( x, axis = axis )
+        return self.__vote_func ( x, axis = axis )
+
 
 # ===============================================================================
 ## @class DensityReweighter
@@ -188,7 +184,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.priors                = {}
         self.__target_weights_info = {}
         self._norm_factor          = numpy.float32 ( 1.0 )
-        self.__mode                = '-not-defined-yet-'
+        self.__mode                = ''
         self.scale_factors         = {}
         
         params [ 'n_jobs' ]        = num_jobs ( params )
@@ -243,6 +239,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                                 original_weight ,
                                                 final_weight    ) 
 
+    # =========================================================================
     ## @property n_splits
     #  @brief Number of cross-validation folds.
     @property
@@ -250,6 +247,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `n_splits`: Number of cross-validation folds. """
         return self.__n_splits
 
+    # =========================================================================
     ## @property voting
     #  @brief Configured voting strategy helper instance.
     @property 
@@ -257,6 +255,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `voting`: Configured voting strategy helper instance. """
         return self.__voting
     
+    # =========================================================================
     ## @property oof_mode 
     #  @brief OOF-mode
     @property 
@@ -264,6 +263,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `oof_mode`: OOF-mode"""
         return self.__oof_mode 
     
+    # =========================================================================
     ## @property original_ratios
     #  @brief Out-of-fold ratios for training original dataset.
     @property
@@ -271,6 +271,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `original_ratios`: Out-of-fold ratios for training original dataset. """
         return self.__original_ratios
 
+    # =========================================================================
     ## @property original_reweighted_weights
     #  @brief Final reweighted weight values for training original dataset.
     @property
@@ -278,6 +279,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `original_reweighted_weights`: Final reweighted weight values for training original dataset. """
         return self.__original_reweighted_weights
     
+    # =========================================================================
     ## @property norm_factor
     #  @brief Global normalization factor conserving total reweighted mass.
     @property
@@ -285,6 +287,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `norm_factor`: Global normalization factor conserving total reweighted mass. """
         return self._norm_factor
         
+    # =========================================================================
     ## @property mode
     #  @brief Partition mode ('1-stream', '2-stream_orig', '2-stream_targ', '4-stream').
     @property
@@ -292,6 +295,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `mode`: Partition mode ('1-stream', '2-stream_orig', '2-stream_targ', '4-stream'). """
         return self.__mode
 
+    # =========================================================================
     ## @property progress
     #  @brief Progress bar status flag.
     @property
@@ -299,11 +303,14 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `progress`: Progress bar status flag. """
         return self.__progress
 
+    # =========================================================================
+    ## Return method identifier name. """
     @property
     def method ( self ) :
         """ Return method identifier name. """
         return method_name ( 'Density Reweighter' ) 
     
+    # =========================================================================
     ## @property config
     #  @brief Serialization configuration parameters dictionary.
     @property
@@ -311,8 +318,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ `config`: Serialization configuration parameters dictionary. """
         conf = {}
         conf.update ( super ().config )
+        if self.mode : conf [ "mode"     ]     = self.mode
         conf [ "progress" ]                    = self.progress
-        conf [ "mode"     ]                    = self.mode
         conf [ "clip_threshold"  ]             = self.__clip_threshold
         conf [ "voting"          ]             = self.__voting.name 
         conf [ "n_splits"        ]             = self.__n_splits
@@ -321,6 +328,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         
         return conf
 
+    # =========================================================================
     ## @brief Abstract method to train a single backend estimator on fold data.
     #  @param X_train Training features matrix for current fold (N-1)/N.
     #  @param y_train Binary labels for training fold (0=original, 1=target).
@@ -334,6 +342,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ Abstract method to train a single backend estimator on fold data. """
         raise NotImplementedError
 
+    # =========================================================================
     ## @brief Abstract method to return probability predictions p(x) for a single model.
     #  @param model Backend estimator instance.
     #  @param X Features matrix.
@@ -345,6 +354,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ Abstract method to return probability predictions p(x) for a single model. """
         raise NotImplementedError
 
+    # =========================================================================
     ## @brief Fit streams based on sign decomposition of original and target weights.
     #  @details Decomposes signed distributions into non-negative streams:
     #           - 1-stream: both original and target weights are non-negative.
@@ -469,19 +479,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         original_ratios[ nz_orig_mask ] = ratios_valid_norm
         original_reweighted_weights     = w_orig * original_ratios
 
-
-        # --- DEBUG PRINTS ---
-        print("DEBUG __fit_and_compute:")
-        print("  len(w_orig):", len(w_orig))
-        print("  len(nz_orig_mask):", len(nz_orig_mask), "True count:", numpy.sum(nz_orig_mask))
-        print("  len(ratios_valid):", len(ratios_valid))
-        print("  len(ratios_valid_norm):", len(ratios_valid_norm))
-        print("  ratios_valid_norm min/max:", numpy.min(ratios_valid_norm), numpy.max(ratios_valid_norm))
-        print("  original_ratios min/max:", numpy.min(original_ratios), numpy.max(original_ratios))
-        print("----------------------")
-        
         return original_ratios, original_reweighted_weights
-
+    
+    # =========================================================================
     ## @brief Execute K-Fold cross-validation for a specific non-negative stream.
     #  @details Supports two evaluation modes depending on `oof_mode`:
     #           - Strict OOF (`oof_mode=True`): Each sample gets a prediction strictly from its single 
@@ -625,7 +625,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         
         return ratios
 
-
+    # =========================================================================
     ## @brief Extract density ratios r(x) from a single fold's model.
     #  @details Acts as a polymorphic bridge for converting raw probability outputs 
     #           into ratio estimates r(x) = p(x) / (1 - p(x)).
@@ -640,6 +640,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         p_clipped = numpy.clip ( p, eps, numpy.float32 ( 1.0 ) - eps )
         return p_clipped / ( numpy.float32 ( 1.0 ) - p_clipped )
 
+    # =========================================================================
     ## @brief Hook for post-processing aggregated ensemble ratios.
     #  @details Can be overridden by subclasses (e.g., IterativeReweighter) to apply 
     #           custom normalization or scaling after fold prediction voting.
@@ -649,6 +650,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         """ Hook for post-processing aggregated ensemble ratios. """
         return ratios
 
+    # =========================================================================
     ## @brief Predict density ratios for an unseen feature matrix X using all trained N fold models.
     #  @details Evaluates each fold model independently and aggregates their predictions 
     #           matrix of shape (N_splits, N_samples) using the configured `Voting` strategy.
@@ -675,6 +677,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         
         return self._postprocess_ensemble_ratios ( ensemble_ratios )
 
+    # =========================================================================
     ## @brief Clip ratios at threshold and compute global normalization scale factor.
     #  @param ratios Density ratios array.
     #  @param w_orig Original source weights array.
@@ -689,6 +692,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self._norm_factor = numpy.float32 ( orig_sum / ( reweighted_sum + 1e-12 ) )
         return clipped_ratios * self._norm_factor
 
+    # =========================================================================
     ## @brief Evaluate reweighting factors for unseen source feature samples.
     #  @details Executes the stream prediction pipeline, combines streams according to sign mode, 
     #           applies clipping threshold, and scales the result by global normalization factor.
@@ -772,19 +776,26 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                 r_neg_neg                = self._predict_stream_ratios ( "neg_neg", X_n )
                 ratios_valid[ mask_neg ] = ( r_neg_pos * w_pos - r_neg_neg * w_neg ) / w_total
 
+
         clipped                 = numpy.clip ( ratios_valid,
                                                numpy.float32 ( 0.0 ),
                                                numpy.float32 ( self.__clip_threshold ) )
         final_ratios            = numpy.zeros ( len ( w_new_f32 ), dtype = numpy.float32 )
         final_ratios[ nz_mask ] = self._apply_norm_factor ( clipped ) 
 
-        ## summary table 
-        if self.verbose : self.weight_summary ( original       ,
-                                                orginal_weight ,
-                                                final_ratios   ) 
         
-        return final_ratios if original_weight is None else final_ratios * w_new_f32
+        final_weight = final_ratios if original_weight is None else final_ratios * w_new_f32
 
+        final_weight = self.preserve_mass ( original , original_weight , final_weight  )  
+        
+        ## summary table 
+        if self.verbose : self.weight_summary ( original        ,
+                                                original_weight ,
+                                                final_weight   ) 
+        
+        return final_weight 
+
+    # =========================================================================
     ## @brief Apply global normalization factor to clipped ratios.
     #  @param clipped_ratios Density ratios array post-clipping.
     #  @return Normalized ratios array.

@@ -50,7 +50,6 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types, sequence_types
-from   ostap.math.math_base   import frexp10, ldexp10 
 from   ostap.logger.symbols   import ( plus_minus      , times       ,
                                        to_superscript  , nan_symbol  , 
                                        infinity_pos as posinf_symbol ,  
@@ -82,12 +81,9 @@ def format_pow10 ( value , show_sign = True ) :
     - format_pow10(1e-15)                      -> '10¹ᵉ⁻¹⁵'
     """
     if not value : return '1'
-    ##
-    if isinstance ( value , int ) : val_str = "%+d" % value if show_sign else "%d" % value 
-    else                          : val_str = "%+g" % value if show_sign else "%g" % value
-    ## 
+    if isinstance ( value , integer_types ) : val_str = "%+d" % value if show_sign else "%d" % value 
+    else                                    : val_str = "%+g" % value if show_sign else "%g" % value
     return "10%s" % to_superscript ( val_str ) 
-
 
 # =============================================================================
 ## 1-formats 
@@ -116,7 +112,7 @@ def fmt_pretty_values ( *values             ,
     
     av = max ( abs ( float ( v )  ) for v in values )
 
-    from ostap.math.math_base import iszero, frexp10
+    from ostap.math.math_base import iszero, frexp10, ldexp10 
     the_format =  '%%+%d.%df' if with_sign else '%%%d.%df'
     
     # 
@@ -159,7 +155,7 @@ def the_expo ( value , *values ) :
     av = abs ( value )
     for v in values : av = max ( av , abs ( v ) )
     ##
-    from ostap.math.math_base import iszero, frexp10
+    from ostap.math.math_base import iszero, frexp10, ldexp10 
     ## 
     if   0.1 <= av < 1000        : return 0 
     elif not av or iszero ( av ) : return 0 
@@ -735,6 +731,28 @@ def nice_print ( what              , * ,
                                  latex     = latex     ,
                                  strip     = strip     , **kwargs )
 
+    ## sequence of numeric types?  
+    if isinstance ( what , sequence_types ) and all ( isinstance ( v , num_types ) for v in what ) :
+        separator = kwargs.pop ( 'separator' , ',' )
+        result , expo = pretty_floats ( *what                 ,
+                                        width     = width     ,
+                                        precision = precision ,
+                                        latex     = latex     ,
+                                        strip     = strip     , **kwargs )
+        nr     = len ( result ) 
+        result = separator.join ( result )
+        
+        if 1 < nr and not expo : result = f'[{result}]'
+        elif              expo : result = f'({result})'
+        
+        if expo :
+            expo   = format_pow10 ( expo )
+            result = f'{result}{times}{expo}'
+            
+        return result
+
+
+    
     result , expo = pretty_print ( what                  ,
                                    width     = width     ,
                                    precision = precision ,

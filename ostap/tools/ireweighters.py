@@ -27,10 +27,13 @@ from   ostap.core.ostap_types       import num_types, string_types, integer_type
 from   ostap.utils.core             import typename
 from   ostap.utils.basic            import safe_loop
 from   ostap.utils.utils            import classprop 
-from   ostap.logger.pretty          import nice_print
+from   ostap.logger.pretty          import nice_print, pretty_floats, format_pow10
 from   ostap.math.math_base         import pos_infinity  
 from   ostap.utils.progress_bar     import progress_bar, text_bar 
-from   ostap.stats.utils            import num_samples, num_features, nEff
+from   ostap.stats.utils            import ( num_samples        ,
+                                             num_features       ,
+                                             nEff               ,
+                                             optimal_batch_size ) 
 from   ostap.tools.base_reweighters import IterativeReweighter  
 import ostap.stats.utils            as     U 
 import ostap.logger.symbols         as     S
@@ -48,9 +51,7 @@ method_XGB      =  U.method_name ( 'XGBoost/Iterative'  )
 method_CATB     =  U.method_name ( 'CatBoost/Iterative' )
 method_TORCH    =  U.method_name ( 'PyTorch/Iterative'  )
 ##
-epoch_symbol    =  U.symbol_EPOCH 
-## 
-boosting_symbol = S.ladder      if S.show and S.ladder     else 'Boosting'
+boosting_symbol = S.ladder if S.show and S.ladder  else 'Boosting'
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================
@@ -59,29 +60,31 @@ LGBM_MAX_DEPTH        =    6 # Deep tree capacity for high dimensions / large st
 LGBM_LEARNING_RATE    = 0.02 # Small step for stable density ratio convergence
 
 XGB_ESTIMATORS        =  300 # High capacity: deep ensemble with low learning rate
-XGB_MAX_DEPTH         =    7 # Deep tree capacity for high dimensions / large statistic
+XGB_MAX_DEPTH         =    6 # Deep tree capacity for high dimensions / large statistic
 XGB_LEARNING_RATE     = 0.02 # Small step for stable density ratio convergence
 XGB_MAX_LEAVES        =   63 # 
 
 CATB_ESTIMATORS       =  300 # High capacity: deep ensemble with low learning rate
 CATB_MAX_DEPTH        =    6 # Deep tree capacity for high dimensions / large statistics
-CATB_LEARNING_RATE    = 0.10 # Small step for stable density ratio convergence
+CATB_LEARNING_RATE    = 0.02 # Small step for stable density ratio convergence
 
 TORCH_ESTIMATORS      =  300 # Number of boosting steps (epochs/models)
 TORCH_EPOCHS_PER_STEP =  100 # Training epochs per boosting step
 TORCH_LEARNING_RATE   = 0.02 # Step size for weight boosting
-TORCH_HIDDEN_DIM      =  128 # Hidden layer size for small MLP weak learners
-TORCH_WEIGHT_DECAY    = 1e-5 
+TORCH_WEIGHT_DECAY    = 1e-5 # regularization parameter  
 TORCH_BATCH_SIZE      = 'auto'
-TORCH_MAX_BATCH_SIZE  = 2 ** 16 
 TORCH_HIDDEN_LAYERS   = 32 ,  # ## single hiddle layer with 32 nodes 
+TORCH_MAX_BATCH_SIZE  = 2 ** 16
 
 TORCH_OPTIMIZER_ADAM  = 'adam'
 TORCH_OPTIMIZER_LBFGS = 'lbfgs'
 TORCH_OPTIMIZERS      = TORCH_OPTIMIZER_ADAM , TORCH_OPTIMIZER_LBFGS
 TORCH_OPTIMIZER       = TORCH_OPTIMIZER_LBFGS 
 TORCH_LBFGS_CHUNK     = 200_000
+TORCH_LBFGS_SYMBOL    = S.gear
+TORCH_ADAM_SYMBOL     = S.lightning
 
+# =============================================================================
 THRESHOLD_NSAMPLES    = 50000
 THRESHOLD_NFEATURES   = 10
 
@@ -122,16 +125,18 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
             'max_bins'                :  1023               ,
             'min_data_in_leaf'        :  10                 ,
             'min_sum_hessian_in_leaf' :  1e-4               , 
-            'subsample'               :  1.0                ,
-            'bagging_freq'            :  0                  , 
+            ## 
             'lambda_l1'               :  0.0                ,
-            'feature_fraction'        :  1.0                , 
             'lambda_l2'               :  0.0                ,                        
+            ##
+            'bagging_freq'            :  0                  ,
+            'subsample'               :  1.0                ,
+            'feature_fraction'        :  1.0                ,
+            ##
             'verbosity'               : -1                  ,
             'print_freq'              : PRINT_FREQ          , 
             'n_jobs'                  :  1                  ,
-            'n_splits'                :  5                  ,
-            
+            'n_splits'                :  5                  ,            
         }
         
         config.update ( kwargs )
@@ -234,7 +239,7 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
 
         neff0 = nEff ( X_orig, current_w_orig )
 
-        description = boosting_symbol + ' ' + S.fixed_width ( self.symbol , 3 ) + ':'        
+        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ':'        
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
         else               : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = True  ) 
@@ -260,15 +265,19 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
             if bar and not self.silent and ( it < 5  or ( it + 1 ) % print_freq == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
-                wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
-                wmax        = nice_print ( float ( ratios_curr.max () ) , precision = 2, with_sign = False, strip = True )
+
+                wmin    , wmax  = float ( ratios_curr.min () ) , float ( ratios_curr.max () ) 
+                wminmax , wexpo = pretty_floats ( wmin , wmax , precision = 2 , with_sign = False , strip = True )
+                wminmax         = '/'.join ( wminmax )
+                if wexpo : wminmax = '(%s)%s%s' % ( wminmax , S.times , format_pow ( wexpo ) )
+                
                 ne0         = nice_print ( float ( neff0              ) , precision = 2, with_sign = False, strip = True )
                 ne          = nice_print ( float ( neff               ) , precision = 2, with_sign = False, strip = True )
 
                 dt       = ( time.time () - t_start ) / ( it + 1 )
                 if dt < 1 : dt = '%dms'  % ( math.ceil ( 1000 * dt ) )
                 else      : dt = '%.1fs' %                      dt                 
-                message  = f"Step {it+1:4d}/{n_estimators:<4d} | min/max: {wmin}/{wmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
+                message  = f"Step {it+1:4d}/{n_estimators:<4d} | wmin/wmax: {wminmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
                 bar     += message
 
             model_bytes = model.model_to_string ()
@@ -345,13 +354,15 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             'max_bin'           :  1023              , 
             'grow_policy'       :  'depthwise'       , 
             'max_leaves'        :  XGB_MAX_LEAVES    , 
-            'min_child_weight'  :  1e-3              , 
-            'max_delta_step'    :  9.0               , 
+            'min_child_weight'  :  1e-4              , 
+            'max_delta_step'    :  0.0               ,
+            ## 
             'gamma'             :  0.0               , 
+            'reg_alpha'         :  0.0               , 
+            'reg_lambda'        :  1e-4              ,
+            ##
             'subsample'         :  1.0               , 
             'colsamples_bytree' :  1.0               , 
-            'reg_alpha'         :  0.0               , 
-            'reg_lambda'        :  0.0               , 
             'verbosity'         :  0                 ,
             'print_freq'        : PRINT_FREQ         , 
             'n_jobs'            :  1                 ,
@@ -457,7 +468,7 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         
         neff0 = nEff ( X_orig, current_w_orig )
         
-        description = boosting_symbol + ' ' + S.fixed_width ( self.symbol , 3 ) + ':'        
+        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ':'        
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
         else               : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = True  ) 
@@ -485,15 +496,19 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
             if bar and not self.silent and ( it < 5  or ( it + 1 ) % print_freq == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
-                wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
-                wmax        = nice_print ( float ( ratios_curr.max () ) , precision = 2, with_sign = False, strip = True )
+
+                wmin    , wmax  = float ( ratios_curr.min () ) , float ( ratios_curr.max () ) 
+                wminmax , wexpo = pretty_floats ( wmin , wmax , precision = 2 , with_sign = False , strip = True )
+                wminmax         = '/'.join ( wminmax )
+                if wexpo : wminmax = '(%s)%s%s' % ( wminmax , S.times , format_pow ( wexpo ) )
+
                 ne0         = nice_print ( float ( neff0              ) , precision = 2, with_sign = False, strip = True )
                 ne          = nice_print ( float ( neff               ) , precision = 2, with_sign = False, strip = True )
 
                 dt       = ( time.time () - t_start ) / ( it + 1 )
                 if dt < 1 : dt = '%dms'  % ( math.ceil ( 1000 * dt ) )
                 else      : dt = '%.1fs' %                      dt                 
-                message  = f"Step {it+1:4d}/{n_estimators:<4d} | min/max: {wmin}/{wmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
+                message  = f"Step {it+1:4d}/{n_estimators:<4d} | wmin/wmax: {wminmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
                 bar     += message
                 
             models.append ( model )
@@ -562,7 +577,7 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
             'learning_rate'              :  CATB_LEARNING_RATE ,
             'max_depth'                  :  CATB_MAX_DEPTH     ,
             'grow_policy'                :  'SymmetricTree'    ,
-            'l2_leaf_reg'                :  0.001              ,
+            'l2_leaf_reg'                :  1e-3               ,
             'subsample'                  :  1.0                ,
             'rsm'                        :  1.0                , 
             'random_strength'            :  0.0                ,
@@ -668,7 +683,7 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
         
         neff0 = nEff ( X_orig, current_w_orig )
 
-        description = boosting_symbol + ' ' + S.fixed_width ( self.symbol , 3 ) + ':'        
+        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ':'        
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
         else               : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = True  ) 
@@ -696,15 +711,19 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
             if bar and not self.silent and ( it < 5  or ( it + 1 ) % print_freq == 0 or ( it + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
-                wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
-                wmax        = nice_print ( float ( ratios_curr.max () ) , precision = 2, with_sign = False, strip = True ) 
+
+                wmin    , wmax  = float ( ratios_curr.min () ) , float ( ratios_curr.max () ) 
+                wminmax , wexpo = pretty_floats ( wmin , wmax , precision = 2 , with_sign = False , strip = True )
+                wminmax         = '/'.join ( wminmax )
+                if wexpo : wminmax = '(%s)%s%s' % ( wminmax , S.times , format_pow ( wexpo ) )
+
                 ne0         = nice_print ( float ( neff0              ) , precision = 2, with_sign = False, strip = True )
                 ne          = nice_print ( float ( neff               ) , precision = 2, with_sign = False, strip = True )
 
                 dt       = ( time.time () - t_start ) / ( it + 1 )
                 if dt < 1 : dt = '%dms'  % ( math.ceil ( 1000 * dt ) )
                 else      : dt = '%.1fs' %                      dt                 
-                message  = f"Step {it+1:4d}/{n_estimators:<4d} | min/max: {wmin}/{wmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
+                message  = f"Step {it+1:4d}/{n_estimators:<4d} | wmin/wmax: {wminmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
                 bar     += message
 
             models.append ( model )
@@ -743,39 +762,19 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
 
 
 # =============================================================================
-## maximal batch size for PyTorch 
-# =============================================================================
-## @brief Calculate optimal batch size for PyTorch iterative boosting.
-#  @details Dynamically balances Full-Batch stability for smaller datasets with 
-#           SIMD efficiency, RAM limits, and BatchNorm1d stability for larger datasets.
-#  @param n_samples  Total number of samples (N_orig + N_targ)
-#  @param n_features Number of input features (D)
-#  @param max_val    Maximum allowed batch size cap (default: 2^16 = 65536)
-#  @return Optimal integer batch size (power of 2)
-# =============================================================================
-def optimal_batch_size ( n_samples      ,
-                         n_features     ,
-                         max_batch_size = TORCH_MAX_BATCH_SIZE ) :
-    """ Calculate optimal batch size dynamically.
-    """
-    if n_samples <= max_batch_size  :return n_samples
-
-    # Ensure at least 64 samples per feature axis to stabilize BatchNorm statistics
-    target_bs = max ( n_samples // 2 , 64 * n_features )
-    
-    # Smoothly round down to the nearest power of 2
-    batch_size = 2 ** math.floor ( math.log2 ( target_bs ) )
-    
-    return min ( batch_size , max_batch_size )
-
-
-# =============================================================================
 ## @class PyTorchIterativeReweighter
 #  @brief Iterative weight boosting density reweighter using PyTorch (MLP weak learners).
 #  @details Implements sequential gradient boosting for density ratio estimation 
 #           \f$r(x) = \frac{p(x)}{1-p(x)}\f$ using feature-dependent Multi-Layer 
 #           Perceptron (MLP) weak learners. Supports flexible optimization backends 
 #           (Adam and quasi-Newton L-BFGS) with automatic static chunking for large datasets.
+#
+# Choosing the right hyperparameters is not an easy task — it is more of an art than a science.
+# Below are several working configurations:
+#
+#  - 3 features, 5k target, 7k original, rather smooth bounded distributions with w-min/w-max = (0,20):
+#      - { 'hidden_layers': (16,), 'optimizer': 'lbfgs' }
+#
 class PyTorchIterativeReweighter ( IterativeReweighter ) :
     """ Iterative weight boosting density reweighter using PyTorch backend.
     
@@ -783,8 +782,14 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
     density ratios between target and original feature distributions. It 
     supports dynamic batch size optimization, spatial variance control via 
     zero-mean centering, and early stopping based on sliding loss improvement.
-    """
 
+    Choosing the right hyperparameters is not an easy task — it is more of an art than a science.
+    Below are several working configurations:
+  
+    (1) 3 features, 5k target, 7k original, rather smooth bounded distributions with w-min/w-max = (0,20):
+          - { 'hidden_layers': (16,), 'optimizer': 'lbfgs' }
+    
+    """
     # =========================================================================
     ## @brief Initialize the PyTorch iterative density reweighter instance.
     #  @details Sets up hyperparameter configuration defaults, validates batch size, 
@@ -818,7 +823,8 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
             'n_estimators'    :  TORCH_ESTIMATORS       ,
             'hidden_layers'   :  TORCH_HIDDEN_LAYERS    ,
             'learning_rate'   :  TORCH_LEARNING_RATE    ,
-            'weight_decay'    :  TORCH_WEIGHT_DECAY     , 
+            'weight_decay'    :  TORCH_WEIGHT_DECAY     ,
+            ## 
             'batch_size'      :  TORCH_BATCH_SIZE       ,
             'lbfgs_chunk'     :  TORCH_LBFGS_CHUNK      ,
             'device'          :  None                   , # Auto-detect GPU/CPU if not specified
@@ -828,7 +834,7 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
             'min_delta'       :  1e-4                   ,
             'patience'        :  5                      ,
             ## 
-            'optimizer'       :  TORCH_OPTIMIZER        , # Default optimizer type ('adam' or 'lbfgs')
+            'optimizer'       :  TORCH_OPTIMIZER        , # Default optimizer type
             # 
             'verbosity'       :  0                      ,
             'print_freq'      : PRINT_FREQ              , 
@@ -837,25 +843,27 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         
         config.update ( kwargs )
         # Alias resolution for backward compatibility
-        if 'num_boost_round' in config : config [ 'n_estimators'  ] = config.pop ( 'num_boost_round', TORCH_ESTIMATORS ) 
-        if 'hidden_dim'      in config : config [ 'hidden_layers' ] = config.pop ( 'hidden_dim'     , ( 128, 64 )      )
-
+        if 'num_boost_round' in config : config [ 'n_estimators'  ] = config.pop ( 'num_boost_round', TORCH_ESTIMATORS    ) 
+        if 'hidden_dim'      in config : config [ 'hidden_layers' ] = config.pop ( 'hidden_dim'     , TORCH_HIDDEN_LAYERS )
+        
         # Automatic GPU / CPU device selection in constructor
-        user_device = config.get ( 'device', None )
-        if user_device is None                        : config [ 'device' ] = torch.device ( 'cuda' if torch.cuda.is_available () else 'cpu' )
-        elif isinstance ( user_device, string_types ) : config [ 'device' ] = torch.device ( user_device )
+        device = config.get ( 'device', None )
+        if   device is None                      : config [ 'device' ] = torch.device ( 'cuda' if torch.cuda.is_available () else 'cpu' )
+        elif isinstance ( device, string_types )          and \
+             device.strip().lower() in ( 'gpu' , 'cuda' ) and \
+             torch.cuda_is_available ()          : config [ 'device' ] = 'cuda'
+        else                                     : config [ 'device' ] = 'cpu'
 
         n_rows     = num_samples  ( target ) + num_samples ( original )
         n_features = num_features ( target )
 
         batch_size = config.get ( 'batch_size' , 'auto' ) 
-        
-        # Validate user-provided integer batch size or dynamically compute optimal size
-        if isinstance ( batch_size, integer_types ) and 2 <= batch_size <= min ( n_rows , TORCH_MAX_BATCH_SIZE ) :
+        # Validate user-provided integer batch size, use full-batch or dynamically compute (large) optimal size
+        if   isinstance ( batch_size, integer_types ) and 2 <= batch_size <= min ( n_rows , TORCH_MAX_BATCH_SIZE ) :
             if batch_size & ( batch_size - 1 ) : batch_size = 2 ** math.floor ( math.log2 ( batch_size ) )
-        else : 
-            batch_size = optimal_batch_size ( n_rows, n_features, TORCH_MAX_BATCH_SIZE )
-            
+        elif isinstance ( batch_size, string_types  ) and batch_size.strip().lower() == 'full' : batch_size = n_rows
+        else : batch_size = optimal_batch_size ( n_rows, n_features, TORCH_MAX_BATCH_SIZE )
+        ## 
         config [ 'batch_size' ] = batch_size
         
         super ().__init__ ( original        = original        ,
@@ -974,8 +982,10 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         sum_w_targ = numpy.sum ( abs_w_targ )
         norm_targ  = w_targ * ( sum_w_orig / ( sum_w_targ + 1e-12 ) )
 
-        y_comb         = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
-                                          numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
+        y_comb     = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
+                                      numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
+        n_comb     = n_orig + n_targ
+        
         current_w_orig = abs_w_orig.copy ()
         
         n_estimators      = self.params.get ( 'n_estimators'       , TORCH_ESTIMATORS      )
@@ -990,6 +1000,9 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         if not optimizer_type in TORCH_OPTIMIZERS :
             raise TypeError ( "Unknown `optimizer': %s" % optimizer_type ) 
 
+        use_LBFGS         = TORCH_OPTIMIZER_LBFGS == optimizer_type        
+        optimizer_symbol  = TORCH_LBFGS_SYMBOL if use_LBFGS else TORCH_ADAM_SYMBOL
+        
         optimizer_learning_rate = self.params.get ( 'optimizer_learning_rate' , 0.01 )
         print_freq        = self.params.get ( 'print_freq'         , PRINT_FREQ )
 
@@ -1006,7 +1019,7 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         WeakMLPClass = self.get_MLP_class ()
 
         neff0       = nEff ( X_orig, current_w_orig )        
-        description = boosting_symbol + ' ' + S.fixed_width ( self.symbol , 3 ) + ':'
+        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + S.fixed_width ( optimizer_symbol , 2 ) + ':'
         
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
@@ -1024,23 +1037,23 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
             criterion = nn.BCEWithLogitsLoss ( reduction = 'none' )
             model.train ()
 
-            if optimizer_type == 'lbfgs' :
+            if use_LBFGS :
                 
                 optimizer = optim.LBFGS ( model.parameters ()                      ,
                                           lr             = optimizer_learning_rate ,
                                           max_iter       = epochs_per_step         ,
                                           line_search_fn = 'strong_wolfe'          )
-                
-                if lbfgs_chunk < n_orig :
-                    orig_idx = numpy.random.choice ( n_orig, size = lbfgs_chunk , replace = False )
-                    t_size   = min ( n_targ, int ( lbfgs_chunk * n_targ / n_orig ) )
-                    targ_idx = numpy.random.choice ( n_targ, size = t_size, replace = False )
+
+                if lbfgs_chunk < n_comb :
                     
-                    X_chunk = numpy.vstack ( [ X_orig[orig_idx], X_targ[targ_idx] ] ).astype ( numpy.float32 )
-                    y_chunk = numpy.hstack ( [ numpy.zeros ( len(orig_idx), dtype=numpy.float32 ), numpy.ones ( len(targ_idx), dtype=numpy.float32 ) ] )
-                    w_chunk = numpy.hstack ( [ current_w_orig[orig_idx], numpy.abs ( norm_targ[targ_idx] ) ] )
-                    w_chunk /= ( numpy.sum ( w_chunk ) + 1e-12 )
+                    chunk_idx = numpy.random.choice ( n_comb , size = lbfgs_chunk, replace = False ) 
+                    X_chunk   = X_comb [ chunk_idx ]
+                    y_chunk   = y_comb [ chunk_idx ]
+                    w_chunk   = comb_weights [ chunk_idx ]
+                    w_chunk  /= ( numpy.sum ( w_chunk ) + 1e-12 )
+                    
                 else :
+                    
                     X_chunk = X_comb
                     y_chunk = y_comb
                     w_chunk = comb_weights
@@ -1097,6 +1110,7 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                 nepoches         = 0
                 
                 for epoch in safe_loop ( epochs_per_step ) :
+                    
                     nepoches   += 1 
                     epoch_loss  = 0.0
                     batches     = 0  
@@ -1148,8 +1162,12 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
             if bar and not self.silent and ( step < 5  or ( step + 1 ) % print_freq == 0 or ( step + 5 ) == n_estimators ) :
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
-                wmin        = nice_print ( float ( ratios_curr.min () ) , precision = 2, with_sign = False, strip = True )
-                wmax        = nice_print ( float ( ratios_curr.max () ) , precision = 2, with_sign = False, strip = True )
+                
+                wmin    , wmax  = float ( ratios_curr.min () ) , float ( ratios_curr.max () ) 
+                wminmax , wexpo = pretty_floats ( wmin , wmax , precision = 2 , with_sign = False , strip = True )
+                wminmax         = '/'.join ( wminmax )
+                if wexpo : wminmax = '(%s)%s%s' % ( wminmax , S.times , format_pow ( wexpo ) )
+                                              
                 ne0         = nice_print ( float ( neff0              ) , precision = 2, with_sign = False, strip = True )
                 ne          = nice_print ( float ( neff               ) , precision = 2, with_sign = False, strip = True )
 
@@ -1157,17 +1175,15 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                 if dt < 0.1 : dt = '%dms'  % ( math.ceil ( 1000 * dt ) )
                 else        : dt = '%.1fs' %                      dt
 
-                init_str  = nice_print ( initial_loss , precision = 3 , with_sign = False , strip = True )
-                loss_str  = nice_print ( running_loss , precision = 3 , with_sign = False , strip = True )
-                best_str  = nice_print ( best_loss    , precision = 3 , with_sign = False , strip = True ) if best_loss != running_loss else "="
-                delta_str = nice_print ( delta_loss   , precision = 3 , with_sign = True  , strip = True )
+                init_str  = nice_print ( initial_loss , precision = 4 , with_sign = False , strip = True )
+                loss_str  = nice_print ( running_loss , precision = 4 , with_sign = False , strip = True )
+                delta_str = nice_print ( delta_loss   , precision = 4 , with_sign = True  , strip = True )
                 
                 message   = f"Step {step+1:4d}/{n_estimators:<4d}"
-                if best_str != loss_str : message  += f" | loss: {init_str} {S.arrow_right} {loss_str}/{best_str}"
-                else                    : message  += f" | loss: {init_str} {S.arrow_right} {loss_str}"                
+                message  += f" | loss: {init_str} {S.arrow_right} {loss_str}"                
                 message  += f" | {S.delta_symbol}: {delta_str}"
-                if nepoches != epochs_per_step : message += f" | #epochs/step:{nepoches}"
-                message  += f" | wmin/wmax: {wmin}/{wmax}"
+                if not use_LBFGS and nepoches != epochs_per_step : message += f" | #epochs/step:{nepoches}"
+                message  += f" | wmin/wmax: {wminmax}"
                 message  += f" | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}"
                 
                 bar      += message

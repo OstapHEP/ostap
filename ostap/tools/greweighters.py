@@ -45,11 +45,13 @@ logger = getLogger ( 'ostap.tools.greweighters' )
 # =============================================================================
 has_sklearn = hasSkLearn() 
 # =============================================================================
-GBRW_symbol          = S.wood if S.wood and S.show and S.wood else 'GBRW'
+GBRW_symbol               = S.wood if S.wood and S.show and S.wood else 'GBRW'
+GBRW_method               = method_name ( 'GBReweighter/HepML' )
+
 # 
-DEFAULT_ESTIMATORS   =   300 # High capacity: deep ensemble with low learning rate
-MAX_DEPTH            =     6 # Deep tree capacity for high dimensions / large statistics
-LEARNING_RATE        =  0.01 # Small step for stable density ratio convergence
+GBRW_DEFAULT_ESTIMATORS   =   300 # High capacity: deep ensemble with low learning rate
+GBRW_MAX_DEPTH            =     7 # Deep tree capacity for high dimensions / large statistics
+GBRW_LEARNING_RATE        =  0.02 # Small step for stable density ratio convergence
 
 THRESHOLD_NSAMPLES   = 50000
 THRESHOLD_NFEATURES  = 10 
@@ -86,14 +88,14 @@ class GBReweighter(Reweighter) :
         self.__n_splits = n_splits
         
         config = {            
-            "n_estimators"         : DEFAULT_ESTIMATORS , 
-            "learning_rate"        : LEARNING_RATE      ,
-            "max_depth"            : MAX_DEPTH          ,
-            "min_samples_leaf"     : 30                 ,
-            "loss_regularization"  : 5.0                ,
+            "n_estimators"         : GBRW_DEFAULT_ESTIMATORS , 
+            "learning_rate"        : GBRW_LEARNING_RATE      ,
+            "max_depth"            : GBRW_MAX_DEPTH          ,
+            "min_samples_leaf"     : 25                      ,
+            "loss_regularization"  : 1.0                     ,
             ##
             "gb_args"              : { "subsample"      : 0.95 ,
-                                    "max_features"   : 0.95 }
+                                       "max_features"   : 0.95 }
         }
         
         config.update ( params ) 
@@ -205,7 +207,7 @@ class GBReweighter(Reweighter) :
     @property
     def method ( self ) :
         """ Return method identifier name. """
-        return method_name ( 'GBReweighter./HepML' )
+        return GBRW_method 
     
     # =========================================================================
     ## Get number of cross-validation splits.

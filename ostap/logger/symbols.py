@@ -162,8 +162,9 @@ __all__     = (
     'lightning'           , ## ⚡
     'lock_closed'         , ## 🔒
     'lock_open'           , ## 🔓
-    ## 
+    ##    
     'matrix'              , ## ▦
+    'microscope'          , ## 🔬
     'minus_plus'          , ## ∓
     'mountain'            , ## ⛰️  (wide)
     'much_greater'        , ## ≫
@@ -273,6 +274,7 @@ __all__     = (
     'v_unit_expr'            , ## f'{v_italic}-unit '
     ##
     'warning'                , ## ⚠️
+    'waterfall'              , ## 🌊
     'weight_lifter'          , ## 🏋️  (wide)
     'weight_scale'           , ## ⚖️  (wide)
     'weierstrass_p'          , ##  ℘
@@ -650,6 +652,8 @@ warning               = '⚠️'  if show else ''
 attention             = '🚨'  if show else '' 
 
 dice                  = '🎲'  if show else ''
+microscope            = '🔬'  if show else '' 
+waterfall             = '🌊'  if show else '' 
 
 # ==================================================
 def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what ) 

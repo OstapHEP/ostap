@@ -1,7 +1,24 @@
 ## New features
 
-   1.  Update `PyTorchIterativeReweighter`
-   
+    1. Finally all reweighters work — at least for the simple test `reweight5`:
+        - Iterative reweighters:
+            - `LightGBMIterativeReweighter`
+            - `XGBoostIterativeReweighter`
+            - `CatBoostIterativeReweighter`
+            - `PyTorchIterativeReweighter`
+        - Density reweighters:
+            - `LightGBMDensityReweighter`
+            - `XGBoostDensityReweighter`
+            - `CatBoostDensityReweighter`
+            - `PyTorchDensityReweighter`
+            - `LogRegressionDensityReweighter`
+        - Others:
+            - `CascadeReweighter`: allows combining two or more "weak" reweighters
+            - `GBReweighter`: thin wrapper over `GBReweighter` from `hep_ml` by Alex Rogozhnikov
+
+    1. Update `PyTorchIterativeReweighter`
+
+
 ## Bug fixes
 
 ## Backward incompatible

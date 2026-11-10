@@ -29,12 +29,11 @@ logger = getLogger ( 'ostap.test_math_histo_integration' )
 batch_env ( logger )
 # =============================================================================
 light , weak = light_tests ()
-random_freq  = 0.33
+random_freq  = 0.25
 
 # =============================================================================
 if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
 elif weak  : logger.warning ( "Machine is not powerful enough: reduce some tests" )
-
 
 def test_histo1_integration () :
 
@@ -52,10 +51,11 @@ def test_histo1_integration () :
     
     xmin, xmax = -3 , 3
     
-    NTOYS      = 10 if ( light or weak ) else 100 
+    h1    = ROOT.TH1D ( hID() , '' , NB , xmin , xmax )
+    NTOYS = 10 if ( light or weak ) else 100 
     for k in progress_bar ( NTOYS ) :
-        
-        h1  = ROOT.TH1D ( hID() , '' , NB , xmin , xmax )
+
+        h1.reset () 
         for i in range ( N ) :
             x = random.gauss(0,1)
             while not xmin < x < xmax : x = random.gauss ( 0 , 1 )                
@@ -68,12 +68,12 @@ def test_histo1_integration () :
             hh    = Ostap.Math.Histo1D ( h1 , *key ) 
             r1    = hh.integral ()
             cnt  += ( r1 - ii ) / ii 
-
             
     rows = [ ('Index' ,
               'mean [%s]'    % format_pow10 ( -3 ) ,
               'rms [%s]'     % format_pow10 ( -3 ) ,
               'min/max [%s]' % format_pow10 ( -3 ) ) ]
+    
     for key in sorted ( cnts ) :
         cnt = cnts [ key ]
 
@@ -116,10 +116,11 @@ def test_histo2_integration () :
     xmin, xmax = -3 , 3 
     ymin, ymax = -3 , 3 
 
+    h2  = ROOT.TH2D ( hID() , '' , NX , xmin , xmax  , NY , ymin , ymax )
     NTOYS      = 10 if ( light or weak ) else 50
     for k in progress_bar ( NTOYS ) :
         
-        h2  = ROOT.TH2D ( hID() , '' , NX , xmin , xmax  , NY , ymin , ymax )
+        h2.reset()
         for i in range  ( N  ) :
             x = random.gauss(0,1)
             while not xmin < x < xmax : x = random.gauss(0,1)                
@@ -134,7 +135,6 @@ def test_histo2_integration () :
             hh    = Ostap.Math.Histo2D ( h2 , *key ) 
             r1    = hh.integral ()
             cnt  += ( r1 - ii ) / ii 
-            
             
     rows = [ ('Index' ,
               'mean [%s]'    % format_pow10 ( -3 ) ,
@@ -184,14 +184,15 @@ def test_histo3_integration () :
     ymin, ymax = -3 , 3 
     zmin, zmax = -3 , 3 
 
-    NTOYS      = 5 if ( light or weak ) else 10
+    h3  = ROOT.TH3D ( hID() , '' ,
+                      NX , xmin , xmax  ,
+                      NY , ymin , ymax  ,
+                      NZ , zmin , zmax )
     
+    NTOYS      = 5 if ( light or weak ) else 10    
     for k in progress_bar ( NTOYS ) :
         
-        h3  = ROOT.TH3D ( hID() , '' ,
-                          NX , xmin , xmax  ,
-                          NY , ymin , ymax  ,
-                          NZ , zmin , zmax )
+        h3.reset()
         for i in range  ( N ) :
             x = random.gauss(0,1)
             while not xmin < x < xmax : x = random.gauss(0,1)                

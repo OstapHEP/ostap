@@ -32,7 +32,7 @@ os.environ [ 'MKL_THREADING_LAYER'  ] = 'GNU'
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.core         import typename 
 from   ostap.utils.basic        import numcpu, is_ci 
-from   ostap.logger.pretty      import nice_print
+from   ostap.logger.pretty      import nice_print, pretty_floats, format_pow10 
 from   ostap.stats.utils        import nEff, num_samples, w_header    
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
@@ -236,197 +236,111 @@ def run_reweight ( n_dim       = 3     ,
     reweighters = [ None ]
     reweighters = [] 
     
-    if False and hasCatBoost () :
+    if active_test ( random_freq ) and hasCatBoost () :
         
-        """
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
-        rw4 = CATB ( target               = target      , 
-                    original              = original    , 
-                    random_state          = seed        , 
-                    learning_rate         = 0.02        ,   
-                    l2_leaf_reg           = 0.1         ,  
-                    early_stopping_rounds = None        , 
-                    ## bootstrap_type        = 'Bernoulli' ,
-                    ## subsample             = 0.8         , 
-                    bootstrap_type        = 'Bayesian'     , 
-                    bagging_temperature   = 1.0            , 
-                    ##   
-                    boosting_type         = 'Ordered'
-                    )                           
-        reweighters.append ( rw4 )
-        """
-
+        rw = CATB ( target   = target      , 
+                    original = original1   )                           
+        reweighters.append ( rw )
+        
+        
+    if active_test ( random_freq ) and hasCatBoost () :
+        
         from ostap.tools.reweighters  import CatBoostIterativeReweighter as CATB
-        rw4 = CATB ( target        = target      , 
-                     original      = original1   ,
-                     ## 
-                     ## leaf_estimation_iterations =    1 , 
-                     min_data_in_leaf           =    1 ,
-                     learning_rate              = 0.02 ,
-                     max_depth                  =    6 , 
-                     n_estimators               =  300 ,
-                     l2_leaf_reg                =  1e-3 , 
-                     ##
-                     voting                     = 'mean'    ,
-                     progress = False 
-                    )
+        rw = CATB ( target   = target    , 
+                    original = original1 )        
+        reweighters.append ( rw )
         
-        reweighters.append ( rw4 )
         
-    if False and hasLightGBM () :
+    if active_test ( radom_freq ) and hasLightGBM () :
         
-        ## from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
-        ## rw2 = LGBM ( target                = target   ,
-        ##             original              = original ,
-        ##             early_stopping_rounds = None     ,
-        ##             min_child_samples     = 10       ,
-        ##             subsample             = 0.8      ,
-        ##             path_smooth           = 0.5      )
-        ## 
-        ## reweighters.append ( rw2 )
+        from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
+        rw = LGBM ( target                = target    ,
+                    original              = original1 )
+        
+        reweighters.append ( rw )
 
+    if active_test ( radom_freq ) and hasLightGBM () :
+        
         from ostap.tools.reweighters  import LightGBMIterativeReweighter as  LGBM
-        rw2 = LGBM ( target                = target    ,
-                     original              = original1 , 
-                     ##
-                     n_estimators            = 300      ,
-                     learning_rate           = 0.02     ,
-                     max_depth               = 6        ,
-                     ## 
-                     min_data_in_leaf        = 10       , # Снизить с 30 до 10
-                     min_sum_hessian_in_leaf = 1e-4     , # Снизить с 1e-2 до 1e-5 (или 0.0)
-                     lambda_l2               = 0.0      , # Пока убрать сильную L2-регуляризацию для теста
-                     ## 
-                     progress              = False    )
-        reweighters.append ( rw2 )
+        rw = LGBM ( target                = target    ,
+                    original              = original1 , 
+                    progress              = False    )
+        
+        reweighters.append ( rw )
         
 
-    if False and hasXGBoost  () :
+    if active_test ( radom_freq ) and hasXGBoost  () :
         
-        ## from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
-        ## rw3 = XGB  ( target                = target   ,
-        ##             original              = original ,
-        ##             subsample             = 0.8      ,
-        ##             early_stopping_rounds = None     , 
-        ##             tree_method           = 'exact'  )
+        from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
+        rw = XGB  ( target                = target    ,
+                    original              = original1 ,
+                   )
         
-        ## reweighters.append ( rw3 )
+        reweighters.append ( rw )
         
+    if active_test ( radom_freq ) and hasXGBoost  () :
+
         from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB 
-        rw3 = XGB  ( target                = target    ,
+        rw = XGB  ( target                = target    ,
                      original              = original1 ,
-                     ##
-                     n_splits              = 5       , 
-                     n_estimators          = 300     ,
-                     learning_rate         = 0.02    ,
-                     ## max_depth             = 7       ,
-                     ## 
-                     ## tree_method           = 'exact' ,
-                     ## max_bin               = 1023    ,
-                     ##
-                     min_child_weight      = 1e-4    ,
-                     max_delta_step        = 0.0     , 
-                     subsample             = 1.0     ,
-                     ## 
-                     gamma                 = 0.0     , 
-                     reg_alpha             = 0.0     ,
-                     reg_lambda            = 1e-4    , ## 0.0     , ## 1e-3    , ## 0.01 
-                     ##
-                     grow_policy           = 'depthwise' ,
-                     max_depth             =  6          ,
-                     ## 
-                     ## max_leaves            =  0      ,
-                     ##
-                     ## grow_policy           = 'lossguide' , 
-                     max_leaves            =  63         ,
-                     tree_method           = 'hist'   ,
-                     ## tree_method           = 'exact'      ,
-                     max_bin               = 1023        ,
-                     ## 
-                     ## voting                = 'trim::1' ,
-                     ## voting                = 'trim'    ,
-                     ## voting                = 'geometric'  ,
-                     voting                = 'mean'    ,
-                     oof_mode              = False     , 
                      progress              = False     ,
                     )
         
-        reweighters.append ( rw3 )
+        reweighters.append ( rw )
         
-    if hasPyTorch () :
+    if active_test ( radom_freq ) and hasPyTorch () :
 
-        """
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
-        rw5 = TORCH ( target        = target        ,
-                      original      = original      ,
-                      n_splits      = 5             ,
-                      epochs        = 1000          ,
-                      bce_epochs    = 30            , 
-                      min_epochs    = 100           ,
-                      eval_freq     = 5             ,  
-                      patience      = 20            ,  
-                      batch_size    = 2 ** 6        ,
-                      dropout       = 0.0           , 
-                      learning_rate = 1e-4          , 
-                      logit_reg     = 0             ,
-                      max_logit     = 10            , 
-                      ma_window     = 20            ,
-                      weight_decay  = 0             ,
-                      min_delta     = 1e-6          ,
-                      hidden_dims   = ( 256 , 256 , 256 ) )                       
-        reweighters.append ( rw5 )
-        """
+        rw = TORCH ( target        = target        ,
+                     original      = original1     ,
+                     hidden_layers = ( 256 , 256 ) )                       
+        reweighters.append ( rw )
+
+        
+    if active_test ( radom_freq ) and hasPyTorch () :
 
         from ostap.tools.reweighters  import PyTorchIterativeReweighter as TORCH
-        rw5 = TORCH ( target        = target        ,
-                      original      = original1     ,
-                      ##
-                      ## n_splits                = 1         ,
-                      ## n_estimators            = 300       ,
-                      hidden_layers           = ( 16 , )  ,
-                      ## epochs_per_step         = 100       ,
-                      ## learning_rate           = 0.02      ,
-                      optimizer               = 'lbfgs'   , 
-                      ## optimizer_learning_rate = 0.01      , 
-                      progress                = False     ,
+        rw = TORCH ( target        = target        ,
+                     original      = original1     ,
+                     ## use very simple construction:
+                     hidden_layers           = ( 16 , )  ,
+                     progress                = False     ,
                      )
         
-        reweighters.append ( rw5 )
+        reweighters.append ( rw )
                       
 
-    if False and hasHepML    () :
+    if active_test ( radom_freq ) and hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
-        rw1 = GBRW ( target              = target         ,
-                     original            = original1      ,
-                     n_estimators        = 300            ,
-                     learning_rate       = 0.01           , 
-                     max_depth           = 7              ,
-                     min_samples_leaf    = 5              ,
-                     loss_regularization = 1              ) 
+        rw = GBRW ( target              = target         ,
+                    original            = original1      ,
+                   ) 
         
-        reweighters.append ( rw1 )
+        reweighters.append ( rw )
         
-    if False and hasSkLearn ():
+    if active_test ( radom_freq ) and hasSkLearn ():
         
         from ostap.tools.reweighters  import LogRegressionDensityReweighter as LOGREG 
+        
+        rw = LOGREG ( target       = target    ,                       
+                      original     = original1 , 
+                      polynomials2 = 2         )
+        
+        reweighters.append ( rw )
+        
+        rw = CASCADE ( stages   = ( ( LOGREG , { 'polynomials' : 4 } ) ,
+                                    ( LOGREG , { 'polynomials' : 4 } ) ) , 
+                       target   = target ,
+                       original = original1 )
+        reweighters.append ( rw )
 
-        ## rw6 = LOGREG ( target = target , original = original )
-        ## reweighters.append ( rw6 )
-        
-        
-        ## rw7 = CASCADE ( classes = [ LOGREG , LOGREG ] , target = target , original = original )
-        ## reweighters.append ( rw7 )
-        
-        rw8 = CASCADE ( classes     = [ LOGREG , LOGREG , LOGREG ] ,
-                        target      = target   ,
-                        original    = original ,
-                        ##
-                        polynomials = 2 , 
-                        ##
-                       )
-        
-        reweighters.append ( rw8 )
-
+        rw = CASCADE ( stages   = ( ( LOGREG , { 'polynomials' : 4 } ) ,
+                                    ( LOGREG , { 'polynomials' : 4 } ) , 
+                                    ( LOGREG , { 'polynomials' : 4 } ) ) , 
+                       target   = target ,
+                       original = original1 )
+        reweighters.append ( rw )
 
     # =========================================================================
     ## Summary table 
@@ -434,24 +348,25 @@ def run_reweight ( n_dim       = 3     ,
     
     header    = [] 
     rows      = []  
+
+    orginals = ( original2 , ) if ( light or weak ) else ( original2 , ) 
     
     for rw in reweighters :
             
-        for original in ( original2 , 
-                          ## original2 ,
-                          ## original3
-                         ) :
+        for original in originals : 
         
             if rw : logger.info ( 'Using REWEIGHTER %s %s ' % ( typename ( rw ) , rw.method ) )
             
             if rw is None : original_weight = None
             else          : original_weight = rw.weights ( original )
             
-            wmin, wmax = '' , '' 
+            wmin, wmax , wunit = '' , '' , '' 
             if not original_weight is None :
                 wmin = float ( numpy.min ( original_weight ) ) 
                 wmax = float ( numpy.max ( original_weight ) )
-                wmin , wmax = '%.5g' % wmin , '%.5g' % wmax 
+                ww   , expo = pretty_floats ( wmin , wmax , precision = 4 , with_sign = False , strip = True )
+                wmin , wmax = ww
+                wunit       =  ( '[%s]' % format_pow10 ( expo ) ) if expo else '' 
                                
             for c in comparators :
                 
@@ -465,7 +380,7 @@ def run_reweight ( n_dim       = 3     ,
                 rw_type = '' if rw is None else rw.method
                 rw_symb = '' if rw is None else rw.symbol                 
                 neff    = nice_print ( neff , precision = 2 , with_sign = False , strip = True ) 
-                row     = ( rw_symb , rw_type , c.symbol, c.method , neff ) + tuple ( row ) + ( wmin , wmax )             
+                row     = ( rw_symb , rw_type , c.symbol, c.method , neff ) + tuple ( row ) + ( wmin , wmax , wunit )             
                 rows.append ( row )
 
             header =  ( '' , 'Reweighter' , '' , 'Comparator'  , '#eff' ) + header + w_header 
@@ -475,20 +390,18 @@ def run_reweight ( n_dim       = 3     ,
             table = T.table ( table , title = title , prefix = '# ' , alignment = 'clclccccccccccccccccccccccccc' )
             logger.info ( '%s\n%s' % ( title , table ) )
 
-            # =================================================================
-            # can we save reweighters into database ?
-            with DBASE.tmpdb () as db :
-                
-                ## for rw in reweighters : db [  typename ( rw ) ] = rw                
-                ## db [ 'reweighters' ] = reweighters
-                
-                db.ls () 
-    
+    # =================================================================
+    # can we save reweighters into database ?
+    with DBASE.tmpdb () as db :
+        
+        for rw in reweighters : db [  typename ( rw ) ] = rw                
+        db [ 'reweighters' ] = reweighters
+        
+        db.ls () 
+        
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## if numcpu() <= 8 : run_reweight ( 3 ,  3000 , 123456 )
-    ## else             : run_reweight ( 3 ,  3000 )
     
     run_reweight ( 3 , 3000 , 7000 , 8000 ) 
     

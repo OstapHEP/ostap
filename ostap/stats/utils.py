@@ -534,7 +534,31 @@ def np2vct ( data , weight = None ) :
             covs [ j , i ] = cc  
         
     return RT ( values ,  covs ) 
-        
+
+# =============================================================================
+## @brief Calculate optimal batch size for PyTorch iterative boosting.
+#  @details Dynamically balances Full-Batch stability for smaller datasets with 
+#           SIMD efficiency, RAM limits, and BatchNorm1d stability for larger datasets.
+#  @param n_samples  Total number of samples (N_orig + N_targ)
+#  @param n_features Number of input features (D)
+#  @param max_val    Maximum allowed batch size cap (default: 2^16 = 65536)
+#  @return Optimal integer batch size (power of 2)
+# =============================================================================
+def optimal_batch_size ( n_samples      ,
+                         n_features     ,
+                         max_batch_size ) :
+    """ Calculate optimal batch size dynamically.
+    """
+    if n_samples <= max_batch_size  : return n_samples
+
+    # Ensure at least 64 samples per feature axis to stabilize BatchNorm statistics
+    target_bs = max ( n_samples // 2 , 64 * n_features )
+    
+    # Smoothly round down to the nearest power of 2
+    batch_size = 2 ** math.floor ( math.log2 ( target_bs ) )
+    
+    return min ( batch_size , max_batch_size )
+
 # =============================================================================
 ## @brief Compute truncated mean with asymmetric low/high trimming along the specified axis.
 #  @param x Input array (e.g. fold predictions matrix of shape (N_folds, N_samples)).
