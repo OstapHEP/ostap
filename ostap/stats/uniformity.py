@@ -24,8 +24,7 @@ import numpy, math
 # Logging setup 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.uniformity' )
-else                       : logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.stats.uniformity' )
 # =============================================================================
 logger.debug ( "Test to check uniform distributions" )
 # =============================================================================

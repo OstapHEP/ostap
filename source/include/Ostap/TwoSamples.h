@@ -196,6 +196,52 @@ namespace Ostap
     double watson_u2          ( const ECDF&  e1 , const WECDF& e2 ) ;
     double watson_u2          ( const WECDF& e1 , const ECDF&  e2 ) ;    
     // ========================================================================
+
+    // ========================================================================
+    // Rank-based estimators (for unweighted data only)
+    // ========================================================================
+    
+    // ========================================================================
+    /**  Mann-Whitney U two-sample test statistic.
+     *
+     *  Calculates the Mann-Whitney U statistic (also known as Wilcoxon rank-sum statistic)
+     *  for two unweighted empirical cumulative distribution functions (ECDF).
+     *  To optimize performance, the algorithm iterates over the shorter sample and
+     *  queries ranks in the longer sample using binary search.
+     *
+     *  @param e1 First ECDF sample
+     *  @param e2 Second ECDF sample
+     *  @return Minimum Mann-Whitney U statistic value (\f$ \min(U_1, U_2) \f$)
+     *
+     *  @see https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test
+     *  @note Mann, H.B., Whitney, D.R. (1947). "On a test of whether one of two random variables is stochastically larger than the other".
+     *        The Annals of Mathematical Statistics, 18(1): 50–60.
+     *  @note Wilcoxon, F. (1945). "Individual comparisons by ranking methods".
+     *        Biometrics Bulletin, 1(6): 80–83.
+     */
+    double mann_whitney ( const ECDF& e1 , const ECDF& e2 ) ;
+    
+    // ========================================================================
+    /** Symmetrized version of Savage two-sample test statistic (Exponential Scores Test).
+     *
+     *  Calculates the Savage test statistic for two unweighted empirical cumulative
+     *  distribution functions (ECDF). The Savage test is a rank-based nonparametric test
+     *  utilizing exponential scores (expected values of order statistics from an exponential
+     *  distribution), making it particularly powerful for detecting differences in the
+     *  right tails of distributions.
+     *
+     *  @param e1 First ECDF sample
+     *  @param e2 Second ECDF sample
+     *  @return Savage test statistic value for the first sample
+     *
+     *  @note Savage, I.R. (1956). "Contributions to the theory of rank order statistics — the two-sample case".
+     *        The Annals of Mathematical Statistics, 27(3): 590–615.
+     *  @note Hájek, J., Šidák, Z. (1967). "Theory of Rank Tests". Academic Press.
+     */
+    // ========================================================================
+    double savage ( const ECDF& e1 , const ECDF& e2 ) ; 
+
+    // ========================================================================
   } //                                        The end  of namespace Ostap::Math
   // ==========================================================================
 } //                                                 The end of namespace Ostap

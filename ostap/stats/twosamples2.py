@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/stats/twosamples2.py
-#  Two-Samples 1D-Weighted Tests
+#  Two-Samples Test for 1D *weighted* data 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2024-10-16
 # =============================================================================
-""" Two-Samples 1D (weighted) Test
+""" Two-Samples Test for 1D *weighted* data 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -24,7 +24,7 @@ __all__     = (
     'wasserstein1'       , ## The first Wasserstein 2-sample test
     'wasserstein2'       , ## The second Wasserstein 2-sample test
     'rosenblatt'         , ## Rosenblatt 2-sample test 
-    'watson_u2'          , ## Watsoon U2 2-sample test 
+    'watson_u2'          , ## Watson U2 2-sample test 
 ) 
 # =============================================================================
 from   ostap.stats.utils    import ( weight_trivial     ,
@@ -39,8 +39,7 @@ import numpy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.twosamples2' )
-else                       : logger = getLogger( __name__ )
+logger = getLogger ( 'ostap.stats.twosamples2' )
 # =============================================================================
 logger.debug ( 'Two-Samples 1D (weighted) Test' )
 # =============================================================================
@@ -281,11 +280,11 @@ def rosenblatt ( data1           ,
 # =============================================================================
 ## @brief Watson's two-sample test statistic (\f$U^2\f$).
 #
-#   A Cramér-von Mises type variant invariant under cyclic transformations:
+#  A Cramér-von Mises type variant invariant under cyclic transformations:
 #  \f[ U^2 = \int_{-\infty}^{\infty} \left( (F_1(x) - F_2(x)) - \bar{D} \right)^2 dH(x) \f]
 #  @see https://en.wikipedia.org/wiki/Watson_test
 #   @note Watson, G.S. (1961, 1962).
-def watson_u2 ( data1           , 
+def watson_u2 ( data1            , 
                  data2           ,
                  weight1 = None  ,
                  weight2 = None  ) : 

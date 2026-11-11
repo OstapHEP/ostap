@@ -1168,7 +1168,7 @@ class Wasserstein(DistanceTest) :
     def symbol ( self ) :
         """`symbol`: Symbol/tag associated with this estimator
         """
-        return U.symbol_W2
+        return U.symbol_W
     
     # =========================================================================
     ## Actual method implemented by the estimator 
@@ -1176,7 +1176,7 @@ class Wasserstein(DistanceTest) :
     def method ( self ) :
         """`method`: Actual method implemented by the estimator
         """
-        return U.method_W2 
+        return U.method_W 
 
 # ============================================================================
 ## @class Hellinger

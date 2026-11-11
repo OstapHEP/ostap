@@ -759,13 +759,15 @@ def _rad_sample_ ( self , num ) :
     >>> subset =  data.sample ( 0.01 )  ## get 1% of events 
     """
     N = len ( self ) 
-    if   0 == num : return self.emptyClone ( dsID () )
-    elif num == N : return _rad_shuffle_ ( self )
+    if   0 == num or 0 == N : return self.emptyClone ( dsID () )
+    elif num == N           : return _rad_shuffle_ ( self )
     elif isinstance ( num , integer_types ) and 0 < num < N : pass 
     elif isinstance ( num , float         ) and 0 < num < 1 :
-        from ostap.math.random_ext import poisson 
-        num = poisson ( num * N )
-        return _rad_sample_ ( self , num )
+        from ostap.math.random_ext import poisson
+        mu = num * N 
+        NN = poisson ( mu )
+        while not NN : NN = poisson ( mu  )
+        return _rad_sample_ ( self , NN  )
     else :
         raise TypeError("Unknown `num':%s" % num )
     ## 

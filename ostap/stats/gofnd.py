@@ -1961,7 +1961,7 @@ class Wasserstein1 ( KolmogorovSmirnov ) :
     def symbol ( self ) :
         """`symbol`: Symbol/tag associated with this estimator
         """
-        return U.symbol_W_1
+        return U.symbol_W1
 
 # =============================================================================
 ## @class Wasserstein1 
@@ -1992,7 +1992,7 @@ class Wasserstein2 ( KolmogorovSmirnov ) :
     def symbol ( self ) :
         """`symbol`: Symbol/tag associated with this estimator
         """
-        return U.symbol_W_2
+        return U.symbol_W2
 
 # =============================================================================
 ## @class KullbackLeibler 
@@ -2342,7 +2342,7 @@ class Wasserstein(GoF) :
     def symbol ( self ) :
         """`symbol`: Symbol/tag associated with this estimator
         """
-        return U.symbol_W2
+        return U.symbol_W
 
 # =============================================================================
 ## @class Hellinger

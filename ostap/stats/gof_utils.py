@@ -51,10 +51,9 @@ import ROOT, numpy, scipy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.gof_utils' )
-else                       : logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.stats.gof_utils' )
 # =============================================================================
-logger.debug ( 'Simple utilities for goodness-of-fit studies' )#
+logger.debug ( 'Simple utilities for Goodness-of-Fit studies' )#
 # =============================================================================
 ## transform structured array to unstructured one
 s2u = None 
@@ -534,33 +533,44 @@ def normalize_weights_to_N ( weight1 ,
 # =============================================================================
 ## Short labels for various statitical estimators 
 Labels = {
-    'KS'  : U.method_KS  ,  
-    'K'   : U.method_K   , 
-    'AD'  : U.method_AD  ,
-    'CM'  : U.method_CVM , 
-    'ZA'  : U.method_ZA  , 
-    'ZC'  : U.method_ZC  , 
-    'ZK'  : U.method_ZK  , 
-    'BJ'  : U.method_BJ  , 
-    'U2'  : U.method_U2  ,
-    'R'   : U.method_R   ,    
-    'NLL' : U.method_NLL ,
-    'AIC' : U.method_AIC ,
-    'BIC' : U.method_BIC ,  
+    'KS'  : U.method_KS   ,  
+    'K'   : U.method_K    , 
+    'AD'  : U.method_AD   ,
+    'CM'  : U.method_CVM  , 
+    'ZA'  : U.method_ZA   , 
+    'ZC'  : U.method_ZC   , 
+    'ZK'  : U.method_ZK   , 
+    'BJ'  : U.method_BJ   , 
+    'U2'  : U.method_U2   ,
+    'R'   : U.method_R    ,
+    'W'   : U.method_W    ,
+    'W1'  : U.method_W1   ,
+    'W2'  : U.method_W2   ,
+    'MW'  : U.method_MW   ,
+    'S'   : U.method_S    ,    
+    'NLL' : U.method_NLL  ,
+    'AIC' : U.method_AIC  ,
+    'BIC' : U.method_BIC  ,  
 }
 # =============================================================================
 ## lower-case shortcuts:
 Keys = {    
-    'KS'  : ( 'ks'  , 'kolmogorov' , 'kolmogorovsmirnov'  , 'smirnov'   ) , 
+    'KS'  : ( 'ks'  , 'kolmogorov'   , 'kolmogorovsmirnov'  , 'smirnov'   ) , 
     'K'   : ( 'k'   , 'kuiper'                                          ) , 
-    'AD'  : ( 'ad'  , 'anderson'   , 'andersondarling'     , 'darling'  ) , 
-    'CM'  : ( 'cm'  , 'cramer'     , 'cramervonmises'      , 'vonmises' ) , 
-    'ZK'  : ( 'zk'  , 'zhangk'     , 'zhangzk'             ) , 
-    'ZA'  : ( 'za'  , 'zhanga'     , 'zhangza'             ) , 
-    'ZC'  : ( 'zc'  , 'zhangc'     , 'zhangzc'             ) , 
-    'BJ'  : ( 'bj'  , 'berkjones'  , 'berk'                ) ,
-    'U2'  : ( 'u2'  , 'watsonu2'   , 'u2watson' , 'watson' ) ,
-    'R'   : ( 'r'   , 'rosenblatt' ) ,     
+    'AD'  : ( 'ad'  , 'anderson'     , 'andersondarling'     , 'darling'  ) , 
+    'CM'  : ( 'cm'  , 'cramer'       , 'cramervonmises'      , 'vonmises' ) , 
+    'ZK'  : ( 'zk'  , 'zhangk'       , 'zhangzk'             ) , 
+    'ZA'  : ( 'za'  , 'zhanga'       , 'zhangza'             ) , 
+    'ZC'  : ( 'zc'  , 'zhangc'       , 'zhangzc'             ) , 
+    'BJ'  : ( 'bj'  , 'berkjones'    , 'berk'                ) ,
+    'U2'  : ( 'u2'  , 'watsonu2'     , 'u2watson' , 'watson' ) ,
+    'R'   : ( 'r'   , 'rosenblatt'   ) ,     
+    'W'   : ( 'w'   , 'wasserstein'  ) ,     
+    'W1'  : ( 'w1'  , 'wasserstein1' ) ,     
+    'W2'  : ( 'w2'  , 'wasserstein2' ) ,
+    'MW'  : ( 'mw'  , 'mannwhitney'  , 'wilcoxon' ) ,
+    'S'   : ( 's'   , 'savage'       ) ,
+    ##
     'NLL' : ( 'nll' ,              ) , 
     'AIC' : ( 'aic' , 'akaike'     ) ,  
     'BIC' : ( 'bic' , 'bayesian'   ) , 

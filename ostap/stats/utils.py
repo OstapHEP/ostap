@@ -54,12 +54,13 @@ __all__     = (
     'symbol_T2'           , ## symbol for Hotelling T2 
     'symbol_B'            , ## symbol for Bhattacharyya'               
     'symbol_H'            , ## symbol for Hellinger 
-    'symbol_W2'           , ## symbol for Wasserstein 
-    'symbol_W_1'          , ## symbol for Wasserstein-1 
-    'symbol_W_2'          , ## symbol for Wasserstein-2
+    'symbol_W'            , ## symbol for Wasserstein 
+    'symbol_W1'           , ## symbol for Wasserstein-1 
+    'symbol_W2'           , ## symbol for Wasserstein-2
     'symbol_R'            , ## symbol for Rosenblatt 
     'symbol_U2'           , ## Symbol for Watson U2 
-
+    'symbol_MW'           , ## Symbol for Mann-Whintey 
+    'symbol_S'            , ## Symbol for Savage 
     ##
     'symbol_NLL'          , ## symbol for NLL 
     'symbol_AIC'          , ## symbol for Akainke IC 
@@ -97,17 +98,18 @@ __all__     = (
     'method_B'            , ##                Bhattacharyya method 
     'method_H'            , ##                    Hellinger method 
     'method_T2'           , ##                    Hotteling method                       
-    'method_W2'           , ##                  Wasserstein method
-    'method_W_1'          , ##                 Wassertein/1 method 
-    'method_W_2'          , ##                 Wassertein/2 method 
+    'method_W'            , ##                  Wasserstein method
+    'method_W1'           , ##                 Wassertein/1 method 
+    'method_W2'           , ##                 Wassertein/2 method 
     'method_R'            , ##                   Rosenblatt method 
     'method_U2'           , ##                    Watson U2 method 
+    'method_MW'           , ##                Mann-Whitney  method 
     ##
     'method_NLL'          , ## Negative log-likelihood 
     'method_AIC'          , ## Akaike IC
     'method_BIC'          , ## Bayesian IC'
     ##
-    'method_KS'           , ## Kolmogoros-Smirnov     
+    'method_KS'           , ## Kolmogorov-Smirnov     
     'method_K'            , ## Kuiper                
     'method_AD'           , ## Anderson-Darling
     'method_CVM'          , ## Cramer-von Mises'        
@@ -125,8 +127,7 @@ import numpy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.utils' )
-else                       : logger = getLogger( __name__ )
+logger = getLogger ( 'ostap.stats.utils' )
 # ============================================================================
 symbol_name  = S.bolditalic 
 method_name  = S.italic
@@ -156,11 +157,13 @@ symbol_M     = symbol_name ( 'M'   )
 symbol_T2    = symbol_name ( f'T{S.sup_two}' if S.show else 'T2'  )
 symbol_B     = symbol_name ( 'B'   )
 symbol_H     = symbol_name ( 'H'   )
-symbol_W2    = symbol_name ( f'W{S.sup_two}' if S.show else 'W2'  )
-symbol_W_1   = symbol_name ( f'W{S.sub_one}' if S.show else 'W_1' )
-symbol_W_2   = symbol_name ( f'W{S.sub_two}' if S.show else 'W_2' )
+symbol_W     = symbol_name ( f'W{S.sup_two}' if S.show else 'W2'  )
+symbol_W1    = symbol_name ( f'W{S.sub_one}' if S.show else 'W_1' )
+symbol_W2    = symbol_name ( f'W{S.sub_two}' if S.show else 'W_2' )
 symbol_R     = symbol_name ( 'R')
 symbol_U2    = symbol_name ( f'U{S.sup_two}' if S.show else 'U2'  )
+symbol_MW    = symbol_name ( 'M-W' )
+symbol_S     = symbol_name ( 'S'   )
 
 symbol_NLL   = symbol_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'NLL' ) 
 symbol_AIC   = symbol_name ( 'AIC' ) 
@@ -199,21 +202,23 @@ method_M     = method_name ( 'Mahalanobis'                   )
 method_T2    = method_name ( f'Hotteling T{S.sup_two}'       )
 method_B     = method_name ( 'Bhattacharyya'                 )
 method_H     = method_name ( 'Hellinger'                     )
-method_W2    = method_name ( f'Wasserstein W{S.sup_two}'     )
-method_W_1   = method_name ( f'Wasserstein W{S.sub_one}'     )
-method_W_2   = method_name ( f'Wasserstein E{S.sub_two}'     )
+method_W     = method_name ( f'Wasserstein W{S.sup_two}'     )
+method_W1    = method_name ( f'Wasserstein W{S.sub_one}'     )
+method_W2    = method_name ( f'Wasserstein W{S.sub_two}'     )
 method_R     = method_name ( 'Rosenblatt'                    )
 method_U2    = method_name ( f'Watson U{S.sup_two}'          )
+method_MW    = method_name ( 'Mann-Whitney'                  )
+method_S     = method_name ( 'Savage'                        )
 
 method_NLL   = method_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'Negative Delta Likelihood' ) 
 method_AIC   = method_name ( 'Akaike IC'   )
 method_BIC   = method_name ( 'Bayesian IC' )
 
-method_KS    = method_name ( 'Kolmogoros-Smirnov'      )
+method_KS    = method_name ( 'Kolmogorov-Smirnov'      )
 method_K     = method_name ( 'Kuiper'                  )
 method_AD    = method_name ( 'Anderson-Darling'        )
 method_CVM   = method_name ( 'Cramer-von Mises'        )
-method_BJ    = method_name ( 'Berk-Kones'              )
+method_BJ    = method_name ( 'Berk-Jones'              )
 method_ZA    = method_name ( f"Zhang Z{S.subscript_A}" )
 method_ZC    = method_name ( f"Zhang Z{S.subscript_C}" )
 method_ZK    = method_name ( f"Zhang Z{S.subscript_K}" )

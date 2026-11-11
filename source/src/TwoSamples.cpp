@@ -400,10 +400,129 @@ namespace Ostap
 #undef IMPLEMENT_TWOSAMPLE_NO_EPS
 #undef IMPLEMENT_TWOSAMPLE_EPS
 
-    // ========================================================================
+    // ========================================================================    
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
 } //                                                 The end of namespace Ostap
+// ============================================================================
+
+// ============================================================================
+// Rank-based estimators (for unweighted data only)
+// ============================================================================
+
+// ===========================================================================
+/*  Mann-Whitney U two-sample test statistic.
+ *
+ *  Calculates the Mann-Whitney U statistic (also known as Wilcoxon rank-sum statistic)
+ *  for two unweighted empirical cumulative distribution functions (ECDF).
+ *  To optimize performance, the algorithm iterates over the shorter sample and
+ *  queries ranks in the longer sample using binary search.
+ *
+ *  @param e1 First ECDF sample
+ *  @param e2 Second ECDF sample
+ *  @return Minimum Mann-Whitney U statistic value (\f$ \min(U_1, U_2) \f$)
+ *
+ *  @see https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test
+ *  @note Mann, H.B., Whitney, D.R. (1947). "On a test of whether one of two random variables is stochastically larger than the other".
+ *        The Annals of Mathematical Statistics, 18(1): 50–60.
+ *  @note Wilcoxon, F. (1945). "Individual comparisons by ranking methods".
+ *        Biometrics Bulletin, 1(6): 80–83.
+ */
+// ===========================================================================
+double Ostap::Math::mann_whitney
+( const Ostap::Math::ECDF& e1 ,
+  const Ostap::Math::ECDF& e2 ) 
+{
+  if ( !e1.ok() || !e2.ok() ) { return 0.0 ; }
+  
+  // Determine the shorter and longer samples to optimize binary search complexity
+  const bool               e1_shorter   = ( e1.size() <= e2.size() ) ;
+  const Ostap::Math::ECDF& short_sample = e1_shorter ? e1 : e2 ;
+  const Ostap::Math::ECDF& long_sample  = e1_shorter ? e2 : e1 ;
+
+  double u_short = 0.0 ;
+  // Sum the ranks of elements from the short sample evaluated in the long sample
+  for ( const double x : short_sample )
+  { u_short += long_sample.rank ( x ) ; }
+  
+  const double n1 = static_cast<double> ( e1.size() ) ;
+  const double n2 = static_cast<double> ( e2.size() ) ;
+  
+  // Derive the alternative statistic using the exact algebraic identity: U1 + U2 = n1 * n2
+  const double u_long = n1 * n2 - u_short ;
+  
+  const double u_mean = ( n1 * n2 ) / 2.0;
+
+  return std::abs ( std::min ( u_short , u_long ) - u_mean ) ;
+  
+}
+// ===========================================================================
+/* Symmetrized version of Savage two-sample test statistic (Exponential Scores Test).
+ *
+ *  Calculates the Savage test statistic for two unweighted empirical cumulative
+ *  distribution functions (ECDF). The Savage test is a rank-based nonparametric test
+ *  utilizing exponential scores (expected values of order statistics from an exponential
+ *  distribution), making it particularly powerful for detecting differences in the
+ *  right tails of distributions.
+ *
+ *  @param e1 First ECDF sample
+ *  @param e2 Second ECDF sample
+ *  @return Savage test statistic value for the first sample
+ *
+ *  @note Savage, I.R. (1956). "Contributions to the theory of rank order statistics — the two-sample case".
+ *        The Annals of Mathematical Statistics, 27(3): 590–615.
+ *  @note Hájek, J., Šidák, Z. (1967). "Theory of Rank Tests". Academic Press.
+ */
+// ===========================================================================
+double Ostap::Math::savage
+( const Ostap::Math::ECDF& e1 ,
+  const Ostap::Math::ECDF& e2 ) 
+{
+  if ( !e1.ok() || !e2.ok() ) { return 0.0 ; }
+  
+  // Merge both samples into a pooled ordered ECDF to determine global ranks
+  const Ostap::Math::ECDF e_pool = e1.merge ( e2 ) ;
+  const std::size_t       N      = e_pool.size () ;
+  if ( 0 == N ) { return 0.0 ; }
+  
+  // Precompute Savage (exponential) scores for all ranks from 1 to N:
+  // E_r = \sum_{j=r}^{N} (1 / j)
+  std::vector<long double> savage_scores ( N + 1 , 0.0L ) ;
+  long double running_sum = 0.0 ;
+  for ( std::size_t j = N ; 1 <= j ; --j )
+  {
+    running_sum += 1.0L / static_cast<long double>( j ) ;
+    savage_scores [ j ] = running_sum ;
+  }
+  
+  // Accumulate Savage scores for elements belonging to the first sample (e1)
+  long double s1 = 0.0 ;
+  for ( const double x : e1 )
+  {
+    const std::size_t r = e_pool.rank ( x ) ;
+    if ( 1 <= r && r <= N ) { s1 += savage_scores [ r ] ; }
+  }
+
+  // Accumulate Savage scores for elements belonging to the second sample (e2)
+  long double s2 = 0.0 ;
+  for ( const double x : e2 )
+  {
+    const std::size_t r = e_pool.rank ( x ) ;
+    if ( 1 <= r && r <= N ) { s2 += savage_scores [ r ] ; }
+  }
+
+  const long double n1 = static_cast<long double>( e1.size() ) ;
+  const long double n2 = static_cast<long double>( e2.size() ) ;
+  
+  const long double nn = n1 + n2 ;
+  const long double f1 = n1 / nn ;
+  const long double f2 = n2 / nn ; 
+  
+  // symmetrized Savage score 
+  return std::abs ( f2 * s1 - f1 * s2 ) ;
+}
+// ===========================================================================
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

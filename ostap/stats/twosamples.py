@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/stats/twosamples.py
-#  Two-Sample Tests for 1D unweighted datasets 
+#  Two-Sample Tests for 1D non-weighted datasets 
 #  @see https://www.jstor.org/stable/25471118
 #  For dataset with weights, see 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2024-10-16
 # =============================================================================
-""" Two-Sample Tests
+""" Two-Sample Tests for 1D non-weighted datasets 
  - see https://www.jstor.org/stable/25471118
 """
 # =============================================================================
@@ -16,21 +16,41 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-16"
 __all__     = (
+    'kolmogorov_smirnov' , ## Kolmogorov-smirnov statistics
+    'kuiper'             , ## Kuiper             statistics
+    'anderson_darling'   , ## Abderson-Darling   statistics
+    'cramer_von_mises'   , ## Cramer-von Mises   statistics
+    'berk_jones'         , ## Berk-Jones         statistics
+    'ZA'                 , ## Zhang ZA           statistics
+    'ZC'                 , ## Zhang ZC           statistics
+    'ZK'                 , ## Zhang ZK           statistics
+    'wasserstein1'       , ## Wasserstein/1      statistics
+    'wasserstein2'       , ## Wasserstein/2      statistics
+    'rosenblatt'         , ## Rosenblatt         statistics
+    'watson_u2'          , ## Watson U2          statistics
+    'mann_whitney'       , ## Mann-Whitney       statistics
+    'savage'             , ## symmetric Savage   statistics
+    ##
+    "TwoSamplesTest"     , ## Two-Samples Test
+    "TwoSamplesToys"     , ## toys for Two-samples Test 
+    ## 
 )
 # =============================================================================
 from   ostap.core.ostap_types import listlike_types, sequence_types  
 from   ostap.core.core        import VE, Ostap
 from   ostap.utils.core       import typename 
+from   ostap.utils.basic      import safe_loop 
 from   ostap.math.math_base   import doubles, axis_range, data2vct 
 from   ostap.math.models      import f1_draw
 from   ostap.utils.cidict     import cidict_fun
-from   ostap.logger.pretty    import pretty_float
+from   ostap.logger.pretty    import pretty_float, format_pow10 
 from   ostap.stats.gof_utils  import Labels, Keys, clip_pvalue 
+from   ostap.stats.utils      import full_header, t_header  
 from   ostap.math.math_ve     import significance
 from   ostap.math.ve          import fmt_pretty_ve
 from   ostap.stats.counters   import SE, ECDF
 from   ostap.stats.pvalue     import permutation_symbol
-from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma
+from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma, infinity_pos 
 from   collections            import defaultdict, namedtuple 
 import ostap.logger.table     as     T
 import ostap.fitting.ds2numpy 
@@ -40,10 +60,9 @@ import ROOT, math, array, numpy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.twosamples' )
-else                       : logger = getLogger( __name__ )
+logger = getLogger ( 'ostap.stats.twosamples' )
 # =============================================================================
-logger.debug ( 'Two-sample test' )
+logger.debug ( 'Two-Samples Test for 1D non-weighted datasets' )
 # =============================================================================
 ## transform data into empirical CDF
 #  @code
@@ -66,80 +85,30 @@ def ecdf_from_data  ( data ) :
     elif isinstance ( data , sequence_types   ) : return ECDF ( doubles  ( data ) ) 
     ## 
     raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % typename ( data1 ) )
+
 # ===============================================================================
 ## Prepare data
 #  @code
 #  data1 = ...
 #  data2 = ...
-#  ecdf1 , ecdf2 , ecdf = prepare_data1 ( data1 , data2 ) 
+#  ecdf1 , ecdf2 = prepare_data1 ( data1 , data2 ) 
 #  @endcode
 #  @param data1 the 1st    dataset
 #  @param data2 the second dataset
-#  @param pooled (optional) the CDF for pooled data 
-#  @return triplet of empiricla CDFs for the 1st, 2nd and pooled datasets 
-def prepare_data1 ( data1  ,
-                    data2  ,
-                    pooled = None ) :
+#  @return pair of empirical CDFs for the 1st and 2nd second daatsets 
+def prepare_data ( data1 , data2 ) : 
     """ Prepare data
     >>> data1 = ...
     >>> data2 = ...
     >>> ecdf1 , ecdf2 , ecdf = prepare_data1 ( data1 , data2 ) 
     - data1  : the 1st    dataset
     - data2  : the second dataset
-    - pooled : (optiomal) the CDF for pooled data 
-    - return a triplet of empirical CDFs for the 1st, 2nd and pooled datasets 
+    - return a pair of of empirical CDFs for the 1st and 2nd datasets 
     """
     ecdf1 = ecdf_from_data ( data1 )
     ecdf2 = ecdf_from_data ( data2 )
     ##
-    n1    = len ( ecdf1 )
-    n2    = len ( ecdf2 )
-    ##
-    ecdf  = pooled if ( isinstance ( pooled , ECDF ) and n1 + n2 == len ( pooled ) ) else ecdf1 + ecdf2
-    ## 
-    return ecdf1 , ecdf2 , ecdf
-# =============================================================================
-## Prepare data
-#  @code
-#  data1 = ...
-#  data2 = ...
-#  ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 = prepare_data2 ( data1 , data2 ) 
-#  @endcode
-#  @param data1 the 1st    dataset
-#  @param data2 the second dataset
-#  @param pooled (optional) the CDF for pooled data
-#  @param ranks1 (optional) array of ranks of elements from the pooled sample in the 1st dataset
-#  @param ranks2 (optional) array of ranks of elements from the pooled sample in the 2nd dataset
-#  @return quintet of empirical CDFs for the 1st, 2nd and pooled datasets and two ransk arrays 
-def prepare_data2 ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = None ) :
-    """ Prepare data
-    >>> data1 = ...
-    >>> data2 = ...
-    >>> ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 = prepare_data2 ( data1 , data2 ) 
-    - data1  : the 1st    dataset
-    - data2  : the second dataset
-    - pooled : (optional) the CDF for pooled data
-    - ranks1 : (optional) array of ranks of elements from the pooled sample in the 1st dataset
-    - ranks2 : (optional) array of ranks of elements from the pooled sample in the 2nd dataset
-    - return quintet of empirical CDFs for the 1st, 2nd and pooled datasets and two ransk arrays 
-    """
-    ##
-    ecdf1 , ecdf2 , ecdf = prepare_data1 ( data1 , data2 , pooled )
-    ##
-    n1 = len ( ecdf1 )
-    n2 = len ( ecdf2 )
-    ## 
-    ok1 = isinstance ( ranks1 , listlike_types ) and n1 + n2 == len ( ranks1 )
-    if not ok1 :
-        r1     = ecdf1.ranks ( ecdf )            
-        ranks1 = numpy.asarray  ( r1 , dtype = numpy.dtype ( 'uint16' ) ) if numpy else array.array ( 'I' , r1 )
-        ## 
-    ok2 = isinstance ( ranks2 , listlike_types ) and n1 + n2 == len ( ranks2 )
-    if not ok2 :
-        r2     = ecdf2.ranks ( ecdf )            
-        ranks2 = numpy.asarray  ( r2 , dtype = numpy.dtype ( 'uint16' ) ) if numpy else array.array ( 'I' , r2 )
-    ## 
-    return ecdf1, ecdf2, ecdf, ranks1 , ranks2
+    return ecdf1 , ecdf2
 
 # =============================================================================
 ## Get Kolmogorov-Smirnov statistics KS
@@ -150,16 +119,15 @@ def prepare_data2 ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = Non
 #  @endcode
 #  @param data1  the 1st dataset or empirical CDF
 #  @param data2  the 2nd dataset or empirical CDF 
-#  @param pooled (optional) pooled dataset or empirical CDF
 #  @return Kolmogorov-Smirnov statistics KS
-def kolmogorov_smirnov ( data1 , data2 , pooled = None ) :
+def kolmogorov_smirnov ( data1 , data2 ) :
     """ Get Kolmogorov-Smirnov statistics  KS
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
-    - pooled : (optional) pooled dataset or CDF
     """
-    ecdf1, ecdf2, ecdf = prepare_data1 ( data1 , data2 , pooled ) 
-    return max ( abs ( ecdf1 ( x ) - ecdf2 ( x ) ) for x in ecdf )
+    ecdf1, ecdf2 = prepare_data ( data1 , data2  ) 
+    return Ostap.Math.kolmogorov_smirnov ( ecdf1 , ecdf2 )
+
 # ================================================================================
 ## Get Kuiper statistics K
 #  @code
@@ -169,87 +137,70 @@ def kolmogorov_smirnov ( data1 , data2 , pooled = None ) :
 #  @endcode
 #  @param data1  the 1st dataset or empirical CDF
 #  @param data2  the 2nd dataset or empirical CDF 
-#  @param pooled (optional) pooled dataset or empirical CDF
 #  @return Kuiper statistics K
-def kuiper ( data1 , data2 , pooled = None  ) :
+def kuiper ( data1 , data2 ) :
     """ Get kuiper statistics K
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
-    - pooled : (optional) pooled dataset or CDF
     """
-    ecdf1, ecdf2, ecdf = prepare_data1 ( data1 , data2 , pooled ) 
-    return max ( ecdf1 ( x ) - ecdf2 ( x ) for x in ecdf ) - min ( ecdf1 ( x ) - ecdf2 ( x ) for x in ecdf )
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 )
+    return Ostap.Math.kuiper( ecdf1 , ecdf2 )
+
 # =============================================================================
 ## Get Anderson-Darling statistics AD
 #  @code
 #  ecdf1 =...
 #  ecdf2 =...
-#  zk  = anderson_darling ( ecdf1, ecdf2 )
+#  ad  = anderson_darling ( ecdf1, ecdf2 )
 #  @endcode
 #  @param data1  the 1st dataset or empirical CDF
 #  @param data2  the 2nd dataset or empirical CDF 
-#  @param pooled (optional) pooled dataset or empirical CDF
-#  @param ranks1 (optional) ranks of the elements from the pooled data in the 1st dataset
-#  @param ranks2 (optional) ranks of the elements from the pooled data in the 2nd dataset
-#  @return Anderspon Darling statistics AD 
-def anderson_darling  ( data1 , data2 , pooled = None , ranks1 = None  , ranks2 = None  ) :
+#  @return Anderson-Darling statistics AD 
+def anderson_darling  ( data1 , data2  ) : 
     """ Get Anderson-Darling  statistics AD 
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
-    - pooled : (optional) pooled dataset or CDF
-    - ranks1 : (optional) ranks of the elements from the pooled data in the 1st dataset
-    - ranks2 : (optional) ranks of the elements from the pooled data in the 2nd dataset
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2, ecdf, ranks1, ranks2 = prepare_data2 ( data1 , data2 , pooled , ranks1 , ranks2 ) 
-    
-    n1   = len ( ecdf1 )
-    n2   = len ( ecdf2 )
-    n    = n1 + n2
-
-    def term1 ( j ) :
-        r1  = int ( ranks1 [ j ] ) 
-        return ( n * r1 - j * n1 ) ** 2  / ( ( j + 1 ) *  ( n - j ) )
-    def term2 ( j ) :
-        r2  = int ( ranks2 [ j ] ) 
-        return ( n * r2 - j * n2 ) ** 2  / ( ( j + 1 ) *  ( n - j ) )
-        
-    s1 = sum ( term1 ( j ) for j in range ( n ) ) / n1
-    s2 = sum ( term2 ( j ) for j in range ( n ) ) / n2
-    
-    return ( s1 + s2 ) / n 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.anderson_darling ( ecdf1 , ecdf2 )
 
 # =============================================================================
 ## Get Cramers-von Mises statistics CM
 #  @code
 #  ecdf1 =...
 #  ecdf2 =...
-#  zk  = cramer_von_mises ( ecdf1, ecdf2 )
+#  cm  = cramer_von_mises ( ecdf1, ecdf2 )
 #  @endcode
 #  @param data1  the 1st dataset or empirical CDF
 #  @param data2  the 2nd dataset or empirical CDF 
-#  @param pooled (optional) pooled dataset or empirical CDF
-#  @return Anderspon Darling statistics AD 
-def cramer_von_mises ( data1 , data2 , pooled = None  ) :
-    """ Get Crsmer-von Misesstatistics CM
+#  @return Cramer-von Mises statistics CM 
+def cramer_von_mises ( data1 , data2 ) :
+    """ Get Cramer-von Mises statistics CM
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
-    - pooled : (optional) pooled dataset or CDF
     """
     ## transform input (if needed) 
-    ecdf1, ecdf2, ecdf = prepare_data1 ( data1 , data2 , pooled ) 
-    
-    n1   = len ( ecdf1 )
-    n2   = len ( ecdf2 )
-    n    = n1 + n2
-    
-    ranks1 = ecdf.ranks ( ecdf1 )
-    ranks2 = ecdf.ranks ( ecdf2 )
-    
-    u  = n1 * sum ( ( int ( ranks1 [ i ] ) - i ) ** 2 for i in range ( n1 ) ) 
-    u += n2 * sum ( ( int ( ranks2 [ i ] ) - i ) ** 2 for i in range ( n2 ) ) 
-    
-    return u / ( n1 * n2 * n ) - ( 4 * n1 * n2 - 1 ) / ( 6.0 * n ) 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.cramer_von_mises ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Get Berk-Jones statistics BJ
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  bj  = cramer_von_mises ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset or empirical CDF
+#  @param data2  the 2nd dataset or empirical CDF 
+#  @return Berk-Jones statistics BJ 
+def berk_jones ( data1 , data2 ) :
+    """ Get Berk-Jones statistics BJ
+    - data1  : the 1st dataset or empirical CDF 
+    - data2  : the 2nd dataset or empirical CDF 
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.berk_jones ( ecdf1 , ecdf2 )
 
 # =============================================================================
 ## Get ZK statistics ZK
@@ -261,46 +212,15 @@ def cramer_von_mises ( data1 , data2 , pooled = None  ) :
 #  @endcode
 #  @param data1  the 1st dataset or empirical CDF
 #  @param data2  the 2nd dataset or empirical CDF 
-#  @param pooled (optional) pooled dataset or empirical CDF
-#  @param ranks1 (optional) ranks of the elements from the pooled data in the 1st dataset
-#  @param ranks2 (optional) ranks of the elements from the pooled data in the 2nd dataset
 #  @return ZK statistics ZK 
-def ZK  ( data1 , data2 , pooled = None , ranks1 = None  , ranks2 = None  ) :
+def ZK  ( data1 , data2 ) :
     """ Get ZK statistics 
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
-    - pooled : (optional) pooled dataset or CDF
-    - ranks1 : (optional) ranks of the elements from the pooled data in the 1st dataset
-    - ranks2 : (optional) ranks of the elements from the pooled data in the 2nd dataset
     - see https://www.jstor.org/stable/25471118
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2, ecdf, ranks1, ranks2 = prepare_data2 ( data1 , data2 , pooled , ranks1 , ranks2 ) 
-    
-    n1   = len ( ecdf1 )
-    n2   = len ( ecdf2 )
-    n    = n1 + n2
-
-    flog = math.log 
-    def term ( k ) :
-
-        r1  = int ( ranks1 [ k ] ) 
-        r2  = int ( ranks2 [ k ] ) 
-        
-        r1  = max ( 0.5 , min ( n1 - 0.5 , r1 ) ) ## r1 + 0.5 ??
-        r2  = max ( 0.5 , min ( n2 - 0.5 , r2 ) ) ## r2 + 0.5 ?? 
-        
-        fk  = 0.5 / n if not k else float ( k ) / n
-        
-        f1k = float ( r1 ) / n1
-        f2k = float ( r2 ) / n2
-        
-        rr  = n1 * ( f1k * flog ( f1k / fk ) + ( 1 - f1k ) * flog ( ( 1. - f1k ) / ( 1. - fk ) ) )
-        rr += n2 * ( f2k * flog ( f2k / fk ) + ( 1 - f2k ) * flog ( ( 1. - f2k ) / ( 1. - fk ) ) ) 
-        
-        return rr
-    
-    return max ( term ( k ) for k in range ( n ) )
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.ZK ( ecdf1 , ecdf2 )
 
 # =============================================================================
 ## Get ZA statistics ZA
@@ -312,45 +232,15 @@ def ZK  ( data1 , data2 , pooled = None , ranks1 = None  , ranks2 = None  ) :
 #  @endcode
 #  @param data1  the 1st dataset or empirical CDF
 #  @param data2  the 2nd dataset or empirical CDF 
-#  @param pooled (optional) pooled dataset or empirical CDF
-#  @param ranks1 (optional) ranks of the elements from the pooled data in the 1st dataset
-#  @param ranks2 (optional) ranks of the elements from the pooled data in the 2nd dataset
 #  @return ZA statistics ZA 
-def ZA ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = None ) :
+def ZA ( data1 , data2 ) : 
     """ Get ZA statistics 
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
-    - pooled : (optional) pooled dataset or CDF
-    - ranks1 : (optional) ranks of the elements from the pooled data in the 1st dataset
-    - ranks2 : (optional) ranks of the elements from the pooled data in the 2nd dataset
     - see https://www.jstor.org/stable/25471118
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2, ecdf, ranks1, ranks2 = prepare_data2 ( data1 , data2 , pooled , ranks1 , ranks2 ) 
-
-    n1   = len ( ecdf1 )
-    n2   = len ( ecdf2 )
-    n    = n1 + n2
-    
-    flog = math.log 
-    def term ( k ) :
-
-        r1  = int ( ranks1 [ k ] ) 
-        r2  = int ( ranks2 [ k ] ) 
-        
-        r1  = max ( 0.5 , min ( n1 - 0.5 , r1 ) ) ## r1 + 0.5 ??
-        r2  = max ( 0.5 , min ( n2 - 0.5 , r2 ) ) ## r2 + 0.5 ?? 
-        
-        fk  = 0.5 / n if not k else float ( k ) / n  
-        f1k = float ( r1 ) / n1
-        f2k = float ( r2 ) / n2
-
-        rr  = n1 * ( f1k * flog ( f1k ) + ( 1 - f1k ) * flog ( 1. - f1k ) ) / ( ( k + 0.5 ) * ( n - k - 0.5 ) )
-        rr += n2 * ( f2k * flog ( f2k ) + ( 1 - f2k ) * flog ( 1. - f2k ) ) / ( ( k + 0.5 ) * ( n - k - 0.5 ) )
-        
-        return rr
-    
-    return sum ( term ( k ) for k in range ( n ) )
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.ZA ( ecdf1 , ecdf2 )
 
 # =============================================================================
 ## Get ZC statistics ZC
@@ -362,44 +252,134 @@ def ZA ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = None ) :
 #  @endcode
 #  @param data1  the 1st dataset or empirical CDF
 #  @param data2  the 2nd dataset or empirical CDF 
-#  @param pooled (optional) pooled dataset or empirical CDF
-#  @param ranks1 (optional) ranks of the elements from the pooled data in the 1st dataset
-#  @param ranks2 (optional) ranks of the elements from the pooled data in the 2nd dataset
 #  @return ZA statistics ZA 
-def ZC ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = None ) :
+def ZC ( data1 , data2 ) :
     """ Get ZC statistics 
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
-    - pooled : (optional) pooled dataset or CDF
-    - ranks1 : (optional) ranks of the elements from the pooled data in the 1st dataset
-    - ranks2 : (optional) ranks of the elements from the pooled data in the 2nd dataset
     - see https://www.jstor.org/stable/25471118
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2, ecdf, ranks1, ranks2 = prepare_data2 ( data1 , data2 , pooled , ranks1 , ranks2 ) 
-
-    n1  = len ( ecdf1 )
-    n2  = len ( ecdf2 )
-    n   = n1 + n2
-    
-    flog = math.log 
-    def term1 ( j ) :
-        r1  = int ( ranks1 [ j ] ) 
-        return flog ( n1 / ( j + 0.5 ) - 1 ) * flog ( n / ( r1 + 0.5 ) - 1 )
-    
-    def term2 ( j ) :
-        r2  = int ( ranks2 [ j ] ) 
-        return flog ( n2 / ( j + 0.5 ) - 1 ) * flog ( n / ( r2 + 0.5 ) - 1 )
-    
-    t1 = sum ( term1 ( j ) for j in range ( n1 ) )
-    t2 = sum ( term2 ( j ) for j in range ( n2 ) )
-
-    return ( t1 + t2 ) / n 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2  ) 
+    return Ostap.Math.ZC ( ecdf1 , ecdf2 )
 
 # =============================================================================
-## @class TSTest
-#  Two-Sample Test
-class TSTest(object):
+## Wasserstein statistics W1
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  w1    = wasserstein1( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset 
+#  @param data2  the 2nd dataset 
+#  @return Wasserstein statistics W1
+def wasserstein1 ( data1 , data2 ) : 
+    """ Get Wasserstein statistics W1
+    - data1  : the 1st dataset 
+    - data2  : the 2nd dataset 
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.wasserstein1 ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Wasserstein statistics W2
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  w2    = wasserstein1( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset 
+#  @param data2  the 2nd dataset 
+#  @return Wasserstein statistics W2
+def wasserstein2 ( data1 , data2 ) : 
+    """ Get Wasserstein statistics W2
+    - data1  : the 1st dataset 
+    - data2  : the 2nd dataset 
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Rosenblatt statistics R 
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  r     = rosenblatt ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset 
+#  @param data2  the 2nd dataset 
+#  @return Rosenblatt statistics W1
+def rosenblatt ( data1 , data2 ) : 
+    """ Get Rosenblatt statistics R
+    - data1  : the 1st dataset 
+    - data2  : the 2nd dataset 
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.rosenblatt  ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Watson statistics U2
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  u2    = watson_u2 ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset 
+#  @param data2  the 2nd dataset 
+#  @return Watson statistics U2 
+def watson_u2 ( data1 , data2 ) :
+    """ Get Watson statistics U2
+    - data1  : the 1st dataset 
+    - data2  : the 2nd dataset 
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.watson_u2 ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Matt-Whitney statistics 
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  mw    = watson_u2 ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset 
+#  @param data2  the 2nd dataset 
+#  @return Matt-Whitney statistics 
+def mann_whitney ( data1 , data2 ) :
+    """ Get Mann-Whitney statistics 
+    - data1  : the 1st dataset 
+    - data2  : the 2nd dataset 
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.mann_whitney ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Symmetrized Savage statistics 
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  ss    = savage ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset 
+#  @param data2  the 2nd dataset 
+#  @return Savage statistics 
+def savage ( data1 , data2 ) : 
+    """ Get Savage statistics 
+    - data1  : the 1st dataset 
+    - data2  : the 2nd dataset 
+    """
+    ## transform input (if needed) 
+    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    return Ostap.Math.savage ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## @class ThoSamplesTest 
+#  Two-Samples Test
+class TwoSamplesTest ( object ) :
     """ Two-sample test 
     """
     def __init__ ( self  ,
@@ -407,24 +387,29 @@ class TSTest(object):
                    data2 ) :
         
         ## transform input data 
-        ecdf1, ecdf2, ecdf, ranks1, ranks2 = prepare_data2 ( data1 , data2 ) 
+        ecdf1, ecdf2 = prepare_data ( data1 , data2 )
         
-        self.__ecdf1  = ecdf1 
-        self.__ecdf2  = ecdf2
-        self.__ecdf   = ecdf 
-        self.__ranks1 = ranks1 
-        self.__ranks2 = ranks2 
+        self.__ecdf1 = ecdf1
+        self.__ecdf2 = ecdf2
+        self.__ecdf  = ecdf1.merge ( ecdf2 ) 
         
         self.__estimators = {            
-            'KS' : kolmogorov_smirnov ( self.ecdf1 , self.ecdf2 , self.ecdf ) , 
-            'K'  : kuiper             ( self.ecdf1 , self.ecdf2 , self.ecdf ) , 
-            'AD' : anderson_darling   ( self.ecdf1 , self.ecdf2 , self.ecdf , self.ranks1 , self.ranks2 ) , 
-            'CM' : cramer_von_mises   ( self.ecdf1 , self.ecdf2 , self.ecdf ) , 
-            'ZK' : ZK                 ( self.ecdf1 , self.ecdf2 , self.ecdf , self.ranks1 , self.ranks2 ) , 
-            'ZA' : ZA                 ( self.ecdf1 , self.ecdf2 , self.ecdf , self.ranks1 , self.ranks2 ) , 
-            'ZC' : ZC                 ( self.ecdf1 , self.ecdf2 , self.ecdf , self.ranks1 , self.ranks2 ) , 
+            'KS' : kolmogorov_smirnov ( self.ecdf1 , self.ecdf2 ) , 
+            'K'  : kuiper             ( self.ecdf1 , self.ecdf2 ) , 
+            'AD' : anderson_darling   ( self.ecdf1 , self.ecdf2 ) , 
+            'CM' : cramer_von_mises   ( self.ecdf1 , self.ecdf2 ) , 
+            'BJ' : berk_jones         ( self.ecdf1 , self.ecdf2 ) , 
+            'ZK' : ZK                 ( self.ecdf1 , self.ecdf2 ) , 
+            'ZA' : ZA                 ( self.ecdf1 , self.ecdf2 ) , 
+            'ZC' : ZC                 ( self.ecdf1 , self.ecdf2 ) , 
+            'W1' : wasserstein1       ( self.ecdf1 , self.ecdf2 ) , 
+            'W2' : wasserstein2       ( self.ecdf1 , self.ecdf2 ) , 
+            'R'  : rosenblatt         ( self.ecdf1 , self.ecdf2 ) , 
+            'U2' : watson_u2          ( self.ecdf1 , self.ecdf2 ) , 
+            'MW' : mann_whitney       ( self.ecdf1 , self.ecdf2 ) , 
+            'S'  : savage             ( self.ecdf1 , self.ecdf2 )
         }
-
+        
     @property
     def ecdf1 ( self ) :
         """`ecdf1` : empirical CDF for the 1st dataset
@@ -434,21 +419,14 @@ class TSTest(object):
     def ecdf2 ( self ) :
         """`ecdf2` : empirical CDF for the 2nd dataset
         """
-        return self.__ecdf2 
+        return self.__ecdf2
+    
     @property
-    def ecdf  ( self ) :
-        """`ecdf` : empirical CDF for combined dataset
+    def ecdf ( self ) :
+        """`ecdf` : total/combined CDF for both datasets
         """
         return self.__ecdf
-    @property
-    def ranks1 ( self ) :
-        """ ranks of elements from pooled sample in the 1st dataset"""
-        return self.__ranks1
-    @property
-    def ranks2 ( self ) :
-        """ ranks of elements from pooled sample in the 2nd dataset"""
-        return self.__ranks2
-
+    
     # =========================================================================
     ## Print the summary as Table
     def table ( self             , * , 
@@ -460,22 +438,21 @@ class TSTest(object):
         """ Print the summary as Table
         """
         ##
-        header = ( 'Statistics' , 'Value' , '' ) 
+        header = ( 'Statistics' , )  + t_header 
         rows   = [] 
         
         for label , value  in self.estimators.items () :
             
             the_label = Labels.get ( label , label )
-
-            result , expo = pretty_float ( value , width = width , precision = precision )
-
-            if expo : row = the_label , result , '10^%+d' % expo
-            else    : row = the_label , result 
+            
+            result , expo = pretty_float ( value , width = width , precision = precision )            
+            row = the_label , result , ( '[%s]' % format_pow10 ( expo ) )  if expo else ''
+            
             rows.append ( row )
-
-        rows = [ header ] + sorted ( rows ) 
-        title = title if title else 'Two samples Test' 
+            
+        rows  = [ header ] + sorted ( rows ) 
         rows  = T.remove_empty_columns ( rows )
+        title = title if title else 'Two-Samples Test'    
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' , style = style  )
 
     ## print estimator as table 
@@ -488,46 +465,6 @@ class TSTest(object):
         """`estimators` : get a dictionary of all estimators"""
         return self.__estimators
 
-    # =========================================================================
-    ## Get Kolmogorov-Smirnov statistiscs 
-    @property 
-    def kolmogorov_smirnov_estimator ( self ) :
-        """ Get Kolmogorov-Smirnov statistiscs KS
-        """
-        return self.estimators.get ( 'KS' , None ) 
-
-    # =========================================================================
-    ## Get Kuiper  statististics 
-    @property 
-    def kuiper_estimator ( self ) :
-        """ Get Kuiperstatistics
-        """        
-        return self.estimators.get ( 'K' , None ) 
-
-    # =========================================================================
-    ## Get ZK statististics 
-    @property 
-    def ZK_estimator  ( self ) :
-        """ Get ZK statistics
-        """
-        return self.estimators.get ( 'ZK' , None ) 
-        
-    # =========================================================================
-    ## Get ZA statististics 
-    @property 
-    def ZA_estimator  ( self ) :
-        """ Get ZA statistics
-        """        
-        return self.estimators.get ( 'ZA' , None ) 
-    
-    # =========================================================================
-    ## Get ZC statististics 
-    @property 
-    def ZC_estimator ( self ) :
-        """ Get ZC statistics
-        """        
-        return self.estimators.get ( 'ZC' , None ) 
-    
     # =========================================================================
     def ks_acccept ( self , alpha ) :
 
@@ -564,7 +501,7 @@ class TSTest(object):
         xmin = min ( xmin , xmin1 , xmin2 )
         xmax = max ( xmax , xmax1 , xmax2 )
 
-        xmin , xmax = axis_range ( xmin , xmax , delta = 0.15 )
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.10 )
 
         xmin = kwargs.pop ( 'xmin' , xmin )
         xmax = kwargs.pop ( 'xmax' , xmax )
@@ -578,10 +515,10 @@ class TSTest(object):
         return r, r1, r2
 
 # =============================================================================
-## @class TSToys
-#  Two-Sample Test
-class TSToys(TSTest):
-    """ Two-sample test 
+## @class TwoSamplesToys
+#  Toys for Two-Samples Test
+class TwoSamplesToys(TwoSamplesTest):
+    """ Toys for Two-sample test 
     """
     ## result of 2-samples test
     Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
@@ -594,7 +531,7 @@ class TSToys(TSTest):
                    silent = False ) :
         
         ## initialize the base
-        TSTest.__init__ ( self , data1 , data2 )
+        super().__init__ ( data1 , data2 )
 
         self.__counters = defaultdict(SE) 
         self.__ecdfs    = {} 
@@ -634,44 +571,67 @@ class TSToys(TSTest):
         n1   = len ( self.ecdf1 )
         n2   = len ( self.ecdf1 )
         
-        data = numpy.asarray ( self.ecdf.data () , dtype = float )
-        
+        data1    = numpy.asarray     ( self.ecdf1.data () , dtype = float )
+        data2    = numpy.asarray     ( self.ecdf1.data () , dtype = float )
+        data     = numpy.concatenate ( ( data1 , data2 ) )
+                
         results  = defaultdict(list)
         counters = self.counters
         
         from ostap.utils.progress_bar import progress_bar 
-        for i in progress_bar ( nToys , silent = silent , description = permutation_symbol ) :
+        for i in safe_loop ( progress_bar ( nToys , silent = silent , description = permutation_symbol ) ) : 
 
             numpy.random.shuffle ( data )
             data1 = data [    : n1 ]
             data2 = data [ n1 :    ] 
             
             ## transform input data 
-            ecdf1, ecdf2, ecdf, ranks1, ranks2 = prepare_data2 ( data1 , data2 ) 
+            ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
             
-            ks = kolmogorov_smirnov ( ecdf1 , ecdf2 , ecdf )
-            k  = kuiper             ( ecdf1 , ecdf2 , ecdf )
-            ad = anderson_darling   ( ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 )            
-            cm = cramer_von_mises   ( ecdf1 , ecdf2 , ecdf )             
-            zk = ZK                 ( ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 )
-            za = ZA                 ( ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 )
-            zc = ZC                 ( ecdf1 , ecdf2 , ecdf , ranks1 , ranks2 )
+            ks = kolmogorov_smirnov ( ecdf1 , ecdf2 )
+            k  = kuiper             ( ecdf1 , ecdf2 )
+            ad = anderson_darling   ( ecdf1 , ecdf2 )            
+            cm = cramer_von_mises   ( ecdf1 , ecdf2 )             
+            bj = berk_jones         ( ecdf1 , ecdf2 )             
+            zk = ZK                 ( ecdf1 , ecdf2 )
+            za = ZA                 ( ecdf1 , ecdf2 )
+            zc = ZC                 ( ecdf1 , ecdf2 )
+            w1 = wasserstein1       ( ecdf1 , ecdf2 )             
+            w2 = wasserstein2       ( ecdf1 , ecdf2 )             
+            r  = rosenblatt         ( ecdf1 , ecdf2 )             
+            u2 = watson_u2          ( ecdf1 , ecdf2 )             
+            mw = mann_whitney       ( ecdf1 , ecdf2 )             
+            s  = savage             ( ecdf1 , ecdf2 )             
             
             counters [ 'KS'  ] += ks 
             counters [ 'K'   ] += k 
             counters [ 'AD'  ] += ad
             counters [ 'CM'  ] += cm
+            counters [ 'BJ'  ] += bj
             counters [ 'ZK'  ] += zk
             counters [ 'ZA'  ] += za
             counters [ 'ZC'  ] += zc
-            
+            counters [ 'W1'  ] += w1 
+            counters [ 'W2'  ] += w2 
+            counters [ 'R'   ] += r
+            counters [ 'U2'  ] += u2
+            counters [ 'MW'  ] += mw
+            counters [ 'S'   ] += s 
+                        
             results  [ 'KS'  ] .append ( ks )    
             results  [ 'K'   ] .append ( k  ) 
             results  [ 'AD'  ] .append ( ad ) 
             results  [ 'CM'  ] .append ( cm ) 
+            results  [ 'BJ'  ] .append ( bj ) 
             results  [ 'ZK'  ] .append ( zk ) 
             results  [ 'ZA'  ] .append ( za ) 
             results  [ 'ZC'  ] .append ( zc ) 
+            results  [ 'W1'  ] .append ( w1 ) 
+            results  [ 'W2'  ] .append ( w2 ) 
+            results  [ 'R'   ] .append ( r  ) 
+            results  [ 'U2'  ] .append ( u2 ) 
+            results  [ 'MW'  ] .append ( mw ) 
+            results  [ 'S'   ] .append ( s  ) 
             
         ## accumulate number of toys 
         self.__nToys += nToys 
@@ -684,46 +644,6 @@ class TSToys(TSTest):
             else                       : self.__ecdfs [ key ]  .add  ( data2vct ( data ) ) 
             
         del results
-
-    # =========================================================================
-    ## Get Kolmogorov-Smirnov statistiscs 
-    @property 
-    def kolmogorov_smirnov ( self ) :
-        """ Get Kolmogorov-Smirnov statistiscs KS
-        """
-        return self.result ( 'KS' ) 
-    
-    # =========================================================================
-    ## Get Kuiper statististics 
-    @property 
-    def kuiper ( self ) :
-        """ Get Kuiper statistics 
-        """        
-        return self.result ( 'K' ) 
-           
-    # =========================================================================
-    ## Get ZK statististics 
-    @property 
-    def ZK  ( self ) :
-        """ Get ZK statistics 
-        """
-        return self.result ( 'ZK' ) 
-        
-    # =========================================================================
-    ## Get ZA statististics 
-    @property 
-    def ZA  ( self ) :
-        """ Get ZA statistics
-        """        
-        return self.result ( 'ZA' ) 
-    
-    # =========================================================================
-    ## Get ZC statististics 
-    @property 
-    def ZC  ( self ) :
-        """ Get ZC statistics 
-        """        
-        return self.result ( 'ZC' ) 
 
     # ========================================================================
     ## Helper method to get the result
@@ -784,14 +704,15 @@ class TSToys(TSTest):
         vmx = vmax  / scale
         
         pvalue = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
-        sigma  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+        sigma  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else infinity_pos  ) 
 
         return ( what  ,
                  fmtv  % vs ,
                  fmt   % ( vm.value() , vm.error() ) ,
                  fmtv  % vr                          ,
-                 fmt2  %  ( vmn , vmx )              ,
-                 ( '%s10^%+d' %  ( times , expo )  if expo else '' ) , pvalue , sigma )
+                 fmtv  % vmn                         ,
+                 fmtv  % vmx                         ,
+                 ( '[%s]' % format_pow10 ( expo ) )  if expo else '' , pvalue , sigma )
     
     # =========================================================================
     ## Make a summary table
@@ -799,14 +720,7 @@ class TSToys(TSTest):
         """ Make a summary table
         """
         import ostap.logger.table  as     T                 
-        header = ( 'Statistics'   ,
-                   'value'       ,
-                   'mean'        ,
-                   'rms'         ,
-                   'min/max'     ,
-                   'factor'      ,
-                   'p-value [%]' ,
-                   '#%s' % greek_lower_sigma )
+        header = ( 'Statistics'  , ) + full_header
         rows   = [] 
         
         for label in self.ecdfs :
@@ -837,31 +751,59 @@ class TSToys(TSTest):
         if   key in Keys [ 'KS' ] and 'KS' in self.ecdfs :             
             result = self.result ( 'KS' )
             ecdf   = self.ecdfs  [ 'KS' ]
-            logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
+            ## logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
         elif key in Keys [ 'K'  ] and 'K'  in self.ecdfs : 
             result = self.result ( 'K' )
             ecdf   = self.ecdfs  [ 'K' ]
-            logger.info ( 'Toy results for Kuiper estimate' ) 
+            ## logger.info ( 'Toy results for Kuiper estimate' ) 
         elif key in Keys [ 'AD' ] and 'AD' in self.ecdfs :             
             result = self.result ( 'AD' )
             ecdf   = self.ecdfs  [ 'AD' ]
-            logger.info ( 'Toy results for Anderson-Darling estimate' ) 
+            ## logger.info ( 'Toy results for Anderson-Darling estimate' ) 
         elif key in Keys [ 'CM' ] and 'CM' in self.ecdfs : 
             result = self.result  ( 'CM' )
             ecdf   = self.ecdfs   [ 'CM' ]
-            logger.info ( 'Toy results for Cramer-von Mises  estimate' ) 
+            ## logger.info ( 'Toy results for Cramer-von Mises  estimate' )
+        elif key in Keys [ 'BJ' ] and 'BJ' in self.ecdfs : 
+            result = self.result  ( 'BJ' )
+            ecdf   = self.ecdfs   [ 'BJ' ]
+            ## logger.info ( 'Toy results for Berk-Jones  estimate' )             
         elif key in Keys [ 'ZK' ]  and 'ZK' in self.ecdfs : 
             result = self.result  ( 'ZK' )
             ecdf   = self.ecdfs   [ 'ZK' ]
-            logger.info ( 'Toy results for Zhang/ZK estimate' ) 
+            ## logger.info ( 'Toy results for Zhang/ZK estimate' ) 
         elif key in Keys [ 'ZA' ]   and 'ZA' in self.ecdfs :  
             result = self.result  ( 'ZA' )
             ecdf   = self.ecdfs   [ 'ZA' ]
-            logger.info ( 'Toy results for Zhang/ZA estimate' ) 
+            ## logger.info ( 'Toy results for Zhang/ZA estimate' ) 
         elif key in Keys [ 'ZC' ] and 'ZC' in self.ecdfs : 
             result = self.result  ( 'ZC' )
             ecdf   = self.ecdfs   [ 'ZC' ]
-            logger.info ( 'Toy results for Zhang/ZC estimate' ) 
+            ## logger.info ( 'Toy results for Zhang/ZC estimate' ) 
+        elif key in Keys [ 'W1' ] and 'W1' in self.ecdfs : 
+            result = self.result  ( 'W1' )
+            ecdf   = self.ecdfs   [ 'W1' ]
+            ## logger.info ( 'Toy results for Wasserstein/1 estimate' ) 
+        elif key in Keys [ 'W2' ] and 'W2' in self.ecdfs : 
+            result = self.result  ( 'W2' )
+            ecdf   = self.ecdfs   [ 'W2' ]
+            ## logger.info ( 'Toy results for Wasserstein/2 estimate' ) 
+        elif key in Keys [ 'R' ] and 'R' in self.ecdfs : 
+            result = self.result  ( 'R' )
+            ecdf   = self.ecdfs   [ 'R' ]
+            ## logger.info ( 'Toy results for Rosenblatt estimate' ) 
+        elif key in Keys [ 'U2' ] and 'U2' in self.ecdfs : 
+            result = self.result  ( 'U2' )
+            ecdf   = self.ecdfs   [ 'U2' ]
+            ## logger.info ( 'Toy results for Watson U2 estimate' ) 
+        elif key in Keys [ 'MW' ] and 'MW' in self.ecdfs : 
+            result = self.result  ( 'MW' )
+            ecdf   = self.ecdfs   [ 'MW' ]
+            ## logger.info ( 'Toy results for Mann-Whitney estimate' ) 
+        elif key in Keys [ 'S' ] and 'S' in self.ecdfs : 
+            result = self.result  ( 'S' )
+            ecdf   = self.ecdfs   [ 'S' ]
+            ## logger.info ( 'Toy results for Savage estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )
 

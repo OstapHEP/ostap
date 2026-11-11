@@ -235,7 +235,7 @@ def run_reweight ( n_dim       = 3     ,
     
     reweighters = [ None ]
     reweighters = [] 
-    
+
     if active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
@@ -288,13 +288,14 @@ def run_reweight ( n_dim       = 3     ,
                     )
         
         reweighters.append ( rw )
-        
+
     if active_test ( random_freq ) and hasPyTorch () :
 
         from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
         rw = TORCH ( target        = target        ,
                      original      = original1     ,
-                     hidden_layers = ( 256 , 256 ) )                       
+                     learning_rate = 1e-4          , 
+                     hidden_layers = ( 128 , 128 ) )                       
         reweighters.append ( rw )
 
         
@@ -310,7 +311,6 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw )
                       
-
     if active_test ( random_freq ) and hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw = GBRW ( target              = target         ,
@@ -341,7 +341,7 @@ def run_reweight ( n_dim       = 3     ,
                        target   = target ,
                        original = original1 )
         reweighters.append ( rw )
-
+    
     # =========================================================================
     ## Summary table 
     # =========================================================================
@@ -349,7 +349,7 @@ def run_reweight ( n_dim       = 3     ,
     header    = [] 
     rows      = []  
 
-    orginals = ( original2 , ) if ( light or weak ) else ( original2 , ) 
+    originals = ( original2 , ) if ( light or weak ) else ( original2 , ) 
     
     for rw in reweighters :
             
@@ -391,13 +391,13 @@ def run_reweight ( n_dim       = 3     ,
             logger.info ( '%s\n%s' % ( title , table ) )
 
     # =================================================================
-    # can we save reweighters into database ?
-    with DBASE.tmpdb () as db :
-        
-        for rw in reweighters : db [  typename ( rw ) ] = rw                
-        db [ 'reweighters' ] = reweighters
-        
-        db.ls () 
+    # can we save all reweighters into database ?
+    ## with DBASE.tmpdb () as db :
+    ##    
+    ##    for rw in reweighters : db [  typename ( rw ) ] = rw                
+    ##    db [ 'reweighters' ] = reweighters
+    ##    
+    ##    db.ls () 
         
 # =============================================================================
 if '__main__' == __name__ :

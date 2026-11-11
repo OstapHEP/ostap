@@ -368,10 +368,13 @@ class CascadeReweighter(Reweighter):
         ## convert to tuple 
         self.__reweighters = tuple ( self.__reweighters )
 
+        ## final weights 
+        final_weight  = self.preserve_mass ( original , original_weight , w_orig  ) 
+
         ## produce summary table of weights 
         if self.verbose : self.weight_summary ( original        ,
                                                 original_weight ,
-                                                w_orig          ) 
+                                                final_weight    ) 
         
         
     # =========================================================================
@@ -407,10 +410,11 @@ class CascadeReweighter(Reweighter):
         w_final = original_weight
         
         for stage in self.__reweighters:
-            w_final = stage.weights ( original ,
-                                      original_weight = w_final )
+            w_final = stage.weights ( original , original_weight = w_final )
+            
 
-        final_weight = w_final
+        ## final weights 
+        final_weight  = self.preserve_mass ( original , original_weight , w_final ) 
         
         ## produce summary table of weights 
         if self.verbose : self.weight_summary ( original        ,

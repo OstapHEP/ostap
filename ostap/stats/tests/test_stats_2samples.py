@@ -8,7 +8,7 @@
 """ 2-samples test
 """
 # ==============================================================================
-from   ostap.stats.twosamples import TSTest, TSToys 
+from   ostap.stats.twosamples import TwoSamplesTest, TwoSamplesToys 
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.logger.pretty    import pretty_float
 from   ostap.utils.ranges     import vrange
@@ -18,8 +18,7 @@ import ostap.logger.table     as     T
 import ROOT, random, array    
 # ==============================================================================
 from   ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_2samples' )
-else                       : logger = getLogger ( __name__               )
+logger = getLogger ( 'ostap.tests_stats_2samples' )
 # ==============================================================================
 batch_env ( logger ) 
 # =============================================================================
@@ -37,88 +36,120 @@ def test_2samples_good () :
     
     logger = getLogger ( 'test_2samples_good' ) 
     
-    test   = TSTest ( ds1 , ds2 )
+    test   = TwoSamplesTest ( ds1 , ds2 )
     title  = 'Test good samples'
     logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
 
-    toys   = TSToys ( ds1 , ds2 )
+    toys   = TwoSamplesToys ( ds1 , ds2 )
     title  = 'Toys good samples'
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
 
     with use_canvas ( 'test_2samples_good/test'                    , wait = 1 ) : test.draw()    
-    with use_canvas ( 'test_2samples_good/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ('KS') 
-    with use_canvas ( 'test_2samples_good/toys Kuiper'             , wait = 1 ) : toys.draw ('K' ) 
-    with use_canvas ( 'test_2samples_good/toys Anderson-Darling'   , wait = 1 ) : toys.draw ('AD') 
-    with use_canvas ( 'test_2samples_good/toys Cramers-von Mises'  , wait = 1 ) : toys.draw ('CM') 
-    with use_canvas ( 'test_2samples_good/toys Zhang ZK'           , wait = 1 ) : toys.draw ('ZK') 
-    with use_canvas ( 'test_2samples_good/toys Zhang ZA'           , wait = 1 ) : toys.draw ('ZA') 
-    with use_canvas ( 'test_2samples_good/toys Zhang ZC'           , wait = 1 ) : toys.draw ('ZC') 
+    with use_canvas ( 'test_2samples_good/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ( 'KS' ) 
+    with use_canvas ( 'test_2samples_good/toys Kuiper'             , wait = 1 ) : toys.draw ( 'K'  ) 
+    with use_canvas ( 'test_2samples_good/toys Anderson-Darling'   , wait = 1 ) : toys.draw ( 'AD' ) 
+    with use_canvas ( 'test_2samples_good/toys Cramers-von Mises'  , wait = 1 ) : toys.draw ( 'CM' )
+    with use_canvas ( 'test_2samples_good/toys Zhang ZK'           , wait = 1 ) : toys.draw ( 'ZK' ) 
+    with use_canvas ( 'test_2samples_good/toys Zhang ZA'           , wait = 1 ) : toys.draw ( 'ZA' ) 
+    with use_canvas ( 'test_2samples_good/toys Zhang ZC'           , wait = 1 ) : toys.draw (' ZC' )
+    
+    with use_canvas ( 'test_2samples_good/toys Berk-Jones'         , wait = 1 ) : toys.draw ( 'BJ' )    
+    with use_canvas ( 'test_2samples_good/toys Wasserstein/1'      , wait = 1 ) : toys.draw ( 'W1' )    
+    with use_canvas ( 'test_2samples_good/toys Wasserstein/2'      , wait = 1 ) : toys.draw ( 'W2' )    
+    with use_canvas ( 'test_2samples_good/toys Rosenblatt'         , wait = 1 ) : toys.draw ( 'R'  )    
+    with use_canvas ( 'test_2samples_good/toys Watson U2'          , wait = 1 ) : toys.draw ( 'U2' )    
+    with use_canvas ( 'test_2samples_good/toys Mann-Whitney'       , wait = 1 ) : toys.draw ( 'MW' )    
+    with use_canvas ( 'test_2samples_good/toys symmetric Savage'   , wait = 1 ) : toys.draw ( 'S'  )    
     
 # =============================================================================
 def test_2samples_same () :
     
     logger = getLogger ( 'test_2samples_same' ) 
         
-    test   = TSTest ( ds1 , ds1 )                   
+    test   = TwoSamplesTest ( ds1 , ds1 )
     title  = 'Test same samples'
     logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
 
-    toys   = TSToys ( ds1 , ds1 )
+    toys   = TwoSamplesToys ( ds1 , ds1 )
     title  = 'Toys same samples'
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
 
     with use_canvas ( 'test_2samples_same/test'                    , wait = 1 ) : test.draw()    
-    with use_canvas ( 'test_2samples_same/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ('KS') 
-    with use_canvas ( 'test_2samples_same/toys Kuiper'             , wait = 1 ) : toys.draw ('K' ) 
-    with use_canvas ( 'test_2samples_same/toys Anderson-Darling'   , wait = 1 ) : toys.draw ('AD') 
-    with use_canvas ( 'test_2samples_same/toys Cramers-von Mises'  , wait = 1 ) : toys.draw ('CM') 
-    with use_canvas ( 'test_2samples_same/toys Zhang ZK'           , wait = 1 ) : toys.draw ('ZK') 
-    with use_canvas ( 'test_2samples_same/toys Zhang ZA'           , wait = 1 ) : toys.draw ('ZA') 
-    with use_canvas ( 'test_2samples_same/toys Zhang ZC'           , wait = 1 ) : toys.draw ('ZC') 
+    with use_canvas ( 'test_2samples_same/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ( 'KS' ) 
+    with use_canvas ( 'test_2samples_same/toys Kuiper'             , wait = 1 ) : toys.draw ( 'K'  ) 
+    with use_canvas ( 'test_2samples_same/toys Anderson-Darling'   , wait = 1 ) : toys.draw ( 'AD' ) 
+    with use_canvas ( 'test_2samples_same/toys Cramers-von Mises'  , wait = 1 ) : toys.draw ( 'CM' ) 
+    with use_canvas ( 'test_2samples_same/toys Zhang ZK'           , wait = 1 ) : toys.draw ( 'ZK' ) 
+    with use_canvas ( 'test_2samples_same/toys Zhang ZA'           , wait = 1 ) : toys.draw ( 'ZA' ) 
+    with use_canvas ( 'test_2samples_same/toys Zhang ZC'           , wait = 1 ) : toys.draw ( 'ZC' ) 
+
+    with use_canvas ( 'test_2samples_same/toys Berk-Jones'         , wait = 1 ) : toys.draw ( 'BJ' )    
+    with use_canvas ( 'test_2samples_same/toys Wasserstein/1'      , wait = 1 ) : toys.draw ( 'W1' )    
+    with use_canvas ( 'test_2samples_same/toys Wasserstein/2'      , wait = 1 ) : toys.draw ( 'W2' )    
+    with use_canvas ( 'test_2samples_same/toys Rosenblatt'         , wait = 1 ) : toys.draw ( 'R'  )    
+    with use_canvas ( 'test_2samples_same/toys Watson U2'          , wait = 1 ) : toys.draw ( 'U2' )    
+    with use_canvas ( 'test_2samples_same/toys Mann-Whitney'       , wait = 1 ) : toys.draw ( 'MW' )    
+    with use_canvas ( 'test_2samples_same/toys symmetric Savage'   , wait = 1 ) : toys.draw ( 'S'  )    
     
 # =============================================================================
 def test_2samples_bad1 () :
     
     logger = getLogger ( 'test_2samples_bad1'  ) 
     
-    test   = TSTest ( ds1 , ds3 )
+    test   = TwoSamplesTest ( ds1 , ds3 )
     title  = 'Test bad/1 samples'
     logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
 
-    toys   = TSToys ( ds1 , ds3 )
+    toys   = TwoSamplesToys ( ds1 , ds3 )
     title  = 'Toys bad/1 samples'
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
     
     with use_canvas ( 'test_2samples_bad1/test'                    , wait = 1 ) : test.draw()    
-    with use_canvas ( 'test_2samples_bad1/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ('KS') 
-    with use_canvas ( 'test_2samples_bad1/toys Kuiper'             , wait = 1 ) : toys.draw ('K' ) 
-    with use_canvas ( 'test_2samples_bad1/toys Anderson-Darling'   , wait = 1 ) : toys.draw ('AD') 
-    with use_canvas ( 'test_2samples_bad1/toys Cramers-von Mises'  , wait = 1 ) : toys.draw ('CM') 
-    with use_canvas ( 'test_2samples_bad1/toys Zhang ZK'           , wait = 1 ) : toys.draw ('ZK') 
-    with use_canvas ( 'test_2samples_bad1/toys Zhang ZA'           , wait = 1 ) : toys.draw ('ZA') 
-    with use_canvas ( 'test_2samples_bad1/toys Zhang ZC'           , wait = 1 ) : toys.draw ('ZC') 
+    with use_canvas ( 'test_2samples_bad1/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ( 'KS' ) 
+    with use_canvas ( 'test_2samples_bad1/toys Kuiper'             , wait = 1 ) : toys.draw ( 'K'  ) 
+    with use_canvas ( 'test_2samples_bad1/toys Anderson-Darling'   , wait = 1 ) : toys.draw ( 'AD' ) 
+    with use_canvas ( 'test_2samples_bad1/toys Cramers-von Mises'  , wait = 1 ) : toys.draw ( 'CM' ) 
+    with use_canvas ( 'test_2samples_bad1/toys Zhang ZK'           , wait = 1 ) : toys.draw ( 'ZK' ) 
+    with use_canvas ( 'test_2samples_bad1/toys Zhang ZA'           , wait = 1 ) : toys.draw ( 'ZA' ) 
+    with use_canvas ( 'test_2samples_bad1/toys Zhang ZC'           , wait = 1 ) : toys.draw ( 'ZC' ) 
+
+    with use_canvas ( 'test_2samples_bad1/toys Berk-Jones'         , wait = 1 ) : toys.draw ( 'BJ' )    
+    with use_canvas ( 'test_2samples_bad1/toys Wasserstein/1'      , wait = 1 ) : toys.draw ( 'W1' )    
+    with use_canvas ( 'test_2samples_bad1/toys Wasserstein/2'      , wait = 1 ) : toys.draw ( 'W2' )    
+    with use_canvas ( 'test_2samples_bad1/toys Rosenblatt'         , wait = 1 ) : toys.draw ( 'R'  )    
+    with use_canvas ( 'test_2samples_bad1/toys Watson U2'          , wait = 1 ) : toys.draw ( 'U2' )    
+    with use_canvas ( 'test_2samples_bad1/toys Mann-Whitney'       , wait = 1 ) : toys.draw ( 'MW' )    
+    with use_canvas ( 'test_2samples_bad1/toys symmetric Savage'   , wait = 1 ) : toys.draw ( 'S'  )    
     
 # =============================================================================
 def test_2samples_bad2 () :
     
     logger = getLogger ( 'test_2samples_bad2'  ) 
     
-    test   = TSTest ( ds1 , ds4  )
+    test   = TwoSamplesTest ( ds1 , ds4 )
     title  = 'Test bad/2 samples'
     logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
 
-    toys   = TSToys ( ds1 , ds4 )
+    toys   = TwoSamplesToys ( ds1 , ds4 )
     title  = 'Toys bad/2 samples'
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
     
     with use_canvas ( 'test_2samples_bad2/test'                    , wait = 1 ) : test.draw()    
-    with use_canvas ( 'test_2samples_bad2/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ('KS') 
-    with use_canvas ( 'test_2samples_bad2/toys Kuiper'             , wait = 1 ) : toys.draw ('K' ) 
-    with use_canvas ( 'test_2samples_bad2/toys Anderson-Darling'   , wait = 1 ) : toys.draw ('AD') 
-    with use_canvas ( 'test_2samples_bad2/toys Cramers-von Mises'  , wait = 1 ) : toys.draw ('CM') 
-    with use_canvas ( 'test_2samples_bad2/toys Zhang ZK'           , wait = 1 ) : toys.draw ('ZK') 
-    with use_canvas ( 'test_2samples_bad2/toys Zhang ZA'           , wait = 1 ) : toys.draw ('ZA') 
-    with use_canvas ( 'test_2samples_bad2/toys Zhang ZC'           , wait = 1 ) : toys.draw ('ZC') 
+    with use_canvas ( 'test_2samples_bad2/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ( 'KS' ) 
+    with use_canvas ( 'test_2samples_bad2/toys Kuiper'             , wait = 1 ) : toys.draw ( 'K'  ) 
+    with use_canvas ( 'test_2samples_bad2/toys Anderson-Darling'   , wait = 1 ) : toys.draw ( 'AD' ) 
+    with use_canvas ( 'test_2samples_bad2/toys Cramers-von Mises'  , wait = 1 ) : toys.draw ( 'CM' ) 
+    with use_canvas ( 'test_2samples_bad2/toys Zhang ZK'           , wait = 1 ) : toys.draw ( 'ZK' ) 
+    with use_canvas ( 'test_2samples_bad2/toys Zhang ZA'           , wait = 1 ) : toys.draw ( 'ZA' ) 
+    with use_canvas ( 'test_2samples_bad2/toys Zhang ZC'           , wait = 1 ) : toys.draw ( 'ZC' )
+    
+    with use_canvas ( 'test_2samples_bad2/toys Berk-Jones'         , wait = 1 ) : toys.draw ( 'BJ' )    
+    with use_canvas ( 'test_2samples_bad2/toys Wasserstein/1'      , wait = 1 ) : toys.draw ( 'W1' )    
+    with use_canvas ( 'test_2samples_bad2/toys Wasserstein/2'      , wait = 1 ) : toys.draw ( 'W2' )    
+    with use_canvas ( 'test_2samples_bad2/toys Rosenblatt'         , wait = 1 ) : toys.draw ( 'R'  )    
+    with use_canvas ( 'test_2samples_bad2/toys Watson U2'          , wait = 1 ) : toys.draw ( 'U2' )    
+    with use_canvas ( 'test_2samples_bad2/toys Mann-Whitney'       , wait = 1 ) : toys.draw ( 'MW' )    
+    with use_canvas ( 'test_2samples_bad2/toys symmetric Savage'   , wait = 1 ) : toys.draw ( 'S'  )    
 
 # ===============================================================================
 if '__main__' == __name__ :

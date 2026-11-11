@@ -2512,7 +2512,7 @@ def data_VIFs ( data        ,
         
         from   ostap.logger.pretty    import pretty_float, format_pow10
         from   ostap.logger.colorized import attstr
-        rows =  [ ( 'Variable' , 'VIF' , 'Unit' , 'R2[%]' ) ] 
+        rows =  [ ( 'Variable' , 'VIF' , 'Unit' , 'R² [%]' ) ] 
         for var , vif in zip ( var_lst , vifs ) :
             v , expo = pretty_float ( vif , precision = precision , width = width )
             R2       = ( '%6.2f' % ( 100 * ( 1.0 - 1.0 / vif ) ) ) if 1 <= vif else '' 
