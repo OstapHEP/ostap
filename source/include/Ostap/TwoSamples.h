@@ -80,10 +80,10 @@ namespace Ostap
      *  @note Anderson, T.W., Darling, D.A. (1952). "Asymptotic theory of certain 'goodness of fit' criteria based on stochastic processes". 
      *        The Annals of Mathematical Statistics, 23(2): 193–212.
      */
-    double anderson_darling   ( const ECDF&  e1 , const ECDF&  e2 , const double eps = 1e-10 ) ;
-    double anderson_darling   ( const WECDF& e1 , const WECDF& e2 , const double eps = 1e-10 ) ;
-    double anderson_darling   ( const ECDF&  e1 , const WECDF& e2 , const double eps = 1e-10 ) ;
-    double anderson_darling   ( const WECDF& e1 , const ECDF&  e2 , const double eps = 1e-10 ) ;
+    double anderson_darling   ( const ECDF&  e1 , const ECDF&  e2 , const double eps = 1e-12 ) ;
+    double anderson_darling   ( const WECDF& e1 , const WECDF& e2 , const double eps = 1e-12 ) ;
+    double anderson_darling   ( const ECDF&  e1 , const WECDF& e2 , const double eps = 1e-12 ) ;
+    double anderson_darling   ( const WECDF& e1 , const ECDF&  e2 , const double eps = 1e-12 ) ;
     // ========================================================================
     /** @brief Berk-Jones two-sample statistic (\f$R_{BJ}\f$).
      *

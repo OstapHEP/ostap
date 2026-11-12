@@ -1617,10 +1617,10 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
-    /** recursively calculate the harmonix number
+    /** recursively calculate the harmonic number
       * @see https://en.wikipedia.org/wiki/Harmonic_number
       */
-    template <unsigned short N>
+    template <std::size_t N>
     struct Harmonic_
     {
       inline static constexpr long double value { 1.0L / N + Harmonic_<N-1>::value } ;
@@ -1631,16 +1631,21 @@ namespace Ostap
      inline static constexpr long double value { 0 } ;
     };
     // =========================================================================
-    /** get the harmonic number  
-     * @see https://en.wikipedia.org/wiki/Harmonic_number
+    /** get the harmonic number	
+     *  @see https://en.wikipedia.org/wiki/Harmonic_number
      */
-    constexpr long double harmonic_ ( const unsigned short N ) 
-    { return !N ? 0 : 1.0L/N + harmonic_ ( N - 1 ) ; } 
+    constexpr long double harmonic_ ( const std::size_t N )
+    {
+      long double sum = 0.0L;
+      for ( std::size_t k = 1 ; k <= N ; ++k ) { sum += 1.0L / k ; }
+      return sum;
+    }
     // ==========================================================================
-    /** get the harmonic number  
+    /** get the harmonic number
+     *  - Agressive cacheing is used! 
      * @see https://en.wikipedia.org/wiki/Harmonic_number
      */
-    double harmonic ( const unsigned short N ) ;
+    double harmonic ( const std::size_t N ) ;
     // ==========================================================================
     /** Harmonic number (generalized) 
      *  \f$ H(x) = \gamma + \psi ( 1 + x ) \f$ 

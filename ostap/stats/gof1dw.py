@@ -26,7 +26,10 @@ __all__     = (
     'Wasserstein1'       , ## Wasserstein-1      GoF/Two-Samples estimator 
     'Wasserstein2'       , ## Wasserstein-2      GoF/Two-Samples estimator
     'Rosenblatt'         , ## Rosenblatt         GoF/Two-Samples estimator
-    'Watson'             , ## Watson-U2          GoF/Two-Samples estimator    
+    'Watson'             , ## Watson-U2          GoF/Two-Samples estimator
+    ## Rank-based, *NON* weighted
+    'MannWhitney'        , ## Mann-Whitney       GoF/Two-Samples estimator
+    'Savage'             , ## Savage             GoF/Two-Samples estimator
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
@@ -417,9 +420,9 @@ class Rosenblatt(ClassicalGoF) :
 ## @class Watson
 #  Two (weighted) sample test using the Watson U2
 class Watson(ClassicalGoF) :
-    """ Two (weighted) sample test using Watsondistance """
+    """ Two (weighted) sample test using Watson U2 distance """
     def __init__ ( self , **kwargs ) :
-        """ Two (weighted) sample test using the Watson distance
+        """ Two (weighted) sample test using the Watson U2 distance
         """
         super () .__init__ (  estimator = TS2.watson_u2 , **kwargs )
         
@@ -439,6 +442,75 @@ class Watson(ClassicalGoF) :
         """
         return U.method_U2
 
+# =============================================================================
+## @class MannWhitney 
+#  Two (*NON*-weighted) sample test using the Mann-Whitney
+class MannWhitney(ClassicalGoF) :
+    """ Two (*NON*-weighted) sample test using Mann-Whitney distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using the Mann-Whitney distance
+        """
+        super () .__init__ (  estimator = TS2.mann_whitney , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_MW
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_MW
+    
+    # =========================================================================
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def weights_supported ( self ) :
+        """`weights_supported`: Are weights supported by this estimator?
+        """
+        return False 
+
+# =============================================================================
+## @class Savage
+#  Two (*NON*-weighted) sample test using the Savage score 
+class MannWhitney(ClassicalGoF) :
+    """ Two (*NON*-weighted) sample test using Savage distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using the Mann-Whitney distance
+        """
+        super () .__init__ (  estimator = TS2.savage , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_S
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_S
+    
+    # =========================================================================
+    ## Are weights supported by this GoF estimator?
+    @property 
+    def weights_supported ( self ) :
+        """`weights_supported`: Are weights supported by this estimator?
+        """
+        return False 
+
+    
 # =============================================================================
 if '__main__' == __name__ :
     

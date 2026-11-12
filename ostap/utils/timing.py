@@ -4,7 +4,7 @@
 # @file
 # Set of useful utilities
 # =============================================================================
-"""Set of useful utilisties for timing
+""" Set of useful utilities  for timing
 """
 # =============================================================================
 __all__     = (
@@ -22,15 +22,42 @@ from   ostap.logger.symbols import clock as clock_symbol
 import time 
 # =============================================================================
 from   ostap.logger.logger  import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.timing' )
-else                       : logger = getLogger ( __name__             )
+logger    = getLogger ( 'ostap.utils.timing' )
 _logger_t = type ( logger )
 del getLogger
 # =============================================================================
 clock_symbol = clock_symbol + ' ' if clock_symbol else '' 
 # =============================================================================
 ## format for timing prints 
-TIMING_FORMAT = 'Timing %-20s  WALL: %.3fs | CPU: %.3fs | CPU Load %.1f%%' 
+TIMING_FORMAT = 'Timing %-20s  WALL: %s | CPU: %s | CPU Load %.1f%%'
+# =============================================================================
+ONE_SECOND = 1 
+ONE_MINUTE = 60 * ONE_SECOND 
+ONE_HOUR   = 60 * ONE_MINUTE
+ONE_DAY    = 24 * ONE_HOUR 
+# =============================================================================
+## format the time-delta 
+def format_time ( delta ) :
+    """ format the time-delta
+    """
+    if   delta <  0.1       : return "%.0fms" % ( delta * 1000 ) 
+    elif delta <    2       : return '%.2f"'  %   delta
+    elif delta <   10       : return '%.1f"'  %   delta
+    elif delta < ONE_MINUTE : return '%.0f"'  %   delta
+    elif delta < ONE_HOUR   :
+        minutes, seconds  = divmod ( delta , 60 )    
+        return "%.0f'%.0f\""  % ( minutes , seconds )
+    elif delta < ONE_DAY    :
+        minutes, seconds  = divmod ( delta   , 60 )
+        hours  , minutes  = divmod ( minutes , 60 )        
+        return "%.0fh%.0f'%.0f\""  % ( hours, minutes , seconds )
+
+    minutes, seconds  = divmod ( delta   , 60 )
+    hours  , minutes  = divmod ( minutes , 60 )        
+    days   , hours    = divmod ( hours   , 24 )
+    return "%.0fd%.0fh%.0f'%.0f\""  % ( days , hours, minutes , seconds )
+
+
 # =============================================================================
 ## @class Timer
 #  Simple context manager to measure the time 
@@ -148,18 +175,20 @@ class Timer(object):
         self.__delta_wall = delta_wall 
         self.__delta_cpu  = delta_cpu
         
-
         # =====================================================================
         if self.logger : # ====================================================
             # =================================================================
+            delta_wall_str = format_time ( delta_wall )
+            delta_cpu_str  = format_time ( delta_cpu  )
+            # =================================================================
             try : # ===========================================================
                 # =============================================================
-                message = self.format % ( self.__name , delta_wall , delta_cpu , cpu_util )
+                message = self.format % ( self.__name , delta_wall_str , delta_cpu_str , cpu_util )
                 # =============================================================
             except TypeError : # ==============================================
                 # =============================================================
                 format  = TIMING_FORMAT 
-                message = format % ( self.__name , delta_wall , delta_cpu , cpu_util  )
+                message = format % ( self.__name , delta_wall_str , delta_cpu_str , cpu_util  )
 
             ## print it! 
             self.logger ( clock_symbol + message )

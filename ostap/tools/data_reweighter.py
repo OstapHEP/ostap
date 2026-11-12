@@ -45,7 +45,7 @@ class DataReweighter(Config) :
                    original_variables = None          , 
                    target_weight      = ''            , 
                    original_weight    = ''            , 
-                   silent             = True          , 
+                   silent             = False         , 
                    progress           = True          ,
                    description        = 'reweighting' , **params ) :        
         ##
@@ -87,6 +87,11 @@ class DataReweighter(Config) :
         """`reweighter` : get the actual Reweighter object
         """
         return self.__rw
+    
+    @property
+    def symbol( self ) :
+        """`symbol` : symbol/tag for the reweighter"""
+        return self.reweighter.symbol  
     
     @property
     def method ( self ) :

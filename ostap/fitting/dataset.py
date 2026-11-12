@@ -417,6 +417,7 @@ def _rad_imul_ ( ds1 , ds2 ) :
     >>> dset1 *= dset2
     """
     if isinstance ( ds1 , ROOT.RooDataSet ) and isinstance ( ds2 , ROOT.RooDataSet ) :
+        ## 
         if len ( ds1 ) != len ( ds2 ) : return NotImplemented
         ##
         w1 = ds1.isWeighted()
@@ -3964,14 +3965,14 @@ def add_new_buffer ( dataset , buffer , * , name , title = '' , report = False ,
         return dataset 
     
     if not name or not Ostap.Trees.valid_name_for_branch ( name ) :
-        raise ValueError ( "Specified name `%s' is not a proper name!" % name ) 
+        raise ValueError ( "Specified name `%s' is not a proper name!" % name )
     
-    if not isinstance ( buffer , numpy.ndarray ) :
-        buffer = numpy.asarray ( buffer , dtype = numpy.float64 )
-    
-    if not isinstance ( buffer , numpy.ndarray ) : raise TypeError ( "Invalid `buffer` type: %s"  %  typename ( buffer ) )
-    elif 1 != len ( buffer.shape )               : raise TypeError ( "Invalid `buffer` shape: %s" % str ( buffer.shape ) )
-    elif buffer.dtype.names                      : raise TypeError ( "Invalid `buffer` dtype: %s" % str ( buffer.dtype ) )
+    if isinstance ( buffer , numpy.ndarray ) :
+        if   1 != len ( buffer.shape ) : raise TypeError ( "Invalid `buffer` shape: %s" % str ( buffer.shape ) )
+        elif buffer.dtype.names        : raise TypeError ( "Invalid `buffer` dtype: %s" % str ( buffer.dtype ) )
+        
+    if not isinstance ( buffer , numpy.ndarray) or not buffer.flags [ 'C_CONTIGUOUS' ] :
+        buffer = numpy.ascontiguousarray ( buffer , dtype = numpy.float64 )
 
     dsize = len ( dataset )
     bsize = len ( buffer  ) 
@@ -3981,7 +3982,8 @@ def add_new_buffer ( dataset , buffer , * , name , title = '' , report = False ,
     
     data      = { name : buffer }
     title     = title if title else '%s variable from buffer' % name 
-    variables = [ ROOT.RooRealVar ( name , title , 0 ) ] 
+    variables = [ ROOT.RooRealVar ( name , title , 0 ) ]
+    
     new_dset  = ROOT.RooDataSet.from_numpy ( data = data  , variables = variables , name = dsID() )
     ROOT.SetOwnership ( new_dset, True )
 

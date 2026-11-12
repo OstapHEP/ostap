@@ -515,7 +515,6 @@ def np2vct ( data , weight = None ) :
     dsw       = DSW  ( data , weights = w )
     mean      = dsw.mean
     covmtrx   = dsw.cov
-
     
     ## load corresponding linear-algebra tricks:
     import ostap.math.linalg

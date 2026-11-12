@@ -343,7 +343,7 @@ def watson_u2 ( data1 , data2 ) :
 #  @code
 #  ecdf1 =...
 #  ecdf2 =...
-#  mw    = watson_u2 ( ecdf1, ecdf2 )
+#  mw    = mann_whitney ( ecdf1, ecdf2 )
 #  @endcode
 #  @param data1  the 1st dataset 
 #  @param data2  the 2nd dataset 
@@ -367,7 +367,7 @@ def mann_whitney ( data1 , data2 ) :
 #  @param data1  the 1st dataset 
 #  @param data2  the 2nd dataset 
 #  @return Savage statistics 
-def savage ( data1 , data2 ) : 
+def savage ( data1 , data2   )
     """ Get Savage statistics 
     - data1  : the 1st dataset 
     - data2  : the 2nd dataset 

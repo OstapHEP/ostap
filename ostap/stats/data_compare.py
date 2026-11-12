@@ -283,10 +283,7 @@ def data_compare ( comparator   ,
             r.importance.clear()
             r.importance.update ( new_importance )
             
-            
-    
-
-    
+                
     ## summary  table 
     if not silent :
         
@@ -294,14 +291,14 @@ def data_compare ( comparator   ,
         for r , c in zip ( rr , cc ) :
             
             _   , row = c.the_row ()
-            row       = ( c.method , ) + row
+            row       = ( c.symbol , c.method , ) + row
             rows.append ( row )
             
-        header = ( 'Method' , ) + full_header
+        header = ( '' , 'Method' , ) + full_header
         rows   = [ header ] + rows            
         title  = title if title else "Two-Sample comparison"
         rows   = T.remove_empty_columns ( rows )
-        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'lccccccccccc' )
+        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'llccccccccccc' )
         logger.info ( "%s:\n%s" % ( title , table ) )
         
     return results 

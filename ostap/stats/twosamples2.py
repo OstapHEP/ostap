@@ -24,7 +24,11 @@ __all__     = (
     'wasserstein1'       , ## The first Wasserstein 2-sample test
     'wasserstein2'       , ## The second Wasserstein 2-sample test
     'rosenblatt'         , ## Rosenblatt 2-sample test 
-    'watson_u2'          , ## Watson U2 2-sample test 
+    'watson_u2'          , ## Watson U2 2-sample test
+    ## Rank-based tests:  *NO WEIGHTS* 
+    'mann_whitney'       , ## Mann-Whitney  2-sample test (NO WEIGHTS!)
+    'savage'             , ## symmetrized Savage 2-sample test (NO WEIGHTS!)
+    ## 
 ) 
 # =============================================================================
 from   ostap.stats.utils    import ( weight_trivial     ,
@@ -121,7 +125,7 @@ def anderson_darling ( data1           ,
                        data2           ,
                        weight1 = None  ,
                        weight2 = None  ,
-                       eps     = 1e-10 ) :
+                       eps     = 1e-12 ) :
     """ Calculates the two-sample Anderson-Darling statistic for 1D datasets
     with weights.
     """
@@ -197,7 +201,7 @@ def ZK ( data1           ,
     return Ostap.Math.ZK ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
-## Calculates First Wasserstein distance (\f$W_1\f$ / Earth Mover's Distance).
+## Calculates First Wasserstein distance \f$W_1\f$ / Earth Mover's Distance.
 #
 #  Calculates the 1st Wasserstein distance between two empirical distributions:
 #  \f[ W_1(F_1, F_2) = \int_{-\infty}^{\infty} |F_1(x) - F_2(x)| \, dx \f]
@@ -214,7 +218,28 @@ def wasserstein1 ( data1           ,
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
     ## 
-    return Ostap.Math.wasserstein1 ( ecdf1 , ecdf2 , eps )
+    return Ostap.Math.wasserstein1 ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Calculates Second  Wasserstein distance \f$W_2\f$
+#
+#  Calculates the square root of the integrated squared differences between empirical CDFs:
+#  \f[ W_2(F_1, F_2) = \left( \int_{-\infty}^{\infty} (F_1(x) - F_2(x))^2 \, dx \right)^{1/2} \f]
+#
+#
+#  @see https://en.wikipedia.org/wiki/Wasserstein_metric
+def wasserstein2 ( data1           , 
+                   data2           ,
+                   weight1 = None  ,
+                   weight2 = None  ) : 
+    """ Calculates the Second Wasserstein distance .
+    @see https://en.wikipedia.org/wiki/Wasserstein_metric
+    """
+    ##
+    ecdf1 = data2ecdf ( data1 , weight1 )
+    ecdf2 = data2ecdf ( data2 , weight2 )
+    ## 
+    return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 )
 
 # =============================================================================
 ## Calculates First Wasserstein distance (\f$W_1\f$ / Earth Mover's Distance).
@@ -235,28 +260,7 @@ def wasserstein2 ( data1           ,
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
     ## 
-    return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 , eps )
-
-# =============================================================================
-## Calculates First Wasserstein distance (\f$W_1\f$ / Earth Mover's Distance).
-#
-#  Calculates the square root of the integrated squared differences between empirical CDFs:
-#  \f[ W_2(F_1, F_2) = \left( \int_{-\infty}^{\infty} (F_1(x) - F_2(x))^2 \, dx \right)^{1/2} \f]
-#
-#
-#  @see https://en.wikipedia.org/wiki/Wasserstein_metric
-def wasserstein2 ( data1           , 
-                   data2           ,
-                   weight1 = None  ,
-                   weight2 = None  ) : 
-    """ Calculates the Second Wasserstein distance .
-    @see https://en.wikipedia.org/wiki/Wasserstein_metric
-    """
-    ##
-    ecdf1 = data2ecdf ( data1 , weight1 )
-    ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
-    return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 , eps )
+    return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 )
 
 # =============================================================================
 ## @brief Rosenblatt-type two-sample test statistic (\f$R\f$).
@@ -275,7 +279,7 @@ def rosenblatt ( data1           ,
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
     ## 
-    return Ostap.Math.rosenblatt ( ecdf1 , ecdf2 , eps )
+    return Ostap.Math.rosenblatt ( ecdf1 , ecdf2 )
 
 # =============================================================================
 ## @brief Watson's two-sample test statistic (\f$U^2\f$).
@@ -285,16 +289,70 @@ def rosenblatt ( data1           ,
 #  @see https://en.wikipedia.org/wiki/Watson_test
 #   @note Watson, G.S. (1961, 1962).
 def watson_u2 ( data1            , 
-                 data2           ,
-                 weight1 = None  ,
-                 weight2 = None  ) : 
+                data2           ,
+                weight1 = None  ,
+                weight2 = None  ) : 
     """ Calculates Watson U2 distance .
     """
-    ##
+a    ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
     ## 
-    return Ostap.Math.watson_u2 ( ecdf1 , ecdf2 , eps )
+    return Ostap.Math.watson_u2 ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Matt-Whitney statistics 
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  mw    = mann_whitney ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset 
+#  @param data2  the 2nd dataset 
+#  @return Matt-Whitney statistics 
+def mann_whitney ( data1   ,
+                   data2   ,
+                   weight1 = None , 
+                   weight2 = None ) : 
+    """ Get Mann-Whitney statistics 
+    - data1  : the 1st dataset 
+    - data2  : the 2nd dataset 
+    """
+    ##
+    if not weight_trivial ( weight1 ) : raise ValueError ( "Mann-Whitney does not support weights!" )
+    if not weight_trivial ( weight2 ) : raise ValueError ( "Mann-Whitney does not support weights!" )    
+    ## 
+    ecdf1 = data2ecdf ( data1 , weight1 )
+    ecdf2 = data2ecdf ( data2 , weight2 )
+    ## 
+    return Ostap.Math.mann_whitney ( ecdf1 , ecdf2 )
+
+# =============================================================================
+## Symmetrized Savage statistics 
+#  @code
+#  ecdf1 =...
+#  ecdf2 =...
+#  ss    = savage ( ecdf1, ecdf2 )
+#  @endcode
+#  @param data1  the 1st dataset 
+#  @param data2  the 2nd dataset 
+#  @return Savage statistics 
+def savage ( data1   ,
+             data2   ,
+             weight1 = None , 
+             weight2 = None ) :              
+    """ Get Savage statistics 
+    - data1  : the 1st dataset 
+    - data2  : the 2nd dataset 
+    """
+    ##
+    if not weight_trivial ( weight1 ) : raise ValueError ( "Savage does not support weights!" )
+    if not weight_trivial ( weight2 ) : raise ValueError ( "Savage does not support weights!" )    
+    ## 
+    ecdf1 = data2ecdf ( data1 , weight1 )
+    ecdf2 = data2ecdf ( data2 , weight2 )
+    ## 
+    return Ostap.Math.savage ( ecdf1 , ecdf2 )
 
 # =============================================================================
 if '__main__' == __name__ :

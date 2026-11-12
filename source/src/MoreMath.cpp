@@ -8,6 +8,8 @@
 #include <climits>
 #include <complex>
 #include <cassert>
+#include <map>
+#include <unordered_map>
 #include <algorithm>
 // ============================================================================
 // GSL 
@@ -8415,37 +8417,64 @@ Ostap::Math::slh
 }
 // =============================================================================
 
-
 // =============================================================================
 namespace 
 {
   // ===========================================================================
-  constexpr unsigned short N_HARMONIC = 250 ; 
-  auto  HN = [] ( const unsigned short I )-> long double 
-  { return Ostap::Math::harmonic_ ( I ) ;  } ; 
-  const std::array<long double,N_HARMONIC+1>
-  s_HARMONIC { Ostap::Math::make_array ( HN , std::make_index_sequence<N_HARMONIC+1> () ) } ;
+  constexpr unsigned short N_HARMONIC          = 1000 ; 
+  constexpr std::size_t    NUM_HARMONIC_BLOCKS = 100  ;
+  constexpr std::size_t    MAX_CACHED_HARMONIC = NUM_HARMONIC_BLOCKS * N_HARMONIC ;
+  
+  // 1. Full precomputed lookup table for small N (from 0 to N_HARMONIC)
+  const std::array<long double, N_HARMONIC + 1> s_HARMONIC { 
+    Ostap::Math::make_array([](const unsigned short I) -> long double { 
+      return Ostap::Math::harmonic_(I); 
+    }, std::make_index_sequence<N_HARMONIC + 1>()) 
+  };
+  
+  // 2. Base anchor points for multiples of N_HARMONIC, computed at compile-time (constexpr)
+  constexpr std::array<long double, NUM_HARMONIC_BLOCKS> s_BASE_HARMONICS = []()
+  {
+    std::array<long double, NUM_HARMONIC_BLOCKS> arr{};
+    arr[0] = 0.0L;
+    for (std::size_t i = 1; i < NUM_HARMONIC_BLOCKS; ++i)
+    {
+      long double val = arr[i - 1];
+      for ( std::size_t k = (i - 1) * N_HARMONIC + 1; k <= i * N_HARMONIC; ++k)
+	{ val += 1.0L / k; }
+      arr[i] = val;
+    }
+    return arr;
+  }();
+  
   // ===========================================================================
 }
 // =============================================================================
 /* get the harmonic number  
  * @see https://en.wikipedia.org/wiki/Harmonic_number
  */
- // =============================================================================
-double Ostap::Math::harmonic 
-( const unsigned short N ) 
+// =============================================================================
+double Ostap::Math::harmonic
+( const std::size_t N ) 
 {
-  /// precomputed values 
-  if      ( N <=       N_HARMONIC ) { return s_HARMONIC [ N ] ; }
-  /// explicit sum 
-  else if ( N <= 100 + N_HARMONIC )
-  {
-    /// the last precomputed harmonic number:
-    long double result   = s_HARMONIC.back () ;
-    for ( unsigned int k = N_HARMONIC + 1 ; k <= N ; ++k ) { result += 1.0L / k ; }
-    return result ;
+  /// Direct O(1) lookup in the precomputed table for small N
+  if ( N <= N_HARMONIC ) { return s_HARMONIC [ N ] ; }
+
+  /// Fast block-based lookup and short explicit summation for medium N.
+  /// Eliminates the long chain of 'else if' branches, improving branch prediction
+  /// and instruction cache efficiency.
+  if ( N < MAX_CACHED_HARMONIC ) 
+    {
+    // Determine which precomputed block N falls into
+    const std::size_t block = N / N_HARMONIC;
+    long double result      = s_BASE_HARMONICS [ block ] ;
+    //
+    // Sum remaining terms from the block boundary up to N
+    for ( std::size_t k = block * N_HARMONIC + 1 ; k <= N ; ++k ) { result += 1.0L / k; }
+    return result ;         
   }
-  /// generic result
+
+  /// General formula for large N using Euler-Mascheroni constant
   return s_GammaE + psi ( 1.0 + N ) ;
 }
 // ============================================================================
@@ -8453,13 +8482,16 @@ double Ostap::Math::harmonic
  *  \f$ H(x) = \gamma + \psi ( 1 + x ) \f$ 
  */
 // ============================================================================
-double Ostap::Math::harmonic ( const double x  )
-{ 
-  if ( -0.001 < x && isushort ( x ) && x < N_HARMONIC + 0.001 )
+double Ostap::Math::harmonic
+( const double x  )
+{
+  // small integer?
+  if ( -0.001 < x && x < N_HARMONIC + 0.001 && isushort ( x ) )
   {
-    const unsigned short N = round ( x ) ;
-    if  (  N <= N_HARMONIC ) { return harmonic ( N ) ; }
+    const std::size_t N = round ( x ) ;
+    if  ( N <= N_HARMONIC ) { return harmonic ( N ) ; }
   }
+  // general formula 
   return s_GammaE + psi ( 1.0 + x ) ; 
 }
 // ============================================================================
@@ -8474,24 +8506,25 @@ double Ostap::Math::psi ( const double x )
   /// use precomputed harmonic numbers 
   if ( 0.999 < x && x < N_HARMONIC + 0.001 && isushort ( x ) )
   {
-    const unsigned short N = round ( x ) ;
+    const std::size_t N = round ( x ) ;
     if ( 1 <= N )
     {
-      const unsigned short NN = N - 1 ;
+      const std::size_t NN = N - 1 ;
       return harmonic ( NN ) - s_GammaE ;
     } 
   }
   //
-  typedef unsigned short        KEY    ;
-  typedef double                RESULT ;
-  typedef std::map<KEY,double>  MAP    ;
-  typedef SyncedCache<MAP>      CACHE  ;
+  typedef unsigned short                  KEY    ;
+  typedef double                          RESULT ;
+  typedef std::unordered_map<KEY,RESULT>  MAP    ;
+  typedef SyncedCache<MAP>                CACHE  ;
   /// the cache
   static CACHE             s_CACHE {} ; // the cache
   //
   static const std::size_t s_MAX_CACHE { 10000 } ; 
   //
-  if ( isushort ( x ) ) 
+  const bool x_is_ushort = isushort ( x ) ;
+  if ( x_is_ushort ) 
   {
     const unsigned short n = round ( x ) ;
     const KEY key { n } ;
@@ -8514,7 +8547,7 @@ double Ostap::Math::psi ( const double x )
     { return std::numeric_limits<double>::quiet_NaN(); }
   }
   //
-  if ( isushort ( x ) )
+  if ( x_is_ushort )
   {
     const unsigned short n = round ( x ) ;
     const KEY key { n } ;
@@ -8545,13 +8578,14 @@ namespace
     const unsigned short m ) 
   {
     // 
-    if      ( 0 == n ) { return                         0   ; }
-    else if ( 0 == m ) { return                         n   ; }
-    else if ( 1 == m ) { return Ostap::Math::harmonic ( n ) ; }
+    if      ( 0 == n ) { return                                                    0     ; }
+    else if ( 0 == m ) { return                                                    n     ; }
+    else if ( 1 == m ) { return Ostap::Math::harmonic ( static_cast<std::size_t> ( n ) ) ; }
     //
-    typedef std::pair<unsigned short,unsigned short> KEY   ;
-    typedef std::map<KEY,long double>                MAP   ;
-    typedef SyncedCache<MAP>                         CACHE ;
+    typedef std::pair<unsigned short,unsigned short> KEY    ;
+    typedef long double                              RESULT ;
+    typedef std::map<KEY,RESULT>                     MAP    ;
+    typedef SyncedCache<MAP>                         CACHE  ;
     /// the cache
     static CACHE             s_CACHE {} ; // the cache
     //

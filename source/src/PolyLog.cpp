@@ -618,7 +618,7 @@ namespace
     const long double    sum = Li_eq_9_5_ ( n , 1.0L * x , 1.0L * w , 10000 ) ;
     //
     const unsigned short nm1  = n - 1 ;
-    const long double    hm  =  Ostap::Math::harmonic ( nm1 )  ;
+    const long double    hm  =  Ostap::Math::harmonic ( static_cast<std::size_t> ( nm1 ) ) ;
     const long double    ig  =  Ostap::Math::igamma   ( n   )  ;
     //
     const long double    t1 =  w < 0 ? 
@@ -646,7 +646,7 @@ namespace
     const std::complex<long double> sum { Li_eq_9_5_ ( n , xx , ww , 10000 ) } ;
     //
     const unsigned short nm1 = n - 1 ;
-    const long double    hm  =  Ostap::Math::harmonic ( nm1 )  ;
+    const long double    hm  =  Ostap::Math::harmonic ( static_cast<std::size_t> ( nm1 ) )  ;
     const long double    ig  =  Ostap::Math::igamma   ( n   )  ;
     //
     const std::complex<long double> t1 = hm - std::log ( -ww ) ;

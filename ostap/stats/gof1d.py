@@ -1216,34 +1216,27 @@ class GoF1DToys(GoF1D) :
         if   key in Keys [ 'KS' ] and 'KS' in self.ecdfs :             
             result = self.result ( 'KS' )
             ecdf   = self.ecdfs  [ 'KS' ]
-            ## logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
         elif key in Keys [ 'K'  ] and 'K'  in self.ecdfs : 
             result = self.result ( 'K' )
             ecdf   = self.ecdfs  [ 'K' ]
-            ## logger.info ( 'Toy results for Kuiper estimate' ) 
         elif key in Keys [ 'AD' ] and 'AD' in self.ecdfs :             
             result = self.result ( 'AD' )
             ecdf   = self.ecdfs  [ 'AD' ]
-            ## logger.info ( 'Toy results for Anderson-Darling estimate' ) 
         elif key in Keys [ 'CM' ] and 'CM' in self.ecdfs : 
             result = self.result  ( 'CM' )
             ecdf   = self.ecdfs   [ 'CM' ]
-            ## logger.info ( 'Toy results for Cramer-von Mises  estimate' ) 
         elif key in Keys [ 'ZK' ]  and 'ZK' in self.ecdfs : 
             result = self.result  ( 'ZK' )
             ecdf   = self.ecdfs   [ 'ZK' ]
-            ## logger.info ( 'Toy results for Zhang/ZK estimate' ) 
         elif key in Keys [ 'ZA' ]   and 'ZA' in self.ecdfs :  
             result = self.result  ( 'ZA' )
             ecdf   = self.ecdfs   [ 'ZA' ]
-            ## logger.info ( 'Toy results for Zhang/ZA estimate' ) 
         elif key in Keys [ 'ZC' ] and 'ZC' in self.ecdfs : 
             result = self.result  ( 'ZC' )
             ecdf   = self.ecdfs   [ 'ZC' ]
         elif key in Keys [ 'BJ' ] and 'BJ' in self.ecdfs : 
             result = self.result  ( 'BJ' )
             ecdf   = self.ecdfs   [ 'BJ' ]
-            ## logger.info ( 'Toy results for Berk-Jones estimate' )
         elif key in Keys [ 'U2' ] and 'U2' in self.ecdfs : 
             result = self.result  ( 'U2' )
             ecdf   = self.ecdfs   [ 'U2' ]
@@ -1253,15 +1246,12 @@ class GoF1DToys(GoF1D) :
         elif key in Keys [ 'NLL' ] and 'NLL' in self.ecdfs : 
             result = self.result  ( 'NLL' )
             ecdf   = self.ecdfs   [ 'NLL' ]
-            ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
         elif key in Keys [ 'AIC' ] and 'AIC' in self.ecdfs : 
             result = self.result  ( 'AIC' )
             ecdf   = self.ecdfs   [ 'AIC' ]
-            ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
         elif key in Keys [ 'BIC' ] and 'BIC' in self.ecdfs : 
             result = self.result  ( 'BIC' )
             ecdf   = self.ecdfs   [ 'BIC' ]
-            ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )
 
