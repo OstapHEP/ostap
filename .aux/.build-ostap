@@ -239,13 +239,13 @@ else
 fi 
 
 # ==========================================================================
-if command -v pip >/dev/null 2>&1; then
-    printf "%s PIP                   : %s\n" "${prefix1}" "$(command -v pip)"
-    printf "%s PIP    version        : %s\n" "${prefix1}" "$(pip --version 2>&1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+if command -v python >/dev/null 2>&1 && python -m pip --version >/dev/null 2>&1; then
+    printf "%s PIP                   : %s\n" "${prefix1}" "$(python -c "import pip; print(pip.__file__)" 2>/dev/null || echo "pip module")"
+    printf "%s PIP version           : %s\n" "${prefix1}" "$(python -m pip --version 2>&1 | grep -Eo '[0-9]+(\.[0-9]+)+')"
 else
-    printf "%s PIP    is not found!\n" "${prefix1_error}"
+    printf "%s PIP     is not found!\n" "${prefix1_error}"
     ## return 214
-fi 
+fi
 
 if command -v cmake >/dev/null 2>&1; then
     printf "%s CMAKE                 : %s\n" "${prefix1}" "$(command -v cmake)"
@@ -257,7 +257,7 @@ fi
 
 if command -v ctest >/dev/null 2>&1; then
     printf "%s CTEST                 : %s\n" "${prefix1}" "$(command -v ctest)"
-    printf "%s CTEST version         : %s\n" "${prefix1}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    printf "%s CTEST version           : %s\n" "${prefix1}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CTEST is not found!\n" "${prefix1_error}"
     return 216 2>/dev/null || exit 216
@@ -265,7 +265,7 @@ fi
 
 if command -v cpack >/dev/null 2>&1; then
     printf "%s CPACK                 : %s\n" "${prefix1}" "$(command -v cpack)"
-    printf "%s CPACK version         : %s\n" "${prefix1}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    printf "%s CPACK version           : %s\n" "${prefix1}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CPACK is not found!\n" "${prefix1_error}"
     return 217 2>/dev/null || exit 217
@@ -277,7 +277,7 @@ if command -v ninja >/dev/null 2>&1; then
     make_command="ninja"
     make_generator="Ninja"
     printf "%s NINJA                 : %s\n" "${prefix1}" "$(command -v ninja)"
-    printf "%s NINJA version         : %s\n" "${prefix1}" "$(ninja --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    printf "%s NINJA version        : %s\n" "${prefix1}" "$(ninja --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 elif command -v gmake >/dev/null 2>&1; then
     make_command="gmake"
     make_generator="Unix Makefiles"
@@ -325,35 +325,7 @@ if [ -n "${OSTAP_INSTALL}" ] && [ -d "${OSTAP_INSTALL}" ] && [ -w "${OSTAP_INSTA
 fi
 
 # =========================================================================
-## Clean build directory (2)
-# ==========================================================================
-if [ -f "${OSTAP_BUILD}/build.ninja" ] && [ "${make_command}" = "ninja" ]; then
-    
-    printf "%s [2/7] Clean  OSTAP_BUILD   build remnants   %s\n" "${prefix1}" "${OSTAP_BUILD}"
-    ( cd "${OSTAP_BUILD}" && "${make_command}" clean )
-    
-    sc=$?
-    if [ "${sc}" -ne 0 ]; then
-        printf "%s [2/7] FAILURE: Cannot clean OSTAP_BUILD (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
-    else
-        printf "%s [2/7] SUCCESS: OSTAP_BUILD is cleaned (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_INSTALL}"
-    fi
-
-elif [ -f "${OSTAP_BUILD}/Makefile" ] && [ "${make_command}" != "ninja" ]; then
-    
-    printf "%s [2/7] Clean  OSTAP_BUILD   build remnants   %s\n" "${prefix1}" "${OSTAP_BUILD}"
-    ( cd "${OSTAP_BUILD}" && "${make_command}" clean )
-
-    sc=$?
-    if [ "${sc}" -ne 0 ]; then
-        printf "%s [2/7] FAILURE: Cannot clean OSTAP_BUILD (code %d) %s\n" "${prefix1_error}" "${sc}" "${OSTAP_INSTALL}"
-    else
-        printf "%s [2/7] SUCCESS: OSTAP_BUILD is cleaned (code %d) %s\n" "${prefix1}" "${sc}" "${OSTAP_INSTALL}"
-    fi
-fi
-
-# =========================================================================
-## Clean build directory (2)
+## Clean build directory (3)
 # ==========================================================================
 printf "%s [3/7] Remove OSTAP_BUILD   remnants&garbage %s\n" "${prefix1}" "${OSTAP_BUILD}"
 ( cd "${OSTAP_BUILD}" && \
