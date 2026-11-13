@@ -10,10 +10,7 @@
 # ==============================================================================
 from   ostap.stats.twosamples import TwoSamplesTest, TwoSamplesToys 
 from   ostap.plotting.canvas  import use_canvas
-from   ostap.logger.pretty    import pretty_float
-from   ostap.utils.ranges     import vrange
 from   ostap.utils.root_utils import batch_env 
-from   ostap.math.math_ve     import significance
 import ostap.logger.table     as     T
 import ROOT, random, array    
 # ==============================================================================

@@ -18,6 +18,7 @@ import ostap.math.integral      as     I
 import ostap.math.integrator    as     II
 import ostap.logger.table       as     T 
 import ostap.math.models
+import ostap.histos.histos
 import ROOT, random 
 # =============================================================================
 # logging 

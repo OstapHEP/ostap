@@ -31,14 +31,9 @@ __all__     = (
     ## 
 ) 
 # =============================================================================
-from   ostap.stats.utils    import ( weight_trivial     ,
-                                     valid_weight       ,
-                                     compatible_weights , 
-                                     check_all          ,
-                                     num_features       )
-from   ostap.math.math_base import Ostap, data2vct 
-from   ostap.stats.counters import ECDF, WECDF 
-import numpy 
+from   ostap.stats.utils    import ( weight_trivial ,
+                                     data2ecdf      )
+from   ostap.math.math_base import Ostap
 # =============================================================================
 # logging 
 # =============================================================================
@@ -46,31 +41,6 @@ from ostap.logger.logger import getLogger
 logger = getLogger ( 'ostap.stats.twosamples2' )
 # =============================================================================
 logger.debug ( 'Two-Samples 1D (weighted) Test' )
-# =============================================================================
-ecdf_types = ECDF , WECDF
-# =============================================================================
-## Convert data/weight pair into (W)ECDF
-#  @see Ostap::Math::ECDF
-#  @see Ostap::Math::WECDF
-def data2ecdf ( data , weight = None ) :
-    """ Convert data/weight pair into (W)ECDF
-    - see Ostap::Math::ECDF
-    - see Ostap::Math::WECDF
-    """
-    ##
-    if isinstance ( data , ecdf_types ) : return data
-    ## 
-    data      = numpy.asarray ( data , dtype = float ).ravel()
-    ##
-    if 1 != num_features      ( data   )          : raise TypeError  ( "Invalid `data` type!"                   )
-    if not valid_weight       ( weight )          : raise ValueError ( "Invalid `weight` type/value!"           )
-    if not compatible_weights ( data   , weight ) : raise TypeError  ( "Incompatible `data/weight` structures!" )
-    ##
-    if weight_trivial ( weight ) : return ECDF ( data2vct ( data ) )
-    ## 
-    weight = numpy.asarray ( weight , dtype = float ).ravel() 
-    return WECDF ( data2vct ( data ) , data2vct ( weight ) ) 
-
 # =============================================================================
 ## Calculates the two-sample Kolmogorov-Smirnov D-statistic for 1D datasets
 #  with weights.
@@ -84,7 +54,6 @@ def kolmogorov_smirnov ( data1    ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.kolmogorov_smirnov ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -99,7 +68,6 @@ def kuiper ( data1          ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.kuiper ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -115,7 +83,6 @@ def cramer_von_mises ( data1          ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.cramer_von_mises  ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -132,7 +99,6 @@ def anderson_darling ( data1           ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.anderson_darling ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
@@ -149,7 +115,6 @@ def berk_jones ( data1          ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.berk_jones ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
@@ -165,7 +130,6 @@ def ZA ( data1           ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.ZA ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
@@ -181,7 +145,6 @@ def ZC ( data1           ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.ZC ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
@@ -197,7 +160,6 @@ def ZK ( data1           ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.ZK ( ecdf1 , ecdf2 , eps )
 
 # =============================================================================
@@ -217,29 +179,7 @@ def wasserstein1 ( data1           ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.wasserstein1 ( ecdf1 , ecdf2 )
-
-# =============================================================================
-## Calculates Second  Wasserstein distance \f$W_2\f$
-#
-#  Calculates the square root of the integrated squared differences between empirical CDFs:
-#  \f[ W_2(F_1, F_2) = \left( \int_{-\infty}^{\infty} (F_1(x) - F_2(x))^2 \, dx \right)^{1/2} \f]
-#
-#
-#  @see https://en.wikipedia.org/wiki/Wasserstein_metric
-def wasserstein2 ( data1           , 
-                   data2           ,
-                   weight1 = None  ,
-                   weight2 = None  ) : 
-    """ Calculates the Second Wasserstein distance .
-    @see https://en.wikipedia.org/wiki/Wasserstein_metric
-    """
-    ##
-    ecdf1 = data2ecdf ( data1 , weight1 )
-    ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
-    return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 )
 
 # =============================================================================
 ## Calculates First Wasserstein distance (\f$W_1\f$ / Earth Mover's Distance).
@@ -253,13 +193,12 @@ def wasserstein2 ( data1           ,
                    data2           ,
                    weight1 = None  ,
                    weight2 = None  ) : 
-    """ Calculates the Second Wasserstein distance .
+    """ Calculates the second Wasserstein distance .
     @see https://en.wikipedia.org/wiki/Wasserstein_metric
     """
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -278,7 +217,6 @@ def rosenblatt ( data1           ,
     ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.rosenblatt ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -288,16 +226,15 @@ def rosenblatt ( data1           ,
 #  \f[ U^2 = \int_{-\infty}^{\infty} \left( (F_1(x) - F_2(x)) - \bar{D} \right)^2 dH(x) \f]
 #  @see https://en.wikipedia.org/wiki/Watson_test
 #   @note Watson, G.S. (1961, 1962).
-def watson_u2 ( data1            , 
+def watson_u2 ( data1           , 
                 data2           ,
                 weight1 = None  ,
                 weight2 = None  ) : 
     """ Calculates Watson U2 distance .
     """
-a    ##
+    ##
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.watson_u2 ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -324,7 +261,6 @@ def mann_whitney ( data1   ,
     ## 
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.mann_whitney ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -351,7 +287,6 @@ def savage ( data1   ,
     ## 
     ecdf1 = data2ecdf ( data1 , weight1 )
     ecdf2 = data2ecdf ( data2 , weight2 )
-    ## 
     return Ostap.Math.savage ( ecdf1 , ecdf2 )
 
 # =============================================================================

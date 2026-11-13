@@ -36,26 +36,25 @@ __all__     = (
     ## 
 )
 # =============================================================================
-from   ostap.core.ostap_types import listlike_types, sequence_types  
 from   ostap.core.core        import VE, Ostap
-from   ostap.utils.core       import typename 
 from   ostap.utils.basic      import safe_loop 
-from   ostap.math.math_base   import doubles, axis_range, data2vct 
-from   ostap.math.models      import f1_draw
+from   ostap.math.math_base   import axis_range, data2vct 
 from   ostap.utils.cidict     import cidict_fun
 from   ostap.logger.pretty    import pretty_float, format_pow10 
 from   ostap.stats.gof_utils  import Labels, Keys, clip_pvalue 
 from   ostap.stats.utils      import full_header, t_header  
 from   ostap.math.math_ve     import significance
 from   ostap.math.ve          import fmt_pretty_ve
-from   ostap.stats.counters   import SE, ECDF
+from   ostap.stats.counters   import SE
+from   ostap.stats.utils      import data2ecdf
 from   ostap.stats.pvalue     import permutation_symbol
-from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma, infinity_pos 
+from   ostap.logger.symbols   import plus_minus, infinity_pos 
 from   collections            import defaultdict, namedtuple 
 import ostap.logger.table     as     T
+import ostap.math.models 
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
-import ROOT, math, array, numpy    
+import ROOT, math, numpy    
 # =============================================================================
 # logging 
 # =============================================================================
@@ -63,53 +62,6 @@ from ostap.logger.logger import getLogger
 logger = getLogger ( 'ostap.stats.twosamples' )
 # =============================================================================
 logger.debug ( 'Two-Samples Test for 1D non-weighted datasets' )
-# =============================================================================
-## transform data into empirical CDF
-#  @code
-#  data = ...
-#  cdf  = ecdf_from_data ( data ) 
-#  @endcode 
-#  @param data input dataset 
-#  @return empirical cumulative distribution function
-#  @see Ostap::Math::ECDF 
-def ecdf_from_data  ( data ) :
-    """ Transform data into empirical CDF 
-    - data : input dataset 
-    >>> data = ...
-    >>> cdf  = ecdf_from_data ( data )
-    - see `Ostap.Math.ECDF`
-    """
-    if   isinstance ( data , ECDF             ) : return data 
-    elif isinstance ( data , numpy.ndarray    ) : return ECDF ( data2vct ( data ) ) 
-    elif isinstance ( data , array.array      ) : return ECDF ( data2vct ( data ) ) 
-    elif isinstance ( data , sequence_types   ) : return ECDF ( doubles  ( data ) ) 
-    ## 
-    raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % typename ( data1 ) )
-
-# ===============================================================================
-## Prepare data
-#  @code
-#  data1 = ...
-#  data2 = ...
-#  ecdf1 , ecdf2 = prepare_data1 ( data1 , data2 ) 
-#  @endcode
-#  @param data1 the 1st    dataset
-#  @param data2 the second dataset
-#  @return pair of empirical CDFs for the 1st and 2nd second daatsets 
-def prepare_data ( data1 , data2 ) : 
-    """ Prepare data
-    >>> data1 = ...
-    >>> data2 = ...
-    >>> ecdf1 , ecdf2 , ecdf = prepare_data1 ( data1 , data2 ) 
-    - data1  : the 1st    dataset
-    - data2  : the second dataset
-    - return a pair of of empirical CDFs for the 1st and 2nd datasets 
-    """
-    ecdf1 = ecdf_from_data ( data1 )
-    ecdf2 = ecdf_from_data ( data2 )
-    ##
-    return ecdf1 , ecdf2
-
 # =============================================================================
 ## Get Kolmogorov-Smirnov statistics KS
 #  @code
@@ -125,7 +77,8 @@ def kolmogorov_smirnov ( data1 , data2 ) :
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
     """
-    ecdf1, ecdf2 = prepare_data ( data1 , data2  ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.kolmogorov_smirnov ( ecdf1 , ecdf2 )
 
 # ================================================================================
@@ -143,7 +96,8 @@ def kuiper ( data1 , data2 ) :
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
     """
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 )
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.kuiper( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -161,7 +115,8 @@ def anderson_darling  ( data1 , data2  ) :
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
     """
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.anderson_darling ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -179,8 +134,8 @@ def cramer_von_mises ( data1 , data2 ) :
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.cramer_von_mises ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -198,8 +153,8 @@ def berk_jones ( data1 , data2 ) :
     - data1  : the 1st dataset or empirical CDF 
     - data2  : the 2nd dataset or empirical CDF 
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )   ## transform input (if needed) 
     return Ostap.Math.berk_jones ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -219,7 +174,8 @@ def ZK  ( data1 , data2 ) :
     - data2  : the 2nd dataset or empirical CDF 
     - see https://www.jstor.org/stable/25471118
     """
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.ZK ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -239,7 +195,8 @@ def ZA ( data1 , data2 ) :
     - data2  : the 2nd dataset or empirical CDF 
     - see https://www.jstor.org/stable/25471118
     """
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.ZA ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -259,7 +216,8 @@ def ZC ( data1 , data2 ) :
     - data2  : the 2nd dataset or empirical CDF 
     - see https://www.jstor.org/stable/25471118
     """
-    ecdf1, ecdf2 = prepare_data ( data1 , data2  ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.ZC ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -277,8 +235,8 @@ def wasserstein1 ( data1 , data2 ) :
     - data1  : the 1st dataset 
     - data2  : the 2nd dataset 
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.wasserstein1 ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -296,8 +254,8 @@ def wasserstein2 ( data1 , data2 ) :
     - data1  : the 1st dataset 
     - data2  : the 2nd dataset 
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.wasserstein2 ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -315,8 +273,8 @@ def rosenblatt ( data1 , data2 ) :
     - data1  : the 1st dataset 
     - data2  : the 2nd dataset 
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.rosenblatt  ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -334,8 +292,8 @@ def watson_u2 ( data1 , data2 ) :
     - data1  : the 1st dataset 
     - data2  : the 2nd dataset 
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.watson_u2 ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -353,8 +311,8 @@ def mann_whitney ( data1 , data2 ) :
     - data1  : the 1st dataset 
     - data2  : the 2nd dataset 
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.mann_whitney ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -367,13 +325,13 @@ def mann_whitney ( data1 , data2 ) :
 #  @param data1  the 1st dataset 
 #  @param data2  the 2nd dataset 
 #  @return Savage statistics 
-def savage ( data1 , data2   )
+def savage ( data1 , data2   ) : 
     """ Get Savage statistics 
     - data1  : the 1st dataset 
     - data2  : the 2nd dataset 
     """
-    ## transform input (if needed) 
-    ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
+    ecdf1 = data2ecdf ( data1 )
+    ecdf2 = data2ecdf ( data2 )
     return Ostap.Math.savage ( ecdf1 , ecdf2 )
 
 # =============================================================================
@@ -387,8 +345,9 @@ class TwoSamplesTest ( object ) :
                    data2 ) :
         
         ## transform input data 
-        ecdf1, ecdf2 = prepare_data ( data1 , data2 )
-        
+        ecdf1 = data2ecdf ( data1 )
+        ecdf2 = data2ecdf ( data2 )
+            
         self.__ecdf1 = ecdf1
         self.__ecdf2 = ecdf2
         self.__ecdf  = ecdf1.merge ( ecdf2 ) 
@@ -586,8 +545,9 @@ class TwoSamplesToys(TwoSamplesTest):
             data2 = data [ n1 :    ] 
             
             ## transform input data 
-            ecdf1, ecdf2 = prepare_data ( data1 , data2 ) 
-            
+            ecdf1 = data2ecdf ( data1 )
+            ecdf2 = data2ecdf ( data2 )
+                
             ks = kolmogorov_smirnov ( ecdf1 , ecdf2 )
             k  = kuiper             ( ecdf1 , ecdf2 )
             ad = anderson_darling   ( ecdf1 , ecdf2 )            

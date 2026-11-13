@@ -121,12 +121,14 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
 from   ostap.utils.core       import typename
+from   ostap.stats.counters   import ECDF, WECDF 
+from   ostap.math.math_base   import data2vct 
 import ostap.logger.symbols   as     S 
 import numpy
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger, logAttention 
+from ostap.logger.logger import getLogger
 logger = getLogger ( 'ostap.stats.utils' )
 # ============================================================================
 symbol_name  = S.bolditalic 
@@ -609,6 +611,33 @@ def truncated_mean ( x         , *    ,
         
     return numpy.mean ( trimmed, axis = axis )
     
+
+# ============================================================================
+## typer for empirical cumulative distribution functions
+ECDF_types = ECDF , WECDF
+# ============================================================================
+## Convert data/weight pair into (W)ECDF
+#  @see Ostap::Math::ECDF
+#  @see Ostap::Math::WECDF
+def data2ecdf ( data , weight = None ) :
+    """ Convert data/weight pair into (W)ECDF
+    - see Ostap::Math::ECDF
+    - see Ostap::Math::WECDF
+    """
+    ##
+    if isinstance ( data , ECDF_types ) : return data
+    ## 
+    ## convert to numpy 
+    data      = numpy.asarray   ( data   , dtype = numpy.float64 ).ravel()
+    if 1 != num_features        ( data   )          : raise TypeError  ( "Invalid `data` type!"                   )
+    ##
+    if       weight_trivial     ( weight )          : return ECDF ( data2vct ( data ) )
+    elif not valid_weight       ( weight )          : raise ValueError ( "Invalid `weight` type/value!"           )
+    elif not compatible_weights ( data   , weight ) : raise TypeError  ( "Incompatible `data/weight` structures!" )
+    ##
+    weight = numpy.asarray ( weight , dtype = numpy.float64 ).ravel() 
+    return WECDF ( data2vct ( data ) , data2vct ( weight ) ) 
+
 # ============================================================================
 if '__main__' == __name__ :
         

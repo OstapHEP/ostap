@@ -3971,7 +3971,7 @@ def add_new_buffer ( dataset , buffer , * , name , title = '' , report = False ,
         if   1 != len ( buffer.shape ) : raise TypeError ( "Invalid `buffer` shape: %s" % str ( buffer.shape ) )
         elif buffer.dtype.names        : raise TypeError ( "Invalid `buffer` dtype: %s" % str ( buffer.dtype ) )
         
-    if not isinstance ( buffer , numpy.ndarray) or not buffer.flags [ 'C_CONTIGUOUS' ] :
+    if not isinstance ( buffer , numpy.ndarray) or not buffer.flags.c_contiguous : 
         buffer = numpy.ascontiguousarray ( buffer , dtype = numpy.float64 )
 
     dsize = len ( dataset )

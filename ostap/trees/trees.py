@@ -22,36 +22,30 @@ __all__     = (
     'array_buffer_types' , ## allowed array buffer types 
   ) 
 # =============================================================================
-from   ostap.core.ostap_types    import ( integer_types      , long_type          ,
+from   ostap.core.ostap_types    import ( integer_types      , 
                                           string_types       , sequence_types     ,
-                                          sized_types        , num_types          ,
-                                          dictlike_types     , list_types         ,
+                                          num_types          ,
+                                          dictlike_types     , 
                                           numpy_buffer_types , array_buffer_types )
 from   ostap.core.core_base      import ( std , Ostap   ,
                                           valid_pointer , 
                                           rootException , rootError ) 
-from   ostap.core.core           import ( VE  , WSE ,
-                                          hID , fID ,  
-                                          strings   ) 
+from   ostap.core.core           import hID , fID , strings    
 from   ostap.logger.utils        import print_args  
 from   ostap.math.reduce         import root_factory
 from   ostap.histos.histos       import histo_book2, histo_keys
 from   ostap.stats.statvars      import data_decorate , data_range , good_for_frame , good_for_parallel 
 from   ostap.trees.cuts          import vars_and_cuts , order_warning
 from   ostap.utils.core          import typename 
-from   ostap.utils.basic         import isatty , terminal_size , NoContext 
+from   ostap.utils.basic         import isatty , NoContext 
 from   ostap.utils.strings       import ( split_string           ,
-                                          split_string_respect   ,
                                           var_separators         )
 from   ostap.utils.cidict        import cidict, cidict_fun
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.progress_conf import progress_conf
-from   ostap.utils.utils         import chunked
 from   ostap.math.math_base      import np2raw, FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
 from   ostap.trees.utils         import Tree, Chain
-from   ostap.logger.symbols      import ( sub_mean , sub_rms ,
-                                          sub_min  , sub_max ,
-                                          tree     as tree_symbol   ,
+from   ostap.logger.symbols      import ( tree     as tree_symbol   ,
                                           branch   as branch_symbol ,
                                           tag      as type_symbol   , 
                                           leaf     as leaf_symbol   ,
@@ -60,7 +54,6 @@ from   ostap.logger.symbols      import ( sub_mean , sub_rms ,
 
 from   ostap.logger.pretty       import pretty_row 
 from   ostap.io.root_file        import ROOTCWD 
-from   ostap.utils.cleanup       import CleanUp
 #
 import ostap.trees.trees_base 
 import ostap.trees.treereduce 
@@ -2160,7 +2153,7 @@ def add_new_buffer ( tree , buffer , * , name = '' , title = '' , **kwargs ) :
         ## convert the structured array into the dictionary of arrays 
         newbuff = {}
         for key in buffer.dtype.names :
-            newbuff [ key ] = buffer [ key ]
+            newbuff [ key ] = numpy.ascontiguousarray ( buffer [ key ] ) 
         keep.append ( newbuff )
         ##
         return add_new_buffer ( tree , newbuff , name = name , **kwargs ) 
@@ -2172,7 +2165,7 @@ def add_new_buffer ( tree , buffer , * , name = '' , title = '' , **kwargs ) :
         newbuff = {}
         for key, v in buffer.items() :
             assert not key in tree , "The branch/leaf `%s' already exists!" % key
-            newbuff [ key ] = numpy.asarray ( v , dtype = float )
+            newbuff [ key ] = numpy.ascontiguousarray ( v )
         keep.append ( newbuff )
 
         ## Ostap's buffers
@@ -2191,25 +2184,26 @@ def add_new_buffer ( tree , buffer , * , name = '' , title = '' , **kwargs ) :
         
         ## recast 
         if   buffer.dtype == numpy.float16 :
-            buffer = numpy.asarray ( buffer , dtype = numpy.float32 )
+            buffer = numpy.ascontiguousarray ( buffer , dtype = numpy.float32 )
+            keep.append ( buffer     )
             return add_new_buffer ( tree , buffer , name = name , **kwargs ) 
 
+        buffer = numpy.ascontiguousarray ( buffer )
         buflen = len ( buffer ) 
         ## convert ndarray into raw C++ buffer 
         raw_buffer, _ = np2raw ( buffer ) 
 
-        if   buffer.dtype in ( numpy.int8  , numpy.byte  ) :
-            the_buffer = Ostap.Utils.schar_buffer ( raw_buffer , buflen ) ## SCHAR_MAKE 
-        elif buffer.dtype in ( numpy.uint8 , numpy.ubyte ) :
-            the_buffer = Ostap.Utils.uchar_buffer ( raw_buffer , buflen ) ## CCHAR_MAKE 
-        else :
-            the_buffer = Ostap.Utils.make_buffer  ( raw_buffer , buflen  )
+        if   buffer.dtype in ( numpy.int8  , numpy.byte  ) : the_buffer = Ostap.Utils.schar_buffer ( raw_buffer , buflen ) ## SCHAR_MAKE 
+        elif buffer.dtype in ( numpy.uint8 , numpy.ubyte ) : the_buffer = Ostap.Utils.uchar_buffer ( raw_buffer , buflen ) ## CCHAR_MAKE 
+        else                                               : the_buffer = Ostap.Utils.make_buffer  ( raw_buffer , buflen )
                         
+        keep.append ( buffer     )
         keep.append ( raw_buffer ) 
         value      = kwargs.pop ( 'value' , 0 )
         if value : the_buffer.setValue ( value )
             
     elif name and isinstance ( buffer , array.array ) and buffer.typecode in array_buffer_types :
+        
         ## array.array of valid types
 
         if   'b' == buffer.typecode : the_buffer = Ostap.Utils.schar_buffer ( buffer , len ( buffer ) )
@@ -2222,8 +2216,8 @@ def add_new_buffer ( tree , buffer , * , name = '' , title = '' , **kwargs ) :
     elif name and numpy and isinstance ( buffer ,  ( bytes , bytearray , memoryview ) ) :
 
         ## construct numpyarray from raw buffer 
-        the_array = numpy.frombuffer ( buffer , dtype = numpy.byte )
-        
+        the_array = numpy.frombuffer        ( buffer , dtype = numpy.byte )
+        the_array = numpy.ascontiguousarray ( the_array ) 
         keep.append ( the_array ) 
         return add_new_buffer ( tree , the_array , name = name , **kwargs )
 

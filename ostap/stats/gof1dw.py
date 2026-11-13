@@ -479,7 +479,7 @@ class MannWhitney(ClassicalGoF) :
 # =============================================================================
 ## @class Savage
 #  Two (*NON*-weighted) sample test using the Savage score 
-class MannWhitney(ClassicalGoF) :
+class Savage(ClassicalGoF) :
     """ Two (*NON*-weighted) sample test using Savage distance """
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using the Mann-Whitney distance

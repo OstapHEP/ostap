@@ -440,12 +440,12 @@ else
     return 119 2>/dev/null || exit 119
 fi 
 
-if [ -f "${OSTAP_BUILD}/build.ninja" ]; then
-    if command -v ninja >/dev/null 2>&1; then
-        printf "%s Clean  OSTAP_BUILD   build remnants   %s\n" "${prefix}" "${OSTAP_BUILD}"
-        ( cd "${OSTAP_BUILD}" && ninja clean )
-    fi
-fi
+## if [ -f "${OSTAP_BUILD}/build.ninja" ]; then
+##    if command -v ninja >/dev/null 2>&1; then
+##        printf "%s Clean  OSTAP_BUILD   build remnants   %s\n" "${prefix}" "${OSTAP_BUILD}"
+##        ( cd "${OSTAP_BUILD}" && ninja clean )
+##    fi
+##fi
 
 # ===================================================================================
 printf "%s Remove OSTAP_BUILD   remnants&garbage %s\n" "${prefix}" "${OSTAP_BUILD}"

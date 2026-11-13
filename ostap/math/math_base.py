@@ -1078,22 +1078,24 @@ def all_entries ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
 #  raw , size = np2raw ( data ) 
 #  @endcoder 
 def np2raw ( data ) :
-    """ Converrt numpy array into raw C++ buffer
+    """ Convert numpy array into raw C++ buffer
     >>> data = ...
     >>> raw , size = np2raw ( data ) 
     """
     assert numpy and isinstance ( data , numpy.ndarray ) , \
         "np2raw: argument must be `numpy.ndarray`"
     
-    size   = len ( data ) 
+    if not data.flags.c_contiguous :
+        logger.warning ( "np2raw: data is not C-CONTIGUOUS!")
+        
+    size   = data.size 
     dtype  = data.dtype
     
-    ## ctype  = numpy.ctypeslib._ctype_from_dtype ( dtype  )
     ctype  = numpy.ctypeslib.as_ctypes_type ( dtype  )
     
     buffer = data.ctypes.data_as ( ctypes.POINTER ( ctype ) )
     # 
-    return buffer , size      
+    return buffer , size       
 
 # =============================================================================
 ## Trvial weight ? 
