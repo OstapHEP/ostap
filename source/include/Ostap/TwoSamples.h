@@ -241,6 +241,160 @@ namespace Ostap
     // ========================================================================
     double savage ( const ECDF& e1 , const ECDF& e2 ) ; 
 
+// ========================================================================
+    /** Ansari-Bradley two-sample scale test statistic.
+     *
+     *  Rank-based nonparametric test for equality of scale (dispersion) parameters
+     *  assuming equal medians. Assigns smaller ranks to extreme observations and
+     *  larger ranks to central observations. Returns the absolute standardized
+     *  deviation from the null expectation to provide a two-sided test statistic.
+     *
+     *  @param e1 First ECDF sample
+     *  @param e2 Second ECDF sample
+     *  @return Standardized Ansari-Bradley statistic |Z|
+     *
+     *  @see https://en.wikipedia.org/wiki/Ansari%E2%80%93Bradley_test
+     *  @note Ansari, A.R., Bradley, R.A. (1960). "Rank-sum tests for dispersions".
+     *        The Annals of Mathematical Statistics, 31(4): 1174–1189.
+     */
+    double ansari_bradley ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double ansari_bradley ( const WECDF& e1 , const WECDF& e2 ) ;
+    double ansari_bradley ( const ECDF&  e1 , const WECDF& e2 ) ; 
+    double ansari_bradley ( const WECDF& e1 , const ECDF&  e2 ) ;
+
+    // ========================================================================
+    /** Siegel-Tukey two-sample scale test statistic.
+     *
+     *  Rank-based nonparametric test for differences in scale/variability.
+     *  Assigns ranks in a serpentine pattern from the extremes toward the center
+     *  (1, 4, 5, 8, 9... from left; 2, 3, 6, 7, 10... from right). Returns the
+     *  absolute standardized deviation from the null expectation.
+     *
+     *  @param e1 First ECDF sample
+     *  @param e2 Second ECDF sample
+     *  @return Standardized Siegel-Tukey statistic |Z|
+     *
+     *  @see https://en.wikipedia.org/wiki/Siegel%E2%80%93Tukey_test
+     *  @note Siegel, S., Tukey, J.W. (1960). "A nonparametric sum of ranks procedure
+     *        for relative spread in unpaired samples". JASA, 55(291): 429–445.
+     */
+    double siegel_tukey   ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double siegel_tukey   ( const WECDF& e1 , const WECDF& e2 ) ;
+    double siegel_tukey   ( const ECDF&  e1 , const WECDF& e2 ) ;
+    double siegel_tukey   ( const WECDF& e1 , const ECDF&  e2 ) ;
+
+    // ========================================================================
+    /** Mood's two-sample scale test statistic.
+     *
+     *  Rank-based nonparametric test for equality of scale parameters based on
+     *  squared deviations of ordinary ranks from the median rank (N+1)/2.
+     *  Returns the absolute standardized deviation from the null expectation.
+     *
+     *  @param e1 First ECDF sample
+     *  @param e2 Second ECDF sample
+     *  @return Standardized Mood statistic |Z|
+     *
+     *  @note Mood, A.M. (1954). "On the asymptotic efficiency of certain nonparametric
+     *        two-sample tests". The Annals of Mathematical Statistics, 25(3): 514–522.
+     */
+    double mood           ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double mood           ( const WECDF& e1 , const WECDF& e2 ) ;
+    double mood           ( const ECDF&  e1 , const WECDF& e2 ) ;
+    double mood           ( const WECDF& e1 , const ECDF&  e2 ) ;
+
+    // ========================================================================
+    /** Van der Waerden (normal scores) two-sample location test statistic.
+     *
+     *  Nonparametric rank-based test that converts midranks \f$ r_i \f$ into 
+     *  standard normal quantiles (probit transformation) using Ostap::Math::probit:
+     *  \f[ a(r_i) = \Phi^{-1}\left( \frac{r_i}{N + 1} \right) \f]
+     *  where \f$ \Phi^{-1} \f$ is the inverse standard normal CDF.
+     *
+     *  Achieves the same asymptotic relative efficiency as the parametric Student's
+     *  t-test under normality while remaining strictly distribution-free. Returns 
+     *  the standardized absolute deviation from the null expectation (asymptotic 
+     *  \f$ |Z| \f$-score) with exact finite-sample variance accounting for ties.
+     *
+     *  @param e1 First ECDF sample
+     *  @param e2 Second ECDF sample
+     *  @return Standardized two-sided Van der Waerden statistic \f$ |Z| \f$
+     *
+     *  @see https://en.wikipedia.org/wiki/Van_der_Waerden_test
+     *  @note Van der Waerden, B.L. (1952). "Order tests for the two-sample problem 
+     *        and their power". Indagationes Mathematicae, 14: 453–458.
+     */
+    double van_der_waerden ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double van_der_waerden ( const WECDF& e1 , const WECDF& e2 ) ;
+    double van_der_waerden ( const ECDF&  e1 , const WECDF& e2 ) ;
+    double van_der_waerden ( const WECDF& e1 , const WECDF& e2 ) ;
+
+
+    // ========================================================================
+    /** Brunner-Munzel two-sample rank test statistic.
+     *
+     *  Nonparametric test for stochastic equality (generalized Mann-Whitney test)
+     *  that remains robust under unequal variances and heterogeneous distributions 
+     *  (Behrens-Fisher problem for ranks). 
+     *  Supports both unweighted (\f$ ECDF \f$) and weighted (\f$ WECDF \f$) data containers.
+     *
+     *  @param e1 First sample (ECDF or WECDF)
+     *  @param e2 Second sample (ECDF or WECDF)
+     *  @return Standardized two-sided Brunner-Munzel test statistic (|Z|-score)
+     *
+     *  @see https://en.wikipedia.org/wiki/Brunner%E2%80%93Munzel_test
+     *  @note Brunner, E., Munzel, U. (2000). "The nonparametric Behrens-Fisher problem: 
+     *        asymptotic theory and a small-sample approximation". 
+     *        Biometrical Journal, 42(1): 17–25.
+     */
+    double brunner_munzel ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double brunner_munzel ( const WECDF& e1 , const WECDF& e2 ) ;
+    double brunner_munzel ( const ECDF&  e1 , const WECDF& e2 ) ;
+    double brunner_munzel ( const WECDF& e1 , const ECDF&  e2 ) ;
+
+    // =========================================================================
+    /** @var EPPS_SINGLETON_FREQUENCIES
+     *  Default set of frequencies for the Epps-Singleton Two-Sample Test
+     *  @attention Frequencies are defined in terms of standardized data! 
+     */
+    inline const std::vector<double> EPPS_SINGLETON_FREQUENCIES { 0.2 , 0.5 , 1.1 , 2.5 , 5.0, 10.0 };
+    // ========================================================================
+    /** Epps-Singleton two-sample test statistic.
+     *
+     *  Omnibus nonparametric test based on the empirical characteristic function (ECF) 
+     *  evaluated at specific frequency points. Highly sensitive to differences in 
+     *  distribution shape, skewness, and tails.
+     *  Supports both unweighted (\f$ ECDF \f$) and weighted (\f$ WECDF \f$) data containers.
+     * 
+     *  @attention Frequencies are defined in terms of standardized data! 
+     * 
+     *  @param e1 First sample (ECDF or WECDF)
+     *  @param e2 Second sample (ECDF or WECDF)
+     *  @param freqs Frequencies to be tested
+     *  
+     *  @return Epps-Singleton test statistic value (chi-squared type discrepancy)
+     *
+     *  @see https://en.wikipedia.org/wiki/Epps%E2%80%93Singleton_test
+     *  @note Epps, T.W., Singleton, K.J. (1986). "An omnibus test for the two-sample 
+     *        problem using the empirical characteristic function". 
+     *        Journal of Statistical Computation and Simulation, 26(3-4): 177–203.
+     */
+    double epps_singleton 
+    ( const Ostap::Math::ECDF&   e1    , 
+      const Ostap::Math::ECDF&   e2    ,
+      const std::vector<double>& freqs = EPPS_SINGLETON_FREQUENCIES  ) ;
+    double epps_singleton 
+    ( const Ostap::Math::WECDF&  e1    , 
+      const Ostap::Math::ECDF&   e2    ,
+      const std::vector<double>& freqs = EPPS_SINGLETON_FREQUENCIES  ) ;
+    double epps_singleton 
+    ( const Ostap::Math::ECDF&   e1    , 
+      const Ostap::Math::WECDF&  e2    ,
+      const std::vector<double>& freqs = EPPS_SINGLETON_FREQUENCIES  ) ;
+    double epps_singleton 
+    ( const Ostap::Math::WECDF&  e1    , 
+      const Ostap::Math::WECDF&  e2    ,
+      const std::vector<double>& freqs = EPPS_SINGLETON_FREQUENCIES  ) ;
+
     // ========================================================================
   } //                                        The end  of namespace Ostap::Math
   // ==========================================================================

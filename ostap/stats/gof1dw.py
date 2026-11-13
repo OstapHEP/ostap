@@ -27,6 +27,13 @@ __all__     = (
     'Wasserstein2'       , ## Wasserstein-2      GoF/Two-Samples estimator
     'Rosenblatt'         , ## Rosenblatt         GoF/Two-Samples estimator
     'Watson'             , ## Watson-U2          GoF/Two-Samples estimator
+    ## Rank-based
+    'AnsariBradley'      , ## Ansari-Bradley     GoF/Two-Samples estimator
+    'SiegelTukey'        , ## Siegel-Tukey       GoF/Two-Samples estimator
+    'Mood'               , ## Mood               GoF/Two-Samples estimator
+    'VanDerWaerden'      , ## Van der Waerden    GoF/Two-Samples estimator 
+    'BrunnerMunzel'      , ## Brunner-Munzel     GoF/Two-Samples estimator 
+    'EppsSingleton'      , ## Epps-singleton     GoF/Two-Samples estimator 
     ## Rank-based, *NON* weighted
     'MannWhitney'        , ## Mann-Whitney       GoF/Two-Samples estimator
     'Savage'             , ## Savage             GoF/Two-Samples estimator
@@ -482,7 +489,7 @@ class MannWhitney(ClassicalGoF) :
 class Savage(ClassicalGoF) :
     """ Two (*NON*-weighted) sample test using Savage distance """
     def __init__ ( self , **kwargs ) :
-        """ Two (weighted) sample test using the Mann-Whitney distance
+        """ Two (weighted) sample test using Savage distance
         """
         super () .__init__ (  estimator = TS2.savage , **kwargs )
         
@@ -510,7 +517,195 @@ class Savage(ClassicalGoF) :
         """
         return False 
 
+# =============================================================================
+## @class AnsariBradley
+#  Two-Samples Test using the Savage score 
+class AnsariBradley(ClassicalGoF) :
+    """ Two-Samples Test using Ansari-Bradley distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two-Samples Test using Ansari-Bradley distance
+        """
+        super () .__init__ (  estimator = TS2.ansari_bradley  , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_AB
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_AB
     
+# =============================================================================
+## @class SiegelTukey
+#  Two-Samples Test using the Siegel-Tukey score 
+class SiegelTukey(ClassicalGoF) :
+    """ Two-Samples Test using Siegel-Tukey distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two-Samples Test using Sigel-Tukey distance
+        """
+        super () .__init__ (  estimator = TS2.siegel_tukey  , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_ST
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_ST
+    
+# =============================================================================
+## @class Mood
+#  Two-Samples Test using the Mood score 
+class Mood(ClassicalGoF) :
+    """ Two-Sample Test using Mood distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using Mood distance
+        """
+        super () .__init__ (  estimator = TS2.mood  , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_MD
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_MD
+    
+# =============================================================================
+## @class VanDerWaerden
+#  Two-Samples test using the Van der Waerden score 
+class VanDerWaerden(ClassicalGoF) :
+    """ Two-Samples test using Van der Waerden distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using Van der Waerden distance
+        """
+        super () .__init__ (  estimator = TS2.van_der_waerden  , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_VDW
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_VDW
+    
+# =============================================================================
+## @class BrunnerMunzel
+#  Two-Samples test using the Brunner-Munzel score 
+class BrunnerMunzel(ClassicalGoF) :
+    """ Two-Samples test using Brunner-Munzel distance """
+    def __init__ ( self , **kwargs ) :
+        """ Two (weighted) sample test using Brunner-Munzel distance
+        """
+        super () .__init__ (  estimator = TS2.brunner_munzel  , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_BM
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_BM
+    
+# =============================================================================
+## @class Epps-Singleton
+#  Two-Samples test using the Epps-Singleton score 
+class EppsSingleton(ClassicalGoF) :
+    """ Two-Samples test using Epps-singleton distance """
+    def __init__ ( self , * , frequencies = TS2.epps_singleton_frequencies () , **kwargs ) :
+        """ Two (weighted) sample test using Epps-Singleton distance
+        """
+        self.__frequencies = tuple ( sorted ( set ( frequencies ) ) )  
+        super () .__init__ ( estimator   = TS2.epps_singleton ,
+                             frequencies = self.frequencies   , **kwargs )
+        
+    # =========================================================================
+    ## Symbol/tag associated with this estimator 
+    @classprop
+    def symbol ( self ) :
+        """`symbol`: Symbol/tag associated with this estimator
+        """
+        return U.symbol_ES
+                
+    # =========================================================================
+    ## Actual method implemented by the estimator 
+    @property 
+    def method ( self ) :
+        """`method`: Actual method implemented by the estimator
+        """
+        return U.method_ES
+ 
+    @property
+    def frequencies ( self  ) :
+        return self.__frequencies
+    
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Fit
+    #  @code
+    #  data1   = ...
+    #  data2   = ...
+    #  weight1 = ...
+    #  weight2 = ...
+    #  tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
+    #  @endcode
+    def tvalue ( self      ,
+                 data1     ,
+                 data2     ,
+                 weight1   = None  ,
+                 weight2   = None  ,
+                 normalize = False ) :
+            """ Calculate T-value for Goodness-of-Fit
+            >>> data1   = ...
+            >>> data2   = ...
+            >>> weight1 = ...
+            >>> weight2 = ...
+            >>>> tvalue  = gof.tvalue ( data1 , data2 , weight1 , weight2 )
+            """
+            return self.estimator ( data1       = data1            ,
+                                    data2       = data2            ,
+                                    weight1     = weight1          ,
+                                    weight2     = weight2          , 
+                                    frequencies = self.frequencies )
 # =============================================================================
 if '__main__' == __name__ :
     

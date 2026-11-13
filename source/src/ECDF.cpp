@@ -437,6 +437,37 @@ double Ostap::Math::ECDF::high_edge () const
     +std::numeric_limits<double>::max () :
     Ostap::Math::high_edge ( xmax () ) ;
 }
+// =============================================================================
+// Get  empiricl characteristic function 
+// ============================================================================
+std::complex<double> Ostap::Math::ECDF::ecf 
+( const double t ) const
+{
+  const auto& s = data () ;
+  if ( s.empty () ) { return { 0.0, 0.0 } ; }
+
+  const double n = static_cast<double> ( s.size () ) ;
+  const double mu = this -> mean () ; 
+
+  double cos_sum = 0.0 ;
+  double sin_sum = 0.0 ;
+
+  for ( const auto& val : s )
+  {
+    const double angle = t * ( val - mu ) ;
+    cos_sum += std::cos ( angle ) ;
+    sin_sum += std::sin ( angle ) ;
+  }
+
+  const double inv_n = 1.0 / n ;
+  const std::complex<double> centered_ecf ( cos_sum * inv_n, sin_sum * inv_n ) ;
+
+  // recostruct the phase : e^{i * t * mu}
+  const double phase = t * mu ;
+  const std::complex<double> phase_factor ( std::cos ( phase ), std::sin ( phase ) ) ;
+  //
+  return centered_ecf * phase_factor ;
+}
 // ============================================================================
 // For weighted data 
 // ============================================================================
@@ -1030,8 +1061,38 @@ double Ostap::Math::WECDF::high_edge () const
     +std::numeric_limits<double>::max () :
     Ostap::Math::high_edge ( xmax () ) ;
 }
-  
+// ============================================================================
+// Get empirical characteristic function
+// ============================================================================
+std::complex<double> Ostap::Math::WECDF::ecf ( const double t ) const
+{
+  const auto& s = data () ;
+  if ( s.empty () ) { return { 0.0, 0.0 } ; }
 
+  const double sumw = this->sumw () ;
+  if ( sumw <= 0.0 ) { return { 0.0, 0.0 } ; }
+
+  const double mu = this->mean () ; // 
+
+  double cos_sum = 0.0 ;
+  double sin_sum = 0.0 ;
+
+  for ( const auto& [val, w] : s )
+  {
+    const double angle = t * ( val - mu ) ;
+    cos_sum += w * std::cos ( angle ) ;
+    sin_sum += w * std::sin ( angle ) ;
+  }
+
+  const double inv_sumw = 1.0 / sumw ;
+  const std::complex<double> centered_ecf ( cos_sum * inv_sumw, sin_sum * inv_sumw ) ;
+
+  // reconstruct the phase : e^{i * t * mu}
+  const double phase = t * mu ;
+  const std::complex<double> phase_factor ( std::cos ( phase ), std::sin ( phase ) ) ;
+
+  return centered_ecf * phase_factor ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

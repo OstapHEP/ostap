@@ -61,6 +61,12 @@ __all__     = (
     'symbol_U2'           , ## Symbol for Watson U2 
     'symbol_MW'           , ## Symbol for Mann-Whintey 
     'symbol_S'            , ## Symbol for Savage 
+    'symbol_AB'           , ## Symbol for Ansari-Bradley
+    'symbol_ST'           , ## Symbol for Siegel-Tukey
+    'symbol_MD'           , ## Symbol for Mood
+    'symbol_VDW'          , ## Symbol for Van der Waerden 
+    'symbol_BM'           , ## Symbol for Brunner-Munzel 
+    'symbol_ES'           , ## Symbol for Epps-Singleton
     ##
     'symbol_NLL'          , ## symbol for NLL 
     'symbol_AIC'          , ## symbol for Akainke IC 
@@ -104,6 +110,13 @@ __all__     = (
     'method_R'            , ##                   Rosenblatt method 
     'method_U2'           , ##                    Watson U2 method 
     'method_MW'           , ##                Mann-Whitney  method 
+    'method_S'            , ##                       Savage method 
+    'method_AB'           , ##               Ansari-Bradley method 
+    'method_ST'           , ##                 Siegel-Tukey method 
+    'method_MD'           , ##                         Mood method 
+    'method_VDW'          , ##              Van der Waerden method
+    'method_BM'           , ##               Brunner-Munzel method
+    'method_ES'           , ##               Epps-Singleton method
     ##
     'method_NLL'          , ## Negative log-likelihood 
     'method_AIC'          , ## Akaike IC
@@ -166,6 +179,12 @@ symbol_R     = symbol_name ( 'R')
 symbol_U2    = symbol_name ( f'U{S.sup_two}' if S.show else 'U2'  )
 symbol_MW    = symbol_name ( 'M-W' )
 symbol_S     = symbol_name ( 'S'   )
+symbol_AB    = symbol_name ( 'A-B' )
+symbol_ST    = symbol_name ( 'S-T' )
+symbol_MD    = symbol_name ( 'Md'  )
+symbol_VDW   = symbol_name ( 'VdW' )
+symbol_BM    = symbol_name ( 'B-M' )
+symbol_ES    = symbol_name ( 'E-S' )
 
 symbol_NLL   = symbol_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'NLL' ) 
 symbol_AIC   = symbol_name ( 'AIC' ) 
@@ -211,6 +230,12 @@ method_R     = method_name ( 'Rosenblatt'                    )
 method_U2    = method_name ( f'Watson U{S.sup_two}'          )
 method_MW    = method_name ( 'Mann-Whitney'                  )
 method_S     = method_name ( 'Savage'                        )
+method_AB    = method_name ( 'Ansari-Bradley'                )
+method_ST    = method_name ( 'Siegel-Tukey'                  )
+method_MD    = method_name ( 'Mood'                          )
+method_VDW   = method_name ( 'Van der Waerden'               )
+method_BM    = method_name ( 'Brunner-Munzel'                )
+method_ES    = method_name ( 'Epps-Singleton'                )
 
 method_NLL   = method_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'Negative Delta Likelihood' ) 
 method_AIC   = method_name ( 'Akaike IC'   )

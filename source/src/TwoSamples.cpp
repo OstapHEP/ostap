@@ -12,6 +12,7 @@
 // ============================================================================
 #include "Ostap/ECDF.h"
 #include "Ostap/TwoSamples.h"
+#include "Ostap/MoreMath.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
 // local 
@@ -523,6 +524,572 @@ double Ostap::Math::savage
 }
 // ===========================================================================
 
+
 // ============================================================================
-//                                                                      The END 
+namespace 
+{
+  // ==========================================================================
+  // Weighted pooled item structure
+  // ==========================================================================
+  struct WeightedRankItem 
+  {
+    double      value    ; ///< Observed value
+    double      weight   ; ///< Associated weight
+    bool        is_first ; ///< True if element belongs to the first sample (e1)
+    std::size_t orig_idx ; ///< Index of the element in the original sample s1 or s2
+  } ;
+
+  // ==========================================================================
+  /** Linear-time O(n1 + n2) merging of two WECDF data containers.
+   */
+  inline std::vector<WeightedRankItem> merge_weighted_ecdfs
+  ( const Ostap::Math::WECDF& ecdf1 ,
+    const Ostap::Math::WECDF& ecdf2 )
+  {
+    const auto& s1 = ecdf1.data () ;
+    const auto& s2 = ecdf2.data () ;
+    const std::size_t n1 = s1.size () ;
+    const std::size_t n2 = s2.size () ;
+
+    std::vector<WeightedRankItem> pooled ;
+    pooled.reserve ( n1 + n2 ) ;
+
+    std::size_t i1 = 0, i2 = 0 ;
+    while ( i1 < n1 && i2 < n2 )
+    {
+      if ( s1 [ i1 ].first <= s2 [ i2 ].first ) 
+      { 
+        pooled.push_back ( { s1 [ i1 ].first, s1 [ i1 ].second, true  } ) ; 
+        ++i1 ; 
+      }
+      else                    
+      { 
+        pooled.push_back ( { s2 [ i2 ].first, s2 [ i2 ].second, false } ) ; 
+        ++i2 ; 
+      }
+    }
+    while ( i1 < n1 ) { pooled.push_back ( { s1 [ i1 ].first, s1 [ i1 ].second, true  } ) ; ++i1 ; }
+    while ( i2 < n2 ) { pooled.push_back ( { s2 [ i2 ].first, s2 [ i2 ].second, false } ) ; ++i2 ; }
+
+    return pooled ;
+  }
+
+  // ==========================================================================
+  /** Compute standardized two-sided weighted rank statistic |W - E[W]| / sqrt(Var(W))
+   */
+  inline double standardize_weighted_rank_stat
+  ( const double W      ,
+    const double sum_a  ,
+    const double sum_a2 ,
+    const double sumw1  ,
+    const double sumw2  )
+  {
+    const double W_tot = sumw1 + sumw2 ;
+    if ( W_tot <= 1.0 ) { return 0.0 ; }
+
+    const double mean_W = ( sumw1 / W_tot ) * sum_a ;
+    const double var_W  = ( sumw1 * sumw2 / ( W_tot * ( W_tot - 1.0 ) ) ) * ( sum_a2 - ( sum_a * sum_a ) / W_tot ) ;
+
+    return ( var_W > 0.0 ) ? std::abs ( W - mean_W ) / std::sqrt ( var_W ) : 0.0 ;
+  }
+
+  // ==========================================================================
+  // 1. Ansari-Bradley computation engine
+  // ==========================================================================
+  double compute_ansari_bradley 
+  ( const Ostap::Math::WECDF& e1 , 
+    const Ostap::Math::WECDF& e2 )
+  {
+    const auto pooled = merge_weighted_ecdfs ( e1 , e2 ) ;
+    const std::size_t N = pooled.size () ;
+    if ( 0 == N ) { return 0.0 ; }
+
+    double total_sumw = 0.0 ;
+    for ( const auto& item : pooled ) { total_sumw += item.weight ; }
+    if ( total_sumw <= 0.0 ) { return 0.0 ; }
+
+    const double half_Wp1 = 0.5 * ( total_sumw + 1.0 ) ;
+    double W = 0.0, sum_a = 0.0, sum_a2 = 0.0 ;
+    double cumulative_w = 0.0 ;
+
+    std::size_t i = 0 ;
+    while ( i < N )
+    {
+      std::size_t j = i + 1 ;
+      while ( j < N && pooled [ j ].value == pooled [ i ].value ) { ++j ; }
+
+      double block_w = 0.0 ;
+      for ( std::size_t k = i ; k < j ; ++k ) { block_w += pooled [ k ].weight ; }
+
+      const double weighted_midrank = cumulative_w + 0.5 * block_w ;
+      cumulative_w += block_w ;
+
+      const double score = half_Wp1 - std::abs ( weighted_midrank - half_Wp1 ) ;
+      sum_a  += block_w * score ;
+      sum_a2 += block_w * ( score * score ) ;
+
+      for ( std::size_t k = i ; k < j ; ++k )
+      {
+        if ( pooled [ k ].is_first ) { W += pooled [ k ].weight * score ; }
+      }
+      i = j ;
+    }
+
+    return standardize_weighted_rank_stat ( W , sum_a , sum_a2 , e1.sumw () , e2.sumw () ) ;
+  }
+
+  // ==========================================================================
+  // 2. Siegel-Tukey computation engine
+  // ==========================================================================
+  double compute_siegel_tukey 
+  ( const Ostap::Math::WECDF& e1 , 
+    const Ostap::Math::WECDF& e2 )
+  {
+    const auto pooled = merge_weighted_ecdfs ( e1 , e2 ) ;
+    const std::size_t N = pooled.size () ;
+    if ( 0 == N ) { return 0.0 ; }
+
+    // Generate serpentine base ranks
+    std::vector<double> st_base ( N , 0.0 ) ;
+    std::size_t left = 0 , right = N - 1 ;
+    double rank_val = 1.0 ;
+    while ( left <= right )
+    {
+      st_base [ left++ ] = rank_val++ ;
+      if ( left > right ) { break ; }
+      st_base [ right-- ] = rank_val++ ;
+      if ( left > right ) { break ; }
+      st_base [ right-- ] = rank_val++ ;
+      if ( left > right ) { break ; }
+      st_base [ left++ ] = rank_val++ ;
+    }
+
+    double W = 0.0, sum_a = 0.0, sum_a2 = 0.0 ;
+    std::size_t i = 0 ;
+    while ( i < N )
+    {
+      std::size_t j = i + 1 ;
+      while ( j < N && pooled [ j ].value == pooled [ i ].value ) { ++j ; }
+
+      double block_w = 0.0 ;
+      double block_score_sum = 0.0 ;
+      for ( std::size_t k = i ; k < j ; ++k ) 
+      { 
+        block_w += pooled [ k ].weight ;
+        block_score_sum += pooled [ k ].weight * st_base [ k ] ;
+      }
+
+      const double avg_score = ( block_w > 0.0 ) ? ( block_score_sum / block_w ) : 0.0 ;
+      sum_a  += block_w * avg_score ;
+      sum_a2 += block_w * ( avg_score * avg_score ) ;
+
+      for ( std::size_t k = i ; k < j ; ++k )
+      {
+        if ( pooled [ k ].is_first ) { W += pooled [ k ].weight * avg_score ; }
+      }
+      i = j ;
+    }
+
+    return standardize_weighted_rank_stat ( W , sum_a , sum_a2 , e1.sumw () , e2.sumw () ) ;
+  }
+
+  // ==========================================================================
+  // 3. Mood's computation engine
+  // ==========================================================================
+  double compute_mood 
+  ( const Ostap::Math::WECDF& e1 , 
+    const Ostap::Math::WECDF& e2 )
+  {
+    const auto pooled = merge_weighted_ecdfs ( e1 , e2 ) ;
+    const std::size_t N = pooled.size () ;
+    if ( 0 == N ) { return 0.0 ; }
+
+    double total_sumw = 0.0 ;
+    for ( const auto& item : pooled ) { total_sumw += item.weight ; }
+    if ( total_sumw <= 0.0 ) { return 0.0 ; }
+
+    const double mid = 0.5 * ( total_sumw + 1.0 ) ;
+    double W = 0.0, sum_a = 0.0, sum_a2 = 0.0 ;
+    double cumulative_w = 0.0 ;
+
+    std::size_t i = 0 ;
+    while ( i < N )
+    {
+      std::size_t j = i + 1 ;
+      while ( j < N && pooled [ j ].value == pooled [ i ].value ) { ++j ; }
+
+      double block_w = 0.0 ;
+      for ( std::size_t k = i ; k < j ; ++k ) { block_w += pooled [ k ].weight ; }
+
+      const double weighted_midrank = cumulative_w + 0.5 * block_w ;
+      cumulative_w += block_w ;
+
+      const double diff  = weighted_midrank - mid ;
+      const double score = diff * diff ;
+
+      sum_a  += block_w * score ;
+      sum_a2 += block_w * ( score * score ) ;
+
+      for ( std::size_t k = i ; k < j ; ++k )
+      {
+        if ( pooled [ k ].is_first ) { W += pooled [ k ].weight * score ; }
+      }
+      i = j ;
+    }
+
+    return standardize_weighted_rank_stat ( W , sum_a , sum_a2 , e1.sumw () , e2.sumw () ) ;
+  }
+
+  // ==========================================================================
+  // 4. Van der Waerden computation engine
+  // ==========================================================================
+  double compute_van_der_waerden 
+  ( const Ostap::Math::WECDF& e1 ,
+    const Ostap::Math::WECDF& e2 )
+  {
+    const auto pooled = merge_weighted_ecdfs ( e1 , e2 ) ;
+    const std::size_t N = pooled.size () ;
+    if ( 0 == N ) { return 0.0 ; }
+
+    double total_sumw = 0.0 ;
+    for ( const auto& item : pooled ) { total_sumw += item.weight ; }
+    if ( total_sumw <= 0.0 ) { return 0.0 ; }
+
+    const double dWp1 = total_sumw + 1.0 ;
+    double W = 0.0, sum_a = 0.0, sum_a2 = 0.0 ;
+    double cumulative_w = 0.0 ;
+
+    std::size_t i = 0 ;
+    while ( i < N )
+    {
+      std::size_t j = i + 1 ;
+      while ( j < N && pooled [ j ].value == pooled [ i ].value ) { ++j ; }
+
+      double block_w = 0.0 ;
+      for ( std::size_t k = i ; k < j ; ++k ) { block_w += pooled [ k ].weight ; }
+
+      const double weighted_midrank = cumulative_w + 0.5 * block_w ;
+      cumulative_w += block_w ;
+
+      const double p     = weighted_midrank / dWp1 ;
+      const double score = ( p > 0.0 && p < 1.0 ) ? Ostap::Math::probit ( p ) : 0.0 ; // Using Ostap::Math::probit[cite: 2]
+
+      sum_a  += block_w * score ;
+      sum_a2 += block_w * ( score * score ) ;
+
+      for ( std::size_t k = i ; k < j ; ++k )
+      {
+        if ( pooled [ k ].is_first ) { W += pooled [ k ].weight * score ; }
+      }
+      i = j ;
+    }
+
+    return standardize_weighted_rank_stat ( W , sum_a , sum_a2 , e1.sumw () , e2.sumw () ) ;
+  }
+
+  // ==========================================================================
+  // 5. Brunner-Munzel computation engine
+  // ==========================================================================
+  double compute_brunner_munzel
+   ( const Ostap::Math::WECDF& e1 , 
+     const Ostap::Math::WECDF& e2 )
+  {
+    const auto& s1 = e1.data () ;
+    const auto& s2 = e2.data () ;
+    const std::size_t n1 = s1.size () ;
+    const std::size_t n2 = s2.size () ;
+    if ( 0 == n1 || 0 == n2 ) { return 0.0 ; }
+
+    const double sumw1 = e1.sumw () ;
+    const double sumw2 = e2.sumw () ;
+    if ( sumw1 <= 0.0 || sumw2 <= 0.0 ) { return 0.0 ; }
+
+    // 1. Merge weighted samples in O(N1 + N2) time with original index tracking
+    std::vector<WeightedRankItem> pooled ;
+    pooled.reserve ( n1 + n2 ) ;
+
+    std::size_t i1 = 0, i2 = 0 ;
+    while ( i1 < n1 && i2 < n2 )
+    {
+      if ( s1 [ i1 ].first <= s2 [ i2 ].first ) 
+      { 
+        pooled.push_back ( { s1 [ i1 ].first, s1 [ i1 ].second, true,  i1 } ) ; 
+        ++i1 ; 
+      }
+      else                    
+      { 
+        pooled.push_back ( { s2 [ i2 ].first, s2 [ i2 ].second, false, i2 } ) ; 
+        ++i2 ; 
+      }
+    }
+    while ( i1 < n1 ) { pooled.push_back ( { s1 [ i1 ].first, s1 [ i1 ].second, true,  i1 } ) ; ++i1 ; }
+    while ( i2 < n2 ) { pooled.push_back ( { s2 [ i2 ].first, s2 [ i2 ].second, false, i2 } ) ; ++i2 ; }
+
+    const std::size_t N = pooled.size () ;
+
+    // 2. Compute within-group ranks (cumulative weights inside s1 and s2)
+    std::vector<double> r1 ( n1 , 0.0 ) ;
+    {
+      double cumw = 0.0 ;
+      std::size_t i = 0 ;
+      while ( i < n1 )
+      {
+        std::size_t j = i + 1 ;
+        while ( j < n1 && s1 [ j ].first == s1 [ i ].first ) { ++j ; }
+        double block_w = 0.0 ;
+        for ( std::size_t k = i ; k < j ; ++k ) { block_w += s1 [ k ].second ; }
+        double midrank = cumw + 0.5 * block_w ;
+        cumw += block_w ;
+        for ( std::size_t k = i ; k < j ; ++k ) { r1 [ k ] = midrank ; }
+        i = j ;
+      }
+    }
+
+    std::vector<double> r2 ( n2 , 0.0 ) ;
+    {
+      double cumw = 0.0 ;
+      std::size_t i = 0 ;
+      while ( i < n2 )
+      {
+        std::size_t j = i + 1 ;
+        while ( j < n2 && s2 [ j ].first == s2 [ i ].first ) { ++j ; }
+        double block_w = 0.0 ;
+        for ( std::size_t k = i ; k < j ; ++k ) { block_w += s2 [ k ].second ; }
+        double midrank = cumw + 0.5 * block_w ;
+        cumw += block_w ;
+        for ( std::size_t k = i ; k < j ; ++k ) { r2 [ k ] = midrank ; }
+        i = j ;
+      }
+    }
+
+    // 3. Compute pooled midranks for pooled items
+    std::vector<double> pooled_ranks ( N , 0.0 ) ;
+    {
+      double cumw = 0.0 ;
+      std::size_t i = 0 ;
+      while ( i < N )
+      {
+        std::size_t j = i + 1 ;
+        while ( j < N && pooled [ j ].value == pooled [ i ].value ) { ++j ; }
+        double block_w = 0.0 ;
+        for ( std::size_t k = i ; k < j ; ++k ) { block_w += pooled [ k ].weight ; }
+        double midrank = cumw + 0.5 * block_w ;
+        cumw += block_w ;
+        for ( std::size_t k = i ; k < j ; ++k ) { pooled_ranks [ k ] = midrank ; }
+        i = j ;
+      }
+    }
+
+    // 4. Compute mean pooled ranks for sample 1 and sample 2
+    double sum_R1 = 0.0 ;
+    double sum_R2 = 0.0 ;
+    for ( std::size_t k = 0 ; k < N ; ++k )
+    {
+      if ( pooled [ k ].is_first ) { sum_R1 += pooled [ k ].weight * pooled_ranks [ k ] ; }
+      else                         { sum_R2 += pooled [ k ].weight * pooled_ranks [ k ] ; }
+    }
+    const double mean_R1 = sum_R1 / sumw1 ;
+    const double mean_R2 = sum_R2 / sumw2 ;
+
+    // 5. Compute Brunner-Munzel variance components S1^2 and S2^2
+    const double W_tot = sumw1 + sumw2 ;
+    const double half_W_plus_1 = 0.5 * ( W_tot + 1.0 ) ;
+
+    double sum_s1_sq = 0.0 ;
+    double sum_s2_sq = 0.0 ;
+
+    for ( std::size_t k = 0 ; k < N ; ++k )
+    {
+      const double R_i = pooled_ranks [ k ] ;
+      if ( pooled [ k ].is_first )
+      {
+        const double r_i = r1 [ pooled [ k ].orig_idx ] ;
+        const double diff = R_i - r_i - mean_R1 + half_W_plus_1 ;
+        sum_s1_sq += pooled [ k ].weight * ( diff * diff ) ;
+      }
+      else
+      {
+        const double r_i = r2 [ pooled [ k ].orig_idx ] ;
+        const double diff = R_i - r_i - mean_R2 + half_W_plus_1 ;
+        sum_s2_sq += pooled [ k ].weight * ( diff * diff ) ;
+      }
+    }
+
+    const double var1 = ( sumw1 > 1.0 ) ? sum_s1_sq / ( sumw1 - 1.0 ) : 0.0 ;
+    const double var2 = ( sumw2 > 1.0 ) ? sum_s2_sq / ( sumw2 - 1.0 ) : 0.0 ;
+
+    // 6. Final test statistic (Welch-type studentized rank statistic)
+    const double denom = W_tot * ( ( var1 / sumw1 ) + ( var2 / sumw2 ) ) ;
+    if ( denom <= 0.0 ) { return 0.0 ; }
+
+    const double t_bm = ( mean_R2 - mean_R1 ) / std::sqrt ( denom ) ;
+    return std::abs ( t_bm ) ;
+  }
+
+
+  // ==========================================================================
+  /** Internal computational kernel for the Epps-Singleton test statistic.
+   *  Operates strictly on WECDF references to ensure O(1) moment extraction 
+   *  and weighted evaluation.
+   */
+  double compute_epps_singleton
+   ( const Ostap::Math::WECDF&  e1    , 
+     const Ostap::Math::WECDF&  e2    ,
+     const std::vector<double>& freqs )
+  {
+    if ( freqs.empty () ) 
+    { return compute_epps_singleton ( e1 , e2 , Ostap::Math::EPPS_SINGLETON_FREQUENCIES ) ; }
+
+    const double w1 = e1.sumw () ;
+    const double w2 = e2.sumw () ;
+    if ( w1 <= 0.0 || w2 <= 0.0 || freqs.empty () ) { return 0.0 ; }
+
+    // 1. Extract means and RMS in O(1)
+    const double mu1 = e1.mean () ;
+    const double mu2 = e2.mean () ;
+    const double s1  = e1.rms  () ;
+    const double s2  = e2.rms  () ;
+
+    // 2. Compute pooled statistical parameters
+    const double w_tot = w1 + w2 ;
+    const double mu_pool = ( w1 * mu1 + w2 * mu2 ) / w_tot ;
+
+    const double var1 = s1 * s1 ;
+    const double var2 = s2 * s2 ;
+    const double var_pool = ( w1 * ( var1 + mu1 * mu1 ) + w2 * ( var2 + mu2 * mu2 ) ) / w_tot 
+                            - mu_pool * mu_pool ;
+    const double rms_pool = ( var_pool > 0.0 ) ? std::sqrt ( var_pool ) : 1.0 ;
+
+    double stat_sum = 0.0 ;
+    const double inv_rms_pool = 1.0 / rms_pool ;
+    const double w_factor = ( w1 * w2 ) / w_tot ;
+
+    // 3. Loop over standardized evaluation frequencies
+    for ( double t_base : freqs )
+    {
+      // Scale frequency by pooled RMS
+      const double t_eff = t_base * inv_rms_pool ;
+
+      // Evaluate ECF using the optimized .ecf(t) method
+      std::complex<double> ecf1 = e1.ecf ( t_eff ) ;
+      std::complex<double> ecf2 = e2.ecf ( t_eff ) ;
+
+      // Apply phase rotation to account for individual sample means
+      const double phase1 = -t_eff * mu1 ;
+      const std::complex<double> rot1 ( std::cos ( phase1 ), std::sin ( phase1 ) ) ;
+      std::complex<double> std_ecf1 = ecf1 ; // * rot1 ;
+
+      const double phase2 = -t_eff * mu2 ;
+      const std::complex<double> rot2 ( std::cos ( phase2 ), std::sin ( phase2 ) ) ;
+      std::complex<double> std_ecf2 = ecf2 ; // * rot2 ;
+
+      // Calculate squared differences of real and imaginary parts
+      const double diff_re = std_ecf1.real () - std_ecf2.real () ;
+      const double diff_im = std_ecf1.imag () - std_ecf2.imag () ;
+
+      stat_sum += w_factor * ( diff_re * diff_re + diff_im * diff_im ) ;
+    }
+
+    return stat_sum ;
+  }
+
+} // namespace
+
+// ============================================================================
+// Public API implementation via Dispatcher Macros
+// ============================================================================
+namespace Ostap 
+{
+  namespace Math 
+  {
+#define IMPLEMENT_RANK_TEST( NAME , ENGINE )                                  \
+    double NAME ( const ECDF&  e1 , const ECDF&  e2 )                         \
+    { return ENGINE ( WECDF ( e1 ) , WECDF ( e2 ) ) ; }                       \
+    double NAME ( const WECDF& e1 , const WECDF& e2 )                         \
+    { return ENGINE ( e1 , e2 ) ; }                                           \
+    double NAME ( const ECDF&  e1 , const WECDF& e2 )                         \
+    { return ENGINE ( WECDF ( e1 ) , e2 ) ; }                                 \
+    double NAME ( const WECDF& e1 , const ECDF&  e2 )                         \
+    { return ENGINE ( e1 , WECDF ( e2 ) ) ; }
+
+    // 1. Ansari-Bradley scale test
+    IMPLEMENT_RANK_TEST ( ansari_bradley , compute_ansari_bradley )
+
+    // 2. Siegel-Tukey scale test
+    IMPLEMENT_RANK_TEST ( siegel_tukey , compute_siegel_tukey )
+
+    // 3. Mood's scale test
+    IMPLEMENT_RANK_TEST ( mood , compute_mood )
+
+    // 4. Van der Waerden normal scores location test
+    IMPLEMENT_RANK_TEST ( van_der_waerden , compute_van_der_waerden )
+
+    // 5. Brunner-Munzel test
+    IMPLEMENT_RANK_TEST ( brunner_munzel , compute_brunner_munzel )
+
+  
+
+#undef IMPLEMENT_RANK_TEST
+
+
+
+    // 1. Both samples are unweighted (ECDF, ECDF)
+    // ========================================================================
+    double epps_singleton ( const Ostap::Math::ECDF&   e1    , 
+                            const Ostap::Math::ECDF&   e2    ,
+                            const std::vector<double>& freqs ) 
+    {
+      // Convert ECDF to WECDF or wrap them if conversion exists
+      return compute_epps_singleton ( Ostap::Math::WECDF ( e1 ), 
+                                      Ostap::Math::WECDF ( e2 ), 
+                                      freqs ) ;
+    }
+
+    // ========================================================================
+    // 2. First weighted, second unweighted (WECDF, ECDF)
+    // ========================================================================
+    double epps_singleton ( const Ostap::Math::WECDF&  e1    , 
+                            const Ostap::Math::ECDF&   e2    ,
+                            const std::vector<double>& freqs ) 
+    {
+      return compute_epps_singleton ( e1, 
+                                      Ostap::Math::WECDF ( e2 ), 
+                                      freqs ) ;
+    }
+
+    // ========================================================================
+    // 3. First unweighted, second weighted (ECDF, WECDF)
+    // ========================================================================
+    double epps_singleton ( const Ostap::Math::ECDF&   e1    , 
+                            const Ostap::Math::WECDF&  e2    ,
+                            const std::vector<double>& freqs ) 
+    {
+      return compute_epps_singleton ( Ostap::Math::WECDF ( e1 ), 
+                                      e2, 
+                                      freqs ) ;
+    }
+
+    // ========================================================================
+    // 4. Both samples are weighted (WECDF, WECDF) - Native execution
+    // ========================================================================
+    double epps_singleton ( const Ostap::Math::WECDF&  e1    , 
+                            const Ostap::Math::WECDF&  e2    ,
+                            const std::vector<double>& freqs ) 
+    {
+      return compute_epps_singleton ( e1, e2, freqs ) ;
+    }
+
+    // ========================================================================
+  } // end of namespace Ostap::Math
+  // ==========================================================================
+} // end of namespace Ostap
+// ============================================================================
+
+
+
+
+
+
+
+//                                                                      The END  
 // ============================================================================

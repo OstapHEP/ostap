@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <numeric>
 #include <vector>
+#include <complex>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -215,9 +216,10 @@ namespace Ostap
       /// complementary?
       inline bool            complementary () const { return m_complementary ; }
       /// minimal x-value
-      inline double          xmin          () const { return m_counter.min () ; } 
+      inline double          xmin          () const { return m_counter.min  () ; } 
       /// maximal x-value
-      inline double          xmax          () const { return m_counter.max () ; } 
+      inline double          xmax          () const { return m_counter.max  () ; } 
+      
       // ======================================================================
       /// get the abscissa value with the given index 
       inline double operator[] ( const unsigned int index ) const
@@ -386,7 +388,13 @@ namespace Ostap
     public:
       //=======================================================================
       /// get simple statistics 
-      const Ostap::StatEntity& counter() const { return m_counter ; }
+      const Ostap::StatEntity& counter () const { return m_counter ; }
+      /// mean x 
+      inline double          mean      () const { return m_counter.mean     () ; }
+      /// rms  x 
+      inline double          rms       () const { return m_counter.rms      () ; }
+      /// variance  x 
+      inline double          variance  () const { return m_counter.variance () ; }
       // ======================================================================
       /** statistics (as statistics)
        * @param stat (UPDATE) input statistic object
@@ -429,10 +437,15 @@ namespace Ostap
       /// swap two objects 
       void swap  ( ECDF& right ) ;
       // ======================================================================
+    public:  // evaluate empitical characteristic function
+      // ======================================================================
+      /// evaluate empirical characteristic function
+      std::complex<double> ecf  ( const double t ) const ;  
+      // ======================================================================
     private :
       // ======================================================================
       /// Remove elments <code>!std::isfinite</code>
-      ECDF& cleanup () ; // Remove elments <code>!std::isfinite</code>
+      ECDF& cleanup () ; // Remove elements <code>!std::isfinite</code>
       // ======================================================================
     private:
       // ======================================================================
@@ -708,7 +721,13 @@ namespace Ostap
    public:
       //=======================================================================
       /// statistics (as Counter)
-      const Ostap::WStatEntity& counter() const { return m_counter ; } 
+      const Ostap::WStatEntity& counter  () const { return m_counter ; } 
+      /// mean x 
+      inline double             mean     () const { return m_counter.mean     () ; }
+      /// rms  x 
+      inline double             rms      () const { return m_counter.rms      () ; }
+      /// variance  x 
+      inline double             variance () const { return m_counter.variance () ; }
       /** statistics (as statistics)
        * @param stat (UPDATE) input statistic object
        * @return updated statistics object
@@ -796,7 +815,12 @@ namespace Ostap
       // ======================================================================
       /// swap two objects 
       void swap   ( WECDF& right ) ;
-    // ======================================================================
+      // ======================================================================
+     public:  // evaluate empitical characteristic function
+      // ======================================================================
+      /// evaluate empirical characteristic function
+      std::complex<double> ecf  ( const double t ) const ;  
+      // ======================================================================
     public:
       //=======================================================================
       /** scale all weights by a factor s
