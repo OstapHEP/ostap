@@ -31,7 +31,10 @@ from   ostap.logger.colorized   import markup
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
 from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, combine_pvalues, combine_methods 
-from   ostap.stats.utils        import full_header, t_header
+from   ostap.stats.utils        import ( full_header   , 
+                                         t_header      , 
+                                         format_pvalue , 
+                                         format_nsigma )
 from   ostap.fitting.simfit     import SimFit 
 from   ostap.stats.gof          import AGoF
 from   ostap.stats.gof1d        import ( GoF1D , vct_clip      ,
@@ -673,9 +676,9 @@ class GoFSimFit1DToys(GoFSimFit1D) :
         vmn = vmin  / scale
         vmx = vmax  / scale
         
-        pvalue = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
-        sigma  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( nsigma ) < 1000 else S.infinity_pos ) 
-
+        pvalue = format_pvalue ( pvalue )
+        nsigma = format_nsigma ( nsigma )
+       
         return ( what     ,
                  sample   ,
                  fmtv     % vs ,
@@ -685,7 +688,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                  fmtv     % vmx ,
                  ( '[%s]' % format_pow10 ( expo ) )  if expo else '' ,                  
                  pvalue   ,
-                 sigma    )
+                 nsigma   )
     
     # =========================================================================
     ## Make a summary table
@@ -722,14 +725,14 @@ class GoFSimFit1DToys(GoFSimFit1D) :
             ## get the binomial efficiency 
             pvalue = cnt.efficiency
 
-            pv     = clip_pvalue ( pvalue , 0.5 )
+            pv     = clip_pvalue  ( pvalue , 0.5 )
             nsigma = significance ( pv ) ## convert  it to significace
             
-            pvalue = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
-            sigma  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( nsigma ) < 1000 else S.infinity_pos ) 
-
+            pvalue = format_pvalue ( pvalue )
+            nsigma = format_nsigma ( nsigma )
+           
             label = Labels.get( e , e ) 
-            row   = label , markup ( '**Combined**' ) , '' , '' , '' , '' , ''  , ''  , pvalue , sigma 
+            row   = label , markup ( '**Combined**' ) , '' , '' , '' , '' , ''  , ''  , pvalue , nsigma 
             rows.append ( row ) 
 
         for label , pvs in to_combine.items () :
@@ -740,27 +743,27 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                 combined = combine_pvalues ( clipped , method = method )
                 
                 pvalue   = combined 
-                pv       = clip_pvalue ( pvalue , 0.5 )
+                pv       = clip_pvalue  ( pvalue , 0.5 )
+                nsigma   = significance ( pv ) ## convert  it to significace 
+                 
+                pvalue   = format_pvalue ( pvalue )
+                nsigma   = format_nsigma ( nsigma )
                 
-                nsigma  = significance ( pv ) ## convert  it to significace            
-                pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
-                sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( nsigma ) < 1000 else S.infinity_pos ) 
-
                 mm      = method.lower().replace(' ','').replace ( '_' , ' ' ).title().replace ( ' ' , '-' )
                 mm      = markup ( "**%s**" % mm ) 
-                row     = label , mm  , '' , '' , '' , '' , '' , ''  , pvalue , sigma 
+                row     = label , mm  , '' , '' , '' , '' , '' , ''  , pvalue , nsigma 
                 rows.append ( row )
         
             minimal = min ( clipped , key = lambda p : float ( p ) )
             pvalue  = minimal  
             pv      = clip_pvalue ( pvalue , 0.5 )
-                
             nsigma  = significance ( pv ) ## convert  it to significace            
-            pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
-            sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( nsigma ) < 1000 else S.infinity_pos ) 
-
+   
+            pvalue  = format_pvalue ( pvalue )
+            nsigma  = format_nsigma ( nsigma )
+            
             mm      = markup ( '**Minimal**' )  
-            row     = label ,  mm , '' , '' , '' , '', '' , '' , pvalue , sigma 
+            row     = label ,  mm , '' , '' , '' , '', '' , '' , pvalue , nsigma 
             rows.append ( row )
             
         rows  = [ header ] + sorted ( rows )
@@ -1222,7 +1225,9 @@ class GoFSimFit(GoFSimFitBase) :
             pvalue = ecdf.estimate ( tv )
             pv     = clip_pvalue   ( pvalue , 0.5 )
             nsigma = significance  ( pv ) ## convert  it to significace
-
+  
+            pvalues.append ( pvalue )
+  
             mean       = cnt.mean ()
             rms        = cnt.rms    () 
             vmin, vmax = cnt.minmax () 
@@ -1240,11 +1245,10 @@ class GoFSimFit(GoFSimFitBase) :
             else    : scale = 1 
              
             smean = mean / scale 
-            spv   = pv * 100 
+    
+            pvalue = format_pvalue ( pvalue ) 
+            nsigma = format_nsigma ( nsigma )
             
-            spv   = str ( ( 100 * pv  ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
-            nsig  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( nsigma ) < 1000 else S.infinity_pos ) 
-
             row = ( key ,
                     fmtv % ( tv    / scale )  , 
                     fmt  % ( smean . value () , smean . error () ) ,
@@ -1252,26 +1256,29 @@ class GoFSimFit(GoFSimFitBase) :
                     fmtv % ( vmin  / scale )  , 
                     fmtv % ( vmax  / scale )  ,
                     ( '[%s]' % format_pow10 ( expo ) ) if expo else '' , 
-                    spv  , 
-                    nsig )  
+                    pvalue , 
+                    nsigma )  
 
             rows.append ( row )
-            pvalues.append ( pvalue )
+          
 
         rows    = sorted ( rows )
 
         ## global statistics
         pvalue  = self.total.eff        
-        pv      = clip_pvalue ( pvalue , 0.5 )        
-        nsigma  = significance ( pv ) ## convert  it to significance            
-        pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
-        sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( nsigma ) < 1000 else S.infinity_pos ) 
-        row     = markup ( '**Combined**' )  , '' , '' , '' , '', '' , ''  , pvalue , sigma
+        pv      = clip_pvalue  ( pvalue , 0.5 )        
+        nsigma  = significance ( pv ) ## convert  it to significance   
+        
+        pvalue  = format_pvalue ( pvalue ) 
+        nsigma  = format_nsigma ( nsigma )
+                 
+        row     = markup ( '**Combined**' )  , '' , '' , '' , '', '' , ''  , pvalue , nsigma
         ## 
         rows.append ( row )
         
         if pvalues and len ( pvalues ) + 1 == len ( rows ) :
-            
+            print ( 'PVALUES:' , pvalues )
+                
             clipped  = [ clip_pvalue ( p , 0.5 ) for p in pvalues ]            
             for method in combine_methods :
                 
@@ -1279,27 +1286,27 @@ class GoFSimFit(GoFSimFitBase) :
                 
                 pvalue   = combined 
                 pv       = clip_pvalue ( pvalue , 0.5 )
-                
                 nsigma  = significance ( pv ) ## convert  it to significance            
-                pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
-                sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( nsigma ) < 1000 else S.infinity_pos ) 
-
+                
+                pvalue  = format_pvalue ( pvalue ) 
+                nsigma  = format_nsigma ( nsigma )
+                
                 mm      = method.lower().replace(' ','').replace ( '_' , ' ' ).title().replace ( ' ' , '-' )
                 mm      = markup ( "**%s**" % mm ) 
-                row     = mm  , '' , '' , '' , '', '' , ''  , pvalue , sigma 
+                row     = mm  , '' , '' , '' , '', '' , ''  , pvalue , nsigma 
                 rows.append ( row )
 
             minimal = min ( clipped , key = lambda p : float ( p ) )
             pvalue  = minimal  
-            pv      = clip_pvalue ( pvalue , 0.5 )
-                
-            nsigma  = significance ( pv ) ## convert  it to significace            
-            pvalue  = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
-            sigma   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( nsigma ) < 1000 else S.infinity_pos ) 
-
+            pv      = clip_pvalue ( pvalue , 0.5 )    
+            nsigma  = significance ( pv ) ## convert  it to significance
+                        
+            pvalue  = format_pvalue ( pvalue ) 
+            nsigma  = format_nsigma ( nsigma )
+                                        
             mm      = markup ( '**Minimal**' ) 
             ## 
-            row     = mm  , '' , '' , '' , '', '' , ''  , pvalue , sigma 
+            row     = mm  , '' , '' , '' , '', '' , ''  , pvalue , nsigma 
             rows.append ( row )
             
             rows [ -6 : ] = sorted ( rows [ -6 : ] )

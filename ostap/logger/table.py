@@ -46,8 +46,7 @@ import textwrap, sys
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.table' )
-else                       : logger = getLogger( __name__             )
+logger = getLogger ( 'ostap.logger.table' )
 # =============================================================================
 terminaltables = None
 # =============================================================================
@@ -145,8 +144,10 @@ except ImportError : # ========================================================
     tabulate         = None
 
 # =============================================================================
-table_styles = tuple ( sorted ( set ( table_styles ) ) )
-ascii_styles = tuple ( sorted ( set ( ascii_styles ) ) )
+terminal_styles = frozenset ( terminal_styles )
+tabulate_styles = frozenset ( tabulate_styles ) 
+table_styles    = frozenset ( table_styles    ) 
+ascii_styles    = frozenset ( ascii_styles    )
 # =============================================================================
 ## default style
 default_style = 'default'
@@ -628,7 +629,7 @@ def preprocess_table ( rows ) :
                 yield tuple ( make_item ( i ) for i in nrow )
 
 # =============================================================================
-## "wrap" certan cells in the table uinsg `textwrap.fill`
+## "wrap" certan cells in the table using `textwrap.fill`
 def wrap_cells ( rows , widths , wrapped , maxwidth , indent = '' , twidth = 0 , pwidth = 0 ) :
     """ `Wrap' certan cells in the table uinsg `textwrap.fill`
     """
@@ -868,26 +869,31 @@ if __name__ == '__main__' :
     logger.info ( 'The table with prefix is \n%s' %
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
 
-    all_styles  = terminal_styles + tabulate_styles
+    all_styles  = terminal_styles | tabulate_styles
     
     for fmt in sorted ( all_styles ) : 
         result = table ( table_data , title = 'Title' , style  = fmt , prefix = '# ' )            
         logger.info ( 'Use the format="%s":\n%s' % ( fmt , result ) )
 
-    rows = [ ( 'Style' , 'From' ) ]
+    rows = [ ( 'Style' , 'From' , 'ascii?' ) ]
+    
+    from   ostap.logger.symbols   import checked_yes  as yes
+    yes = yes if yes else 'yes'
     
     for s in sorted ( all_styles ) :
         if    'local' == s                           : row = s , 'Local'
         elif s in terminal_styles and terminaltables : row = s , 'terminaltables'
         elif s in tabulate_styles and tabulate       : row = s , 'tabulate'
         else                                         : row = s , ''
+        
+        if s in ascii_styles : row +=  ( yes , ) 
         rows.append ( row ) 
         
     title = 'All styles'
     logger.info ( '%s: \n%s' % ( title , table ( rows              ,
                                                  title     = title ,
                                                  prefix    = '# '  ,
-                                                 alignment = 'll'  ) ) ) 
+                                                 alignment = 'llc' ) ) ) 
 
     logger.info  ('Default style: %s' % default_style )
     

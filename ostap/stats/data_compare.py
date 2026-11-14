@@ -24,14 +24,15 @@ from   collections            import namedtuple
 from   ostap.core.ostap_types import sequence_types, sized_types, dictlike_types  
 from   ostap.utils.core       import typename 
 from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
-from   ostap.stats.utils      import weight_trivial, check_all, full_header 
+from   ostap.stats.utils      import ( weight_trivial , check_all     , 
+                                       full_header    , 
+                                       format_pvalue  , format_nsigma )  
 from   ostap.stats.gof_utils  import clip_pvalue 
 from   ostap.math.math_ve     import significance
 from   ostap.stats.gof        import AGoFnp
 from   ostap.stats.counters   import ECDF, WECDF
 from   ostap.math.math_ve     import chi2_prob, significance
-from   ostap.logger.symbols   import ( chi2ndf      as chi2ndf_symbol      , 
-                                       infinity_pos as infinity_pos_symbol )
+from   ostap.logger.symbols   import chi2ndf  as chi2ndf_symbol  
 import ostap.logger.table     as     T 
 import ostap.histos.histos 
 import ostap.histos.graphs 
@@ -410,7 +411,7 @@ def ecdf_compare ( ecdf1   ,
     ## # of degrees of freedom 
     nDoF = ( n - 1 ) if density else n
     
-    if 0 <= 0 and 1 <= nDoF :        
+    if 0 <= chi2 and 1 <= nDoF :        
         pvalue = chi2_prob    ( chi2   , nDoF )
         nsigma = significance ( pvalue )
     else :
@@ -554,20 +555,18 @@ def compare_variable ( what        ,
     if not silent :
         
         ## chi2-row 
-        chi2ndf = '%.2f/%s'  % ( histos.chi2   , histos.nDoF) 
-        pvalue  = '%6.2f'    % ( histos.pvalue * 100 )
+        chi2ndf = '%.2f/%s'    % ( histos.chi2   , histos.nDoF) 
         
-        nsigma  = histos.nsigma 
-        if  99 < float ( nsigma ) : nsigma = infinity_pos_symbol
-        else                      : nsigma = '%5.2f' % nsigma
-    
-        row   = chi2ndf_symbol , chi2ndf   ,  '' , '' , '' , '' , '' , pvalue , nsigma
+        pvalue  = format_pvalue  ( histos.pvalue )
+        nsigma  = format_nsigma  ( histos.nsigma )
         
-        header = ( 'Method' , ) + full_header 
-        rows   = [ header ] + [ row ] + rows
+        row     = chi2ndf_symbol , chi2ndf   ,  '' , '' , '' , '' , '' , pvalue , nsigma
         
-        if   what2 == what : title = title if title else "Two-Sample test: %s"           %   what 
-        else               : title = title if title else "Two-Sample test: (%s) vs (%s)" % ( what , what2 ) 
+        header  = ( 'Method' , ) + full_header 
+        rows    = [ header ] + [ row ] + rows
+        
+        if   what2 == what : title = title if title else "Two-Sample Test: %s"           %   what 
+        else               : title = title if title else "Two-Sample Test: (%s) vs (%s)" % ( what , what2 ) 
         
         rows   = T.remove_empty_columns ( rows )
         table  = T.table ( rows , title = title , prefix = "# " , alignment = 'lccccccccccc' )

@@ -38,7 +38,9 @@ from   ostap.stats.utils        import ( weight_trivial  ,
                                          full_header     ,
                                          short_header    ,
                                          t_header        , 
-                                         clip_pvalue     )
+                                         clip_pvalue     , 
+                                         format_pvalue   , 
+                                         format_nsigma   )
 from   ostap.stats.counters     import SE, WSE, ECDF
 from   ostap.stats.tools        import hasSkLearn
 from   ostap.logger.pretty      import pretty_row 
@@ -656,16 +658,9 @@ def format_row ( tvalue    = None ,
         pv         = clip_pvalue  ( pvalue ) 
         nsigma     = significance ( pv     ) ## convert  it to significance
         ## 
-        if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
-
-        pvalue  = pvalue * 100
-
-        if isinstance ( pvalue , VE )   : pvalue  = '%6.2f %s %.2f' % ( pvalue.value() , S.plus_minus , pvalue.error () )
-        else                            : pvalue  = '%6.2f'         %   float ( pvalue )
-        
-        if   99 < float ( nsigma      ) : nsigma = S.infinity_pos 
-        elif isinstance ( nsigma , VE ) : nsigma = '%.2f %s %.2f'   % ( nsigma.value() , S.plus_minus , nsigma.error () )
-        else                            : nsigma = '%.2f'           %   float ( nsigma ) 
+       
+        pvalue     = format_pvalue ( pvalue )
+        nsigma     = format_nsigma ( nsigma )
 
         row = row + ( unit , pvalue , nsigma )
         
@@ -681,16 +676,10 @@ def format_row ( tvalue    = None ,
         
         pv         = clip_pvalue  ( pvalue )
         nsigma     = significance ( pv     )
-        if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
         
-        pvalue  = pvalue * 100 
-        if isinstance ( pvalue , VE )   : pvalue  = '%6.2f %s %.2f' % ( pvalue.value() , S.plus_minus , pvalue.error () )
-        else                            : pvalue  = '%6.2f'         % float ( pvalue )
-
-        if   99 < float ( nsigma      ) : nsigma  = S.infinity_pos
-        elif isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , S.plus_minus , nsigma.error () )        
-        else                            : nsigma  = '%.2f'          % float ( nsigma ) 
-        
+        pvalue     = format_pvalue ( pvalue )
+        nsigma     = format_nsigma ( nsigma )
+         
         row     = row + ( unit , pvalue , nsigma )
         return header , row 
 

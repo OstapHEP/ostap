@@ -141,7 +141,7 @@ __all__     = (
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
 from   ostap.utils.core       import typename
 from   ostap.stats.counters   import ECDF, WECDF 
-from   ostap.math.math_base   import data2vct 
+from   ostap.math.math_base   import data2vct, isfinite  
 from   ostap.math.ve          import VE
 import ostap.logger.symbols   as     S 
 import numpy
@@ -579,14 +579,17 @@ def np2vct ( data , weight = None ) :
 def clip_pvalue ( pvalue , clip = 0.5 ) :
     """ Clip p-value
     """
-    pv = VE ( pvalue )
-    ## everything is fine, no need to clip 
-    if 0 < pv.value() < 1 : return pv  
-    ##
-    clip = min ( 0.5 , abs ( clip ) * pv.error () )
+    ## if everything is fine, no need to clip:
+    if 0 < float ( pvalue ) < 1 : return pvalue 
     ## 
-    if   1 <= pv.value() : pv = VE ( 1 - clip , pv.cov2() )
-    elif 0 >= pv.value() : pv = VE (     clip , pv.cov2() )
+    pv   = VE ( pvalue )
+    cov2 = max (  0 , pv.cov2() ) 
+    ##
+    clip = min ( 0.5 , abs ( clip ) * pv.error () ) if 0 < cov2 else min ( clip , 1e-6 )  
+    ## 
+    value = pv.value () 
+    if   1 <= value : pv = VE ( 1 - clip , cov2 )
+    elif 0 >= value : pv = VE (     clip , cov2 )
     ## 
     return pv 
 
@@ -596,6 +599,11 @@ def format_pvalue ( pvalue , clip = 0.5 ) :
     """ Format p-value [in %]  as nice string
     """
     pv = clip_pvalue ( pvalue , clip = clip ) 
+    pv = VE ( pv )
+    if pv.cov2 () <= 0 : 
+        pv = 100 *  float ( pv )
+        return '%.2f' % pv 
+     
     pv = str ( ( 100 * pv ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
     return pv 
 
@@ -605,6 +613,10 @@ def format_nsigma ( nsigma ) :
     """ Format significance [#sigma] as nce string 
     """
     ns = VE  ( nsigma )
+    if ns.cov2 () <= 0 : 
+        ns = float ( ns )
+        return ( '%.2f' % ns ) if isfinite ( ns ) and ns < 1000 else  S.infinity_pos 
+    
     return str ( ns.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( ns ) < 1000 else S.infinity_pos  ) 
 
 # =============================================================================
