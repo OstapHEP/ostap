@@ -491,7 +491,7 @@ def table ( rows                          ,
         for i in cols_left   : table_.justify_columns [ i ] = 'left'
         for i in cols_center : table_.justify_columns [ i ] = 'center'
                         
-        if title and style in ( 'github' , 'markdown' ) :
+        if title and fmt in ( 'github' , 'markdown' ) :
             title   = '# ' + title
             twidth += 2
 
@@ -536,7 +536,7 @@ def table ( rows                          ,
         colalign = kwargs.get ( 'colalign' , [] ) 
         if alignment and not colalign :
             for i in range ( num_cols ) :
-                if   i in cols_left   : colalign.append ( 'leff'   ) 
+                if   i in cols_left   : colalign.append ( 'left'   ) 
                 elif i in cols_right  : colalign.append ( 'right'  ) 
                 elif i in cols_center : colalign.append ( 'center' ) 
                 else                  : colalign.append ( 'left'   ) # #ATTENTION 
@@ -548,20 +548,60 @@ def table ( rows                          ,
         if colalign  : table = tabulate.tabulate ( rows , tablefmt = fmt , colalign = colalign , **kwargs )
         else         : table = tabulate.tabulate ( rows , tablefmt = fmt                       , **kwargs )
         
+        
         if title :
-            tabwidth = table_width ( table  )
-            if tabwidth < twidth + 2 :                
-                title , twidth = shorten_title ( title , tabwidth - 2 )
-            if fmt.startswith( 'latex' ) : title = '%% ' + title
-            d1 , d2  = divmod ( tabwidth  - 2 - twidth , 2 )              
-            title    = allright ( ( d1 + d2 ) * ' ' + decolorize ( title ) + d1 * ' ' )                                 
-            table    = title + '\n' + table  
-
+            # Special handling for table titles depending on the tabulate format
+            if fmt in ( 'html' , 'unsafehtml' ) :
+                # Insert the title inside the <table> tag using <caption>
+                title = decolorize ( title )
+                caption = f'<caption>{title}</caption>'
+                if '<table>' in table : table = table.replace ( '<table>' , f'<table>\n{caption}' , 1 )
+                else                  : table = caption + '\n' + table
+            
+            elif fmt == 'mediawiki' :
+                # Replace tabulate's default caption placeholder with the actual title
+                clean_title  = decolorize ( title )
+                caption_line = f'|+ {clean_title}'
+                if '|+ <!-- caption -->' in table : table = table.replace ( '|+ <!-- caption -->' , caption_line , 1 )
+                else                              : table = f'{caption_line}\n{table}'
+            
+            elif fmt.startswith ( 'latex_long' ) :
+                clean_title = decolorize ( title )
+                
+                # For longtable, \caption goes inside the environment
+                latex_lines = f'%% \\caption{{{clean_title}}} \\\\' , '%% %' , table
+                table = '\n'.join ( latex_lines )
+            
+            elif fmt.startswith ( 'latex' ) :
+                
+                clean_title = decolorize ( title )
+                # For standard tabular-based LaTeX formats
+                latex_lines = (
+                    '%% \\begin{table}[htbp]' ,
+                    '%%   \\centering' ,
+                    f'%%   \\caption{{{clean_title}}}' ,
+                    '%%   %' ,
+                    table ,
+                    '%% \\end{table}'
+                    )
+                table = '\n'.join ( latex_lines )
+                 
+            elif fmt == 'tsv' :
+                # Comment out the title for TSV to avoid breaking column parsers
+                title = '# ' + decolorize ( title )
+                table = title + '\n' + table
+                
+            else :
+                # Standard centering logic for console formats (grid, simple, pipe, etc.)
+                tabwidth = table_width ( table  )
+                if tabwidth < twidth + 2 :                
+                    title , twidth = shorten_title ( title , tabwidth - 2 )
+                d1 , d2  = divmod ( tabwidth  - 2 - twidth , 2 )              
+                title    = allright ( ( d1 + d2 ) * ' ' + decolorize ( title ) + d1 * ' ' )                                 
+                table    = title + '\n' + table
+        
         if   fmt.startswith( 'latex' ) : table = decolorize ( table )
         elif 'html' in fmt             : table = decolorize ( table )
-        
-        if sys.version_info < ( 3 , 0 ) :
-            if isinstance ( table , unicode ) : table = table.encode ('utf-8')
         
         if kwargs : logger.warning ( 'Ignore keyword arguments: %s' %  ( ', '.join ( key for key in kwargs ) ) )             
         return add_prefix ( table  , prefix ) if prefix else table 
