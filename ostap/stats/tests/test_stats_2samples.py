@@ -12,7 +12,7 @@ from   ostap.stats.twosamples import TwoSamplesTest, TwoSamplesToys
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.root_utils import batch_env 
 import ostap.logger.table     as     T
-import ROOT, random, array    
+import random, array    
 # ==============================================================================
 from   ostap.logger.logger import getLogger 
 logger = getLogger ( 'ostap.tests_stats_2samples' )
@@ -20,13 +20,13 @@ logger = getLogger ( 'ostap.tests_stats_2samples' )
 batch_env ( logger ) 
 # =============================================================================
 
-N1  = 150
-N2  = 150
+N1  = 1000
+N2  = 9000
 
-ds1 = array.array ( 'd' , ( random.gauss ( 0   , 1   ) for i in range ( N1 ) ) ) ## Gaussian 
-ds2 = array.array ( 'd' , ( random.gauss ( 0   , 1   ) for i in range ( N2 ) ) ) ## the same  Gaussian 
-ds3 = array.array ( 'd' , ( random.gauss ( 0.5 , 1   ) for i in range ( N2 ) ) ) ## different Gaussian 
-ds4 = array.array ( 'd' , ( random.gauss ( 0   , 1.5 ) for i in range ( N2 ) ) ) ## different Gaussian 
+ds1 = array.array ( 'd' , ( random.gauss   (  0   , 1   ) for i in range ( N1 ) ) ) ## Gaussian 
+ds2 = array.array ( 'd' , ( random.gauss   (  0   , 1   ) for i in range ( N2 ) ) ) ## the same  Gaussian 
+ds3 = array.array ( 'd' , ( random.gauss   (  0.5 , 1.5 ) for i in range ( N2 ) ) ) ## shifted and scaled Gaussian 
+ds4 = array.array ( 'd' , ( random.uniform ( -1.5 , 4.5 ) for i in range ( N2 ) ) ) ## shifted and scaled Uniform  
 
 # =============================================================================
 def test_2samples_good () :

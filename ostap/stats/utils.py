@@ -26,6 +26,10 @@ __all__     = (
     'np2vct'              , ## numpy arrays into SVectorWithError
     'eff_size'            , ## effective size of two samples
     ##
+    'clip_pvalue'        , ## clip-value
+    'format_pvalue'      , ## format pvalue as nice value in [%]
+    'format_nsigma'      , ## format #sigma as nice value in [#sigma]
+    ##
     'full_header'         , ## the header for statistical table (full) 
     'short_header'        , ## the header for statistical table (short) 
     't_header'            , ## the header for statistical table (only t-values)
@@ -130,12 +134,15 @@ __all__     = (
     'method_ZA'           , ## zhang ZA 
     'method_ZC'           , ## zhang ZC 
     'method_ZK'           , ## zhang ZK 
+    ## 
+   
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
 from   ostap.utils.core       import typename
 from   ostap.stats.counters   import ECDF, WECDF 
 from   ostap.math.math_base   import data2vct 
+from   ostap.math.ve          import VE
 import ostap.logger.symbols   as     S 
 import numpy
 # =============================================================================
@@ -565,6 +572,40 @@ def np2vct ( data , weight = None ) :
             covs [ j , i ] = cc  
         
     return RT ( values ,  covs ) 
+
+
+# =============================================================================        
+## clip p-value 
+def clip_pvalue ( pvalue , clip = 0.5 ) :
+    """ Clip p-value
+    """
+    pv = VE ( pvalue )
+    ## everything is fine, no need to clip 
+    if 0 < pv.value() < 1 : return pv  
+    ##
+    clip = min ( 0.5 , abs ( clip ) * pv.error () )
+    ## 
+    if   1 <= pv.value() : pv = VE ( 1 - clip , pv.cov2() )
+    elif 0 >= pv.value() : pv = VE (     clip , pv.cov2() )
+    ## 
+    return pv 
+
+# ==============================================================================
+## format p-value [in %]  as nice string  
+def format_pvalue ( pvalue , clip = 0.5 ) :
+    """ Format p-value [in %]  as nice string
+    """
+    pv = clip_pvalue ( pvalue , clip = clip ) 
+    pv = str ( ( 100 * pv ) .toString ( '%% 5.2f %s %%-.2f' % S.plus_minus ) )
+    return pv 
+
+# =============================================================================
+## format signifcance [#sigma] as nice string 
+def format_nsigma ( nsigma ) : 
+    """ Format significance [#sigma] as nce string 
+    """
+    ns = VE  ( nsigma )
+    return str ( ns.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( ns ) < 1000 else S.infinity_pos  ) 
 
 # =============================================================================
 ## @brief Calculate optimal batch size for PyTorch iterative boosting.

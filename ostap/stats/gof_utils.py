@@ -13,6 +13,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2023-12-06"
 __all__     = (
+    ##
     'mean_var'           , ## mean and variance for (weighted) arrays
     'nEff'               , ## get number of effective entries
     'normalize'          , ## "normalize" variables in dataset/structured array
@@ -23,7 +24,7 @@ __all__     = (
     'nearest_distances'  , ## get all nearest distances 
     's2u'                , ## convert structured numpy array into non-structured
     'combine_pvalues'    , ## combine p-values 
-    'combine_methods'    , ## available methods for p-value combination 
+    'combine_methods'    , ## available methods for p-value combination
     ##
 )
 # =============================================================================
@@ -36,7 +37,8 @@ from   ostap.math.math_ve       import significance
 from   ostap.stats.utils        import ( weight_trivial  ,
                                          full_header     ,
                                          short_header    ,
-                                         t_header        )
+                                         t_header        , 
+                                         clip_pvalue     )
 from   ostap.stats.counters     import SE, WSE, ECDF
 from   ostap.stats.tools        import hasSkLearn
 from   ostap.logger.pretty      import pretty_row 
@@ -606,22 +608,7 @@ def method_1D ( mm ) :
     """ Get the internal  name for external 1D-method
     """
     return __all_1D_names.get ( mm , '' ) 
-# =============================================================================        
-## clip p-value 
-def clip_pvalue ( pvalue , clip = 0.5 ) :
-    """ Clip p-value
-    """
-    pv = VE ( pvalue )
-    ## everything is fine, no need to clip 
-    if 0 < pv.value() < 1 : return pv  
-    ##
-    clip = min ( 0.5 , abs ( clip ) * pv.error () )
-    ## 
-    if   1 <= pv.value() : pv = VE ( 1 - clip , pv.cov2() )
-    elif 0 >= pv.value() : pv = VE (     clip , pv.cov2() )
-    ## 
-    return pv 
-    
+
 # =============================================================================
 pvalue_types = num_types + ( VE , ) 
 # =============================================================================

@@ -42,7 +42,7 @@ __all__     = (
 # =============================================================================
 from   ostap.utils.core        import typename, classprop 
 from   ostap.stats.gof_np      import GoFnp
-import ostap.stats.twosamples2 as     TS2 
+import ostap.stats.twosamples  as     TS  
 import ostap.stats.utils       as     U 
 # =============================================================================
 # logging 
@@ -145,7 +145,7 @@ class KolmogorovSmirnov(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ (weighted 1D) Two-Sample test using Kolmogorov-Smirnov statistics
         """
-        super().__init__ ( estimator = TS2.kolmogorov_smirnov , **kwargs )
+        super().__init__ ( estimator = TS.kolmogorov_smirnov , **kwargs )
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -171,7 +171,7 @@ class Kuiper(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Kuiper' statistics
         """
-        super().__init__ ( estimator = TS2.kuiper , **kwargs )
+        super().__init__ ( estimator = TS.kuiper , **kwargs )
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -197,7 +197,7 @@ class CramerVonMises(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Cramer-von Mises' statistics
         """
-        super().__init__ ( estimator = TS2.cramer_von_mises , **kwargs )
+        super().__init__ ( estimator = TS.cramer_von_mises , **kwargs )
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -223,7 +223,7 @@ class AndersonDarling(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Anderson-Darling' statistics
         """
-        super().__init__ ( estimator = TS2.anderson_darling, **kwargs )
+        super().__init__ ( estimator = TS.anderson_darling, **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -249,7 +249,7 @@ class BerkJones(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Berk-Jones statistics
         """
-        super().__init__ ( estimator = TS2.berk_jones, **kwargs )
+        super().__init__ ( estimator = TS.berk_jones, **kwargs )
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -275,7 +275,7 @@ class ZA(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Zhang's ZA statistics
         """
-        super().__init__ ( estimator = TS2.ZA      , **kwargs )
+        super().__init__ ( estimator = TS.ZA      , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -301,7 +301,7 @@ class ZC(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Zhang's ZC statistics
         """
-        super ().__init__ ( estimator = TS2.ZC      , **kwargs )
+        super ().__init__ ( estimator = TS.ZC      , **kwargs )
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -327,7 +327,7 @@ class ZK(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Zhang's ZK statistics
         """
-        super().__init__ ( estimator = TS2.ZK , **kwargs )
+        super().__init__ ( estimator = TS.ZK , **kwargs )
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -353,7 +353,7 @@ class Wasserstein1(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using the First Wasserstein distance
         """
-        super () .__init__ ( estimator = TS2.wasserstein1 , **kwargs )
+        super () .__init__ ( estimator = TS.wasserstein1 , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -379,7 +379,7 @@ class Wasserstein2(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using the second Wasserstein distance
         """
-        super () .__init__ ( estimator = TS2.wasserstein2 , **kwargs )
+        super () .__init__ ( estimator = TS.wasserstein2 , **kwargs )
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -405,7 +405,7 @@ class Rosenblatt(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using the Rosenblatt distance
         """
-        super () .__init__ ( estimator = TS2.rosenblatt , **kwargs )
+        super () .__init__ ( estimator = TS.rosenblatt , **kwargs )
 
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -431,7 +431,7 @@ class Watson(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using the Watson U2 distance
         """
-        super () .__init__ (  estimator = TS2.watson_u2 , **kwargs )
+        super () .__init__ (  estimator = TS.watson_u2 , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -457,7 +457,7 @@ class MannWhitney(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using the Mann-Whitney distance
         """
-        super () .__init__ (  estimator = TS2.mann_whitney , **kwargs )
+        super () .__init__ (  estimator = TS.mann_whitney , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -491,7 +491,7 @@ class Savage(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Savage distance
         """
-        super () .__init__ (  estimator = TS2.savage , **kwargs )
+        super () .__init__ (  estimator = TS.savage , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -525,7 +525,7 @@ class AnsariBradley(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two-Samples Test using Ansari-Bradley distance
         """
-        super () .__init__ (  estimator = TS2.ansari_bradley  , **kwargs )
+        super () .__init__ (  estimator = TS.ansari_bradley  , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -551,7 +551,7 @@ class SiegelTukey(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two-Samples Test using Sigel-Tukey distance
         """
-        super () .__init__ (  estimator = TS2.siegel_tukey  , **kwargs )
+        super () .__init__ (  estimator = TS.siegel_tukey  , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -577,7 +577,7 @@ class Mood(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Mood distance
         """
-        super () .__init__ (  estimator = TS2.mood  , **kwargs )
+        super () .__init__ (  estimator = TS.mood  , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -603,7 +603,7 @@ class VanDerWaerden(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Van der Waerden distance
         """
-        super () .__init__ (  estimator = TS2.van_der_waerden  , **kwargs )
+        super () .__init__ (  estimator = TS.van_der_waerden  , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -629,7 +629,7 @@ class BrunnerMunzel(ClassicalGoF) :
     def __init__ ( self , **kwargs ) :
         """ Two (weighted) sample test using Brunner-Munzel distance
         """
-        super () .__init__ (  estimator = TS2.brunner_munzel  , **kwargs )
+        super () .__init__ (  estimator = TS.brunner_munzel  , **kwargs )
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -652,11 +652,11 @@ class BrunnerMunzel(ClassicalGoF) :
 #  Two-Samples test using the Epps-Singleton score 
 class EppsSingleton(ClassicalGoF) :
     """ Two-Samples test using Epps-singleton distance """
-    def __init__ ( self , * , frequencies = TS2.epps_singleton_frequencies () , **kwargs ) :
+    def __init__ ( self , * , frequencies = TS.epps_singleton_frequencies () , **kwargs ) :
         """ Two (weighted) sample test using Epps-Singleton distance
         """
         self.__frequencies = tuple ( sorted ( set ( frequencies ) ) )  
-        super () .__init__ ( estimator   = TS2.epps_singleton ,
+        super () .__init__ ( estimator   = TS.epps_singleton ,
                              frequencies = self.frequencies   , **kwargs )
         
     # =========================================================================
