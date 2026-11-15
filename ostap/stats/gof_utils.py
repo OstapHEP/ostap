@@ -314,67 +314,75 @@ def nEff ( weights ) :
 #  ds3 = ...
 #  ds1 , ds2 , ds3 = normalize_pooled ( ds1 , ds2 , ds3 ) 
 #  @endcode 
-def normalize_pooled ( *datasets ) :
-    """ Normalize/standartize several numpy arrays such that the mean and rms for the POOLED sample
-    are equal to 0 and 1 correspondinly
+def normalize_pooled(*datasets):
+    """
+    Normalize/standardize several numpy arrays such that the mean and RMS 
+    for the POOLED sample are equal to 0 and 1 respectively.
     
     >>> ds1 = ...
     >>> ds2 = ...
-    >>> ds3 = ...
-    >>> ds1 , ds2 , ds3 = normalize_pooled ( ds1 , ds2 , ds3 )
-    
+    >>> ds1, ds2 = normalize_pooled(ds1, ds2)
     """
+    if not datasets: return ()
 
-    if not datasets : return ()
-
-    total      = 0 
+    # Convert all inputs to numpy arrays (safely handles python lists too)
+    datasets = [ numpy.asarray ( d ) for d in datasets ]
+    
+    total_n    = 0
     total_mean = None
-    total_std2 = None
+    total_var  = None
     
     sizes      = []
     means      = []
+    vars_      = []
     
-    for i , data in enumerate ( datasets ) :
+    # 1st pass: collect sample sizes, means, and variances for each dataset
+    for data in datasets:
         
-        n     = len ( data )
+        n = len ( data )
+        sizes.append ( n )
         
-        mean = numpy.mean ( data , axis=0 , keepdims = True )
-        std2 = numpy.std  ( data , axis=0 , keepdims = True ) ** 2 
+        mean = numpy.mean ( data , axis = 0, keepdims = True)
+        var  = numpy.var  ( data , axis = 0, keepdims = True)  # More efficient than std**2
         
-        sizes .append ( n    ) 
-        means .append ( mean )
-        
-        if total_mean is None : total_mean  = n * mean
-        else                  : total_mean += n * mean
-        
-        if total_std2 is None : total_std2  = n * std2
-        else                  : total_std2 += n * std2
-        
-    ## total number of entries in pooled sample
-    total       = sum ( sizes )
+        means.append ( mean )
+        vars_.append ( var  )
+         
+        if total_mean is None:
+            
+            total_mean = n * mean
+            total_var  = n * var
+            
+        else:
+            
+            total_mean += n * mean
+            total_var  += n * var
+            
+        total_n += n
 
-    ## mean values 
-    total_mean /= total
+    # Final global mean across the pooled sample
+    total_mean /= total_n
 
-    for n , mu in zip ( sizes , means ) : total_std2 += n * ( mu - total_mean ) ** 2
+    # 2nd pass (Huygens–Steiner theorem / Parallel Axis Theorem): 
+    # add the inter-group variance contribution
+    for n, mean_i in zip ( sizes , means ):
+        total_var += n * ( mean_i - total_mean) ** 2
+        
+    # Global variance of the pooled sample
+    total_var /= total_n
+
+    # Global Root Mean Square (RMS) standard deviation
+    std = numpy.sqrt ( total_var )
     
-    ## squared RMS
-    total_std2 /= total
+    # Protection against division by zero for constant features
+    std[std == 0.0] = 1.0
 
-    ## mean value 
-    mean = total_mean
-
-    ## RMS 
-    std  = numpy.sqrt ( total_std2 )
-    
-    result = []
-    for i , data in enumerate ( datasets ) :
-        ### shift&scale 
-        result.append ( ( data - mean ) / std )
+    # Apply shift & scale transformation to each dataset
+    result = [ ( data - total_mean ) / std for data in datasets]
 
     if 1 == len ( result ) : return result [ 0 ]
-    
-    return tuple ( result ) 
+        
+    return tuple ( result )
 
 # =============================================================================
 ## Get the "normalized" input datasets

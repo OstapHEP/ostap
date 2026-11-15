@@ -76,6 +76,7 @@ __all__     = (
     ##
     'game_die'            , ## 🎲 
     'gear'                , ## ⚙️
+    'globe'               , ## 🌐
     'graph'               , ## 📈  (wide)
     ##
     'greater_or_equal'    , ## ≥
@@ -462,6 +463,7 @@ ladder           = '🪜'  if show else ''
 scale            = '⚖️'  if show else '' 
 weight_scale     = scale  
 
+globe            = '🌐' if show else '' 
 scissors         = '✂️' if show else '' 
 oil_drum         = '🛢️' if show else ''       
 brain            = '🧠' if show else ''

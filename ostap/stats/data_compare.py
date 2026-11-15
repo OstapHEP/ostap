@@ -21,14 +21,13 @@ __all__     = (
 )
 # =============================================================================
 from   collections            import namedtuple 
-from   ostap.core.ostap_types import sequence_types, sized_types, dictlike_types  
+from   ostap.core.ostap_types import sequence_types, sized_types, dictlike_types, integer_types   
 from   ostap.utils.core       import typename 
-from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY
+from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY, axis_range 
 from   ostap.stats.utils      import ( weight_trivial , check_all     , 
                                        full_header    , 
                                        format_pvalue  , format_nsigma )  
 from   ostap.stats.gof_utils  import clip_pvalue 
-from   ostap.math.math_ve     import significance
 from   ostap.stats.gof        import AGoFnp
 from   ostap.stats.counters   import ECDF, WECDF
 from   ostap.math.math_ve     import chi2_prob, significance
@@ -306,9 +305,9 @@ def data_compare ( comparator   ,
 
 # =============================================================================
 ## Visual&chi2 comparison of (W)ECDFs
-#  - create pooled sample
+#  - create pooled sample  (with equal treatment of input ECDFs)
 #  - find equidistant quantiles
-#  - create two histograms accorfing to quantiels of pooled sample
+#  - create two histograms according to quantiles of pooled sample
 #  - project (W)ECDFs into histogram
 #  - normalize them as "density" (optional)
 #  - draw them superimposed (optional)
@@ -326,9 +325,9 @@ def ecdf_compare ( ecdf1   ,
                    fill    = True , 
                    draw    = True ) :
     """ Visual compare (W)ECDFs
-    - create pooled sample
+    - create pooled sample (with equal treatment of input ECDFs)
     - find equaidistant quantiles
-    - create two histograms accorfing to quantiels of pooled sample
+    - create two histograms according to quantiles of pooled sample
     - project (W)ECDFs into histogram
     - normalize them as "density" (optional)
     - draw them superimposed      (optional)
@@ -343,7 +342,10 @@ def ecdf_compare ( ecdf1   ,
     if not isinstance ( ecdf2 , ecdf_types ) : raise TypeError  ( "Invalid `ecdf2` type: %s" % typename ( ecdf2 ) )
     if not ecdf1 . ok ()                     : raise ValueError ( "Invalid `ecdf1`!" )
     if not ecdf2 . ok ()                     : raise ValueError ( "Invalid `ecdf2`!" )
-
+    if not isinstance ( N , integer_types  ) : raise TypeError  ( "Invalid `N' type: %s"     % typename ( N     ) )
+    if not 2 <= N                            : raise ValueError ( "Invalid `N'!"     )
+    
+    N = int ( N )
     
     pooled = WECDF ( False )
     sumw1  = ecdf1.sumw ()
@@ -375,23 +377,29 @@ def ecdf_compare ( ecdf1   ,
         h1 = h1.density ( silent = True )
         h2 = h2.density ( silent = True )
         
-    if fill :
+    if not fill :
         
+        h1.red  () 
+        h2.blue ()
+         
+    else :
+         
         h1.red  ( fill = True , opacity = 0.20 ) 
         h2.blue ( fill = True , opacity = 0.30 ) 
-
+        
     if draw :
 
-        if h2.GetMaximum() < h1.GetMaximum() : 
-            
-            h1.draw () 
-            h2.draw ('same')
-            
-        else  :
-             
-            h2.draw ()
-            h1.draw ( 'same' )
+        min1 , max1 = h1.minmax ( errors = True )
+        min2 , max2 = h2.minmax ( errors = True ) 
+        minv , maxv = axis_range ( min ( min1, min2 ) , max ( max1, max2 ) , delta = 0.1 )
         
+        for h in ( h1, h2 ) : 
+            h.SetMinimum ( minv )
+            h.SetMaximum ( maxv )
+        
+        h1.draw () 
+        h2.draw ('same')
+            
         if fill :
             
             h1.draw ( 'same hist' )
@@ -484,9 +492,9 @@ def compare_variable ( what        ,
     if cuts2      is None : cuts2      = cuts 
     if cut_range2 is None : cut_range2 = cut_range
 
-    from   ostap.stats.statvars import data_ECDF
-    
     what , what2 = what.strip() , what2.strip () 
+    
+    from   ostap.stats.statvars import data_ECDF
           
     ecdf1 = data_ECDF      ( data       = data       ,
                              expression = what       ,
@@ -527,8 +535,7 @@ def compare_variable ( what        ,
     
     if isinstance ( comparators , AGoFnp ) : comparators = ( comparators , )
     comparators  = tuple (  c for c in comparators if isinstance ( c , AGoFnp ) and c.two_samples )
-    if with_weight :
-        comparators =  tuple ( c for c in comparators if c.weights_supported )
+    if with_weight : comparators =  tuple ( c for c in comparators if c.weights_supported )
 
     results = []     
     rows    = []
@@ -546,7 +553,7 @@ def compare_variable ( what        ,
 
         if not silent : 
             _ , row = cmp.the_row ()
-            row    = ( cmp.method , ) + tuple ( row )
+            row    = ( cmp.symbol , cmp.method , ) + tuple ( row )
             rows.append ( row ) 
 
     results = tuple ( results ) 
@@ -562,14 +569,14 @@ def compare_variable ( what        ,
         
         row     = chi2ndf_symbol , chi2ndf   ,  '' , '' , '' , '' , '' , pvalue , nsigma
         
-        header  = ( 'Method' , ) + full_header 
+        header  = ( '', 'Method' , ) + full_header 
         rows    = [ header ] + [ row ] + rows
         
-        if   what2 == what : title = title if title else "Two-Sample Test: %s"           %   what 
-        else               : title = title if title else "Two-Sample Test: (%s) vs (%s)" % ( what , what2 ) 
+        if   what2 == what : title = title if title else "Two-Sample Test: %s"               %   what 
+        else               : title = title if title else "Two-Sample Test: [ %s ] vs [ %s ]" % ( what , what2 ) 
         
         rows   = T.remove_empty_columns ( rows )
-        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'lccccccccccc' )
+        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'lccccccccccccc' )
         logger.info ( "%s:\n%s" % ( title , table ) )
 
     return histos , results 

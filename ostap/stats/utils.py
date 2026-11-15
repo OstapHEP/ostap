@@ -71,6 +71,7 @@ __all__     = (
     'symbol_VDW'          , ## Symbol for Van der Waerden 
     'symbol_BM'           , ## Symbol for Brunner-Munzel 
     'symbol_ES'           , ## Symbol for Epps-Singleton
+    'symbol_RA'           , ## Symbol for Random Axes/Cramer-Wold 
     ##
     'symbol_NLL'          , ## symbol for NLL 
     'symbol_AIC'          , ## symbol for Akainke IC 
@@ -121,6 +122,7 @@ __all__     = (
     'method_VDW'          , ##              Van der Waerden method
     'method_BM'           , ##               Brunner-Munzel method
     'method_ES'           , ##               Epps-Singleton method
+    'method_RA'           , ##      Random Axes/Cramer-Wold method 
     ##
     'method_NLL'          , ## Negative log-likelihood 
     'method_AIC'          , ## Akaike IC
@@ -192,6 +194,8 @@ symbol_MD    = symbol_name ( 'Md'  )
 symbol_VDW   = symbol_name ( 'VdW' )
 symbol_BM    = symbol_name ( 'B-M' )
 symbol_ES    = symbol_name ( 'E-S' )
+symbol_RA    = symbol_name ( S.globe if S.show and S.globe else 'C-W' )   
+
 
 symbol_NLL   = symbol_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'NLL' ) 
 symbol_AIC   = symbol_name ( 'AIC' ) 
@@ -243,6 +247,7 @@ method_MD    = method_name ( 'Mood'                          )
 method_VDW   = method_name ( 'Van der Waerden'               )
 method_BM    = method_name ( 'Brunner-Munzel'                )
 method_ES    = method_name ( 'Epps-Singleton'                )
+method_RA    = method_name ( 'Cramer-Wold'                   )
 
 method_NLL   = method_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'Negative Delta Likelihood' ) 
 method_AIC   = method_name ( 'Akaike IC'   )
