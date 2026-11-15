@@ -184,6 +184,15 @@ class GoF(AGoF,Config) :
         """
         return self.gof.weights_supported
     
+    
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality ( self ) :
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return self.gof.max_dimensionality 
+        
     @property
     def t_value ( self ) : return self.gof.t_value
     @property
@@ -791,6 +800,14 @@ class NLL(AGoF,Config) :
         """
         return U.method_NLL
 
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return -1
+    
     ## Are weights supported by this GoF estimator?
     @property 
     def weights_supported ( self ) :

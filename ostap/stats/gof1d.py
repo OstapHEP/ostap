@@ -1167,6 +1167,14 @@ class GoF_1D(AGoF) :
         """
         return self.what 
         
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return 1
+    
     @property
     def what  ( self ) : 
         """`what`: the actual GoF method"""

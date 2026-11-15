@@ -131,6 +131,15 @@ class AGoF(abc.ABC) :
         """
         return NotImplemented
 
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    @abc.abstractmethod
+    def max_dimensionality ( self ) :
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return NotImplemented
+    
     # ==========================================================================
     ## Get GoF results in form of the table
     #  @code
@@ -322,6 +331,15 @@ class AGoFnp(abc.ABC) :
         """
         return NotImplemented
     
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    @abc.abstractmethod
+    def max_dimensionality ( self ) :
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return NotImplemented
+        
     # ==========================================================================
     ## Get results in form of the table 
     def report ( self             ,

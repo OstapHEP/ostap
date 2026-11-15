@@ -351,6 +351,14 @@ class USTAT(AGoF,Config) :
         """
         return U.method_name ( U.method_USTAT + '/' + self.algorithm )
     
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return -1
+    
     # =======================================================================
     ## get all configration parameters
     @property 

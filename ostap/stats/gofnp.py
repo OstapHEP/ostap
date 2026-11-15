@@ -21,7 +21,7 @@ from   ostap.stats.counters     import EffCounter, ECDF
 from   ostap.utils.core         import typename 
 from   ostap.utils.config       import Config
 from   ostap.stats.gof          import AGoFnp
-from   ostap.stats.utils        import weight_trivial   , check_all 
+from   ostap.stats.utils        import weight_trivial   , check_all , num_features 
 from   ostap.stats.gof_utils    import normalize_pooled , draw_ecdf , s2u  
 from   ostap.utils.memory       import memory_enough
 import ostap.math.math_base    
@@ -88,7 +88,9 @@ class GoFnp (AGoFnp,Config) :
         conf [ 'weights_supported'          ] = self.weights_supported
         conf [ 'two_samples'                ] = self.two_samples 
         conf [ 'method'                     ] = self.method  
-        conf [ 'symbol'                     ] = self.symbol  
+        conf [ 'symbol'                     ] = self.symbol
+        maxdim = self.max_dimensionality
+        if maxdim and 1 <= maxdim: conf [ 'max_dimensionality' ] = maxdim
         return conf 
     
     # =========================================================================
@@ -109,7 +111,7 @@ class GoFnp (AGoFnp,Config) :
         return self.__progress
     
     # =======================================================================
-    ##  Unpack data ( consvert from structured to unstructured arrays)
+    ##  Unpack data ( convert from structured to unstructured arrays)
     #   @code
     #   gof   = 
     #   ds1   , ds2  = ...
@@ -168,6 +170,11 @@ class GoFnp (AGoFnp,Config) :
         ## check vaildity and consitency of input parameters 
         check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) )
 
+        maxdim = self.max_dimensionality
+        if maxdim and 1 <= maxdim : 
+            nf = num_features ( uds1 ) 
+            if maxdim < nf : raise ValueError ( "Dataset dimensionality %d exceeds max_dimensionlaty %d " % ( nf , maxdim ) )
+            
         ## normalize
         if normalize and self.normalize :
             uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 

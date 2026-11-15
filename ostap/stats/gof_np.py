@@ -44,8 +44,6 @@ from   ostap.core.core          import Ostap, hID
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.core         import typename
 from   ostap.utils.basic        import numcpu, num_jobs, run_parallel, classprop  
-from   ostap.utils.config       import Config
-from   ostap.stats.gof          import AGoFnp
 from   ostap.stats.gofnp        import GoFnp
 from   ostap.stats.utils        import ( weight_trivial     ,
                                          check_all          , 
@@ -185,6 +183,14 @@ class MIXnp(GoFnp) :
         """`two_samples`: Can this estimator be used for comparison of two samples?
         """
         return True 
+    
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return -1
     
     # =========================================================================
     ## k_max` : number fo nearest neighbors to test
@@ -332,6 +338,14 @@ class PPDnp(GoFnp) :
         """`method`: Actual method implemented by the estimator
         """
         return U.method_PPD 
+    
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return -1
     
     # ==================================================================================
     @property
@@ -572,6 +586,7 @@ class DNNnp(GoFnp) :
         """
         return U.symbol_DNN 
     
+    
     # =========================================================================
     ## Actual method implemented by the estimator 
     @property 
@@ -597,6 +612,14 @@ class DNNnp(GoFnp) :
         """
         return False 
     
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return -1
+        
     @property
     def histo ( self ) :
         """`histo` : the histogram with distribution of U-values"""
@@ -803,6 +826,14 @@ class DistanceTest(GoFnp) :
         """
         return True 
 
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return -1
+    
     # =========================================================================
     ## Convert numpy-array statistics into Ostap::SVectorWithError
     #  @see Ostap::Math::SVectorWithError

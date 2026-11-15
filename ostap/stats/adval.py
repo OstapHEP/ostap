@@ -273,7 +273,15 @@ class ADVAL_base (GoFnp):
     def two_samples ( self ) :
         return True
 
-    ## importance featurs (if suppported by backend) 
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return -1
+
+    ## importance features (if suppported by backend) 
     @property 
     def importance_features ( self ) :
         """`importance_features`: Importance features (if suppported by backend)

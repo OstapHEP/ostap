@@ -100,6 +100,14 @@ class Chi2 ( GoFnp ) :
         """
         return U.method_CHI2
     
+    # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality ( self ) :
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return self.dimension 
+        
     # ==================================================================================
     @property
     def config ( self ) :

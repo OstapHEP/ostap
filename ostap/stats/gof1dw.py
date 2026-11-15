@@ -102,6 +102,14 @@ class ClassicalGoF (GoFnp) :
         return True 
 
     # =========================================================================
+    ## max-dimensionality
+    @property 
+    def max_dimensionality(self):
+        """`max_dimensionality` : maximal dimensionality of dataset
+        """
+        return 1
+    
+    # =========================================================================
     ## Good for two-samples comparison?
     #  Can this estimator be used for Two Samples comparison ?
     @property 
