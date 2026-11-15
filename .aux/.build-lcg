@@ -343,9 +343,9 @@ if ! command -v cmake >/dev/null 2>&1 || \
         cd "${runtime_dir}" || exit 1
 
         if command -v curl >/dev/null 2>&1; then
-            latest_version=$(curl -s --connect-timeout 10 --max-time 15 -H "User-Agent: ostap-build-script" "https://api.github.com/repos/Kitware/CMake/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+            latest_version=$(curl -sk --connect-timeout 10 --max-time 15 -H "User-Agent: ostap-build-script" "https://api.github.com/repos/Kitware/CMake/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
         elif command -v wget >/dev/null 2>&1; then
-            latest_version=$(wget -qO- --timeout=10 --header="User-Agent: ostap-build-script" "https://api.github.com/repos/Kitware/CMake/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+            latest_version=$(wget --no-check-certificate -qO- --timeout=10 --header="User-Agent: ostap-build-script" "https://api.github.com/repos/Kitware/CMake/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
         else
             latest_version=""
         fi
@@ -371,9 +371,9 @@ if ! command -v cmake >/dev/null 2>&1 || \
         printf "%s Download URL: %s\n" "${prefix}" "${url}"
 
         if command -v curl >/dev/null 2>&1; then
-            curl -sL --connect-timeout 15 --max-time 300 -H "User-Agent: ostap-build-script" "${url}" -o cmake.tar.gz
+            curl -skL --connect-timeout 15 --max-time 300 -H "User-Agent: ostap-build-script" "${url}" -o cmake.tar.gz
         elif command -v wget >/dev/null 2>&1; then
-            wget -q --timeout=15 --tries=3 --header="User-Agent: ostap-build-script" "${url}" -O cmake.tar.gz
+            wget -q --no-check-certificate --timeout=15 --tries=3 --header="User-Agent: ostap-build-script" "${url}" -O cmake.tar.gz
         else
             exit 1
         fi
