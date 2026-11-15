@@ -1,3 +1,5 @@
+# v3.8.6.20 
+
 ## New features
 
     1. Finally all reweighters work — at least for the simple test `reweight5`:
@@ -17,12 +19,12 @@
             - `GBReweighter`: thin wrapper over `GBReweighter` from `hep_ml` by Alex Rogozhnikov
 
     1. Update `PyTorchIterativeReweighter`
-
+    1. Add more classical 1D Two-Sample Tests
+    
 
 ## Bug fixes
 
 ## Backward incompatible
-
 
 # v3.8.6.18
 
