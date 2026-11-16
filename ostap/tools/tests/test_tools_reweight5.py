@@ -58,7 +58,7 @@ batch_env ( logger )
 # =============================================================================
 light, weak = light_tests ( 8 )
 
-random_freq = 0.10
+random_freq = 0.25
  
 # =============================================================================
 if   light : logger.warning ( "CONTINUOUS_INTEGRATION: run *LIGHT* version of tests" ) 
@@ -236,7 +236,6 @@ def run_reweight ( n_dim       = 3     ,
     reweighters = [ None ]
     reweighters = [] 
 
-    """
     if active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
@@ -250,7 +249,6 @@ def run_reweight ( n_dim       = 3     ,
         rw = CATB ( target   = target    , 
                     original = original1 )        
         reweighters.append ( rw )
-        
     
     if active_test ( random_freq ) and hasLightGBM () :
         
@@ -259,8 +257,6 @@ def run_reweight ( n_dim       = 3     ,
                     original              = original1 )
         
         reweighters.append ( rw )
-
-    """
     
     if active_test ( random_freq ) and hasLightGBM () :
         
@@ -271,7 +267,6 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw )
 
-    """
     if active_test ( random_freq ) and hasXGBoost  () :
         
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
@@ -343,12 +338,12 @@ def run_reweight ( n_dim       = 3     ,
                        target   = target ,
                        original = original1 )
         reweighters.append ( rw )
-
-    """
     
     # =========================================================================
     ## A bit special comparator: Random Axes 
     # =========================================================================
+    print ( 'REWEIGHTERS' , reweighters )
+    
     
     from  ostap.stats.random_axes import RandomAxes        as RA
     import ostap.stats.gof1dw     as     G1D  
@@ -367,8 +362,8 @@ def run_reweight ( n_dim       = 3     ,
                               G1D.AnsariBradley     () ,
                               G1D.SiegelTukey       () ,
                               G1D.Mood              () ,
-                              ## G1D.VanDerWaerden     () ,
-                              ## G1D.BrunnerMunzel     () ,
+                              G1D.VanDerWaerden     () ,
+                              G1D.BrunnerMunzel     () ,
                               G1D.EppsSingleton     () ) ,
               nAxes    =  8 if ( light or weak ) else 15 ,
               nToys    = 25 if ( light or weak ) else 64 ,              

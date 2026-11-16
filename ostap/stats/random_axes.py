@@ -173,6 +173,7 @@ class RandomAxes(AGoFnp,Config) :
         ##
         self.__progress  = True if progress  else False
         self.__counter   = EffCounter  () 
+        self.__pvalue    = None 
         
         Config.__init__ ( self, 
                           silent       = silent          , 
@@ -388,7 +389,7 @@ class RandomAxes(AGoFnp,Config) :
         data1 , data2 = U.normalize_pooled  ( data1   = data1   ,
                                               data2   = data2   ,
                                               weight1 = weight1 ,
-                                              weight2 = weight1 )
+                                              weight2 = weight2 )
         
         
         if tvalue is None or tvalue.shape != ( nc , na ) :
@@ -398,8 +399,10 @@ class RandomAxes(AGoFnp,Config) :
                                     weight2   = weight2 , 
                                     normalize = False   )
         
-        proj1    = numpy.dot ( data1 , self.axes.T )
-        proj2    = numpy.dot ( data2 , self.axes.T )
+        proj1  = numpy.dot ( data1 , self.axes.T )
+        proj2  = numpy.dot ( data2 , self.axes.T )
+        
+        tv_max = numpy.max ( tvalue , axis = 1 )
         
         ## make permutations
         description = permutation_symbol  + ' ' + S.fixed_width ( self.symbol , 4 ) + ':'
@@ -418,16 +421,20 @@ class RandomAxes(AGoFnp,Config) :
                                       weight1 = w1  , 
                                       weight2 = w2  )
             
+            tm_max = numpy.max ( tmatrix , axis = 1 )
 
-            exceeds = numpy.any ( tvalue <= tmatrix , axis = 1 )
+            exceeds = tv_max <= tm_max
 
             ## update counters 
             for exc, counter in zip ( exceeds, self.t_counters ) : counter += exc
 
-            self.__counter += numpy.any ( exceeds )
+            self.__counter += numpy.all ( exceeds )
             
             
-        pvalue = self.counter.eff
+        pvals  = [ c.eff for c in self.t_counters ]
+        p_min  = min ( pvals , key = float )
+        pvalue = 1.0 - ( 1.0 - p_min ) ** len ( pvals )
+        self.__pvalue = pvalue 
         
         return tvalue , pvalue 
     
@@ -457,7 +464,7 @@ class RandomAxes(AGoFnp,Config) :
                   precision = 4    ,
                   width     = 6    ) :
         
-        pvalue = self.counter.eff if pvalue is None else pvalue 
+        pvalue = self.__pvalue if pvalue is None else pvalue 
         return super().the_row ( pvalue    = pvalue    , 
                                  precision = precision ,      
                                  width     = width     )
@@ -491,13 +498,13 @@ class RandomAxes(AGoFnp,Config) :
             
             rows.append ( row )
             
-        hdr , row = self.the_row ( pvalue = self.counter.eff , 
+        hdr , row = self.the_row ( pvalue    = self.__pvalue , 
                                    precision = precision     ,
                                    width     = width         ) 
         
         first = header + hdr 
         last  = ( self.symbol, self.method ) + row
-        rows  = [ first ] + rows + [ last ]
+        rows  = [ first ] + sorted ( rows ) + [ last ]
         import ostap.logger.table as T
         rows  = T.remove_empty_columns ( rows )
         title = title if title else '%s report' % typename ( self )  
