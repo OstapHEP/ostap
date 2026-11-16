@@ -34,14 +34,16 @@ from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.core.ostap_types   import string_types, num_types, numpy_floats  
 from   ostap.math.math_base     import axis_range
 from   ostap.math.math_ve       import significance
-from   ostap.stats.utils        import ( weight_trivial  ,
-                                         full_header     ,
-                                         short_header    ,
-                                         t_header        , 
-                                         p_header        , 
-                                         clip_pvalue     , 
-                                         format_pvalue   , 
-                                         format_nsigma   )
+from   ostap.stats.utils        import ( nEff             ,
+                                         weight_trivial   ,
+                                         normalize_pooled , 
+                                         full_header      ,
+                                         short_header     ,
+                                         t_header         , 
+                                         p_header         , 
+                                         clip_pvalue      , 
+                                         format_pvalue    , 
+                                         format_nsigma    )
 from   ostap.stats.counters     import SE, WSE, ECDF
 from   ostap.stats.tools        import hasSkLearn
 from   ostap.logger.pretty      import pretty_row 
@@ -292,97 +294,6 @@ def mean_var ( data , weight = None ) :
     var   = numpy.average ( ( data - mean ) ** 2 , weights = weight , axis = 0 )
     #
     return mean , var 
-
-# =============================================================================
-## Get the effective number of entries for 1D-array
-#  \f{ n_{eff} = \frac{  \left\langle x \right\rangle^2}
-#                     { \left\langle x^2 \right\rangle } \f}
-def nEff ( weights ) :
-    """ Get the effective number of entries for 1D-array
-    n_eff = ( sum ( x )  ) ^2 / sum ( x^2 )
-    """
-    w_arr = numpy.asarray     ( weight , dtype = numpy.float64 )
-    sumw  = float ( numpy.sum ( w_arr  , dtype = numpy.float64 ) ) 
-    sumw2 = float ( numpy.dot ( w_arr  , w_arr ) ) 
-    return ( sumw * sumw ) / sumw2 
-
-# =============================================================================
-## Normalize/standartize several numpy arrays such that mean and rms for the pooled sample
-#  are equal to 0 and 1 correspondinly
-#  @code
-#  ds1 = ...
-#  ds2 = ...
-#  ds3 = ...
-#  ds1 , ds2 , ds3 = normalize_pooled ( ds1 , ds2 , ds3 ) 
-#  @endcode 
-def normalize_pooled ( *datasets ) :
-    """ Normalize/standardize several numpy arrays such that the mean and RMS 
-    for the POOLED sample are equal to 0 and 1 respectively.
-    
-    >>> ds1 = ...
-    >>> ds2 = ...
-    >>> ds1, ds2 = normalize_pooled ( ds1 , ds2 )
-    """
-    if not datasets: return ()
-
-    # Convert all inputs to numpy arrays (safely handles python lists too)
-    datasets = [ numpy.asarray ( d ) for d in datasets ]
-    
-    total_n    = 0
-    total_mean = None
-    total_var  = None
-    
-    sizes      = []
-    means      = []
-    vars_      = []
-    
-    # 1st pass: collect sample sizes, means, and variances for each dataset
-    for data in datasets:
-        
-        n = len ( data )
-        sizes.append ( n )
-        
-        mean = numpy.mean ( data , axis = 0, keepdims = True)
-        var  = numpy.var  ( data , axis = 0, keepdims = True)  # More efficient than std**2
-        
-        means.append ( mean )
-        vars_.append ( var  )
-         
-        if total_mean is None:
-            
-            total_mean = n * mean
-            total_var  = n * var
-            
-        else:
-            
-            total_mean += n * mean
-            total_var  += n * var
-            
-        total_n += n
-
-    # Final global mean across the pooled sample
-    total_mean /= total_n
-
-    # 2nd pass (Huygens–Steiner theorem / Parallel Axis Theorem): 
-    # add the inter-group variance contribution
-    for n, mean_i in zip ( sizes , means ):
-        total_var += n * ( mean_i - total_mean) ** 2
-        
-    # Global variance of the pooled sample
-    total_var /= total_n
-
-    # Global Root Mean Square (RMS) standard deviation
-    std = numpy.sqrt ( total_var )
-    
-    # Protection against division by zero for constant features
-    std[std == 0.0] = 1.0
-
-    # Apply shift & scale transformation to each dataset
-    result = [ ( data - total_mean ) / std for data in datasets]
-
-    if 1 == len ( result ) : return result [ 0 ]
-        
-    return tuple ( result )
 
 # =============================================================================
 ## Get the "normalized" input datasets

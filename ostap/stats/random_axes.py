@@ -69,7 +69,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2026-11-15"
 __all__     = (
-    'RandmAxes' , ## Random Axed Two-Samples Tests 
+    'RandomAxes' , ## Random Axed Two-Samples Tests 
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import sequence_types 
@@ -79,7 +79,6 @@ from   ostap.stats.pvalue     import make_permutations, permutation_symbol
 from   ostap.utils.config     import Config
 from   ostap.stats.gof        import AGoFnp
 from   ostap.stats.counters   import SE, EffCounter
-from   ostap.stats.gof_utils  import normalize_pooled 
 import ostap.stats.utils      as     U
 import ostap.logger.symbols   as     S 
 import numpy
@@ -335,7 +334,10 @@ class RandomAxes(AGoFnp,Config) :
         
         ## normalize input data
         if normalize : 
-            data1 , data2 = normalize_pooled  ( data1 , data2 )
+            data1 , data2 = U.normalize_pooled  ( data1   = data1   ,
+                                                  data2   = data2   ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 )
             
         ## project datasets onto frozen axes
         proj1 = numpy.dot ( data1 , self.axes.T )
@@ -383,8 +385,12 @@ class RandomAxes(AGoFnp,Config) :
                       weight2 = weight2  , 
                       where   = typename ( self ) )
         
-        data1, data2 = normalize_pooled ( data1 , data2 )
-         
+        data1 , data2 = U.normalize_pooled  ( data1   = data1   ,
+                                              data2   = data2   ,
+                                              weight1 = weight1 ,
+                                              weight2 = weight1 )
+        
+        
         if tvalue is None or tvalue.shape != ( nc , na ) :
             tvalue = self.tvalue (  data1     = data1   ,  
                                     data2     = data2   , 

@@ -21,8 +21,9 @@ from   ostap.stats.counters     import EffCounter, ECDF
 from   ostap.utils.core         import typename 
 from   ostap.utils.config       import Config
 from   ostap.stats.gof          import AGoFnp
-from   ostap.stats.utils        import weight_trivial   , check_all , num_features 
-from   ostap.stats.gof_utils    import normalize_pooled , draw_ecdf , s2u  
+from   ostap.stats.utils        import ( weight_trivial , check_all        ,
+                                         num_features   , normalize_pooled ) 
+from   ostap.stats.gof_utils    import draw_ecdf , s2u  
 from   ostap.utils.memory       import memory_enough
 import ostap.math.math_base    
 # =============================================================================
@@ -177,7 +178,10 @@ class GoFnp (AGoFnp,Config) :
             
         ## normalize
         if normalize and self.normalize :
-            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
+            uds1 , uds2 = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 ) 
         
         return self.tvalue ( uds1      ,
                              uds2      ,
@@ -219,7 +223,10 @@ class GoFnp (AGoFnp,Config) :
 
         ## normalize ? 
         if self.normalize :
-            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
+            uds1 , uds2 = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 )
 
         ## calculate t-value if not specified 
         t_value    = tvalue if not tvalue is None else self.tvalue ( uds1      ,
@@ -376,7 +383,11 @@ class GoFnp (AGoFnp,Config) :
     #  ds2 = ...
     #  ds1 , ds2 = gof.normalize_pooled  ( ds1 , ds2 ) 
     #  @endcode 
-    def normalize_pooled ( self , ds1 , ds2 ) :
+    def normalize_pooled ( self    ,
+                           data1   ,
+                           data2   ,
+                           weight1 = None ,
+                           weight2 = None ) :
         """ Normalize/standartize two numpy arrays such that the mean and rms for the POOLED sample
         are equal to 0 and 1 correspondinly
         
@@ -384,8 +395,11 @@ class GoFnp (AGoFnp,Config) :
         >>> ds2 = ...
         >>> ds1 , ds2 = gof.normalize_pooled  ( ds1 , ds2 )        
         """
-        return normalize_pooled ( ds1 , ds2 )
-
+        return normalize_pooled ( data1   = data1   ,
+                                  data2   = data2   ,
+                                  weight1 = weight1 ,
+                                  weight2 = weight2 )
+    
 # =============================================================================
 if '__main__' == __name__ :
     

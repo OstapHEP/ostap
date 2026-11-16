@@ -459,7 +459,7 @@ namespace Ostap
     // ========================================================================
     /** @class HarrellDavis 
      *  Harrell-Davis quatile etimator 
-     *  @attention it cna e CPU espensive for large data sets
+     *  @attention it can be CPU expensive for large data sets
      */
     class HarrellDavis : public QuantileMixin<HarrellDavis>
     {
@@ -518,11 +518,11 @@ namespace Ostap
         const double      t1 ,
         const double      t2 ) ; 
       // ======================================================================
-    } ; //                        The end of the class  Ostap::Math::Harrelavis
+    } ; //                       The end of the class  Ostap::Math::HarrelDavis
     // ========================================================================     
     /** @class WHarrellDavis 
-     *  Harrell-Davis quatile  etimator for weighted datas 
-     *  @attention it can be  CPU espensive for large data sets
+     *  Harrell-Davis quatile  etimator for weighted data
+     *  @attention it can be CPU expensive for large data sets
      */
     class WHarrellDavis : public QuantileMixin<WHarrellDavis>
     {
@@ -548,7 +548,7 @@ namespace Ostap
       // ======================================================================
     public : 
       // ======================================================================
-      /** calculate the quantile using the preecalculated sum of weights and sum of squared weigths          
+      /** calculate the quantile using the precalculated sum of weights and sum of squared weigths          
        *  @param first (INPUT) start of (ordered) data-sequence 
        *  @param last  (INPUT) end of   (ordered) data-sequence 
        *  @param p     (input) probability 0 < p < 1 

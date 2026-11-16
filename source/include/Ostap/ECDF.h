@@ -296,7 +296,7 @@ namespace Ostap
       ( const double                                     p    , 
         const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const ;
       // ======================================================================
-      /** get p-quantile uaing Hyndman-Fan estimator 
+      /** get p-quantile using Hyndman-Fan estimator 
        *  @see https://arxiv.org/abs/2304.07265
        *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
        */
@@ -768,6 +768,17 @@ namespace Ostap
        */
       double quantile
       ( const double                                     p    ) const ; 
+      // ======================================================================
+      /** Get (weighted) Harrel-Davis estimator for quantiles 
+       *  @param ps  (INPUT) input vector of quantiles
+       *  @retiurn Harrel-Davis quantile estimator
+       *  @see https://doi.org/10.1093/biomet/69.3.635
+       *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+       *       Biometrika 63.9 (Dec 1982), pp. 635-640
+       *  @attention It could be rather CPU expensive 
+       */
+      std::vector<double> quantiles
+      ( const std::vector<double>&                      p    ) const ; 
       // ======================================================================
     public:
       // ======================================================================

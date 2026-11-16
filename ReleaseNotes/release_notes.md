@@ -1,7 +1,8 @@
 ## New features
 
   1. Add `RandomAxes` Two-Samples Test 
-  
+  1. Take into account weights for `normalize_pooled` method.  In case variance is not posititive - use a half-difference between 16% and 85% quantiles
+
 ## Bug fixes
 
 ## Backward incompatible

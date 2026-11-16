@@ -50,9 +50,10 @@ from   ostap.stats.utils        import ( weight_trivial     ,
                                          valid_data_shape   ,
                                          num_features       ,
                                          num_samples        ,
-                                         np2vct             ) 
-from   ostap.stats.gof_utils    import ( normalize_pooled   ,
-                                         pairwise_distances ,
+                                         np2vct             , 
+                                         normalize_single   , 
+                                         normalize_pooled   )
+from   ostap.stats.gof_utils    import ( pairwise_distances ,
                                          nearest_neighbors  , 
                                          nearest_distances  , 
                                          draw_ecdf          , s2u )
@@ -227,7 +228,11 @@ class MIXnp(GoFnp) :
         ## transform ?
         uds1 , uds2 = self.unpack ( data1 , data2 )
         ## normalize
-        if normalize and self.normalize : uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+        if normalize and self.normalize :
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 ) 
 
         ## check validity and consitency of ALL input parameters 
         check_all ( uds1 , uds2 , weight1 , weight2 , typename ( self ) )
@@ -455,10 +460,13 @@ class PPDnp(GoFnp) :
 
         ## normalize
         if normalize and self.normalize :
-            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 ) 
-            
-        n1 = len ( uds1 ) 
-        n2 = len ( uds2 )
+            uds1 , uds2 = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 )
+                                                                                                                
+        n1 = num_samples ( uds1 ) 
+        n2 = num_samples ( uds2 )
         
         ## calculate sums of distances, Eq (3.7) 
         result  = self.sum_distances ( uds1 , uds1 ) / ( n1 * ( n1 - 1 ) )
@@ -510,7 +518,11 @@ class PPDnp(GoFnp) :
         
         ## normalize if requested 
         if normalize and self.normalize :
-            uds1 , uds2 = self.normalize_pooled ( uds1 , uds2 )            
+            uds1 , uds2 = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 , 
+                                                  weight2 = weight2 )
+                                                  
         ##        
         return self.tvalue ( uds1      ,
                              uds2      ,
@@ -642,7 +654,8 @@ class DNNnp(GoFnp) :
         vpdf  : array of PDF values  
         """
         ## 
-        if not weight_trivial ( weight2 ) : raise TypeError ( "DNNnp: weight2 must be *trivial*" )
+        if not weight_trivial ( weight2 ) :
+            raise TypeError ( "DNNnp: weight2 must be *trivial*" )
 
         w1_trivial = weight_trivial ( weight1 ) 
         if not w1_trivial and not self.weight_supported :
@@ -671,8 +684,7 @@ class DNNnp(GoFnp) :
         jacobian = 1.0  
         if normalize and self.normalize :
             jacobian = numpy.prod ( numpy.std  ( uds1 , axis = 0 , keepdims = True ) ) 
-            uds1     = normalize_pooled ( uds1  )     
-
+            uds1     = normalize_single( uds1  )     
         """
         from sklearn.neighbors import NearestNeighbors   
         nn = NearestNeighbors ( **self.params )        
@@ -874,7 +886,10 @@ class KullbackLeibler(DistanceTest) :
 
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 , 
+                                                  weight2 = weight2 ) 
             
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
@@ -923,7 +938,11 @@ class Jeffrey(DistanceTest) :
 
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 , 
+                                                  weight2 = weight2 )
+                                                  
             
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
@@ -972,8 +991,11 @@ class JensenShannon(DistanceTest) :
 
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
-            
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 )
+                                                              
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
 
@@ -1024,7 +1046,10 @@ class Mahalanobis(DistanceTest) :
         
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 , 
+                                                  weight2 = weight2 )
             
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
@@ -1077,8 +1102,11 @@ class Hotelling(DistanceTest) :
         
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
-
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 )
+            
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
         
@@ -1130,7 +1158,11 @@ class Bhattacharyya(DistanceTest) :
         
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight1 )
+                                                  
 
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
@@ -1183,7 +1215,10 @@ class Wasserstein(DistanceTest) :
 
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 )
 
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )
@@ -1236,7 +1271,11 @@ class Hellinger(DistanceTest) :
 
         ## normalize
         if normalize and self.normalize :
-            uds1, uds2  = self.normalize_pooled ( uds1 , uds2  ) 
+            uds1, uds2  = self.normalize_pooled ( data1   = uds1    ,
+                                                  data2   = uds2    ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 )
+                                                  
 
         v1 = self.np2vstat ( uds1 , weight1 )
         v2 = self.np2vstat ( uds2 , weight2 )

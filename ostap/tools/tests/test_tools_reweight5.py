@@ -163,7 +163,6 @@ if active_test ( random_freq ) :  comparators .append ( COMPARATORH ( parallel =
 
 if not comparators : comparators .append ( COMPARATORA ( parallel = True , nToys = 100 ) )
 
-"""
 if active_test ( random_freq ) and hasCatBoost  () :
     
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
@@ -193,7 +192,6 @@ if False and active_test ( random_freq ) and hasSkLearn ():
 
     from ostap.stats.adval        import ADVAL_RF   as COMPARATOR10
     comparators .append ( COMPARATOR10 ( parallel = True , nToys = 25 ) ) 
-"""
 
 comparators = tuple ( comparators )
 
@@ -238,6 +236,7 @@ def run_reweight ( n_dim       = 3     ,
     reweighters = [ None ]
     reweighters = [] 
 
+    """
     if active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
@@ -245,7 +244,6 @@ def run_reweight ( n_dim       = 3     ,
                     original = original1   )                           
         reweighters.append ( rw )
         
-    """
     if active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostIterativeReweighter as CATB
@@ -253,7 +251,7 @@ def run_reweight ( n_dim       = 3     ,
                     original = original1 )        
         reweighters.append ( rw )
         
-        
+    
     if active_test ( random_freq ) and hasLightGBM () :
         
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
@@ -262,6 +260,8 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw )
 
+    """
+    
     if active_test ( random_freq ) and hasLightGBM () :
         
         from ostap.tools.reweighters  import LightGBMIterativeReweighter as  LGBM
@@ -270,8 +270,8 @@ def run_reweight ( n_dim       = 3     ,
                     progress              = False    )
         
         reweighters.append ( rw )
-        
 
+    """
     if active_test ( random_freq ) and hasXGBoost  () :
         
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
@@ -343,8 +343,9 @@ def run_reweight ( n_dim       = 3     ,
                        target   = target ,
                        original = original1 )
         reweighters.append ( rw )
-    """
 
+    """
+    
     # =========================================================================
     ## A bit special comparator: Random Axes 
     # =========================================================================

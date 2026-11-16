@@ -330,8 +330,6 @@ def nEff ( X , W = None ):
     if weight_trivial ( W ) : return ns
 
     # Step 3: Convert weights directly to float64 to prevent precision loss.
-    # High-precision accumulation is critical here because sPlot weights can have 
-    # large dynamic ranges and negative values, making them sensitive to rounding errors.
     w_arr = numpy.asarray ( W , dtype = numpy.float64 )
     
     # Step 4: Compute the sum of weights (Sum of W)
@@ -342,7 +340,6 @@ def nEff ( X , W = None ):
     sum_w2 = float ( numpy.dot ( w_arr, w_arr ) ) 
 
     # Step 6: Apply Kish's formula: N_eff = (sum_w)^2 / sum_w2.
-    # Guard against division by zero or negative sum of squares (pathological weight cases).
     return float ( sum_w ** 2 ) / sum_w2 if 0  < sum_w2 else ns 
 
 # =============================================================================
@@ -361,28 +358,22 @@ def eff_size ( data1   ,
     
 # =============================================================================
 ## Check if weights array has a valid 1D/column vector shape
-# - Supports NumPy arrays, lists, tuples, and custom containers.
 def valid_weights_shape ( weights ) :
     """ Check if weights have a valid 1D array or (N, 1) column shape.
     - Supports NumPy arrays, lists, tuples, and custom containers.
     """
     if weight_trivial ( weights ) : return True
 
-    # Extract shape attribute if present (NumPy arrays, Tensors, DataFrames)
     shape = getattr ( weights , 'shape' , None )
 
     if shape is not None:
         ndim = len ( shape )
-        # Accept 1D vectors (N,) or 0D scalars
         if ndim <= 1 : return True
-        # Accept (N, 1) column vectors, reject any multi-column (N, >1) or >2D arrays
         if ndim == 2 and shape[1] == 1: return True
         return False
     
-    # For standard Python sequences (lists, tuples): check nested dimensions
     if hasattr ( weights , '__len__' ) and 0 < len  ( weights ) :
         first_element = weights [ 0 ]
-        # Reject lists of lists/tuples with length > 1
         if isinstance ( first_element, sized_types ) :
             return 1 == len ( first_element )
 
@@ -390,60 +381,43 @@ def valid_weights_shape ( weights ) :
 
 # =============================================================================
 ## Check if dataset has a valid structure/shape
-# - Supports NumPy arrays, DataFrames, PyROOT C++ containers, and sequences.
 def valid_data_shape(data):
     """ Check if data has a valid 1D, 2D, or Structured Array shape.
-    - Supports NumPy arrays, DataFrames, PyROOT C++ containers, and sequences.
     """
     if data is None: return False
 
-    # Check shape attribute if present (NumPy arrays, Pandas, Tensors)
     shape = getattr ( data , 'shape' , None )
     if shape is not None:
         ndim = len ( shape )
-        # Allow 1D vectors (N,) and 2D tabular features (N, F)
         return True if 1 <= ndim <= 2 else False 
 
-    # For standard Python sequences / PyROOT containers
     return True if hasattr ( data , '__len__' ) else False 
 
 # =============================================================================
 ## Number of features for training data
-#  - Safe extraction of n_features (supports DataFrame, 2D array, 1D vector, Structured Array)
 def num_features ( X ) :
     """ Number of features for training data
-    - Safe extraction of n_features (supports DataFrame, 2D array, 1D vector, Structured Array)
     """
-    # 1. Structured Arrays (check field names in dtype)
     dtype = getattr ( X , 'dtype' , None )
     if dtype is not None and dtype.names : return len ( dtype.names )
 
-    # 2. Standard NumPy arrays, DataFrames, etc.
     shape = getattr ( X , 'shape' , None )
     if shape is not None and 1 < len ( shape ) : return shape [ 1 ]
 
-    # 3. 1D vectors and fallback
     return 1
 
 # =============================================================================
 ## Returns the number of samples/events (rows) in the dataset.
-#  Supports NumPy arrays, Pandas DataFrames/Series, SciPy sparse matrices,
-#  PyTorch/TensorFlow tensors, C++ containers (via PyROOT), and standard Python sequences.
 def num_samples(X):
     """ Number of samples/events (rows) in the dataset.
-
-    Supports NumPy arrays, Pandas DataFrames/Series, SciPy sparse matrices,
-    PyTorch/TensorFlow tensors, C++ containers (via PyROOT), and standard Python sequences.
     """
     if X is None : return 0
 
-    # Handle standard Python sequences, DataFrames, ROOT objects, PyROOT C++ vectors
     if hasattr ( X, "__len__" ) : return len ( X )
 
-    # Handle objects with .shape attribute (NumPy, PyTorch, TensorFlow, SciPy )
     shape = getattr ( X , "shape" , None )
     if shape is not None:
-        if 0 == len ( shape ) : return 0 # 0D scalar has 0 samples 
+        if 0 == len ( shape ) : return 0 
         return int ( shape  [ 0 ] )
 
     raise TypeError ( "Unsupported data structure for determining sample count: %s" % typename ( X ) )
@@ -452,23 +426,18 @@ def num_samples(X):
 ## Check if input dataset shapes have compatible feature dimensions
 def compatible_shapes ( ds1 , ds2 ) :
     """ Check if ds1 and ds2 have compatible feature dimensions"""
-    
-    # Extract dtype for structured arrays (if applicable)
     dt1 = getattr ( ds1 , 'dtype' , None )
     dt2 = getattr ( ds2 , 'dtype' , None )
 
-    # If both are structured arrays, compare their field names/types
     if dt1 is not None and dt1.names and dt2 is not None and dt2.names:
         return dt1.names == dt2.names
 
     s1 = numpy.shape ( ds1 )
     s2 = numpy.shape ( ds2 )
 
-    # Validate non-empty datasets
     if not ( s1 and s2 and s1 [ 0 ] > 0 and s2 [ 0 ] > 0 ):
         return False
 
-    # Get feature dimensions (ignoring event count at index 0)
     dim1 = s1 [ 1 : ] if 1 < len ( s1 ) else ()
     dim2 = s2 [ 1 : ] if 1 < len ( s2 ) else ()
 
@@ -476,75 +445,259 @@ def compatible_shapes ( ds1 , ds2 ) :
 
 # =============================================================================
 ## Check if dataset and weights are compatible
-#  - Ensures weights are 1D (or 2D column vector) matching the data length.
 def compatible_weights ( data , weights = None ) :
     """Check for data and weights compatibility.
-    - Ensures weights are 1D (or 2D column vector) matching the data length.
     """
     if weight_trivial ( weights ) : return True
 
-    # 1. Reject data shapes first
     if not valid_data_shape    ( data    ) : return False
-    
-    # 2. Reject invalid weight matrix shapes second 
     if not valid_weights_shape ( weights ) : return False
 
-    # 3. Check event count compatibility using num_samples
     return num_samples ( data ) == num_samples ( weights )
 
 # ===========================================================================
 ## Valid weight?
-#  - trivial or valid shape 
-#  - trivial or sum is positive
 def valid_weight ( weight ) :
     """ Valid weight?
-    - trivial or valid shape 
-    - trivial or sum is positive
     """
     if     weight_trivial      ( weight ) : return True
     if not valid_weights_shape ( weight ) : return False
     
-    # =========================================================================
-    # Safely evaluate sum for NumPy arrays, lists, ROOT containers, etc.
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
+    try : 
         return 0 < float ( numpy.sum ( weight ) )
-        # ===================================================================== 
-    except Exception : # ======================================================
-        # =====================================================================
+    except Exception : 
         return False
+
+
+
+# =============================================================================
+from ostap.math.math_ve import gauss_cdf 
+one_sigma_minus = gauss_cdf ( -1.0 ) 
+one_sigma_plus  = gauss_cdf ( +1.0 )  
+
+# =============================================================================
+## Internal implementation for single or pooled normalization 
+def _normalize_impl ( data1         ,
+                      data2 = None  ,
+                      weight1 = None,
+                      weight2 = None ) :
+    """ Internal implementation for single or pooled normalization """
+    
+    w1_trivial = weight_trivial ( weight1 )
+    w2_trivial = weight_trivial ( weight2 ) if data2 is not None else True
+
+    n1   = num_samples ( data1 )
+    
+    # ========================================================================
+    ## Case with a single dataset
+    # ========================================================================
+    if data2 is None :
+        
+        if w1_trivial :
+            
+            mu  = numpy.mean ( data1 , axis = 0 , keepdims = True )
+            var = numpy.var  ( data1 , axis = 0 , keepdims = True )  
+            
+            var   = numpy.where ( var > 0 , var , 1.0 )
+            scale = numpy.sqrt  ( var )
+            
+            return mu, scale
+        
+        else :
+            
+            w1    = numpy.asarray ( weight1 , dtype = numpy.float64 ).ravel() if weight1 is not None else numpy.ones ( n1 , dtype = numpy.float64 )
+            w1    = numpy.ascontiguousarray ( w1 )
+            sum_w = numpy.sum ( w1 )
+            
+            # 1. Centering: weighted mean (1D weight @ 2D data)
+            mean = ( w1 @ data1 ) / sum_w
+            if mean.ndim == 1:
+                mean = mean.reshape(1, -1)
+            
+            x_centered = data1 - mean
+            
+            # 2. Weighted variance O(N)
+            var = ( w1 @ ( x_centered * x_centered ) ) / sum_w
+            if var.ndim == 1:
+                var = var.reshape(1, -1)
+
+            if numpy.all ( 0 <= w1 ) or numpy.all ( 0 < var ) :
+                var   = numpy.where ( var > 0 , var , 1.0 )
+                scale = numpy.sqrt  ( var )
+                return mean, scale
+            else :
+                scale = numpy.empty_like ( mean )
+                pos_mask = var > 0
+                scale [ pos_mask ] = numpy.sqrt ( var [ pos_mask ] )
+                
+                if not numpy.all ( pos_mask ) :
+                    n_features = num_features ( data1 )
+                    for j in range ( n_features ) :
+                        if not pos_mask [ 0 , j ] :
+                            col_data    = data1 [ : , j ] if 1 < data1.ndim else data1
+                            col_weights = w1
+                            
+                            ecdf = data2ecdf ( col_data , col_weights )
+                            q1   = ecdf.quantile ( one_sigma_minus )
+                            q2   = ecdf.quantile ( one_sigma_plus  )
+                            
+                            robust_sigma = ( q2 - q1 ) * 0.5
+                            scale [ 0 , j ] = robust_sigma
+                            
+                scale = numpy.where ( scale > 0 , scale , 1.0 )
+                return mean, scale
+
+    # ========================================================================
+    ## Case with two datasets (pooling)
+    # ========================================================================
+    n2   = num_samples ( data2 )
+    ntot = n1 + n2
+
+    if w1_trivial and w2_trivial :
+        mu1  = numpy.mean ( data1 , axis = 0 , keepdims = True )
+        mu2  = numpy.mean ( data2 , axis = 0 , keepdims = True )
+        
+        var1 = numpy.var  ( data1 , axis = 0 , keepdims = True )  
+        var2 = numpy.var  ( data2 , axis = 0 , keepdims = True ) 
+
+        pooled_mean = ( n1 * mu1  + n2 * mu2  ) / ntot 
+        
+        diff1 = mu1 - pooled_mean
+        diff2 = mu2 - pooled_mean
+        
+        pooled_var  = ( n1 * ( var1 + diff1 * diff1 ) + 
+                        n2 * ( var2 + diff2 * diff2 ) ) / ntot 
+        
+        pooled_var   = numpy.where ( pooled_var > 0 , pooled_var , 1.0 )
+        pooled_scale = numpy.sqrt  ( pooled_var )
+
+        return pooled_mean, pooled_scale
+
+    # ========================================================================
+    ## Case with weights (two datasets) - Чистые 1D массивы + оператор @
+    # ========================================================================
+    w1 = numpy.asarray ( weight1 , dtype = numpy.float64 ).ravel() if weight1 is not None else numpy.ones ( n1 , dtype = numpy.float64 )
+    w2 = numpy.asarray ( weight2 , dtype = numpy.float64 ).ravel() if weight2 is not None else numpy.ones ( n2 , dtype = numpy.float64 )
+
+    w1 = numpy.ascontiguousarray ( w1 )
+    w2 = numpy.ascontiguousarray ( w2 )
+
+    x_pool = numpy.concatenate ( ( data1 , data2 ) , axis = 0 )
+    w_pool = numpy.concatenate ( ( w1    , w2    ) , axis = 0 )
+    
+    sum_w  = numpy.sum ( w_pool )
+    
+    # 1. Centering: weighted mean of the pool (1D w_pool @ 2D x_pool)
+    pooled_mean = ( w_pool @ x_pool ) / sum_w
+    if pooled_mean.ndim == 1:
+        pooled_mean = pooled_mean.reshape(1, -1)
+        
+    x_centered  = x_pool - pooled_mean
+    
+    # 2. Weighted variance O(N)
+    pooled_var = ( w_pool @ ( x_centered * x_centered ) ) / sum_w
+    if pooled_var.ndim == 1:
+        pooled_var = pooled_var.reshape(1, -1)
+
+    # ========================================================================
+    ## Case with all weights non-negative or all pooled var non-negative 
+    # ========================================================================     
+    if numpy.all ( 0 <= w_pool ) or numpy.all ( 0 < pooled_var ) :
+        pooled_var   = numpy.where ( pooled_var > 0 , pooled_var , 1.0 )
+        pooled_scale = numpy.sqrt  ( pooled_var )
+        return pooled_mean, pooled_scale
+    
+    # ========================================================================
+    ## General case: negative weights and some pooled variances are <= 0
+    # ========================================================================
+    pooled_scale = numpy.empty_like ( pooled_mean )
+    
+    pos_mask     = pooled_var > 0
+    pooled_scale [ pos_mask ] = numpy.sqrt ( pooled_var [ pos_mask ] )
+    
+    if not numpy.all ( pos_mask ) :
+        n_features = num_features ( x_pool )
+        
+        for j in range ( n_features ) :
+            if not pos_mask [ 0 , j ] :
+                col_data   = x_pool [ : , j ] if 1 < x_pool.ndim else x_pool
+                col_weight = w_pool
+                
+                ecdf = data2ecdf ( col_data , col_weight )
+                q1   = ecdf.quantile ( one_sigma_minus )
+                q2   = ecdf.quantile ( one_sigma_plus  )
+                
+                robust_sigma = ( q2 - q1 ) * 0.5
+                pooled_scale [ 0 , j ] = robust_sigma 
+                
+    pooled_scale = numpy.where ( pooled_scale > 0 , pooled_scale , 1.0 )
+
+    return pooled_mean, pooled_scale
+
+
+# =============================================================================
+## Normalize ("standardize") two input datasets such that pooled dataset has
+#  zero mean and unit variance
+# =============================================================================
+def normalize_pooled ( data1         ,
+                       data2         ,
+                       weight1 = None,
+                       weight2 = None ) :
+    """ Normalize ("Standardize") two input datasets such that pooled
+    dataset has zero means and unit variances for each variable
+    
+    >>> data1, data2, weight1, weight2 = ...
+    >>> ds1 , ds2 = normalize_pooled ( data1 , data2 , weight1 , weight2 )
+    """ 
+    check_all ( data1   = data1              ,
+                data2   = data2              ,
+                weight1 = weight1            ,
+                weight2 = weight2            ,
+                where   = "normalize_pooled" )
+
+    mean, scale = _normalize_impl ( data1, data2, weight1, weight2 )
+
+    ds1 = ( data1 - mean ) / scale
+    ds2 = ( data2 - mean ) / scale
+    
+    return ds1 , ds2
+
+
+# =============================================================================
+## Normalize ("standardize") single input dataset
+# =============================================================================
+def normalize_single ( data       ,
+                       weight = None ) :
+    """ Normalize ("Standardize") single input dataset such that
+    dataset has zero mean and unit variance for each variable
+    
+    >>> data, weight = ...
+    >>> ds = normalize ( data, weight )
+    """     
+    mean, scale = _normalize_impl ( data1 = data, weight1 = weight )
+    return ( data - mean ) / scale
 
 # ============================================================================
 ## check data and weights
-#  - <code>data1</code>   is valid 
-#  - <code>data2</code>   is valid 
-#  - <code>data1</code>   is "compatible" with <code>data2</code>
-#  - <code>weight1</code> is valid
-#  - <code>weight2</code> is valid
-#  - <code>data1</code>   and <code>weight1</code> are "compatible"
-#  - <code>data2</code>   and <code>weight2</code> are "compatible"
 def check_all ( data1   ,
                 data2   ,
                 weight1 = None        ,
                 weight2 = None        ,
                 where   = "check_all" ) :
     
-    if not valid_weight       ( weight1         ) : raise TypeError ( "%s: invalid `weight1`" % where ) 
-    if not valid_weight       ( weight2         ) : raise TypeError ( "%s: invalid `weight2`" % where ) 
     if not valid_data_shape   ( data1           ) : raise TypeError ( "%s: invalid `data1`"   % where ) 
     if not valid_data_shape   ( data2           ) : raise TypeError ( "%s: invalid `data2`"   % where ) 
     if not compatible_shapes  ( data1 , data2   ) : raise TypeError ( "%s: incompatible data shape`"  % where ) 
+    if not valid_weight       ( weight1         ) : raise TypeError ( "%s: invalid `weight1`" % where ) 
+    if not valid_weight       ( weight2         ) : raise TypeError ( "%s: invalid `weight2`" % where ) 
     if not compatible_weights ( data1 , weight1 ) : raise TypeError ( "%s: incompatible `data1/weight1`"  % where ) 
     if not compatible_weights ( data2 , weight2 ) : raise TypeError ( "%s: incompatible `data2/weight2`"  % where ) 
     return True 
 
 # ==============================================================================
 ## Convert numpy-array statistics into Ostap::SVectorWithError
-#  @see Ostap::Math::SVectorWithError
 def np2vct ( data , weight = None ) :
     """ Convert numpy-array statistics into `Ostap.Math.SVectorWithError`
-    - see `Ostap.Math.SVectorWithError`
     """
 
     shape     = data.shape
@@ -552,19 +705,16 @@ def np2vct ( data , weight = None ) :
     
     w         = None if weight_trivial ( weight ) else weight
 
-    ## 
     from statsmodels.stats.weightstats import DescrStatsW as DSW 
     dsw       = DSW  ( data , weights = w )
     mean      = dsw.mean
     covmtrx   = dsw.cov
     
-    ## load corresponding linear-algebra tricks:
     import ostap.math.linalg
     from   ostap.core.core   import Ostap
     
     MN        = Ostap.Math.SymMatrix ( N )
     
-    ## prepare output 
     RT        = Ostap.Math.SVectorWithError [ N ]
     values    = RT.Value      () 
     covs      = RT.Covariance () 
@@ -587,18 +737,13 @@ def np2vct ( data , weight = None ) :
 def clip_pvalue ( pvalue , clip = 0.5 ) :
     """ Clip p-value
     """
-    ## if everything is fine, no need to clip:
     if 0 < float ( pvalue ) < 1 : return pvalue 
-    ## 
     pv   = VE ( pvalue )
     cov2 = max (  0 , pv.cov2() ) 
-    ##
     clip = min ( 0.5 , abs ( clip ) * pv.error () ) if 0 < cov2 else min ( clip , 1e-6 )  
-    ## 
     value = pv.value () 
     if   1 <= value : pv = VE ( 1 - clip , cov2 )
     elif 0 >= value : pv = VE (     clip , cov2 )
-    ## 
     return pv 
 
 # ==============================================================================
@@ -628,14 +773,7 @@ def format_nsigma ( nsigma ) :
     return str ( ns.toString ( '%%.2f %s %%-.2f' % S.plus_minus ) if float ( ns ) < 1000 else S.infinity_pos  ) 
 
 # =============================================================================
-## @brief Calculate optimal batch size for PyTorch iterative boosting.
-#  @details Dynamically balances Full-Batch stability for smaller datasets with 
-#           SIMD efficiency, RAM limits, and BatchNorm1d stability for larger datasets.
-#  @param n_samples  Total number of samples (N_orig + N_targ)
-#  @param n_features Number of input features (D)
-#  @param max_val    Maximum allowed batch size cap (default: 2^16 = 65536)
-#  @return Optimal integer batch size (power of 2)
-# =============================================================================
+## Calculate optimal batch size for PyTorch iterative boosting.
 def optimal_batch_size ( n_samples      ,
                          n_features     ,
                          max_batch_size ) :
@@ -643,22 +781,13 @@ def optimal_batch_size ( n_samples      ,
     """
     if n_samples <= max_batch_size  : return n_samples
 
-    # Ensure at least 64 samples per feature axis to stabilize BatchNorm statistics
     target_bs = max ( n_samples // 2 , 64 * n_features )
-    
-    # Smoothly round down to the nearest power of 2
     batch_size = 2 ** math.floor ( math.log2 ( target_bs ) )
     
     return min ( batch_size , max_batch_size )
 
 # =============================================================================
-## @brief Compute truncated mean with asymmetric low/high trimming along the specified axis.
-#  @param x Input array (e.g. fold predictions matrix of shape (N_folds, N_samples)).
-#  @param axis Dimension along which to sort and trim extremes.
-#  @param trim_low Number or fraction of elements to trim from the bottom (low end).
-#  @param trim_high Number or fraction of elements to trim from the top (high end). 
-#                 If None, defaults to `trim_low` (symmetric trimming).
-#  @return Aggregated array with trimmed mean.
+## Compute truncated mean with asymmetric low/high trimming along the specified axis.
 def truncated_mean ( x         , *    ,
                      axis      = 0    ,
                      trim_low  = 1    ,
@@ -668,26 +797,20 @@ def truncated_mean ( x         , *    ,
     x = numpy.asarray ( x, dtype = numpy.float32 )
     n_folds = x.shape [ axis ]
     
-    # Fallback to standard mean if there are too few elements to trim safely
     if n_folds < 3 : return numpy.mean ( x, axis = axis )
     
-    # If trim_high is not specified, make it symmetric to trim_low
     if trim_high is None : trim_high = trim_low
         
-    # Sort predictions along the fold axis
     sorted_x = numpy.sort ( x, axis = axis )
     
-    # Determine number of elements to trim from the bottom (k_low)
     k_low  = int ( trim_low  )
     k_high = int ( trim_high )
         
-    # Safety bounds: ensure we don't trim everything or overlap extremes
     k_low  = max ( 0 , k_low   )
     k_high = max ( 0 , k_high  )
     if k_low + k_high >= n_folds : k_low = k_high = 0
     
     if k_low > 0 or k_high > 0 :
-        # Construct a dynamic slice tuple to support arbitrary dimensions safely
         slices   = [ slice ( None ) ] * x.ndim
         end_idx  = n_folds - k_high if k_high > 0 else None
         slices [ axis ] = slice ( k_low, end_idx )
@@ -699,29 +822,26 @@ def truncated_mean ( x         , *    ,
     
 
 # ============================================================================
-## typer for empirical cumulative distribution functions
 ECDF_types = ECDF , WECDF
 # ============================================================================
 ## Convert data/weight pair into (W)ECDF
-#  @see Ostap::Math::ECDF
-#  @see Ostap::Math::WECDF
 def data2ecdf ( data , weight = None ) :
     """ Convert data/weight pair into (W)ECDF
-    - see Ostap::Math::ECDF
-    - see Ostap::Math::WECDF
     """
-    ##
     if isinstance ( data , ECDF_types ) : return data
-    ## 
-    ## convert to numpy 
-    data      = numpy.asarray   ( data   , dtype = numpy.float64 ).ravel()
+    
+    data  = numpy.asarray   ( data   , dtype = numpy.float64 ).ravel()
+    data  = numpy.ascontiguousarray ( data )
+    
     if 1 != num_features        ( data   )          : raise TypeError  ( "Invalid `data` type!"                   )
-    ##
+    
     if       weight_trivial     ( weight )          : return ECDF ( data2vct ( data ) )
     elif not valid_weight       ( weight )          : raise ValueError ( "Invalid `weight` type/value!"           )
     elif not compatible_weights ( data   , weight ) : raise TypeError  ( "Incompatible `data/weight` structures!" )
-    ##
-    weight = numpy.asarray ( weight , dtype = numpy.float64 ).ravel() 
+    
+    weight = numpy.asarray ( weight , dtype = numpy.float64 ).ravel()
+    weight = numpy.ascontiguousarray ( weight )
+    
     return WECDF ( data2vct ( data ) , data2vct ( weight ) ) 
 
 # ============================================================================
@@ -733,3 +853,6 @@ if '__main__' == __name__ :
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
+
+
+

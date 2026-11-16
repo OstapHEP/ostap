@@ -19,7 +19,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class Quantile 
-     *  P2 algorithm for (approximate) quantile estimamtion
+     *  P2 algorithm for (approximate) quantile estimation
      *  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
      *  @see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
      *  @see https://aakinshin.net/posts/p2-quantile-estimator-initialization/

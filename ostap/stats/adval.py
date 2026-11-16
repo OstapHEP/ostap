@@ -342,7 +342,10 @@ class ADVAL_base (GoFnp):
         check_all ( data1 , data2 , weight1 , weight2 , typename ( self ) )
         
         if self.normalize and normalize :
-            uds1 , uds2 = self.normalize_pooled ( data1 , data2 )
+            uds1 , uds2 = self.normalize_pooled ( data1   = data1   ,
+                                                  data2   = data2   ,
+                                                  weight1 = weight1 ,
+                                                  weight2 = weight2 )
             return self.tvalue ( uds1       , uds2       ,
                                  weight1    = weight1    ,
                                  weight2    = weight2    ,

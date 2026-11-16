@@ -4471,13 +4471,13 @@ class APDF3 (APDF2) :
                                     args    = args    , **kwargs )
 
         if   draw and draw in ( 1 , '1' , 'x' , 'X' , self.xvar.name ) :
-            f = self.draw1 ( daatset , silent = silent , args = args , **kwargs )
+            f = self.draw1 ( dataset , silent = silent , args = args , **kwargs )
             return result, f
         elif draw and draw in ( 2 , '2' , 'y' , 'Y' , self.yvar.name ) :
-            f = self.draw2 ( daatset , silent = silent , args = args , **kwargs )
+            f = self.draw2 ( dataset , silent = silent , args = args , **kwargs )
             return result, f
         elif draw and draw in ( 3 , '3' , 'z' , 'Z' , self.zvar.name ) :
-            f = self.draw3 ( daatset , silent = silent , args = args , **kwargs )
+            f = self.draw3 ( dataset , silent = silent , args = args , **kwargs )
             return result, f
 
         return result , None 
