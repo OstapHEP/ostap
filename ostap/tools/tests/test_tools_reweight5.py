@@ -140,14 +140,14 @@ def make_datasets ( n_target    = 5000 ,
 # ==============================================================================
 ## Compare datasets using several methods 
 # ==============================================================================
-from ostap.stats.gof_np       import  ( KullbackLeibler as COMPARATORA , 
-                                        Jeffrey         as COMPARATORB , 
-                                        JensenShannon   as COMPARATORC ,
-                                        Mahalanobis     as COMPARATORD ,
-                                        Hotelling       as COMPARATORE , 
-                                        Bhattacharyya   as COMPARATORF , 
-                                        Wasserstein     as COMPARATORG , 
-                                        Hellinger       as COMPARATORH ) 
+from ostap.stats.gof_np   import  ( KullbackLeibler as COMPARATORA , 
+                                    Jeffrey         as COMPARATORB , 
+                                    JensenShannon   as COMPARATORC ,
+                                    Mahalanobis     as COMPARATORD ,
+                                    Hotelling       as COMPARATORE , 
+                                    Bhattacharyya   as COMPARATORF , 
+                                    Wasserstein     as COMPARATORG , 
+                                    Hellinger       as COMPARATORH ) 
 
 from ostap.stats.data_compare import data_compare
 comparators = []
@@ -163,6 +163,7 @@ if active_test ( random_freq ) :  comparators .append ( COMPARATORH ( parallel =
 
 if not comparators : comparators .append ( COMPARATORA ( parallel = True , nToys = 100 ) )
 
+"""
 if active_test ( random_freq ) and hasCatBoost  () :
     
     from ostap.stats.adval        import ADVAL_CATB  as COMPARATOR7
@@ -192,10 +193,11 @@ if False and active_test ( random_freq ) and hasSkLearn ():
 
     from ostap.stats.adval        import ADVAL_RF   as COMPARATOR10
     comparators .append ( COMPARATOR10 ( parallel = True , nToys = 25 ) ) 
+"""
 
 comparators = tuple ( comparators )
 
-# ============================
+
 def run_reweight ( n_dim       = 3     ,
                    n_target    = 10000 , 
                    n_original1 = None  , 
@@ -243,7 +245,7 @@ def run_reweight ( n_dim       = 3     ,
                     original = original1   )                           
         reweighters.append ( rw )
         
-        
+    """
     if active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostIterativeReweighter as CATB
@@ -341,6 +343,36 @@ def run_reweight ( n_dim       = 3     ,
                        target   = target ,
                        original = original1 )
         reweighters.append ( rw )
+    """
+
+    # =========================================================================
+    ## A bit special comparator: Random Axes 
+    # =========================================================================
+    
+    from  ostap.stats.random_axes import RandomAxes        as RA
+    import ostap.stats.gof1dw     as     G1D  
+    ra = RA ( comparators = ( G1D.KolmogorovSmirnov () ,
+                              G1D.Kuiper            () ,
+                              G1D.AndersonDarling   () ,
+                              G1D.CramerVonMises    () ,
+                              G1D.BerkJones         () ,
+                              G1D.ZA                () ,
+                              G1D.ZC                () ,
+                              G1D.ZK                () ,
+                              G1D.Wasserstein1      () ,
+                              G1D.Wasserstein2      () ,
+                              G1D.Rosenblatt        () ,
+                              G1D.Watson            () ,
+                              G1D.AnsariBradley     () ,
+                              G1D.SiegelTukey       () ,
+                              G1D.Mood              () ,
+                              ## G1D.VanDerWaerden     () ,
+                              ## G1D.BrunnerMunzel     () ,
+                              G1D.EppsSingleton     () ) ,
+              nAxes    =  8 if ( light or weak ) else 15 ,
+              nToys    = 25 if ( light or weak ) else 64 ,              
+             progress = True ) 
+
     
     # =========================================================================
     ## Summary table 
@@ -349,13 +381,14 @@ def run_reweight ( n_dim       = 3     ,
     header    = [] 
     rows      = []  
 
+    
     originals = ( original2 , ) if ( light or weak ) else ( original2 , ) 
     
     for rw in reweighters :
-            
-        for original in originals : 
-        
-            if rw : logger.info ( 'Using REWEIGHTER %s %s ' % ( typename ( rw ) , rw.method ) )
+
+        for original in originals :
+                    
+            if rw : logger.info ( 'Using REWEIGHTER %s %s %s ' % ( rw.symbol , typename ( rw ) , rw.method ) )
             
             if rw is None : original_weight = None
             else          : original_weight = rw.weights ( original )
@@ -390,23 +423,20 @@ def run_reweight ( n_dim       = 3     ,
             table = T.table ( table , title = title , prefix = '# ' , alignment = 'clclccccccccccccccccccccccccc' )
             logger.info ( '%s\n%s' % ( title , table ) )
 
-    # =================================================================
-    # can we save all reweighters into database ?
-    ## with DBASE.tmpdb () as db :
-    ##    
-    ##    for rw in reweighters : db [  typename ( rw ) ] = rw                
-    ##    db [ 'reweighters' ] = reweighters
-    ##    
-    ##    db.ls () 
+            ## Random Axes comparator:
+            _ , pv = ra.pvalue ( data1   = target   ,
+                                 data2   = original ,
+                                 weight2 = original_weight ) 
+
+            title = '%s Random Axes/%s ' % ( ra.symbol, ra.method ) 
+            logger.info ( '%s:\n%s' % ( title , ra.report ( pvalue = pv , title = title , prefix = '# ' ) ) ) 
+            
         
 # =============================================================================
 if '__main__' == __name__ :
-
     
     run_reweight ( 3 , 3000 , 7000 , 8000 ) 
     
-# =============================================================================
-        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

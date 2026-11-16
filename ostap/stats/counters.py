@@ -535,7 +535,15 @@ class EffCounter(object):
     def __setstate__ ( self , state ) :
         self.__A , self.__R = state
     # ==========================================================================
-
+    ## reset the content 
+    def reset ( self ) :
+        """ Reset the content of th eocunter
+        """
+        self.__A = 0
+        self.__R = 0
+        
+        return self
+    
 # ============================================================================
 ## nice print for EffEntity 
 def _ec_table_ ( cnt              ,

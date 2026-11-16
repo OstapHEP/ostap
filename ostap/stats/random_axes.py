@@ -3,7 +3,7 @@
 # =============================================================================
 ## @file ostap/stats/random_axes.py
 #  Implement Random Axes to probe
-#  the difference between two weighted dataset
+#  the difference between two (weighted) datasets
 #  
 # The theoretical justification for projecting multidimensional datasets 
 # onto random axes lies in the Cramér–Wold Theorem.
@@ -34,7 +34,7 @@
 #  @date   2026-07-04
 # =============================================================================
 """ Implement Random Axes to probe
-    the difference between two weighted datasets (supporting negative weights via sPlot)
+    the difference between two (weighted) datasets 
     
 To estimate the p-value, permutations are used.
 
@@ -69,15 +69,19 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2026-11-15"
 __all__     = (
+    'RandmAxes' , ## Random Axed Two-Samples Tests 
 ) 
 # =============================================================================
+from   ostap.core.ostap_types import sequence_types 
 from   ostap.utils.core       import typename 
 from   ostap.utils.basic      import classprop
-from   ostap.stats.pvalue     import make_permutations
+from   ostap.stats.pvalue     import make_permutations, permutation_symbol 
 from   ostap.utils.config     import Config
 from   ostap.stats.gof        import AGoFnp
-from   ostap.stats.counters   import EffCounter  
+from   ostap.stats.counters   import SE, EffCounter
+from   ostap.stats.gof_utils  import normalize_pooled 
 import ostap.stats.utils      as     U
+import ostap.logger.symbols   as     S 
 import numpy
 # =============================================================================
 # Logging setup
@@ -87,15 +91,61 @@ logger = getLogger ( 'ostap.stats.random_axes' )
 # =============================================================================
 logger.debug ( 'Implement Random Axes' )
 # =============================================================================
-## @class RandomAxesComparator
-# Two-Sample Test based on  Cramer-Wold theorem
-class RandomAxesComparator(AGoFnp,Config) :
-    """ Two sample Test based on Cramer-Wold theorem 
+## @class RandomAxes
+# Two-Sample Test based on the Cramer-Wold theorem
+#
+# Theorem Statement:
+#
+#  A multivariate probability distribution is uniquely determined by 
+#  the set of all its one-dimensional linear projections. 
+#  In other words, two random vectors $X$ and $Y$ have the same joint 
+#  distribution if and only if their scalar projections 
+#  $v^T X$ and $v^T Y$ have the same distribution
+#  for all possible unit vectors $v \in \mathbb{R}^D$.
+# 
+#  @see Cramér, H., & Wold, H. (1936). 
+#       "Some Theorems on Distribution Functions". 
+#       Journal of the London Mathematical Society, 
+#        s1-11(4), 290–294.Read on Wiley Online Library
+#  @see  https://doi.org/10.1112/jlms/s1-11.4.290
+#
+#  Cramér–Wold Theorem on Wikipedia
+#  @see https://en.wikipedia.org/wiki/Cram%C3%A9r%E2%80%93Wold_theorem
+#  
+#  @see Cuesta-Albertos, J. A., Escudero, L., & Matrán, C. (2007). 
+#       "A-tests: Multivariate goodness-of-fit tests based on projections Test", 16(1), 21–42 
+#  @see https://doi.org/10.1016/j.csda.2006.09.007
+#
+class RandomAxes(AGoFnp,Config) :
+    """ Two sample Test based on the Cramer-Wold theorem
+    
+    Theorem Statement:
+    
+    A multivariate probability distribution is uniquely determined by 
+    the set of all its one-dimensional linear projections. 
+    In other words, two random vectors $X$ and $Y$ have the same joint 
+    distribution if and only if their scalar projections 
+    $v^T X$ and $v^T Y$ have the same distribution
+    for all possible unit vectors
+    
+    - see Cramér, H., & Wold, H. (1936). 
+        "Some Theorems on Distribution Functions". 
+        Journal of the London Mathematical Society, 
+         s1-11(4), 290–294.Read on Wiley Online Library
+    - see  https://doi.org/10.1112/jlms/s1-11.4.290
+
+    - Cramér–Wold Theorem on Wikipedia
+    - see https://en.wikipedia.org/wiki/Cram%C3%A9r%E2%80%93Wold_theorem
+
+    - see Cuesta-Albertos, J. A., Escudero, L., & Matrán, C. (2007). 
+      "A-tests: Multivariate goodness-of-fit tests based on projections Test", 16(1), 21–42 
+    - see https://doi.org/10.1016/j.csda.2006.09.007
+
     """
     def __init__ ( self                 , * ,
                    comparators          ,   
-                   nToys        = 100   ,
-                   nAxes        = 100   , 
+                   nToys        =  100  ,
+                   nAxes        =   50  , 
                    silent       = True  ,
                    progress     = True  , 
                    random_state = None  , **params ) :
@@ -111,12 +161,16 @@ class RandomAxesComparator(AGoFnp,Config) :
         
         self.__axes         = None   
         self.__rng          = numpy.random.default_rng ( random_state )
-        
-        self.__comparators  = tuple ( c for c in comparators if isinstance ( c , AGoFNp ) and  c.two_samples )
+
+        if not isinstance ( comparators , sequence_types ) : comparators = [ comparators ] 
+            
+        self.__comparators  = tuple ( c for c in comparators if isinstance ( c , AGoFnp ) and  c.two_samples )
         if not self.comparators : raise TypeError ( "No valid comparators are provided!")
 
         self.__weights_supported = all ( c.weights_supported  for c in self.comparators )
         
+        self.__t_counters = tuple ( EffCounter () for _ in range ( self.nComps ) )
+                
         ##
         self.__progress  = True if progress  else False
         self.__counter   = EffCounter  () 
@@ -186,6 +240,12 @@ class RandomAxesComparator(AGoFnp,Config) :
         return len ( self.__comparators )
     
     @property
+    def random_state ( self ) :
+        """`random_state` : random state for random-axes and permuttions
+        """
+        return self.__random_state
+    
+    @property
     def axes ( self ) :
         """`axes` : set of random axes/projection to probe or None  
         """
@@ -199,15 +259,21 @@ class RandomAxesComparator(AGoFnp,Config) :
         
     @property
     def counter ( self ) : 
-        """`counter`: counter for p-value
+        """`counter`: global counter for p-value
         """
-        return self.__counter 
-        
+        return self.__counter
+    
     @property
-    def random_state ( self ) :
-        """`random_state` : random state for random-axes and permuttions
+    def progress ( self ) : 
+        """`progress`: show progress-bar? 
         """
-        return self.__random_state
+        return self.__progress 
+
+    @property
+    def t_counters ( self ) : 
+        """`t_counters`: counter of t-values for each comparator
+        """
+        return self.__t_counters
     
     # =========================================================================
     ## Internal helper to compute t-matrix directly from precomputed projections
@@ -276,6 +342,9 @@ class RandomAxesComparator(AGoFnp,Config) :
         proj2 = numpy.dot ( data2 , self.axes.T )
         
         return self.t_matrix ( proj1 , proj2 , weight1 = weight1 , weight2 = weight2 )
+
+    
+    __call__ = tvalue
     
     # =========================================================================
     ## Calculate the t (matrix) & p (scalar) values using permutation test
@@ -296,12 +365,14 @@ class RandomAxesComparator(AGoFnp,Config) :
         >>> t , p = gof.pvalue ( ds1 , ds2 , normalize = True )
         """
         
-        ## reset/re-create the counter 
-        self.__counter   = EffCounter  () 
-         
+        ## reset/re-create the counters 
+        self.__counter.reset()  
+        for c in self.__t_counters : c.reset()
+        
         if not self.weights_supported : 
-            if not U.weight_trivial ( weight1 ) : raise ValueError  ( "Weights are not supprted!")
-            if not U.weight_trivial ( weight2 ) : raise ValueError  ( "Weights are not supprted!")
+            if not U.weight_trivial ( weight1 ) : raise ValueError  ( "Weights are not supported!")
+            if not U.weight_trivial ( weight2 ) : raise ValueError  ( "Weights are not supported!")
+            weight1 , weight2 = None , None
 
         nc = self.nComps
         na = self.nAxes 
@@ -324,23 +395,35 @@ class RandomAxesComparator(AGoFnp,Config) :
         proj1    = numpy.dot ( data1 , self.axes.T )
         proj2    = numpy.dot ( data2 , self.axes.T )
         
-        ## make permutations 
-        for ds1, ds2, w1 , w2 in make_permutations ( data1       = proj1            , 
-                                                     data2       = proj2            , 
-                                                     weight1     = weight1          , 
-                                                     weight2     = weight2          , 
-                                                     progress    = self.progress    , 
-                                                     random_seed = self.random_seed ) :
-        
+        ## make permutations
+        description = permutation_symbol  + ' ' + S.fixed_width ( self.symbol , 4 ) + ':'
+        for ds1, ds2, w1 , w2 in make_permutations ( self.nToys  ,
+                                                     data1       = proj1             , 
+                                                     data2       = proj2             , 
+                                                     weight1     = weight1           , 
+                                                     weight2     = weight2           , 
+                                                     progress    = self.progress     , 
+                                                     random_seed = self.random_state ,
+                                                     description = description       ) : 
+            
             ## get new matrix of t-values 
-            tmatrix = self.t_matrix ( data1   = ds1 ,
-                                      data2   = ds2 , 
+            tmatrix = self.t_matrix ( proj1   = ds1 ,
+                                      proj2   = ds2 , 
                                       weight1 = w1  , 
                                       weight2 = w2  )
             
-            self.__counter  += numpy.any ( tvalue <= tmatrix )
-    
-        return self.counter.eff
+
+            exceeds = numpy.any ( tvalue <= tmatrix , axis = 1 )
+
+            ## update counters 
+            for exc, counter in zip ( exceeds, self.t_counters ) : counter += exc
+
+            self.__counter += numpy.any ( exceeds )
+            
+            
+        pvalue = self.counter.eff
+        
+        return tvalue , pvalue 
     
     # ========================================================================
     ## generate <code>n_axes</code>  random axes of dimension  <code>n_dim</code>
@@ -353,15 +436,75 @@ class RandomAxesComparator(AGoFnp,Config) :
         axes  /= norms
         ## 
         return axes
-    
+
+    # ==========================================================================
+    ## Get results in form of the row in the table
+    #  @code
+    #  gof = ...
+    #  header , row = gof.the_row ( ... ) 
+    #  @endcode `
+    def the_row ( self             ,
+                  tvalue    = None ,
+                  pvalue    = None ,
+                  ecdf      = None ,
+                  counter   = None ,                  
+                  precision = 4    ,
+                  width     = 6    ) :
+        
+        pvalue = self.counter.eff if pvalue is None else pvalue 
+        return super().the_row ( pvalue    = pvalue    , 
+                                 precision = precision ,      
+                                 width     = width     )
+ 
+    # ==========================================================================
+    ## Get results in form of the table 
+    def report ( self             ,
+                 tvalue    = None ,
+                 pvalue    = None ,
+                 ecdf      = None ,
+                 counter   = None ,
+                 precision = 4    ,
+                 width     = 6    , 
+                 title     = ''   ,
+                 prefix    = ''   ,
+                 style     = ''   ) :
+        """ Get results in form of the table
+        """
+
+        rows = []
+        header =  ( '' , 'Method' )
+        
+        for cmp , pv in zip ( self.comparators ,
+                              self.t_counters  ) : 
+        
+            hdr , row = cmp.the_row ( pvalue    = pv.eff    ,
+                                      precision = precision ,
+                                      width     = width     )
+            
+            row = ( cmp.symbol , cmp.method ) + row
+            
+            rows.append ( row )
+            
+        hdr , row = self.the_row ( pvalue = self.counter.eff , 
+                                   precision = precision     ,
+                                   width     = width         ) 
+        
+        first = header + hdr 
+        last  = ( self.symbol, self.method ) + row
+        rows  = [ first ] + rows + [ last ]
+        import ostap.logger.table as T
+        rows  = T.remove_empty_columns ( rows )
+        title = title if title else '%s report' % typename ( self )  
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'llcccccccc' , style = style )
+        
+    def __str__ ( self ) : return self.report ()
+    __repr__  = __str__
+            
 # =============================================================================
 if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
-    from ostap.stats.tools import ( hasLightGBM , hasXGBoost , hasCatBoost ,
-                                    hasSkLearn  , hasPyTorch , hasKeras    )
 
 # =============================================================================
 ##                                                                      The END

@@ -199,7 +199,7 @@ class AGoF(abc.ABC) :
                             counter   = counter   ,
                             precision = precision ,
                             width     = width     )
-
+    
     # =========================================================================
     ## Are weights supported by this GoF estimator?
     @property 
@@ -208,6 +208,7 @@ class AGoF(abc.ABC) :
         """`weghts_supported`: Are weights supported by this estimator?
         """
         return NotImplemented
+
 
 # =============================================================================
 ## @class AGoFnp

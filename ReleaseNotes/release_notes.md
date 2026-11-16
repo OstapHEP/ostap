@@ -1,5 +1,7 @@
 ## New features
 
+  1. Add `RandomAxes` Two-Samples Test 
+  
 ## Bug fixes
 
 ## Backward incompatible

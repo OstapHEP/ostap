@@ -33,6 +33,7 @@ __all__     = (
     'full_header'         , ## the header for statistical table (full) 
     'short_header'        , ## the header for statistical table (short) 
     't_header'            , ## the header for statistical table (only t-values)
+    'p_header'            , ## the header for statistical table (only p-values&nsigma
     'w_header'            , ## "header" for min/max weights
     ##
     'symbol_LGBM'         , ## symbold for LigthGBM 
@@ -276,7 +277,9 @@ short_header    = ( S.t_value_expr         ,
                     S.t_unit_expr          ,
                     S.p_value_percent_expr ,
                     S.n_sigma_expr         )
-t_header        = S.t_value_expr  , S.t_unit_expr           
+t_header        = S.t_value_expr  , S.t_unit_expr
+p_header        = ( S.p_value_percent_expr ,
+                    S.n_sigma_expr         )
 w_header        = S.w_min_expr    , S.w_max_expr , S.w_unit_expr
 # =============================================================================
 

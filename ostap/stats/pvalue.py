@@ -184,7 +184,6 @@ def make_bootstrap ( N           ,
                              random_seed = random_seed ,
                              description = description ) 
 
-    
 # =============================================================================
 ## @class PVALUE
 #  Helper base class to run permutation/bootstrap test in parallel

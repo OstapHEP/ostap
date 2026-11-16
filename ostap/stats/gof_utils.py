@@ -38,6 +38,7 @@ from   ostap.stats.utils        import ( weight_trivial  ,
                                          full_header     ,
                                          short_header    ,
                                          t_header        , 
+                                         p_header        , 
                                          clip_pvalue     , 
                                          format_pvalue   , 
                                          format_nsigma   )
@@ -314,14 +315,13 @@ def nEff ( weights ) :
 #  ds3 = ...
 #  ds1 , ds2 , ds3 = normalize_pooled ( ds1 , ds2 , ds3 ) 
 #  @endcode 
-def normalize_pooled(*datasets):
-    """
-    Normalize/standardize several numpy arrays such that the mean and RMS 
+def normalize_pooled ( *datasets ) :
+    """ Normalize/standardize several numpy arrays such that the mean and RMS 
     for the POOLED sample are equal to 0 and 1 respectively.
     
     >>> ds1 = ...
     >>> ds2 = ...
-    >>> ds1, ds2 = normalize_pooled(ds1, ds2)
+    >>> ds1, ds2 = normalize_pooled ( ds1 , ds2 )
     """
     if not datasets: return ()
 
@@ -690,6 +690,21 @@ def format_row ( tvalue    = None ,
          
         row     = row + ( unit , pvalue , nsigma )
         return header , row 
+
+    elif has_pvalue :
+
+        header     = p_header 
+
+        pv         = clip_pvalue  ( pvalue ) 
+        nsigma     = significance ( pv     ) ## convert  it to significance
+        ## 
+       
+        pvalue     = format_pvalue ( pvalue )
+        nsigma     = format_nsigma ( nsigma )
+
+        row        = pvalue , nsigma  
+        
+        return header , row
 
     elif has_tvalue :
         
