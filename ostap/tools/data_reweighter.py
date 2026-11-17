@@ -180,13 +180,13 @@ class DataReweighter(Config) :
         if not variables is None :
             ovars , _ , _ = vars_and_cuts ( variables , ''  )
             assert len ( ovars ) == len ( self.__ovars ) , "Invalid variables!"
-            if not silent and not ovars == self.__ovars :
-                logger.warning  (  "Variables to be used: [%s]" % ','.join ( ovars ) )
+            if not self.silent and not ovars == self.__ovars :
+                logger.warning  ( "Variables to be used: [%s]" % ','.join ( ovars ) )
                 
-        ## ATTENTION: no weight here!
-        odata, _ = data_slice ( original , ovars, '' , structured = False , progress = self.progress ) 
+        ## ATTENTION: no weight/cuts here - we need to assign the weights to *ALL* events 
+        odata, _   = data_slice ( original , ovars, '' , structured = False , progress = self.progress ) 
             
-        the_weight = self.__rw ( odata )
+        the_weight = self.__rw  ( odata )
         ## variable title 
         title      = title if title else self.description  
         return original.add_new_buffer ( the_weight                 ,

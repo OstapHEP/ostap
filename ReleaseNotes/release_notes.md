@@ -1,3 +1,5 @@
+# v3.8.6.22
+
 ## New features
 
   1. Add `RandomAxes` Two-Samples Test 
@@ -5,6 +7,8 @@
 
 ## Bug fixes
 
+  1. fix the bug in `DaatReweighter`  (thansk to Artem Egorychev)
+  
 ## Backward incompatible
 
 # v3.8.6.20 
