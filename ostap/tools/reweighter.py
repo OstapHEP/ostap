@@ -253,7 +253,7 @@ class Reweighter(abc.ABC,Config) :
             counters [ '%s ratios' % self.method ] = rcnt 
 
         if not trivial_final and not trivial_original :
-            delta = final_weight - orginal_weight
+            delta = final_weight - original_weight
             dcnt  = SE() 
             for s in delta  : scnt.add ( s )
             counters [ '%s delta' % self.method ] = scnt 
