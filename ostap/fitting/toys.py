@@ -1578,7 +1578,7 @@ def make_bootstrap (
         frequency   = 500    ) :
     
     """ Run Bootstrap analysis, useful for evaluaton of fit biased and uncertainty estimates 
-    In total `size` datasets are sampled (with replacement) from the original dataste
+    In total `size` datasets are sampled (with replacement) from the original dataset
     `data` and each sampled dataset is fit
     >>> dataset = ...
     >>> model   = ...

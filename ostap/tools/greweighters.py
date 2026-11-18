@@ -192,9 +192,10 @@ class GBReweighter(Reweighter) :
             self.__original_reweighted_weights = final_weight 
 
             ## produce summary of weights 
-            if self.verbose : self.weight_summary ( original        ,
-                                                    original_weight ,
-                                                    final_weight    ) 
+            if self.verbose : self.weight_summary ( original         ,
+                                                    original_weight  ,
+                                                    final_weight     ,
+                                                    ratios = factors ) 
 
     # =========================================================================
     ## short symbol/tag for reweighter 
@@ -280,10 +281,11 @@ class GBReweighter(Reweighter) :
         final_weight = self.preserve_mass ( original , original_weight , final_weight ) 
         
         ## produce summary table of weights 
-        if self.verbose : self.weight_summary ( original        ,
-                                                original_weight ,
-                                                final_weight    ) 
-    
+        if self.verbose : self.weight_summary ( original         ,
+                                                original_weight  ,
+                                                final_weight     ,  
+                                                ratios = factors ) 
+        
         return final_weight 
     
 

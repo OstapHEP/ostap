@@ -69,7 +69,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2026-11-15"
 __all__     = (
-    'RandomAxes' , ## Random Axed Two-Samples Tests 
+    'RandomAxes' , ## Random Axes Cramer-Wold Two-Samples Tests 
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import sequence_types 
@@ -88,7 +88,7 @@ import numpy
 from ostap.logger.logger import getLogger
 logger = getLogger ( 'ostap.stats.random_axes' )
 # =============================================================================
-logger.debug ( 'Implement Random Axes' )
+logger.debug ( 'Implement Random Axes/Cramer-Wold Two-Samples Test' )
 # =============================================================================
 ## @class RandomAxes
 # Two-Sample Test based on the Cramer-Wold theorem
@@ -274,6 +274,13 @@ class RandomAxes(AGoFnp,Config) :
         """`t_counters`: counter of t-values for each comparator
         """
         return self.__t_counters
+
+    @property
+    def impornace_features ( self ) :
+        """`importance_features` : fictive empty dictionary fo importance features
+        - importance features are not supported for this comparator
+        """
+        return {}
     
     # =========================================================================
     ## Internal helper to compute t-matrix directly from precomputed projections
@@ -308,10 +315,11 @@ class RandomAxes(AGoFnp,Config) :
     #  @endcode
     def tvalue ( self      ,
                  data1     ,
-                 data2     , *    ,
-                 weight1   = None ,
-                 weight2   = None ,
-                 normalize = True ) :
+                 data2     , *     ,
+                 weight1   = None  ,
+                 weight2   = None  , 
+                 normalize = True  ,
+                 importace = False ) :
         """ Calculate the t-value
         >>> gof = ...
         >>> ds1 , ds2 = ...
@@ -371,6 +379,8 @@ class RandomAxes(AGoFnp,Config) :
         ## reset/re-create the counters 
         self.__counter.reset()  
         for c in self.__t_counters : c.reset()
+        self.__counter   = EffCounter  () 
+        self.__pvalue    = None 
         
         if not self.weights_supported : 
             if not U.weight_trivial ( weight1 ) : raise ValueError  ( "Weights are not supported!")
@@ -429,8 +439,7 @@ class RandomAxes(AGoFnp,Config) :
             for exc, counter in zip ( exceeds, self.t_counters ) : counter += exc
 
             self.__counter += numpy.all ( exceeds )
-            
-            
+                        
         pvals  = [ c.eff for c in self.t_counters ]
         p_min  = min ( pvals , key = float )
         pvalue = 1.0 - ( 1.0 - p_min ) ** len ( pvals )
@@ -512,7 +521,8 @@ class RandomAxes(AGoFnp,Config) :
         
     def __str__ ( self ) : return self.report ()
     __repr__  = __str__
-            
+
+
 # =============================================================================
 if '__main__' == __name__ :
 

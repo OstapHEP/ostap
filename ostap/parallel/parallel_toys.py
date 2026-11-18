@@ -1310,7 +1310,7 @@ def parallel_jackknife (
 # =============================================================================
 ## Run Bootstrap analysis, useful for evaluaton of fit biases and uncertainty estimates
 # 
-#  In total <code>size</code> datasets are sampled (with replacement) from the original dataste
+#  In total <code>size</code> datasets are sampled (with replacement) from the original dataset
 #  <code>data</code> and each sampled dataset is fit
 #  @code
 #  dataset = ...

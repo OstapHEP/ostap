@@ -235,9 +235,10 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             self.__original_reweighted_weights = final_weight 
         
         ## As a last step: produce summary of weights 
-        if self.verbose : self.weight_summary ( original        ,
-                                                original_weight ,
-                                                final_weight    ) 
+        if self.verbose : self.weight_summary ( original                 ,
+                                                original_weight          ,
+                                                final_weight             ,
+                                                ratios = original_ratios ) 
 
     # =========================================================================
     ## @property n_splits
@@ -789,9 +790,10 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         final_weight = self.preserve_mass ( original , original_weight , final_weight  )  
         
         ## summary table 
-        if self.verbose : self.weight_summary ( original        ,
-                                                original_weight ,
-                                                final_weight   ) 
+        if self.verbose : self.weight_summary ( original              ,
+                                                original_weight       ,
+                                                final_weight          ,
+                                                ratios = final_ratios ) 
         
         return final_weight 
 

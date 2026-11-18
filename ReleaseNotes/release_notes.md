@@ -1,3 +1,7 @@
+# v3.8.6.24
+
+  1. reshuffle some code between `ostap.stats.data_compare` and `ostap.stat.utils` to reduc code duplication
+  
 # v3.8.6.22
 
 ## New features

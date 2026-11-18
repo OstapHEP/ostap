@@ -2145,7 +2145,7 @@ def add_new_var ( dataset  ,
     >>> dataset.add_new_var ( 'ratio' , 'pt/pz' )  ## use RooFormulaVar
     
     >>> func = ...  ## Ostap.IFuncData object 
-    >>> dataste.add_new_var ( 'value' ,   func )
+    >>> dataset.add_new_var ( 'value' ,   func )
 
     >>> h1 = ...## 1D histogram
     >>> dataset.add_new_var ( 'nTracks' , h1 ) ## sample from 1D histogram
@@ -3467,7 +3467,7 @@ _new_methods_ += [
     ]
 
 # ============================================================================
-## Are two datastes equal by content?
+## Are two datasets equal by content?
 #  @code
 #  ds1 = ...
 #  ds2 = ...
@@ -3577,7 +3577,7 @@ def ds_equal ( ds1 , ds2 ) :
 #  ds1 != ds2 
 #  @endcode 
 def ds_nonequal ( ds1 , ds2 ) : 
-    """ Are two datastes non-equal by content?
+    """ Are two datasets non-equal by content?
     ds1 = ...
     ds2 = ...
     ds_nonequal ( ds1 , ds2 ) 

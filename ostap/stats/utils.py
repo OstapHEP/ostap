@@ -26,6 +26,11 @@ __all__     = (
     'np2vct'              , ## numpy arrays into SVectorWithError
     'eff_size'            , ## effective size of two samples
     ##
+    'TwoDataSets'           , ## helper keeper of two dataset with optional weights
+    'ComparisonResult'      , ## helper keeper of Comparison results for two datasets 
+    'HistoComparisonResult' , ## helper keeper of Comparison results for two histograms                                       
+    'prepare_data'          , ## Prepare two datasets for comparison    
+    ##
     'clip_pvalue'        , ## clip-value
     'format_pvalue'      , ## format pvalue as nice value in [%]
     'format_nsigma'      , ## format #sigma as nice value in [#sigma]
@@ -138,13 +143,13 @@ __all__     = (
     'method_ZC'           , ## zhang ZC 
     'method_ZK'           , ## zhang ZK 
     ## 
-   
 ) 
 # =============================================================================
+from   collections            import namedtuple 
 from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types 
 from   ostap.utils.core       import typename
 from   ostap.stats.counters   import ECDF, WECDF 
-from   ostap.math.math_base   import data2vct, isfinite  
+from   ostap.math.math_base   import data2vct, isfinite , FIRST_ENTRY , LAST_ENTRY
 from   ostap.math.ve          import VE
 import ostap.logger.symbols   as     S 
 import numpy
@@ -843,6 +848,135 @@ def data2ecdf ( data , weight = None ) :
     weight = numpy.ascontiguousarray ( weight )
     
     return WECDF ( data2vct ( data ) , data2vct ( weight ) ) 
+
+# =============================================================================
+## comparison result  
+ComparisonResult     = namedtuple ( 'ComparisonResult'  ,
+                                    ( 'symbol'     ,
+                                      'method'     ,
+                                      'tvalue'     ,
+                                      'pvalue'     ,
+                                      'nsigma'     ,
+                                      'importance' ,
+                                      'table_row'  ) ,
+                                    defaults = ( '' , '<UNKNOWN>' , -1e+9 , -1 , -1 , {} , '' ) )
+# =============================================================================
+## 1D-histogram comparison result  
+HistoComparisonResult = namedtuple ( 'HistoComparisonResult'  ,
+                                     ( 'histo1'    ,
+                                       'histo2'    ,
+                                       'chi2'      ,
+                                       'nDoF'      , 
+                                       'pvalue'    ,
+                                       'nsigma'    ) )
+
+# =============================================================================
+## helper keeper of two datasets
+#  - convert to dataclass(frozen=True) ??
+TwoDataSets = namedtuple ( 'TwoDataSets' ,
+                           ( 'data1'   ,
+                             'data2'   ,
+                             'weight1' ,
+                             'weight2' ) ,
+                           defaults = ( None , None ) )
+
+# =============================================================================
+## Prepare two datasets for comparison:
+#  Each dataset is converted to numpy 
+#  @see numpy_compare 
+#  @code
+#  datasets = prepare_data ( data1       = data1    ,
+#                            data2       = data2    ,
+#                            expressions = 'X,y,z'  ,  
+#                            cuts        =   'pt>1' )
+#  @endcode 
+def prepare_data ( data         ,
+                   data2        ,
+                   expressions  ,                   ## variables in data1 
+                   cuts         = ''          , * , ## cuts for data1
+                   expressions2 = None        ,
+                   cuts2        = ''          ,                            
+                   first        = FIRST_ENTRY ,
+                   last         =  LAST_ENTRY ,                                                                      
+                   first2       = FIRST_ENTRY ,
+                   last2        =  LAST_ENTRY ,                                                                      
+                   cut_range    = ''          ,
+                   cut_range2   = None        , 
+                   prescale     = None        , 
+                   prescale2    = None        , 
+                   use_frame    = False       , 
+                   use_frame2   = None        , 
+                   parallel     = False       , 
+                   parallel2    = None        , 
+                   progress     = False       ,
+                   progress2    = None        ) :
+    """ Prepare two datasets for comparison:
+    
+    - Each dataset is converted to numpy
+    
+    >>> data1, data2 , weight1 , weight2 = data_prepare ( data1       = data1    ,
+    ...                                                   data2       = data2    ,
+    ...                                                   expressinos = 'X,y,z'  ,  
+    ...                                                   cuts        =   'pt>1' )
+    """
+    if expressions2 is None : expressions2 = expressions
+    if cuts2        is None : cuts2        = cuts
+    
+    if first2       is None : first2       = first
+    if last2        is None : last2        = last
+    
+    if cut_range2   is None : cut_range2   = cut_range
+    if use_frame2   is None : use_frame2   = use_frame
+    if parallel2    is None : parallel2    = parallel
+    if progress2    is None : progress2    = progress
+    
+    from   ostap.trees.cuts     import vars_and_cuts
+    from   ostap.stats.statvars import data_slice
+    
+    varlst1 , cuts  , _  = vars_and_cuts ( expressions  , cuts )
+    varlst1 = tuple ( sorted ( varlst1 ) )
+    
+    varlst2 , cuts2 , _  = vars_and_cuts ( expressions2 , cuts2 )
+    varlst2 = tuple ( sorted ( varlst2 ) )
+    
+    assert varlst1 and len ( varlst1 ) == len ( varlst2 ) , \
+        "Different lenghts for variable lists!"
+
+    ## (1) create numpy datasets 
+    npdata1 , weight1 = data_slice ( data                   ,
+                                     varlst1                , 
+                                     cuts       = cuts      ,
+                                     first      = first     ,
+                                     last       = last      ,
+                                     cut_range  = cut_range ,
+                                     prescale   = prescale  , 
+                                     structured = True      , ## ATTENTION!  
+                                     transpose  = True      ,
+                                     progress   = progress  ,
+                                     use_frame  = use_frame , 
+                                     parallel   = parallel  )
+    
+    npdata2 , weight2 = data_slice ( data2                   ,
+                                     varlst2                 , 
+                                     cuts       = cuts2      ,
+                                     first      = first2     ,
+                                     last       = last2      ,
+                                     cut_range  = cut_range2 ,
+                                     prescale   = prescale2  , 
+                                     structured = True       , ## ATTENTION!  
+                                     transpose  = True       ,
+                                     progress   = progress2  ,
+                                     use_frame  = use_frame2 , 
+                                     parallel   = parallel2  )
+    
+    return TwoDataSets ( data1   = npdata1 ,
+                         data2   = npdata2 ,
+                         weight1 = weight1 , 
+                         weight2 = weight2 ) 
+
+
+
+
 
 # ============================================================================
 if '__main__' == __name__ :

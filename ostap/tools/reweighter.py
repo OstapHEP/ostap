@@ -168,14 +168,14 @@ class Reweighter(abc.ABC,Config) :
         conf [ 'random_state'  ] = self.random_state 
         conf [ 'n_features'    ] = self.n_features
         
-        conf [ 'n_target'      ] = nice_print ( self.n_target   , precision = 4 , with_sign = False , strip = True ) 
-        conf [ 'n_original'    ] = nice_print ( self.n_original , precision = 4 , with_sign = False , strip = True ) 
-        conf [ 'n_total'       ] = nice_print ( self.n_total    , precision = 4 , with_sign = False , strip = True ) 
+        conf [ 'n_target'      ] = nice_print ( self.n_target   , precision = 3 , with_sign = False , strip = True ) 
+        conf [ 'n_original'    ] = nice_print ( self.n_original , precision = 3 , with_sign = False , strip = True ) 
+        conf [ 'n_total'       ] = nice_print ( self.n_total    , precision = 3 , with_sign = False , strip = True ) 
         
-        if self.n_target   != self.nEff_target   : conf [ 'nEff_target'   ] = nice_print ( self.nEff_target   , precision = 4 , with_sign = False , strip = True ) 
-        if self.n_original != self.nEff_original : conf [ 'nEff_original' ] = nice_print ( self.nEff_original , precision = 4 , with_sign = False , strip = True )  
-        if self.n_target   != self.sumw_target   : conf [ 'sumw_target'   ] = nice_print ( self.sumw_target   , precision = 4 , with_sign = False , strip = True )  
-        if self.n_original != self.sumw_original : conf [ 'sumw_original' ] = nice_print ( self.sumw_original , precision = 4 , with_sign = False , strip = True )  
+        if self.n_target   != self.nEff_target   : conf [ 'nEff_target'   ] = nice_print ( self.nEff_target   , precision = 3 , with_sign = False , strip = True ) 
+        if self.n_original != self.nEff_original : conf [ 'nEff_original' ] = nice_print ( self.nEff_original , precision = 3 , with_sign = False , strip = True )  
+        if self.n_target   != self.sumw_target   : conf [ 'sumw_target'   ] = nice_print ( self.sumw_target   , precision = 3 , with_sign = False , strip = True )  
+        if self.n_original != self.sumw_original : conf [ 'sumw_original' ] = nice_print ( self.sumw_original , precision = 3 , with_sign = False , strip = True )  
 
 
         return conf 
@@ -214,7 +214,7 @@ class Reweighter(abc.ABC,Config) :
                    original               ,
                    original_weight = None ) :
         """ Get/predict  new weights for (new) original
-            """
+        """
         return self.weights ( original , original_weight )
      
     # =========================================================================
@@ -222,21 +222,42 @@ class Reweighter(abc.ABC,Config) :
     def weight_summary ( self            ,
                          original        ,
                          original_weight = None ,
-                         final_weight    = None ) :
+                         final_weight    = None ,
+                         ratios          = None ) :
         """ Helper method to produce summary table of weights
         """
         
         neff_before = nEff ( original , original_weight )        
         neff_after  = nEff ( original  , final_weight   )
+
+
+        trivial_original = weight_trivial ( original_weight ) 
+        trivial_final    = weight_trivial ( final_weight    ) 
+        trivial_ratios   = weight_trivial ( ratios         ) 
         
         wcnt = SE ()
-        if not final_weight is None : 
+        if not trivial_final : 
             for w in final_weight : wcnt.add ( w )
         else :
-            wcnt = SE ( num_samples ( origin ) , 1 , 0 , 1 , 1 ) 
+            wcnt = SE ( num_samples ( original ) , 1 , 0 , 1 , 1 ) 
         
         counters = { '%s weights' % self.method : wcnt }
-            
+        
+        if not trivial_ratios :
+            sumr  = numpy.sum ( ratios )
+            scale = len ( ratios )
+            if 0 < sumr : scale /= sumr 
+            rr   = ( ratios * scale ) if 0 < sumr else ratios 
+            rcnt = SE ()
+            for r in rr  : rcnt.add ( r )
+            counters [ '%s ratios' % self.method ] = rcnt 
+
+        if not trivial_final and not trivial_original :
+            delta = final_weight - orginal_weight
+            dcnt  = SE() 
+            for s in delta  : scnt.add ( s )
+            counters [ '%s delta' % self.method ] = scnt 
+                                
         nb    = nice_print ( neff_before , precision = 2 , with_sign = False , strip = True )
         na    = nice_print ( neff_after  , precision = 2 , with_sign = False , strip = True )
         

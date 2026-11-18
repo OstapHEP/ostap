@@ -11,22 +11,28 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2026-07-05"
 __all__     = (
     ## 
-    'numpy_compare'         , ## compare two (numpy) arrays 
-    'data_compare'          , ## compare two datasets
-    'ecdf_compare'          , ## visual (&chi2) comparison of two (W)ECDFs 
-    'compare_variable'      , ## detailed compariso of two variables 
+    'numpy_compare'         , ## Compare two (numpy) arrays using Two-Samples comparators 
+    'data_compare'          , ## Compare two datasets using Two-Samples comparators 
+    'ecdf_compare'          , ## Cisual (&chi2) comparison of two (W)ECDFs 
+    'compare_variable'      , ## detailed comparision of two variables
+    'compare_projections'   , ## Use Random Axed/Cramer-Wold Two-Sample Test to compare datasets 
     ## 
     'ComparisonResult'      , ## helper class to report the comparison resuts 
     'HistoComparisonResult' , ## helper class to report the histogram comparison resuts 
 )
 # =============================================================================
-from   collections            import namedtuple 
 from   ostap.core.ostap_types import sequence_types, sized_types, dictlike_types, integer_types   
 from   ostap.utils.core       import typename 
 from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY, axis_range 
-from   ostap.stats.utils      import ( weight_trivial , check_all     , 
-                                       full_header    , 
-                                       format_pvalue  , format_nsigma )  
+from   ostap.stats.utils      import ( TwoDataSets            ,
+                                       ComparisonResult       ,
+                                       HistoComparisonResult  ,                                       
+                                       prepare_data           , 
+                                       weight_trivial         ,
+                                       check_all              , 
+                                       full_header            , 
+                                       format_pvalue          ,
+                                       format_nsigma          )  
 from   ostap.stats.gof_utils  import clip_pvalue 
 from   ostap.stats.gof        import AGoFnp
 from   ostap.stats.counters   import ECDF, WECDF
@@ -41,43 +47,170 @@ import ostap.histos.graphs
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.data_compare' )
 else                       : logger = getLogger ( __name__                   )
-# =============================================================================
-## comparison result  
-ComparisonResult     = namedtuple ( 'ComparisonResult'  ,
-                                    ( 'symbol'     ,
-                                      'method'     ,
-                                      'tvalue'     ,
-                                      'pvalue'     ,
-                                      'nsigma'     ,
-                                      'importance' ,
-                                      'table_row'  ) ,
-                                    defaults = ( '' , '<UNKNOWN>' , -1e+9 , -1 , -1 , {} , '' ) )
-# =============================================================================
-## 1D-histogram comparison result  
-HistoComparisonResult = namedtuple ( 'HistoComparisonResult'  ,
-                                     ( 'histo1'    ,
-                                       'histo2'    ,
-                                       'chi2'      ,
-                                       'nDoF'      , 
-                                       'pvalue'    ,
-                                       'nsigma'    ) )
-# =============================================================================
+# =============================================================================##
 ## ECDF types 
 ecdf_types = ECDF , WECDF
 # =============================================================================
-## Compare two numpy arrays
+## Compare two datasets:
+#  Each dataset is converted to numpy and then `numpy_compare` is invoked 
+#  @see numpy_compare 
 #  @code
-#  nd1 = ...
-#  nd2 = ...
-#  comparator = ...
-#  result     = numpy_compare ( comparator , nd1 , nd2 , importance = True ) 
+#  data1       = ...
+#  data2       = ...
+#  comparatorsа = ... 
+#  results , table = data_compare ( comparators , nd1 , nd2 , 'X,y,z' , 'pt>1' , importance = True )
 #  @endcode 
-def numpy_compare ( comparator ,
-                    data1      ,
-                    data2      , *     ,
-                    weight1    = None  ,
-                    weight2    = None  ,
-                    importance = False ) :
+def data_compare ( comparators  ,  
+                   data         ,
+                   data2        ,
+                   expressions  ,                   ## variables in data1 
+                   cuts         = ''          , * , ## cuts for data1
+                   expressions2 = None        ,
+                   cuts2        = ''          ,                            
+                   first        = FIRST_ENTRY ,
+                   last         =  LAST_ENTRY ,                                                                      
+                   first2       = FIRST_ENTRY ,
+                   last2        =  LAST_ENTRY ,                                                                      
+                   cut_range    = ''          ,
+                   cut_range2   = None        , 
+                   prescale     = None        , 
+                   prescale2    = None        , 
+                   use_frame    = False       , 
+                   use_frame2   = None        , 
+                   parallel     = False       , 
+                   parallel2    = None        , 
+                   progress     = False       ,
+                   progress2    = None        ,
+                   importance   = False       ,
+                   ## 
+                   title        = ''          , 
+                   silent       = False       , **config  ) :
+    """ Compare two datasets:
+    Each dataset is converted to numpy and then `numpy_compare` is invoked 
+    - see numpy_compare 
+    >>> data1      = ...
+    >>> data2      = ...
+    >>> comparator = ... 
+    >>> results , table = data_compare( comparator , data1 , data2 , 'X,y,z' , 'pt>1' )
+    """
+    ## convert data into numpy arrays 
+    datasets = prepare_data ( data        = data          ,
+                              data2       = data2         ,
+                              ## 
+                              expressions  = expressions  ,
+                              cuts         = cuts         , 
+                              first        = first        ,
+                              last         = last         ,
+                              cut_range    = cut_range    ,
+                              prescale     = prescale     ,
+                              use_frame    = use_frame    ,
+                              parallel     = parallel     ,
+                              progress     = progress     ,
+                              ## 
+                              expressions2 = expressions2 ,
+                              cuts2        = cuts2        , 
+                              first2       = first2       ,
+                              last2        = last2        ,
+                              cut_range2   = cut_range2   ,
+                              prescale2    = prescale2    ,
+                              use_frame2   = use_frame2   ,
+                              parallel2    = parallel2    ,
+                              progress2    = progress     )
+    
+    
+    ## use comparator(s)  
+    results = numpy_compare ( comparators                   , 
+                              data1      = datasets.data1   ,  
+                              data2      = datasets.data2   , 
+                              weight1    = datasets.weight1 ,
+                              weight2    = datasets.weight2 ,
+                              importance = importance       )
+
+    ##    
+    if isinstance ( comparators , sequence_types ) and isinstance ( results , sequence_types ) and \
+       isinstance ( comparators , sized_types    ) and isinstance ( results , sized_types    ) and \
+       all ( isinstance ( r , ComparisonResult  ) for r in results ) :
+
+        rr = results
+        cc = comparators
+        
+    elif isinstance ( comparators , AGoFnp ) and isinstance ( results  , ComparisonResult ) :
+        
+        rr = results     , 
+        cc = comparators ,
+        
+    else : raise TypeError ( "Inconsistent type for `results` and `comparators`"  )
+
+
+    ## from   ostap.trees.cuts     import vars_and_cuts
+    ## varlst1 , cuts  , _  = vars_and_cuts ( expressions  , cuts  ) 
+    ## varlst2 , cuts2 , _  = vars_and_cuts ( expressions2 , cuts2 )
+    ## varlst1 = tuple ( sorted ( varlst1 ) )    
+    ## varlst2 = tuple ( sorted ( varlst2 ) )
+    
+    # =====================================================================================
+    if False :
+    ## for r in rr : # =======================================================================
+        # =================================================================================
+        if r.importance and isinstance ( r.importance , dictlike_types ) :            
+            importance     = r.importance
+            new_importance = {}
+            for key, value in importance.items () :
+                ## add it into new dictionary: 
+                new_importance [ key ] = float ( value )
+                if key.startswith ( 'f' ) :
+                    # =====================================================================
+                    try : # ===============================================================
+                        # =================================================================
+                        index = int ( key [ 1: ] )
+                        if 0 <= index < len ( varlst1 ) :
+                            name = varlst1 [ index ]
+                            ## add proper name into dictionary 
+                            new_importance [ name ] = float ( value )
+                            ## remove old name 
+                            del new_importance [ key ]
+                        # =================================================================
+                    except : # ============================================================
+                        # =================================================================
+                        pass
+            ## replace 
+            r.importance.clear()
+            r.importance.update ( new_importance )
+                            
+    ## summary  table 
+    if not silent :
+        
+        rows = [] 
+        for r , c in zip ( rr , cc ) :
+            
+            _   , row = c.the_row ()
+            ## print ( 'HERE:' , c.symbol, c.method , typename ( c ) , row , r ) 
+
+            row       = ( c.symbol , c.method , ) + row
+            rows.append ( row )
+        header = ( '' , 'Method' , ) + full_header
+        rows   = [ header ] + sorted ( rows ) 
+        title  = title if title else "Two-Sample comparison"
+        rows   = T.remove_empty_columns ( rows )
+        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'llccccccccccc' )
+        logger.info ( "%s:\n%s" % ( title , table ) )
+        
+    return results 
+
+# =============================================================================
+## Compare two numpy datasets 
+#  @code
+#  data1 = ...
+#  data2 = ...
+#  comparator = ...
+#  result     = numpy_compare ( comparator , data1 , data2 , importance = True ) 
+#  @endcode 
+def numpy_compare ( comparators ,
+                    data1       ,
+                    data2       , *     ,
+                    weight1     = None  ,
+                    weight2     = None  ,
+                    importance  = False ) :
     """ Compare two numpy arrays
     >>> data1      = ...
     >>> data2      = ...
@@ -88,15 +221,15 @@ def numpy_compare ( comparator ,
     check_all ( data1 , data2 , weight1 , weight2 , "numpy_compare" ) 
 
     ## the sequence of comparators is provided 
-    if isinstance ( comparator , sequence_types ) and all ( isinstance ( c , AGoFnp ) and c.two_samples for c in comparator ) :
+    if isinstance ( comparators , sequence_types ) and all ( isinstance ( c , AGoFnp ) and c.two_samples for c in comparators ) :
         return tuple ( numpy_compare ( cmp        ,
                                        data1      = data1      ,
                                        data2      = data2      ,
                                        weight1    = weight1    ,
                                        weight2    = weight2    ,
-                                       importance = importance ) for cmp in comparator )
-    
+                                       importance = importance ) for cmp in comparators )
     ## single comparator
+    comparator = comparators 
     if not ( isinstance ( comparator , AGoFnp ) and comparator.two_samples ) :
         raise TypeError ( "Invalid comparator type: %s" % typename ( comparator )  ) 
     
@@ -134,175 +267,8 @@ def numpy_compare ( comparator ,
                               pvalue     = pvalue                      ,
                               nsigma     = nsigma                      ,
                               importance = importance_features         , 
-                              table_row  = comparator.the_row () [ 1 ] ) 
-
-# =============================================================================
-## Compare two datasets:
-#  Each dataset is converted to numpy and then `numpy_compare` is invoked 
-#  @see numpy_compare 
-#  @code
-#  data1      = ...
-#  data2      = ...
-#  comparator = ... 
-#  results , table = data_compare ( comparator , nd1 , nd2 , 'X,y,z' , 'pt>1' , importance = True )
-#  @endcode 
-def data_compare ( comparator   ,  
-                   data         ,
-                   data2        ,
-                   expressions  ,                   ## variables in data1 
-                   cuts         = ''          , * , ## cuts for data1
-                   expressions2 = None        ,
-                   cuts2        = ''          ,                            
-                   first        = FIRST_ENTRY ,
-                   last         =  LAST_ENTRY ,                                                                      
-                   first2       = FIRST_ENTRY ,
-                   last2        =  LAST_ENTRY ,                                                                      
-                   cut_range    = ''          ,
-                   cut_range2   = None        , 
-                   prescale     = None        , 
-                   prescale2    = None        , 
-                   use_frame    = False       , 
-                   use_frame2   = None        , 
-                   parallel     = False       , 
-                   parallel2    = None        , 
-                   progress     = False       ,
-                   progress2    = None        ,
-                   importance   = False       ,
-                   ## 
-                   title        = ''          , 
-                   silent       = False       , **config  ) :
-    """ Compare two datasets:
-    Each dataset is converted to numpy and then `numpy_compare` is invoked 
-    - see numpy_compare 
-    >>> data1      = ...
-    >>> data2      = ...
-    >>> comparator = ... 
-    >>> results , table = data_compare ( comparator , data1 , data2 , 'X,y,z' , 'pt>1' )
-    """
-    
-    if expressions2 is None : expressions2 = expressions
-    if cuts2        is None : cuts2        = cuts
-    
-    if first2       is None : first2       = first
-    if last2        is None : last2        = last
-    
-    if cut_range2   is None : cut_range2   = cut_range
-    if use_frame2   is None : use_frame2   = use_frame
-    if parallel2    is None : parallel2    = parallel
-    if progress2    is None : progress2    = progress
-    
-    from   ostap.trees.cuts     import vars_and_cuts
-    from   ostap.stats.statvars import data_slice
-    
-    varlst1 , cuts  , _  = vars_and_cuts ( expressions  , cuts )
-    varlst1 = tuple ( sorted ( varlst1 ) )
-    
-    varlst2 , cuts2 , _  = vars_and_cuts ( expressions2 , cuts2 )
-    varlst2 = tuple ( sorted ( varlst2 ) )
-    
-    assert varlst1 and len ( varlst1 ) == len ( varlst2 ) , \
-        "Different lenghts for variable lists!"
-
-    ## (1) create numpy datasets 
-    nd1 , weight1 = data_slice ( data                   ,
-                                 varlst1                , 
-                                 cuts       = cuts      ,
-                                 first      = first     ,
-                                 last       = last      ,
-                                 cut_range  = cut_range ,
-                                 prescale   = prescale  , 
-                                 structured = True      , ## ATTENTION!  
-                                 transpose  = True      ,
-                                 progress   = progress  ,
-                                 use_frame  = use_frame , 
-                                 parallel   = parallel  )
-
-    nd2 , weight2 = data_slice ( data2                   ,
-                                 varlst2                 , 
-                                 cuts       = cuts2      ,
-                                 first      = first2     ,
-                                 last       = last2      ,
-                                 cut_range  = cut_range2 ,
-                                 prescale   = prescale2  , 
-                                 structured = True       , ## ATTENTION!  
-                                 transpose  = True       ,
-                                 progress   = progress2  ,
-                                 use_frame  = use_frame2 , 
-                                 parallel   = parallel2  )
-
-    ## use comparator(s)  
-    results = numpy_compare ( comparator , 
-                              nd1        ,
-                              nd2        ,
-                              weight1    = weight1 ,
-                              weight2    = weight2 ,
-                              importance = importance )
-
-    ##
-    
-    if isinstance ( comparator , sequence_types ) and isinstance ( results , sequence_types ) and \
-       isinstance ( comparator , sized_types    ) and isinstance ( results , sized_types    ) and \
-       all ( isinstance ( r , ComparisonResult  ) for r in results ) :
-
-        rr = results
-        cc = comparator
-        
-    elif isinstance ( comparator , AGoFnp ) and isinstance ( results  , ComparisonResult ) :
-        
-        rr = results    , 
-        cc = comparator ,
-        
-    else : raise TypeError ( "Inconsistent type for `results` and `comparator`"  )
-
-
-    # =====================================================================================
-    for r in rr : # =======================================================================
-        # =================================================================================
-        if r.importance and isinstance ( r.importance , dictlike_types ) :            
-            importance     = r.importance
-            new_importance = {}
-            for key, value in importance.items () :
-                ## add it into new dictionary: 
-                new_importance [ key ] = float ( value )
-                if key.startswith ( 'f' ) :
-                    # =====================================================================
-                    try : # ===============================================================
-                        # =================================================================
-                        index = int ( key [ 1: ] )
-                        if 0 <= index < len ( varlst1 ) :
-                            name = varlst1 [ index ]
-                            ## add proper name into dictionary 
-                            new_importance [ name ] = float ( value )
-                            ## remove old name 
-                            del new_importance [ key ]
-                        # =================================================================
-                    except : # ============================================================
-                        # =================================================================
-                        pass
-            ## replace 
-            r.importance.clear()
-            r.importance.update ( new_importance )
-            
-                
-    ## summary  table 
-    if not silent :
-        
-        rows = [] 
-        for r , c in zip ( rr , cc ) :
-            
-            _   , row = c.the_row ()
-            row       = ( c.symbol , c.method , ) + row
-            rows.append ( row )
-            
-        header = ( '' , 'Method' , ) + full_header
-        rows   = [ header ] + rows            
-        title  = title if title else "Two-Sample comparison"
-        rows   = T.remove_empty_columns ( rows )
-        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'llccccccccccc' )
-        logger.info ( "%s:\n%s" % ( title , table ) )
-        
-    return results 
-
+                              table_row  = comparator.the_row () [ 1 ] )
+                              
 # =============================================================================
 ## Visual&chi2 comparison of (W)ECDFs
 #  - create pooled sample  (with equal treatment of input ECDFs)
@@ -432,7 +398,6 @@ def ecdf_compare ( ecdf1   ,
                                    pvalue  = pvalue  , 
                                    nsigma  = nsigma  ) 
 
-
 # ============================================================================
 ## Compare two variables from (presumably two) sources
 #  @param what        (INPUT) the first variable name/expression
@@ -479,21 +444,29 @@ def compare_variable ( what        ,
                        title       = ''          ,
                        progress    = False       ,
                        parallel    = False       ) :
+
     
-    if what2      is None and \
+    from   ostap.trees.cuts     import vars_and_cuts
+    varlst , cuts  , _  = vars_and_cuts ( what , cuts )
+    if 1 != len ( varlst ) : raise ValueError  ( "Invalid `what`: %s" % what )
+    what = varlst [ 0 ]
+    
+    if not what2 and \
        data2      is None and \
        cuts2      is None and \
        cut_range2 is None and \
        first2 == first    and \
        last2  == last        :  logger.error ( "Nothing to compare!" )
 
-    if what2      is None : what2      = what 
+    if not what2          : what2      = what 
     if data2      is None : data2      = data  
     if cuts2      is None : cuts2      = cuts 
     if cut_range2 is None : cut_range2 = cut_range
+                    
+    varlst , cuts2 , _  = vars_and_cuts ( what2 , cuts2 )
+    if 1 != len ( varlst ) : raise ValueError  ( "Invalid `what2`: %s" % what2 )
+    what2 = varlst [ 0 ]
 
-    what , what2 = what.strip() , what2.strip () 
-    
     from   ostap.stats.statvars import data_ECDF
           
     ecdf1 = data_ECDF      ( data       = data       ,
@@ -524,7 +497,6 @@ def compare_variable ( what        ,
                             density = density ,
                             fill    = fill    ,
                             draw    = draw    )
-
     
     ## unpack (W)ECDFs 
     raw_data1 , weight1 = ecdf1.raw_data ()
@@ -543,11 +515,11 @@ def compare_variable ( what        ,
     ## explicit loop over all comparators 
     for cmp in comparators :
         
-        r = numpy_compare ( comparator = cmp       ,  
-                            data1      = raw_data1 ,
-                            data2      = raw_data2 ,
-                            weight1    = weight1   ,
-                            weight2    = weight2   )
+        r = numpy_compare ( comparators = cmp       ,  
+                            data1       = raw_data1 ,
+                            data2       = raw_data2 ,
+                            weight1     = weight1   ,
+                            weight2     = weight2   )
         
         results.append ( r )
 
@@ -556,7 +528,8 @@ def compare_variable ( what        ,
             row    = ( cmp.symbol , cmp.method , ) + tuple ( row )
             rows.append ( row ) 
 
-    results = tuple ( results ) 
+    rows    = sorted ( rows    ) 
+    results = tuple  ( results ) 
 
     ## summary table 
     if not silent :
@@ -567,19 +540,112 @@ def compare_variable ( what        ,
         pvalue  = format_pvalue  ( histos.pvalue )
         nsigma  = format_nsigma  ( histos.nsigma )
         
-        row     = chi2ndf_symbol , chi2ndf   ,  '' , '' , '' , '' , '' , pvalue , nsigma
+        row     = chi2ndf_symbol , chi2ndf_symbol , chi2ndf  ,  '' , '' , '' , '' , '' , pvalue , nsigma
         
         header  = ( '', 'Method' , ) + full_header 
-        rows    = [ header ] + [ row ] + rows
+        rows    = [ header ] + [ row ] + rows 
         
         if   what2 == what : title = title if title else "Two-Sample Test: %s"               %   what 
         else               : title = title if title else "Two-Sample Test: [ %s ] vs [ %s ]" % ( what , what2 ) 
         
         rows   = T.remove_empty_columns ( rows )
-        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'lccccccccccccc' )
+        table  = T.table ( rows , title = title , prefix = "# " , alignment = 'llcccccccccccc' )
         logger.info ( "%s:\n%s" % ( title , table ) )
 
-    return histos , results 
+        return histos , results
+
+# =============================================================================
+## Use Random Axes/Cramer-Wold Two-Sample Test to compare two datasets
+## Compare two datasets:
+#  Each dataset is converted to numpy and then `numpy_compare` is invoked 
+#  @see numpy_compare 
+#  @code
+#  data1       = ...
+#  data2       = ...
+#  comparators = ... 
+#  results , table = data_compare ( comparators , nd1 , nd2 , 'X,y,z' , 'pt>1' , importance = True )
+#  @endcode 
+def compare_projections ( comparator   ,  
+                          data         ,
+                          data2        ,
+                          expressions  ,                   ## variables in data1 
+                          cuts         = ''          , * , ## cuts for data1
+                          expressions2 = None        ,
+                          cuts2        = ''          ,                            
+                          first        = FIRST_ENTRY ,
+                          last         =  LAST_ENTRY ,                                                                      
+                          first2       = FIRST_ENTRY ,
+                          last2        =  LAST_ENTRY ,                                                                      
+                          cut_range    = ''          ,
+                          cut_range2   = None        , 
+                          prescale     = None        , 
+                          prescale2    = None        , 
+                          use_frame    = False       , 
+                          use_frame2   = None        , 
+                          parallel     = False       , 
+                          parallel2    = None        , 
+                          progress     = False       ,
+                          progress2    = None        ,
+                          ## 
+                          title        = ''          , 
+                          silent       = False       , **config  ) :
+    """ Compare two datasets:
+    Each dataset is converted to numpy and then `numpy_compare` is invoked 
+    - see numpy_compare 
+    >>> data1      = ...
+    >>> data2      = ...
+    >>> comparator = ... 
+    >>> results , table = data_compare( comparator , data1 , data2 , 'X,y,z' , 'pt>1' )
+    """
+    import ostap.stats.random_axes as RA
+    if not isinstance ( comparator , RA.RandomAxes ) :
+        raise TypeError ( "Invalid comparator type : %s" % typename ( comparator ) )
+    
+    ## convert data into numpy arrays 
+    datasets = prepare_data ( data        = data          ,
+                              data2       = data2         ,
+                              ## 
+                              expressions  = expressions  ,
+                              cuts         = cuts         , 
+                              first        = first        ,
+                              last         = last         ,
+                              cut_range    = cut_range    ,
+                              prescale     = prescale     ,
+                              use_frame    = use_frame    ,
+                              parallel     = parallel     ,
+                              progress     = progress     ,
+                              ## 
+                              expressions2 = expressions2 ,
+                              cuts2        = cuts2        , 
+                              first2       = first2       ,
+                              last2        = last2        ,
+                              cut_range2   = cut_range2   ,
+                              prescale2    = prescale2    ,
+                              use_frame2   = use_frame2   ,
+                              parallel2    = parallel2    ,
+                              progress2    = progress     )
+    
+    ## use comparator
+    _ , pvalue = comparator.pvalue ( data1   = datasets.data1   ,
+                                     data2   = datasets.data2   ,
+                                     weight1 = datasets.weight1 ,
+                                     weight2 = datasets.weight2 )
+    
+    if not silent :
+        title = title if title else '%s Random Axes/%s ' % ( comparator.symbol, comparator.method ) 
+        logger.info ( '%s:\n%s' % ( title , comparator.report ( pvalue = pvalue , title = title , prefix = '# ' ) ) ) 
+
+    ## 
+    pv     = clip_pvalue  ( pvalue )
+    nsigma = significance ( pv     )
+    ## 
+    return ComparisonResult ( symbol    = comparator.symbol   ,
+                              method    = comparator.method    ,
+                              tvalue    = None                 ,
+                              pvalue    = pvalue               ,
+                              nsigma    = nsigma               ,
+                              importace = {}                   ,
+                              table_row = comparator.table_row ) 
 
 # =============================================================================
 if '__main__' == __name__ :

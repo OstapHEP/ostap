@@ -241,10 +241,10 @@ fi
 # ==========================================================================
 if command -v python >/dev/null 2>&1 && python -m pip --version >/dev/null 2>&1; then
     printf "%s PIP                   : %s\n" "${prefix1}" "$(python -c "import pip; print(pip.__file__)" 2>/dev/null || echo "pip module")"
-    printf "%s PIP version           : %s\n" "${prefix1}" "$(python -m pip --version 2>&1 | grep -Eo '[0-9]+(\.[0-9]+)+')"
+    printf "%s PIP version           : %s\n" "${prefix1}" "$(python -m pip --version 2>&1 | grep -Eo '[0-9]+(\.[0-9]+)+' | head -n 1)"
 else
     printf "%s PIP     is not found!\n" "${prefix1_error}"
-    ## return 214
+    return 215 2>/dev/null || exit 215
 fi
 
 if command -v cmake >/dev/null 2>&1; then
@@ -252,7 +252,7 @@ if command -v cmake >/dev/null 2>&1; then
     printf "%s CMAKE version         : %s\n" "${prefix1}" "$(cmake --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CMAKE is not found!\n" "${prefix1_error}"
-    return 215 2>/dev/null || exit 215
+    return 216 2>/dev/null || exit 216
 fi
 
 if command -v ctest >/dev/null 2>&1; then
@@ -260,7 +260,7 @@ if command -v ctest >/dev/null 2>&1; then
     printf "%s CTEST version           : %s\n" "${prefix1}" "$(ctest --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CTEST is not found!\n" "${prefix1_error}"
-    return 216 2>/dev/null || exit 216
+    return 217 2>/dev/null || exit 216
 fi
 
 if command -v cpack >/dev/null 2>&1; then
@@ -268,7 +268,7 @@ if command -v cpack >/dev/null 2>&1; then
     printf "%s CPACK version           : %s\n" "${prefix1}" "$(cpack --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
 else
     printf "%s CPACK is not found!\n" "${prefix1_error}"
-    return 217 2>/dev/null || exit 217
+    return 218 2>/dev/null || exit 218
 fi
 
 make_command=""
@@ -290,7 +290,7 @@ elif command -v make >/dev/null 2>&1; then
     printf "%s MAKE version          : %s\n" "${prefix1}" "$(make --version | grep -Eo '[0-9]+\.[0-9]+')"
 else
     printf "%s neither NINJA nor (G)MAKE is found!\n" "${prefix1_error}"
-    return 218
+    return 219 2>/dev/null || exit 219
 fi
 
 # =========================================================================
@@ -488,9 +488,9 @@ env_final=$(printenv|sort)
 flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
 case "$flag" in
     1|true|yes)
-	if [ "$(type -t env_diff 2>/dev/null)" = "function" ]; then
-	    env_diff "${env_init}" "${env_final}"
-	fi 
+        if [ "$(type -t env_diff 2>/dev/null)" = "function" ]; then
+            env_diff "${env_init}" "${env_final}"
+        fi 
 esac
 
 return ${result} 2>/dev/null || exit ${result}
