@@ -680,7 +680,10 @@ def normalize_pooled ( data1         ,
                 weight2 = weight2            ,
                 where   = "normalize_pooled" )
 
-    mean, scale = _normalize_impl ( data1, data2, weight1, weight2 )
+    mean, scale = _normalize_impl ( data1   = data1   ,
+                                    data2   = data2   ,
+                                    weight1 = weight1 ,
+                                    weight2 = weight2 )
 
     ds1 = ( data1 - mean ) / scale
     ds2 = ( data2 - mean ) / scale
@@ -702,7 +705,8 @@ def normalize_single ( data       ,
     ##
     data = structured2unstructured ( data , copy = False ) 
     ##    
-    mean, scale = _normalize_impl ( data = data, weight1 = weight )
+    mean, scale = _normalize_impl ( data1   = data   ,
+                                    weight1 = weight )
     return ( data - mean ) / scale
 
 # ============================================================================
