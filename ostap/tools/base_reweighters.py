@@ -33,7 +33,7 @@ from   ostap.stats.utils        import ( valid_weight       ,
                                          truncated_mean     ,
                                          method_name        )
 import ostap.logger.symbols     as     S
-import numpy, abc, re  
+import numpy, abc, re, gc   
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
 logger = getLogger ( 'ostap.tools.base_reweighters' )
@@ -238,8 +238,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         if self.verbose : self.weight_summary ( original                 ,
                                                 original_weight          ,
                                                 final_weight             ,
-                                                ratios = original_ratios ) 
-
+                                                ratios = original_ratios )
+        ## collect some memor gabage 
+        gc.collect()
     # =========================================================================
     ## @property n_splits
     #  @brief Number of cross-validation folds.

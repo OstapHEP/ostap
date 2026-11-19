@@ -61,6 +61,8 @@ __all__     = (
     'CallThem'           , ## convert sequence of callables into single callable
     'AttrGetter'         , ## helper class to have pickeable `operator.attrgetter`
     ##
+    'UseGC'              , ## Context manager that runs `gc.collect` at the exit 
+    'use_gc'             , ## Context manager that runs `gc.collect` at the exit 
     )
 # =============================================================================
 from   itertools              import repeat, chain, islice
@@ -74,7 +76,7 @@ from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
 from   ostap.utils.memory     import memory, virtualMemory, Memory
-import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime, operator, threading  ## attention here!!
+import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime, operator, threading, gc   ## attention here!!
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
@@ -988,7 +990,32 @@ def copy_with_progress ( source  , destination ) :
     
     return os.path.realpath ( destination )
 
+
 # =============================================================================
+## @class UseGC 
+#  Context manager that runs <code>gc.collect</code> at exit
+class UseGC(object): 
+    """ Context manager taht runs `gc.collect` at exit
+    """
+    # =========================================================================    
+    ## ENTER the context 
+    def __enter__  ( self ) :
+        """ ENTER the context
+        """
+        return self
+    # =========================================================================    
+    ## EXIT the context
+    def __exit__ ( self , *_ ) :
+        """ EXIT the context
+        """
+        gc.collect() 
+
+# ==============================================================================        
+## Context manager that runs <code>gc.collect</code> at exit
+def use_gc () :
+    """ Context manager that runs `gc.collect` at exit
+    """
+    return UseGC()
 
 # =============================================================================
 if '__main__' == __name__ :
