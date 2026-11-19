@@ -227,13 +227,12 @@ class Reweighter(abc.ABC,Config) :
         """ Helper method to produce summary table of weights
         """
         
-        neff_before = nEff ( original , original_weight )        
-        neff_after  = nEff ( original  , final_weight   )
+        neff_before      = nEff ( original , original_weight )        
+        neff_after       = nEff ( original , final_weight    )
 
-
-        trivial_original = weight_trivial ( original_weight ) 
-        trivial_final    = weight_trivial ( final_weight    ) 
-        trivial_ratios   = weight_trivial ( ratios         ) 
+        trivial_original = weight_trivial ( original_weight  ) 
+        trivial_final    = weight_trivial ( final_weight     ) 
+        trivial_ratios   = weight_trivial ( ratios           ) 
         
         wcnt = SE ()
         if not trivial_final : 
@@ -255,7 +254,7 @@ class Reweighter(abc.ABC,Config) :
         if not trivial_final and not trivial_original :
             delta = final_weight - original_weight
             dcnt  = SE() 
-            for s in delta  : scnt.add ( s )
+            for d in delta  : dcnt.add ( d )
             counters [ '%s delta' % self.method ] = scnt 
                                 
         nb    = nice_print ( neff_before , precision = 2 , with_sign = False , strip = True )

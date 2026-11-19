@@ -21,9 +21,12 @@ from   ostap.stats.counters     import EffCounter, ECDF
 from   ostap.utils.core         import typename 
 from   ostap.utils.config       import Config
 from   ostap.stats.gof          import AGoFnp
-from   ostap.stats.utils        import ( weight_trivial , check_all        ,
-                                         num_features   , normalize_pooled ) 
-from   ostap.stats.gof_utils    import draw_ecdf , s2u  
+from   ostap.stats.utils        import ( weight_trivial          ,
+                                         check_all               ,
+                                         num_features            ,
+                                         normalize_pooled        ,
+                                         structured2unstructured ) 
+from   ostap.stats.gof_utils    import draw_ecdf  
 from   ostap.utils.memory       import memory_enough
 import ostap.math.math_base    
 # =============================================================================
@@ -121,18 +124,14 @@ class GoFnp (AGoFnp,Config) :
     def unpack ( self , ds1 , ds2 ) :
         """ Unpack data ( convert from structured to unstructured arrays)
         >>> gof   = 
-        >>> ds1   , ds2  = ...
-        >>> data1 , dat2 = gof.unpack ( ds1 , ds2 ) 
+        >>> ds1   , ds2   = ...
+        >>> data1 , data2 = gof.unpack ( ds1 , ds2 ) 
         """
         ## 
-        ## transform ?  
-        structured1 = True if ds1.dtype.fields else False
-        structured2 = True if ds2.dtype.fields else False
-        ##
-        ## convert to unstructured datasets 
-        data1 = s2u ( ds1 , copy = False ) if structured1 else ds1
-        data2 = s2u ( ds2 , copy = False ) if structured2 else ds2
-        ##
+        ## convert to unstructured datasets
+        data1 = structured2unstructured ( ds1 , copy = False ) 
+        data2 = structured2unstructured ( ds2 , copy = False ) 
+        ## 
         return data1 , data2 
                        
     # =======================================================================

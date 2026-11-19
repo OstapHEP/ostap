@@ -25,15 +25,17 @@ __all__     = (
     'nEff'                , ## Compute effective sample size (Kish's design effect formula)
     'np2vct'              , ## numpy arrays into SVectorWithError
     'eff_size'            , ## effective size of two samples
+    ## 
+    'structured2unstructured' , ## convert structured numpy-array to unstructured one
     ##
     'TwoDataSets'           , ## helper keeper of two dataset with optional weights
     'ComparisonResult'      , ## helper keeper of Comparison results for two datasets 
     'HistoComparisonResult' , ## helper keeper of Comparison results for two histograms                                       
     'prepare_data'          , ## Prepare two datasets for comparison    
     ##
-    'clip_pvalue'        , ## clip-value
-    'format_pvalue'      , ## format pvalue as nice value in [%]
-    'format_nsigma'      , ## format #sigma as nice value in [#sigma]
+    'clip_pvalue'         , ## clip-value
+    'format_pvalue'       , ## format pvalue as nice value in [%]
+    'format_nsigma'       , ## format #sigma as nice value in [#sigma]
     ##
     'full_header'         , ## the header for statistical table (full) 
     'short_header'        , ## the header for statistical table (short) 
@@ -164,21 +166,21 @@ method_name  = S.italic
 
 symbol_EPOCH = f'{S.repeat} :' if S.show and S.repeat else 'Epoch:'
 
-symbol_LGBM   = symbol_name ( S.light_bulb   if S.show and S.light_bulb     else 'LightGBM' ) 
-symbol_XGB    = symbol_name ( S.rocket       if S.show and S.rocket         else 'XGBoost'  ) 
-symbol_CATB   = symbol_name ( S.cat_face     if S.show and S.cat_face       else 'CatBoost' ) 
-symbol_HGBC   = symbol_name ( S.bar_chart    if S.show and S.bar_chart      else 'HGBC'     ) 
-symbol_GBC    = symbol_name ( S.nabla        if S.show and S.nabla          else 'GBC'      ) 
-symbol_RF     = symbol_name ( S.palm         if S.show and S.palm           else 'RF'       )
-symbol_TORCH  = symbol_name ( S.flashlight   if S.show and S.flashlight     else 'TORCH'    ) 
-symbol_KERAS  = symbol_name ( S.postal_horn  if S.show and S.postal_horn    else 'KERAS'    ) 
-symbol_LOGREG = symbol_name ( S.ruler        if S.show and S.ruler          else 'LOGREG'   ) 
-symbol_USTAT  = symbol_name ( S.pushpin      if S.show and S.pushpin        else 'USTAT'    ) 
-symbol_CHI2   = symbol_name ( S.chi2         if S.show and S.chi2           else 'Chi2'     ) 
+symbol_LGBM   = S.light_bulb   if S.show and S.light_bulb     else symbol_name ( 'LightGBM' ) 
+symbol_XGB    = S.rocket       if S.show and S.rocket         else symbol_name ( 'XGBoost'  ) 
+symbol_CATB   = S.cat_face     if S.show and S.cat_face       else symbol_name ( 'CatBoost' ) 
+symbol_HGBC   = S.bar_chart    if S.show and S.bar_chart      else symbol_name ( 'HGBC'     ) 
+symbol_GBC    = S.nabla        if S.show and S.nabla          else symbol_name ( 'GBC'      ) 
+symbol_RF     = S.palm         if S.show and S.palm           else symbol_name ( 'RF'       )
+symbol_TORCH  = S.flashlight   if S.show and S.flashlight     else symbol_name ( 'TORCH'    ) 
+symbol_KERAS  = S.postal_horn  if S.show and S.postal_horn    else symbol_name ( 'KERAS'    ) 
+symbol_LOGREG = S.ruler        if S.show and S.ruler          else symbol_name ( 'LOGREG'   ) 
+symbol_USTAT  = S.pushpin      if S.show and S.pushpin        else symbol_name ( 'USTAT'    ) 
+symbol_CHI2   = S.chi2         if S.show and S.chi2           else symbol_name ( 'Chi2'     ) 
 
-symbol_MIX   = symbol_name ( S.shuffle      if S.show and S.shuffle        else 'MIX'      ) 
-symbol_PPD   = symbol_name ( S.ruler        if S.show and S.ruler          else 'PPD'      ) 
-symbol_DNN   = symbol_name ( S.compass      if S.show and S.compass        else 'DNN'      ) 
+symbol_MIX   = S.shuffle       if S.show and S.shuffle        else symbol_name ( 'MIX'      ) 
+symbol_PPD   = S.ruler         if S.show and S.ruler          else symbol_name ( 'PPD'      ) 
+symbol_DNN   = S.compass       if S.show and S.compass        else symbol_name ( 'DNN'      ) 
 
 symbol_KL    = symbol_name ( 'K-L' )
 symbol_J     = symbol_name ( 'J'   )
@@ -200,7 +202,7 @@ symbol_MD    = symbol_name ( 'Md'  )
 symbol_VDW   = symbol_name ( 'VdW' )
 symbol_BM    = symbol_name ( 'B-M' )
 symbol_ES    = symbol_name ( 'E-S' )
-symbol_RA    = symbol_name ( S.globe if S.show and S.globe else 'C-W' )   
+symbol_RA    = S.globe if S.show and S.globe else symbol_name ( 'C-W' )   
 
 
 symbol_NLL   = symbol_name ( f'-{S.delta_symbol}log{S.script_L}' if S.show else 'NLL' ) 
@@ -472,9 +474,18 @@ def valid_weight ( weight ) :
         return 0 < float ( numpy.sum ( weight ) )
     except Exception : 
         return False
-
-
-
+    
+# =============================================================================
+## transform structured array to unstructured one
+from numpy.lib.recfunctions import structured_to_unstructured as s2u
+# =============================================================================
+## Convert structured array to unstructured one
+def structured2unstructured ( data, copy = False , dtype = numpy.float64  ) :
+    """ Convert structured array to unstructured one
+    """
+    if not data.dtype.names : return data
+    return s2u ( data , copy = copy , dtype = dtype ) 
+    
 # =============================================================================
 from ostap.math.math_ve import gauss_cdf 
 one_sigma_minus = gauss_cdf ( -1.0 ) 
@@ -482,9 +493,9 @@ one_sigma_plus  = gauss_cdf ( +1.0 )
 
 # =============================================================================
 ## Internal implementation for single or pooled normalization 
-def _normalize_impl ( data1         ,
-                      data2 = None  ,
-                      weight1 = None,
+def _normalize_impl ( data1          ,
+                      data2   = None ,
+                      weight1 = None ,
                       weight2 = None ) :
     """ Internal implementation for single or pooled normalization """
     
@@ -497,7 +508,8 @@ def _normalize_impl ( data1         ,
     ## Case with a single dataset
     # ========================================================================
     if data2 is None :
-        
+
+                
         if w1_trivial :
             
             mu  = numpy.mean ( data1 , axis = 0 , keepdims = True )
@@ -558,6 +570,9 @@ def _normalize_impl ( data1         ,
     n2   = num_samples ( data2 )
     ntot = n1 + n2
 
+    data1 = structured2unstructured ( data1 , copy = False ) 
+    data2 = structured2unstructured ( data2 , copy = False ) 
+    
     if w1_trivial and w2_trivial :
         mu1  = numpy.mean ( data1 , axis = 0 , keepdims = True )
         mu2  = numpy.mean ( data2 , axis = 0 , keepdims = True )
@@ -579,7 +594,7 @@ def _normalize_impl ( data1         ,
         return pooled_mean, pooled_scale
 
     # ========================================================================
-    ## Case with weights (two datasets) - Чистые 1D массивы + оператор @
+    ## Case with weights (two datasets) - 1D arrays  + оператор @
     # ========================================================================
     w1 = numpy.asarray ( weight1 , dtype = numpy.float64 ).ravel() if weight1 is not None else numpy.ones ( n1 , dtype = numpy.float64 )
     w2 = numpy.asarray ( weight2 , dtype = numpy.float64 ).ravel() if weight2 is not None else numpy.ones ( n2 , dtype = numpy.float64 )
@@ -653,7 +668,12 @@ def normalize_pooled ( data1         ,
     
     >>> data1, data2, weight1, weight2 = ...
     >>> ds1 , ds2 = normalize_pooled ( data1 , data2 , weight1 , weight2 )
-    """ 
+    """
+    ##
+    
+    data1 = structured2unstructured ( data1 , copy = False ) 
+    data2 = structured2unstructured ( data2 , copy = False ) 
+    
     check_all ( data1   = data1              ,
                 data2   = data2              ,
                 weight1 = weight1            ,
@@ -679,7 +699,10 @@ def normalize_single ( data       ,
     >>> data, weight = ...
     >>> ds = normalize ( data, weight )
     """     
-    mean, scale = _normalize_impl ( data1 = data, weight1 = weight )
+    ##
+    data = structured2unstructured ( data , copy = False ) 
+    ##    
+    mean, scale = _normalize_impl ( data = data, weight1 = weight )
     return ( data - mean ) / scale
 
 # ============================================================================
@@ -882,7 +905,7 @@ TwoDataSets = namedtuple ( 'TwoDataSets' ,
 
 # =============================================================================
 ## Prepare two datasets for comparison:
-#  Each dataset is converted to numpy 
+#  Each dataset is converted to *STRUCTURED* numpy array 
 #  @see numpy_compare 
 #  @code
 #  datasets = prepare_data ( data1       = data1    ,
@@ -912,7 +935,7 @@ def prepare_data ( data         ,
                    progress2    = None        ) :
     """ Prepare two datasets for comparison:
     
-    - Each dataset is converted to numpy
+    - Each dataset is converted to *STRUCTURED* numpy array 
     
     >>> data1, data2 , weight1 , weight2 = data_prepare ( data1       = data1    ,
     ...                                                   data2       = data2    ,
@@ -934,10 +957,10 @@ def prepare_data ( data         ,
     from   ostap.stats.statvars import data_slice
     
     varlst1 , cuts  , _  = vars_and_cuts ( expressions  , cuts )
-    varlst1 = tuple ( sorted ( varlst1 ) )
+    varlst1 = tuple ( varlst1 ) 
     
     varlst2 , cuts2 , _  = vars_and_cuts ( expressions2 , cuts2 )
-    varlst2 = tuple ( sorted ( varlst2 ) )
+    varlst2 = tuple ( varlst2 ) 
     
     assert varlst1 and len ( varlst1 ) == len ( varlst2 ) , \
         "Different lenghts for variable lists!"
@@ -968,15 +991,12 @@ def prepare_data ( data         ,
                                      progress   = progress2  ,
                                      use_frame  = use_frame2 , 
                                      parallel   = parallel2  )
-    
+
+    ## 
     return TwoDataSets ( data1   = npdata1 ,
                          data2   = npdata2 ,
                          weight1 = weight1 , 
                          weight2 = weight2 ) 
-
-
-
-
 
 # ============================================================================
 if '__main__' == __name__ :

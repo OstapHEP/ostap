@@ -56,7 +56,7 @@ from   ostap.stats.utils        import ( weight_trivial     ,
 from   ostap.stats.gof_utils    import ( pairwise_distances ,
                                          nearest_neighbors  , 
                                          nearest_distances  , 
-                                         draw_ecdf          , s2u )
+                                         draw_ecdf          )
 import ostap.stats.utils       as      U 
 import ostap.math.math_base           
 import ROOT, numpy

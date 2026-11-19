@@ -22,7 +22,6 @@ __all__     = (
     'pairwise_distances' , ## get array of all pair-wise distances between two datasets
     'nearest_neighbors'  , ## get all nearest neigbours
     'nearest_distances'  , ## get all nearest distances 
-    's2u'                , ## convert structured numpy array into non-structured
     'combine_pvalues'    , ## combine p-values 
     'combine_methods'    , ## available methods for p-value combination
     ##
@@ -62,17 +61,6 @@ logger = getLogger ( 'ostap.stats.gof_utils' )
 # =============================================================================
 logger.debug ( 'Simple utilities for Goodness-of-Fit studies' )#
 # =============================================================================
-## transform structured array to unstructured one
-s2u = None 
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================  
-    from numpy.lib.recfunctions import structured_to_unstructured as s2u
-    # =========================================================================
-except ImportError :
-    # =========================================================================
-    s2u = None 
-    # =============================================================================
 ## pair-wise distances between two datasets 
 pairwise_distance = None # ====================================================
 # =============================================================================

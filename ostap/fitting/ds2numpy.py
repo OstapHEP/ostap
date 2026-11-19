@@ -340,10 +340,9 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             data    = data [ [ v for v in data.dtype.names if v != weight ] ]
 
         ## (3) convert to unstructured array, if requested 
-        if not structured :
-            from numpy.lib.recfunctions import structured_to_unstructured as s2u
-            data = s2u ( data , copy = False )
-        
+        if not structured :            
+            from ostap.stats.utils import structured2unstructured
+            data = structured2unstructured ( data , copy = False )            
         ## 
         return ( data , weights ) if weight_split else data          ## RETURN
 
@@ -546,9 +545,9 @@ else :
             data    = data [ [ v for v in data.dtype.names if v != weight ] ]
 
         ## (3) convert to unstructured array, if requested 
-        if not structured :
-            from numpy.lib.recfunctions import structured_to_unstructured as s2u
-            data = s2u ( data , copy = False )
+        if not structured :            
+            from ostap.stats.utils import structured2unstructured
+            data = structured2unstructured ( data , copy = False )            
         
         ## 
         del ds_delete 

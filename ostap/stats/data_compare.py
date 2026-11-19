@@ -24,15 +24,17 @@ __all__     = (
 from   ostap.core.ostap_types import sequence_types, sized_types, dictlike_types, integer_types   
 from   ostap.utils.core       import typename 
 from   ostap.math.math_base   import FIRST_ENTRY , LAST_ENTRY, axis_range 
-from   ostap.stats.utils      import ( TwoDataSets            ,
-                                       ComparisonResult       ,
-                                       HistoComparisonResult  ,                                       
-                                       prepare_data           , 
-                                       weight_trivial         ,
-                                       check_all              , 
-                                       full_header            , 
-                                       format_pvalue          ,
-                                       format_nsigma          )  
+from   ostap.stats.utils      import ( TwoDataSets             ,
+                                       structured2unstructured ,  
+                                       ComparisonResult        ,
+                                       HistoComparisonResult   ,                                       
+                                       prepare_data            , 
+                                       weight_trivial          ,
+                                       check_all               , 
+                                       full_header             , 
+                                       format_pvalue           , 
+                                       format_nsigma           )
+
 from   ostap.stats.gof_utils  import clip_pvalue 
 from   ostap.stats.gof        import AGoFnp
 from   ostap.stats.counters   import ECDF, WECDF
@@ -85,6 +87,7 @@ def data_compare ( comparators  ,
                    ## 
                    title        = ''          , 
                    silent       = False       , **config  ) :
+    
     """ Compare two datasets:
     Each dataset is converted to numpy and then `numpy_compare` is invoked 
     - see numpy_compare 
@@ -117,10 +120,9 @@ def data_compare ( comparators  ,
                               parallel2    = parallel2    ,
                               progress2    = progress     )
     
-    
     ## use comparator(s)  
-    results = numpy_compare ( comparators                   , 
-                              data1      = datasets.data1   ,  
+    results = numpy_compare ( comparators                   ,
+                              data1      = datasets.data1   ,
                               data2      = datasets.data2   , 
                               weight1    = datasets.weight1 ,
                               weight2    = datasets.weight2 ,
@@ -142,17 +144,17 @@ def data_compare ( comparators  ,
     else : raise TypeError ( "Inconsistent type for `results` and `comparators`"  )
 
 
-    ## from   ostap.trees.cuts     import vars_and_cuts
-    ## varlst1 , cuts  , _  = vars_and_cuts ( expressions  , cuts  ) 
-    ## varlst2 , cuts2 , _  = vars_and_cuts ( expressions2 , cuts2 )
-    ## varlst1 = tuple ( sorted ( varlst1 ) )    
-    ## varlst2 = tuple ( sorted ( varlst2 ) )
-    
+    if datasets.data1.dtype.names : 
+        varnames = tuple ( datasets.data1.dtype.names ) 
+    else :        
+        from   ostap.trees.cuts     import vars_and_cuts
+        varnames , _ , _  = vars_and_cuts ( expressions  , cuts  ) 
+        varnames = tuple ( varnames )
+        
     # =====================================================================================
-    if False :
-    ## for r in rr : # =======================================================================
+    for r in rr : # =======================================================================
         # =================================================================================
-        if r.importance and isinstance ( r.importance , dictlike_types ) :            
+        if importance and r.importance and isinstance ( r.importance , dictlike_types ) :            
             importance     = r.importance
             new_importance = {}
             for key, value in importance.items () :
@@ -163,8 +165,8 @@ def data_compare ( comparators  ,
                     try : # ===============================================================
                         # =================================================================
                         index = int ( key [ 1: ] )
-                        if 0 <= index < len ( varlst1 ) :
-                            name = varlst1 [ index ]
+                        if 0 <= index < len ( varnames ) :
+                            name = varnames [ index ]
                             ## add proper name into dictionary 
                             new_importance [ name ] = float ( value )
                             ## remove old name 
@@ -220,6 +222,9 @@ def numpy_compare ( comparators ,
     ## check input data 
     check_all ( data1 , data2 , weight1 , weight2 , "numpy_compare" ) 
 
+    data1 = structured2unstructured ( data1 , copy = False ) 
+    data2 = structured2unstructured ( data2 , copy = False ) 
+    
     ## the sequence of comparators is provided 
     if isinstance ( comparators , sequence_types ) and all ( isinstance ( c , AGoFnp ) and c.two_samples for c in comparators ) :
         return tuple ( numpy_compare ( cmp        ,
@@ -545,8 +550,8 @@ def compare_variable ( what        ,
         header  = ( '', 'Method' , ) + full_header 
         rows    = [ header ] + [ row ] + rows 
         
-        if   what2 == what : title = title if title else "Two-Sample Test: %s"               %   what 
-        else               : title = title if title else "Two-Sample Test: [ %s ] vs [ %s ]" % ( what , what2 ) 
+        if   what2 == what : title = title if title else "Two-Samples Test for %s variable"               %   what 
+        else               : title = title if title else "Two-Samples Test for [ %s ] vs [ %s ] variable" % ( what , what2 ) 
         
         rows   = T.remove_empty_columns ( rows )
         table  = T.table ( rows , title = title , prefix = "# " , alignment = 'llcccccccccccc' )
@@ -625,27 +630,31 @@ def compare_projections ( comparator   ,
                               parallel2    = parallel2    ,
                               progress2    = progress     )
     
+    data1 = structured2unstructured ( datasets.data1 , copy = False ) 
+    data2 = structured2unstructured ( datasets.data2 , copy = False ) 
+    
     ## use comparator
-    _ , pvalue = comparator.pvalue ( data1   = datasets.data1   ,
-                                     data2   = datasets.data2   ,
+    _ , pvalue = comparator.pvalue ( data1   = data1            ,
+                                     data2   = data2            ,
                                      weight1 = datasets.weight1 ,
                                      weight2 = datasets.weight2 )
     
     if not silent :
         title = title if title else '%s Random Axes/%s ' % ( comparator.symbol, comparator.method ) 
         logger.info ( '%s:\n%s' % ( title , comparator.report ( pvalue = pvalue , title = title , prefix = '# ' ) ) ) 
-
+        
     ## 
     pv     = clip_pvalue  ( pvalue )
     nsigma = significance ( pv     )
-    ## 
+    ##
+    ## row = ('',) * 8 + tuple ( comparator.the_row () [ 1 ] ) 
+    row = comparator.the_row () [ 1 ] 
     return ComparisonResult ( symbol    = comparator.symbol   ,
-                              method    = comparator.method    ,
-                              tvalue    = None                 ,
-                              pvalue    = pvalue               ,
-                              nsigma    = nsigma               ,
-                              importace = {}                   ,
-                              table_row = comparator.table_row ) 
+                              method    = comparator.method   ,
+                              tvalue    = None                ,
+                              pvalue    = pvalue              ,
+                              nsigma    = nsigma              ,
+                              table_row = row                 ) 
 
 # =============================================================================
 if '__main__' == __name__ :

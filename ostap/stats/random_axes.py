@@ -495,7 +495,6 @@ class RandomAxes(AGoFnp,Config) :
 
         rows = []
         header =  ( '' , 'Method' )
-        
         for cmp , pv in zip ( self.comparators ,
                               self.t_counters  ) : 
         
@@ -506,14 +505,17 @@ class RandomAxes(AGoFnp,Config) :
             row = ( cmp.symbol , cmp.method ) + row
             
             rows.append ( row )
+
             
-        hdr , row = self.the_row ( pvalue    = self.__pvalue , 
-                                   precision = precision     ,
-                                   width     = width         ) 
+        _ , row = self.the_row ( pvalue    = self.__pvalue , 
+                                 precision = precision     ,
+                                 width     = width         ) 
+        row   = ('',) * 6 + row
         
         first = header + hdr 
         last  = ( self.symbol, self.method ) + row
         rows  = [ first ] + sorted ( rows ) + [ last ]
+        
         import ostap.logger.table as T
         rows  = T.remove_empty_columns ( rows )
         title = title if title else '%s report' % typename ( self )  
