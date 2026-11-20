@@ -74,8 +74,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import sequence_types 
 from   ostap.utils.core       import typename 
-from   ostap.utils.basic      import classprop
-from   ostap.utils.memory     import LoopGC 
+from   ostap.utils.basic      import classprop, LoopGC
 from   ostap.stats.pvalue     import make_permutations, permutation_symbol 
 from   ostap.utils.config     import Config
 from   ostap.stats.gof        import AGoFnp
