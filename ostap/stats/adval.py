@@ -437,6 +437,7 @@ class ADVAL_LGBM (ADVAL_base) :
         num_boost_round       = params.pop ( 'num_boost_round'       , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 50   )
 
+        """
         reg_case = BDT_needs_regularization ( X_train , W_train )        
         if reg_case :
             self.regularized [ reg_case ] += 1
@@ -454,7 +455,8 @@ class ADVAL_LGBM (ADVAL_base) :
                                          num_samples           = ns                    , 
                                          num_boost_round       = num_boost_round       ,
                                          early_stopping_rounds = early_stopping_rounds )
-            
+        """
+                
         import lightgbm as LightGBM
         callbacks = []
         if 0 < early_stopping_rounds :
@@ -572,6 +574,7 @@ class ADVAL_XGB (ADVAL_base) :
         nf = num_features ( X_train )
         ns = num_samples  ( X_train )
         
+        """
         reg_case = BDT_needs_regularization ( X_train , W_train )        
         if reg_case :
             self.regularized [ reg_case ] += 1
@@ -590,6 +593,8 @@ class ADVAL_XGB (ADVAL_base) :
                                          num_boost_round       = num_boost_round       ,
                                          early_stopping_rounds = early_stopping_rounds )
             
+        """
+        
             
         model = XGBoost.train ( params                = params,
                                 dtrain                = dtrain,
@@ -709,6 +714,8 @@ class ADVAL_CATB (ADVAL_base) :
         nf =  num_features ( X_train )
         ns =  num_samples  ( X_train )
 
+        
+        """
         reg_case = BDT_needs_regularization ( X_train , W_train )
         if reg_case : 
 
@@ -729,6 +736,7 @@ class ADVAL_CATB (ADVAL_base) :
                                          num_samples           = ns                    , 
                                          iterations            = iterations            ,
                                          early_stopping_rounds = early_stopping_rounds )
+        """
 
         params [ 'iterations'            ] = iterations
         params [ 'early_stopping_rounds' ] = early_stopping_rounds  
@@ -838,6 +846,7 @@ class ADVAL_HGBC (ADVAL_base) :
         params.update ( self.params )
         max_iter = params.pop ( 'max_iter' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         
+        """
         reg_case = BDT_needs_regularization ( X_train , W_train )
         if reg_case : 
 
@@ -854,6 +863,7 @@ class ADVAL_HGBC (ADVAL_base) :
                                          num_features = nf       , 
                                          num_samples  = ns       , 
                                          max_iter     = max_iter )
+        """
             
         params [ 'max_iter' ] = max_iter
 
@@ -960,6 +970,7 @@ class ADVAL_GBC (ADVAL_base) :
         params.update ( self.params )
         n_estimators = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
         
+        """
         reg_case = BDT_needs_regularization ( X_train , W_train )
         if reg_case : 
 
@@ -976,6 +987,7 @@ class ADVAL_GBC (ADVAL_base) :
                                          num_features = nf           , 
                                          num_samples  = ns           ,
                                          n_estimators = n_estimators )
+        """
                                                      
         params [ 'n_estimators' ] = n_estimators
         
@@ -1080,6 +1092,8 @@ class ADVAL_RF (ADVAL_base) :
         nf =  num_features ( X_train )
         ns =  num_samples  ( X_train )
         
+        
+        """
         reg_case = BDT_needs_regularization ( X_train , W_train )
         if reg_case : 
 
@@ -1098,7 +1112,8 @@ class ADVAL_RF (ADVAL_base) :
                                          num_samples  = ns           ,
                                          n_estimators = n_estimators )
 
-            
+        """
+          
         params [ 'n_estimators' ] = n_estimators
         
         with threadpool_limits ( limits = 1 ):
@@ -1185,6 +1200,7 @@ class ADVAL_TORCH (ADVAL_base) :
         nf = num_features ( X_train )
         ns = num_samples  ( X_train )
         
+        """
         reg_case = NN_needs_regularization ( X_train , W_train )
         if reg_case : 
             self.regularized [ reg_case ] += 1
@@ -1196,6 +1212,7 @@ class ADVAL_TORCH (ADVAL_base) :
                                          num_features = nf       ,
                                          num_samples  = ns       ,
                                          epochs       = epochs   )
+        """
             
         batch_size   = params.get ( 'batch_size'            , 256  )
         lr           = params.get ( 'learning_rate'         , params.get ( 'lr' , 1e-3 ) )
@@ -1346,6 +1363,7 @@ class ADVAL_KERAS (ADVAL_base) :
         ns     = num_samples  ( X_train )
         epochs = params.pop ( 'epochs' , None ) or 100
         
+        """
         reg_case = NN_needs_regularization ( X_train , W_train )
         if reg_case : 
             self.regularized [ reg_case ] += 1
@@ -1356,7 +1374,8 @@ class ADVAL_KERAS (ADVAL_base) :
                                          num_features = nf       ,
                                          num_samples  = ns       ,
                                          epochs       = epochs   )
-
+        """
+        
         n_features   = nf 
         hidden_dim   = params.get ( 'hidden_dim'           , 64 if 15 < n_features else 16 )
         batch_size   = params.get ( 'batch_size'           , max ( int ( 0.02 * ns ) , 256 ) ) 
