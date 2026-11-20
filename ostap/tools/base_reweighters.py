@@ -19,7 +19,8 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, string_types  
 from   ostap.utils.core         import typename
-from   ostap.utils.basic        import num_jobs
+from   ostap.utils.basic        import num_jobs, LoopGC 
+from   ostap.utils.memory       import use_gc, memory 
 from   ostap.logger.pretty      import nice_print 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.tools.reweighter   import Reweighter
@@ -38,6 +39,8 @@ import numpy, abc, re, gc
 from ostap.logger.logger import getLogger, logAttention 
 logger = getLogger ( 'ostap.tools.base_reweighters' )
 # =============================================================================
+FOLD_symbol = S.fixed_width ( S.accordion , 2 ) if S.show and S.accordion else 'Fold'
+# =============================================================================
 re_voting = re.compile ( 
     r'^\s*(?:trim|truncate|truncated)\s*(?:[:=]\s*(?P<low>\d*)\s*(?:[:=]\s*(?P<high>\d*))?)?\s*$' , 
     re.IGNORECASE 
@@ -49,7 +52,8 @@ re_voting = re.compile (
 #           'geometric', 'trim:N') for reducing stacked fold predictions matrices 
 #           of shape (N_folds, N_samples) into an aggregated array of shape (N_samples,).
 class Voting ( object ) :
-    """ Encapsulates fold prediction aggregation (voting) strategies. """
+    """ Encapsulates fold prediction aggregation (voting) strategies.
+    """
     
     # =========================================================================
     ## Initialize voting strategy.
@@ -115,9 +119,9 @@ class Voting ( object ) :
     #  @param axis Dimension along which to aggregate predictions across folds.
     #  @return Aggregated prediction array of shape (N_samples,).
     def __call__ ( self, x, axis = 0 ) :
-        """ Apply the voting aggregation function to stacked fold predictions. """
+        """ Apply the voting aggregation function to stacked fold predictions.
+        """
         return self.__vote_func ( x, axis = axis )
-
 
 # ===============================================================================
 ## @class DensityReweighter
@@ -157,7 +161,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                    voting                 = 'mean'   , 
                    oof_mode               = False    , 
                    store_original_weights = False    ,
-                   progress               = True     , **params ) :
+                   progress               = True     ,
+                   phoenix                = True     , **params ) :
         """ Initialize and fit the density ratio reweighter ensemble. """
         
         if not isinstance ( n_splits, int ) : raise TypeError  ( "Invalid `n_splits' type %s"  % typename ( n_splits ) )
@@ -178,6 +183,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         self.__n_splits            = n_splits
         self.__voting              = Voting ( voting ) 
         self.__oof_mode            = True if oof_mode else False
+        self.__phoenix             = True if phoenix  else False
         
         # Public attributes for clean and direct access in subclasses
         self.fitted_models         = {}
@@ -197,15 +203,13 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                             target_weight   = target_weight   , **params )
 
         # Execute immediate fitting across positive streams and compute OOF initial weights
-        original_ratios, final_weight =  self.__fit_and_compute (
-            original.astype        ( numpy.float32 , copy = False ) ,
-            original_weight.astype ( numpy.float32 , copy = False ) if original_weight is not None else None , 
-            target.astype          ( numpy.float32 , copy = False ) ,
-            target_weight.astype   ( numpy.float32 , copy = False ) if target_weight   is not None  else None )
-                
-        ## final weights 
-        final_weight  = self.preserve_mass ( original , original_weight , final_weight ) 
-
+        with use_gc () : 
+            original_ratios, final_weight =  self.__fit_and_compute (
+                original.astype        ( numpy.float32 , copy = False ) ,
+                original_weight.astype ( numpy.float32 , copy = False ) if original_weight is not None else None , 
+                target.astype          ( numpy.float32 , copy = False ) ,
+                target_weight.astype   ( numpy.float32 , copy = False ) if target_weight   is not None  else None )
+            
         if not numpy.all ( numpy.isfinite ( original_ratios ) ) : logger.error ( "%s: NaN/Inf found in original_ratios" % typename ( self ) )
         if not numpy.all ( numpy.isfinite ( final_weight    ) ) : logger.error ( "%s: NaN/Inf found in final_weight"    % typename ( self ) )
         
@@ -230,17 +234,25 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             frac = 100.0 * clipped_count / len ( original_ratios ) 
             if 1 < frac : logger.warning ( "%s: Too many clipped events %.2f[%%]" % ( self.method , frac ) )
 
-        if store_original_weights : 
-            self.__original_ratios             = original_ratios 
-            self.__original_reweighted_weights = final_weight 
-        
+        ## final weights 
+        final_weight  = self.preserve_mass ( original , original_weight , final_weight ) 
+       
         ## As a last step: produce summary of weights 
         if self.verbose : self.weight_summary ( original                 ,
                                                 original_weight          ,
                                                 final_weight             ,
                                                 ratios = original_ratios )
-        ## collect some memor gabage 
+
+        if store_original_weights : 
+            self.__original_ratios             = original_ratios 
+            self.__original_reweighted_weights = final_weight
+        else :
+            del original_ratios 
+            del final_weight
+            
+        ## collect some memory gabage 
         gc.collect()
+            
     # =========================================================================
     ## @property n_splits
     #  @brief Number of cross-validation folds.
@@ -274,16 +286,14 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return self.__original_ratios
 
     # =========================================================================
-    ## @property original_reweighted_weights
-    #  @brief Final reweighted weight values for training original dataset.
+    ## Final reweighted weight values for training original dataset.
     @property
     def original_reweighted_weights ( self ) :
         """ `original_reweighted_weights`: Final reweighted weight values for training original dataset. """
         return self.__original_reweighted_weights
     
     # =========================================================================
-    ## @property norm_factor
-    #  @brief Global normalization factor conserving total reweighted mass.
+    ## Global normalization factor conserving total reweighted mass.
     @property
     def norm_factor ( self ) :
         """ `norm_factor`: Global normalization factor conserving total reweighted mass. """
@@ -291,7 +301,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         
     # =========================================================================
     ## @property mode
-    #  @brief Partition mode ('1-stream', '2-stream_orig', '2-stream_targ', '4-stream').
+    #  Partition mode ('1-stream', '2-stream_orig', '2-stream_targ', '4-stream').
     @property
     def mode ( self ) :
         """ `mode`: Partition mode ('1-stream', '2-stream_orig', '2-stream_targ', '4-stream'). """
@@ -299,11 +309,18 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 
     # =========================================================================
     ## @property progress
-    #  @brief Progress bar status flag.
+    #  Progress bar status flag.
     @property
     def progress ( self ) :
         """ `progress`: Progress bar status flag. """
         return self.__progress
+
+    # =========================================================================
+    ## Use Phoenix to cleanup the models? 
+    @property
+    def phoenix ( self ) :
+        """ `phoenix`: use PHOENIX to cleanup models """
+        return self.__phoenix 
 
     # =========================================================================
     ## Return method identifier name. """
@@ -322,6 +339,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         conf.update ( super ().config )
         if self.mode : conf [ "mode"     ]     = self.mode
         conf [ "progress" ]                    = self.progress
+        conf [ "phoenix"         ]             = self.phoenix 
         conf [ "clip_threshold"  ]             = self.__clip_threshold
         conf [ "voting"          ]             = self.__voting.name 
         conf [ "n_splits"        ]             = self.__n_splits
@@ -388,6 +406,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             original_ratios = self._apply_norm_factor ( clipped ) 
             return original_ratios, original_ratios.copy ()
 
+        
         w_orig = original_weight if original_weight is not None else numpy.ones ( len ( original ) , dtype = numpy.float32 )
         w_targ = target_weight   if target_weight   is not None else numpy.ones ( len ( target   ) , dtype = numpy.float32 )
 
@@ -411,11 +430,11 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                                    w_orig_valid ,
                                                    X_targ_valid ,
                                                    w_targ_valid )
-
+            
         elif has_neg_orig and not has_neg_targ :
             
             self.__mode                   = "2-stream_orig"
-            ratios_valid                  = numpy.zeros ( len ( X_orig_valid ) , dtype = numpy.float32 )
+            ratios_valid                  = numpy.zeros ( len ( X_orig_valid ) , dtype = numpy.float32 )            
             ratios_valid[ mask_orig_pos ] = self._fit_eval_stream ( "orig_pos"                     ,
                                                                     X_orig_valid [ mask_orig_pos ] ,
                                                                     w_orig_valid [ mask_orig_pos ] ,
@@ -438,18 +457,19 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             
             self.__target_weights_info = { "W_pos": w_pos_sum, "W_neg": w_neg_sum }
             w_total                    = w_pos_sum + w_neg_sum
-
+            
             r_pos_pos = self._fit_eval_stream ( "pos_pos"    ,
                                                 X_orig_valid ,
                                                 w_orig_valid ,
                                                 X_targ_pos   ,
                                                 w_targ_pos   )
+            
             r_pos_neg = self._fit_eval_stream ( "pos_neg"    ,
                                                 X_orig_valid ,
                                                 w_orig_valid ,
                                                 X_targ_neg   ,
                                                 w_targ_neg   )
-
+            
             ratios_valid = ( r_pos_pos * w_pos_sum - r_pos_neg * w_neg_sum ) / ( w_total + numpy.float32 ( 1e-12 ) )
 
         else :
@@ -502,7 +522,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                            w_orig_sub ,
                            X_targ_sub ,
                            w_targ_sub ) :
-        """ Execute K-Fold cross-validation with switchable OOF / training-ensemble mode. """
+        """ Execute K-Fold cross-validation with switchable OOF / training-ensemble mode.
+        """
 
         # Combine original and target feature matrices into a unified cross-validation dataset
         X_comb = numpy.vstack ( [ X_orig_sub, X_targ_sub ] )
@@ -516,7 +537,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         sum_w_targ = numpy.sum ( w_targ_abs, dtype = numpy.float64 )
         
         # Scale factor aligning total target mass with total original mass
-        scale_factor = ( sum_w_targ / ( sum_w_orig + 1e-12 ) ) if sum_w_orig > 0 else numpy.float32 ( 1.0 )
+        scale_factor  = ( sum_w_targ / ( sum_w_orig + 1e-12 ) ) if sum_w_orig > 0 else numpy.float32 ( 1.0 )
         w_orig_scaled = w_orig_abs * scale_factor
         
         w_comb_base     = numpy.hstack ( [ w_orig_scaled, w_targ_abs ] )
@@ -541,13 +562,17 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         n_samples       = len ( X_orig_sub )
         ratios          = numpy.ones ( n_samples, dtype = numpy.float32 )
 
-        if self.__oof_mode :
+        description = FOLD_symbol + self.symbol + ':'
+         
+        # ==================================================================================
+        if self.__oof_mode : # MODE 1: Strict Out-Of-Fold (OOF) Evaluation =================
+            # ==============================================================================
             # --- MODE 1: Strict Out-Of-Fold (OOF) Evaluation ---
             # Each original sample is evaluated exclusively by the fold model where it was part of the validation set.
-            for train_idx, valid_idx in progress_bar ( splits      ,
-                                                       max_value   = n_folds           ,
-                                                       description = 'Folds (OOF):'    , 
-                                                       silent      = not self.progress ) :
+            for train_idx, valid_idx in LoopGC ( progress_bar ( splits      ,
+                                                                max_value   = n_folds           ,
+                                                                description = description       , 
+                                                                silent      = not self.progress ) ) :
                 X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
                 w_tr       = w_comb_global [ train_idx ] if w_comb_global is not None else None
                 
@@ -569,13 +594,17 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                 fold_ratios = p_clipped / ( numpy.float32 ( 1.0 ) - p_clipped )
                 
                 ratios [ orig_indices_local ] = fold_ratios.astype ( numpy.float32, copy = False )
-        else :
+                
+            # ============================================================================
+        else : # MODE 2: Training-Ensemble Averaging (Cheating / Stabilized Mode) ========
+            # ============================================================================
             # --- MODE 2: Training-Ensemble Averaging (Cheating / Stabilized Mode) ---
             # Each sample's ratio is averaged across all N-1 models for which it served as a training point.
-            for train_idx, valid_idx in progress_bar ( splits      ,
-                                                       max_value   = n_folds           ,
-                                                       description = 'Folds (Train Ens):', 
-                                                       silent      = not self.progress ) :
+            for train_idx, valid_idx in LoopGC ( progress_bar ( splits      ,
+                                                                max_value   = n_folds           ,
+                                                                description = description       ,
+                                                                silent      = not self.progress ) ) :
+                
                 X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
                 w_tr       = w_comb_global [ train_idx ] if w_comb_global is not None else None
                 
@@ -628,14 +657,15 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return ratios
 
     # =========================================================================
-    ## @brief Extract density ratios r(x) from a single fold's model.
+    ## Extract density ratios r(x) from a single fold's model.
     #  @details Acts as a polymorphic bridge for converting raw probability outputs 
     #           into ratio estimates r(x) = p(x) / (1 - p(x)).
     #  @param model Trained fold estimator.
     #  @param X Features matrix.
     #  @return Array of predicted density ratios.
     def _predict_fold_ratios ( self, model, X ) :
-        """ Extract density ratios r(x) from a single fold's model. """
+        """ Extract density ratios r(x) from a single fold's model.
+        """
         p = self._predict_single_model ( model, X )
         if 1 < p.ndim : p = p [ :, 1 ]
         eps       = numpy.finfo ( numpy.float32 ).eps
@@ -643,24 +673,27 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return p_clipped / ( numpy.float32 ( 1.0 ) - p_clipped )
 
     # =========================================================================
-    ## @brief Hook for post-processing aggregated ensemble ratios.
+    ## Hook for post-processing aggregated ensemble ratios.
     #  @details Can be overridden by subclasses (e.g., IterativeReweighter) to apply 
     #           custom normalization or scaling after fold prediction voting.
     #  @param ratios Aggregated ratios array.
     #  @return Post-processed ratios array.
     def _postprocess_ensemble_ratios ( self, ratios ) :
-        """ Hook for post-processing aggregated ensemble ratios. """
+        """ Hook for post-processing aggregated ensemble ratios.
+        """
         return ratios
 
     # =========================================================================
-    ## @brief Predict density ratios for an unseen feature matrix X using all trained N fold models.
-    #  @details Evaluates each fold model independently and aggregates their predictions 
+    ## Predict density ratios for an unseen feature matrix X using all trained N fold models.
+    #
+    #   Evaluates each fold model independently and aggregates their predictions 
     #           matrix of shape (N_splits, N_samples) using the configured `Voting` strategy.
     #  @param stream_key Identifier key of the stream being evaluated.
     #  @param X Features matrix of unseen events.
     #  @return Aggregated density ratio predictions for the stream.
     def _predict_stream_ratios ( self, stream_key, X ) :
-        """ Predict density ratios for an unseen feature matrix X using all trained N fold models. """
+        """ Predict density ratios for an unseen feature matrix X using all trained N fold models.
+        """
         models_list = self.fitted_models [ stream_key ]
         if not models_list :
             return numpy.ones ( len ( X ) , dtype = numpy.float32 )
@@ -680,14 +713,15 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return self._postprocess_ensemble_ratios ( ensemble_ratios )
 
     # =========================================================================
-    ## @brief Clip ratios at threshold and compute global normalization scale factor.
+    ## Clip ratios at threshold and compute global normalization scale factor.
     #  @param ratios Density ratios array.
     #  @param w_orig Original source weights array.
     #  @return Normalized and clipped density ratios array.
     def _normalize_and_clip ( self   ,
                               ratios ,
                               w_orig ) :
-        """ Clip ratios at threshold and compute global normalization scale factor. """
+        """ Clip ratios at threshold and compute global normalization scale factor.
+        """
         clipped_ratios    = numpy.clip ( ratios, numpy.float32 ( 0.0 ) , numpy.float32 ( self.__clip_threshold ) )
         orig_sum          = numpy.sum  ( w_orig, dtype = numpy.float64 )
         reweighted_sum    = numpy.sum  ( w_orig * clipped_ratios, dtype = numpy.float64 )
@@ -695,8 +729,9 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return clipped_ratios * self._norm_factor
 
     # =========================================================================
-    ## @brief Evaluate reweighting factors for unseen source feature samples.
-    #  @details Executes the stream prediction pipeline, combines streams according to sign mode, 
+    ## Evaluate reweighting factors for unseen source feature samples.
+    #
+    #  Executes the stream prediction pipeline, combines streams according to sign mode, 
     #           applies clipping threshold, and scales the result by global normalization factor.
     #  @param original Source feature matrix of unseen samples.
     #  @param original_weight Source observation weights.
@@ -704,7 +739,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     def weights ( self                   ,
                   original               ,
                   original_weight = None ) :
-        """ Evaluate reweighting factors for unseen source feature samples. """
+        """ Evaluate reweighting factors for unseen source feature samples.
+        """
         
         X_new_f32 = original.astype ( numpy.float32, copy = False )
 
@@ -714,23 +750,27 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         if self.n_features != num_features ( X_new_f32 )          : raise TypeError ( "Invalid #features!!")
 
         if original_weight is None and self.__mode == "1-stream" :
-            
-            ratios  = self._predict_stream_ratios ( "base", X_new_f32 )
-            clipped = numpy.clip ( ratios,
-                                   numpy.float32 ( 0.0 ) ,
-                                   numpy.float32 ( self.__clip_threshold ) )
-            
-            result  = clipped * self._norm_factor
-            
-            ## final weights 
-            final_weight  = result 
-            final_weight  = self.preserve_mass ( original , original_weight , final_weight )  
-            
-            ## summary table 
-            if self.verbose : self.weight_summary ( original        ,
-                                                    original_weight ,
-                                                    final_weight    ) 
-            return final_weight
+
+            with use_gc () :
+                
+                ratios  = self._predict_stream_ratios ( "base", X_new_f32 )
+                clipped = numpy.clip ( ratios,
+                                       numpy.float32 ( 0.0 ) ,
+                                       numpy.float32 ( self.__clip_threshold ) )
+                
+                result  = clipped * self._norm_factor
+                
+                ## final weights 
+                final_weight  = result 
+                final_weight  = self.preserve_mass ( original , original_weight , final_weight )  
+                
+                ## summary table 
+                if self.verbose : self.weight_summary ( original        ,
+                                                        original_weight ,
+                                                        final_weight    )
+                del ratios, clipped
+                
+                return final_weight
                     
         w_new_f32 = ( original_weight.astype ( numpy.float32, copy = False )
                       if original_weight is not None
@@ -744,41 +784,60 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         ratios_valid = numpy.zeros ( len ( X_valid ), dtype = numpy.float32 )
 
         if self.__mode == "1-stream" :
-            ratios_valid = self._predict_stream_ratios ( "base", X_valid )
+            
+            with use_gc () :
+                ratios_valid = self._predict_stream_ratios ( "base", X_valid )
 
         elif self.__mode == "2-stream_orig" :
-            if numpy.any ( mask_pos ) :
-                ratios_valid[ mask_pos ] = self._predict_stream_ratios ( "orig_pos", X_valid[ mask_pos ] )
-            if numpy.any ( mask_neg ) :
-                ratios_valid[ mask_neg ] = self._predict_stream_ratios ( "orig_neg", X_valid[ mask_neg ] )
+            
+            with use_gc () :
+                if numpy.any ( mask_pos ) : ratios_valid [ mask_pos ] = self._predict_stream_ratios ( "orig_pos", X_valid[ mask_pos ] )
+                if numpy.any ( mask_neg ) : ratios_valid [ mask_neg ] = self._predict_stream_ratios ( "orig_neg", X_valid[ mask_neg ] )
 
         elif self.__mode == "2-stream_targ" :
-            w_pos   = self.__target_weights_info[ "W_pos" ]
-            w_neg   = self.__target_weights_info[ "W_neg" ]
+            
+            w_pos   = self.__target_weights_info [ "W_pos" ]
+            w_neg   = self.__target_weights_info [ "W_neg" ]
             w_total = w_pos + w_neg + numpy.float32 ( 1e-12 )
 
-            r_pos_pos    = self._predict_stream_ratios ( "pos_pos", X_valid )
-            r_pos_neg    = self._predict_stream_ratios ( "pos_neg", X_valid )
-            ratios_valid = ( r_pos_pos * w_pos - r_pos_neg * w_neg ) / w_total
+            with use_gc () :                
+                r_pos_pos    = self._predict_stream_ratios ( "pos_pos", X_valid )
+                r_pos_neg    = self._predict_stream_ratios ( "pos_neg", X_valid )
+                ratios_valid = ( r_pos_pos * w_pos - r_pos_neg * w_neg ) / w_total
 
+            del r_pos_pos
+            del r_pos_neg 
+            
         elif self.__mode == "4-stream" :
-            w_pos   = self.__target_weights_info[ "W_pos" ]
-            w_neg   = self.__target_weights_info[ "W_neg" ]
+            
+            w_pos   = self.__target_weights_info [ "W_pos" ]
+            w_neg   = self.__target_weights_info [ "W_neg" ]
             w_total = w_pos + w_neg + numpy.float32 ( 1e-12 )
 
-            if numpy.any ( mask_pos ) :
-                X_p                      = X_valid[ mask_pos ]
-                r_pos_pos                = self._predict_stream_ratios ( "pos_pos", X_p )
-                r_pos_neg                = self._predict_stream_ratios ( "pos_neg", X_p )
-                ratios_valid[ mask_pos ] = ( r_pos_pos * w_pos - r_pos_neg * w_neg ) / w_total
+            with use_gc () :
+                
+                if numpy.any ( mask_pos ) :
+                    
+                    X_p                      = X_valid[ mask_pos ]
+                    r_pos_pos                = self._predict_stream_ratios ( "pos_pos", X_p )
+                    r_pos_neg                = self._predict_stream_ratios ( "pos_neg", X_p )
+                    
+                    ratios_valid[ mask_pos ] = ( r_pos_pos * w_pos - r_pos_neg * w_neg ) / w_total
+                    
+                    del r_pos_pos
+                    del r_pos_neg 
 
-            if numpy.any ( mask_neg ) :
-                X_n                      = X_valid[ mask_neg ]
-                r_neg_pos                = self._predict_stream_ratios ( "neg_pos", X_n )
-                r_neg_neg                = self._predict_stream_ratios ( "neg_neg", X_n )
-                ratios_valid[ mask_neg ] = ( r_neg_pos * w_pos - r_neg_neg * w_neg ) / w_total
+                if numpy.any ( mask_neg ) :
+                    
+                    X_n                      = X_valid[ mask_neg ]
+                    r_neg_pos                = self._predict_stream_ratios ( "neg_pos", X_n )
+                    r_neg_neg                = self._predict_stream_ratios ( "neg_neg", X_n )
+                    ratios_valid[ mask_neg ] = ( r_neg_pos * w_pos - r_neg_neg * w_neg ) / w_total
+                    
+                    del r_neg_pos
+                    del r_neg_neg 
 
-
+                    
         clipped                 = numpy.clip ( ratios_valid,
                                                numpy.float32 ( 0.0 ),
                                                numpy.float32 ( self.__clip_threshold ) )
@@ -795,6 +854,10 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                                                 original_weight       ,
                                                 final_weight          ,
                                                 ratios = final_ratios ) 
+
+
+        del clipped, ratios_valid, final_ratios         
+        gc.collect()
         
         return final_weight 
 
@@ -814,9 +877,10 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
 #           to fit seamlessly into the cross-validation and evaluation pipeline 
 #           provided by the DensityReweighter base class.
 class IterativeReweighter ( DensityReweighter ) :
-    """ Base class for iterative weight boosting density reweighters (Gradient Weight Boosting). """
-    
-    ## @brief Initialize the iterative weight boosting ensemble.
+    """ Base class for iterative weight boosting density reweighters (Gradient Weight Boosting).
+    """    
+    # =========================================================================
+    ## Initialize the iterative weight boosting ensemble.
     #  @param original Source feature matrix.
     #  @param target Target feature matrix.
     #  @param original_weight Source observation weights.
@@ -837,7 +901,8 @@ class IterativeReweighter ( DensityReweighter ) :
                    clip_threshold         = 1.e+4 ,
                    store_original_weights = True  ,
                    progress               = True  , **params ) :
-        """ Initialize the iterative weight boosting ensemble. """
+        """ Initialize the iterative weight boosting ensemble.
+        """
         
         # Inject core boosting hyperparameters into parameter dictionary
         params [ 'n_estimators'  ] = n_estimators
@@ -855,17 +920,20 @@ class IterativeReweighter ( DensityReweighter ) :
 
     @property
     def method ( self ) :
-        """ Return method identifier name. """
+        """ Return method identifier name.
+        """
         return method_name ( 'Iterative/Boosting Reweighter' ) 
 
-    ## @property norm_factor
-    #  @brief Normalization scale handled internally per boosting step.
+    # =========================================================================
+    ##  Normalization scale handled internally per boosting step.
     @property
     def norm_factor ( self ) :
-        """ `norm_factor`: Normalization scale handled internally per boosting step. """
+        """ `norm_factor`: Normalization scale handled internally per boosting step.
+        """
         return numpy.float32 ( 1.0 )
     
-    ## @brief Abstract method for concrete backends to execute sequential boosting steps.
+    # =========================================================================
+    ## Abstract method for concrete backends to execute sequential boosting steps.
     #  @param X_orig Original feature subset for current fold.
     #  @param w_orig Original weight subset for current fold.
     #  @param X_targ Target feature subset for current fold.
@@ -873,42 +941,51 @@ class IterativeReweighter ( DensityReweighter ) :
     #  @return Tuple of (models_list, final_ratios_array).
     @abc.abstractmethod
     def _fit_iterative_stream ( self, X_orig, w_orig, X_targ, w_targ ) :
-        """ Abstract method for concrete backends to execute sequential boosting steps. """
+        """ Abstract method for concrete backends to execute sequential boosting steps.
+        """
         raise NotImplementedError
 
-    ## @brief Abstract method to accumulate log-ratios across sequential models for matrix X.
+    # =========================================================================
+    ## Abstract method to accumulate log-ratios across sequential models for matrix X.
     #  @param models List of trained sequential boosting models for a fold.
     #  @param X Unseen feature matrix.
     #  @return Density ratios array predicted by boosting chain.
     @abc.abstractmethod
     def _predict_iterative_stream ( self, models, X ) :
-        """ Abstract method to accumulate log-ratios across sequential models for matrix X. """
+        """ Abstract method to accumulate log-ratios across sequential models for matrix X.
+        """
         raise NotImplementedError
 
-    ## @brief Predict ratios directly using the iterative sequential chain.
+    # =========================================================================
+    ## Predict ratios directly using the iterative sequential chain.
     #  @param models Trained model chain.
     #  @param X Features matrix.
     #  @return Array of density ratios.
     def _predict_fold_ratios ( self, models, X ) :
-        """ Predict ratios directly using the iterative sequential chain. """
+        """ Predict ratios directly using the iterative sequential chain.
+        """
         return self._predict_iterative_stream ( models, X )
 
-    ## @brief Normalize aggregated ensemble response mean value to 1.0.
+    # =========================================================================
+    ## Normalize aggregated ensemble response mean value to 1.0.
     #  @param ratios Aggregated ratios array.
     #  @return Normalized ratios array.
     def _postprocess_ensemble_ratios ( self, ratios ) :
-        """ Normalize aggregated ensemble response mean value to 1.0. """
+        """ Normalize aggregated ensemble response mean value to 1.0.
+        """
         mean_ens = numpy.mean ( ratios )
         if 0 < mean_ens : ratios /= mean_ens
         return ratios
 
-    ## @brief Train an iterative boosting chain on the training partition of the fold.
+    # =========================================================================
+    ## Train an iterative boosting chain on the training partition of the fold.
     #  @param X_train Combined training feature matrix (N-1)/N.
     #  @param y_train Binary labels for training fold.
     #  @param w_train Training sample weights.
     #  @return List of trained sequential models for the fold.
     def _train_single_model ( self, X_train, y_train, w_train ) :
-        """ Train an iterative boosting chain on the training partition of the fold. """
+        """ Train an iterative boosting chain on the training partition of the fold.
+        """
         orig_mask = ( y_train == 0 )
         targ_mask = ( y_train == 1 )
 
@@ -921,31 +998,37 @@ class IterativeReweighter ( DensityReweighter ) :
                                                  X_targ_tr , w_targ_tr )
         return models
 
-    ## @brief Map predicted ratios r(x) to pseudo-probabilities p = r / (1 + r).
+    # =========================================================================
+    ## Map predicted ratios r(x) to pseudo-probabilities p = r / (1 + r).
     #  @param models List of sequential boosting models.
     #  @param X Features matrix.
     #  @return Array of pseudo-probabilities.
     def _predict_single_model ( self, models, X ) :
-        """ Map predicted ratios r(x) to pseudo-probabilities p = r / (1 + r). """
+        """ Map predicted ratios r(x) to pseudo-probabilities p = r / (1 + r).
+        """
         ratios = self._predict_iterative_stream ( models, X )
         p      = ratios / ( 1.0 + ratios )
         return p.astype ( numpy.float32, copy = False )
 
-    ## @brief Soft normalization for iterative fold ensembles keeping mean weight stable.
+    # =========================================================================
+    ## Soft normalization for iterative fold ensembles keeping mean weight stable.
     #  @param clipped_ratios Clipped ratios array.
     #  @return Normalized ratios array.
     def _apply_norm_factor ( self, clipped_ratios ) :
-        """ Soft normalization for iterative fold ensembles keeping mean weight stable. """
+        """ Soft normalization for iterative fold ensembles keeping mean weight stable.
+        """
         mean_val = numpy.mean ( clipped_ratios )
         if 0 < mean_val :  return clipped_ratios / mean_val
         return clipped_ratios
 
-    ## @brief Clip extreme ratios and compute mass conservation norm factor for logging.
+    # =========================================================================
+    ## Clip extreme ratios and compute mass conservation norm factor for logging.
     #  @param ratios Unclipped ratios array.
     #  @param w_orig Original source weights.
     #  @return Clipped and locally normalized ratios array.
     def _normalize_and_clip ( self, ratios, w_orig = None ) :
-        """ Clip extreme ratios and compute mass conservation norm factor for logging. """
+        """ Clip extreme ratios and compute mass conservation norm factor for logging.
+        """
         clipped = numpy.clip ( ratios, 0.0, self.params.get ( 'clip_threshold', 1.e4 ) )
         
         if w_orig is None :

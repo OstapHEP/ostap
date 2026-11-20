@@ -25,8 +25,9 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types       import num_types, string_types, integer_types
 from   ostap.utils.core             import typename
-from   ostap.utils.basic            import safe_loop
+from   ostap.utils.basic            import safe_loop, LoopGC 
 from   ostap.utils.utils            import classprop 
+from   ostap.utils.memory           import use_gc 
 from   ostap.logger.pretty          import nice_print, pretty_floats, format_pow10
 from   ostap.math.math_base         import pos_infinity  
 from   ostap.utils.progress_bar     import progress_bar, text_bar 
@@ -37,7 +38,7 @@ from   ostap.stats.utils            import ( num_samples        ,
 from   ostap.tools.base_reweighters import IterativeReweighter  
 import ostap.stats.utils            as     U 
 import ostap.logger.symbols         as     S
-import numpy, math, time   
+import numpy, math, time, pickle, gc 
 # =============================================================================
 # Logging setup
 # =============================================================================
@@ -59,7 +60,7 @@ LGBM_ESTIMATORS       =  300 # High capacity: deep ensemble with low learning ra
 LGBM_MAX_DEPTH        =    6 # Deep tree capacity for high dimensions / large statistics
 LGBM_LEARNING_RATE    = 0.02 # Small step for stable density ratio convergence
 
-XGB_ESTIMATORS        =  300 # High capacity: deep ensemble with low learning rate
+XGB_ESTIMATORS        =  300 # High capacity: deep ensemble with low learning rat
 XGB_MAX_DEPTH         =    6 # Deep tree capacity for high dimensions / large statistic
 XGB_LEARNING_RATE     = 0.02 # Small step for stable density ratio convergence
 XGB_MAX_LEAVES        =   63 # 
@@ -81,7 +82,7 @@ TORCH_OPTIMIZER_LBFGS = 'lbfgs'
 TORCH_OPTIMIZERS      = TORCH_OPTIMIZER_ADAM , TORCH_OPTIMIZER_LBFGS
 TORCH_OPTIMIZER       = TORCH_OPTIMIZER_LBFGS 
 TORCH_LBFGS_CHUNK     = 200_000
-TORCH_LBFGS_SYMBOL    = S.gear
+TORCH_LBFGS_SYMBOL    = S.gear     
 TORCH_ADAM_SYMBOL     = S.lightning
 
 # =============================================================================
@@ -93,8 +94,9 @@ PRINT_FREQ            = 10
 LOG_STEP_CLIPS        = -7.0 , 7.0 
 # =============================================================================
 ## @class LightGBMIterativeReweighter
-#  @brief Iterative density ratio reweighter based on LightGBM gradient boosting trees.
-#  @details Implements sequential gradient boosting for density ratio estimation 
+#  Iterative density ratio reweighter based on LightGBM gradient boosting trees.
+#
+#  Implements sequential gradient boosting for density ratio estimation 
 #           \f$r(x) = \frac{p(x)}{1-p(x)}\f$ using raw margin predictions (log-odds)
 #           with dynamically updated sample weights on each boosting iteration.
 # =============================================================================
@@ -103,14 +105,13 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
     """
 
     # =========================================================================
-    ## @brief Initialize the LightGBM iterative density reweighter instance.
+    ## Initialize the LightGBM iterative density reweighter instance.
     #  @param self Instance of the class.
     #  @param original Source feature matrix (N-dimensional array or dataframe).
     #  @param target Target feature matrix (N-dimensional array or dataframe).
     #  @param original_weight Optional observation weights for the source dataset.
     #  @param target_weight Optional observation weights for the target dataset.
     #  @param kwargs Additional keyword arguments for LightGBM configuration.
-    # =========================================================================
     def __init__ ( self            , 
                    original        , 
                    target          , 
@@ -157,25 +158,25 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
                             target_weight   = target_weight   , **config )
 
     # =========================================================================
-    ## @brief Get the short symbol/tag representing the LightGBM reweighter method.
+    ## Get the short symbol/tag representing the LightGBM reweighter method.
     #  @return String identifier symbol used for logging and console visual display.
-    # =========================================================================
     @classprop
     def symbol ( self ) :
-        """ Short symbol/tag for reweighter. """
+        """ Short symbol/tag for reweighter.
+        """
         return U.symbol_LGBM
     
     # =========================================================================
-    ## @brief Get the full method identifier name.
+    ## Get the full method identifier name.
     #  @return Method string tag.
-    # =========================================================================
     @property
     def method ( self ) :
-        """ Return method identifier name. """
+        """ Return method identifier name.
+        """
         return method_LGBM 
     
     # =========================================================================
-    ## @brief Execute the iterative LightGBM boosting stream on a specific cross-validation fold.
+    ## Execute the iterative LightGBM boosting stream on a specific cross-validation fold.
     #  @details Sequentially fits LightGBM weak learners (1 tree per step), evaluates raw margins 
     #           (log-odds), applies log-space clipping to [-7.0, 7.0], and updates sample weights 
     #           via exponential scaling.
@@ -185,13 +186,13 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
     #  @param X_targ Target feature subset matrix for current fold.
     #  @param w_targ Target sample weights subset for current fold.
     #  @return Tuple `(models, final_ratios)` containing trained boosters and final density ratio array.
-    # =========================================================================
     def _fit_iterative_stream ( self   ,
                                 X_orig ,
                                 w_orig ,
                                 X_targ ,
                                 w_targ ) :
-        """ Execute iterative LightGBM boosting stream on fold data. """
+        """ Execute iterative LightGBM boosting stream on fold data.
+        """
         import lightgbm as LightGBM
 
         n_orig = len ( X_orig )
@@ -207,6 +208,11 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
 
         y_comb         = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
                                           numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
+        
+        abs_norm_targ = numpy.abs   ( norm_targ ).astype ( numpy.float32 , copy=False)
+        sum_abs_targ  = numpy.sum   ( abs_norm_targ   , dtype = numpy.float64 )
+        comb_weights  = numpy.empty ( n_orig + n_targ , dtype = numpy.float32 )
+
         current_w_orig = abs_w_orig.copy ()
         
         n_estimators  = self.params.get ( 'n_estimators' , LGBM_ESTIMATORS    )
@@ -239,18 +245,20 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
 
         neff0 = nEff ( X_orig, current_w_orig )
 
-        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ':'        
+        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ' :'        
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
         else               : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = True  ) 
 
         t_start = time.time () 
 
-        for it , _ ,  bar in safe_loop ( the_bar ) :
-            
-            comb_weights  = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
-            comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
+        for it , _ ,  bar in LoopGC ( safe_loop ( the_bar ) ) :
 
+            w_sum    = numpy.sum ( current_w_orig , dtype=numpy.float64 ) + sum_abs_targ + 1e-12
+            inv_sum  = numpy.float32 ( 1.0 / w_sum )
+            comb_weights [ : n_orig ] = current_w_orig * inv_sum
+            comb_weights [ n_orig : ] = abs_norm_targ  * inv_sum
+            
             trn_data = LightGBM.Dataset ( X_comb, label = y_comb, weight = comb_weights, free_raw_data = True )            
             model    = LightGBM.train   ( params          = params   ,
                                           train_set       = trn_data ,
@@ -280,22 +288,36 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
                 message  = f"Step {it+1:4d}/{n_estimators:<4d} | wmin/wmax: {wminmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
                 bar     += message
 
-            model_bytes = model.model_to_string ()
-            model.free_dataset ()
-            del model, trn_data
-            
-            model = LightGBM.Booster ( model_str = model_bytes )
-            del model_bytes
-            
+                ## clean-up 
+                del ratios_curr
+                
+            if self.phoenix :
+                
+                model_bytes = model.model_to_string ()
+                model.free_dataset ()                
+                del model
+                model = LightGBM.Booster ( model_str = model_bytes )
+                del model_bytes
+                
             models.append ( model )
+            
+            ## clean-up 
+            del trn_data
+            del raw_vals
+            del log_r_step
             
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
         final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
 
+        ## more cleanup 
+        del X_comb, y_comb 
+        del current_w_orig
+        del abs_norm_targ
+        
         return models, final_ratios
 
     # =========================================================================
-    ## @brief Accumulate raw margin predictions and compute log-ratios across sequential LightGBM models.
+    ## Accumulate raw margin predictions and compute log-ratios across sequential LightGBM models.
     #  @details Evaluates each trained LightGBM booster on feature matrix X in raw log-odds space,
     #           clips log-ratio steps to [-7.0, 7.0], accumulates them scaled by learning rate,
     #           and returns final exponential density ratio predictions.
@@ -305,7 +327,8 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
     #  @return Array of predicted density ratios r(x).
     # =========================================================================
     def _predict_iterative_stream ( self, models, X ) :
-        """ Accumulate predictions across sequential LightGBM models. """
+        """ Accumulate predictions across sequential LightGBM models.
+        """
         
         learning_rate = self.params.get ( 'learning_rate', LGBM_LEARNING_RATE )
         log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
@@ -315,14 +338,23 @@ class LightGBMIterativeReweighter ( IterativeReweighter ) :
             if 1 < raw_vals.ndim : raw_vals = raw_vals [ :, 0 ]
             
             log_r_step  = numpy.clip ( raw_vals, *LOG_STEP_CLIPS )
-            log_ratios += log_r_step * learning_rate
+            
+            log_r_step *= learning_rate
+            log_ratios += log_r_step
+            
+            del log_r_step
 
-        return numpy.exp ( log_ratios )
+        rexp = numpy.exp ( log_ratios )
+            
+        del log_ratios
+        
+        return rexp
 
 # =============================================================================
 ## @class XGBoostIterativeReweighter
-#  @brief Iterative weight boosting density reweighter using XGBoost backend.
-#  @details Implements sequential gradient boosting for density ratio estimation 
+#  Iterative weight boosting density reweighter using XGBoost backend.
+#
+#  Implements sequential gradient boosting for density ratio estimation 
 #           \f$r(x) = \frac{p(x)}{1-p(x)}\f$ using raw margin predictions (output_margin)
 #           with dynamically updated sample weights on each boosting iteration.
 # =============================================================================
@@ -331,21 +363,21 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
     """
 
     # =========================================================================
-    ## @brief Initialize the XGBoost iterative density reweighter instance.
+    ## Initialize the XGBoost iterative density reweighter instance.
     #  @param self Instance of the class.
     #  @param original Source feature matrix (N-dimensional array or dataframe).
     #  @param target Target feature matrix (N-dimensional array or dataframe).
     #  @param original_weight Optional observation weights for the source dataset.
     #  @param target_weight Optional observation weights for the target dataset.
     #  @param kwargs Additional keyword arguments for XGBoost configuration.
-    # =========================================================================
     def __init__ ( self            , 
                    original        , 
                    target          , 
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        """ Initialize XGBoost iterative density reweighter with custom defaults. """
+        """ Initialize XGBoost iterative density reweighter with custom defaults.
+        """
         config = {
             'n_estimators'      :  XGB_ESTIMATORS    ,
             'learning_rate'     :  XGB_LEARNING_RATE ,
@@ -386,26 +418,27 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                             target_weight   = target_weight   , **config )
 
     # =========================================================================
-    ## @brief Get the short symbol/tag representing the XGBoost reweighter method.
+    ## Get the short symbol/tag representing the XGBoost reweighter method.
     #  @return String identifier symbol used for logging and visual presentation.
-    # =========================================================================
     @classprop
     def symbol ( self ) :
-        """ Short symbol/tag for reweighter. """
+        """ Short symbol/tag for reweighter.
+        """
         return U.symbol_XGB
 
     # =========================================================================
-    ## @brief Get the full method identifier name.
+    ## Get the full method identifier name.
     #  @return Method string tag.
-    # =========================================================================
     @property
     def method ( self ) :
-        """ Return method identifier name. """
+        """ Return method identifier name.
+        """
         return method_XGB
 
     # =========================================================================
-    ## @brief Execute the iterative XGBoost boosting stream on a specific cross-validation fold.
-    #  @details Sequentially fits XGBoost weak learners (1 tree per step), evaluates raw margins 
+    ## Execute the iterative XGBoost boosting stream on a specific cross-validation fold.
+    #
+    #  Sequentially fits XGBoost weak learners (1 tree per step), evaluates raw margins 
     #           (output_margin), applies log-space clipping to [-7.0, 7.0], and updates sample weights 
     #           via exponential scaling.
     #  @param self Instance of the class.
@@ -414,18 +447,21 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
     #  @param X_targ Target feature subset matrix for current fold.
     #  @param w_targ Target sample weights subset for current fold.
     #  @return Tuple `(models, final_ratios)` containing trained boosters and final density ratio array.
-    # =========================================================================
     def _fit_iterative_stream ( self   ,
                                 X_orig ,
                                 w_orig ,
                                 X_targ ,
                                 w_targ ) :
-        """ Execute iterative XGBoost boosting stream on fold data. """
+        """ Execute iterative XGBoost boosting stream on fold data.
+        """
         import xgboost as XGBoost
 
         n_orig     = len ( X_orig )
         n_targ     = len ( X_targ )
         X_comb     = numpy.vstack ( [ X_orig, X_targ ] )
+
+        dmat_orig = XGBoost.DMatrix ( X_orig )
+
         abs_w_orig = numpy.abs ( w_orig )
         abs_w_targ = numpy.abs ( w_targ )
         
@@ -436,11 +472,16 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         y_comb         = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
                                           numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
         current_w_orig = abs_w_orig.copy ()
+        
+        abs_norm_targ = numpy.abs   ( norm_targ ).astype ( numpy.float32 , copy=False)
+        sum_abs_targ  = numpy.sum   ( abs_norm_targ   , dtype = numpy.float64 )
+        comb_weights  = numpy.empty ( n_orig + n_targ , dtype = numpy.float32 )
 
         n_estimators  = self.params.get ( 'n_estimators' , XGB_ESTIMATORS    )
         learning_rate = self.params.get ( 'learning_rate', XGB_LEARNING_RATE )
         
-        models = []
+        dmat_comb = XGBoost.DMatrix ( X_comb , label = y_comb )
+        models    = []
 
         params = {
             'objective'        : 'binary:logistic' , 
@@ -468,24 +509,26 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
         
         neff0 = nEff ( X_orig, current_w_orig )
         
-        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ':'        
+        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ' :'        
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
         else               : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = True  ) 
 
         t_start = time.time () 
-        for it , _ ,  bar in safe_loop ( the_bar ) :
-                        
-            comb_weights  = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
-            comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
+        for it , _ ,  bar in LoopGC ( safe_loop ( the_bar ) ) :
+
+            w_sum    = numpy.sum ( current_w_orig , dtype=numpy.float64 ) + sum_abs_targ + 1e-12
+            inv_sum  = numpy.float32 ( 1.0 / w_sum )
+            comb_weights [ : n_orig ] = current_w_orig * inv_sum
+            comb_weights [ n_orig : ] = abs_norm_targ  * inv_sum
+
+            ## just change the weights  
+            dmat_comb.set_weight ( comb_weights )
             
-            dmat_comb = XGBoost.DMatrix ( X_comb, label = y_comb, weight = comb_weights )
+            model     = XGBoost.train ( params          = params,
+                                        dtrain          = dmat_comb,
+                                        num_boost_round = 1 )
             
-            model = XGBoost.train ( params          = params,
-                                    dtrain          = dmat_comb,
-                                    num_boost_round = 1 )
-            
-            dmat_orig = XGBoost.DMatrix ( X_orig )
             # Retrieve raw margins (output_margin=True) for exact mathematical consistency
             raw_vals  = model.predict ( dmat_orig, output_margin = True )
             if 1 < raw_vals.ndim : raw_vals = raw_vals [ :, 0 ]
@@ -510,12 +553,36 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
                 else      : dt = '%.1fs' %                      dt                 
                 message  = f"Step {it+1:4d}/{n_estimators:<4d} | wmin/wmax: {wminmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
                 bar     += message
+
+                ## cleanup
+                del ratios_curr
+                
+            # PHOENIX memory optimization: export raw JSON model bytes and reload clean inference engine
+            if self.phoenix : 
+                model_bytes = model.save_raw ( raw_format = "json" )
+                best_iter   = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )                    
+                del model
+                model = XGBoost.Booster ()
+                model.load_model ( model_bytes )
+                del model_bytes            
+                if best_iter is not None : model.best_iteration = best_iter
                 
             models.append ( model )
-            
+
+            ## cleanup 
+            del raw_vals
+            del log_r_step 
+
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
         final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
-
+        
+        ## more cleanup
+        del dmat_orig 
+        del dmat_comb
+        del X_comb, y_comb
+        del current_w_orig
+        del abs_norm_targ
+        
         return models, final_ratios
 
     # =========================================================================
@@ -529,20 +596,34 @@ class XGBoostIterativeReweighter ( IterativeReweighter ) :
     #  @return Array of predicted density ratios r(x).
     # =========================================================================
     def _predict_iterative_stream ( self, models, X ) :
-        """ Accumulate predictions across sequential XGBoost models. """
+        """ Accumulate predictions across sequential XGBoost models.
+        """
         import xgboost as XGBoost
-        dmat          = XGBoost.DMatrix ( X )
-        learning_rate = self.params.get ( 'learning_rate', XGB_LEARNING_RATE )
-        log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
 
-        for model in models :
-            raw_vals    = model.predict ( dmat, output_margin = True )
-            if 1 < raw_vals.ndim : raw_vals = raw_vals [ :, 0 ]
+        with use_gc () :
             
-            log_r_step  = numpy.clip ( raw_vals, *LOG_STEP_CLIPS )
-            log_ratios += log_r_step * learning_rate
-
-        return numpy.exp ( log_ratios )
+            dmat          = XGBoost.DMatrix ( X )
+            learning_rate = self.params.get ( 'learning_rate', XGB_LEARNING_RATE )
+            log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
+            
+            for model in models :
+                
+                raw_vals    = model.predict ( dmat, output_margin = True )
+                if 1 < raw_vals.ndim : raw_vals = raw_vals [ :, 0 ]
+                
+                log_r_step  = numpy.clip ( raw_vals, *LOG_STEP_CLIPS )
+                log_r_step *= learning_rate
+                log_ratios += log_r_step
+                
+                del log_r_step
+                del raw_vals
+                
+            rexp = numpy.exp ( log_ratios )
+            
+            del dmat 
+            del log_ratios
+            
+            return rexp
 
 
 # =============================================================================
@@ -627,7 +708,7 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
         return method_CATB
 
     # =========================================================================
-    ## @brief Execute the iterative CatBoost boosting stream on a specific cross-validation fold.
+    ## Execute the iterative CatBoost boosting stream on a specific cross-validation fold.
     #  @details Sequentially fits CatBoost weak learners (1 tree per step), evaluates raw margins 
     #           (RawFormulaVal), applies log-space clipping to [-7.0, 7.0], and updates sample weights 
     #           via exponential scaling.
@@ -643,7 +724,8 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
                                 w_orig ,
                                 X_targ ,
                                 w_targ ) :
-        """ Execute iterative CatBoost boosting stream on fold data. """
+        """ Execute iterative CatBoost boosting stream on fold data.
+        """
         import catboost as CatBoost
 
         n_orig     = len ( X_orig )
@@ -659,7 +741,11 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
         y_comb         = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
                                           numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
         current_w_orig = abs_w_orig.copy ()
-        
+
+        abs_norm_targ = numpy.abs   ( norm_targ ).astype ( numpy.float32 , copy=False)
+        sum_abs_targ  = numpy.sum   ( abs_norm_targ   , dtype = numpy.float64 )
+        comb_weights  = numpy.empty ( n_orig + n_targ , dtype = numpy.float32 )
+ 
         n_estimators  = self.params.get ( 'n_estimators' , CATB_ESTIMATORS    )
         learning_rate = self.params.get ( 'learning_rate', CATB_LEARNING_RATE )
 
@@ -687,18 +773,20 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
         
         neff0 = nEff ( X_orig, current_w_orig )
 
-        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ':'        
+        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ' :'        
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
         else               : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = True  ) 
 
         t_start = time.time () 
 
-        for it , _ ,  bar in safe_loop ( the_bar ) :
+        for it , _ ,  bar in LoopGC ( safe_loop ( the_bar ) ) :
             
-            comb_weights  = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
-            comb_weights /= ( numpy.sum ( comb_weights ) + 1e-12 )
-
+            w_sum    = numpy.sum ( current_w_orig , dtype=numpy.float64 ) + sum_abs_targ + 1e-12
+            inv_sum  = numpy.float32 ( 1.0 / w_sum )
+            comb_weights [ : n_orig ] = current_w_orig * inv_sum
+            comb_weights [ n_orig : ] = abs_norm_targ  * inv_sum
+            
             trn_pool = CatBoost.Pool ( data = X_comb, label = y_comb, weight = comb_weights )
             
             model    = CatBoost.train ( pool    = trn_pool ,
@@ -706,13 +794,14 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
                                         verbose = False    )
 
             # Retrieve raw margins (RawFormulaVal) for exact mathematical consistency
-            raw_vals = model.predict ( pool_orig, prediction_type = 'RawFormulaVal' )
+            raw_vals = model.predict ( pool_orig , prediction_type = 'RawFormulaVal' )
             if 1 < raw_vals.ndim : raw_vals = raw_vals [ :, 0 ]
             
             log_r_step      = numpy.clip ( raw_vals   , *LOG_STEP_CLIPS )
             current_w_orig *= numpy.exp  ( log_r_step * learning_rate   )
 
             if bar and not self.silent and ( it < 5  or ( it + 1 ) % print_freq == 0 or ( it + 5 ) == n_estimators ) :
+                
                 ratios_curr = current_w_orig / ( abs_w_orig + 1e-12 )
                 neff        = nEff ( X_orig, current_w_orig )
 
@@ -730,11 +819,31 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
                 message  = f"Step {it+1:4d}/{n_estimators:<4d} | wmin/wmax: {wminmax} | #eff: {ne0} {S.arrow_right} {ne} | Time/step:{dt}" 
                 bar     += message
 
-            models.append ( model )
+                del ratios_curr
 
+            # PHOENIX memory optimization: serialize model blob and purge heavy training pools
+            if self.phoenix :  
+                model_bytes = pickle.dumps ( model       )                        
+                model       = pickle.loads ( model_bytes )
+                del model_bytes
+            
+            models.append ( model )
+            
+            ## some clean up
+            del trn_pool
+            del raw_vals
+            del log_r_step
+                
+            
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
         final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
 
+        ## more cleanup 
+        del pool_orig
+        del X_comb, y_comb    
+        del current_w_orig
+        del abs_norm_targ
+        
         return models, final_ratios
 
     # =========================================================================
@@ -748,21 +857,34 @@ class CatBoostIterativeReweighter ( IterativeReweighter ) :
     #  @return Array of predicted density ratios r(x).
     # =========================================================================
     def _predict_iterative_stream ( self, models, X ) :
-        """ Accumulate predictions across sequential CatBoost models. """
+        """ Accumulate predictions across sequential CatBoost models.
+        """
         import catboost as CatBoost
         
         learning_rate = self.params.get ( 'learning_rate', CATB_LEARNING_RATE )
-        pool          = CatBoost.Pool ( data = X )
-        log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
 
-        for model in models :
-            raw_vals    = model.predict ( pool, prediction_type = 'RawFormulaVal' )
-            if 1 < raw_vals.ndim : raw_vals = raw_vals [ :, 0 ]
+        with use_gc () :
             
-            log_r_step  = numpy.clip ( raw_vals , *LOG_STEP_CLIPS )
-            log_ratios += log_r_step * learning_rate
+            pool          = CatBoost.Pool ( data = X )
+            log_ratios    = numpy.zeros ( len ( X ), dtype = numpy.float32 )
+            
+            for model in models :
+                raw_vals    = model.predict ( pool, prediction_type = 'RawFormulaVal' )
+                if 1 < raw_vals.ndim : raw_vals = raw_vals [ :, 0 ]
+                
+                log_r_step  = numpy.clip ( raw_vals , *LOG_STEP_CLIPS )
+                log_r_step *= learning_rate
+                log_ratios += log_r_step
+                
+                del log_r_step
+                del raw_vals
 
-        return numpy.exp ( log_ratios )
+            rexp = numpy.exp ( log_ratios )
+            
+            del pool
+            del log_ratios
+            
+            return rexp
 
 
 # =============================================================================
@@ -795,8 +917,9 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
     
     """
     # =========================================================================
-    ## @brief Initialize the PyTorch iterative density reweighter instance.
-    #  @details Sets up hyperparameter configuration defaults, validates batch size, 
+    ## Initialize the PyTorch iterative density reweighter instance.
+    #
+    #  Sets up hyperparameter configuration defaults, validates batch size, 
     #           configures the computation device (CPU or GPU), and initializes 
     #           the underlying IterativeReweighter framework.
     #  @param self Instance of the class.
@@ -809,7 +932,6 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
     #         - hidden_layers (tuple): Architecture of hidden layers (default: (128, 64)).
     #         - learning_rate (float): Learning rate for density ratio boosting step (default: 0.02).
     #         - device (str or torch.device): Computation device ('cpu', 'cuda', or None for auto-detection).
-    # =========================================================================
     def __init__ ( self            , 
                    original        , 
                    target          , 
@@ -876,30 +998,30 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                             target_weight   = target_weight   , **config )
 
     # =========================================================================
-    ## @brief Get the short symbol/tag representing the PyTorch reweighter method.
+    ## Get the short symbol/tag representing the PyTorch reweighter method.
     #  @return String identifier symbol used for logging and console visual display.
-    # =========================================================================
     @classprop
     def symbol ( self ) :
-        """ Return short symbol/tag for reweighter console visual representation. """
+        """ Return short symbol/tag for reweighter console visual representation.
+        """
         return U.symbol_TORCH
 
     # =========================================================================
-    ## @brief Get the full method identifier name.
+    ## Get the full method identifier name.
     #  @return Method string tag.
-    # =========================================================================
     @property
     def method ( self ) :
-        """ Return method identifier name. """
+        """ Return method identifier name.
+        """
         return method_TORCH
 
     # =========================================================================
-    ## @brief Factory method generating a dynamic PyTorch Module class for weak learners.
-    #  @details Constructs a dynamic `WeakMLP` subclass supporting arbitrary hidden layer 
+    ## Factory method generating a dynamic PyTorch Module class for weak learners.
+    #
+    #  Constructs a dynamic `WeakMLP` subclass supporting arbitrary hidden layer 
     #           architectures. Includes BatchNorm1d for input normalization and forces 
     #           `bias=False` on the output linear layer to eliminate global offset learning.
     #  @return WeakMLP class inheriting from `torch.nn.Module`.
-    # =========================================================================
     def get_MLP_class ( self ) :
         """ Dynamically import torch and construct the WeakMLP PyTorch Module class.
         
@@ -946,8 +1068,9 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         return WeakMLP
 
     # =========================================================================
-    ## @brief Execute the iterative PyTorch boosting stream on a specific cross-validation fold.
-    #  @details Sequentially fits PyTorch MLP weak learners, computes logit predictions,
+    ## Execute the iterative PyTorch boosting stream on a specific cross-validation fold.
+    #
+    #  Sequentially fits PyTorch MLP weak learners, computes logit predictions,
     #           applies zero-mean centering, clips log-ratio steps to [-7.0, 7.0], 
     #           and updates sample weights via exponential scaling. Supports static chunking for L-BFGS.
     #  @param self Instance of the class.
@@ -956,7 +1079,6 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
     #  @param X_targ Target feature subset matrix for current fold.
     #  @param w_targ Target sample weights subset for current fold.
     #  @return Tuple `(models, final_ratios)` containing list of model dicts and final ratio array.
-    # =========================================================================
     def _fit_iterative_stream ( self   ,
                                 X_orig ,
                                 w_orig ,
@@ -989,6 +1111,10 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         y_comb     = numpy.hstack ( [ numpy.zeros ( n_orig, dtype = numpy.float32 ),
                                       numpy.ones  ( n_targ, dtype = numpy.float32 ) ] )
         n_comb     = n_orig + n_targ
+
+        abs_norm_targ = numpy.abs   ( norm_targ ).astype ( numpy.float32 , copy=False)
+        sum_abs_targ  = numpy.sum   ( abs_norm_targ   , dtype = numpy.float64 )
+        comb_weights  = numpy.empty ( n_orig + n_targ , dtype = numpy.float32 )
         
         current_w_orig = abs_w_orig.copy ()
         
@@ -1023,7 +1149,7 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         WeakMLPClass = self.get_MLP_class ()
 
         neff0       = nEff ( X_orig, current_w_orig )        
-        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + S.fixed_width ( optimizer_symbol , 2 ) + ':'
+        description = S.fixed_width ( boosting_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + S.fixed_width ( optimizer_symbol , 2 ) + ' :'
         
         if   self.progress : the_bar = progress_bar ( n_estimators , full = True , description = description , silent = not self.progress ) 
         elif self.verbose  : the_bar = text_bar     ( n_estimators , full = True , description = description , silent =     self.silent   )
@@ -1031,10 +1157,13 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
         
         t_start   = time.time ()
         prev_loss = 0  
-        for step , index , bar in safe_loop ( the_bar ) : 
+        for step , index , bar in LoopGC ( safe_loop ( the_bar ) ) : 
+
+            w_sum    = numpy.sum ( current_w_orig , dtype=numpy.float64 ) + sum_abs_targ + 1e-12
+            inv_sum  = numpy.float32 ( 1.0 / w_sum )
+            comb_weights [ : n_orig ] = current_w_orig * inv_sum
+            comb_weights [ n_orig : ] = abs_norm_targ  * inv_sum
             
-            comb_weights   = numpy.hstack ( [ current_w_orig, numpy.abs ( norm_targ ) ] )
-            comb_weights  /= ( numpy.sum ( comb_weights ) + 1e-12 )
             weights_tensor = torch.tensor ( comb_weights, dtype = torch.float32 ).unsqueeze ( 1 ).to ( device )
 
             model     = WeakMLPClass ( n_features, hidden_layers ).to ( device )
@@ -1198,6 +1327,10 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
                 'hidden_layers' : hidden_layers       ,
                 'shift'         : train_shift         
             } )
+
+            ## soem cleanup 
+            del raw_vals 
+            del log_r_step
             
         final_ratios = current_w_orig / ( abs_w_orig + 1e-12 )
         final_ratios = self._normalize_and_clip ( final_ratios, w_orig )
@@ -1247,9 +1380,18 @@ class PyTorchIterativeReweighter ( IterativeReweighter ) :
             raw_vals    = raw_vals - train_shift
             
             log_r_step  = numpy.clip ( raw_vals, *LOG_STEP_CLIPS )
-            log_ratios += log_r_step * learning_rate
+            log_r_step *= learning_rate
+            log_ratios += log_r_step
 
-        return numpy.exp ( log_ratios )
+            del log_r_step
+            del raw_vals
+
+            
+        rexp = numpy.exp ( log_ratios )
+            
+        del log_ratios
+        del X_tensor
+        return rexp
 
 
 # ============================================================================

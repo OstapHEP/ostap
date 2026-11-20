@@ -67,120 +67,6 @@ DEFAULT_ESTIMATORS         = 500
 MAX_REGULARIZED_ESTIMATORS = 100
 MAX_DEPTH                  =   5
 # =============================================================================
-## Evaluate whether strong regularization is required for BDT-based models.
-#  Evaluates feature dimension, Kish's effective sample size, and sPlot weight noise.
-#
-#  @param X Array-like feature matrix (n_samples, n_features).
-#  @param W Optional sample weights (supports negative sPlot weights).
-#  @return bool True if strong regularization should be applied, False otherwise.
-# =============================================================================
-def BDT_needs_regularization ( X , W = None ) :
-    """ Determines whether strong regularization is necessary for tree-based 
-        Adversarial Validation models.
-    """
-
-    ## ATTENTNION!
-    return False ## ATTENTION!!!
-
-    nf   = num_features ( X )
-    nraw = num_samples  ( X )
-    neff = nEff         ( X , W )
-    
-    # Since W is class-balanced (sumw1 == sumw2), this global nEff 
-    # mathematically equals the two-sample harmonic effective size:
-    # 4 * (N_eff1 * N_eff2) / (N_eff1 + N_eff2).
-    # It correctly bottlenecks capacity by the weaker sample.
-    # 
-    # 1. Check weight efficiency (nEff / nRaw)
-    #    Efficiency < 65% indicates significant sPlot negative weight fluctuations
-    eff = neff / float ( nraw ) if 0 < nraw else 0.0
-    if eff < 0.65 :
-        effp = 100 * eff 
-        return 'eff[%.0f%%]<65%%' % effp 
-
-    # 2. Low dimensionality (<= 3) requires regularization only under limited statistics
-    threshold = 50000.0 
-    if nf <= 3 and neff < threshold :
-        th     = nice_print ( threshold , precision = 1 , width = 2 , with_sign = False )
-        vv     = nice_print ( neff      , precision = 1 , width = 2 , with_sign = False ) 
-        result = "nf[%d]<=3&neff[%s]<%s" % ( nf , vv , th )
-        return result.replace ( ' ' , '' ) 
-
-    # 3. Dimensionality-dependent minimum statistical threshold
-    required_stats = 1000.0 * ( nf ** 1.5 )
-    if neff < required_stats :
-        rs     = nice_print ( required_stats , precision = 1 , width = 2 , with_sign = False )
-        vv     = nice_print ( neff           , precision = 1 , width = 2 , with_sign = False ) 
-        result = "neff[%s]<%s" % ( vv ,rs )
-        return result.replace ( ' ' , '' ) 
-        
-    return ''
-
-# =============================================================================
-## Determine whether strong regularization is required specifically for Neural Networks
-#  (PyTorch / Keras) when handling weighted or sPlot datasets.
-#
-#  Neural networks require significantly higher effective statistics and stricter 
-#  bounds on weight dispersion to prevent overfitting on tabular sPlot data.
-#
-#  @param X Array-like feature matrix (n_samples, n_features).
-#  @param W Optional sample weights (supports negative sPlot weights).
-#  @return bool True if strong regularization should be applied, False otherwise.
-# =============================================================================
-def NN_needs_regularization ( X , W = None ):
-    """ Determines whether strong regularization (e.g., dropout, weight decay) 
-        is required specifically for Neural Networks handling weighted datasets.
-    """
-    
-    ## ATTENTNION!
-    return False ## ATTENTION!!!
-
-    nf   = num_features ( X )
-    nraw = num_samples  ( X )
-    neff = nEff         ( X , W )
-
-    # 1. Strict absolute statistic threshold for Neural Networks
-    threshold1 = 10000.0 
-    if neff < threshold1 :
-        th1    = nice_print ( threshold1 , precision = 1 , width = 2 , with_sign = False )
-        vv     = nice_print ( neff       , precision = 1 , width = 2 , with_sign = False )         
-        result ='neff[%s]<%s' % ( vv , th1 )
-        return result.replace ( ' ' , '' ) 
-        
-    # 2. Higher statistical coverage required for low-dimensional spaces to ensure smooth boundaries
-    threshold2 = 100000.0     
-    if nf <= 3 and neff < threshold2 :
-        th2    = nice_print ( threshold2 )
-        vv     = nice_print ( neff           , precision = 1 , width = 2 , with_sign = False )                 
-        result = 'nf[%d]<=3&neffp[%s]<%s' % ( nf , vv , th2 )
-        return result.replace ( ' ' , '' ) 
-        
-    # 3. Non-linear event density threshold per feature
-    required_stats = 3000.0 * ( nf ** 1.5 )
-    if neff < required_stats :
-        rs     = nice_print ( required_stats , precision = 1 , width = 2 , with_sign = False )
-        vv     = nice_print ( neff           , precision = 1 , width = 2 , with_sign = False )         
-        result = 'neff[%s]<%s'% ( vv , rs )
-        return result.replace ( ' ' , '' ) 
-        
-    # 4. Weight efficiency and dispersion checks for non-trivial weights
-    if not weight_trivial ( W ) :
-        
-        eff = neff / float ( nraw ) if 0 < nraw else 0.0
-        if eff < 0.65 :
-            effp = 100 * eff 
-            return 'eff[%.1f%%]<65%%' % effp 
-
-        w_arr        = numpy.asarray ( W     , dtype = numpy.float32 )
-        mean_w       = numpy.mean    ( w_arr , dtype = numpy.float64 )
-        w_dispersion = ( numpy.std   ( w_arr , dtype = numpy.float64 ) / mean_w ) if 0.0 < mean_w else 0.0
-        
-        # Enforce strict weight dispersion limit (> 1.5) for network convergence stability
-        if w_dispersion > 1.5 : return 'w_dispersion[%.1f]>1.5'
-
-    return '' 
-
-# =============================================================================
 ## convert MSE to t-value 
 def tvalue_from_MSE ( mse ) :
     """ Convert MST to tvalue"
@@ -548,8 +434,8 @@ class ADVAL_LGBM (ADVAL_base) :
         nf =  num_features ( X_train )
         ns =  num_samples  ( X_train )
 
-        num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
-        early_stopping_rounds = params.pop ( 'early_stopping_rounds' ,  10 )
+        num_boost_round       = params.pop ( 'num_boost_round'       , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 50   )
 
         reg_case = BDT_needs_regularization ( X_train , W_train )        
         if reg_case :

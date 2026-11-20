@@ -65,20 +65,23 @@ class DataReweighter(Config) :
         self.__tweight     = tweight
         self.__oweight     = oweight 
         self.__description = description 
-        ## 
+        ##
         tdata, tw = data_slice ( target  , tvars, tweight , structured = False , progress = self.progress )
         odata, ow = data_slice ( original, ovars, oweight , structured = False , progress = self.progress ) 
 
         ## if not weight_trivial ( tw ) : tw /= numpy.sum ( tw )
         ## if not weight_trivial ( ow ) : ow /= numpy.sum ( ow )
 
-        ## create the actual reweighter
-        self.__rw = reweighter_type ( original        = odata  , 
-                                      target          = tdata  , 
-                                      original_weight = ow     , 
-                                      target_weight   = tw     , 
-                                      silent          = silent , **params  )
-        
+        from ostap.utils.memory import memory, use_gc 
+        with memory ( "DATA-REWEIGHTER" , logger = logger ) , use_gc() : 
+            
+            ## create the actual reweighter
+            self.__rw = reweighter_type ( original        = odata  , 
+                                          target          = tdata  , 
+                                          original_weight = ow     , 
+                                          target_weight   = tw     , 
+                                          silent          = silent , **params  )
+            
         
         Config.__init__ ( self , silent = silent , **params ) 
                                   

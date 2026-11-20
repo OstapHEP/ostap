@@ -242,8 +242,11 @@ class ProgressBar(object):
         
         ncols         = columns () - 12
         self.__width  = ncols if ncols > 10 else width
-        
-        self.__prefix = kwargs.get ( 'description' , '' )  ## description
+
+        description = kwargs.get ( 'description' , '' )        
+        if description and not description.endswith ( ':' ) : description = description + ':'            
+        self.__prefix = description
+
         ## self.__width -= len ( self.__prefix ) 
         self.__width -= visible_width ( self.__prefix )  
           
@@ -495,13 +498,18 @@ class RunningBar(object):
         self.__silent = kwargs.get ( 'silent' , not tty )
 
         self.__amount =  0 
-        self.freq     =  kwargs.get ( 'frequence'   , 0   ) ## dynamic/adaptive  
-        self.prefix   =  kwargs.get ( 'description' , ''  )
+        self.freq     =  kwargs.get ( 'frequence'   , 0   ) ## dynamic/adaptive
+        
+        description = kwargs.get ( 'description' , '' )        
+        if description and not description.endswith ( ':' ) : description = description + ':'            
+        self.prefix = description
+
         self.__start  =  time.time ()
         self.__last   =  None 
         self.__shown  =  0
         self.__output =  output 
 
+        
         if not isinstance ( self.freq , int ) or self.freq < 0 : self.freq = 0 
             
         self.update_amount () 

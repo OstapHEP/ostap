@@ -43,7 +43,7 @@ from   ostap.utils.valerrors        import VAE
 from   ostap.utils.progress_conf    import progress_conf
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.logger.pretty          import pretty_float, pretty_row, nice_print   
-from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis, sum_symbol 
+from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis, sum_symbol, fixed_width 
 from   ostap.logger.colorized       import allright
 import ostap.logger.table           as     T
 import ostap.fitting.variables  
@@ -55,10 +55,10 @@ import ROOT, random, math, sys, ctypes, numpy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.dataset' )
-else                       : logger = getLogger( __name__ )
+logger = getLogger( 'ostap.fitting.dataset' )
 # =============================================================================
-weight_lifter = ( weight_lifter + ' ' ) if weight_lifter else 'W' 
+weight_symbol = fixed_width ( weight_lifter if weight_lifter else 'W' , 2 )
+data_symbol   = fixed_width ( cabinet , 2 ) if cabinet else ''
 # =============================================================================
 logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================
@@ -2720,7 +2720,7 @@ def _ds_table_ ( dataset                 ,
         else :
             title = '%s("%s"):'      % ( typename ( dataset ) , dataset.GetName () )
         title =  '%s %d#' %  ( title , len ( dataset ) )
-        if cabinet : title = '%s %s' % ( cabinet , title )
+        if cabinet : title = '%s %s' % ( data_symbol , title )
         
     weight = None
     if   isinstance ( dataset , ROOT.RooDataHist ) :
@@ -2753,7 +2753,7 @@ def _ds_table_ ( dataset                 ,
         items      = mean , rms , vmin , vmax
         row , unit = pretty_row ( *items  , precision = precision , width = width )
         
-        row        = ( allright ( weight ) , 'Weight variable' ) + row + ( unit , weight_lifter )
+        row        = ( allright ( weight ) , 'Weight variable' ) + row + ( unit , weight_symbol )
         
         rows.append ( row ) 
 
@@ -2762,7 +2762,7 @@ def _ds_table_ ( dataset                 ,
     # ==============================================================================================
     
     header =  [ 'Variable' , 'Description' , 'mean' , 'rms' , 'min', 'max' , 'unit' ] 
-    if weight : header.append ( weight_lifter  )
+    if weight : header.append ( weight_symbol  )
     
     rows = [ tuple  ( header ) ] + rows
     rows = T.remove_empty_columns ( rows ) 
@@ -3831,7 +3831,7 @@ def _rds_dump_table_ ( dataset   , *    ,
 
     header = '#' ,
     for v in vars : header += ( v , '%s[%s]' % ( times , ellipsis ) ) 
-    if weighted   : header += ( weight_lifter , '' )
+    if weighted   : header += ( weight_symbol , '' )
     
     rows   = [ header ]
 

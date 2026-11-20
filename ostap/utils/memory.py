@@ -26,13 +26,18 @@ __all__     = (
     'delta_ram'      , ## symbol for delta-RAM
     'PeakMemory'     , ## context manager to check the peak memory
     'peak_memory'    , ## ditto 
+    ##
+    'UseGC'              , ## Context manager that runs `gc.collect` at the exit 
+    'use_gc'             , ## Context manager that runs `gc.collect` at the exit 
     )
 # ==========================================================================
-from   ostap.logger.symbols import ( delta_symbol , sum_symbol ,
+from   ostap.logger.symbols import ( delta_symbol ,
+                                     sum_symbol   ,
+                                     fixed_width  , 
                                      ram      as ram_symbol    , 
                                      enough   as enough_symbol ,
                                      mountain as peak_symbol   ) 
-import os, psutil, time, threading  
+import os, psutil, time, threading, gc 
 # ==========================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.memory' )
@@ -41,8 +46,8 @@ _logger_t = type ( logger )
 del getLogger
 # ==========================================================================
 ram_symbol = ram_symbol + ' ' if ram_symbol else ''
-delta_ram  = '%s%s' % ( delta_symbol , ram_symbol )
-peak_ram   = '%s%s' % ( peak_symbol  , ram_symbol ) 
+delta_ram  = fixed_width ( '%s%s'  % ( delta_symbol , ram_symbol ) , 4 ) 
+peak_ram   = fixed_width ( '%s %s' % ( peak_symbol  , ram_symbol ) , 6 ) 
 # ==========================================================================
 ## Fast & Cross-Platform Memory Usage Reporter
 # ==========================================================================
@@ -124,7 +129,7 @@ def memory_enough () :
 
 # ============================================================================
 ## format for memory prints 
-MEMORY_FORMAT = 'Memory %%-20s %s=%%+.2fMB %s=%%.3fGB %s%%.1f' % ( delta_ram , sum_symbol , enough_symbol )
+MEMORY_FORMAT      = '  Memory      %%-20s  %s=%%+.2fMB %s=%%.2fGB %s%%.1fGB' % ( delta_ram , sum_symbol , enough_symbol )
 # =============================================================================
 ## @class Memory
 #  Simple context manager to measure the virtual memory increase
@@ -201,12 +206,12 @@ class Memory(object):
     def __exit__  ( self, *_ ) :
         """ Context manager: EXIT """ 
         current      = self.current 
-        self.__delta = current - self.memory
-        total        = current / 1024         ## in GB
-        enough       = max ( 0 , memory_enough () ) 
-        
+        self.__delta = current - self.memory        
         # =====================================================================
         if self.logger  : # ===================================================
+            # =================================================================
+            total        = current / 1024         ## in GB
+            enough       = max ( 0 , memory_enough () ) 
             # =================================================================
             try : # ===========================================================
                 # =============================================================
@@ -265,7 +270,7 @@ memory = virtualMemory  ## ditto
 
 # =============================================================================
 ## format for memory prints 
-PEAK_MEMORY_FORMAT = 'Peak memory %%-20s %s=%%.3fGB %s=%%.3fGB' % ( peak_ram , sum_symbol )
+PEAK_MEMORY_FORMAT = 'Peak memory %%-20s %s=%%.3fGB %s=%%.2fGB' % ( peak_ram , sum_symbol )
 # =============================================================================
 ## @class PeakMemory
 #  Context manager reprting the peak memory consumption
@@ -387,6 +392,33 @@ def peak_memory ( name = '' , **kwargs ) :
     ...  <some code here> 
     """
     return PeakMemory ( name , **kwargs )
+
+
+# =============================================================================
+## @class UseGC 
+#  Context manager that runs <code>gc.collect</code> at the exit
+class UseGC(object): 
+    """ Context manager taht runs `gc.collect` at the exit
+    """
+    # =========================================================================    
+    ## ENTER the context 
+    def __enter__  ( self ) :
+        """ ENTER the context
+        """
+        return self
+    # =========================================================================    
+    ## EXIT the context
+    def __exit__ ( self , *_ ) :
+        """ EXIT the context
+        """
+        gc.collect() 
+
+# ==============================================================================        
+## Context manager that runs <code>gc.collect</code> at exit
+def use_gc () :
+    """ Context manager that runs `gc.collect` at exit
+    """
+    return UseGC()
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -60,9 +60,6 @@ __all__     = (
     ##
     'CallThem'           , ## convert sequence of callables into single callable
     'AttrGetter'         , ## helper class to have pickeable `operator.attrgetter`
-    ##
-    'UseGC'              , ## Context manager that runs `gc.collect` at the exit 
-    'use_gc'             , ## Context manager that runs `gc.collect` at the exit 
     )
 # =============================================================================
 from   itertools              import repeat, chain, islice

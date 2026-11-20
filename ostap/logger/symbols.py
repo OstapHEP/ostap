@@ -14,6 +14,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
+    'accordion'           , ## 🪗
     'approximate'         , ## ≈
     'arrow_down'          , ## ↓
     'arrow_left'          , ## ←
@@ -473,6 +474,7 @@ gear             = '⚙️'  if show else ''
 wrench           = '🔧' if show else ''
 hammer_and_wrench= '🛠️'  if show else ''
 package          = '📦' if show else ''     
+accordion        = '🪗' if show else '' 
 
 pushpin          = '📍' if show else '' 
 puzzle           = '🧩' if show else '' 

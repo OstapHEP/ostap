@@ -75,6 +75,7 @@ __all__     = (
 from   ostap.core.ostap_types import sequence_types 
 from   ostap.utils.core       import typename 
 from   ostap.utils.basic      import classprop
+from   ostap.utils.memory     import LoopGC 
 from   ostap.stats.pvalue     import make_permutations, permutation_symbol 
 from   ostap.utils.config     import Config
 from   ostap.stats.gof        import AGoFnp
@@ -89,6 +90,9 @@ from ostap.logger.logger import getLogger
 logger = getLogger ( 'ostap.stats.random_axes' )
 # =============================================================================
 logger.debug ( 'Implement Random Axes/Cramer-Wold Two-Samples Test' )
+# =============================================================================
+# Memory threshold for dense projection matrices (200 MB)
+MAX_PROJECTION_BYTES = 200 * 1024 * 1024
 # =============================================================================
 ## @class RandomAxes
 # Two-Sample Test based on the Cramer-Wold theorem
@@ -158,6 +162,7 @@ class RandomAxes(AGoFnp,Config) :
         self.__nAxes        = nAxes 
         self.__random_state = random_state 
         
+        # Lazy cache of unit projection axes of shape (nAxes, nDim)
         self.__axes         = None   
         self.__rng          = numpy.random.default_rng ( random_state )
 
@@ -281,15 +286,28 @@ class RandomAxes(AGoFnp,Config) :
         - importance features are not supported for this comparator
         """
         return {}
-    
+
+    # =========================================================================
+    ## Decide whether dense projection matrices fit under the memory budget
+    def use_dense_projections ( self   ,
+                                n1     ,
+                                n2     ,
+                                n_axes ,
+                                dtype  = numpy.float64 ) :
+        """ Check if (N1 + N2) * nAxes projection data stays below MAX_PROJECTION_BYTES.
+        """
+        elem_size   = numpy.dtype ( dtype ).itemsize
+        total_bytes = ( n1 + n2 ) * n_axes * elem_size
+        return total_bytes < MAX_PROJECTION_BYTES
+
     # =========================================================================
     ## Internal helper to compute t-matrix directly from precomputed projections
-    def t_matrix ( self    ,
-                   proj1   ,
-                   proj2   , * ,
-                   weight1 = None ,
-                   weight2 = None ) :
-        """ Compute t-matrix from already projected data 
+    def t_matrix_from_proj ( self    ,
+                             proj1   ,
+                             proj2   , * ,
+                             weight1 = None ,
+                             weight2 = None ) :
+        """ Compute t-matrix from already projected 1D arrays per axis.
         """
         n_axes   = self.nAxes
         n_comps  = self.nComps
@@ -305,6 +323,48 @@ class RandomAxes(AGoFnp,Config) :
                                                        weight2   = weight2 , 
                                                        normalize = False   )
         return t_matrix
+
+    # =========================================================================
+    ## Internal helper to compute t-matrix by projecting onto each axis on the fly
+    def t_matrix_on_the_fly ( self    ,
+                              data1   ,
+                              data2   , * ,
+                              weight1 = None ,
+                              weight2 = None ) :
+        """ Project samples onto each axis one by one to avoid storing full (N, nAxes) matrices.
+        """
+        n_axes   = self.nAxes
+        n_comps  = self.nComps
+        t_matrix = numpy.empty ( ( n_comps , n_axes ) , dtype = numpy.float64 )
+
+        for i in range ( n_axes ) :
+            axis = self.axes [ i ]
+            # Compute 1D projections only for the current axis and release them right after
+            u    = numpy.dot ( data1 , axis )
+            v    = numpy.dot ( data2 , axis )
+            for c_idx , comp in enumerate ( self.comparators ) :
+                t_matrix [ c_idx , i ] = comp.tvalue ( data1     = u       ,
+                                                       data2     = v       ,
+                                                       weight1   = weight1 ,
+                                                       weight2   = weight2 ,
+                                                       normalize = False   )
+            del u , v
+
+        return t_matrix
+    
+    # =========================================================================
+    ## Public helper to compute t-matrix from precomputed projections
+    def t_matrix ( self    ,
+                   proj1   ,
+                   proj2   , * ,
+                   weight1 = None ,
+                   weight2 = None ) :
+        """ Compute t-matrix from already projected data 
+        """
+        return self.t_matrix_from_proj ( proj1     = proj1   ,
+                                         proj2     = proj2   ,
+                                         weight1   = weight1 ,
+                                         weight2   = weight2 )
     
     # =========================================================================
     ## Calculate the matrix (#comparators x #axes) of t-values
@@ -347,12 +407,27 @@ class RandomAxes(AGoFnp,Config) :
                                                   data2   = data2   ,
                                                   weight1 = weight1 ,
                                                   weight2 = weight2 )
-            
-        ## project datasets onto frozen axes
-        proj1 = numpy.dot ( data1 , self.axes.T )
-        proj2 = numpy.dot ( data2 , self.axes.T )
-        
-        return self.t_matrix ( proj1 , proj2 , weight1 = weight1 , weight2 = weight2 )
+
+        proj_dtype = numpy.result_type ( numpy.asarray ( data1 ).dtype ,
+                                         numpy.asarray ( data2 ).dtype ,
+                                         self.axes.dtype )
+
+        # Use dense projection matrices only when they stay within the 500 MB budget
+        if self.use_dense_projections ( len ( data1 ) , len ( data2 ) , n_axes , proj_dtype ) :
+            proj1 = numpy.dot ( data1 , self.axes.T )
+            proj2 = numpy.dot ( data2 , self.axes.T )
+            res   = self.t_matrix_from_proj ( proj1     = proj1   ,
+                                              proj2     = proj2   ,
+                                              weight1   = weight1 ,
+                                              weight2   = weight2 )
+            del proj1 , proj2
+            return res
+
+        # Fall back to axis-by-axis projection for large datasets / many axes
+        return self.t_matrix_on_the_fly ( data1     = data1   ,
+                                          data2     = data2   ,
+                                          weight1   = weight1 ,
+                                          weight2   = weight2 )
 
     
     __call__ = tvalue
@@ -401,7 +476,6 @@ class RandomAxes(AGoFnp,Config) :
                                               weight1 = weight1 ,
                                               weight2 = weight2 )
         
-        
         if tvalue is None or tvalue.shape != ( nc , na ) :
             tvalue = self.tvalue (  data1     = data1   ,  
                                     data2     = data2   , 
@@ -409,28 +483,47 @@ class RandomAxes(AGoFnp,Config) :
                                     weight2   = weight2 , 
                                     normalize = False   )
         
-        proj1  = numpy.dot ( data1 , self.axes.T )
-        proj2  = numpy.dot ( data2 , self.axes.T )
-        
-        tv_max = numpy.max ( tvalue , axis = 1 )
-        
-        ## make permutations
+        tv_max      = numpy.max ( tvalue , axis = 1 )
         description = permutation_symbol  + ' ' + S.fixed_width ( self.symbol , 4 ) + ':'
-        for ds1, ds2, w1 , w2 in make_permutations ( self.nToys  ,
-                                                     data1       = proj1             , 
-                                                     data2       = proj2             , 
-                                                     weight1     = weight1           , 
-                                                     weight2     = weight2           , 
-                                                     progress    = self.progress     , 
-                                                     random_seed = self.random_state ,
-                                                     description = description       ) : 
+        
+        proj_dtype  = numpy.result_type ( numpy.asarray ( data1 ).dtype ,
+                                          numpy.asarray ( data2 ).dtype ,
+                                          self.axes.dtype )
+        
+        dense_proj  = self.use_dense_projections ( len ( data1 ) , len ( data2 ) , na , proj_dtype )
+
+        if dense_proj :
+            # Precompute full projection matrices once when memory budget allows
+            proj1 = numpy.dot ( data1 , self.axes.T )
+            proj2 = numpy.dot ( data2 , self.axes.T )
+            perm_data1 , perm_data2 = proj1 , proj2
+        else :
+            # Keep original feature matrices and project per axis inside each toy
+            proj1 = proj2 = None
+            perm_data1 , perm_data2 = data1 , data2
+
+        ## make permutations with LoopGC over toy stream
+        for ds1, ds2, w1 , w2 in LoopGC ( make_permutations ( self.nToys  ,
+                                                              data1       = perm_data1      , 
+                                                              data2       = perm_data2      , 
+                                                              weight1     = weight1         , 
+                                                              weight2     = weight2         , 
+                                                              progress    = self.progress     , 
+                                                              random_seed = self.random_state ,
+                                                              description = description       ) ) : 
             
             ## get new matrix of t-values 
-            tmatrix = self.t_matrix ( proj1   = ds1 ,
-                                      proj2   = ds2 , 
-                                      weight1 = w1  , 
-                                      weight2 = w2  )
-            
+            if dense_proj :
+                tmatrix = self.t_matrix_from_proj ( proj1   = ds1 ,
+                                                    proj2   = ds2 , 
+                                                    weight1 = w1  , 
+                                                    weight2 = w2  )
+            else :
+                tmatrix = self.t_matrix_on_the_fly ( data1   = ds1 ,
+                                                     data2   = ds2 ,
+                                                     weight1 = w1  ,
+                                                     weight2 = w2  )
+                
             tm_max = numpy.max ( tmatrix , axis = 1 )
 
             exceeds = tv_max <= tm_max
@@ -439,6 +532,12 @@ class RandomAxes(AGoFnp,Config) :
             for exc, counter in zip ( exceeds, self.t_counters ) : counter += exc
 
             self.__counter += numpy.all ( exceeds )
+
+            ## clean up per-toy temporaries
+            del tmatrix , tm_max , exceeds , ds1 , ds2
+
+        if dense_proj :
+            del proj1 , proj2
                         
         pvals  = [ c.eff for c in self.t_counters ]
         p_min  = min ( pvals , key = float )

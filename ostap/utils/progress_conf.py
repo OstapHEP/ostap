@@ -24,12 +24,12 @@ from ostap.core.ostap_types import integer_types
 from ostap.core.core        import Ostap
 from ostap.utils.basic      import isatty, terminal_size
 from ostap.logger.colorized import allright
+from ostap.logger.symbols   import visible_width 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.progress_conf')
-else                       : logger = getLogger( __name__ )
+logger = getLogger ( 'ostap.utils.progress_conf' )
 # =============================================================================
 ## configuration of the progress bar
 #  @see Ostap::Utils::ProgressConf
@@ -55,10 +55,23 @@ def progress_conf ( show = True , timer = True , description = 'Entries:' ) :
     assert len ( done ) == len ( notyet ) , "Mismatch in symbol lengths"
     left   = '[ '
     right  = ' ]'
+
+    if description and not description.endswith(':') :
+        description = description + ' :'
+        
     ld     = len ( description ) 
     ll     = len ( left        )
     lr     = len ( right       )
-    twidth = max ( 0 , twidth - 20 - ll - lr - ld ) // len ( done )
+    ldone  = len ( done        )
+
+    ## ld     = visible_width ( description ) 
+    ## ll     = visible_width ( left        )
+    ## lr     = visible_width ( right       )
+    ## ldone  = visible_width ( done        )
+
+    
+    twidth = max ( 0 , twidth - 20 - ll - lr - ld ) // ldone
+    
     if tty :
         done  = allright ( done  )
         left  = allright ( left  )
@@ -66,7 +79,7 @@ def progress_conf ( show = True , timer = True , description = 'Entries:' ) :
 
     return Ostap.Utils.ProgressConf ( 
         twidth        , ## silent if terminal is too narrow
-	done          , ## 'done' symbol 
+        done          , ## 'done' symbol 
         notyet        , ## 'not-yet' symbol
         left          , ## left 
         right         , ## right

@@ -34,13 +34,12 @@ from   ostap.tools.base_reweighters import DensityReweighter
 from   ostap.stats.utils            import optimal_batch_size
 import ostap.stats.utils            as     U
 import ostap.logger.symbols         as     S
-import numpy, math, gc  
+import numpy, math 
 # =============================================================================
 # Logging setup
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.dreweighters' )
-else                       : logger = getLogger ( __name__ )
+logger = getLogger ( 'ostap.tools.dreweighters' )
 # =============================================================================
 has_sklearn = hasSkLearn () 
 # =============================================================================
@@ -157,8 +156,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
     def _train_single_model ( self, X_train, y_train, w_train ) : 
         """ Train single LightGBM model on fold data. """
         import lightgbm as LightGBM
-        import gc
-        
+    
         X_tr = numpy.ascontiguousarray ( X_train , dtype = numpy.float32 )
         w_tr = numpy.ascontiguousarray ( w_train , dtype = numpy.float32 ) if w_train is not None else None
 
@@ -171,18 +169,18 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         model = LightGBM.train ( params          = params          ,
                                  train_set       = trn_data        ,
                                  num_boost_round = num_boost_round )
-            
+
         # PHOENIX memory optimization: export raw C++ model string and reload clean booster
-        model_bytes = model.model_to_string ()
-        best_iter   = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )                    
-        model.free_dataset () 
-        del model, trn_data, X_tr, w_tr
-        
-        model = LightGBM.Booster ( model_str = model_bytes )
-        if best_iter is not None : model.best_iteration = best_iter 
-        del model_bytes
-        
-        gc.collect ()                
+        if self.phoenix :
+            model_bytes = model.model_to_string ()
+            best_iter   = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )                    
+            model.free_dataset ()
+            del model 
+            model       = LightGBM.Booster ( model_str = model_bytes )
+            if best_iter is not None : model.best_iteration = best_iter 
+            del model_bytes
+            
+        del trn_data, X_tr, w_tr
 
         return model
 
@@ -192,7 +190,8 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
     #  @param X Features array.
     #  @return Array of predicted probabilities.
     def _predict_single_model ( self, model, X ) :
-        """ Predict probabilities using a LightGBM model. """
+        """ Predict probabilities using a LightGBM model.
+        """
         best_iter   = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )        
         kwargs      = {}
         if best_iter is not None and 0 < best_iter : kwargs [ 'num_iteration' ] = best_iter            
@@ -204,9 +203,10 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
 ## @class XGBoostDensityReweighter
 #  Density ratio reweighter using XGBoost as the underlying classifier.
 class XGBoostDensityReweighter ( DensityReweighter ) :
-    """ Density ratio reweighter using XGBoost as the underlying classifier. """
-
-    ## @brief Initialize XGBoost density reweighter.
+    """ Density ratio reweighter using XGBoost as the underlying classifier.
+    """
+    # =========================================================================
+    ## Initialize XGBoost density reweighter.
     #  @param original Features array for original sample.
     #  @param target Features array for target sample.
     #  @param original_weight Initial weights for original sample (optional).
@@ -218,7 +218,8 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        """ Initialize XGBoost density reweighter (High Capacity Mode Defaults). """
+        """ Initialize XGBoost density reweighter (High Capacity Mode Defaults).
+        """
         config = {
             'objective'        : 'binary:logistic'     ,
             'eval_metric'      : 'logloss'             ,
@@ -249,8 +250,7 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
         )
 
     # =========================================================================
-    ## @property symbol
-    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    ## Short symbol or tag representing the LightGBM reweighter method.
     #  @return String identifier/symbol used for logging and visual presentation.
     @classprop
     def symbol ( self ) :
@@ -258,20 +258,21 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
         return U.symbol_XGB
         
     # =========================================================================
-    #  @brief Return the method identifier name.
+    ## Return the method identifier name.
     @property
     def method ( self ) :
         """ Return the method identifier name. """
         return method_XGB 
 
     # =========================================================================
-    ## @brief Train single XGBoost booster on fold data.
+    ## Train single XGBoost booster on fold data.
     #  @param X_train Training features array (N-1)/N.
     #  @param y_train Training binary labels.
     #  @param w_train Training event weights or None.
     #  @return Trained XGBoost Booster instance.
     def _train_single_model ( self, X_train, y_train, w_train ) :
-        """ Train single XGBoost booster on fold data. """
+        """ Train single XGBoost booster on fold data.
+        """
         import xgboost as XGBoost
         
         X_tr   = numpy.ascontiguousarray ( X_train, dtype = numpy.float32 )
@@ -292,27 +293,28 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
         )
 
         # PHOENIX memory optimization: export raw JSON model bytes and reload clean inference engine
-        model_bytes = model.save_raw ( raw_format = "json" )
-        best_iter   = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )                    
-        
-        del dtrain, model, X_tr, y_tr, w_tr
-        
-        model = XGBoost.Booster ()
-        model.load_model ( model_bytes )
-        if best_iter is not None : model.best_iteration = best_iter
-        
-        del model_bytes            
-        gc.collect ()
+        if self.phoenix : 
+            model_bytes = model.save_raw ( raw_format = "json" )
+            best_iter   = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )                    
+            del model
+            model = XGBoost.Booster ()
+            model.load_model ( model_bytes )
+            del model_bytes            
+            if best_iter is not None : model.best_iteration = best_iter
+            
+            
+        del dtrain, X_tr, y_tr, w_tr
 
         return model
     
     # =========================================================================
-    ## @brief Predict probabilities using an XGBoost model.
+    ## Predict probabilities using an XGBoost model.
     #  @param model Trained XGBoost Booster.
     #  @param X Input features array.
     #  @return Array of predicted probabilities.
     def _predict_single_model ( self, model, X ) :
-        """ Predict probabilities using an XGBoost model. """
+        """ Predict probabilities using an XGBoost model.
+        """
         import xgboost as XGBoost
         dmat      = XGBoost.DMatrix ( X )
         best_iter = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )
@@ -325,7 +327,8 @@ class XGBoostDensityReweighter ( DensityReweighter ) :
 ## @class CatBoostDensityReweighter
 #  Density ratio reweighter using CatBoost as the underlying classifier.
 class CatBoostDensityReweighter ( DensityReweighter ) :
-    """ Density ratio reweighter using CatBoost as the underlying classifier. """
+    """ Density ratio reweighter using CatBoost as the underlying classifier.
+    """
     
     def __init__ ( self                   , * , 
                    original               ,
@@ -333,7 +336,8 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
                    original_weight        = None ,
                    target_weight          = None ,
                    store_original_weights = True , **params ) :
-        """ Initialize CatBoost density reweighter. """
+        """ Initialize CatBoost density reweighter.
+        """
         
         from catboost.utils import get_gpu_device_count
         gpu        = get_gpu_device_count () 
@@ -440,26 +444,26 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         model.fit ( trn_pool, verbose = verbose_level )
 
         # PHOENIX memory optimization: serialize model blob and purge heavy training pools
-        model_bytes = pickle.dumps ( model ) 
-        best_iter   = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )                    
-        
+        if self.phoenix : 
+            model_bytes = pickle.dumps ( model ) 
+            best_iter   = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )                    
+            del model
+            model = pickle.loads ( model_bytes )
+            if best_iter is not None : model.best_iteration = best_iter
+            del model_bytes  
+            
         del trn_pool, model, X_tr, y_tr, w_tr
-        
-        model = pickle.loads ( model_bytes )
-        if best_iter is not None : model.best_iteration = best_iter
-        
-        del model_bytes 
-        gc.collect ()
         
         return model
 
     # =========================================================================
-    ## @brief Predict probabilities using a CatBoost model.
+    ## Predict probabilities using a CatBoost model.
     #  @param model Trained CatBoost model.
     #  @param X Features array.
     #  @return Array of predicted probabilities.
     def _predict_single_model ( self, model, X ) :
-        """ Predict probabilities using a CatBoost model. """
+        """ Predict probabilities using a CatBoost model.
+        """
         X_clean   = numpy.ascontiguousarray ( X, dtype = numpy.float32 )
         best_iter = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )        
         kwargs    = {}
@@ -482,13 +486,15 @@ TORCH_LBFGS_CHUNK     = 200_000
 TORCH_EPOCHS          = 1000    
 # =============================================================================
 ## @class PyTorchDensityReweighter
-#  @brief Highly optimized and stabilized PyTorch MLP density ratio reweighter.
-#  @details Implements a single-shot density ratio estimation using PyTorch MLPs 
+#  Highly optimized and stabilized PyTorch MLP density ratio reweighter.
+#
+#  Implements a single-shot density ratio estimation using PyTorch MLPs 
 #           with flexible optimizers (Adam and L-BFGS), dynamic batch sizing, and 
 #           robust GPU/CPU execution control.
 class PyTorchDensityReweighter ( DensityReweighter ) :
-    """ Highly optimized and stabilized PyTorch MLP density ratio reweighter. """
-
+    """ Highly optimized and stabilized PyTorch MLP density ratio reweighter.
+    """
+    # =========================================================================
     ## @brief Initialize PyTorch density reweighter with advanced optimizer choices.
     #  @param self Instance of the class.
     #  @param original Source feature matrix.
@@ -504,7 +510,8 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                    original_weight = None    ,
                    target_weight   = None    ,
                    progress        = True    , **kwargs ) :
-        """ Constructor with optimizer and batch size configuration. """
+        """ Constructor with optimizer and batch size configuration.
+        """
         import torch
         cuda = torch.cuda.is_available () 
 
@@ -552,17 +559,16 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         torch.set_num_threads ( 1 )
 
     # =========================================================================
-    ## @property symbol
-    #  @brief Get short symbol/tag representing the PyTorch reweighter method.
+    ## Get short symbol/tag representing the PyTorch reweighter method.
     #  @return String identifier symbol.
     @classprop
     def symbol ( self ) :
-        """ Short symbol/tag for reweighter. """
+        """ Short symbol/tag for reweighter.
+        """
         return U.symbol_TORCH
 
     # =========================================================================
-    ## @property method
-    #  @brief Get method identifier name.
+    ## Get method identifier name.
     #  @return Method string tag.
     @property
     def method ( self ) :
@@ -570,8 +576,9 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         return method_TORCH 
 
     # =========================================================================
-    ## @brief Train a single neural network model on fold data using Adam or L-BFGS.
-    #  @details Sets up the custom density ratio loss function, configures the chosen 
+    ## Train a single neural network model on fold data using Adam or L-BFGS.
+    #
+    #  Sets up the custom density ratio loss function, configures the chosen 
     #           optimizer, handles L-BFGS chunking or Adam mini-batch loops, and returns 
     #           the trained PyTorch model instance.
     #  @param self Instance of the class.
@@ -580,12 +587,12 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
     #  @param w_train Sample weights for training fold.
     #  @return Trained PyTorch model instance.
     def _train_single_model ( self, X_train, y_train, w_train ) :
-        """ Trains a single neural network model on fold data with flexible optimizer support. """
+        """ Trains a single neural network model on fold data with flexible optimizer support.
+        """
         import torch
         import torch.nn            as nn
         import torch.optim         as optim
         from   ostap.tools.ireweighters import optimal_batch_size
-        import gc
 
         device  = torch.device ( self.params.get ( 'device', 'cuda' if torch.cuda.is_available () else 'cpu' ) )
         is_cuda = device.type == 'cuda'
@@ -776,7 +783,8 @@ valid_LR_params = (
 # features id  \f$ C^{n+d}_{d} = \left( \begin{array}{c} n+d \\ d \end{array}\right) \f$
 # 
 class LogRegressionDensityReweighter ( DensityReweighter ) :
-    """ Density ratio reweighter using Logistic Regression as the underlying classifier. """
+    """ Density ratio reweighter using Logistic Regression as the underlying classifier.
+    """
 
     def __init__ ( self , * , 
                   original               ,
@@ -784,7 +792,8 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
                   original_weight        = None ,
                   target_weight          = None ,
                   store_original_weights = True , **params ) :        
-        """ Initialize Logistic Regression density reweighter. """
+        """ Initialize Logistic Regression density reweighter.
+        """
         config = { 'C'           : 1.0     ,
                    'solver'      : 'lbfgs' ,
                    'max_iter'    : 2000    ,
@@ -806,23 +815,24 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
                             store_original_weights = store_original_weights , **config )
         
     # =========================================================================
-    ## @property symbol
-    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    ## Short symbol or tag representing the LightGBM reweighter method.
     #  @return String identifier/symbol used for logging and visual presentation.
     @classprop
     def symbol ( self ) :
-        """ Short symbol/tag for reweighter. """
+        """ Short symbol/tag for reweighter.
+        """
         return U.symbol_LOGREG
 
     # =========================================================================
     ## Return method identifier name. 
     @property
     def method ( self ) :
-        """ Return method identifier name. """
+        """ Return method identifier name.
+        """
         return method_LOGREG
 
     # =========================================================================
-    ## @brief Train single Logistic Regression model on fold data.
+    ## Train single Logistic Regression model on fold data.
     #  @param X_train Training features array (N-1)/N.
     #  @param y_train Training binary labels.
     #  @param w_train Training event weights or None.
@@ -834,7 +844,6 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         from sklearn.pipeline      import Pipeline        
         from sklearn.preprocessing import StandardScaler, PolynomialFeatures
         import pickle
-        import gc
         
         params = {}
         params.update ( self.params )
@@ -860,22 +869,22 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         if w_tr is not None : model.fit ( X_train, y_train, logistic__sample_weight = w_tr )
         else                : model.fit ( X_train, y_train )
 
-        model_bytes = pickle.dumps ( model ) 
-        del model, w_tr
-        
-        model = pickle.loads ( model_bytes )
-        del model_bytes 
-        gc.collect ()
+        if self.phoenix :            
+            model_bytes = pickle.dumps ( model )
+            del model
+            model       = pickle.loads ( model_bytes )            
+            del model_bytes 
         
         return model
 
     # =========================================================================
-    ## @brief Predict probabilities using a Logistic Regression model.
+    ## Predict probabilities using a Logistic Regression model.
     #  @param model Trained Logistic Regression pipeline.
     #  @param X Input features array.
     #  @return Array of predicted probabilities.
     def _predict_single_model ( self, model, X ) :
-        """ Predict probabilities using a Logistic Regression model. """
+        """ Predict probabilities using a Logistic Regression model.
+        """
         X_clean = numpy.ascontiguousarray ( X, dtype = numpy.float32 )
         p       = model.predict_proba ( X_clean ) [ :, 1 ]
         return p.astype ( numpy.float32, copy = False )

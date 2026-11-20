@@ -43,9 +43,12 @@ __all__     = (
     'memoize'              , ## lightweight cache
     'classprop'            , ## class property decorator
     ##
-    'SafeLoop'             , ## A safe loop wrapper that catches KeyboardInterrupt 
-    'safe_loop'            , ## A safe loop wrapper that catches KeyboardInterrupt 
+    'SafeLoop'             , ## A safe loop wrapper that catches `KeyboardInterrupt` 
+    'safe_loop'            , ## A safe loop wrapper that catches `KeyboardInterrupt` 
     ##
+    'LoopGC'               , ## Loop wrapper that calls `gc.collect`
+    'loop_GC'              , ## Loop wrapper that calls `gc.collect`
+    'gc_loop'              , ## Loop wrapper that calls `gc.collect`    
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
@@ -54,7 +57,7 @@ from   ostap.utils.core     import isfunction, classprop
 from   ostap.utils.env      import boolean_false_values 
 from   itertools            import zip_longest
 import multiprocessing      as     mp_
-import sys, os, shutil, psutil, functools
+import sys, os, shutil, psutil, functools, gc 
 # =============================================================================
 ## Interactive processing ?
 #  @see https://stackoverflow.com/questions/2356399/tell-if-python-is-in-interactive-mode
@@ -73,7 +76,7 @@ def interactive () :
 def isatty ( stream = None ) :
     """ Is the stream is attached to terminal?
     >>> stream = ...
-    >>> if isatty( stream ) : print('Teminal!')
+    >>> if isatty( stream ) : print('Terminal!')
     >>> if isatty() : print('stdout is terminal!')
     """
     if not stream : stream = sys.stdout
@@ -391,8 +394,6 @@ def run_parallel ( parallel ) :
     ## 
     return True 
 
-
-
 # =============================================================================
 ## @class SafeLoop
 #  A safe loop wrapper that catches KeyboardInterrupt 
@@ -468,6 +469,69 @@ def safe_loop ( iterable ,
     ...
     """
     return SafeLoop ( iterable , message = message , output = output )
+
+# =============================================================================
+## @class LoopGC 
+#  A loop wrapper that calls <code>gc.collect</code>
+#  @code
+#  for a in LoopGC ( iterable , frequency = 1 ) :
+#      ...
+#  @endcode
+class LoopGC ( object ) :
+    """ A loop wrapper that calls `gc.collect()`
+    >>> for a in LoopGC ( iterable , frequency = 5 ) :
+    ...
+    """
+    # =========================================================================
+    def __init__ ( self          ,
+                   iterable      ,
+                   frequency = 1 ) :
+
+        if not isinstance ( frequency , int ) or frequency < 0  :
+            raise ValueError ( "Invalid `frequency` %s " % frequency )
+        ##         
+        self.iterable  = iterable
+        self.frequency = frequency 
+        
+    # =========================================================================
+    ## standard iterator 
+    def __iter__ ( self ) :
+        """ Standard iterator
+        """
+        # =====================================================================
+        freq = self.frequency # ===============================================
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            for index, item in enumerate ( self.iterable , start = 1 ) : 
+                yield item
+                if freq and not index % freq : gc.collect()  
+            # =================================================================
+        finally : # ===========================================================
+            # =================================================================
+            self.iterable = None
+            gc.collect()  
+
+
+# =============================================================================
+## A loop wrapper that calls <code>gc.collect</code>
+#  @code
+#  for a in loop_GC ( iterable , frequency = 1 ) :
+#  ..
+#  for a in gc_loop ( iterable , frequency = 1 ) : ## ditto 
+#  ..
+#  @endcode
+def loop_GC ( iterable   ,
+              frequency  = 1 ) : 
+    """ A loop wrapper that calls `gc.collect()`
+    >>> for a in loop_GC ( iterable , frequency = 5 ) :
+    ...
+    >>> for a in gc_loop ( iterable , frequency = 5 ) : ## ditto 
+    ...
+    """
+    return LoopGC ( frequency = frequency )
+
+gc_loop  = loop_GC
 
 # =============================================================================
 if __name__ == '__main__' :

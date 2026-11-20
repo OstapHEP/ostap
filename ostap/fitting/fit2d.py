@@ -27,8 +27,7 @@ from   ostap.fitting.utils      import component_similar , component_clone
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit2d' )
-else                       : logger = getLogger ( __name__              )
+logger = getLogger ( 'ostap.fitting.fit2d' )
 # =============================================================================
 ## @class Model2D
 #  Trivial class to construct 2D model as a product of split 1D-models

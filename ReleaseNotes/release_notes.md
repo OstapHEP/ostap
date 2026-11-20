@@ -1,3 +1,17 @@
+# v3.8.6.26
+
+## New features
+
+   1. drastically reduce memory consumption of `CatBoostIterativeReweighter` 
+   1. reduce memory printout of `XGBoostIterativeReweighter`
+   1. avoid very large intermediate matrices for `RandomAxes`
+   1. Add `UseGC/use_gc` context manager that calls `gc.collect`
+   1. Add `LoopGC/loop_GC/gc_loop` helper looper that calls `gc.collect` in the loop at at exit 
+   
+## Bug fixes
+
+## Backward incompatible
+
 # v3.8.6.24
 
   1. reshuffle some code between `ostap.stats.data_compare` and `ostap.stat.utils` to reduc code duplication
