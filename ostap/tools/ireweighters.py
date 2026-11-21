@@ -39,7 +39,7 @@ from   ostap.stats.utils            import ( num_samples        ,
 from   ostap.tools.base_reweighters import IterativeReweighter  
 import ostap.stats.utils            as     U 
 import ostap.logger.symbols         as     S
-import numpy, math, time, pickle, gc 
+import numpy, math, time, pickle, abc
 # =============================================================================
 # Logging setup
 # =============================================================================

@@ -2187,7 +2187,7 @@ class Hotelling(GoF) :
                    progress   = True  ,
                    mcFactor   = 20    , **params ) : 
     
-        """ Create the Hotteling' estimator 
+        """ Create the Hotelling' estimator 
 
         Parameters
 

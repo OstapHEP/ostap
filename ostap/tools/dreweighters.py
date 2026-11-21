@@ -35,7 +35,7 @@ from   ostap.tools.base_reweighters import DensityReweighter
 from   ostap.stats.utils            import optimal_batch_size
 import ostap.stats.utils            as     U
 import ostap.logger.symbols         as     S
-import numpy, math 
+import numpy, math, abc 
 # =============================================================================
 # Logging setup
 # =============================================================================
@@ -745,7 +745,7 @@ class PyTorchDensityReweighter (DensityReweighter ) :
     #  @param y_tr_t Label tensor on @c device
     #  @param w_tr_t Sample weight tensor on @c device
     #  @param device Target @c torch.device for training
-     @abc.abstractmethod
+    @abc.abstractmethod
     def _fit_model ( self      ,
                      model     ,
                      criterion ,
@@ -772,7 +772,7 @@ class PyTorchDensityReweighter (DensityReweighter ) :
     #  @param y_train Training binary labels (0 for original, 1 for target)
     #  @param w_train Training sample weights or @c None
     #  @return Trained @c WeakMLP model in evaluation mode
-     def _train_single_model ( self, X_train, y_train, w_train ) :
+    def _train_single_model ( self, X_train, y_train, w_train ) :
         """ Train a single fold ``WeakMLP`` model using ``DensityRatioLoss``
         """
         import torch
@@ -825,7 +825,7 @@ class PyTorchDensityReweighter (DensityReweighter ) :
     #  @param model Trained @c WeakMLP model instance
     #  @param X Feature matrix of samples to score
     #  @return @c float32 NumPy array of predicted probabilities @c p(x)
-     def _predict_single_model ( self, model, X ) :
+    def _predict_single_model ( self, model, X ) :
         """ Predict probabilities ``p(x)`` in batches using a trained model
         """
         import torch

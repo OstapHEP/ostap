@@ -114,7 +114,7 @@ __all__     = (
     'method_M'            , ##                  Mahalanobis method 
     'method_B'            , ##                Bhattacharyya method 
     'method_H'            , ##                    Hellinger method 
-    'method_T2'           , ##                    Hotteling method                       
+    'method_T2'           , ##                    Hotelling method                       
     'method_W'            , ##                  Wasserstein method
     'method_W1'           , ##                 Wassertein/1 method 
     'method_W2'           , ##                 Wassertein/2 method 
@@ -235,7 +235,7 @@ method_KL    = method_name ( 'Kullback-Leibler'              )
 method_J     = method_name ( 'Jeffrey'                       )
 method_JS    = method_name ( 'Jensen-Shannon'                )
 method_M     = method_name ( 'Mahalanobis'                   )
-method_T2    = method_name ( f'Hotteling T{S.sup_two}'       )
+method_T2    = method_name ( f'Hotelling T{S.sup_two}'       )
 method_B     = method_name ( 'Bhattacharyya'                 )
 method_H     = method_name ( 'Hellinger'                     )
 method_W     = method_name ( f'Wasserstein W{S.sup_two}'     )

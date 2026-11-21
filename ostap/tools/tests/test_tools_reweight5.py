@@ -288,17 +288,45 @@ def run_reweight ( n_dim       = 3     ,
 
     if active_test ( random_freq ) and hasPyTorch () :
 
-        from ostap.tools.reweighters  import PyTorchDensityReweighter as TORCH
+        from ostap.tools.reweighters  import PyTorchAdamDensityReweighter as TORCH
         rw = TORCH ( target        = target        ,
                      original      = original1     ,
                      learning_rate = 1e-4          , 
                      hidden_layers = ( 128 , 128 ) )                       
         reweighters.append ( rw )
 
+
+    if active_test ( random_freq ) and hasXGBoost  () :
+
+        from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB 
+        rw = XGB  ( target                = target    ,
+                     original              = original1 ,
+                     progress              = False     ,
+                    )
+        
+        reweighters.append ( rw )
+
+    if active_test ( random_freq ) and hasPyTorch () :
+
+        from ostap.tools.reweighters  import PyTorchAdamDensityReweighter as TORCH
+        rw = TORCH ( target        = target        ,
+                     original      = original1     ,
+                     learning_rate = 1e-4          , 
+                     hidden_layers = ( 128 , 128 ) )                       
+        reweighters.append ( rw )
+
+    if active_test ( random_freq ) and hasPyTorch () :
+
+        from ostap.tools.reweighters  import PyTorchLBFGSDensityReweighter as TORCH
+        rw = TORCH ( target        = target        ,
+                     original      = original1     ,
+                     learning_rate = 1e-4          , 
+                     hidden_layers = ( 128 , 128 ) )                       
+        reweighters.append ( rw )
         
     if active_test ( random_freq ) and hasPyTorch () :
 
-        from ostap.tools.reweighters  import PyTorchIterativeReweighter as TORCH
+        from ostap.tools.reweighters  import PyTorchAdamIterativeReweighter as TORCH
         rw = TORCH ( target        = target        ,
                      original      = original1     ,
                      ## use very simple construction:
@@ -307,7 +335,19 @@ def run_reweight ( n_dim       = 3     ,
                      )
         
         reweighters.append ( rw )
-                      
+            
+    if active_test ( random_freq ) and hasPyTorch () :
+
+        from ostap.tools.reweighters  import PyTorchLBGFSIterativeReweighter as TORCH
+        rw = TORCH ( target        = target        ,
+                     original      = original1     ,
+                     ## use very simple construction:
+                     hidden_layers           = ( 16 , )  ,
+                     progress                = False     ,
+                     )
+        
+        reweighters.append ( rw )
+            
     if active_test ( random_freq ) and hasHepML    () :
         from ostap.tools.reweighters  import GBReweighter   as GBRW
         rw = GBRW ( target              = target         ,

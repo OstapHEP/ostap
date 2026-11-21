@@ -22,7 +22,7 @@ __all__     = (
     'LightGBMDensityReweighter'       , # LightGBM-based density reweighter
     'XGBoostDensityReweighter'        , # XGBoost-based density reweighter
     'CatBoostDensityReweighter'       , # CatBoost-based density reweighter
-    'PyTorchAda,DensityReweighter'    , # PyTorch-based density reweighter
+    'PyTorchAdamDensityReweighter'    , # PyTorch-based density reweighter
     'PyTorchLBFGSDensityReweighter'   , # PyTorch-based density reweighter
     'LogRegressionDensityReweighter'  , # Density reweighter based on Logistic Regression
     ##
@@ -40,7 +40,7 @@ from  ostap.tools.dreweighters import  ( LightGBMDensityReweighter       ,
                                          XGBoostDensityReweighter        , 
                                          CatBoostDensityReweighter       , 
                                          PyTorchAdamDensityReweighter    , 
-                                         PyTorchLbfgsDensityReweighter   , 
+                                         PyTorchLBFGSDensityReweighter   , 
                                          LogRegressionDensityReweighter  )
 from  ostap.tools.ireweighters import  ( LightGBMIterativeReweighter     , 
                                          XGBoostIterativeReweighter      , 
