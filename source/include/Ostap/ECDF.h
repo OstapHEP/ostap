@@ -15,9 +15,10 @@
 // Ostap
 // ============================================================================
 #include "Ostap/ValueWithError.h"
+#include "Ostap/Statistic.h"
 #include "Ostap/StatEntity.h"
 #include "Ostap/WStatEntity.h"
-#include "Ostap/Statistic.h"
+#include "Ostap/WeightedEntry.h"
 #include "Ostap/Moments.h"
 #include "Ostap/QuantileTypes.h"
 #include "Ostap/IsContainerOf.h"
@@ -60,7 +61,7 @@ namespace Ostap
       ( const Data&  data                  ,
         const bool   complementary = false ) ;
       // =======================================================================
-      /** Constructor from the idngle entry 
+      /** Constructor from the single entry 
        */ 
       ECDF
       ( const double data                  ,
@@ -82,7 +83,7 @@ namespace Ostap
       {
         /// (1) adjust the content 
         this -> cleanup () ;
-        /// (2) sort it if needed 
+        /// (2) sort it 
         std::sort ( m_data.begin () , m_data.end () ) ;
         /// (3) update counters 
         for ( auto v : m_data ) { m_counter.add ( v ) ; }
@@ -134,12 +135,16 @@ namespace Ostap
       ( ITERATOR begin ,
         ITERATOR end   )
       {
-        /// copy input data 
-        Data tmp ( begin, end ) ;       
+        /// copy input data into temporary container 
+        Data tmp ( begin, end ) ;
+        /// move bad elements to the end of the sequence 
+        Data::iterator remove = this -> remove_bad ( tmp.begin() , tmp.end() ) ;
+        /// .. and erase them!
+        tmp.erase ( remove , tmp.end() ) ;
         /// sort input data 
         std::sort ( tmp.begin () , tmp.end () ) ;
         /// add sorted input 
-        return this -> add_sorted ( tmp.begin() , tmp.end() ) ;
+        return this -> add_sorted ( tmp.begin() , tmp.end () ) ;
       }
       // ======================================================================
       /// add container of values 
@@ -266,6 +271,8 @@ namespace Ostap
        */
       double uniform ( const double x ) const ;
       // ======================================================================
+    public: // Quantiles 
+      // ======================================================================
       /** get p-quantile of distribution: \f$ 1 \le p \le1  \f$
        *  @see scipy.stats.mstats
        *
@@ -313,7 +320,59 @@ namespace Ostap
         const Ostap::QuantileTypes::HyndmanFanType t =
         Ostap::QuantileTypes::HyndmanFanType::Eight ) const ;
       // ======================================================================
-    public:
+    public : // Quantiles 
+      // ======================================================================
+      /** get quantiles of distribution: \f$ 1 \le p \le1  \f$
+       *  @see scipy.stats.mstats
+       *
+       *  Typical values for alphap, betap are:
+       * 
+       * - (0,1) : p(k) = k/n : linear interpolation of cdf (R type 4)
+       * - (.5,.5) : p(k) = (k - 1/2.)/n : piecewise linear function (R type 5)
+       * - (0,0) : p(k) = k/(n+1) : (R type 6)
+       * - (1,1) : p(k) = (k-1)/(n-1): p(k) = mode[F(x[k])]. (R type 7, R default)
+       * - (1/3,1/3): p(k) = (k-1/3)/(n+1/3): Then p(k) ~ median[F(x[k])].
+       *   The resulting quantile estimates are approximately median-unbiased 
+       *   regardless of the distribution of x. (R type 8)
+       * - (3/8,3/8): p(k) = (k-3/8)/(n+1/4): Blom.
+       *   The resulting quantile estimates are approximately 
+       *   unbiased if x is normally distributed (R type 9)
+       * - 0(.4,.4) : approximately quantile unbiased (Cunnane)
+       * - (.35,.35): APL, used with PWM
+       *
+       *  @param p      (INPUT) vectro of input quantile
+       *  @param alphap (INPUT) parameter alphap \f$ 0 \le\alpha_p \le 1 \f$ 
+       *  @param abetap (INPUT) parameter betap \f$ 0 \le\beta_p \le 1 \f$ 
+       */    
+      std::vector<double>
+      quantiles 
+      ( const std::vector<double>&                  p  ,
+        const Ostap::QuantileTypes::ABQuantileType& ab ) const ;
+      // ======================================================================
+      /** Use Harrel-Davis estimator for quantile function
+       *  @param p  (INPUT) vector of input probabilities quantile 
+       *  @return Harrel-Davis quantile estimator
+       *  @see https://doi.org/10.1093/biomet/69.3.635
+       *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+       *       Biometrika 63.9 (Dec 1982), pp. 635-640
+       *  @attention It could be rather CPU expensive 
+       */
+      std::vector<double>
+      quantiles
+      ( const std::vector<double>&                  p  ,
+        const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const ;
+      // ======================================================================
+      /** get p-quantile using Hyndman-Fan estimator 
+       *  @see https://arxiv.org/abs/2304.07265
+       *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
+       */
+      std::vector<double>
+      quantiles
+      ( const std::vector<double>&                 p  ,
+        const Ostap::QuantileTypes::HyndmanFanType t =
+        Ostap::QuantileTypes::HyndmanFanType::Eight ) const ;
+      // ======================================================================
+    public: // Equidistant quantile grid             
       // =====================================================================
       /** get the equidistant quantiles     
        *  @see Ostap::ECDF::quantile 
@@ -452,7 +511,16 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
-      /// Remove elments <code>!std::isfinite</code>
+      /// "remove" (in STL sense) non-finite elements from the sequence
+      inline Data::iterator remove_bad
+      ( Data::iterator begin ,
+        Data::iterator end   )
+      { return std::remove_if ( begin ,
+                                end   ,
+                                [] ( const double x ) -> bool
+                                { return !std::isfinite ( x ) ; } ) ; } 
+      // ======================================================================            
+      /// Remove elements <code>!std::isfinite</code>
       ECDF& cleanup () ; // Remove elements <code>!std::isfinite</code>
       // ======================================================================
     private:
@@ -461,7 +529,7 @@ namespace Ostap
       Data              m_data          {       } ; // container of sorted data
       /// complementary CDF?
       bool              m_complementary { false } ; // complementary CDF ?
-      /// counter
+      /// counter to keep some statistics 
       Ostap::StatEntity m_counter       {} ;
       // ======================================================================
     }; //                                The end of the class Ostap::Math::ECDF
@@ -487,7 +555,7 @@ namespace Ostap
     public: 
       // ======================================================================
       /// The actual type of entry: (y,w)
-      typedef std::pair<double,double>    Entry    ;
+      typedef WeightedEntry               Entry    ;
       /// the actual type of data
       typedef std::vector<Entry>          Data     ;
       /// iterator type
@@ -500,13 +568,13 @@ namespace Ostap
       {
         /// comparison criteria: compare abscissas *ONLY*  
         inline bool operator () ( const Entry& a , const Entry& b ) const
-        { return a.first < b.first ; }
+        { return a.data () < b.data () ; }
         /// comparison criteria: compare abscissas *ONLY*
         inline bool operator () ( const Entry& a , const double b ) const
-        { return a.first < b ; }
+        { return a.data () < b ; }
         /// comparison criteria: compare abscissas *ONLY 
         inline bool operator () ( const double a , const Entry& b ) const
-        { return a < b.first ; }
+        { return a < b.data () ; }
       } ;
       // ======================================================================
     public: 
@@ -576,7 +644,7 @@ namespace Ostap
       explicit WECDF ( const T& data, const double weight, Args&&... args) 
         : WECDF ( std::forward<Args> ( args )... ) 
       {
-        this -> add ( data , weight);
+        this -> add ( data , weight ) ;
       } ;
       // =======================================================================      
     public :
@@ -693,10 +761,10 @@ namespace Ostap
       inline const Data&     data          () const { return m_data         ; }
       // access to data 
       inline double data   ( const unsigned int index ) const
-      { return index < m_data.size() ?  m_data [ index ].first  : xmax ()   ; }
+      { return index < m_data.size() ?  m_data [ index ].data   () : xmax ()   ; }
       // access to weight 
       inline double weight ( const unsigned int index ) const
-      { return index < m_data.size() ?  m_data [ index ].second : 0.0       ; }      
+      { return index < m_data.size() ?  m_data [ index ].weight () : 0.0       ; }      
       // ======================================================================
       /// complementary?
       inline bool            complementary () const { return m_complementary  ; }
@@ -748,7 +816,7 @@ namespace Ostap
       Ostap::Math::WMoment_<K> moment_ () const
       {
         Ostap::Math::WMoment_<K> m{} ;
-        for ( const auto& value : m_data ) { m.add ( value.first, value.second ) ; }
+        for ( const auto& value : m_data ) { m.add ( value.data() , value.weight () ) ; }
         return m ;
       } 
       // =======================================================================
@@ -863,14 +931,14 @@ namespace Ostap
                                  m_data.begin () + std::min ( n , m_data.size() ) , 
                                  0.0             ,
                                  [] ( const double s , const Entry& entry ) -> double
-                                 { return s + entry.second ; } ) ;      }
+                                 { return s + entry.weight  () ; } ) ;      }
       /// calculate \f$ \sum_i^{n} w_i \f$
       inline double sumw2 ( const unsigned long n ) const
       { return std::accumulate ( m_data.begin () ,
                                  m_data.begin () + std::min ( n , m_data.size() ) , 
                                  0.0             ,
                                  [] ( const double s , const Entry& entry ) -> double
-                                 { return s + entry.second * entry.second ; } ) ; }
+                                 { return s + entry.weight2 () ; } ) ; }
       // ======================================================================
     public: 
       // ======================================================================
@@ -890,6 +958,15 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
+      /// "remove" (in STL sense) non-finite elements from the sequence
+      inline Data::iterator remove_bad
+      ( Data::iterator begin ,
+        Data::iterator end   )
+      { return std::remove_if ( begin ,
+                                end   ,
+                                [] ( const Entry& entry  ) -> bool
+                                { return !entry.valid () ; } ) ; } 
+      // ======================================================================            
       /// remove elements <code>!std::isfinite</code>
       WECDF& cleanup () ; // check that ECDF is OK: there are some entries 
       // ======================================================================

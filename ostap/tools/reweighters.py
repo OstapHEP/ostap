@@ -19,37 +19,40 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
     ## 
-    'LightGBMDensityReweighter'      , # LightGBM-based density reweighter
-    'XGBoostDensityReweighter'       , # XGBoost-based density reweighter
-    'CatBoostDensityReweighter'      , # CatBoost-based density reweighter
-    'PyTorchDensityReweighter'       , # PyTorch-based density reweighter
-    'LogRegressionDensityReweighter' , # Density reweighter based on Logistic Regression
+    'LightGBMDensityReweighter'       , # LightGBM-based density reweighter
+    'XGBoostDensityReweighter'        , # XGBoost-based density reweighter
+    'CatBoostDensityReweighter'       , # CatBoost-based density reweighter
+    'PyTorchAda,DensityReweighter'    , # PyTorch-based density reweighter
+    'PyTorchLBFGSDensityReweighter'   , # PyTorch-based density reweighter
+    'LogRegressionDensityReweighter'  , # Density reweighter based on Logistic Regression
     ##
-    'LightGBMIterativeReweighter'    , # LightGBM-based iterative density reweighter
-    'XGBoostIterativeReweighter'     , # XGBoost-based  iterative density reweighter
-    'CatBoostIterativeReweighter'    , # CatBoost-based iterative density reweighter
-    'PyTorchIterativeReweighter'     , # PyTorch-based  iterative density reweighter
+    'LightGBMIterativeReweighter'     , # LightGBM-based iterative density reweighter
+    'XGBoostIterativeReweighter'      , # XGBoost-based  iterative density reweighter
+    'CatBoostIterativeReweighter'     , # CatBoost-based iterative density reweighter
+    'PyTorchAdamIterativeReweighter'  , # PyTorch-based  iterative density reweighter
+    'PyTorchLBFGSIterativeReweighter' , # PyTorch-based  iterative density reweighter
     ## 
     'GBReweighter'                   , # Reweighter based on GBReweighter from hep_ml by Alex Rogozhnikov
     ## 
 ) # ===========================================================================
 # =============================================================================
-from  ostap.tools.dreweighters import  ( LightGBMDensityReweighter      , 
-                                         XGBoostDensityReweighter       , 
-                                         CatBoostDensityReweighter      , 
-                                         PyTorchDensityReweighter       , 
-                                         LogRegressionDensityReweighter )
-from  ostap.tools.ireweighters import  ( LightGBMIterativeReweighter    , 
-                                         XGBoostIterativeReweighter     , 
-                                         CatBoostIterativeReweighter    ,
-                                         PyTorchIterativeReweighter     )
+from  ostap.tools.dreweighters import  ( LightGBMDensityReweighter       , 
+                                         XGBoostDensityReweighter        , 
+                                         CatBoostDensityReweighter       , 
+                                         PyTorchAdamDensityReweighter    , 
+                                         PyTorchLbfgsDensityReweighter   , 
+                                         LogRegressionDensityReweighter  )
+from  ostap.tools.ireweighters import  ( LightGBMIterativeReweighter     , 
+                                         XGBoostIterativeReweighter      , 
+                                         CatBoostIterativeReweighter     ,
+                                         PyTorchAdamIterativeReweighter  ,
+                                         PyTorchLBFGSIterativeReweighter )
 from  ostap.tools.greweighters import GBReweighter
 # =============================================================================
 # Logging setup
 # =============================================================================
 from ostap.logger.logger import getLogger, logAttention 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.tools.reweighters' )
-else                       : logger = getLogger( __name__ )
+logger = getLogger ( 'ostap.tools.reweighters' )
 # =============================================================================
 
 # ============================================================================

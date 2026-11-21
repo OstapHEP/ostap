@@ -50,7 +50,6 @@ __all__     = (
     'symbol_GBC'          , ## symbol for GradientBoost 
     'symbol_RF'           , ## symbol for RandomForest 
     'symbol_TORCH'        , ## symbol for PyTorch 
-    'symbol_KERAS'        , ## symbol for Keras
     'symbol_LOGREG'       , ## symbol fo rLogistic Regression 
     'symbol_USTAT'        , ## symbol for uStat
     'symbol_CHI2'         , ## symbol for chi2
@@ -101,7 +100,6 @@ __all__     = (
     'method_GBC'          , ##       GradientBoost method 
     'method_RF'           , ##        RandomForest method 
     'method_TORCH'        , ##             PyTorch method 
-    'method_KERAS'        , ##               Keras method
     'method_LOGREG'       , ## Logistic Regression method 
     'method_USTAT'        , ##              uStat method 
     'method_CHI2'         , ##               Chi2 method 
@@ -173,7 +171,6 @@ symbol_HGBC   = S.bar_chart    if S.show and S.bar_chart      else symbol_name (
 symbol_GBC    = S.nabla        if S.show and S.nabla          else symbol_name ( 'GBC'      ) 
 symbol_RF     = S.palm         if S.show and S.palm           else symbol_name ( 'RF'       )
 symbol_TORCH  = S.flashlight   if S.show and S.flashlight     else symbol_name ( 'TORCH'    ) 
-symbol_KERAS  = S.postal_horn  if S.show and S.postal_horn    else symbol_name ( 'KERAS'    ) 
 symbol_LOGREG = S.ruler        if S.show and S.ruler          else symbol_name ( 'LOGREG'   ) 
 symbol_USTAT  = S.pushpin      if S.show and S.pushpin        else symbol_name ( 'USTAT'    ) 
 symbol_CHI2   = S.chi2         if S.show and S.chi2           else symbol_name ( 'Chi2'     ) 
@@ -226,7 +223,6 @@ method_HGBC   = method_name ( 'HistoGradientBoost'  )
 method_GBC    = method_name ( 'GradientBoost'       ) 
 method_RF     = method_name ( 'RandomForest'        )
 method_TORCH  = method_name ( 'PyTorch'             )
-method_KERAS  = method_name ( 'Keras'               ) 
 method_LOGREG = method_name ( 'Logistic Regression' ) 
 method_USTAT  = method_name ( 'uStat'               )
 method_CHI2   = method_name ( S.chi2  if S.show and S.chi2  else 'Chi2' ) 

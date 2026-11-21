@@ -1,3 +1,17 @@
+## New features
+
+  1. `StatEntity`        - add templated method to add any `container`
+  1. `ECDF`              - add templated method to add any `container`
+  1. `Ostap/Quantiles.h` - add `quantiles` methods for arbitrary quantiles `std::vector<double>` 
+  1. `ECDF/WECDF`        - add `quantiles` methods for arbitrary quantiles `std::vector<double>` 
+  
+## Bug fixes
+
+## Backward incompatible
+
+   1. remove Keras and Tensorflow
+   1. split `PyTorch(Iterative/Density)Reweighter` into pairs of `PyTorch(Adam/LBGFGS)(Iterative/Density)Reweighter`
+
 # v3.8.6.26
 
 ## New features
@@ -12,6 +26,9 @@
 
 ## Backward incompatible
 
+   1. remove Keras and Tensorflow
+   1. split `PyTorch(Iterative/Density)Reweighter` into pairs of `PyTorch(Adam/LBGFGS)(Iterative/Density)Reweighter`
+   
 # v3.8.6.24
 
   1. reshuffle some code between `ostap.stats.data_compare` and `ostap.stat.utils` to reduc code duplication
@@ -21,11 +38,11 @@
 ## New features
 
   1. Add `RandomAxes` Two-Samples Test 
-  1. Take into account weights for `normalize_pooled` method.  In case variance is not posititive - use a half-difference between 16% and 85% quantiles
+  1. Take into account weights for `normalize_pooled` method.  In case variance is not posititive - use a half-difference between 16% and 84% quantiles
 
 ## Bug fixes
 
-  1. fix the bug in `DaatReweighter`  (thansk to Artem Egorychev)
+  1. fix the bug in `DataReweighter`  (thansk to Artem Egorychev)
   
 ## Backward incompatible
 

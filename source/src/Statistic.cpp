@@ -4,6 +4,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Statistic.h"
+#include "Ostap/WeightedEntry.h"
 // ============================================================================
 /** @file
  *  Implementation file for classes Ostap::Math::Statistic and Ostap::Math::wStatistics
@@ -26,6 +27,13 @@ Ostap::Math::WStatistic ::~WStatistic (){}
 Ostap::Math::WStatistic2::~WStatistic2(){}
 Ostap::Math::WStatistic3::~WStatistic3(){}
 Ostap::Math::WStatistic4::~WStatistic4(){}
+// ===========================================================================
+/// add new value to the counter      
+void Ostap::Math::WStatistic::update
+( const Ostap::Math::WeightedEntry& entry )
+{
+  if ( entry.valid () ) { update ( entry.value() , entry.weight() ) ; } 
+}
 // ============================================================================
 //                                                                      The END
 // ============================================================================

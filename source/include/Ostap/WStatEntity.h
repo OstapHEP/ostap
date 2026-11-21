@@ -7,6 +7,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/StatEntity.h"
+#include "Ostap/WeightedEntry.h"
 // ============================================================================
 namespace Ostap
 {
@@ -172,6 +173,14 @@ namespace Ostap
     WStatEntity& add   
     ( const double value      ,  
       const double weight = 1 ) ;
+    // ===============================================================================
+    /** the only one important method: add the value with the given weight 
+     *  @param entry  entry to be added 
+     *  @attention non-finite values/weights  are ignored! 
+     */
+    WStatEntity& add   
+    ( const Ostap::Math::WeightedEntry& entry )
+    { return entry.valid () ? add ( entry.data() , entry.weight() ) : *this ; }
     // ===============================================================================
   public:
     // ===============================================================================

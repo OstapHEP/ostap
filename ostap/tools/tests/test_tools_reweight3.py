@@ -35,8 +35,7 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.stats.utils        import full_header 
 from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
                                          hasCatBoost , hasSkLearn ,
-                                         hasPyTorch  , hasKeras   , 
-                                         hasHepML    )
+                                         hasPyTorch  , hasHepML   )
 from   ostap.utils.utils4tests  import light_tests, active_test 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
@@ -329,17 +328,6 @@ if active_test ( random_freq ) and hasPyTorch () :
     logger.info ( 'Use PyTorch       for dataset comparison' ) 
     from ostap.stats.adval        import ADVAL_TORCH  as CMP
     comparators .append ( CMP ( **cconf ) )
-
-if False and ( not light or random.uniform ( 0 , 1 ) < random_freq ) and hasKeras ()  : 
-    
-    if 'torch' == get_env ( 'KERAS_BACKEND' , '' , silent = True ) : 
-        
-        logger.info ( 'Use Keras         for dataset comparison' ) 
-        from ostap.stats.adval        import ADVAL_KERAS  as CMP
-        cconf [ 'nToys'    ] = 5 
-        cconf [ 'parallel' ] = False 
-        cconf [ 'silent'   ] = False 
-        comparators .append  ( CMP ( **cconf ) )
 
         
 comparators = tuple ( comparators )

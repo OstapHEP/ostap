@@ -145,13 +145,13 @@ namespace
     while ( it1 != end1 || it2 != end2 ) 
     {
       double x = 0.0 ;
-      if      ( it1 == end1 ) { x = it2->first ; }
-      else if ( it2 == end2 ) { x = it1->first ; }
-      else                    { x = std::min ( it1->first , it2->first ) ; }
+      if      ( it1 == end1 ) { x = it2->data () ; }
+      else if ( it2 == end2 ) { x = it1->data () ; }
+      else                    { x = std::min ( it1->data() , it2->data () ) ; }
 
       double step_w1 = 0.0 , step_w2 = 0.0 ;
-      while ( it1 != end1 && it1->first == x ) { step_w1 += it1->second ; ++it1 ; }
-      while ( it2 != end2 && it2->first == x ) { step_w2 += it2->second ; ++it2 ; }
+      while ( it1 != end1 && it1->data() == x ) { step_w1 += it1->weight() ; ++it1 ; }
+      while ( it2 != end2 && it2->data() == x ) { step_w2 += it2->weight() ; ++it2 ; }
 
       acc_w1 += step_w1 ;
       acc_w2 += step_w2 ;
@@ -557,19 +557,19 @@ namespace
     std::size_t i1 = 0, i2 = 0 ;
     while ( i1 < n1 && i2 < n2 )
     {
-      if ( s1 [ i1 ].first <= s2 [ i2 ].first ) 
+      if ( s1 [ i1 ].data() <= s2 [ i2 ].data() ) 
       { 
-        pooled.push_back ( { s1 [ i1 ].first, s1 [ i1 ].second, true  } ) ; 
+        pooled.push_back ( { s1 [ i1 ].data() , s1 [ i1 ].weight(), true  } ) ; 
         ++i1 ; 
       }
       else                    
       { 
-        pooled.push_back ( { s2 [ i2 ].first, s2 [ i2 ].second, false } ) ; 
+        pooled.push_back ( { s2 [ i2 ].data(), s2 [ i2 ].weight(), false } ) ; 
         ++i2 ; 
       }
     }
-    while ( i1 < n1 ) { pooled.push_back ( { s1 [ i1 ].first, s1 [ i1 ].second, true  } ) ; ++i1 ; }
-    while ( i2 < n2 ) { pooled.push_back ( { s2 [ i2 ].first, s2 [ i2 ].second, false } ) ; ++i2 ; }
+    while ( i1 < n1 ) { pooled.push_back ( { s1 [ i1 ].data() , s1 [ i1 ].weight() , true  } ) ; ++i1 ; }
+    while ( i2 < n2 ) { pooled.push_back ( { s2 [ i2 ].data() , s2 [ i2 ].weight() , false } ) ; ++i2 ; }
 
     return pooled ;
   }
@@ -811,19 +811,19 @@ namespace
     std::size_t i1 = 0, i2 = 0 ;
     while ( i1 < n1 && i2 < n2 )
     {
-      if ( s1 [ i1 ].first <= s2 [ i2 ].first ) 
+      if ( s1 [ i1 ].data() <= s2 [ i2 ].data () ) 
       { 
-        pooled.push_back ( { s1 [ i1 ].first, s1 [ i1 ].second, true,  i1 } ) ; 
+        pooled.push_back ( { s1 [ i1 ].data(), s1 [ i1 ].weight(), true,  i1 } ) ; 
         ++i1 ; 
       }
       else                    
       { 
-        pooled.push_back ( { s2 [ i2 ].first, s2 [ i2 ].second, false, i2 } ) ; 
+        pooled.push_back ( { s2 [ i2 ].data(), s2 [ i2 ].weight(), false, i2 } ) ; 
         ++i2 ; 
       }
     }
-    while ( i1 < n1 ) { pooled.push_back ( { s1 [ i1 ].first, s1 [ i1 ].second, true,  i1 } ) ; ++i1 ; }
-    while ( i2 < n2 ) { pooled.push_back ( { s2 [ i2 ].first, s2 [ i2 ].second, false, i2 } ) ; ++i2 ; }
+    while ( i1 < n1 ) { pooled.push_back ( { s1 [ i1 ].data(), s1 [ i1 ].weight(), true,  i1 } ) ; ++i1 ; }
+    while ( i2 < n2 ) { pooled.push_back ( { s2 [ i2 ].data(), s2 [ i2 ].weight(), false, i2 } ) ; ++i2 ; }
 
     const std::size_t N = pooled.size () ;
 
@@ -835,9 +835,9 @@ namespace
       while ( i < n1 )
       {
         std::size_t j = i + 1 ;
-        while ( j < n1 && s1 [ j ].first == s1 [ i ].first ) { ++j ; }
+        while ( j < n1 && s1 [ j ].data ()  == s1 [ i ].data ()  ) { ++j ; }
         double block_w = 0.0 ;
-        for ( std::size_t k = i ; k < j ; ++k ) { block_w += s1 [ k ].second ; }
+        for ( std::size_t k = i ; k < j ; ++k ) { block_w += s1 [ k ].weight () ; }
         double midrank = cumw + 0.5 * block_w ;
         cumw += block_w ;
         for ( std::size_t k = i ; k < j ; ++k ) { r1 [ k ] = midrank ; }
@@ -852,9 +852,9 @@ namespace
       while ( i < n2 )
       {
         std::size_t j = i + 1 ;
-        while ( j < n2 && s2 [ j ].first == s2 [ i ].first ) { ++j ; }
+        while ( j < n2 && s2 [ j ].data () == s2 [ i ].data () ) { ++j ; }
         double block_w = 0.0 ;
-        for ( std::size_t k = i ; k < j ; ++k ) { block_w += s2 [ k ].second ; }
+        for ( std::size_t k = i ; k < j ; ++k ) { block_w += s2 [ k ].weight ()  ; }
         double midrank = cumw + 0.5 * block_w ;
         cumw += block_w ;
         for ( std::size_t k = i ; k < j ; ++k ) { r2 [ k ] = midrank ; }

@@ -2,11 +2,16 @@
 #ifndef OSTAP_STATISTIC_H 
 #define OSTAP_STATISTIC_H 1
 // =============================================================================
+// Include files 
+// =============================================================================
 namespace  Ostap
 {
   // ===========================================================================
   namespace Math
   {
+    // ========================================================================
+    /// forward declaration 
+    class WeightedEntry ;
     // ========================================================================
     /** @class Statistic
      *  Helper abstract base class for statistic counters
@@ -87,6 +92,8 @@ namespace  Ostap
       virtual ~WStatistic () ;
       /// add new value to the counter
       virtual void update ( const double x , const double w = 1 ) = 0 ;
+      /// add new value to the counter      
+      virtual void update ( const WeightedEntry& entry );      
       /// reset  the context
       virtual void reset () = 0 ; 
       // ======================================================================

@@ -40,7 +40,7 @@ namespace Ostap
       // =======================================================================
       /// initialization strategy 
       enum Initialization
-    	{
+        {
           Classic = 0 ,
           Adaptive 
         } ;

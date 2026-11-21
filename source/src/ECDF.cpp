@@ -146,11 +146,7 @@ Ostap::Math::ECDF&
 Ostap::Math::ECDF::cleanup ()
 {
   // find invalid elements 
-  Data::iterator remove = std::remove_if
-    ( m_data.begin () ,
-      m_data.end   () ,
-      [] ( const double x ) -> bool
-      { return !std::isfinite ( x ) ; } ) ;
+  Data::iterator remove = this->remove_bad ( m_data.begin () , m_data.end   () ) ;
   // remove them! 
   m_data.erase ( remove , m_data.end() ) ; 
   //
@@ -303,7 +299,7 @@ double Ostap::Math::ECDF::uniform ( const double x ) const
       ( std::lower_bound ( m_data.begin () , m_data.end () , x ) - m_data.begin() ) * 1.0 / size () ) ;
 }
 // =============================================================================
-/*  get p-quantile uaing Hyndman-Fan estimator 
+/*  get p-quantile using Hyndman-Fan estimator 
  *  @see https://arxiv.org/abs/2304.07265
  *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
  */
@@ -397,6 +393,91 @@ double Ostap::Math::ECDF::quantile
   return estimator.quantile ( m_data.begin () , m_data.end   () , p ) ;  
 }
 // ============================================================================
+/* get quantiles of distribution: \f$ 1 \le p \le1  \f$
+ *  @see scipy.stats.mstats
+ *
+ *  Typical values for alphap, betap are:
+ * 
+ * - (0,1) : p(k) = k/n : linear interpolation of cdf (R type 4)
+ * - (.5,.5) : p(k) = (k - 1/2.)/n : piecewise linear function (R type 5)
+ * - (0,0) : p(k) = k/(n+1) : (R type 6)
+ * - (1,1) : p(k) = (k-1)/(n-1): p(k) = mode[F(x[k])]. (R type 7, R default)
+ * - (1/3,1/3): p(k) = (k-1/3)/(n+1/3): Then p(k) ~ median[F(x[k])].
+ *   The resulting quantile estimates are approximately median-unbiased 
+ *   regardless of the distribution of x. (R type 8)
+ * - (3/8,3/8): p(k) = (k-3/8)/(n+1/4): Blom.
+ *   The resulting quantile estimates are approximately 
+ *   unbiased if x is normally distributed (R type 9)
+ * - 0(.4,.4) : approximately quantile unbiased (Cunnane)
+ * - (.35,.35): APL, used with PWM
+ *
+ *  @param p      (INPUT) vectro of input quantile
+ *  @param alphap (INPUT) parameter alphap \f$ 0 \le\alpha_p \le 1 \f$ 
+ *  @param abetap (INPUT) parameter betap \f$ 0 \le\beta_p \le 1 \f$ 
+ */    
+// ============================================================================
+std::vector<double>
+Ostap::Math::ECDF::quantiles 
+( const std::vector<double>&                  p  ,
+  const Ostap::QuantileTypes::ABQuantileType& ab ) const
+{
+  //
+  Ostap::Assert ( !p.empty() && std::all_of ( p .begin() , p.end() ,                                              
+                                              [](double w) { return 0 <= w && w <= 1 ; } ) ,
+                  "Invalid probabilities"                    , 
+                  "Ostap::Math::ECDF::quantiles"             , 
+                  INVALID_PROBABILITY , __FILE__  , __LINE__ ) ;
+  //
+  const Ostap::Math::ABQuantile estimator { ab , false } ;
+  return estimator.quantiles ( m_data.begin () , m_data.end   () , p ) ;  
+}
+// ============================================================================
+/*  Use Harrel-Davis estimator for quantile function
+ *  @param p  (INPUT) vector of input probabilities quantile 
+ *  @return Harrel-Davis quantile estimator
+ *  @see https://doi.org/10.1093/biomet/69.3.635
+ *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+ *       Biometrika 63.9 (Dec 1982), pp. 635-640
+ *  @attention It could be rather CPU expensive 
+ */
+// ============================================================================
+std::vector<double>
+Ostap::Math::ECDF::quantiles 
+( const std::vector<double>&                       p    ,
+  const Ostap::QuantileTypes::HarrellDavisType& /* t */ ) const
+{
+  //
+  Ostap::Assert ( !p.empty() && std::all_of ( p .begin() , p.end() ,                                              
+                                              [] ( double w ) { return 0 <= w && w <= 1 ; } ) ,
+                  "Invalid probabilities"                    , 
+                  "Ostap::Math::ECDF::quantiles"             , 
+                  INVALID_PROBABILITY , __FILE__  , __LINE__ ) ;
+  //
+  const Ostap::Math::HarrellDavis estimator { false } ;
+  return estimator.quantiles ( m_data.begin () , m_data.end   () , p ) ;
+}
+// ============================================================================
+/*  get p-quantile using Hyndman-Fan estimator 
+ *  @see https://arxiv.org/abs/2304.07265
+ *  @see Andrey Akinshin, "Weighted quantile estimators", arXiv:2304.07265     
+ */
+// ============================================================================
+std::vector<double>
+Ostap::Math::ECDF::quantiles 
+( const std::vector<double>&                 p ,
+  const Ostap::QuantileTypes::HyndmanFanType t ) const
+{
+  //
+  Ostap::Assert ( !p.empty() && std::all_of ( p .begin() , p.end() ,                                              
+                                              [] ( double w ) { return 0 <= w && w <= 1 ; } ) ,
+                  "Invalid probabilities"                    , 
+                  "Ostap::Math::ECDF::quantiles"             , 
+                  INVALID_PROBABILITY , __FILE__  , __LINE__ ) ;
+  //
+  const Ostap::Math::HyndmanFan estimator { t , false } ;
+  return estimator.quantiles ( m_data.begin () , m_data.end   () , p ) ;
+}
+// ============================================================================
 /* statistics (as statistics)
  * @param stat (UPDATE) input statistic object
  * @return updated statistics object
@@ -481,14 +562,11 @@ std::complex<double> Ostap::Math::ECDF::ecf
 Ostap::Math::WECDF&
 Ostap::Math::WECDF::cleanup ()
 {
-  Data::iterator remove = std::remove_if
-  ( m_data.begin () ,
-    m_data.end   () ,
-    [] ( const Data::value_type& item ) -> bool
-    { return
-        !std::isfinite ( item.first  ) ||
-        !std::isfinite ( item.second ) || !item.second ; } ) ;
+  // find invalid elements 
+  Data::iterator remove = this->remove_bad ( m_data.begin () , m_data.end   () ) ;
+  // remove them! 
   m_data.erase ( remove , m_data.end() ) ; 
+  //
   return *this ;
 }
 // ============================================================================
@@ -517,7 +595,7 @@ Ostap::Math::WECDF::WECDF
   // (2) sort it
   std::sort ( m_data.begin() , m_data.end() , COMPARE () ) ;  
   // (3) update counter
-  for ( const auto& v : m_data ) { m_counter.add ( v.first , v.second ) ; } 
+  for ( const auto& v : m_data ) { m_counter.add  ( v ) ; } 
 }
 // ============================================================================
 /*  Constructor from data
@@ -572,8 +650,9 @@ Ostap::Math::WECDF::WECDF
     {
       for ( auto& entry : m_data )
       {
-        entry.second *= weight ;
-        m_counter.add ( entry.first , entry.second ) ;
+        const double ww  = weight * entry.weight()      ;
+        entry            = Entry ( entry.value() , ww ) ; 
+        m_counter.add ( entry ) ;
       }
     }
   }
@@ -622,8 +701,9 @@ Ostap::Math::WECDF::scale
   m_counter.reset () ;
   for ( auto& entry : m_data )
   {
-    entry.second *= s ;
-    m_counter.add ( entry.first , entry.second ) ;
+    const double ww = entry.weight() * s  ; 
+    entry = Entry ( entry.value () , ww ) ; 
+    m_counter.add ( entry ) ;
   }
   //
   return *this ;
@@ -637,10 +717,10 @@ Ostap::Math::WECDF&
 Ostap::Math::WECDF::add
 ( const Ostap::Math::WECDF::Entry& entry ) 
 {
-  const double value  = entry.first ;
-  const double weight = entry.second ;
+  if ( !entry.valid() ) { return *this ; }
   //
-  if ( !std::isfinite ( value ) || !std::isfinite ( weight ) || !weight ) { return *this ; }  
+  const double value  = entry.value  ()  ;
+  const double weight = entry.weight ()  ;
   //
   auto where = std::upper_bound ( m_data.begin () , m_data.end () , entry , COMPARE () ) ;
   m_data.insert ( where , entry  ) ;
@@ -665,7 +745,11 @@ Ostap::Math::WECDF::add
   if ( 1 != weight && !s_equal ( 1 , weight ) )
   { 
     Data scaled_data { values.m_data } ;
-    for ( auto& v : scaled_data ) { v.second *= weight ; }
+    for ( auto& v : scaled_data )
+    {
+      const double ww = weight * v.weight() ;
+      v = Entry ( v.value() , ww ) ;
+    }
     //
     std::merge ( m_data.begin      () ,
                  m_data.end        () ,
@@ -674,7 +758,7 @@ Ostap::Math::WECDF::add
                  tmp.begin         () ,
                  COMPARE           () ) ;
     // update counter 
-    for ( const auto& v : scaled_data) { m_counter.add ( v.first, v.second ) ; }
+    for ( const auto& v : scaled_data) { m_counter.add ( v ) ; }
     //
     std::swap ( m_data , tmp  ) ;
     return *this ; 
@@ -719,7 +803,7 @@ Ostap::Math::WECDF::add
   std::swap ( m_data , tmp  ) ;
   ///
   /// update counter 
-  for ( const auto& v : aux ) { m_counter.add ( v.first , v.second ) ; }
+  for ( const auto& v : aux ) { m_counter.add ( v ) ; }
   return *this ;
 }
 // ============================================================================
@@ -750,7 +834,7 @@ Ostap::Math::WECDF::add
   /// (6) swap containers 
   std::swap ( m_data , tmp ) ;
   /// (7) update counters 
-  for ( const auto& v : values2 ) { m_counter.add ( v.first , v.second ) ; }
+  for ( const auto& v : values2 ) { m_counter.add ( v ) ; }
   return *this ;
 }  
 // ============================================================================
@@ -768,16 +852,16 @@ Ostap::Math::WECDF::add
   Data values2 { values } ;
   /// (2) scale it if needed
   if ( 1 != weight && !s_equal ( 1 , weight ) )
-  { for ( auto& entry : values2 ) { entry.second *= weight; } }
+  {
+    for ( auto& entry : values2 )
+    {
+      const double ww = weight * entry.weight () ;
+      entry = Entry ( entry.value () , ww ) ;
+    }
+  }
   ///
   /// (3) remove bad elements 
-  Data::iterator remove = std::remove_if
-  ( values2.begin () ,
-    values2.end   () ,
-    [] ( const Data::value_type& item ) -> bool
-    { return
-        !std::isfinite ( item.first  ) ||
-        !std::isfinite ( item.second ) || !item.second ; } ) ;
+  Data::iterator remove = remove_bad ( values2.begin () , values2.end   () ) ; 
   if ( values2.end() != remove ) { values2.erase ( remove , values2.end() ) ; } 
   /// (4) sort it 
   std::sort ( values2.begin() , values2.end  () , COMPARE () ) ;      
@@ -794,7 +878,7 @@ Ostap::Math::WECDF::add
   /// (7) swap containers 
   std::swap ( m_data , tmp ) ;
   /// (8) update counters 
-  for ( const auto& v : values2 ) { m_counter.add ( v.first , v.second ) ; }
+  for ( const auto& v : values2 ) { m_counter.add ( v ) ; }
   return *this ;
 }
 // ============================================================================
@@ -825,13 +909,7 @@ Ostap::Math::WECDF::add
                    { return std::make_pair ( v , w * weight ) ; } ) ;
 
   /// (2) remove bad elements 
-  Data::iterator remove = std::remove_if
-  ( values2.begin () ,
-    values2.end   () ,
-    [] ( const Data::value_type& item ) -> bool
-    { return
-        !std::isfinite ( item.first  ) ||
-        !std::isfinite ( item.second ) || !item.second ; } ) ;
+  Data::iterator remove = remove_bad  ( values2.begin () , values2.end   () ) ;
   if ( values2.end() != remove ) { values2.erase ( remove , values2.end() ) ; } 
   ///
   /// (4) sort it 
@@ -848,7 +926,7 @@ Ostap::Math::WECDF::add
   /// (7) swap containers 
   std::swap ( m_data , tmp ) ;
   /// (8) update counters 
-  for ( const auto& v : values2 ) { m_counter.add ( v.first , v.second ) ; }
+  for ( const auto& v : values2 ) { m_counter.add ( v ) ; }
   return *this ;
 }
 // ============================================================================
@@ -889,18 +967,18 @@ Ostap::Math::WECDF::estimate ( const double x ) const
   const VE all  { sumw () , sumw2 () } ;
   //
   if      ( x < xmin () )
-    {
-      const VE none { 0 , std::pow ( m_data.front().second , 2 ) } ;
-      return m_complementary ?
-        Ostap::Math::binomEff2 ( all  , none ) :
-        Ostap::Math::binomEff2 ( none , all  ) ; }
+  {
+    const VE none { 0 , m_data.front().weight2 () } ;
+    return m_complementary ?
+      Ostap::Math::binomEff2 ( all  , none ) :
+      Ostap::Math::binomEff2 ( none , all  ) ; }
   else if ( x > xmax () )
-    {
-      const VE none { 0 , std::pow ( m_data.back().second , 2 ) } ;
-      return m_complementary ?
-        Ostap::Math::binomEff2 ( none , all  ) :
-        Ostap::Math::binomEff2 ( all  , none ) ;
-    }
+  {
+    const VE none { 0 , m_data.back().weight2 () } ;
+    return m_complementary ?
+      Ostap::Math::binomEff2 ( none , all  ) :
+      Ostap::Math::binomEff2 ( all  , none ) ;
+  }
   //
   const Entry entry { x , 1.0 } ;
   // NB: note the comparison criteria! 
@@ -966,7 +1044,7 @@ Ostap::Math::WStatistic&
 Ostap::Math::WECDF::statistics
 ( Ostap::Math::WStatistic& stat ) 
 {
-  for ( const auto& v : m_data ) { stat.update ( v.first , v.second  ) ; } 
+  for ( const auto& v : m_data ) { stat.update ( v ) ; } 
   return stat ;
 }
 // ============================================================================
@@ -1008,13 +1086,13 @@ double Ostap::Math::WECDF::quantile
                    "Ostap::Math::WECDF::quantile"       , 
                    INVALID_SUMW2 , __FILE__  , __LINE__ ) ;
   //
-  if ( 1 == size() ) { return m_data.front().first ; }
+  if ( 1 == size() ) { return m_data.front().value () ; }
   //
   const Ostap::Math::WHarrellDavis estimator { false } ;
   return estimator.quantile ( m_data.begin () , m_data.end () , p , w , w2 ) ;
 }
 // ============================================================================
-/* Get Harrel-Davis estimator for quantile function
+/*  Get Harrel-Davis estimator for quantile function
  *  @param p  (INPUT) quantile 
  *  @retiurn Harrel-Davis quantile estimator
  *
@@ -1033,19 +1111,55 @@ double Ostap::Math::WECDF::quantile
   return quantile ( p , t ) ;
 }
 // ============================================================================
+/*  Get (weighted) Harrel-Davis estimator for quantiles 
+ *  @param ps  (INPUT) input vector of quantiles
+ *  @retiurn Harrel-Davis quantile estimator
+ *  @see https://doi.org/10.1093/biomet/69.3.635
+ *  @see F.E. Harrel and C.E.Davis,  "A new distribution-free quantile estimator",
+ *       Biometrika 63.9 (Dec 1982), pp. 635-640
+ *  @attention It could be rather CPU expensive 
+ */
+// ============================================================================
+std::vector<double>
+Ostap::Math::WECDF::quantiles
+( const std::vector<double>&   p ) const
+{
+  //
+  Ostap::Assert ( !p.empty() && std::all_of ( p .begin() , p.end() ,                                              
+                                              [](double w) { return 0 <= w && w <= 1 ; } ) ,
+                  "Invalid probabilities"                    , 
+                  "Ostap::Math::ECDF::quantiles"             , 
+                  INVALID_PROBABILITY , __FILE__  , __LINE__ ) ;
+  //
+  const double w  = sumw  () ;
+  const double w2 = sumw2 () ;
+  //
+  Ostap::Assert (  0 < w   , 
+                   "Invalid sum of weights!"            , 
+                   "Ostap::Math::WECDF::quantiles"       , 
+                   INVALID_SUMW  , __FILE__  , __LINE__ ) ;
+  //
+  Ostap::Assert (  0 < w2  , 
+                   "Invalid sum of squared weights!"    , 
+                   "Ostap::Math::WECDF::quantiles"       , 
+                   INVALID_SUMW2 , __FILE__  , __LINE__ ) ;
+  //
+  const Ostap::Math::WHarrellDavis estimator { false } ;
+  return estimator.quantiles ( m_data.begin () , m_data.end () , p , w , w2 ) ;
+}
+// ============================================================================
 // project data content into 1D histogram[
 // ============================================================================
 void Ostap::Math::WECDF::project 
 ( TH1& histo ) const 
 {
   Ostap::Assert ( 1 == histo.GetDimension()      , 
-                  "Invalild histogram dimension" , 
+                  "Invalid histogram dimension" , 
                   "Ostap::Math::ECDF::project"   , 
                   INVALID_TH1                    ) ; 
   histo.Reset() ;
   if ( !histo.GetSumw2() ) { histo.Sumw2() ; }
-  for ( const auto& item : m_data )
-  { histo.Fill ( item.first , item.second ) ; }
+  for ( const auto& item : m_data ) { histo.Fill ( item.value () , item.weight () ) ; }
 }
 // ============================================================================
 // low_edge <= xmin 
@@ -1077,8 +1191,12 @@ std::complex<double> Ostap::Math::WECDF::ecf ( const double t ) const
   double cos_sum = 0.0 ;
   double sin_sum = 0.0 ;
 
-  for ( const auto& [val, w] : s )
+  for ( const auto& v : s )
   {
+    //
+    const double val = v.value  () ;
+    const double w   = v.weight () ;
+    //
     const double angle = t * ( val - mu ) ;
     cos_sum += w * std::cos ( angle ) ;
     sin_sum += w * std::sin ( angle ) ;

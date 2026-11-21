@@ -288,7 +288,7 @@ if ( NOT PY_berkeleydb_FOUND )
 endif()
 
 # ========================================================================================
-## BDDDB3
+## BSDDB3
 # ========================================================================================
 if ( PYTHON_VERSION VERSION_LESS "3.10.0" )
    ensure_python_module_ex ( bsddb3 bsddb3 )
@@ -296,6 +296,7 @@ if ( PYTHON_VERSION VERSION_LESS "3.10.0" )
      message ( "----> warning (optional)          bsddb3 is NOT found!" ) 
    endif()
 endif()
+
     
 # ========================================================================================
 ## duckdb & fasteners
@@ -318,6 +319,17 @@ endif ()
 find_python_module ( tkrzw QUIET )
 if ( NOT PY_tkrzw_FOUND )  
    message ( "----> warning (optional)           tkrzw is NOT found!" ) 
+endif()
+
+
+# ========================================================================================
+## h5py
+# ========================================================================================
+if ( PYTHON_VERSION VERSION_GREATER_EQUAL "3.10.0" )
+   ensure_python_module_ex ( h5py h5py  )
+   if ( NOT PY_h5py_FOUND )
+      message ( "----> warning                       h5py is NOT found!" ) 
+   endif()
 endif()
 
 # ========================================================================================
@@ -392,23 +404,13 @@ if ( OSTAP_HAS_AVX AND OSTAP_HAS_AVX2 )
 endif()
 
 # ========================================================================================
-## pytorch, tensorflow & keras 
+## pytorch
 # ========================================================================================
 if ( OSTAP_HAS_AVX AND OSTAP_HAS_AVX2 )
   ensure_python_module_ex ( torch torch )
   if ( NOT PY_torch_FOUND ) 
     message ( "----> warning               (py)torch is NOT found!" ) 
   endif()
-
-  ensure_python_module_ex ( tensorflow tensorflow )
-  if ( NOT PY_tensorflow_FOUND ) 
-    message ( "----> warning              tensorflow is NOT found!" ) 
-  endif()
-
-  ensure_python_module_ex ( keras keras )
-  if ( NOT PY_keras_FOUND ) 
-    message ( "----> warning                   keras is NOT found!" ) 
-  endif()  
 endif() 
 
 # ========================================================================================
@@ -488,6 +490,14 @@ if ( PYTHON_VERSION VERSION_GREATER_EQUAL "3.10.0" )
   endif()
 endif()
 
+if ( PYTHON_VERSION VERSION_GREATER_EQUAL "3.10.0" )
+  if ( PY_h5py_FOUND )
+    find_python_module_version ( h5py ) 
+    message ( "----> h5py             version    : " ${PY_h5py_VERSION} " \t" ${PY_H5PY} )                                       
+  endif()
+endif()
+
+
 if ( PY_hep_ml_FOUND )
   find_python_module_version ( hep_ml ) 
   message ( "----> hep_ml           version    : " ${PY_hep_ml_VERSION} " \t" ${PY_HEP_ML} ) 
@@ -502,11 +512,6 @@ if ( PY_joblib_FOUND )
   find_python_module_version ( joblib ) 
   message ( "----> joblib           version    : " ${PY_joblib_VERSION} " \t" ${PY_JOBLIB} )            
 endif() 
-
-if ( OSTAP_HAS_AVX2 AND PY_keras_FOUND )
-  find_python_module_version ( keras ) 
-  message ( "----> keras            version    : " ${PY_keras_VERSION} " \t" ${PY_KERAS} ) 
-endif()
 
 if ( PY_lightgbm_FOUND )
   find_python_module_version ( lightgbm ) 
@@ -618,11 +623,6 @@ endif()
 if ( PY_terminaltables_FOUND )
   find_python_module_version ( terminaltables ) 
   message ( "----> terminaltables   version    : " ${PY_terminaltables_VERSION} " \t" ${PY_TERMINALTABLES} )                
-endif()
-
-if ( OSTAP_HAS_AVX2 AND PY_tensorflow_FOUND )
-  find_python_module_version ( tensorflow ) 
-  message ( "----> tensorflow       version    : " ${PY_tensorflow_VERSION} " \t" ${PY_TENSORFLOW} ) 
 endif()
 
 if ( PY_threadpoolctl_FOUND )

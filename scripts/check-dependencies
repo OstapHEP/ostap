@@ -952,7 +952,7 @@ try : # =======================================================================
 except ImportError : # ========================================================
     # =========================================================================
     message = """lightgbm cannot be imported!
-    lightgbm  is useful for comparison of datasets & Goodness-of-Fit tests
+    - lightgbm is used for Goodness-of-Fit/Two-Samples-Test and reweighting 
     """
     missing.append ( 'lightgbm' ) 
     logger.error ( message )
@@ -978,7 +978,7 @@ if True or ( 3 , 12 ) <= python_info : # ======================================
     except ImportError : # ====================================================
         # =====================================================================
         message = """ xgboost cannot be imported!
-        - xgboost  is useful for comparison of datasets & goodness-of-fit 
+        - xgboost  is used for Goodness-of-Fit/Two-Samples-Test and reweighting 
         """
         missing.append ( 'xgboost' ) 
         logger.error ( message )
@@ -1005,7 +1005,7 @@ if HAS_AVX2 : # ===============================================================
     except ImportError : # ====================================================
         # =====================================================================
         message = """ catboost cannot be imported!
-        - catboost  is useful for comparison of datasets  
+        - catboost is used for Goodness-of-Fit/Two-Samples-Test and reweighting 
         """
         ## missing.append ( 'catboost' ) 
         logger.error ( message )
@@ -1029,7 +1029,7 @@ if HAS_AVX2 : # ===============================================================
     except ImportError : # ====================================================
         # =====================================================================
         message = """ torch cannot be imported! 
-        - torch is used in GoF and dataset comparison 
+        - torch is used for Goodness-of-Fit/Two-Samples-Test and reweighting 
         """
         ## missing.append ( 'torch' ) 
         logger.error ( message ) 
@@ -1040,54 +1040,7 @@ if HAS_AVX2 : # ===============================================================
         # =====================================================================
         ## missing.append ( 'hep_ml' ) 
         logger.error   ( 'torch cannot be imported!' )
-        # =====================================================================        
-# =============================================================================
-if HAS_AVX2 : # ===============================================================
-    # =========================================================================
-    try : # ===================================================================
         # =====================================================================
-        import tensorflow
-        row = 'tensorflow' , getattr ( tensorflow , '__version__' , unknown ) , tensorflow.__file__
-        rows.append  ( row )
-        # =====================================================================
-    except ImportError : # ====================================================
-        # =====================================================================
-        message = """ tensoflow cannot be imported! 
-        - torch is used in GoF and dataset comparison 
-        """
-        logger.error ( message ) 
-        row = attention ( 'tensorflow' ) , attention ( '---' ) , ''
-        rows.append  ( row )
-        # =====================================================================
-    except : # ================================================================
-        # =====================================================================
-        ## missing.append ( 'hep_ml' ) 
-        logger.error   ( 'tensorflow cannot be imported!' )
-        # =====================================================================        
-# =============================================================================
-if HAS_AVX2 : # ===============================================================
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        import keras
-        version = getattr ( keras , '__version__' , unknown ) 
-        row = 'keras' , version , keras.__file__
-        rows.append  ( row )
-        # =====================================================================
-    except ImportError : # ====================================================
-        # =====================================================================
-        message = """ keras cannot be imported!
-        - keras  is useful for comparison of datasets  
-        """
-        ## missing.append ( 'catboost' ) 
-        logger.error ( message )
-        row = attention ( 'keras' ) , attention ( '---' ) , '' 
-        rows.append  ( row )
-        # =====================================================================
-    except : # ================================================================
-        # =====================================================================
-        ## missing.append ( 'keras' ) 
-        logger.error ( 'keras    cannot be imported!' )
         
 # =============================================================================        
 try : # =======================================================================
@@ -1099,7 +1052,7 @@ try : # =======================================================================
 except ImportError : # ========================================================
     # =========================================================================
     message = """ hep_ml cannot be imported! 
-    - hep_ml is recommended for very efficient  multidimensional reweighting
+    - hep_ml is used for multidimensional reweighting
     """
     missing.append ( 'hep_ml' ) 
     logger.error ( message ) 

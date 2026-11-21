@@ -49,7 +49,7 @@ message ( " ********************************************************************
 set(OSTAP_VERSION_MAJOR  3)
 set(OSTAP_VERSION_MINOR  8)
 set(OSTAP_VERSION_PATCH  6)
-set(OSTAP_VERSION_TWEAK 26)
+set(OSTAP_VERSION_TWEAK 27)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
@@ -198,8 +198,6 @@ check_cxx_source_runs("
         return (ptr[0] == 2) ? 0 : 1; 
     }
 " OSTAP_HAS_AVX2)
-
-
 
 # ============================================================================
 # 3. CHECK FOR AVX-512 (Foundation)

@@ -48,10 +48,9 @@ namespace Ostap
         > > {} ;
 
   // ==========================================================================
-  /** Convenience variable template for Ostap::is_container_of. */
+  /// Convenience variable template for Ostap::is_container_of. 
   template < class CONTAINER , class T >
-    inline constexpr bool is_container_of_v =
-    is_container_of < CONTAINER , T > :: value ;
+  inline constexpr bool is_container_of_v = is_container_of < CONTAINER , T > :: value ;
   // ==========================================================================
 } //                                                     End of namespace Ostap
 // ============================================================================

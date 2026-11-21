@@ -198,6 +198,7 @@
 #include "Ostap/Vector3DWithError.h"
 #include "Ostap/Vector4DTypes.h"
 #include "Ostap/Voigt.h"
+#include "Ostap/WeightedEntry.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Workspace.h"
 #include "Ostap/qMath.h"

@@ -27,7 +27,7 @@ from   ostap.logger.symbols   import plus_minus , greek_lower_sigma , likelihood
 from   ostap.stats.gof_utils  import clip_pvalue 
 from   ostap.stats.tools      import ( hasLightGBM , hasXGBoost ,
                                        hasCatBoost , hasSkLearn , 
-                                       hasPyTorch  , hasKeras   )
+                                       hasPyTorch  )
 import ostap.fitting.models   as     M 
 import ostap.stats.gofnd      as     GnD
 import ostap.logger.table     as     T 
@@ -277,18 +277,6 @@ def test_GOF () :
         test   = gof , gof , 'ADVAL:PyTorch'
         to_test.append ( test ) 
 
-    # ==========================================================================
-    if False and hasKeras() : # ================================================
-        # ======================================================================
-        from   ostap.stats.gofnd import ADVAL_Keras as GOF 
-        ## 
-        config [ 'parallel' ] = False 
-        config [ 'n_splits' ] = 2 ## ATTENTION !!
-        config [ 'nToys'    ] = 5 ## ATTENTION !! 
-        gof    = GOF ( **config )
-        test   = gof , gof , 'ADVAL:Keras'
-        to_test.append ( test ) 
-            
     # ===========================================================================
     ## -log L 
     # ===========================================================================

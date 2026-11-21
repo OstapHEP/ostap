@@ -163,7 +163,7 @@ double Ostap::Math::DensityEstimator::hopt
   if ( 2 > data.N() || 2 > data.nEff() ) { return -1 ; }
   //
   Ostap::WStatEntity cnt {} ;
-  for ( const auto v : data ) { cnt.add ( v.first , v.second ) ; } 
+  for ( const auto v : data ) { cnt.add ( v.data ()  , v.weight () ) ; } 
   //
   double value = cnt.rms() ;
   //
@@ -172,8 +172,8 @@ double Ostap::Math::DensityEstimator::hopt
       // the first * third  quartiles, well... not really... @todo FIX ME!
       const std::size_t i1 = static_cast<std::size_t> ( 0.25 * data.N () ) ;
       const std::size_t i3 = static_cast<std::size_t> ( 0.75 * data.N () ) ;
-      const double x1 = data [ i1 ].first ;
-      const double x3 = data [ i3 ].first ;
+      const double x1 = data [ i1 ].data ()  ;
+      const double x3 = data [ i3 ].data ()  ;
       if ( x1 < x3 ) { value = std::min ( value , ( x3 - x1 ) / 1.34 ) ;} 
     }
   //
@@ -290,9 +290,9 @@ double Ostap::Math::WEPDF::evaluate ( const double x ) const
   const double ih    = 1 / m_h ;
   for ( Ostap::Math::WECDF::iterator i = imin ; i < imax ; ++i )
     {
-      const double w = i->second ;
+      const double w = i->weight ()  ;
       if ( !w ) { continue ; } 
-      const double u = ih * ( x - i->first ) ;
+      const double u = ih * ( x - i->data() ) ;
       value += w * (*k) ( u ) ;
     }
   return ih * value / m_cdf.sumw ();

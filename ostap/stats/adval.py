@@ -18,7 +18,6 @@
  - see ADVAL_GBC   , class based on GradientBoostingRegressor
  - see ADVAL_RF    , class based on RandomForestRegressor 
  - see ADVAL_TORCH , class based on PyTorch (Regression)
- - see ADVAL_KERAS , class based on Keras (Regression)
 
 As t-value: based on Weighted MSE / RMSE is used.
 To estimate the p-value, permutations are used. 
@@ -35,7 +34,6 @@ __all__     = (
     'ADVAL_GBC'   , 
     'ADVAL_RF'    , 
     'ADVAL_TORCH' , 
-    'ADVAL_KERAS' , 
 )
 # =============================================================================
 from   collections            import defaultdict 
@@ -1295,144 +1293,6 @@ class ADVAL_TORCH (ADVAL_base) :
         return predictions, None
 
 
-# =============================================================================
-## @class ADVAL_KERAS (Regression)
-class ADVAL_KERAS (ADVAL_base) : 
-    def __init__ ( self             ,
-                   nToys    = 100   , **params   ) :
-
-        config =  { 'epochs'                :  50    ,
-                    'batch_size'            : 256    ,
-                    'learning_rate'         :   0.01 ,
-                    'weight_decay'          :   1e-4 , 
-                    'early_stopping_rounds' :  15    , 
-                    'dropout'               :   0.1  }
-
-        config [ 'normalize'  ] = True                  
-        ADVAL_base.__init__ ( self , nToys  = nToys , **config   ) 
-        
-    # =========================================================================
-    ## Symbol/tag associated with this estimator 
-    @classprop
-    def symbol ( self ) :
-        """`symbol`: Symbol/tag associated with this estimator
-        """
-        return U.symbol_KERAS 
-    
-    # =========================================================================
-    ## Actual method implemented by the estimator 
-    @property 
-    def method ( self ) :
-        """`method`: Actual method implemented by the estimator
-        """
-        return U.method_KERAS 
-
-    # =========================================================================
-    ## Parameters for strong regularization
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        """ Parameters for strong regularization
-        """
-        nf = n_features
-        ns = n_samples
-
-        params [ 'batch_size'            ] = max ( int ( 0.02 * ns ) , 256 )                
-        params [ 'weight_decay'          ] = 1e-3
-        params [ 'hidden_dim'            ] = 8 if 1 == nf else 16
-        params [ 'learning_rate'         ] = min ( 0.005 , params.get ( 'learning_rate' , 0.01 ) ) 
-        params [ 'early_stopping_rounds' ] = 0
-
-        return params 
-        
-    def work ( self    ,
-               X_train , Y_train , W_train ,
-               X_val   , Y_val   , W_val   , importance = False ) :
-        
-        import keras as     Keras 
-        from   keras import layers as Layers 
-
-        Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
-        Y_val_mod,   W_val_mod   = transform_weights_and_targets ( Y_val  , W_val   )
-
-        params = {}
-        params.update ( self.params )
-        
-        nf     = num_features ( X_train )
-        ns     = num_samples  ( X_train )
-        epochs = params.pop ( 'epochs' , None ) or 100
-        
-        """
-        reg_case = NN_needs_regularization ( X_train , W_train )
-        if reg_case : 
-            self.regularized [ reg_case ] += 1
-            params.update ( self.regularization ( params , nf , ns ) )
-            epochs = min ( 30 if 1 == nf else 50 , epochs )
-            self.report_regularization ( params       ,
-                                         reg_case     = reg_case ,                                                  
-                                         num_features = nf       ,
-                                         num_samples  = ns       ,
-                                         epochs       = epochs   )
-        """
-        
-        n_features   = nf 
-        hidden_dim   = params.get ( 'hidden_dim'           , 64 if 15 < n_features else 16 )
-        batch_size   = params.get ( 'batch_size'           , max ( int ( 0.02 * ns ) , 256 ) ) 
-
-        patience     = params.get ( 'early_stopping_rounds',  15   )
-        dropout_rate = params.get ( 'dropout'              ,   0.1 )
-        lr           = params.get ( 'learning_rate'        , params.get ( 'lr' , 0.01 ) )
-        weight_decay = params.get ( 'weight_decay'         , 1e-4  )
-        
-        X_tr_arr = numpy.nan_to_num ( numpy.asarray ( X_train , dtype = numpy.float32 ).reshape ( -1 , n_features ) , nan = 0.0 )
-        Y_tr_arr = numpy.asarray ( Y_train_mod , dtype = numpy.float32 ).reshape ( -1 , 1 )
-        W_tr_arr = ( numpy.ones_like ( Y_tr_arr ) if W_train_mod is None 
-                     else numpy.asarray ( W_train_mod , dtype = numpy.float32 ).reshape ( -1 , 1 ) )
-
-        X_va_arr = numpy.nan_to_num ( numpy.asarray ( X_val , dtype = numpy.float32 ).reshape ( -1 , n_features ) , nan = 0.0 )
-        Y_va_arr = numpy.asarray ( Y_val_mod , dtype = numpy.float32 ).reshape ( -1 , 1 )
-        W_va_arr = ( numpy.ones_like ( Y_va_arr ) if W_val_mod is None 
-                     else numpy.asarray ( W_val_mod , dtype = numpy.float32 ).reshape ( -1 , 1 ) )
-        
-        inputs = Keras.Input ( shape = ( n_features , ) )
-        x      = Layers.Dense ( hidden_dim , activation = 'relu' )( inputs )
-        if 0 < dropout_rate:
-            x = Layers.Dropout ( dropout_rate )( x )
-        outputs = Layers.Dense ( 1 )( x )
-
-        model = Keras.Model ( inputs = inputs , outputs = outputs )
-
-        optimizer = Keras.optimizers.AdamW ( learning_rate = lr , weight_decay = weight_decay )
-        model.compile ( optimizer        = optimizer ,
-                        loss             = Keras.losses.MeanSquaredError() ,
-                        weighted_metrics = [] )
-
-        verbose = 0 if self.silent else 1
-        
-        callbacks = []
-        if patience and 0 < patience:
-            callbacks.append (
-                Keras.callbacks.EarlyStopping ( monitor              = 'val_loss' ,
-                                                 patience             = patience  ,
-                                                 restore_best_weights = True      ,
-                                                 verbose              = verbose   )
-            )
-        
-        model.fit ( X_tr_arr        ,
-                    Y_tr_arr        ,
-                    sample_weight   = W_tr_arr.ravel() ,
-                    validation_data = ( X_va_arr , Y_va_arr , W_va_arr.ravel() ) ,
-                    epochs          = epochs             ,
-                    batch_size      = batch_size         ,
-                    callbacks       = callbacks          ,
-                    verbose         = verbose            )
-
-        predictions = model.predict ( X_va_arr , batch_size = batch_size , verbose = 0 ).ravel()
-
-        Keras.backend.clear_session()
-        
-        return predictions, None
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -1441,14 +1301,13 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
     from ostap.stats.tools import ( hasLightGBM , hasXGBoost , hasCatBoost ,
-                                    hasSkLearn  , hasPyTorch , hasKeras    )
+                                    hasSkLearn  , hasPyTorch )
     
     if not hasLightGBM ( False ) : logger.warning  ( "No LightGBM available!" ) 
     if not hasXGBoost  ( False ) : logger.warning  ( "No XGBoost  available!" ) 
     if not hasCatBoost ( False ) : logger.warning  ( "No CatBoost available!" ) 
     if not hasSkLearn  ( False ) : logger.warning  ( "No sklearn  available!" ) 
     if not hasPyTorch  ( False ) : logger.warning  ( "No PyTorch  available!" ) 
-    if not hasKeras    ( False ) : logger.warning  ( "No Keras    available!" ) 
   
 # =============================================================================
 ##                                                                      The END 

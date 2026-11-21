@@ -22,7 +22,8 @@ __all__     = (
     'LightGBMDensityReweighter'      , # LightGBM-based density reweighter
     'XGBoostDensityReweighter'       , # XGBoost-based density reweighter
     'CatBoostDensityReweighter'      , # CatBoost-based density reweighter
-    'PyTorchDensityReweighter'       , # PyTorch-based density reweighter
+    'PyTorchAdamDensityReweighter'   , # PyTorch-based density reweighter
+    'PyTorchLBFGSDensityReweighter'  , # PyTorch-based density reweighter
     'LogRegressionDensityReweighter' , # Density reweighter based on Logistic Regression
 ) 
 # =============================================================================
@@ -470,11 +471,13 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         best_iter = getattr ( model, 'best_iteration_', None ) or getattr ( model, 'best_iteration', None )        
         kwargs    = {}
         if best_iter is not None and 0 <= best_iter : kwargs [ 'ntree_end' ] = best_iter + 1
-        thread_count = self.params.get ( 'thread_count', self.params.get ( 'n_jobs', max ( 1, numcpu () // 2 ) ) )                                    
+        thread_count = self.params.get ( 'thread_count', self.params.get ( 'n_jobs', max ( 1, numcpu () // 2 ) ) ) 
         p            = model.predict_proba ( X_clean, thread_count = thread_count, **kwargs ) [ :, 1 ]
         return p.astype ( numpy.float32, copy = False )
 
 
+    
+    
 # ==========================================================================
 TORCH_OPTIMIZER_ADAM  = 'adam'
 TORCH_OPTIMIZER_LBFGS = 'lbfgs'
@@ -486,278 +489,608 @@ TORCH_LEARNING_RATE   = 1e-4
 TORCH_WEIGHT_DECAY    = 1e-5     
 TORCH_LBFGS_CHUNK     = 200_000
 TORCH_EPOCHS          = 1000    
+
 # =============================================================================
-## @class PyTorchDensityReweighter
-#  Highly optimized and stabilized PyTorch MLP density ratio reweighter.
+## @class PyTorchBaseDensityReweighter
+#  (Abstract) base class for PyTorch MLP-based density ratio reweighters.
 #
-#  Implements a single-shot density ratio estimation using PyTorch MLPs 
-#           with flexible optimizers (Adam and L-BFGS), dynamic batch sizing, and 
-#           robust GPU/CPU execution control.
-class PyTorchDensityReweighter ( DensityReweighter ) :
-    """ Highly optimized and stabilized PyTorch MLP density ratio reweighter.
+#           Implements a single-stage neural density-ratio estimator on top
+#           of @c DensityReweighter by training a Multi-Layer Perceptron
+#           (@c WeakMLP) per cross-validation fold against a direct density-ratio
+#           objective (@c DensityRatioLoss) rather than standard binary cross-
+#           entropy
+#
+#           Shared responsibilities—device resolution, batch-size calculation,
+#           network and loss construction, fold model orchestration, and
+#           batched probability inference with @c torch.inference_mode and
+#           CUDA @c torch.autocast—live in this base class, while optimizer-
+#           specific training loops are delegated to subclasses via @c _fit_model.
+# =============================================================================
+class PyTorchDensityReweighter (DensityReweighter ) :
+    """ Abstract base class for PyTorch MLP-based density ratio reweighters
+
+    Coordinates device normalization, batch size selection, ``WeakMLP`` and
+    ``DensityRatioLoss`` instantiation, fold-level training via ``_fit_model``,
+    and batched probability prediction via ``_predict_single_model``
     """
     # =========================================================================
-    ## Initialize PyTorch density reweighter with advanced optimizer choices.
-    #  @param self Instance of the class.
-    #  @param original Source feature matrix.
-    #  @param target Target feature matrix.
-    #  @param original_weight Optional source observation weights.
-    #  @param target_weight Optional target observation weights.
-    #  @param optimizer Optimizer type ('adam' or 'lbfgs', default: 'adam').
-    #  @param batch_size Training batch size or 'auto'.
-    #  @param params Additional keyword arguments.
-    def __init__ ( self                     , * ,
+    ## Initialize the PyTorch density ratio reweighter base class.
+    #
+    #           Merges caller keyword arguments with default PyTorch density
+    #           reweighting parameters, normalizes the target device to a
+    #           @c torch.device instance (CUDA GPU or CPU), computes the
+    #           effective training batch size, and invokes @c DensityReweighter.__init__
+    #           with @c progress=False so fold-level progress bars do not collide
+    #           with per-epoch bars when present
+    #
+    #  @param original Source feature matrix (N-dimensional array or dataframe)
+    #  @param target Target feature matrix (N-dimensional array or dataframe)
+    #  @param original_weight Optional source observation weights (supports signed weights)
+    #  @param target_weight Optional target observation weights (supports signed weights)
+    #  @param progress Optional progress flag retained for subclass/epoch progress control.
+    #  @param kwargs Additional keyword arguments controlling network architecture,
+    #         learning rate, regularization, logit bounds, and execution device.
+    def __init__ ( self                      , * ,
                    original                  ,
                    target                    ,
                    original_weight = None    ,
                    target_weight   = None    ,
                    progress        = True    , **kwargs ) :
-        """ Constructor with optimizer and batch size configuration.
+        """ Initialize ``PyTorchDensityReweighter`` base configuration
+
+        Resolves target ``torch.device``, determines batch size, and delegates
+        cross-validation setup and fitting to ``DensityReweighter``
         """
         import torch
-        cuda = torch.cuda.is_available () 
 
-        config = { 'hidden_layers' : TORCH_HIDDEN_LAYERS       ,
-                   'learning_rate' : TORCH_LEARNING_RATE       ,              
-                   'weight_decay'  : TORCH_WEIGHT_DECAY        ,              
-                   'batch_size'    : 'auto'                    ,
-                   'lbfgs_chunk'   : TORCH_LBFGS_CHUNK         ,
-                   'epochs'        : TORCH_EPOCHS              ,         
-                   'optimizer'     : TORCH_OPTIMIZER           ,
-                   'max_logit'     : 10                        , 
-                   'logit_reg'     : 0                         , 
-                   'device'        : None                      ,
-                   'n_jobs'        : -1                        }
-
+        config = { 'hidden_layers' : TORCH_HIDDEN_LAYERS ,
+                   'learning_rate' : TORCH_LEARNING_RATE ,
+                   'weight_decay'  : TORCH_WEIGHT_DECAY  ,
+                   'epochs'        : TORCH_EPOCHS        ,
+                   'max_logit'     : 10                  ,
+                   'logit_reg'     : 0                   ,
+                   'device'        : None                ,
+                   'n_jobs'        : -1                  ,
+                  }
+        
         config.update ( kwargs )
-        self.__progress_epochs = config.get ( 'progress', progress )
-        
-        # Automatic GPU / CPU device selection in constructor
+        self.__progress_epochs = bool ( config.get ( 'progress', progress ) )
+
+        # Normalize device specification into an explicit torch.device object
         device = config.get ( 'device', None )
-        if   device is None                      : config [ 'device' ] = torch.device ( 'cuda' if torch.cuda.is_available () else 'cpu' )
-        elif isinstance ( device, string_types )          and \
-             device.strip().lower() in ( 'gpu' , 'cuda' ) and \
-             torch.cuda_is_available ()          : config [ 'device' ] = 'cuda'
-        else                                     : config [ 'device' ] = 'cpu'
-        
+        if device is None : config [ 'device' ] = torch.device ( 'cuda' if torch.cuda.is_available () else 'cpu' )
+        elif isinstance ( device, string_types ) and device.strip ().lower () in ( 'gpu', 'cuda' ) :
+            config [ 'device' ] = torch.device ( 'cuda' if torch.cuda.is_available () else 'cpu' )
+        else :
+            config [ 'device' ] = torch.device ( device )
+
         n_rows     = num_samples  ( target ) + num_samples ( original )
         n_features = num_features ( target )
 
-        batch_size = config.get ( 'batch_size' , 'auto' ) 
-        # Validate user-provided integer batch size, use full-batch or dynamically compute (large) optimal size
-        if   isinstance ( batch_size, integer_types ) and 2 <= batch_size <= min ( n_rows , TORCH_MAX_BATCH_SIZE ) :
-            if batch_size & ( batch_size - 1 ) : batch_size = 2 ** math.floor ( math.log2 ( batch_size ) )
-        elif isinstance ( batch_size, string_types  ) and batch_size.strip().lower() == 'full' : batch_size = n_rows
-        else : batch_size = optimal_batch_size ( n_rows, n_features, TORCH_MAX_BATCH_SIZE )
-        ## 
-        config [ 'batch_size' ] = batch_size 
-            
         super ().__init__ ( original        = original        ,
                             target          = target          ,
                             original_weight = original_weight ,
                             target_weight   = target_weight   ,
                             progress        = False           , **config )
 
-        torch.set_num_threads ( 1 )
+    # =========================================================================
+    ## Return whether epoch-level progress reporting is enabled.
+    #  @return Boolean flag controlling epoch progress display in subclasses
+    @property
+    def progress_epochs ( self ) :
+        """ Return epoch-level progress bar flag
+        """
+        return self.__progress_epochs
 
     # =========================================================================
-    ## Get short symbol/tag representing the PyTorch reweighter method.
-    #  @return String identifier symbol.
+    ## Get the short symbol/tag representing the PyTorch reweighter method.
+    #  @return String identifier symbol used for logging and visual presentation
     @classprop
     def symbol ( self ) :
-        """ Short symbol/tag for reweighter.
+        """ Return short symbol/tag for PyTorch density reweighter
         """
         return U.symbol_TORCH
 
     # =========================================================================
-    ## Get method identifier name.
-    #  @return Method string tag.
+    ## @brief Get the full method identifier name.
+    #  @return Method string tag used in summaries and diagnostic logs
     @property
     def method ( self ) :
-        """ Return method identifier name. """
-        return method_TORCH 
+        """ Return method identifier name for PyTorch density reweighter
+        """
+        return method_TORCH
 
     # =========================================================================
-    ## Train a single neural network model on fold data using Adam or L-BFGS.
+    ## Build the direct density-ratio loss module (@c DensityRatioLoss).
     #
-    #  Sets up the custom density ratio loss function, configures the chosen 
-    #           optimizer, handles L-BFGS chunking or Adam mini-batch loops, and returns 
-    #           the trained PyTorch model instance.
-    #  @param self Instance of the class.
-    #  @param X_train Features matrix for training (N-1)/N.
-    #  @param y_train Binary labels for training fold (0=original, 1=target).
-    #  @param w_train Sample weights for training fold.
-    #  @return Trained PyTorch model instance.
-    def _train_single_model ( self, X_train, y_train, w_train ) :
-        """ Trains a single neural network model on fold data with flexible optimizer support.
+    #           Estimates log density ratios directly by minimizing
+    #           \f$\frac{\sum_{i \in \text{orig}} w_i \exp(\text{clip}(z_i, z_{\max}))}
+    #           {\sum_{i \in \text{orig}} |w_i|} - \frac{\sum_{j \in \text{targ}} w_j z_j}{\sum_{j \in \text{targ}} |w_j|}\f$
+    #           plus an optional quadratic logit penalty @c logit_reg * mean(z^2)
+    #           to prevent logit blow-up in low-density regions
+    #
+    #  @param max_logit Upper clamp bound applied to source logits before @c exp
+    #  @param logit_reg Weight of the quadratic logit regularization term
+    #  @return Instantiated @c torch.nn.Module computing the density-ratio loss
+    def _build_loss_module ( self             ,
+                             max_logit = 8.0  ,
+                             logit_reg = 1e-4 ) :
+        """ Construct and return the ``DensityRatioLoss`` ``torch.nn.Module``
+        
+        Minimizes expected exponential source logits minus expected target logits
+        with optional quadratic regularization on raw logits
         """
         import torch
-        import torch.nn            as nn
-        import torch.optim         as optim
-        from   ostap.tools.ireweighters import optimal_batch_size
+        import torch.nn as nn
 
-        device  = torch.device ( self.params.get ( 'device', 'cuda' if torch.cuda.is_available () else 'cpu' ) )
-        is_cuda = device.type == 'cuda'
-        
+        ## Direct density-ratio estimation loss with logit clamping and L2 penalty
+        class DensityRatioLoss ( nn.Module ) :
+            """ Direct density-ratio estimation loss with logit clamping and L2 penalty
+            """
+
+            ## Initialize clamping bound and quadratic logit regularization strength
+            def __init__ ( self, max_logit = 8.0, logit_reg = 1e-4 ) :
+                """ Initialize clamping bound and quadratic logit regularization strength
+                """
+                super ().__init__ ()
+                self.max_logit = max_logit
+                self.logit_reg = logit_reg
+
+            ## Compute weighted density-ratio loss over combined batch samples
+            def forward ( self, logits, targets, weights ) :
+                """ Compute weighted density-ratio loss over combined batch samples
+                """
+                logits  = logits.float ()
+                targets = targets.float ()
+                weights = weights.float ()
+
+                mask_orig = ( targets == 0 )
+                mask_targ = ( targets == 1 )
+
+                z_orig = logits  [ mask_orig ]
+                w_orig = weights [ mask_orig ]
+                z_targ = logits  [ mask_targ ]
+                w_targ = weights [ mask_targ ]
+
+                # Guard denominators against zero or degenerate weight subsets
+                w_orig_sum = w_orig.abs ().sum () + 1e-8
+                w_targ_sum = w_targ.abs ().sum () + 1e-8
+
+                exp_z     = torch.exp ( torch.clamp ( z_orig, max = self.max_logit ) )
+                loss_orig = torch.sum ( w_orig * exp_z ) / w_orig_sum
+                loss_targ = torch.sum ( w_targ * z_targ ) / w_targ_sum
+
+                loss = loss_orig - loss_targ
+                if 0 < self.logit_reg :
+                    loss = loss + self.logit_reg * torch.mean ( logits ** 2 )
+                return loss
+
+        return DensityRatioLoss ( max_logit = max_logit, logit_reg = logit_reg )
+
+    # =========================================================================
+    ## Build the @c WeakMLP neural network module class.
+    #
+    #           Constructs a @c torch.nn.Module comprising a @c BatchNorm1d
+    #           input normalizer, hidden @c Linear + @c LeakyReLU(0.1) blocks
+    #           initialized via Kaiming uniform initialization, and a final
+    #           @c Linear output head with @c bias=False so outputs remain centered
+    #           around zero without an unconstrained global bias term
+    #
+    #  @return Subclass of @c torch.nn.Module implementing @c WeakMLP
+    def _build_mlp_class ( self ) :
+        """ Construct and return the ``WeakMLP`` ``torch.nn.Module``
+
+        Builds an MLP with ``BatchNorm1d`` input normalization, ``LeakyReLU``
+        hidden layers, and a bias-free linear output layer
+        """
+        import torch
+        import torch.nn as nn
+
+        ## Multi-Layer Perceptron module predicting raw log density ratios
+        class WeakMLP ( nn.Module ) :
+            """ Multi-Layer Perceptron module predicting raw log density ratios
+            """
+
+            ## Initialize BatchNorm input stage, hidden layers, and output head
+            def __init__ ( self, input_dim, hidden_layers = TORCH_HIDDEN_LAYERS ) :
+                """ Initialize BatchNorm input stage, hidden layers, and output head
+                """
+                super ().__init__ ()
+
+                # Allow passing either a single layer width or an iterable/tuple of widths
+                if isinstance ( hidden_layers, integer_types ) : hidden_layers = ( hidden_layers, )
+
+                self.bn = nn.BatchNorm1d ( input_dim )
+
+                layers   = []
+                curr_dim = input_dim
+                for h_dim in hidden_layers :
+                    linear = nn.Linear ( curr_dim, h_dim )
+                    nn.init.kaiming_uniform_ ( linear.weight, a = 0.1 )
+                    nn.init.zeros_ ( linear.bias )
+
+                    layers.append ( linear )
+                    layers.append ( nn.LeakyReLU ( 0.1 ) )
+                    curr_dim = h_dim
+
+                self.hidden_net = nn.Sequential ( *layers )
+
+                # bias=False keeps the linear readout anchored without a free offset
+                self.fc_out = nn.Linear ( curr_dim, 1, bias = False )
+                nn.init.xavier_uniform_ ( self.fc_out.weight )
+
+            ## Execute forward pass and return 1D raw logit predictions
+            def forward ( self, x ) :
+                """ Execute forward pass and return 1D raw logit predictions
+                """
+                h = self.bn ( x )
+                h = self.hidden_net ( h )
+                return self.fc_out ( h ).squeeze ( -1 )
+
+        return WeakMLP
+
+    # =========================================================================
+    ## Train ``model`` on fold data using the subclass's optimizer strategy.
+    #
+    #           Hook method invoked by @c _train_single_model after contiguous
+    #           NumPy arrays and device tensors have been prepared.
+    #           Subclasses implement optimizer-specific parameter updates here
+    #
+    #  @param model Instantiated @c WeakMLP network placed on @c device
+    #  @param criterion Loss module returned by @c _build_loss_module
+    #  @param X_tr Contiguous float32 NumPy feature array of shape @c (n_samples, n_features)
+    #  @param y_tr Float32 NumPy binary label array of shape @c (n_samples,)
+    #  @param w_tr Contiguous float32 NumPy weight array of shape @c (n_samples,)
+    #  @param X_tr_t Feature tensor on @c device
+    #  @param y_tr_t Label tensor on @c device
+    #  @param w_tr_t Sample weight tensor on @c device
+    #  @param device Target @c torch.device for training
+     @abc.abstractmethod
+    def _fit_model ( self      ,
+                     model     ,
+                     criterion ,
+                     X_tr      ,
+                     y_tr      ,
+                     w_tr      ,
+                     X_tr_t    ,
+                     y_tr_t    ,
+                     w_tr_t    ,
+                     device    ) :
+        """ Optimize ``model`` on the training fold using a concrete optimizer
+        """
+        raise NotImplementedError
+
+    # =========================================================================
+    ## Train a single PyTorch density-ratio model on one CV fold.
+    #
+    #           Converts fold arrays to contiguous @c float32 tensors on the
+    #           configured device, instantiates @c WeakMLP and @c DensityRatioLoss,
+    #           delegates parameter optimization to @c _fit_model, and switches
+    #           the trained model into @c eval() mode before returning it
+    #
+    #  @param X_train Training features matrix for the current fold @c (N-1)/N
+    #  @param y_train Training binary labels (0 for original, 1 for target)
+    #  @param w_train Training sample weights or @c None
+    #  @return Trained @c WeakMLP model in evaluation mode
+     def _train_single_model ( self, X_train, y_train, w_train ) :
+        """ Train a single fold ``WeakMLP`` model using ``DensityRatioLoss``
+        """
+        import torch
+
+        device = torch.device ( self.params.get ( 'device', 'cuda' if torch.cuda.is_available () else 'cpu' ) )
+
         n_samples  = num_samples  ( X_train )
         n_features = num_features ( X_train )
-        
-        batch_size    = self.params.get ( 'batch_size'    , 256                  )
-        nepochs       = self.params.get ( 'epochs'        , TORCH_EPOCHS         )
-        max_logit     = self.params.get ( 'max_logit'     , 8.0                  )
-        logit_reg     = self.params.get ( 'logit_reg'     , 1e-4                 )
-        learning_rate = self.params.get ( 'learning_rate' , TORCH_LEARNING_RATE  )
-        hidden_layers = self.params.get ( 'hidden_layers' , TORCH_HIDDEN_LAYERS  )
-        weight_decay  = self.params.get ( 'weight_decay'  , TORCH_WEIGHT_DECAY   )
-        
-        optimizer_type = self.params.get ( 'optimizer', TORCH_OPTIMIZER ).strip().lower().replace('-', '')
-        use_LBFGS      = ( optimizer_type == 'lbfgs' )
-        lbfgs_chunk    = self.params.get ( 'lbfgs_chunk', TORCH_LBFGS_CHUNK )
+
+        max_logit     = self.params.get ( 'max_logit'    , 8.0                 )
+        logit_reg     = self.params.get ( 'logit_reg'    , 1e-4                )
+        hidden_layers = self.params.get ( 'hidden_layers', TORCH_HIDDEN_LAYERS )
 
         X_tr = numpy.ascontiguousarray ( X_train, dtype = numpy.float32 )
-        w_tr = numpy.ascontiguousarray ( w_train, dtype = numpy.float32 ) if w_train is not None else numpy.ones ( n_samples, dtype = numpy.float32 )
+        w_tr = (
+            numpy.ascontiguousarray ( w_train, dtype = numpy.float32 )
+            if w_train is not None
+            else numpy.ones ( n_samples, dtype = numpy.float32 )
+        )
         y_tr = y_train.astype ( numpy.float32 )
 
         X_tr_t = torch.from_numpy ( X_tr ).to ( device )
         y_tr_t = torch.from_numpy ( y_tr ).to ( device )
         w_tr_t = torch.from_numpy ( w_tr ).to ( device )
 
-        class DensityRatioLoss ( nn.Module ) :
-            def __init__ ( self, max_logit = 8.0, logit_reg = 1e-4 ) :
-                super ().__init__ ()
-                self.max_logit = max_logit
-                self.logit_reg = logit_reg
+        WeakMLPClass = self._build_mlp_class ()
+        model        = WeakMLPClass ( n_features, hidden_layers ).to ( device )
+        criterion    = self._build_loss_module ( max_logit = max_logit, logit_reg = logit_reg )
 
-            def forward ( self, logits, targets, weights ) :
-                logits     = logits.float ()
-                targets    = targets.float ()
-                weights    = weights.float ()
-                
-                mask_orig  = ( targets == 0 )
-                mask_targ  = ( targets == 1 )
-                
-                z_orig     = logits [ mask_orig ]
-                w_orig     = weights[ mask_orig ]
-                z_targ     = logits [ mask_targ ]
-                w_targ     = weights[ mask_targ ]
-                
-                w_orig_sum = w_orig.abs ().sum () + 1e-8
-                w_targ_sum = w_targ.abs ().sum () + 1e-8
-                
-                exp_z      = torch.exp ( torch.clamp ( z_orig, max = self.max_logit ) )
-                loss_orig  = torch.sum ( w_orig * exp_z ) / w_orig_sum
-                loss_targ  = torch.sum ( w_targ * z_targ ) / w_targ_sum
-                
-                loss       = loss_orig - loss_targ
-                if 0 < self.logit_reg : loss += self.logit_reg * torch.mean ( logits ** 2 )
-                return loss
+        self._fit_model ( model     = model     ,
+                          criterion = criterion ,
+                          X_tr      = X_tr      ,
+                          y_tr      = y_tr      ,
+                          w_tr      = w_tr      ,
+                          X_tr_t    = X_tr_t    ,
+                          y_tr_t    = y_tr_t    ,
+                          w_tr_t    = w_tr_t    ,
+                          device    = device    )
 
-        # Standard WeakMLP architecture with BatchNorm and bias=False on output
-        class WeakMLP ( nn.Module ) :
-            def __init__ ( self, input_dim, hidden_layers = ( 256, 256 ) ) :
-                super ().__init__ ()
-                if isinstance ( hidden_layers, int ) : hidden_layers = ( hidden_layers, )
-                self.bn = nn.BatchNorm1d ( input_dim )
-                layers = []
-                curr_dim = input_dim
-                for h_dim in hidden_layers :
-                    linear = nn.Linear ( curr_dim, h_dim )
-                    nn.init.kaiming_uniform_ ( linear.weight, a = 0.1 )
-                    nn.init.zeros_ ( linear.bias )
-                    layers.append ( linear )
-                    layers.append ( nn.LeakyReLU ( 0.1 ) )
-                    curr_dim = h_dim
-                self.hidden_net = nn.Sequential ( *layers )
-                self.fc_out     = nn.Linear ( curr_dim, 1, bias = False )
-                nn.init.xavier_uniform_ ( self.fc_out.weight )
-
-            def forward ( self, x ) :
-                h = self.bn ( x )
-                h = self.hidden_net ( h )
-                return self.fc_out ( h ).squeeze ( -1 )
-
-        model     = WeakMLP ( n_features, hidden_layers ).to ( device )
-        criterion = DensityRatioLoss ( max_logit = max_logit, logit_reg = logit_reg )
-
-        if use_LBFGS :
-            optimizer = optim.LBFGS ( model.parameters (), lr = learning_rate, max_iter = nepochs, line_search_fn = 'strong_wolfe' )
-            
-            if lbfgs_chunk < n_samples :
-                chunk_idx = numpy.random.choice ( n_samples, size = lbfgs_chunk, replace = False )
-                X_ch, y_ch, w_ch = X_tr [ chunk_idx ], y_tr [ chunk_idx ], w_tr [ chunk_idx ]
-            else :
-                X_ch, y_ch, w_ch = X_tr, y_tr, w_tr
-                
-            w_ch_norm = w_ch / ( numpy.sum ( w_ch ) + 1e-12 )
-            X_ch_t = torch.from_numpy ( X_ch ).to ( device )
-            y_ch_t = torch.from_numpy ( y_ch ).to ( device )
-            w_ch_t = torch.from_numpy ( w_ch_norm ).to ( device )
-
-            def closure () :
-                optimizer.zero_grad ()
-                preds = model ( X_ch_t )
-                loss  = criterion ( preds, y_ch_t, w_ch_t )
-                if 0 < weight_decay :
-                    l2_reg = sum ( torch.sum ( p ** 2 ) for p in model.parameters() )
-                    loss = loss + 0.5 * weight_decay * l2_reg
-                loss.backward ()
-                return loss
-
-            model.train ()
-            optimizer.step ( closure )
-            
-        else :
-            
-            optimizer = optim.Adam ( model.parameters (), lr = learning_rate, weight_decay = weight_decay )
-            dataset = torch.utils.data.TensorDataset ( X_tr_t, y_tr_t, w_tr_t )
-            loader  = torch.utils.data.DataLoader ( dataset, batch_size = batch_size, shuffle = True )
-
-            model.train ()
-
-            description = S.fixed_width ( train_symbol , 2 ) + S.fixed_width ( self.symbol , 2 ) + ':'        
-            the_bar     = progress_bar ( nepochs , description = description , silent = not self.progress )                                      
-            for epoch in safe_loop ( the_bar ) : 
-                for bx, by, bw in loader :
-                    optimizer.zero_grad ()
-                    preds  = model ( bx )
-                    # Pass unnormalized weights to loss, loss handles normalization sum internally
-                    loss   = criterion ( preds, by, bw )
-                    loss.backward ()
-                    optimizer.step ()  
-                    
         model.eval ()
         return model
 
     # =========================================================================
-    ## Predict probabilities using a trained PyTorch model.
-    #  @param model Trained PyTorch model instance.
-    #  @param X Features array to predict on.
-    #  @return Numpy array of predicted probabilities p(x).
-    def _predict_single_model ( self, model, X ) :
-        """ Predict probabilities using a trained PyTorch model
+    ## Predict probabilities @c p(x) using a trained fold @c WeakMLP.
+    #
+    #           Evaluates @c model in chunks under @c torch.inference_mode and
+    #           @c torch.autocast (when running on CUDA), converting raw logits
+    #           via @c torch.sigmoid into a @c float32 NumPy probability array
+    #
+    #  @param model Trained @c WeakMLP model instance
+    #  @param X Feature matrix of samples to score
+    #  @return @c float32 NumPy array of predicted probabilities @c p(x)
+     def _predict_single_model ( self, model, X ) :
+        """ Predict probabilities ``p(x)`` in batches using a trained model
         """
         import torch
-        model.eval ()
-        device    = next ( model.parameters () ).device
-        is_cuda   = device.type == 'cuda'
-        n_samples = num_samples ( X )
-        
-        batch_size = 2**17 if is_cuda else 2**16
-        batch_size = max ( 1024, 2 ** math.floor ( math.log2 ( max ( 1, min ( batch_size, n_samples ) ) ) ) )
 
-        X_clean = numpy.ascontiguousarray ( X, dtype = numpy.float32 )
-        preds   = numpy.empty ( n_samples, dtype = numpy.float32 )
+        model.eval ()
+        device     = next ( model.parameters () ).device
+        is_cuda    = device.type == 'cuda'
+        n_samples  = num_samples ( X )
+
+        max_bs     = 2 ** 17 if is_cuda else 2 ** 16
+        batch_size = max ( 1024, 2 ** math.floor ( math.log2 ( max ( 1, min ( max_bs, n_samples ) ) ) ) )
+
+        X_clean    = numpy.ascontiguousarray ( X, dtype = numpy.float32 )
+        preds      = numpy.empty ( n_samples, dtype = numpy.float32 )
 
         with torch.inference_mode () :
             for i in range ( 0, n_samples, batch_size ) :
-                chunk   = X_clean [ i : i + batch_size ]
-                b_x     = torch.from_numpy ( chunk ).to ( device )
+                chunk = X_clean [ i : i + batch_size ]
+                b_x   = torch.from_numpy ( chunk ).to ( device )
                 with torch.autocast ( device_type = device.type, enabled = is_cuda ) :
                     logits  = model ( b_x )
                     b_preds = torch.sigmoid ( logits )
                 preds [ i : i + batch_size ] = b_preds.cpu ().numpy ()
 
+        del X_clean 
         return preds.astype ( numpy.float32, copy = False )
+
+
+# =============================================================================
+## @class PyTorchAdamDensityReweighter
+#  Density ratio reweighter training @c WeakMLP fold models with @c Adam.
+#           Specializes @c PyTorchDensityReweighter to optimize each fold's
+#           @c WeakMLP network over @c epochs using mini-batch stochastic gradient
+#           descent via @c torch.optim.Adam and @c DataLoader with shuffling
+class PyTorchAdamDensityReweighter ( PyTorchDensityReweighter ) :
+    """ Density ratio reweighter training ``WeakMLP`` models with ``Adam``
+
+    Iterates over mini-batches of ``(X_tr_t, y_tr_t, w_tr_t)`` and updates
+    network parameters using ``torch.optim.Adam``
+    """
+    # =========================================================================
+    ## Initialize the PyTorch Adam density ratio reweighter.
+    #
+    #           Sets default @c Adam learning rate, weight decay, epoch count,
+    #           and batch size before delegating to @c PyTorchDensityReweighter
+    #
+    #  @param original Source feature matrix
+    #  @param target Target feature matrix
+    #  @param original_weight Optional source observation weights
+    #  @param target_weight Optional target observation weights
+    #  @param progress Optional progress flag for epoch loop display
+    #  @param kwargs Additional keyword arguments passed to the base class
+    def __init__ ( self                     , * ,
+                   original                  ,
+                   target                    ,
+                   original_weight = None    ,
+                   target_weight   = None    ,
+                   progress        = True    , **kwargs ) :
+        """ Initialize ``PyTorchAdamDensityReweighter`` with Adam defaults
+        """
+        config = {
+            'batch_size'    : 'auto' ,
+        }
+        config.update ( kwargs )
+
+        # Honor explicit integer batch sizes (rounded down to a power of two),
+        # 'full' batch mode, or fall back to Ostap's heuristic batch sizing
+        batch_size = config.get ( 'batch_size', 'auto' )
+        if isinstance ( batch_size, integer_types ) and 2 <= batch_size <= min ( n_rows, TORCH_MAX_BATCH_SIZE ) :
+            if batch_size & ( batch_size - 1 ) : batch_size = 2 ** math.floor ( math.log2 ( batch_size ) )
+        elif isinstance ( batch_size, string_types ) and batch_size.strip ().lower () == 'full' : batch_size = n_rows
+        else : batch_size = optimal_batch_size ( n_rows, n_features, TORCH_MAX_BATCH_SIZE )
+        
+        config [ 'batch_size' ] = batch_size
+
+        super ().__init__ ( original        = original        ,
+                            target          = target          ,
+                            original_weight = original_weight ,
+                            target_weight   = target_weight   ,
+                            progress        = progress        , **config )
+
+    # =========================================================================
+    ## Train a fold @c WeakMLP model using mini-batch @c Adam.
+    # 
+    #           Creates a @c TensorDataset and shuffled @c DataLoader, runs
+    #           @c epochs passes over the fold data, and applies @c optim.Adam
+    #           updates using unnormalized sample weights (which @c DensityRatioLoss
+    #           normalizes per class subset inside @c forward)
+    #
+    #  @param model @c WeakMLP instance to train in-place
+    #  @param criterion @c DensityRatioLoss instance
+    #  @param X_tr Contiguous float32 NumPy feature array (unused; tensors used)
+    #  @param y_tr Float32 NumPy binary label array (unused; tensors used)
+    #  @param w_tr Contiguous float32 NumPy weight array (unused; tensors used)
+    #  @param X_tr_t Feature tensor on @c device
+    #  @param y_tr_t Label tensor on @c device
+    #  @param w_tr_t Weight tensor on @c device
+    #  @param device Target @c torch.device
+    def _fit_model ( self      ,
+                     model     ,
+                     criterion ,
+                     X_tr      ,
+                     y_tr      ,
+                     w_tr      ,
+                     X_tr_t    ,
+                     y_tr_t    ,
+                     w_tr_t    ,
+                     device    ) :
+        """ Train a single fold model using mini-batch ``Adam``
+        """
+        import torch.optim as optim
+        from torch.utils.data import TensorDataset, DataLoader
+
+        batch_size    = self.params.get ( 'batch_size'   , 256                 )
+        nepochs       = self.params.get ( 'epochs'       , TORCH_EPOCHS        )
+        learning_rate = self.params.get ( 'learning_rate', TORCH_LEARNING_RATE )
+        weight_decay  = self.params.get ( 'weight_decay' , TORCH_WEIGHT_DECAY  )
+
+        optimizer = optim.Adam ( model.parameters () ,
+                                 lr           = learning_rate ,
+                                 weight_decay = weight_decay  )
+        
+        dataset = TensorDataset ( X_tr_t, y_tr_t, w_tr_t )
+        loader  = DataLoader    ( dataset, batch_size = batch_size, shuffle = True )
+
+        model.train ()
+
+        description = S.fixed_width ( train_symbol, 2 ) + S.fixed_width ( self.symbol, 2 ) + ':'
+        the_bar     = progress_bar ( nepochs, description = description, silent = not self.progress_epochs )
+
+        for epoch in safe_loop ( the_bar ) :
+            for bx, by, bw in loader :
+                optimizer.zero_grad ()
+                preds = model ( bx )
+                loss  = criterion ( preds, by, bw )
+                loss.backward ()
+                optimizer.step ()
+
+# =============================================================================
+## @class PyTorchLBFGSDensityReweighter
+#  Density ratio reweighter training @c WeakMLP fold models with @c L-BFGS.
+#
+#           Specializes @c PyTorchDensityReweighter to optimize each fold's
+#           @c WeakMLP network using @c torch.optim.LBFGS with strong Wolfe line
+#           search.
+#           When @c n_samples exceeds @c lbfgs_chunk, draws a
+#           random subsample of size @c lbfgs_chunk without replacement so that
+#           quasi-Newton memory and step cost stay bounded
+class PyTorchLBFGSDensityReweighter ( PyTorchDensityReweighter ) :
+    """ Density ratio reweighter training ``WeakMLP`` models with ``L-BFGS``
+
+    Optimizes each fold's ``WeakMLP`` using ``torch.optim.LBFGS`` and
+    ``strong_wolfe`` line search over the full fold or a chunk subsample
+    """
+
+    # =========================================================================
+    ## Initialize the PyTorch L-BFGS density ratio reweighter.
+    #
+    #           Sets default @c lbfgs_chunk, @c learning_rate, @c weight_decay,
+    #           and @c epochs (@c max_iter) before delegating to
+    #           @c PyTorchDensityReweighter
+    #
+    #  @param original Source feature matrix
+    #  @param target Target feature matrix
+    #  @param original_weight Optional source observation weights
+    #  @param target_weight Optional target observation weights
+    #  @param progress Optional progress flag
+    #  @param kwargs Additional keyword arguments passed to the base class
+    def __init__ ( self                     , * ,
+                   original                  ,
+                   target                    ,
+                   original_weight = None    ,
+                   target_weight   = None    ,
+                   progress        = True    , **kwargs ) :
+        """ Initialize ``PyTorchLBFGSDensityReweighter`` with L-BFGS defaults
+        """
+        config = {
+            'lbfgs_chunk'   : TORCH_LBFGS_CHUNK   ,
+        }
+        ## 
+        config.update ( kwargs )
+
+        super ().__init__ ( original        = original        ,
+                            target          = target          ,
+                            original_weight = original_weight ,
+                            target_weight   = target_weight   ,
+                            progress        = progress        , **config )
+
+    # =========================================================================
+    ## Train a fold @c WeakMLP model using @c L-BFGS with strong Wolfe search.
+    #           Prepares either the full fold tensors or a random chunk of size
+    #           @c lbfgs_chunk, normalizes chunk weights, defines the @c closure
+    #           evaluating @c criterion plus optional explicit L2 penalty, and
+    #           runs @c optimizer.step(closure)
+    #
+    #  @param model @c WeakMLP instance to train in-place
+    #  @param criterion @c DensityRatioLoss instance
+    #  @param X_tr Contiguous float32 NumPy feature array of shape @c (n_samples, n_features)
+    #  @param y_tr Float32 NumPy binary label array of shape @c (n_samples,)
+    #  @param w_tr Contiguous float32 NumPy weight array of shape @c (n_samples,)
+    #  @param X_tr_t Full-fold feature tensor on @c device
+    #  @param y_tr_t Full-fold label tensor on @c device
+    #  @param w_tr_t Full-fold weight tensor on @c device
+    #  @param device Target @c torch.device
+    def _fit_model ( self      ,
+                     model     ,
+                     criterion ,
+                     X_tr      ,
+                     y_tr      ,
+                     w_tr      ,
+                     X_tr_t    ,
+                     y_tr_t    ,
+                     w_tr_t    ,
+                     device    ) :
+        """ Train a single fold model using ``L-BFGS`` and ``strong_wolfe``
+        """
+        import torch
+        import torch.optim as optim
+
+        nepochs       = self.params.get ( 'epochs'       , TORCH_EPOCHS        )
+        learning_rate = self.params.get ( 'learning_rate', TORCH_LEARNING_RATE )
+        weight_decay  = self.params.get ( 'weight_decay' , TORCH_WEIGHT_DECAY  )
+        lbfgs_chunk   = self.params.get ( 'lbfgs_chunk'  , TORCH_LBFGS_CHUNK   )
+
+        n_samples = len ( X_tr )
+
+        # Subsample without replacement when the fold exceeds lbfgs_chunk
+        if lbfgs_chunk < n_samples :
+            chunk_idx = numpy.random.choice ( n_samples, size = lbfgs_chunk, replace = False )
+            X_ch      = X_tr [ chunk_idx ]
+            y_ch      = y_tr [ chunk_idx ]
+            w_ch      = w_tr [ chunk_idx ]
+            w_ch_norm = w_ch / ( numpy.sum ( w_ch ) + 1e-12 )
+
+            X_ch_t = torch.from_numpy ( X_ch      ).to ( device )
+            y_ch_t = torch.from_numpy ( y_ch      ).to ( device )
+            w_ch_t = torch.from_numpy ( w_ch_norm ).to ( device )
+        else :
+            X_ch_t = X_tr_t
+            y_ch_t = y_tr_t
+            w_ch_t = w_tr_t
+
+        optimizer = optim.LBFGS ( model.parameters ()      ,
+                                  lr             = learning_rate ,
+                                  max_iter       = nepochs       ,
+                                  line_search_fn = 'strong_wolfe' )
+
+        ## Zero gradients, evaluate density-ratio + L2 loss, and backpropagate
+        def closure () :
+            """ Zero gradients, evaluate density-ratio + L2 loss, and backpropagate
+            """
+            optimizer.zero_grad ()
+            preds = model ( X_ch_t )
+            loss  = criterion ( preds, y_ch_t, w_ch_t )
+            if 0 < weight_decay :
+                l2_reg = sum ( torch.sum ( p ** 2 ) for p in model.parameters () )
+                loss   = loss + 0.5 * weight_decay * l2_reg
+            loss.backward ()
+            return loss
+
+        model.train ()
+        optimizer.step ( closure )
+
+        if lbfgs_chunk < n_samples :
+            del X_ch_t, y_ch_t, w_ch_t
 
 # =============================================================================
 valid_LR_params = (
