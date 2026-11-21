@@ -20,6 +20,7 @@
 #include "Ostap/Statistic.h"
 #include "Ostap/Moments.h"
 #include "Ostap/QuantileTypes.h"
+#include "Ostap/IsContainerOf.h"
 // ============================================================================
 // Forward declarations 
 // ============================================================================
@@ -138,8 +139,15 @@ namespace Ostap
         /// sort input data 
         std::sort ( tmp.begin () , tmp.end () ) ;
         /// add sorted input 
-        return this->add_sorted ( tmp.begin() , tmp.end() ) ;
+        return this -> add_sorted ( tmp.begin() , tmp.end() ) ;
       }
+      // ======================================================================
+      /// add container of values 
+      template < class CONTAINER ,
+                 std::enable_if_t < Ostap::is_container_of_v < CONTAINER , double > , bool > = true >
+      ECDF& add
+      ( const CONTAINER& container )
+      { return this -> add ( container.begin () , container.end () ) ; }                      
       // ======================================================================
     public:
       // ======================================================================

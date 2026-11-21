@@ -242,7 +242,7 @@ class Reweighter(abc.ABC,Config) :
         
         counters = { '%s weights' % self.method : wcnt }
         
-        if not trivial_ratios :
+        if not trivial_ratios and not trivial_original :
             sumr  = numpy.sum ( ratios )
             scale = len ( ratios )
             if 0 < sumr : scale /= sumr 
@@ -252,10 +252,10 @@ class Reweighter(abc.ABC,Config) :
             counters [ '%s ratios' % self.method ] = rcnt 
 
         if not trivial_final and not trivial_original :
-            delta = final_weight - original_weight
-            dcnt  = SE() 
+            delta = final_weight - original_weight            
+            dcnt  = SE () 
             for d in delta  : dcnt.add ( d )
-            counters [ '%s delta' % self.method ] = scnt 
+            counters [ '%s delta' % self.method ] = dcnt 
                                 
         nb    = nice_print ( neff_before , precision = 2 , with_sign = False , strip = True )
         na    = nice_print ( neff_after  , precision = 2 , with_sign = False , strip = True )

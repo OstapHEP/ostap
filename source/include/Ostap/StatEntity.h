@@ -10,10 +10,13 @@
 #include <limits>
 #include <string>
 #include <iosfwd>
+#include <iterator>     // std::iterator_traits
+#include <type_traits>  // std::enable_if, std::enable_if_t, std::is_convertible, std::is_convertible_v
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Statistic.h"
+#include "Ostap/IsContainerOf.h"
 // ============================================================================
 namespace Ostap
 {
@@ -53,7 +56,7 @@ namespace Ostap
   {
   public:
     // ======================================================================
-    /// the  content type: umber of entries  
+    /// the  content type: number of entries  
     typedef unsigned long long size_type ;
     // ======================================================================
   public:
@@ -75,11 +78,11 @@ namespace Ostap
       const double    minv    ,
       const double    maxv    ) ;
     // ======================================================================
-    /// copy constructire
-    // StatEntity ( const StatEntity&   ) ;
-    /// move constructire
-    // StatEntity (       StatEntity&&  ) ;
-    // ======================================================================
+    /// copy constructor
+    StatEntity ( const StatEntity&   ) = default ;
+    /// move constructior
+    StatEntity (       StatEntity&&  ) = default ;
+    // =======================================================================
   public: // the basic accessors 
     // ======================================================================
     /// number of entries 
@@ -193,7 +196,7 @@ namespace Ostap
      *  @code
      *  StatEntity stat ;
      *  for ( int i =    ... )
-     *   {
+     *  {
      *    double eTotal = .... ;
      *    // increment the counter
      *    stat += eTotal ;
@@ -208,7 +211,7 @@ namespace Ostap
      *  @code
      *  StatEntity stat ;
      *  for ( int i =    ... )
-     *   {
+     *  {
      *     double eTotal = .... ;
      *     // increment the counter
      *     if ( eTotal > 1 * TeV ) { ++stat ; } ;
@@ -223,7 +226,7 @@ namespace Ostap
      *  @code
      *  StatEntity stat ;
      *  for ( int i =    ... )
-     *   {
+     *  {
      *    double eTotal = .... ;
      *    // increment the counter
      *    if ( eTotal > 1 * TeV ) { stat++ ; } ;
@@ -305,7 +308,7 @@ namespace Ostap
      *  @see https://arxiv.org/abs/1510.04923v1
      *  @param value (INPUT) value to be added
      *  @return self-reference 
-     *  @attention non-finite values ar eignored! 
+     *  @attention non-finite values are ignored! 
      */
     StatEntity& add    ( const double      value ) ;
     // ========================================================================
@@ -322,6 +325,36 @@ namespace Ostap
      */
     StatEntity& add    ( const StatEntity& value ) ;
     // ========================================================================
+  public :
+    // ========================================================================
+    /// add sequence of values
+    template <class ITERATOR,
+              typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+              std::enable_if_t<std::is_convertible_v<value_type, double>, bool> = true>
+    StatEntity& add
+    ( ITERATOR begin ,
+      ITERATOR end   )
+    {
+      for (; begin != end; ++begin) { add ( *begin ); }
+      return *this;
+    }
+    // ======================================================================
+    /// add container of values 
+    template < class CONTAINER ,
+               std::enable_if_t < Ostap::is_container_of_v < CONTAINER , double > , bool > = true >
+    StatEntity& add ( const CONTAINER& container )
+    {
+      for ( const auto& x : container ) { add ( x ) ; }
+      return *this ;
+    }    
+    // =======================================================================
+  public : // assignements 
+    // ========================================================================
+    /// copy-assignement 
+    StatEntity& operator= ( const StatEntity&  ) = default;
+    /// move assignement
+    StatEntity& operator= (       StatEntity&& ) = default;
+    // ========================================================================    
   public:
     // ========================================================================
     /// update counter Ostap::Math::Statistic
@@ -376,11 +409,11 @@ namespace Ostap
   inline std::string to_string ( const StatEntity& s ) { return s.toString() ; }
   // ==========================================================================
   /// swap two counters 
-  inline void swap ( StatEntity&  a , StatEntity&  b  ) { a.swap( b ) ; }
+  inline void swap ( StatEntity&  a , StatEntity&  b  ) { a.swap ( b ) ; }
   // =========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
-//                                                                      The END
-// ============================================================================
 #endif // OSTAP_STATENTITY_H
+// ============================================================================
+//                                                                      The END
 // ============================================================================

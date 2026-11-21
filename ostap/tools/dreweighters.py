@@ -81,9 +81,10 @@ THRESHOLD_NFEATURES   = 10
 ## @class LightGBMDensityReweighter
 #  Density ratio reweighter using LightGBM as the underlying classifier.
 class LightGBMDensityReweighter ( DensityReweighter ) :
-    """ Density ratio reweighter using LightGBM as the underlying classifier. """
-
-    ## @brief Initialize LightGBM density reweighter.
+    """ Density ratio reweighter using LightGBM as the underlying classifier
+    """
+    # =========================================================================
+    ## Initialize LightGBM density reweighter.
     #  @param original Features array for original sample.
     #  @param target Features array for target sample.
     #  @param original_weight Initial weights for original sample (optional).
@@ -95,7 +96,8 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
                    original_weight = None , 
                    target_weight   = None , 
                    **kwargs        ) :
-        """ Initialize LightGBM density reweighter (High Capacity Mode Defaults). """
+        """ Initialize LightGBM density reweighter (High Capacity Mode Defaults)
+        """
         config = {
             'objective'          : 'binary'                ,
             'metric'             : 'binary_logloss'        ,
@@ -132,8 +134,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         )
 
     # =========================================================================
-    ## @property symbol
-    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    ## Short symbol or tag representing the LightGBM reweighter method.
     #  @return String identifier/symbol used for logging and visual presentation.
     @classprop
     def symbol ( self ) :
@@ -148,7 +149,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         return method_LGBM 
 
     # =========================================================================
-    ## @brief Train single LightGBM model on fold data.
+    ## Train single LightGBM model on fold data.
     #  @param X_train Training features array (N-1)/N.
     #  @param y_train Training binary labels.
     #  @param w_train Training event weights or None.
@@ -185,7 +186,7 @@ class LightGBMDensityReweighter ( DensityReweighter ) :
         return model
 
     # =========================================================================
-    ## @brief Predict probabilities using a LightGBM model.
+    ## Predict probabilities using a LightGBM model.
     #  @param model Trained LightGBM booster instance.
     #  @param X Features array.
     #  @return Array of predicted probabilities.
@@ -394,23 +395,24 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
         return self.__gpu
     
     # =========================================================================
-    ## @property symbol
-    #  @brief Short symbol or tag representing the LightGBM reweighter method.
+    ## Short symbol or tag representing the LightGBM reweighter method.
     #  @return String identifier/symbol used for logging and visual presentation.
     @classprop
     def symbol ( self ) :
-        """ Short symbol/tag for reweighter. """
+        """ Short symbol/tag for reweighter
+        """
         return U.symbol_CATB
 
     # =========================================================================
     ## Return method name identifier
     @property
     def method ( self ) :
-        """ Return method name identifier. """
+        """ Return method name identifier
+        """
         return method_CATB
     
     # =========================================================================
-    ## @brief Train single CatBoost model on fold data.
+    ## Train single CatBoost model on fold data.
     #  @param X_train Training features array (N-1)/N.
     #  @param y_train Training binary labels.
     #  @param w_train Training event weights or None.
@@ -452,7 +454,7 @@ class CatBoostDensityReweighter ( DensityReweighter ) :
             if best_iter is not None : model.best_iteration = best_iter
             del model_bytes  
             
-        del trn_pool, model, X_tr, y_tr, w_tr
+        del trn_pool, X_tr, y_tr, w_tr
         
         return model
 
@@ -495,7 +497,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
     """ Highly optimized and stabilized PyTorch MLP density ratio reweighter.
     """
     # =========================================================================
-    ## @brief Initialize PyTorch density reweighter with advanced optimizer choices.
+    ## Initialize PyTorch density reweighter with advanced optimizer choices.
     #  @param self Instance of the class.
     #  @param original Source feature matrix.
     #  @param target Target feature matrix.
@@ -666,7 +668,7 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                     layers.append ( nn.LeakyReLU ( 0.1 ) )
                     curr_dim = h_dim
                 self.hidden_net = nn.Sequential ( *layers )
-                self.fc_out = nn.Linear ( curr_dim, 1, bias = False )
+                self.fc_out     = nn.Linear ( curr_dim, 1, bias = False )
                 nn.init.xavier_uniform_ ( self.fc_out.weight )
 
             def forward ( self, x ) :
@@ -727,12 +729,13 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
         return model
 
     # =========================================================================
-    ## @brief Predict probabilities using a trained PyTorch model.
+    ## Predict probabilities using a trained PyTorch model.
     #  @param model Trained PyTorch model instance.
     #  @param X Features array to predict on.
     #  @return Numpy array of predicted probabilities p(x).
     def _predict_single_model ( self, model, X ) :
-        """ Predict probabilities using a trained PyTorch model. """
+        """ Predict probabilities using a trained PyTorch model
+        """
         import torch
         model.eval ()
         device    = next ( model.parameters () ).device
@@ -755,7 +758,6 @@ class PyTorchDensityReweighter ( DensityReweighter ) :
                 preds [ i : i + batch_size ] = b_preds.cpu ().numpy ()
 
         return preds.astype ( numpy.float32, copy = False )
-
 
 # =============================================================================
 valid_LR_params = (
@@ -801,7 +803,7 @@ class LogRegressionDensityReweighter ( DensityReweighter ) :
         
         config.update ( params )
 
-        if 'polynomial' in config : config [ 'ppolynomials' ] = config.pop ( 'polynomial' )
+        if 'polynomial' in config : config [ 'polynomials' ] = config.pop ( 'polynomial' )
         
         poly       = config.get   ( 'polynomials', 2 )
         n_features = num_features ( original )

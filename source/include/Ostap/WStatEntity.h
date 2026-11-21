@@ -28,7 +28,7 @@ namespace Ostap
     /// empty constructor 
     WStatEntity () = default ;
     /// constructor from StatEntity of values 
-    WStatEntity					
+    WStatEntity                                         
     ( const StatEntity& values ) ;
     /// full constructor (used for deserialization)
     WStatEntity
@@ -37,6 +37,11 @@ namespace Ostap
       const StatEntity& values  ,   // statistics of values 
       const StatEntity& weights ,   // statistics of weights  
       const StatEntity& vtimesw ) ; // statistics of value*weight 
+    // ======================================================================
+    /// copy constructor
+    WStatEntity ( const WStatEntity&   ) = default ;
+    /// move constructior
+    WStatEntity (       WStatEntity&&  ) = default ;
     // ======================================================================
   public: // the basic getters 
     // ======================================================================
@@ -134,8 +139,15 @@ namespace Ostap
     inline bool operator>=( const WStatEntity& s ) const { return    (*this) == s || (*this) > s ; }
     inline bool operator!=( const WStatEntity& s ) const { return   !(*this  == s ) ; }
     // ======================================================================
+  public : // assignements 
+    // ======================================================================
+    /// copy-assignement 
+    WStatEntity& operator= ( const WStatEntity&  ) = default;
+    /// move assignement
+    WStatEntity& operator= (       WStatEntity&& ) = default;
+    // ======================================================================
   public: // various technical helper methods  
-    // ========================================================================
+    // ======================================================================
     /// swap two cunters
     void swap ( WStatEntity& right ) ;
     /// representation as string
@@ -228,10 +240,10 @@ namespace Ostap
   // ==========================================================================
   /// swap two counters 
   inline void swap ( WStatEntity&  a , WStatEntity&  b  ) { a.swap( b ) ; }
-  // =========================================================================
+  // ==========================================================================
 } //                                                 The end of namespace Ostap
 // ============================================================================
-// The END 
-// ============================================================================
 #endif // OSTAP_WSTATENTITY_H
+// ============================================================================
+//                                                                      The END 
 // ============================================================================

@@ -83,6 +83,7 @@
 #include "Ostap/Integrator.h"
 #include "Ostap/Interpolants.h"
 #include "Ostap/Interpolation.h"
+#include "Ostap/IsContainerOf.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Kinematics.h"
 #include "Ostap/KramersKronig.h"
