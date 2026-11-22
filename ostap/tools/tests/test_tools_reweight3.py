@@ -93,7 +93,7 @@ def prepare_data ( ) :
     """ Prepare data for test
     """
         
-    seed =  1234567890 
+    seed =  None  ## 1234567890 
     random.seed ( seed ) 
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
@@ -326,10 +326,17 @@ if active_test ( random_freq ) and hasPyTorch () :
     cconf ['nToys'] = 10 
 
     logger.info ( 'Use PyTorch       for dataset comparison' ) 
-    from ostap.stats.adval        import ADVAL_TORCH  as CMP
+    from ostap.stats.adval        import ADVAL_TORCH_ADAM  as CMP
     comparators .append ( CMP ( **cconf ) )
 
-        
+if active_test ( random_freq ) and hasPyTorch () :
+    
+    cconf ['nToys'] = 10 
+
+    logger.info ( 'Use PyTorch       for dataset comparison' ) 
+    from ostap.stats.adval        import ADVAL_TORCH_LBFGS  as CMP
+    comparators .append ( CMP ( **cconf ) )
+    
 comparators = tuple ( comparators )
 
 # ============================================================================
@@ -659,7 +666,7 @@ if active_test ( random_freq ) and hasCatBoost () :
 if active_test ( random_freq ) and hasPyTorch () :
     # =========================================================================
     logger.info ( 'Use PyTorch  for control reweighting' ) 
-    from ostap.tools.reweighters     import PyTorchDensityReweighter   as TORCH
+    from ostap.tools.reweighters     import PyTorchAdamDensityReweighter   as TORCH
     rw5 = DataReweighter ( TORCH                       , ## reweighter type 
                            original         = mctree   ,
                            target           = datatree ,
