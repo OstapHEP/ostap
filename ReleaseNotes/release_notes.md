@@ -4,7 +4,8 @@
   1. `ECDF`              - add templated method to add any `container`
   1. `Ostap/Quantiles.h` - add `quantiles` methods for arbitrary quantiles `std::vector<double>` 
   1. `ECDF/WECDF`        - add `quantiles` methods for arbitrary quantiles `std::vector<double>` 
-  
+  1. Split `ADVAL_TORCH` into `Adam` and `LBFGS`
+
 ## Bug fixes
 
 ## Backward incompatible

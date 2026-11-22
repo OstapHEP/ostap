@@ -826,20 +826,22 @@ def remove_invisible ( text ) :
 #  Includes standard wide icons (width 2) and hardcoded overrides for composite emojis.
 # =============================================================================
 exceptional_symbols = {
-    cabinet           : 2 ,
-    chain             : 2 , 
-    document          : 2 , 
-    frame             : 2 , 
-    gear              : 2 , 
-    hammer_and_wrench : 2 , 
-    label             : 2 , 
-    mountain          : 2 , 
-    oil_drum          : 2 , 
-    scissors          : 2 , 
-    tape_cartridge    : 2 ,
-    warning           : 2 , 
-    weight_lifter     : 2 ,
-    weight_scale      : 2 , 
+    cabinet           : 1 ,
+    chain             : 1 , 
+    document          : 1 , 
+    frame             : 1 , 
+    gear              : 1 , 
+    folder            : 2 , 
+    hammer_and_wrench : 1 , 
+    label             : 1 , 
+    mountain          : 1 , 
+    ##
+    oil_drum          : 1 , 
+    scissors          : 1 , 
+    tape_cartridge    : 1 , 
+    warning           : 1 , 
+    weight_lifter     : 1 ,
+    weight_scale      : 1 ,
 }
 # =============================================================================
 # Normalize keys by stripping variation selectors so they match cleaned text reliably

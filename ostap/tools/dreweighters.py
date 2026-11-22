@@ -33,6 +33,7 @@ from   ostap.stats.utils            import num_features, num_samples
 from   ostap.stats.tools            import hasSkLearn 
 from   ostap.tools.base_reweighters import DensityReweighter  
 from   ostap.stats.utils            import optimal_batch_size
+from   ostap.utils.progress_bar     import progress_bar 
 import ostap.stats.utils            as     U
 import ostap.logger.symbols         as     S
 import numpy, math, abc 
@@ -46,12 +47,15 @@ has_sklearn = hasSkLearn ()
 # =============================================================================
 ## Decorations 
 # =============================================================================
-method_LGBM    =  U.method_name ( 'LightGBM/Density' )
-method_XGB     =  U.method_name ( 'XGBoost/Density'  )
-method_CATB    =  U.method_name ( 'CatBoost/Density' )
-method_TORCH   =  U.method_name ( 'PyTorch/Density'  )
-method_LOGREG  =  U.method_name ( 'Logistic/Density' )
-train_symbol   =  S.gear if S.show and S.gear  else 'Train'
+method_LGBM        =  U.method_name ( 'LightGBM/Density' )
+method_XGB         =  U.method_name ( 'XGBoost/Density'  )
+method_CATB        =  U.method_name ( 'CatBoost/Density' )
+method_LOGREG      =  U.method_name ( 'Logistic/Density' )
+method_TORCH       =  U.method_name ( 'PyTorch/Density'  )
+method_TORCH_ADAM  =  U.method_name ( 'PyTorch/Adam/Density'  )
+method_TORCH_LBFGS =  U.method_name ( 'PyTorch/LBFGS/Density' )
+
+train_symbol       =  S.hammer_and_wrench if S.show and S.hammer_and_wrench else 'Train'
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================
@@ -890,7 +894,12 @@ class PyTorchAdamDensityReweighter ( PyTorchDensityReweighter ) :
             'batch_size'    : 'auto' ,
         }
         config.update ( kwargs )
-
+        
+        n_features = num_features ( target   ) 
+        n_target   = num_samples  ( target   ) 
+        n_original = num_samples  ( original ) 
+        n_rows     = n_target + n_original
+        
         # Honor explicit integer batch sizes (rounded down to a power of two),
         # 'full' batch mode, or fall back to Ostap's heuristic batch sizing
         batch_size = config.get ( 'batch_size', 'auto' )
@@ -906,6 +915,24 @@ class PyTorchAdamDensityReweighter ( PyTorchDensityReweighter ) :
                             original_weight = original_weight ,
                             target_weight   = target_weight   ,
                             progress        = progress        , **config )
+
+    # =========================================================================
+    ## Get the short symbol/tag representing the PyTorch reweighter method.
+    #  @return String identifier symbol used for logging and console visual display
+    @classprop
+    def symbol ( self ) :
+        """ Return short symbol/tag for PyTorch reweighter console display
+        """
+        return U.symbol_TORCH_ADAM
+
+    # =========================================================================
+    ## Get the full method identifier name.
+    #  @return Method string tag used in summaries and warnings
+    @property
+    def method ( self ) :
+        """ Return method identifier name for PyTorch iterative reweighter
+        """
+        return method_TORCH_ADAM
 
     # =========================================================================
     ## Train a fold @c WeakMLP model using mini-batch @c Adam.
@@ -1014,6 +1041,24 @@ class PyTorchLBFGSDensityReweighter ( PyTorchDensityReweighter ) :
                             target_weight   = target_weight   ,
                             progress        = progress        , **config )
 
+    # =========================================================================
+    ## Get the short symbol/tag representing the PyTorch reweighter method.
+    #  @return String identifier symbol used for logging and console visual display
+    @classprop
+    def symbol ( self ) :
+        """ Return short symbol/tag for PyTorch reweighter console display
+        """
+        return U.symbol_TORCH_LBFGS
+
+    # =========================================================================
+    ## Get the full method identifier name.
+    #  @return Method string tag used in summaries and warnings
+    @property
+    def method ( self ) :
+        """ Return method identifier name for PyTorch iterative reweighter
+        """
+        return method_TORCH_LBFGS
+    
     # =========================================================================
     ## Train a fold @c WeakMLP model using @c L-BFGS with strong Wolfe search.
     #           Prepares either the full fold tensors or a random chunk of size

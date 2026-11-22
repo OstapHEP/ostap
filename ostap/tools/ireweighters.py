@@ -48,10 +48,12 @@ logger = getLogger ( 'ostap.tools.ireweighters' )
 # =============================================================================
 ## Decorations 
 # =============================================================================
-method_LGBM     =  U.method_name ( 'LightGBM/Iterative' )
-method_XGB      =  U.method_name ( 'XGBoost/Iterative'  )
-method_CATB     =  U.method_name ( 'CatBoost/Iterative' )
-method_TORCH    =  U.method_name ( 'PyTorch/Iterative'  )
+method_LGBM        =  U.method_name ( 'LightGBM/Iterative' )
+method_XGB         =  U.method_name ( 'XGBoost/Iterative'  )
+method_CATB        =  U.method_name ( 'CatBoost/Iterative' )
+method_TORCH       =  U.method_name ( 'PyTorch/Iterative'  )
+method_TORCH_ADAM  =  U.method_name ( 'PyTorch/Adam/Iterative'  )
+method_TORCH_LBFGS =  U.method_name ( 'PyTorch/LBFGS/Iterative' )
 ##
 boosting_symbol = S.ladder if S.show and S.ladder  else 'Boosting'
 # =============================================================================
@@ -85,8 +87,6 @@ TORCH_OPTIMIZER_LBFGS = 'lbfgs'
 TORCH_OPTIMIZERS      = TORCH_OPTIMIZER_ADAM , TORCH_OPTIMIZER_LBFGS
 TORCH_OPTIMIZER       = TORCH_OPTIMIZER_LBFGS 
 TORCH_LBFGS_CHUNK     = 200_000
-TORCH_LBFGS_SYMBOL    = S.gear     
-TORCH_ADAM_SYMBOL     = S.lightning
 
 # =============================================================================
 THRESHOLD_NSAMPLES    = 50000
@@ -983,19 +983,6 @@ class PyTorchBaseIterativeReweighter ( IterativeReweighter  ) :
         return method_TORCH
 
     # =========================================================================
-    ## Get the symbol/tag representing the concrete optimizer backend.
-    #
-    #  Subclasses override this property to return the visual tag for
-    #  their optimization algorithm (e.g. L-BFGS or Adam)
-    #  @return Optimizer symbol string used in progress bar descriptions
-    @property
-    @abc.abstractmethod
-    def optimizer_symbol ( self ) :
-        """ Return optimizer symbol/tag for progress bar description
-        """
-        raise NotImplementedError
-
-    # =========================================================================
     ## Factory method generating a PyTorch Module class for weak learners.
     #  - Builds a @c WeakMLP subclass of @c torch.nn.Module that first
     #           normalizes input features via @c BatchNorm1d, passes them through
@@ -1175,8 +1162,7 @@ class PyTorchBaseIterativeReweighter ( IterativeReweighter  ) :
         neff0 = nEff ( X_orig, current_w_orig )
         description = (
             S.fixed_width ( boosting_symbol      , 2 ) +
-            S.fixed_width ( self.symbol          , 2 ) +
-            S.fixed_width ( self.optimizer_symbol, 2 ) + ' :'
+            S.fixed_width ( self.symbol          , 2 ) + ' :'
         )
 
         if   self.progress : the_bar = progress_bar ( n_estimators, full = True, description = description, silent = not self.progress )
@@ -1385,8 +1371,10 @@ class PyTorchAdamIterativeReweighter ( PyTorchBaseIterativeReweighter ) :
 
         config.update ( kwargs )
 
-        n_rows     = num_samples  ( target ) + num_samples ( original )
-        n_features = num_features ( target )
+        n_features = num_features ( target   ) 
+        n_target   = num_samples  ( target   ) 
+        n_original = num_samples  ( original ) 
+        n_rows     = n_target + n_original
 
         batch_size = config.get ( 'batch_size', 'auto' )
         
@@ -1403,13 +1391,22 @@ class PyTorchAdamIterativeReweighter ( PyTorchBaseIterativeReweighter ) :
                             target_weight   = target_weight   , **config )
 
     # =========================================================================
-    ## Get the symbol/tag representing the Adam optimizer backend.
-    #  @return Adam visual symbol used in progress bar descriptions
-    @property
-    def optimizer_symbol ( self ) :
-        """ Return visual symbol representing the ``Adam`` optimizer
+    ## Get the short symbol/tag representing the PyTorch reweighter method.
+    #  @return String identifier symbol used for logging and console visual display
+    @classprop
+    def symbol ( self ) :
+        """ Return short symbol/tag for PyTorch reweighter console display
         """
-        return TORCH_ADAM_SYMBOL
+        return U.symbol_TORCH_ADAM
+
+    # =========================================================================
+    ## Get the full method identifier name.
+    #  @return Method string tag used in summaries and warnings
+    @property
+    def method ( self ) :
+        """ Return method identifier name for PyTorch iterative reweighter
+        """
+        return method_TORCH_ADAM
 
     # =========================================================================
     ## Format epoch count when early stopping terminates before @c epochs_per_step.
@@ -1457,18 +1454,18 @@ class PyTorchAdamIterativeReweighter ( PyTorchBaseIterativeReweighter ) :
         import torch.optim as optim
         from torch.utils.data import TensorDataset, DataLoader
 
-        batch_size      = self.params.get ( 'batch_size'             , TORCH_BATCH_SIZE      )
-        lr              = self.params.get ( 'optimizer_learning_rate', 0.01                  )
-        weight_decay    = self.params.get ( 'weight_decay'           , TORCH_WEIGHT_DECAY    )
-        epochs_per_step = self.params.get ( 'epochs_per_step'        , TORCH_EPOCHS_PER_STEP )
-        min_epochs      = self.params.get ( 'min_epochs'             , 5                     )
-        min_delta       = self.params.get ( 'min_delta'              , 1e-4                  )
-        patience        = self.params.get ( 'patience'               , 5                     )
-
-        optimizer = optim.Adam ( model.parameters (),
-                               lr           = lr           ,
-                               weight_decay = weight_decay )
-
+        batch_size      = self.params.get ( 'batch_size'             , TORCH_BATCH_SIZE           )
+        lr              = self.params.get ( 'optimizer_learning_rate', 0.01                       )
+        weight_decay    = self.params.get ( 'weight_decay'           , TORCH_WEIGHT_DECAY         )
+        epochs_per_step = self.params.get ( 'epochs_per_step'        , TORCH_ADAM_EPOCHS_PER_STEP )
+        min_epochs      = self.params.get ( 'min_epochs'             , 5                          )
+        min_delta       = self.params.get ( 'min_delta'              , 1e-4                       )
+        patience        = self.params.get ( 'patience'               , 5                          )
+        
+        optimizer = optim.Adam ( model.parameters ()         ,
+                                 lr           = lr           ,
+                                 weight_decay = weight_decay )
+        
         dataset = TensorDataset ( X_comb_tensor, y_comb_tensor, weights_tensor )
         loader  = DataLoader    ( dataset, batch_size = batch_size, shuffle = True )
 
@@ -1509,13 +1506,11 @@ class PyTorchAdamIterativeReweighter ( PyTorchBaseIterativeReweighter ) :
                 else :
                     patience_counter += 1
 
-                if patience <= patience_counter :
-                    break
+                if patience <= patience_counter : break
 
         return { 'initial_loss' : 0.0 if initial_loss is None else initial_loss ,
                  'running_loss' : running_loss                                  ,
                  'nepochs'      : nepochs                                       }
-
 
 # =============================================================================
 ## @class PyTorchLBFGSIterativeReweighter
@@ -1569,14 +1564,23 @@ class PyTorchLBFGSIterativeReweighter ( PyTorchBaseIterativeReweighter ) :
                             target_weight   = target_weight   , **config )
 
     # =========================================================================
-    ## Get the symbol/tag representing the L-BFGS optimizer backend.
-    #  @return L-BFGS visual symbol used in progress bar descriptions
-    @property
-    def optimizer_symbol ( self ) :
-        """ Return visual symbol representing the ``L-BFGS`` optimizer
+    ## Get the short symbol/tag representing the PyTorch reweighter method.
+    #  @return String identifier symbol used for logging and console visual display
+    @classprop
+    def symbol ( self ) :
+        """ Return short symbol/tag for PyTorch reweighter console display
         """
-        return TORCH_LBFGS_SYMBOL
+        return U.symbol_TORCH_LBFGS
 
+    # =========================================================================
+    ## Get the full method identifier name.
+    #  @return Method string tag used in summaries and warnings
+    @property
+    def method ( self ) :
+        """ Return method identifier name for PyTorch iterative reweighter
+        """
+        return method_TORCH_LBFGS
+    
     # =========================================================================
     ## Train one @c WeakMLP weak learner using @c L-BFGS on a chunk.
     #

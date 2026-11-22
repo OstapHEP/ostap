@@ -11,13 +11,14 @@
 """ Implement adversarial validation (regression mode) to probe
     the difference between two weighted datasets (supporting negative weights via sPlot)
 
- - see ADVAL_LGBM  , class based on LightGBM
- - see ADVAL_XGB   , class based on XGBoost 
- - see ADVAL_CATB  , class based on CatBoost 
- - see ADVAL_HGBC  , class based on HistGradientBoostingRegressor
- - see ADVAL_GBC   , class based on GradientBoostingRegressor
- - see ADVAL_RF    , class based on RandomForestRegressor 
- - see ADVAL_TORCH , class based on PyTorch (Regression)
+ - see ADVAL_LGBM        , class based on LightGBM
+ - see ADVAL_XGB         , class based on XGBoost 
+ - see ADVAL_CATB        , class based on CatBoost 
+ - see ADVAL_HGBC        , class based on HistGradientBoostingRegressor
+ - see ADVAL_GBC         , class based on GradientBoostingRegressor
+ - see ADVAL_RF          , class based on RandomForestRegressor 
+ - see ADVAL_TORCH_ADAM  , class based on PyTorch (Regression)
+ - see ADVAL_TORCH_LBFGS , class based on PyTorch (Regression)
 
 As t-value: based on Weighted MSE / RMSE is used.
 To estimate the p-value, permutations are used. 
@@ -27,22 +28,24 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2026-07-04"
 __all__     = (
-    'ADVAL_LGBM'  , 
-    'ADVAL_XGB'   , 
-    'ADVAL_CATB'  , 
-    'ADVAL_HGBC'  , 
-    'ADVAL_GBC'   , 
-    'ADVAL_RF'    , 
-    'ADVAL_TORCH' , 
+    'ADVAL_LGBM'        , 
+    'ADVAL_XGB'         , 
+    'ADVAL_CATB'        , 
+    'ADVAL_HGBC'        , 
+    'ADVAL_GBC'         , 
+    'ADVAL_RF'          , 
+    'ADVAL_TORCH_ADAM'  , 
+    'ADVAL_TORCH_LBFGS' , 
 )
 # =============================================================================
 from   collections            import defaultdict 
-from   ostap.core.ostap_types import string_types
+from   ostap.core.ostap_types import string_types, sequence_types, integer_types 
 from   ostap.utils.core       import typename
 from   ostap.utils.basic      import classprop 
 from   ostap.stats.utils      import ( weight_trivial , nEff         , 
-                                       num_samples    , num_features , 
-                                       check_all      )
+                                       num_samples    , num_features ,
+                                       check_all      ,
+                                       optimal_batch_size            )
 from   ostap.utils.basic      import num_jobs, run_parallel 
 from   ostap.stats.gof_np     import GoFnp
 from   ostap.logger.pretty    import nice_print 
@@ -62,7 +65,7 @@ has_sklearn = hasSkLearn()
 from   sklearn.metrics        import mean_squared_error
 # =============================================================================
 DEFAULT_ESTIMATORS         = 500
-MAX_REGULARIZED_ESTIMATORS = 100
+DEFAULT_EARLY_STOPPING     =  50 
 MAX_DEPTH                  =   5
 # =============================================================================
 ## convert MSE to t-value 
@@ -95,15 +98,15 @@ def transform_weights_and_targets ( Y , W ) :
 class ADVAL_base (GoFnp):
     """ Base class for Adversarial Validation (regression mode) for weighted datasets
     """
-    def __init__ ( self               ,
-                   nToys      = 400   ,
-                   parallel   = True  ,
-                   normalize  = True  ,
-                   n_splits   = 5     , **params ) :
+    def __init__ ( self              ,
+                   nToys      = 400  ,
+                   parallel   = True ,
+                   normalize  = True ,
+                   n_splits   = 5    , **params ) :
 
         # =====================================================================
         if   not isinstance ( n_splits , int ) : raise TypeError ( "Invalid `n_splits` type  : %s" % typename ( n_splits ) )
-        elif n_splits < 2                      : raise TypeError ( "Invalid `n_splits` value : %d" %            n_splits   )
+        elif n_splits < 1                      : n_splits = 1 
         ## store it! 
         self.__n_splits = n_splits
         
@@ -121,15 +124,13 @@ class ADVAL_base (GoFnp):
         self.__n_splits            = n_splits 
         self.__importance_features = {}
 
-        ## how often the regularization applied?
-        self.__regularized         = defaultdict(int)
-
         GoFnp.__init__ ( self            ,
                          nToys  = nToys  , **params )                
     # =========================================================================
     @property
     def n_splits ( self ) :
-        """`n_splits`: Number of splits for cross-validation"""
+        """`n_splits`: Number of splits for cross-validation
+        """
         return self.__n_splits 
 
     # =========================================================================
@@ -139,16 +140,8 @@ class ADVAL_base (GoFnp):
         conf = {}
         conf.update ( super().config ) 
         conf [ 'n_splits'    ] = self.n_splits
-        if self.regularized  :
-            regs = {}
-            regs.update ( self.regularized )
-            conf [ 'regularized' ] = regs 
         return conf
     
-    @property 
-    def regularized ( self ) :
-        return self.__regularized 
-
     @property 
     def weights_supported ( self ) :
         return True 
@@ -196,22 +189,7 @@ class ADVAL_base (GoFnp):
                X_val   , Y_val   , W_val   , importance = False ) :
         return NotImplemented
 
-    # =========================================================================
-    ## Parameters for strong regularization
-    #  @code
-    #  params gof.regularization ( params , n_features , n_samples ) 
-    #  @endcode
-    @abc.abstractmethod 
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        
-        """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples ) 
-        """
-        return NotImplemented
-        
+    
     def tvalue ( self               ,
                  data1              ,
                  data2              ,  * , 
@@ -263,12 +241,21 @@ class ADVAL_base (GoFnp):
 
         from sklearn.model_selection import KFold
         
-        random_state = self.params.get ( 'random_state' )
-        cv           = KFold ( n_splits = self.n_splits , shuffle = True , random_state = random_state )
+        random_state = self.params.get ( 'random_state' , None )
+        
         oof_preds    = numpy.zeros ( N , dtype = numpy.float32 )
         importances  = numpy.zeros ( X.shape [ 1 ] , dtype = numpy.float32 ) if importance else None
-        
-        for fold, ( train_idx , val_idx ) in enumerate ( cv.split ( X , Y ) ) :
+
+        if 1 == self.n_splits :
+            full_idx = numpy.arange ( N , dtype = numpy.intp )
+            splits   = [ ( full_idx , full_idx ) ]
+        else :
+            from sklearn.model_selection import KFold
+            cv     = KFold ( n_splits = self.n_splits , shuffle = True , random_state = random_state )
+            splits = cv.split ( X , Y )
+            
+        for fold, ( train_idx , val_idx ) in enumerate ( splits ) :
+            
             X_train, Y_train_f = X[train_idx], Y[train_idx]
             X_val,   Y_val_f   = X[val_idx],   Y[val_idx]
             
@@ -299,50 +286,32 @@ class ADVAL_base (GoFnp):
 
         return tvalue_from_MSE ( mse_score )
 
-    # ===================================================================================
-    ## print regularized parameters in "no-silent" regime
-    def report_regularization ( self , params = {} , **kwargs ) :
-        """ print regularized paramters in "no-silent" regime
-        """
-        
-        if self.silent               : return
-        if not params and not kwargs : return
-        
-        rpars = {}
-        rpars.update ( params , **kwargs )
-        title = "%s regularized" % typename ( self )
-        from ostap.logger.utils import map2table_ex
-        logger.info ( '%s:\n%s' % ( title , map2table_ex ( rpars       , 
-                                                           header      = ( 'Parameter' , 'type' , 'value' ) ,
-                                                           alignment   = 'rcw'  , 
-                                                           prefix      = "# "   ,
-                                                           title       = title  ) ) ) 
-
 # =======================================================================================
 ## @class ADVAL_LGBM (Regression)
-class ADVAL_LGBM (ADVAL_base) : 
+class ADVAL_LGBM (ADVAL_base) :
+    
     def __init__ ( self             ,
                    nToys    = 400   , **params ) :
         
         config = {
-            'objective'         : 'regression',
-            'metric'            : 'rmse',
-            'learning_rate'     :  0.03,
-            'n_estimators'      : DEFAULT_ESTIMATORS ,
-            'max_depth'         : MAX_DEPTH ,
-            'num_leaves'        : 24    ,
-            'min_child_samples' : 50    ,
-            'subsample'         :  0.8  ,
-            'subsample_freq'    :  1    ,
-            'colsample_bytree'  :  0.8  ,
-            'reg_alpha'         :  0.1  ,
-            'reg_lambda'        :   1.0 ,
-            'force_row_wise'    :  True ,
-            'force_col_wise'    : False ,
-            'max_bin'           : 1023  , 
-            'n_jobs'            : -1    ,  
-            'verbosity'         : -1    ,
-            'verbose'           : -1    ,
+            'objective'             : 'regression'       ,
+            'metric'                : 'rmse'             ,
+            ## 
+            'n_estimators'          : DEFAULT_ESTIMATORS     ,
+            'max_depth'             : MAX_DEPTH              ,
+            'early_stopping_rounds' : DEFAULT_EARLY_STOPPING , 
+            'learning_rate'         :  0.03                  ,
+            ## 
+            'num_leaves'           : 24                 ,
+            'min_child_samples'    : 50                 ,
+            'reg_alpha'            : 0.1                ,
+            'reg_lambda'           : 1.0                ,
+            'force_row_wise'       : True               ,
+            'force_col_wise'       : False              ,
+            'max_bin'              : 1023               , 
+            'n_jobs'               : -1                 ,  
+            'verbosity'            : -1                 ,
+            'verbose'              : -1                 ,
         }
         
         config.update ( params ) 
@@ -356,12 +325,15 @@ class ADVAL_LGBM (ADVAL_base) :
 
         config [ 'force_col_wise' ] = col_wise 
         config [ 'force_row_wise' ] = row_wise
-        
+
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , DEFAULT_ESTIMATORS ) 
+        if 'iterations'      in config : config [ 'n_estimators' ] = config.pop ( 'iterations'      , DEFAULT_ESTIMATORS ) 
+        if 'max_iter'        in config : config [ 'n_estimators' ] = config.pop ( 'max_iter'        , DEFAULT_ESTIMATORS ) 
+            
         config [ 'normalize'      ] = False         
         ADVAL_base.__init__ ( self  , nToys = nToys , **config   )
         
-        if 'n_jobs' in self.params :
-            self.params [ 'num_threads' ] = self.params.pop ( 'n_jobs' , 1 )
+        if 'n_jobs' in self.params : self.params [ 'num_threads' ] = self.params.pop ( 'n_jobs' , 1 )
         if self.silent :
             self.params [ 'verbosity'   ] = -1 
             self.params [ 'verbose'     ] = -1 
@@ -382,43 +354,6 @@ class ADVAL_LGBM (ADVAL_base) :
         """
         return U.method_LGBM
 
-    # =========================================================================
-    ## Parameters for strong regularization
-    #  @code
-    #  params = gof.regularization ( params , n_features , n_samples ) 
-    #  @endcode
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        
-        """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples ) 
-        """
-        
-        # ADAPTIVE DEPTH    
-        max_depth  = min ( 6 , max ( 1 , n_features ) )
-        
-        # SAFE NUMBER OF LEAVES 
-        num_leaves = max ( 2 , int ( 2 ** ( max_depth * 0.8 ) ) ) 
-        
-        params [ 'max_depth'         ] = max_depth
-        params [ 'num_leaves'        ] = num_leaves
-        
-        # DYNAMIC LEAF MASS 
-        params [ 'min_child_samples' ] = max ( 20 , int ( n_samples * 0.001 ) )
-        params [ 'min_child_weight'  ] = 1e-3
-        
-        params [ 'colsample_bytree'  ] = 1.0
-        params [ 'subsample'         ] = 1.0
-        params [ 'reg_alpha'         ] = 0.0
-        params [ 'reg_lambda'        ] = 0.0
-        
-        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' ,  0.05 ) )
-        params [ 'max_bin'           ] = min ( 256  , params.get ( 'max_bin'       , 1024  ) )
-        
-        return params
-    
     def work ( self    ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -432,29 +367,19 @@ class ADVAL_LGBM (ADVAL_base) :
         nf =  num_features ( X_train )
         ns =  num_samples  ( X_train )
 
-        num_boost_round       = params.pop ( 'num_boost_round'       , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
-        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 50   )
+        # ====================================================================
+        ## num-boost-rounds & early stopping 
+        # ====================================================================
+        num_boost_round  = ( params.pop ( 'iterations'      , None ) or
+                             params.pop ( 'max_iter'        , None ) or
+                             params.pop ( 'num_boost_round' , None ) or
+                             params.pop ( 'n_estimators'    , None ) or DEFAULT_ESTIMATORS )         
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , DEFAULT_EARLY_STOPPING )
+        if   early_stopping_rounds is None             : early_stopping_rounds = 0 
+        elif early_stopping_rounds <= 0                : early_stopping_rounds = 0
+        elif num_boost_round <= early_stopping_rounds  : early_stopping_rounds = 0
+        
 
-        """
-        reg_case = BDT_needs_regularization ( X_train , W_train )        
-        if reg_case :
-            self.regularized [ reg_case ] += 1
-            
-            ## update parameters 
-            params.update ( self.regularization ( params , nf , ns ) )
-            
-            num_boost_round        = min ( 20 if 1 == nf else 50 , num_boost_round )
-            early_stopping_rounds  = max ( 10 , early_stopping_rounds )
-            
-            ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params                ,
-                                         reg_case              = reg_case              , 
-                                         num_features          = nf                    , 
-                                         num_samples           = ns                    , 
-                                         num_boost_round       = num_boost_round       ,
-                                         early_stopping_rounds = early_stopping_rounds )
-        """
-                
         import lightgbm as LightGBM
         callbacks = []
         if 0 < early_stopping_rounds :
@@ -479,13 +404,16 @@ class ADVAL_LGBM (ADVAL_base) :
 class ADVAL_XGB (ADVAL_base) : 
     def __init__ ( self             ,
                    nToys    = 400   , **params ) :
-
-        config = {  'objective'        : 'reg:squarederror',
-                    'eval_metric'      : 'rmse',
-                    'tree_method'      : 'hist',
-                    'learning_rate'    : 0.03  ,
-                    'n_estimators'     : DEFAULT_ESTIMATORS ,
-                    'max_depth'        : MAX_DEPTH ,
+        
+        config = {  'objective'             : 'reg:squarederror',
+                    'eval_metric'           : 'rmse',
+                    'tree_method'           : 'hist',
+                    ##
+                    'n_estimators'          : DEFAULT_ESTIMATORS     ,
+                    'max_depth'             : MAX_DEPTH              ,
+                    'early_stopping_rounds' : DEFAULT_EARLY_STOPPING , 
+                    'learning_rate'         : 0.03                   ,
+                    ## 
                     'max_leaves'       : 15    ,
                     'min_child_weight' :  1.0  ,
                     'subsample'        :  0.8  ,
@@ -494,18 +422,20 @@ class ADVAL_XGB (ADVAL_base) :
                     'lambda'           :  1.0  ,
                     'n_jobs'           : -1    ,
                     'verbosity'        :  0
-                }
+                  }
         config.update ( params ) 
-        
+
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , DEFAULT_ESTIMATORS ) 
+        if 'iterations'      in config : config [ 'n_estimators' ] = config.pop ( 'iterations'      , DEFAULT_ESTIMATORS ) 
+        if 'max_iter'        in config : config [ 'n_estimators' ] = config.pop ( 'max_iter'        , DEFAULT_ESTIMATORS ) 
+            
         config [ 'normalize'      ] = False         
         ADVAL_base.__init__ ( self , nToys = nToys , **config   ) 
-
-        if 'n_jobs' in self.params :
-            self.params [ 'nthread' ] = self.params.pop ( 'n_jobs' , 1 )
-            
+        
+        if 'n_jobs' in self.params : self.params [ 'nthread' ] = self.params.pop ( 'n_jobs' , 1 )            
         if self.silent : self.params [ 'verbosity' ] = 0
-            
-            
+
+        
     # =========================================================================
     ## Symbol/tag associated with this estimator 
     @classprop
@@ -522,33 +452,6 @@ class ADVAL_XGB (ADVAL_base) :
         """
         return U.method_XGB 
 
-    # =========================================================================
-    ## Parameters for strong regularization
-    #  @code
-    #  params = gof.regularization ( params , n_features , n_samples ) 
-    #  @endcode
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        
-        """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples ) 
-        """
-
-        max_depth = min ( 6 , max ( 1 , n_features ) )
-        params [ 'max_depth'         ] = max_depth
-        
-        params [ 'min_child_weight'  ] = 1e-3
-        
-        params [ 'colsample_bytree'  ] = 1.0
-        params [ 'subsample'         ] = 1.0
-        params [ 'alpha'             ] = 0.0
-        params [ 'lambda'            ] = 0.0
-        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
-        
-        return params
-    
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -566,34 +469,19 @@ class ADVAL_XGB (ADVAL_base) :
         
         params.update ( self.params )
 
-        num_boost_round       = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
-        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 10 )
-        
-        nf = num_features ( X_train )
-        ns = num_samples  ( X_train )
-        
-        """
-        reg_case = BDT_needs_regularization ( X_train , W_train )        
-        if reg_case :
-            self.regularized [ reg_case ] += 1
-            
-            ## update parameters 
-            params.update ( self.regularization ( params , nf , ns ) ) 
+        # ====================================================================
+        ## num-boost-rounds & early stopping 
+        # ====================================================================
+        num_boost_round  = ( params.pop ( 'iterations'      , None ) or
+                             params.pop ( 'max_iter'        , None ) or
+                             params.pop ( 'num_boost_round' , None ) or
+                             params.pop ( 'n_estimators'    , None ) or DEFAULT_ESTIMATORS )         
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , DEFAULT_EARLY_STOPPING )
+        if   early_stopping_rounds is None             : early_stopping_rounds = 0 
+        elif early_stopping_rounds <= 0                : early_stopping_rounds = 0
+        elif num_boost_round <= early_stopping_rounds  : early_stopping_rounds = 0
 
-            num_boost_round        = min ( 20 if 1 == nf else 50 , num_boost_round )
-            early_stopping_rounds  = max ( 10 , early_stopping_rounds )
-
-            ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params                ,
-                                         reg_case              = reg_case              ,                                          
-                                         num_features          = nf                    , 
-                                         num_samples           = ns                    , 
-                                         num_boost_round       = num_boost_round       ,
-                                         early_stopping_rounds = early_stopping_rounds )
-            
-        """
         
-            
         model = XGBoost.train ( params                = params,
                                 dtrain                = dtrain,
                                 num_boost_round       = num_boost_round,
@@ -623,10 +511,12 @@ class ADVAL_CATB (ADVAL_base) :
         
         config = {  'loss_function'         : 'RMSE',
                     'eval_metric'           : 'RMSE',
+                    ## 
+                    'n_estimators'          : DEFAULT_ESTIMATORS     , 
+                    'depth'                 : MAX_DEPTH              ,
+                    'early_stopping_rounds' : DEFAULT_EARLY_STOPPING ,
                     'learning_rate'         : 0.03,
-                    'n_estimators'          : DEFAULT_ESTIMATORS ,
-                    'early_stopping_rounds' :  20   ,
-                    'depth'                 :  MAX_DEPTH ,
+                    ## 
                     'min_data_in_leaf'      :  20   ,
                     'l2_leaf_reg'           :   3.0 ,
                     'subsample'             :   0.8 ,
@@ -638,8 +528,11 @@ class ADVAL_CATB (ADVAL_base) :
         if   'random_seed'  in params : pass
         elif 'random_state' in params : params [ 'random_seed' ] = params.pop ( 'random_state' , None  )
 
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , DEFAULT_ESTIMATORS ) 
+        if 'iterations'      in config : config [ 'n_estimators' ] = config.pop ( 'iterations'      , DEFAULT_ESTIMATORS ) 
+        if 'max_iter'        in config : config [ 'n_estimators' ] = config.pop ( 'max_iter'        , DEFAULT_ESTIMATORS ) 
+                    
         config.update ( params )
-        import catboost as CatBoost
 
         config [ 'normalize'      ] = False                 
         ADVAL_base.__init__ ( self,  nToys = nToys , **config   ) 
@@ -647,7 +540,7 @@ class ADVAL_CATB (ADVAL_base) :
         ## 
         if 'n_jobs' in self.params :
             self.params [ 'thread_count' ] = self.params.pop ( 'n_jobs' , 1 )
-
+            
     # =========================================================================
     ## Symbol/tag associated with this estimator 
     @classprop
@@ -664,33 +557,6 @@ class ADVAL_CATB (ADVAL_base) :
         """
         return U.method_CATB
 
-    # =========================================================================
-    ## Parameters for strong regularization
-    #  @code
-    #  params = gof.regularization ( params , n_features , n_samples ) 
-    #  @endcode
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        
-        """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples ) 
-        """
-    
-        depth = min ( 6 , max ( 1 , n_features ) )
-        params [ 'depth'             ] = depth
-        
-        # 
-        params [ 'min_data_in_leaf'  ] = max ( 20 , int ( n_samples * 0.001 ) )
-        
-        params [ 'rsm'               ] = 1.0
-        params [ 'subsample'         ] = 1.0
-        params [ 'l2_leaf_reg'       ] = 1.0
-        params [ 'learning_rate'     ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
-        
-        return params
-    
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -705,36 +571,20 @@ class ADVAL_CATB (ADVAL_base) :
 
         params = {}
         params.update ( self.params )
-        
-        iterations            = params.pop ( 'iterations' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
-        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , 10 )
-        
-        nf =  num_features ( X_train )
-        ns =  num_samples  ( X_train )
 
+        # ====================================================================
+        ## num-boost-rounds & early stopping 
+        # ====================================================================
+        num_boost_round  = ( params.pop ( 'iterations'      , None ) or
+                             params.pop ( 'max_iter'        , None ) or
+                             params.pop ( 'num_boost_round' , None ) or
+                             params.pop ( 'n_estimators'    , None ) or DEFAULT_ESTIMATORS )         
+        early_stopping_rounds = params.pop ( 'early_stopping_rounds' , DEFAULT_EARLY_STOPPING )
+        if   early_stopping_rounds is None             : early_stopping_rounds = 0 
+        elif early_stopping_rounds <= 0                : early_stopping_rounds = 0
+        elif num_boost_round <= early_stopping_rounds  : early_stopping_rounds = 0
         
-        """
-        reg_case = BDT_needs_regularization ( X_train , W_train )
-        if reg_case : 
-
-            self.regularized [ reg_case ] += 1
-            
-            ## update parameters 
-            params.update ( self.regularization ( params , nf , ns ) )
-            
-            iterations             = min ( 20 if 1 == nf else 50 , iterations )
-            
-            # --- CRITICAL FIX FOR CATBOOST: MUST BE NONE (OR > 0), NEVER 0 ---
-            early_stopping_rounds  = None
-
-            ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params                ,
-                                         reg_case              = reg_case              ,
-                                         num_features          = nf                    , 
-                                         num_samples           = ns                    , 
-                                         iterations            = iterations            ,
-                                         early_stopping_rounds = early_stopping_rounds )
-        """
+        iterations = num_boost_round
 
         params [ 'iterations'            ] = iterations
         params [ 'early_stopping_rounds' ] = early_stopping_rounds  
@@ -743,8 +593,8 @@ class ADVAL_CATB (ADVAL_base) :
         model = CatBoost.CatBoostRegressor ( **params ) 
         model.fit ( train_pool , eval_set = val_pool )
 
-        predictions = model.predict ( val_pool )
-        imps = model.get_feature_importance ( data = train_pool ) if importance else None
+        predictions = model.predict                ( val_pool )
+        imps        = model.get_feature_importance ( data = train_pool ) if importance else None
 
         return predictions, imps
 
@@ -768,12 +618,17 @@ class ADVAL_HGBC (ADVAL_base) :
 
         config.update ( params )
 
+        
         import sklearn
         from   packaging.version        import Version
         if Version ( sklearn.__version__ ) < Version ( '1.0' ) :
             if 'squared_error'               == config.get ( 'loss'   ) : config [ 'loss'    ] = 'least_squares' 
             if 'neg_root_mean_squared_error' == config.get ( 'scoring') : config [ 'scoring' ] = 'loss'  
             
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , DEFAULT_ESTIMATORS ) 
+        if 'iterations'      in config : config [ 'n_estimators' ] = config.pop ( 'iterations'      , DEFAULT_ESTIMATORS ) 
+        if 'max_iter'        in config : config [ 'n_estimators' ] = config.pop ( 'max_iter'        , DEFAULT_ESTIMATORS ) 
+        
         config [ 'normalize'  ] = False                 
         ADVAL_base.__init__ ( self , nToys = nToys , **config   ) 
 
@@ -784,6 +639,7 @@ class ADVAL_HGBC (ADVAL_base) :
     ## Symbol/tag associated with this estimator 
     @classprop
     def symbol ( self ) :
+
         """`symbol`: Symbol/tag associated with this estimator
         """
         return U.symbol_HGBC
@@ -795,36 +651,6 @@ class ADVAL_HGBC (ADVAL_base) :
         """`method`: Actual method implemented by the estimator
         """
         return U.method_HGBC
-
-    # =========================================================================
-    ## Parameters for strong regularization
-    #  @code
-    #  params = gof.regularization ( params , n_features , n_samples ) 
-    #  @endcode
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        
-        """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples ) 
-        """
-        nf = n_features
-        
-        max_depth      = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
-        max_leaf_nodes = 2 if max_depth == 1 else min ( 2 ** max_depth , params.get ( 'max_leaf_nodes' , 31 ) )
-        
-        params [ 'max_depth'            ] = max_depth
-        params [ 'max_leaf_nodes'       ] = max_leaf_nodes
-        
-        params [ 'min_samples_leaf'     ] = max ( 50 , params.get ( 'min_samples_leaf' , 20 ) )
-        
-        # --- Moderate L2 regularization to suppress sPlot noise in binning ---
-        params [ 'l2_regularization'    ] = 1.0
-        
-        params [ 'learning_rate'        ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
-
-        return params
 
 
     def work ( self ,
@@ -842,27 +668,18 @@ class ADVAL_HGBC (ADVAL_base) :
         
         params = {}
         params.update ( self.params )
-        max_iter = params.pop ( 'max_iter' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
+
+        # ====================================================================
+        ## num-boost-rounds & early stopping 
+        # ====================================================================
+        num_boost_round  = ( params.pop ( 'iterations'      , None ) or
+                             params.pop ( 'max_iter'        , None ) or
+                             params.pop ( 'num_boost_round' , None ) or
+                             params.pop ( 'n_estimators'    , None ) or DEFAULT_ESTIMATORS )         
         
-        """
-        reg_case = BDT_needs_regularization ( X_train , W_train )
-        if reg_case : 
-
-            self.regularized [ reg_case ] += 1
-            
-            ## update parameters 
-            params.update ( self.regularization ( params , nf , ns ) )
-
-            max_iter = min ( 20 if 1 == nf else 50 , max_iter )
-            
-            ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params                  ,
-                                         reg_case     = reg_case , 
-                                         num_features = nf       , 
-                                         num_samples  = ns       , 
-                                         max_iter     = max_iter )
-        """
-            
+        max_iter = num_boost_round
+        
+        
         params [ 'max_iter' ] = max_iter
 
         X_tr_c  = numpy.ascontiguousarray ( X_train     , dtype = numpy.float32 )
@@ -900,7 +717,11 @@ class ADVAL_GBC (ADVAL_base) :
         from   packaging.version        import Version
         if Version ( sklearn.__version__ ) < Version ( '1.0' ) :
             if 'squared_error' == config.get ( 'loss' ) : config [ 'loss'    ] = 'ls' 
-        
+
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , DEFAULT_ESTIMATORS ) 
+        if 'iterations'      in config : config [ 'n_estimators' ] = config.pop ( 'iterations'      , DEFAULT_ESTIMATORS ) 
+        if 'max_iter'        in config : config [ 'n_estimators' ] = config.pop ( 'max_iter'        , DEFAULT_ESTIMATORS ) 
+            
         config [ 'normalize'  ] = False                 
         ADVAL_base.__init__ ( self  , nToys = nToys , **config ) 
         
@@ -922,35 +743,6 @@ class ADVAL_GBC (ADVAL_base) :
         """
         return U.method_GBC
 
-    # =========================================================================
-    ## Parameters for strong regularization
-    #  @code
-    #  params = gof.regularization ( params , n_features , n_samples ) 
-    #  @endcode
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        
-        """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples ) 
-        """
-        nf = n_features
-        
-        max_depth = 1 if 1 == nf else min ( 2 , params.get ( 'max_depth' , 5 ) )
-        
-        params [ 'max_depth'                ] = max_depth
-        
-        params [ 'min_samples_leaf'         ] = 5
-        params [ 'min_samples_split'        ] = 10
-        
-        params [ 'subsample'                ] = 1.0
-        params [ 'ccp_alpha'                ] = 0.0
-        
-        params [ 'learning_rate'            ] = min ( 0.05 , params.get ( 'learning_rate' , 0.05 ) )
-
-        return params 
-
     def work ( self ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   , importance = False ) :
@@ -966,26 +758,17 @@ class ADVAL_GBC (ADVAL_base) :
         
         params = {}
         params.update ( self.params )
-        n_estimators = params.pop ( 'num_boost_round' , None ) or params.pop ( 'n_estimators' , None ) or DEFAULT_ESTIMATORS 
+
+        # ====================================================================
+        ## num-boost-rounds & early stopping 
+        # ====================================================================
+        num_boost_round  = ( params.pop ( 'iterations'      , None ) or
+                             params.pop ( 'max_iter'        , None ) or
+                             params.pop ( 'num_boost_round' , None ) or
+                             params.pop ( 'n_estimators'    , None ) or DEFAULT_ESTIMATORS )         
         
-        """
-        reg_case = BDT_needs_regularization ( X_train , W_train )
-        if reg_case : 
+        n_estimators = num_boost_round
 
-            self.regularized [ reg_case ] += 1
-
-            ## update parameters 
-            params.update ( self.regularization ( params , nf , ns ) )
-
-            n_estimators = min ( 20 if 1 == nf else 50 , n_estimators , DEFAULT_ESTIMATORS )
-            
-            ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params                      ,
-                                         reg_case     = reg_case     ,  
-                                         num_features = nf           , 
-                                         num_samples  = ns           ,
-                                         n_estimators = n_estimators )
-        """
                                                      
         params [ 'n_estimators' ] = n_estimators
         
@@ -1021,6 +804,10 @@ class ADVAL_RF (ADVAL_base) :
         if Version ( sklearn.__version__ ) < Version ( '1.0' ) :
             if 'squared_error' == config.get ( 'criterion' ) : config [ 'criterion' ] = 'mse' 
         
+        if 'num_boost_round' in config : config [ 'n_estimators' ] = config.pop ( 'num_boost_round' , DEFAULT_ESTIMATORS ) 
+        if 'iterations'      in config : config [ 'n_estimators' ] = config.pop ( 'iterations'      , DEFAULT_ESTIMATORS ) 
+        if 'max_iter'        in config : config [ 'n_estimators' ] = config.pop ( 'max_iter'        , DEFAULT_ESTIMATORS ) 
+
         config [ 'normalize'  ] = False                 
         ADVAL_base.__init__ ( self, nToys = nToys , **config ) 
         
@@ -1040,38 +827,6 @@ class ADVAL_RF (ADVAL_base) :
         """
         return U.method_RF
 
-    # =========================================================================
-    ## Parameters for strong regularization
-    #  @code
-    #  params = gof.regularization ( params , n_features , n_samples ) 
-    #  @endcode
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        
-        """ Parameters for strong regularization
-        >>> params = gof.regularization ( params , n_features , n_samples ) 
-        """
-        nf = n_features 
-        ns = n_samples 
-        
-        max_depth = 1 if 1 == nf else min ( 2 if nf <= 3 else 3 , params.get ( 'max_depth' , 5 ) )
-        
-        params [ 'max_depth'          ] = max_depth
-        
-        # --- Dynamic minimum samples leaf scaling with increased Asimov dataset size ---
-        params [ 'min_samples_leaf'   ] = max ( int ( 0.01 * ns ) , 100 )
-        params [ 'min_samples_split'  ] = max ( int ( 0.02 * ns ) , 200 )
-        
-        # --- Use full bootstrap samples to eliminate mean prediction bias on large Asimov datasets ---
-        params [ 'max_samples'        ] = None
-        params [ 'bootstrap'          ] = True
-        
-        # --- Disable CCP pruning; sPlot negative weights distort complexity-cost pruning ---
-        params [ 'ccp_alpha'          ] = 0.0
-
-        return params 
          
     def work ( self ,
                X_train , Y_train , W_train ,
@@ -1085,33 +840,17 @@ class ADVAL_RF (ADVAL_base) :
 
         params = {}
         params.update ( self.params )
-        n_estimators = params.pop ( 'n_estimators' , None ) or params.pop ( 'num_boost_round' , None ) or DEFAULT_ESTIMATORS 
 
-        nf =  num_features ( X_train )
-        ns =  num_samples  ( X_train )
+        # ====================================================================
+        ## num-boost-rounds & early stopping 
+        # ====================================================================
+        num_boost_round  = ( params.pop ( 'iterations'      , None ) or
+                             params.pop ( 'max_iter'        , None ) or
+                             params.pop ( 'num_boost_round' , None ) or
+                             params.pop ( 'n_estimators'    , None ) or DEFAULT_ESTIMATORS )         
         
-        
-        """
-        reg_case = BDT_needs_regularization ( X_train , W_train )
-        if reg_case : 
+        n_estimators = num_boost_round
 
-            self.regularized [ reg_case ] += 1
-
-            
-            ## update parameters 
-            params.update ( self.regularization ( params , nf , ns ) )
-            
-            n_estimators = min ( 20 if 1 == nf else 50 , n_estimators , MAX_REGULARIZED_ESTIMATORS ) 
-                                 
-            ## print regularized parameters in "no-silent" regime
-            self.report_regularization ( params                      ,
-                                         reg_case     = reg_case     ,  
-                                         num_features = nf           , 
-                                         num_samples  = ns           ,
-                                         n_estimators = n_estimators )
-
-        """
-          
         params [ 'n_estimators' ] = n_estimators
         
         with threadpool_limits ( limits = 1 ):
@@ -1124,176 +863,499 @@ class ADVAL_RF (ADVAL_base) :
         return predictions, imps
 
 # =============================================================================
-## @class ADVAL_TORCH (Regression)
-class ADVAL_TORCH (ADVAL_base) :
-    
-    def __init__ ( self             ,
-                   nToys    = 100   , **params   ) :
+TORCH_ADAM_DEFAULT_EPOCHS = 200 
+TORCH_HIDDEN_DIMS         = 16, 
+TORCH_DROPOUT             = 0.05
+TORCH_MAX_BATCH_SIZE      = 2 ** 16
 
-        config =  { 'epochs'                : 100   ,
-                    'batch_size'            : 256   ,
-                    'learning_rate'         : 1.e-3 ,
-                    'weight_decay'          : 1.e-4 ,
-                    'early_stopping_rounds' :  15   , 
-                    'dropout'               : 0.1   }
-
-        config.update ( params ) 
-
-        config [ 'normalize'  ] = True                  
-        ADVAL_base.__init__ ( self , nToys  = nToys , **config   ) 
+# =============================================================================
+## @class ADVAL_TORCH_base
+#  (Abstract) base class for PyTorch-based Adversarial Validation in regression mode.
+# 
+#           Provides shared infrastructure for evaluating distribution shifts
+#           between two weighted datasets using neural regression on binary labels
+#           (with sign-flipping target transformation for negative weights via
+#           @c transform_weights_and_targets) and weighted MSE scoring
+#           Handles device resolution, thread configuration, model construction,
+#           tensor preparation, inference, and explicit memory cleanup, while
+#           delegating optimizer-specific training to subclasses via @_fit_fold_model.
+class ADVAL_TORCH_base ( ADVAL_base ) :
+    """ Base class for PyTorch-based Adversarial Validation (regression mode).
+    """
 
     # =========================================================================
-    ## Symbol/tag associated with this estimator 
+    ## Initialize the PyTorch adversarial validation base estimator.
+    #
+    #  @param nToys Number of toy permutations used to estimate p-values
+    #  @param hidden_dim Hidden layer width (or None for heuristic sizing based on feature count).
+    #  @param dropout Dropout probability applied after hidden activation (0 disables dropout).
+    #  @param params Additional keyword arguments forwarded to @c ADVAL_base and backends.
+    def __init__ ( self        ,
+                   nToys = 100 , **params ) :
+        """ Initialize the PyTorch adversarial validation base estimator.
+        """
+        config = {
+            'learning_rate' : 1.e-2      ,
+            'weight_decay'  : 1.e-4      ,
+            'hidden_dims'   : TORCH_HIDDEN_DIMS ,
+            'dropout'       : TORCH_DROPOUT     ,
+            'n_jobs'        : 1          ,
+            'device'        : None       , ## autodetect CUDA
+        }
+        config.update ( params )    
+        ## 
+        if 'lr' in config : config  [ 'learning_rate' ] = config.pop ( 'lr' )
+        
+        import torch as Torch
+        
+        device = config .get ( 'device' , None )
+        if   device is None : device = 'cuda' if Torch.cuda.is_available () else 'cpu'
+        elif isinstance ( device, string_types ) :
+            device = device.strip().lower()
+            device = 'cuda' if 'cuda' == device and Torch.cuda.is_available () else 'cpu'
+        else : device = 'cpu'
+        
+        ## store device 
+        self.__device = device 
+        config [ 'device'    ] = self.__device 
+        
+        hidden_dims = config.pop ( 'hidden_dims' , TORCH_HIDDEN_DIMS )
+        if     isinstance   ( hidden_dims , integer_types  ) : hidden_dims = hidden_dims ,
+        if not isinstance   ( hidden_dims , sequence_types ) :
+            raise TypeError ( "Invalid `hidden dims' type: %s" % typename (  hidden_dims ) ) 
+        if not hidden_dims : 
+            raise TypeError ( "Invalid `hidden dims': %s" % str ( hidden_dims ) )
+        if not all ( isinstance ( d , integer_types ) and 1 < d for d in hidden_dims ) :            
+            raise TypeError ( "Invalid `hidden dims' type: %s" % typename (  hidden_dims ) ) 
+                
+        config [ 'hidden_dims' ] = tuple ( int ( d ) for d in hidden_dims )
+        self.__hidden_dims = hidden_dims
+
+        dropout = config.get ( 'dropout' , 0 )
+        if not 0 <= dropout < 1 : raise TypeError ( "Invalid `dropout': %s" % dropout )
+            
+        self.__dropout     = dropout   
+                
+        # Input normalization is enabled by default to stabilize neural training
+        # across observables with different scales and units
+        config [ 'normalize' ] = True
+
+        super ().__init__ ( nToys = nToys , **config )
+        
+        n_jobs = self.params.get ( 'n_jobs' , 1 )
+        Torch.set_num_threads ( n_jobs if 0 < n_jobs else 1 )
+        
+    # =========================================================================
+    ## Short symbol/tag representing the PyTorch adversarial validator.
+    #  @return String identifier symbol used for logging and display.
     @classprop
     def symbol ( self ) :
-        """`symbol`: Symbol/tag associated with this estimator
+        """ `symbol`: Short symbol/tag representing the PyTorch adversarial validator.
         """
-        return U.symbol_TORCH 
-    
+        return U.symbol_TORCH
+
     # =========================================================================
-    ## Actual method implemented by the estimator 
-    @property 
+    ## Full method identifier name for reporting and tables.
+    #  @return Method string tag.
+    @property
     def method ( self ) :
-        """`method`: Actual method implemented by the estimator
+        """ `method`: Full method identifier name for reporting and tables.
         """
         return U.method_TORCH
 
     # =========================================================================
-    ## Parameters for strong regularization
-    def regularization ( self       ,
-                         params     ,
-                         n_features , 
-                         n_samples  ) :
-        """ Parameters for strong regularization
+    ## Resolve execution device and configure PyTorch CPU thread count.
+    #  @return Normalized @c torch.device instance (CUDA if available, otherwise CPU).
+    def get_device ( self ) :
+        """ Resolve execution device and configure PyTorch CPU thread count.
         """
-        nf = n_features
-        ns = n_samples
+        import torch as Torch
+        return Torch.device ( self.__device )
+
+    # =========================================================================
+    ## Construct a feed-forward regression MLP on target device.
+    #
+    #           Builds a sequential stack of @c Linear -> @c ReLU -> (optional @c Dropout)
+    #           blocks according to @c hidden_dims, followed by a scalar output @c Linear layer.
+    #
+    #  @param n_features Number of input features.
+    #  @param device Target @c torch.device for placing model parameters.
+    #  @return Instantiated @c torch.nn.Sequential regression model on @c device.
+    def build_model ( self , n_features , device ) :
+        """ Construct a feed-forward regression MLP on target device.
+        """
+        import torch.nn as NN
+
+        hidden_dims  = self.__hidden_dims 
+        dropout_rate = self.__dropout     
+
+        layers   = []
+        in_dim   = int ( n_features )
         
-        params [ 'batch_size'            ] = max ( int ( 0.02 * ns ) , 256 )
-        params [ 'weight_decay'          ] = 1e-3
-        params [ 'hidden_dim'            ] = 8 if 1 == nf else 16
-        params [ 'learning_rate'         ] = min ( 0.005 , params.get ( 'learning_rate' , params.get ( 'lr' , 1e-3 ) ) )
-        params [ 'early_stopping_rounds' ] = 0
-        
-        return params 
+        for h_dim in hidden_dims :
+            
+            layers.append ( NN.Linear ( in_dim , h_dim ) )
+            layers.append ( NN.ReLU () )
+            if 0.0 < dropout_rate : layers.append ( NN.Dropout ( dropout_rate ) )
+            in_dim = h_dim
+
+        layers.append ( NN.Linear ( in_dim , 1 ) )
+        return NN.Sequential ( *layers ).to ( device )
     
-    def work ( self ,
-               X_train , Y_train , W_train ,
-               X_val   , Y_val   , W_val   , importance = False ) :
-        
-        import copy
-        import torch    as Torch 
-        import torch.nn as NN 
-        from   torch.utils.data import DataLoader, TensorDataset
-
-        Torch.set_num_threads ( 1 )
-
-        Y_train_mod, W_train_mod = transform_weights_and_targets ( Y_train, W_train )
-        Y_val_mod,   W_val_mod   = transform_weights_and_targets ( Y_val  , W_val   )
-
-        params = {}
-        params.update ( self.params )
-        epochs = params.pop ( 'epochs' , None ) or 100
-
-        nf = num_features ( X_train )
-        ns = num_samples  ( X_train )
-        
+    # =========================================================================
+    ## Compute sample-weighted Mean Squared Error loss.
+    #  @param preds Predicted continuous values tensor of shape (N, 1).
+    #  @param targets Target labels tensor of shape (N, 1).
+    #  @param weights Non-negative sample weights tensor of shape (N, 1).
+    #  @return Scalar weighted MSE loss tensor.
+    @staticmethod
+    def weighted_mse ( preds , targets , weights ) :
+        """ Compute sample-weighted Mean Squared Error loss.
         """
-        reg_case = NN_needs_regularization ( X_train , W_train )
-        if reg_case : 
-            self.regularized [ reg_case ] += 1
-            
-            params.update ( self.regularization ( params , nf , ns ) )
-            epochs = min ( 30 if 1 == nf else 50 , epochs ) 
-            self.report_regularization ( params       ,
-                                         reg_case     = reg_case ,         
-                                         num_features = nf       ,
-                                         num_samples  = ns       ,
-                                         epochs       = epochs   )
+        import torch.nn.functional as F
+
+        loss = F.mse_loss ( preds , targets , reduction = 'none' )
+        return ( loss * weights ).mean ()
+
+    # =========================================================================
+    ## Convert feature matrix, targets, and weights into float32 device tensors.
+    #  @param X Feature matrix (array-like or DataFrame).
+    #  @param Y Target vector/array.
+    #  @param W Optional sample weights (array-like, Series, or None).
+    #  @param device Target @c torch.device.
+    #  @param is_features If True, sanitize NaN/Inf values in feature matrix X.
+    #  @return Tuple of contiguous float32 tensors @c (x_t, y_t, w_t) on @c device.
+    @staticmethod
+    def prepare_xyw ( X , Y , W , device , is_features = False ) :
+        """ Convert feature matrix, targets, and weights into float32 device tensors.
         """
-            
-        batch_size   = params.get ( 'batch_size'            , 256  )
-        lr           = params.get ( 'learning_rate'         , params.get ( 'lr' , 1e-3 ) )
-        weight_decay = params.get ( 'weight_decay'          , 1e-4 )
-        patience     = params.get ( 'early_stopping_rounds' ,  15  )        
-        dropout_rate = params.get ( 'dropout'               , 0.1  )
-        hidden_dim   = params.get ( 'hidden_dim'            , 64 if 15 < nf else 16 )
+        import torch as Torch
 
-        n_jobs = params.get ( 'n_jobs', -1 )
-        if 0 < n_jobs : Torch.set_num_threads ( n_jobs )
-        else          : Torch.set_num_threads ( 1      )
-            
-        device = Torch.device ( 'cuda' if Torch.cuda.is_available() else 'cpu' )
+        arr_x = numpy.asarray ( X , dtype = numpy.float32 )
+        if is_features :
+            # Guard against non-finite values before transferring to PyTorch tensors
+            arr_x = numpy.nan_to_num ( arr_x , nan = 0.0 , posinf = 0.0 , neginf = 0.0 )
 
-        X_tr_arr = numpy.nan_to_num ( numpy.asarray ( X_train , dtype = numpy.float32 ), nan = 0.0 )
-        Y_tr_arr = numpy.asarray ( Y_train_mod , dtype = numpy.float32 ) . reshape ( -1 , 1 )        
-        W_tr_arr = ( numpy.ones_like ( Y_tr_arr ) if W_train_mod is None 
-                     else numpy.asarray ( W_train_mod , dtype = numpy.float32 ) . reshape  (-1 , 1 ) )
+        y_arr = numpy.asarray ( Y , dtype = numpy.float32 ).reshape ( -1 , 1 )
+        if W is None :
+            w_arr = numpy.ones_like ( y_arr )
+        else :
+            w_src = W.values if hasattr ( W , 'values' ) else W
+            w_arr = numpy.asarray ( w_src , dtype = numpy.float32 ).reshape ( -1 , 1 )
+
+        x_t = Torch.from_numpy ( numpy.ascontiguousarray ( arr_x ) ).to ( device , non_blocking = True )
+        y_t = Torch.from_numpy ( numpy.ascontiguousarray ( y_arr ) ).to ( device , non_blocking = True )
+        w_t = Torch.from_numpy ( numpy.ascontiguousarray ( w_arr ) ).to ( device , non_blocking = True )
+
+        return x_t , y_t , w_t
+
+    # =========================================================================
+    ## Fit the fold model using a concrete optimization strategy.
+    #
+    #  @param model Neural network model placed on @c device.
+    #  @param X_tr_t Training feature tensor on @c device.
+    #  @param Y_tr_t Training target tensor on @c device.
+    #  @param W_tr_t Training sample weight tensor on @c device.
+    #  @param X_va_t Validation feature tensor on @c device.
+    #  @param Y_va_t Validation target tensor on @c device.
+    #  @param W_va_t Validation sample weight tensor on @c device.
+    #  @param device Target @c torch.device.
+    @abc.abstractmethod
+    def _fit_fold_model ( self   ,
+                          model  ,
+                          X_tr_t , Y_tr_t , W_tr_t ,
+                          X_va_t , Y_va_t , W_va_t , device ) :
+        """ Fit the fold model using a concrete optimization strategy.
+        """
+        raise NotImplementedError
+
+    # =========================================================================
+    ## Train on one CV fold and return validation predictions.
+    #
+    #           Transforms signed weights into non-negative weights with flipped
+    #           targets for negative entries, trains @c model via @_fit_fold_model,
+    #           evaluates predictions on @c X_val, and explicitly frees tensors
+    #           and temporary buffers to keep memory usage low across folds and toys
+    #
+    #  @param X_train Training features for the current fold.
+    #  @param Y_train Training binary labels for the current fold.
+    #  @param W_train Training weights for the current fold (or None).
+    #  @param X_val Validation features for the current fold.
+    #  @param Y_val Validation binary labels for the current fold.
+    #  @param W_val Validation weights for the current fold (or None).
+    #  @param importance Unused flag kept for uniform @c ADVAL_base interface.
+    #  @return Tuple @c (predictions, None) with 1D validation prediction array.
+    def work ( self       ,
+               X_train    , Y_train    , W_train ,
+               X_val      , Y_val      , W_val   , importance = False ) :
+        """ Train on one CV fold and return validation predictions.
+        """
+        import torch as Torch
+
+        Y_tr_mod , W_tr_mod = transform_weights_and_targets ( Y_train , W_train )
+        Y_va_mod , W_va_mod = transform_weights_and_targets ( Y_val   , W_val   )
+
+        device     = self.get_device ()
+        n_features = num_features ( X_train )
+
+        X_tr_t , Y_tr_t , W_tr_t = self.prepare_xyw ( X_train , Y_tr_mod , W_tr_mod , device , is_features = True )
+        X_va_t , Y_va_t , W_va_t = self.prepare_xyw ( X_val   , Y_va_mod , W_va_mod , device , is_features = True )
+
+        model = self.build_model ( n_features , device )
+        self._fit_fold_model ( model  ,
+                               X_tr_t , Y_tr_t , W_tr_t ,
+                               X_va_t , Y_va_t , W_va_t , device )
+
+        model.eval ()
+        with Torch.no_grad () :
+            predictions = model ( X_va_t ).detach ().cpu ().numpy ().ravel ()
+
+        # Explicitly release fold tensors and model before next fold / toy iteration
+        del model , X_tr_t , Y_tr_t , W_tr_t , X_va_t , Y_va_t , W_va_t
+        if device.type == 'cuda' : Torch.cuda.empty_cache ()
+
+        return predictions , None
+
+# =============================================================================
+## @class ADVAL_TORCH_ADAM
+#  Adversarial validation estimator trained with mini-batch AdamW and early stopping.
+#
+#           Optimizes the regression MLP over epochs using mini-batches from the
+#           training fold and tracks validation weighted MSE to restore the best
+#           checkpoint while avoiding unnecessary GPU memory retention.
+class ADVAL_TORCH_ADAM ( ADVAL_TORCH_base ) :
+    """ Adversarial validation estimator trained with mini-batch AdamW and early stopping.
+    """
+
+    # =========================================================================
+    ## Initialize the AdamW-based adversarial validation estimator.
+    #
+    #  @param nToys Number of toy permutations used to estimate p-values
+    #  @param params Additional keyword arguments (e.g. @c epochs, @c batch_size,
+    #         @c early_stopping_rounds, @c learning_rate, @c weight_decay).
+    def __init__ ( self            ,
+                   nToys    = 100  , **params ) :
+        """ Initialize the AdamW-based adversarial validation estimator.
+        """
+        config = {
+            'epochs'                : TORCH_ADAM_DEFAULT_EPOCHS ,
+            'batch_size'            : 'auto' ,
+            'early_stopping_rounds' : 20     ,
+        }
+        config.update ( params )
+        super ().__init__ ( nToys = nToys , **config )
+
+    # =========================================================================
+    ## Short symbol/tag representing the PyTorch adversarial validator.
+    #  @return String identifier symbol used for logging and display.
+    @classprop
+    def symbol ( self ) :
+        """ `symbol`: Short symbol/tag representing the PyTorch adversarial validator.
+        """
+        return U.symbol_TORCH_ADAM
+
+    # =========================================================================
+    ## Full method identifier name for reporting and tables.
+    #  @return Method string tag.
+    @property
+    def method ( self ) :
+        """ `method`: Full method identifier name for reporting and tables.
+        """
+        return U.method_TORCH_ADAM
+
+    # =========================================================================
+    ## Fit fold model using mini-batch AdamW with validation early stopping.
+    # 
+    #           Stores best weights as detached CPU tensor clones instead of
+    #           deep-copying dictionaries on GPU, then reloads them onto @c device
+    #           at the end of training.
+    #
+    #  @param model Neural network model placed on @c device.
+    #  @param X_tr_t Training feature tensor on @c device.
+    #  @param Y_tr_t Training target tensor on @c device.
+    #  @param W_tr_t Training sample weight tensor on @c device.
+    #  @param X_va_t Validation feature tensor on @c device.
+    #  @param Y_va_t Validation target tensor on @c device.
+    #  @param W_va_t Validation sample weight tensor on @c device.
+    #  @param device Target @c torch.device.
+    def _fit_fold_model ( self   ,
+                          model  ,
+                          X_tr_t , Y_tr_t , W_tr_t ,
+                          X_va_t , Y_va_t , W_va_t , device ) :
+        """ Fit fold model using mini-batch AdamW with validation early stopping.
+        """
+        import torch as Torch
+        from torch.utils.data import DataLoader , TensorDataset
+
+        epochs       = self.params.get ( 'epochs'                , TORCH_ADAM_DEFAULT_EPOCHS ) 
+        lr           = self.params.get ( 'learning_rate'         , None   ) or self.params.get ( 'lr' , 1.e-3 ) 
+        weight_decay = self.params.get ( 'weight_decay'          , 1.e-3  ) 
+        patience     = self.params.get ( 'early_stopping_rounds' , 20     )
+
+        n_rows       = num_samples  ( X_tr_t )
+        n_features   = num_features ( X_tr_t )
         
-        X_va_arr = numpy.nan_to_num ( numpy.asarray ( X_val , dtype = numpy.float32 ), nan = 0.0 )
-        Y_va_arr = numpy.asarray ( Y_val_mod  , dtype = numpy.float32 ) . reshape ( -1 , 1 )
-        W_va_arr = ( numpy.ones_like ( Y_va_arr ) if W_val_mod is None 
-                     else numpy.asarray ( W_val_mod , dtype = numpy.float32 ) . reshape (-1 , 1 ) )
-
-        train_dataset = TensorDataset ( Torch.from_numpy ( X_tr_arr ) , 
-                                        Torch.from_numpy ( Y_tr_arr ) , 
-                                        Torch.from_numpy ( W_tr_arr ) )
-        train_loader = DataLoader ( train_dataset , batch_size = batch_size , shuffle = True )
-
-        val_x_tensor = Torch.from_numpy ( X_va_arr ).to ( device )
-        val_y_tensor = Torch.from_numpy ( Y_va_arr ).to ( device )
-        val_w_tensor = Torch.from_numpy ( W_va_arr ).to ( device )
-
-        model = NN.Sequential ( NN.Linear ( nf , hidden_dim ) ,
-                                NN.ReLU   ()                   ,
-                                NN.Dropout( dropout_rate )     ,
-                                NN.Linear ( hidden_dim , 1 )   ).to ( device )
-            
-        optimizer = Torch.optim.AdamW ( model.parameters() , lr = lr , weight_decay = weight_decay )
+        batch_size   = self.params.get ( 'batch_size'            , 'auto' )
         
-        def compute_weighted_mse ( preds , targets , weights ):
-            loss = NN.functional.mse_loss ( preds , targets , reduction = 'none' )
-            return ( loss * weights ).mean()
+        if isinstance ( batch_size, integer_types ) and 2 <= batch_size <= min ( n_rows, TORCH_MAX_BATCH_SIZE ) :
+            if batch_size & ( batch_size - 1 ) : batch_size = 2 ** math.floor ( math.log2 ( batch_size ) )
+        elif isinstance ( batch_size, string_types ) and batch_size.strip ().lower () == 'full' : batch_size = n_rows
+        else : batch_size = optimal_batch_size ( n_rows, n_features, TORCH_MAX_BATCH_SIZE )
 
-        best_val_loss      = float('inf')
-        best_model_weights = None
-        patience_counter   = 0
 
-        for epoch in range ( epochs ) :
-            model.train()
-            for bx, by, bw in train_loader:
-                bx, by, bw = bx.to ( device ) , by.to ( device ) , bw.to ( device )
-                optimizer.zero_grad()
-                preds = model(bx)
-                loss   = compute_weighted_mse(preds, by, bw)
-                loss.backward()
-                optimizer.step()
+        loader    = DataLoader ( TensorDataset ( X_tr_t , Y_tr_t , W_tr_t ) ,
+                                 batch_size = batch_size , shuffle = True )
+        optimizer = Torch.optim.AdamW ( model.parameters () ,
+                                        lr           = lr     ,
+                                        weight_decay = weight_decay )
+        
+        best_val_loss    = float ( 'inf' )
+        best_cpu_state   = None
+        patience_counter = 0
 
-            model.eval()
-            with Torch.no_grad():
-                val_preds = model ( val_x_tensor )
-                val_loss   = compute_weighted_mse ( val_preds , val_y_tensor, val_w_tensor).item()
+        for _ in range ( epochs ) :
+            
+            model.train ()
+            for bx , by , bw in loader :
+                # set_to_none=True avoids zero-filling gradient buffers every step
+                optimizer.zero_grad ( set_to_none = True )
+                loss = self.weighted_mse ( model ( bx ) , by , bw )
+                loss.backward ()
+                optimizer.step ()
 
-            if val_loss < best_val_loss:
-                best_val_loss      = val_loss
-                best_model_weights = copy.deepcopy ( model.state_dict() )
-                patience_counter   = 0
-            else:
+            model.eval ()
+            with Torch.no_grad () :
+                val_loss = float ( self.weighted_mse ( model ( X_va_t ) , Y_va_t , W_va_t ).item () )
+
+            if val_loss < best_val_loss :
+                best_val_loss    = val_loss
+                # Keep best checkpoint on CPU to save device memory and avoid deepcopy overhead
+                best_cpu_state   = { k : v.detach ().cpu ().clone () for k , v in model.state_dict ().items () }
+                patience_counter = 0
+            else :
                 patience_counter += 1
-                if patience and patience_counter >= patience:
+                if 0 < patience and patience <= patience_counter :
                     break
 
-        if best_model_weights is not None:
-            model.load_state_dict ( best_model_weights )
+        if best_cpu_state is not None :
+            model.load_state_dict ( { k : v.to ( device ) for k , v in best_cpu_state.items () } )
+            del best_cpu_state
 
-        model.eval()
-        with Torch.no_grad():
-            predictions = model ( val_x_tensor ) .cpu().numpy().ravel()
+# =============================================================================
+## @class ADVAL_TORCH_LBFGS
+#  Adversarial validation estimator trained with quasi-Newton L-BFGS.
+#
+#           Optimizes the regression MLP using @c torch.optim.LBFGS with strong
+#           Wolfe line search over the full training fold by default to preserve
+#           sensitivity to subtle or localized differences. Optional random chunk
+#           subsampling (@c lbfgs_chunk) can be enabled explicitly when a fold
+#           is very large and speed/memory outweigh maximum tail sensitivity.
+class ADVAL_TORCH_LBFGS ( ADVAL_TORCH_base ) :
+    """ Adversarial validation estimator trained with quasi-Newton L-BFGS.
+    """
 
-        return predictions, None
+    # =========================================================================
+    ## Initialize the L-BFGS-based adversarial validation estimator.
+    # 
+    #  @param nToys Number of toy permutations used to estimate p-values
+    #  @param params Additional keyword arguments (e.g. @c max_iter, @c lbfgs_chunk,
+    #         @c learning_rate, @c weight_decay).
+    def __init__ ( self            ,
+                   nToys    = 100  , **params ) :
+        """ Initialize the L-BFGS-based adversarial validation estimator.
+        """
+        config = {
+            'max_iter'    : 50   ,
+            'lbfgs_chunk' : None ,
+            'dropout'     : 0    ,  
+        }
+        
+        config.update ( params )
+        
+        if 'epochs' in config : config  [ 'max_iter' ] = config.pop ( 'epochs' , 25 )
+        
+        super ().__init__ ( nToys = nToys , **config )
 
+    # =========================================================================
+    ## Short symbol/tag representing the PyTorch adversarial validator.
+    #  @return String identifier symbol used for logging and display.
+    @classprop
+    def symbol ( self ) :
+        """ `symbol`: Short symbol/tag representing the PyTorch adversarial validator.
+        """
+        return U.symbol_TORCH_LBFGS
 
-    
+    # =========================================================================
+    ## Full method identifier name for reporting and tables.
+    #  @return Method string tag.
+    @property
+    def method ( self ) :
+        """ `method`: Full method identifier name for reporting and tables.
+        """
+        return U.method_TORCH_LBFGS
+
+    # =========================================================================
+    ## Fit fold model using L-BFGS on the full fold or an explicit chunk.
+    #
+    #           Uses the entire training fold by default so subtle distribution
+    #           shifts are not diluted by subsampling; if @c lbfgs_chunk is set
+    #           to a positive integer smaller than the fold size, draws a random
+    #           subset without replacement.
+    #
+    #  @param model Neural network model placed on @c device.
+    #  @param X_tr_t Training feature tensor on @c device.
+    #  @param Y_tr_t Training target tensor on @c device.
+    #  @param W_tr_t Training sample weight tensor on @c device.
+    #  @param X_va_t Validation feature tensor (unused directly in L-BFGS step).
+    #  @param Y_va_t Validation target tensor (unused directly in L-BFGS step).
+    #  @param W_va_t Validation sample weight tensor (unused directly in L-BFGS step).
+    #  @param device Target @c torch.device.
+    def _fit_fold_model ( self   ,
+                          model  ,
+                          X_tr_t , Y_tr_t , W_tr_t ,
+                          X_va_t , Y_va_t , W_va_t , device ) :
+        """ Fit fold model using L-BFGS on the full fold or an explicit chunk.
+        """
+        import torch as Torch
+        ## 
+        max_iter     = self.params.get ( 'max_iter'      , None  ) or self.params.get ( 'epochs' , 25   ) 
+        lr           = self.params.get ( 'learning_rate' , None  ) or self.params.get ( 'lr'     , 0.01 ) 
+        weight_decay = self.params.get ( 'weight_decay'  , 1.e-4 ) 
+        chunk_raw    = self.params.get ( 'lbfgs_chunk'   , None  )
+        chunk_size   = int ( chunk_raw ) if chunk_raw is not None else None
+
+        n_tr = X_tr_t.shape [ 0 ]
+        if chunk_size is not None and 0 < chunk_size < n_tr :
+            # Explicit subsampling only when requested for very large folds
+            idx   = Torch.randperm ( n_tr , device = device ) [ : chunk_size ]
+            x_opt = X_tr_t.index_select ( 0 , idx )
+            y_opt = Y_tr_t.index_select ( 0 , idx )
+            w_opt = W_tr_t.index_select ( 0 , idx )
+            del idx
+        else :
+            x_opt , y_opt , w_opt = X_tr_t , Y_tr_t , W_tr_t
+            
+        optimizer = Torch.optim.LBFGS ( model.parameters () ,
+                                        lr             = lr ,
+                                        max_iter       = max_iter ,
+                                        line_search_fn = 'strong_wolfe' )
+        
+        def closure () :
+            optimizer.zero_grad ( set_to_none = True )
+            loss = self.weighted_mse ( model ( x_opt ) , y_opt , w_opt )
+            if 0.0 < weight_decay :
+                l2_reg = sum ( Torch.sum ( p * p ) for p in model.parameters () )
+                loss   = loss + 0.5 * weight_decay * l2_reg
+            loss.backward ()
+            return loss
+
+        model.train ()
+        optimizer.step ( closure )
+
+        if x_opt is not X_tr_t :
+            del x_opt , y_opt , w_opt
+
+            
 # =============================================================================
 if '__main__' == __name__ :
     

@@ -29,7 +29,8 @@ del getLogger
 clock_symbol = clock_symbol + ' ' if clock_symbol else '' 
 # =============================================================================
 ## format for timing prints 
-TIMING_FORMAT = '  Timing      %-20s  WALL: %s | CPU: %s | CPU Load %.1f%%'
+TIMING_FORMAT = '   Timing %-30s  WALL: %s | CPU: %s | CPU Load %.1f%%'
+START_FORMAT  = '   Start  %-30s'
 # =============================================================================
 ONE_SECOND = 1 
 ONE_MINUTE = 60 * ONE_SECOND 
@@ -136,7 +137,7 @@ class Timer(object):
         self.format        = format
         
         if   start              : self.start_message = start
-        elif name and not start : self.start_message = '  Start  %s' % name
+        elif name and not start : self.start_message = START_FORMAT % name
         else                    : self.start_message = ''
         
         self.__start_wall = 0

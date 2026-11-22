@@ -50,6 +50,8 @@ __all__     = (
     'symbol_GBC'          , ## symbol for GradientBoost 
     'symbol_RF'           , ## symbol for RandomForest 
     'symbol_TORCH'        , ## symbol for PyTorch 
+    'symbol_TORCH_ADAM'   , ## symbol for PyTorch/Adam 
+    'symbol_TORCH_LBFGS'  , ## symbol for PyTorch/LBGDS 
     'symbol_LOGREG'       , ## symbol fo rLogistic Regression 
     'symbol_USTAT'        , ## symbol for uStat
     'symbol_CHI2'         , ## symbol for chi2
@@ -99,10 +101,12 @@ __all__     = (
     'method_HGBC'         , ##  HistoGradientBoost method 
     'method_GBC'          , ##       GradientBoost method 
     'method_RF'           , ##        RandomForest method 
-    'method_TORCH'        , ##             PyTorch method 
     'method_LOGREG'       , ## Logistic Regression method 
-    'method_USTAT'        , ##              uStat method 
-    'method_CHI2'         , ##               Chi2 method 
+    'method_USTAT'        , ##               uStat method 
+    'method_CHI2'         , ##                Chi2 method 
+    'method_TORCH'        , ##             PyTorch method 
+    'method_TORCH_ADAM'   , ##        PyTorch/Adam method 
+    'method_TORCH_LBFGS'  , ##       PyTorch/LBFGS method 
     ##
     'method_MIX'          , ##                 Mixed-Sample method 
     'method_PPD'          , ## Point-to-Point Dissimilarity method 
@@ -170,7 +174,11 @@ symbol_CATB   = S.cat_face     if S.show and S.cat_face       else symbol_name (
 symbol_HGBC   = S.bar_chart    if S.show and S.bar_chart      else symbol_name ( 'HGBC'     ) 
 symbol_GBC    = S.nabla        if S.show and S.nabla          else symbol_name ( 'GBC'      ) 
 symbol_RF     = S.palm         if S.show and S.palm           else symbol_name ( 'RF'       )
-symbol_TORCH  = S.flashlight   if S.show and S.flashlight     else symbol_name ( 'TORCH'    ) 
+
+symbol_TORCH       = S.flashlight             if S.show and S.flashlight else symbol_name ( 'TORCH'    )
+symbol_TORCH_ADAM  = S.flashlight+S.lightning if S.show and S.flashlight and S.lightning  else symbol_name ( 'TORCH/ADAM'   )
+symbol_TORCH_LBFGS = S.flashlight+S.gear      if S.show and S.flashlight and S.gear       else symbol_name ( 'TORCH/L-BFGS' )
+
 symbol_LOGREG = S.ruler        if S.show and S.ruler          else symbol_name ( 'LOGREG'   ) 
 symbol_USTAT  = S.pushpin      if S.show and S.pushpin        else symbol_name ( 'USTAT'    ) 
 symbol_CHI2   = S.chi2         if S.show and S.chi2           else symbol_name ( 'Chi2'     ) 
@@ -222,10 +230,13 @@ method_CATB   = method_name ( 'CatBoost'            )
 method_HGBC   = method_name ( 'HistoGradientBoost'  ) 
 method_GBC    = method_name ( 'GradientBoost'       ) 
 method_RF     = method_name ( 'RandomForest'        )
-method_TORCH  = method_name ( 'PyTorch'             )
 method_LOGREG = method_name ( 'Logistic Regression' ) 
 method_USTAT  = method_name ( 'uStat'               )
-method_CHI2   = method_name ( S.chi2  if S.show and S.chi2  else 'Chi2' ) 
+method_CHI2   = method_name ( S.chi2  if S.show and S.chi2  else 'Chi2' )
+
+method_TORCH       = method_name ( 'PyTorch'             )
+method_TORCH_ADAM  = method_name ( 'PyTorch/Adam'        )
+method_TORCH_LBFGS = method_name ( 'PyTorch/L-BFGS'      )
 
 method_MIX   = method_name ( 'Mixed-Sample'                  )
 method_PPD   = method_name ( 'Point-to-Point Dissimilarity'  )
@@ -397,15 +408,42 @@ def valid_data_shape(data):
     return True if hasattr ( data , '__len__' ) else False 
 
 # =============================================================================
-## Number of features for training data
+## Return the number of features for training or evaluation data.
+#
+#           Supports structured NumPy arrays (via field names), standard arrays
+#           and PyTorch tensors (via 2D shape), pandas DataFrames/Series, and
+#           nested sequences. Falls back to 1 for 1D or scalar-like inputs.
+#
+#  @param X Input feature container (array, tensor, DataFrame, or sequence).
+#  @return Number of features as an integer.
 def num_features ( X ) :
-    """ Number of features for training data
-    """
-    dtype = getattr ( X , 'dtype' , None )
-    if dtype is not None and dtype.names : return len ( dtype.names )
+    """ Number of features for training data.
 
+    Supports structured NumPy arrays (via field names), standard arrays
+    and PyTorch tensors (via 2D shape), pandas DataFrames/Series, and
+    nested sequences. Falls back to 1 for 1D or scalar-like inputs.
+    
+    """
+    # Structured NumPy dtypes expose field names via `.names` (absent on torch.dtype)
+    dtype = getattr ( X , 'dtype' , None )
+    if dtype is not None and getattr ( dtype , 'names' , None ) :
+        return len ( dtype.names )
+
+    # pandas DataFrame has explicit column count
+    columns = getattr ( X , 'columns' , None )
+    if columns is not None and hasattr ( columns , '__len__' ) :
+        return len ( columns )
+
+    # NumPy arrays, PyTorch tensors, and array-like objects with `.shape`
     shape = getattr ( X , 'shape' , None )
-    if shape is not None and 1 < len ( shape ) : return shape [ 1 ]
+    if shape is not None :
+        return int ( shape [ 1 ] ) if 1 < len ( shape ) else 1
+
+    # Fallback for plain Python lists/tuples of rows (e.g. [[f1, f2], ...])
+    if isinstance ( X , ( list , tuple ) ) and X :
+        first = X [ 0 ]
+        if isinstance ( first , ( list , tuple ) ) :
+            return len ( first )
 
     return 1
 
@@ -422,6 +460,37 @@ def num_samples(X):
     if shape is not None:
         if 0 == len ( shape ) : return 0 
         return int ( shape  [ 0 ] )
+
+    raise TypeError ( "Unsupported data structure for determining sample count: %s" % typename ( X ) )
+
+# =============================================================================
+## Return the number of samples/events (rows) in the dataset.
+#
+#           Checks tensor/array @c shape first so 0-dimensional objects (such as
+#           0-d PyTorch tensors or scalar arrays) safely return 0 instead of
+#           raising on @c len(). Falls back to @c len() for sized containers
+#           (NumPy arrays, tensors, DataFrames, lists, tuples).
+#
+#  @param X Input dataset container or @c None.
+#  @return Number of samples/rows as an integer (0 if @c X is @c None or 0-d).
+def num_samples ( X ) :
+    """ Number of samples/events (rows) in the dataset.
+
+    Checks tensor/array @c shape first so 0-dimensional objects (such as
+    0-d PyTorch tensors or scalar arrays) safely return 0 instead of
+    raising on @c len(). Falls back to @c len() for sized containers
+    (NumPy arrays, tensors, DataFrames, lists, tuples).
+
+    """
+    if X is None : return 0
+
+    # Check shape first to safely handle 0-d tensors/arrays where len() fails
+    shape = getattr ( X , "shape" , None )
+    if shape is not None :
+        if 0 == len ( shape ) : return 0
+        return int ( shape [ 0 ] )
+
+    if hasattr ( X , "__len__" ) : return int ( len ( X ) )
 
     raise TypeError ( "Unsupported data structure for determining sample count: %s" % typename ( X ) )
 

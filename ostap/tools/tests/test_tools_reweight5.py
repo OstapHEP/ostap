@@ -40,6 +40,8 @@ from   ostap.stats.tools        import ( hasLightGBM , hasXGBoost ,
 from   ostap.logger.symbols     import p_value_percent_expr 
 from   ostap.tools.reweighter   import CascadeReweighter as  CASCADE
 from   ostap.utils.utils4tests  import light_tests,   active_test
+from   ostap.utils.timing       import timing 
+from   ostap.utils.memory       import memory,peak_memory 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
 import ostap.io.root_file 
@@ -236,126 +238,169 @@ def run_reweight ( n_dim       = 3     ,
     reweighters = [ None ]
     reweighters = [] 
 
-    if active_test ( random_freq ) and hasCatBoost () :
+    if False and active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
-        rw = CATB ( target   = target      , 
-                    original = original1   )                           
-        reweighters.append ( rw )
+        what = "Use CatBoostDensityReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) : 
+                        
+            rw = CATB ( target   = target      , 
+                        original = original1   )                           
+            reweighters.append ( rw )
         
-    if active_test ( random_freq ) and hasCatBoost () :
+    if False and active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostIterativeReweighter as CATB
-        rw = CATB ( target   = target    , 
-                    original = original1 )        
-        reweighters.append ( rw )
-    
-    if active_test ( random_freq ) and hasLightGBM () :
+        what = "Use CatBoostIterativeReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) : 
+            
+            rw = CATB ( target   = target    , 
+                        original = original1 )        
+            reweighters.append ( rw )
+
+            
+    if False and active_test ( random_freq ) and hasLightGBM () :
         
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
-        rw = LGBM ( target                = target    ,
-                    original              = original1 )
-        
-        reweighters.append ( rw )
+        what = "Use LightGBMDensityReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) : 
+            
+            rw = LGBM ( target                = target    ,
+                        original              = original1 )
+            
+            reweighters.append ( rw )
     
-    if active_test ( random_freq ) and hasLightGBM () :
+    if False and active_test ( random_freq ) and hasLightGBM () :
         
         from ostap.tools.reweighters  import LightGBMIterativeReweighter as  LGBM
-        rw = LGBM ( target                = target    ,
-                    original              = original1 , 
-                    progress              = False    )
-        
-        reweighters.append ( rw )
+        what = "Use LightGBMIterativeReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) :
+            
+            rw = LGBM ( target                = target    ,
+                        original              = original1 , 
+                        progress              = False    )
+            
+            reweighters.append ( rw )
 
-    if active_test ( random_freq ) and hasXGBoost  () :
+    if False and active_test ( random_freq ) and hasXGBoost  () :
         
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
-        rw = XGB  ( target                = target    ,
-                    original              = original1 ,
-                   )
+        what = "Use XGBoostDensityReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) : 
+            
+            rw = XGB  ( target                = target    ,
+                        original              = original1 ,
+                       )
+            
+            reweighters.append ( rw )
         
-        reweighters.append ( rw )
-        
-    if active_test ( random_freq ) and hasXGBoost  () :
+    if False and active_test ( random_freq ) and hasXGBoost  () :
 
-        from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB 
-        rw = XGB  ( target                = target    ,
-                     original              = original1 ,
-                     progress              = False     ,
-                    )
-        
-        reweighters.append ( rw )
+        from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB
+        what = "Use XGbBoostIterativeReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) : 
+            
+            rw = XGB  ( target                = target    ,
+                        original              = original1 ,
+                        progress              = False     ,
+                       )
+            
+            reweighters.append ( rw )
 
     if active_test ( random_freq ) and hasPyTorch () :
 
         from ostap.tools.reweighters  import PyTorchAdamDensityReweighter as TORCH
-        rw = TORCH ( target        = target        ,
-                     original      = original1     ,
-                     learning_rate = 1e-4          , 
-                     hidden_layers = ( 128 , 128 ) )                       
-        reweighters.append ( rw )
-
-
-    if active_test ( random_freq ) and hasXGBoost  () :
-
-        from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB 
-        rw = XGB  ( target                = target    ,
-                     original              = original1 ,
-                     progress              = False     ,
-                    )
+        what = "Use PyTorchAdamDensityReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) : 
+            
+            rw = TORCH ( target        = target        ,
+                         original      = original1     ,
+                         n_splits      = 1             , 
+                         learning_rate = 1e-4          ,                     
+                         hidden_layers = ( 128 , 128 ) )
+            
+            reweighters.append ( rw )
         
-        reweighters.append ( rw )
-
-    if active_test ( random_freq ) and hasPyTorch () :
-
-        from ostap.tools.reweighters  import PyTorchAdamDensityReweighter as TORCH
-        rw = TORCH ( target        = target        ,
-                     original      = original1     ,
-                     learning_rate = 1e-4          , 
-                     hidden_layers = ( 128 , 128 ) )                       
-        reweighters.append ( rw )
-
     if active_test ( random_freq ) and hasPyTorch () :
 
         from ostap.tools.reweighters  import PyTorchLBFGSDensityReweighter as TORCH
-        rw = TORCH ( target        = target        ,
-                     original      = original1     ,
-                     learning_rate = 1e-4          , 
-                     hidden_layers = ( 128 , 128 ) )                       
-        reweighters.append ( rw )
-        
+        what = "Use PyTorchLBFGSDensityReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) :
+            
+            rw = TORCH ( target        = target        ,
+                         original      = original1     ,
+                         n_splits      = 1             , 
+                         learning_rate = 1e-4          , 
+                         hidden_layers = ( 128 , 128 ) )                       
+            reweighters.append ( rw )
+
     if active_test ( random_freq ) and hasPyTorch () :
 
         from ostap.tools.reweighters  import PyTorchAdamIterativeReweighter as TORCH
-        rw = TORCH ( target        = target        ,
-                     original      = original1     ,
-                     ## use very simple construction:
-                     hidden_layers           = ( 16 , )  ,
-                     progress                = False     ,
-                     )
-        
-        reweighters.append ( rw )
+        what = "Use PyTorchAdamIterativeReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) :
+            
+            rw = TORCH ( target        = target    ,
+                         original      = original1 ,
+                         n_splits      = 1         ,                      
+                         ## use very simple construction:
+                         hidden_layers = ( 16 , )  ,
+                         progress      = False     ,
+                        )
+            
+            reweighters.append ( rw )
             
     if active_test ( random_freq ) and hasPyTorch () :
 
-        from ostap.tools.reweighters  import PyTorchLBGFSIterativeReweighter as TORCH
-        rw = TORCH ( target        = target        ,
-                     original      = original1     ,
-                     ## use very simple construction:
-                     hidden_layers           = ( 16 , )  ,
-                     progress                = False     ,
-                     )
-        
-        reweighters.append ( rw )
+        from ostap.tools.reweighters  import PyTorchLBFGSIterativeReweighter as TORCH
+        what = "Use PyTorchLBFGSterativeReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) :
+            
+            rw = TORCH ( target        = target    ,
+                         original      = original1 ,
+                         n_splits      = 1             ,                                           
+                         ## use very simple construction:
+                         hidden_layers = ( 16 , )       ,
+                         progress      = False         ,
+                        )
+            
+            reweighters.append ( rw )
             
     if active_test ( random_freq ) and hasHepML    () :
+        
         from ostap.tools.reweighters  import GBReweighter   as GBRW
-        rw = GBRW ( target              = target         ,
-                    original            = original1      ,
-                   ) 
         
-        reweighters.append ( rw )
-        
+        what = "Use GBReweighter" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) :
+            
+            rw = GBRW ( target              = target         ,
+                        original            = original1      ,
+                       ) 
+            
+            reweighters.append ( rw )
+            
     if active_test ( random_freq ) and hasSkLearn ():
         
         from ostap.tools.reweighters  import LogRegressionDensityReweighter as LOGREG 
@@ -366,24 +411,32 @@ def run_reweight ( n_dim       = 3     ,
         
         reweighters.append ( rw )
         
-        rw = CASCADE ( stages   = ( ( LOGREG , { 'polynomials' : 4 } ) ,
-                                    ( LOGREG , { 'polynomials' : 4 } ) ) , 
-                       target   = target ,
-                       original = original1 )
-        reweighters.append ( rw )
-
-        rw = CASCADE ( stages   = ( ( LOGREG , { 'polynomials' : 4 } ) ,
-                                    ( LOGREG , { 'polynomials' : 4 } ) , 
-                                    ( LOGREG , { 'polynomials' : 4 } ) ) , 
-                       target   = target ,
-                       original = original1 )
-        reweighters.append ( rw )
-    
+        what = "Use Cascade/2" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) :
+            
+            rw = CASCADE ( stages   = ( ( LOGREG , { 'polynomials' : 4 } ) ,
+                                        ( LOGREG , { 'polynomials' : 4 } ) ) , 
+                           target   = target ,
+                          original = original1 )
+            reweighters.append ( rw )
+            
+        what = "Use Cascade/3" 
+        with peak_memory ( what , logger = logger ) , \
+             memory      ( what , logger = logger ) , \
+             timing      ( what , logger = logger ) :
+            
+            rw = CASCADE ( stages   = ( ( LOGREG , { 'polynomials' : 4 } ) ,
+                                        ( LOGREG , { 'polynomials' : 4 } ) , 
+                                        ( LOGREG , { 'polynomials' : 4 } ) ) , 
+                           target   = target ,
+                           original = original1 )
+            reweighters.append ( rw )
+            
     # =========================================================================
     ## A bit special comparator: Random Axes 
     # =========================================================================
-    print ( 'REWEIGHTERS' , reweighters )
-    
     
     from  ostap.stats.random_axes import RandomAxes        as RA
     import ostap.stats.gof1dw     as     G1D  
@@ -424,11 +477,12 @@ def run_reweight ( n_dim       = 3     ,
 
         for original in originals :
                     
-            if rw : logger.info ( 'Using REWEIGHTER %s %s %s ' % ( rw.symbol , typename ( rw ) , rw.method ) )
             
             if rw is None : original_weight = None
-            else          : original_weight = rw.weights ( original )
-            
+            else          :
+                with timing ( 'Use REWEIGHTER %s %s %s ' % ( rw.symbol , rw.method , typename ( rw ) ) , logger = logger ) :
+                    original_weight = rw.weights ( original )
+                              
             wmin, wmax , wunit = '' , '' , '' 
             if not original_weight is None :
                 wmin = float ( numpy.min ( original_weight ) ) 

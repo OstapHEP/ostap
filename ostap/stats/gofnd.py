@@ -33,13 +33,14 @@ __all__     = (
     'AkaikeIC'           , ## Use Akaike IC  as GoF estimator 
     'BayesianIC'         , ## Use Bayesian IC  as GoF estimator
     ## 
-    'ADVAL_LightGBM'     , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_HistoGBoost'  , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_GBoost'       , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_CatBoost'     , ## Use Adversarial Validation as GoF estimator
-    'ADVAL_XGBoost'      , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_RandomForest' , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_PyTorch'      , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_LightGBM'      , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_HistoGBoost'   , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_GBoost'        , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_CatBoost'      , ## Use Adversarial Validation as GoF estimator
+    'ADVAL_XGBoost'       , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_RandomForest'  , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_PyTorch_Adam'  , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_PyTorch_LBFGS' , ## Use Adversarial Validation as GoF estimator 
     ##
     ## 1D-(weighted) case
     'KolmogorovSmirnov'  , ## Kolmogorov-Sminov GoF estimator
@@ -1529,11 +1530,11 @@ class ADVAL_CatBoost(ADVAL_LightGBM) :
         return U.symbol_CATB
     
 # ============================================================================
-## @class ADVAL_PyTorch
+## @class ADVAL_PyTorch_Adam
 #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
 #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
 #  @see ADVAL_TORCH
-class ADVAL_PyTorch(ADVAL_LightGBM) : 
+class ADVAL_PyTorch_Adam(ADVAL_LightGBM) : 
     """ Implementation of concrete method CatBoost-based Adversation Validation for probing of Goodness-Of-Fit
     -   t-value is defined via AUC
     -   p-value if defined via permutations
@@ -1562,13 +1563,56 @@ class ADVAL_PyTorch(ADVAL_LightGBM) :
         - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
         - nToys    : (int) number of permutations/toys 
         """
-        from ostap.stats.adval import ADVAL_TORCH as ADVAL_TYPE 
+        from ostap.stats.adval import ADVAL_TORCH_ADAM as ADVAL_TYPE 
         ADVAL_LightGBM.__init__ ( self ,
                                   mcFactor   = mcFactor ,
                                   nToys      = nToys    ,
                                   parallel   = parallel ,
                                   silent     = silent   ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
+
+# ============================================================================
+## @class ADVAL_PyTorch_LBFGS
+#  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+#  @see ADVAL_TORCH
+class ADVAL_PyTorch_LBFGS(ADVAL_LightGBM) : 
+    """ Implementation of concrete method CatBoost-based Adversation Validation for probing of Goodness-Of-Fit
+    -   t-value is defined via AUC
+    -   p-value if defined via permutations
+        
+    Important parameters:
+        
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+        
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    def __init__ ( self               ,
+                   mcFactor  = 20     , 
+                   nToys     = 400    ,
+                   parallel  = False  ,
+                   silent    = True   ,
+                   progress  = True   , **params ) : 
+            
+        """ Create the Adversarial Validation estimator 
+
+        Parameters  
+            
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        """
+        from ostap.stats.adval import ADVAL_TORCH_LBFGS as ADVAL_TYPE 
+        ADVAL_LightGBM.__init__ ( self ,
+                                  mcFactor   = mcFactor ,
+                                  nToys      = nToys    ,
+                                  parallel   = parallel ,
+                                  silent     = silent   ,
+                                  ADVAL_TYPE = ADVAL_TYPE , **params )
+
         
     # =========================================================================
     ## Symbol/tag associated with this estimator 
@@ -1576,8 +1620,8 @@ class ADVAL_PyTorch(ADVAL_LightGBM) :
     def symbol ( self ) :
         """`symbol`: Symbol/tag associated with this estimator
         """
-        return U.symbol_TORCH
-    
+        return U.symbol_TORCH_LBGFS
+
 # =============================================================================
 ## @class KolmogorovSmirnov
 #  Goodness of 1D (weighted) fit estimator using Kolmogorov-Smirnot test 

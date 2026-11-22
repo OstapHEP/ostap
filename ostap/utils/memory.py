@@ -129,7 +129,7 @@ def memory_enough () :
 
 # ============================================================================
 ## format for memory prints 
-MEMORY_FORMAT      = '  Memory      %%-20s  %s=%%+.2fMB %s=%%.2fGB %s%%.1fGB' % ( delta_ram , sum_symbol , enough_symbol )
+MEMORY_FORMAT      = '   Memory %%-30s %s=%%+.2fMB %s=%%.2fGB %s%%.1fGB' % ( delta_ram , sum_symbol , enough_symbol )
 # =============================================================================
 ## @class Memory
 #  Simple context manager to measure the virtual memory increase
@@ -270,7 +270,7 @@ memory = virtualMemory  ## ditto
 
 # =============================================================================
 ## format for memory prints 
-PEAK_MEMORY_FORMAT = 'Peak memory %%-20s %s=%%.3fGB %s=%%.2fGB' % ( peak_ram , sum_symbol )
+PEAK_MEMORY_FORMAT = 'Peak memory %%-25s %s=%%.3fGB %s=%%.2fGB' % ( peak_ram , sum_symbol )
 # =============================================================================
 ## @class PeakMemory
 #  Context manager reprting the peak memory consumption

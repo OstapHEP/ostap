@@ -151,18 +151,19 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
     #  @param store_original_weights Flag to retain fitted original ratio arrays.
     #  @param progress Enable progress bar display during fold fitting.
     #  @param params Additional parameters passed to the parent class.
-    def __init__ ( self                              , * ,
-                   original                          ,
-                   target                            ,
-                   original_weight        = None     , 
-                   target_weight          = None     ,
-                   clip_threshold         = 1.e+4    ,
-                   n_splits               = 5        ,
-                   voting                 = 'mean'   , 
-                   oof_mode               = False    , 
-                   store_original_weights = False    ,
-                   progress               = True     ,
-                   phoenix                = True     , **params ) :
+    def __init__ ( self                            , * ,
+                   original                        ,
+                   target                          ,
+                   original_weight        = None   , 
+                   target_weight          = None   ,
+                   clip_threshold         = 1.e+4  ,
+                   n_splits               = 5      ,
+                   voting                 = 'mean' , 
+                   oof_mode               = False  , 
+                   store_original_weights = False  ,
+                   progress               = True   ,
+                   progress_split         = True   , 
+                   phoenix                = True   , **params ) :
         """ Initialize and fit the density ratio reweighter ensemble. """
         
         if not isinstance ( n_splits, int ) : raise TypeError  ( "Invalid `n_splits' type %s"  % typename ( n_splits ) )
@@ -178,7 +179,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                     weight2 = target_weight     ,
                     where   = typename ( self ) )   
         
-        self.__progress            = True if progress else False 
+        self.__progress            = True if progress       else False 
+        self.__progress_split      = True if progress_split else False 
         self.__clip_threshold      = float ( clip_threshold )
         self.__n_splits            = n_splits
         self.__voting              = Voting ( voting ) 
@@ -300,21 +302,26 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         return self._norm_factor
         
     # =========================================================================
-    ## @property mode
-    #  Partition mode ('1-stream', '2-stream_orig', '2-stream_targ', '4-stream').
+    ##  Partition mode ('1-stream', '2-stream_orig', '2-stream_targ', '4-stream').
     @property
     def mode ( self ) :
         """ `mode`: Partition mode ('1-stream', '2-stream_orig', '2-stream_targ', '4-stream'). """
         return self.__mode
 
     # =========================================================================
-    ## @property progress
-    #  Progress bar status flag.
+    ##  Progress bar status flag.
     @property
     def progress ( self ) :
         """ `progress`: Progress bar status flag. """
         return self.__progress
 
+    # =========================================================================
+    ## Progress bar for split/fold loops 
+    @property
+    def progress_split ( self ) :
+        """ `progress_split`: Progress bar for splitting/folding loop"""
+        return self.__progress_split and 1 < self.n_splits
+    
     # =========================================================================
     ## Use Phoenix to cleanup the models? 
     @property
@@ -338,7 +345,8 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         conf = {}
         conf.update ( super ().config )
         if self.mode : conf [ "mode"     ]     = self.mode
-        conf [ "progress" ]                    = self.progress
+        conf [ "progress"        ]             = self.progress
+        conf [ "progress_split"  ]             = self.progress_split 
         conf [ "phoenix"         ]             = self.phoenix 
         conf [ "clip_threshold"  ]             = self.__clip_threshold
         conf [ "voting"          ]             = self.__voting.name 
@@ -572,7 +580,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             for train_idx, valid_idx in LoopGC ( progress_bar ( splits      ,
                                                                 max_value   = n_folds           ,
                                                                 description = description       , 
-                                                                silent      = not self.progress ) ) :
+                                                                silent      = not self.progress_split ) ) :
                 X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
                 w_tr       = w_comb_global [ train_idx ] if w_comb_global is not None else None
                 
@@ -594,7 +602,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
                 fold_ratios = p_clipped / ( numpy.float32 ( 1.0 ) - p_clipped )
                 
                 ratios [ orig_indices_local ] = fold_ratios.astype ( numpy.float32, copy = False )
-                
+
             # ============================================================================
         else : # MODE 2: Training-Ensemble Averaging (Cheating / Stabilized Mode) ========
             # ============================================================================
@@ -603,7 +611,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
             for train_idx, valid_idx in LoopGC ( progress_bar ( splits      ,
                                                                 max_value   = n_folds           ,
                                                                 description = description       ,
-                                                                silent      = not self.progress ) ) :
+                                                                silent      = not self.progress_split ) ) :
                 
                 X_tr, y_tr = X_comb [ train_idx ] , y_comb [ train_idx ]
                 w_tr       = w_comb_global [ train_idx ] if w_comb_global is not None else None

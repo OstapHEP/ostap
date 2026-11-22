@@ -264,17 +264,29 @@ def test_GOF () :
         ##
         if not small : to_test.append ( test ) 
         else         : logger.warning ( "skip RandomForest" )
-    
+
     # ==========================================================================
     if hasPyTorch () : # =======================================================
         # ======================================================================
-        from   ostap.stats.gofnd import ADVAL_PyTorch as GOF 
+        from   ostap.stats.gofnd import ADVAL_PyTorch_Adam as GOF 
         ##
         config [ 'parallel' ] = False 
-        config [ 'n_splits' ] = 2 ## ATTENTION !! 
-        config [ 'nToys'    ] = 5 ## ATTENTION !!  
+        config [ 'n_splits' ] =  2 ## ATTENTION !! 
+        config [ 'nToys'    ] = 20 ## ATTENTION !!  
         gof    = GOF ( **config )
-        test   = gof , gof , 'ADVAL:PyTorch'
+        test   = gof , gof , 'ADVAL:PyTorch/Adam'
+        to_test.append ( test ) 
+
+    # ==========================================================================
+    if hasPyTorch () : # =======================================================
+        # ======================================================================
+        from   ostap.stats.gofnd import ADVAL_PyTorch_LBFGS as GOF 
+        ##
+        config [ 'parallel' ] = False 
+        config [ 'n_splits' ] =  2 ## ATTENTION !! 
+        config [ 'nToys'    ] = 20 ## ATTENTION !!  
+        gof    = GOF ( **config )
+        test   = gof , gof , 'ADVAL:PyTorch/LBFGS'
         to_test.append ( test ) 
 
     # ===========================================================================
