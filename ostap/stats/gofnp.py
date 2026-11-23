@@ -352,7 +352,6 @@ class GoFnp (AGoFnp,Config) :
                                  ecdf    = ecdf    if not ecdf    is None else self.__ecdf    ,
                                  counter = counter if not counter is None else self.__counter )
     
-
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
     def draw  ( self , option = '' , * , tvalue = None , **kwargs ) :

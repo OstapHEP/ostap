@@ -46,7 +46,7 @@ varset = ROOT.RooArgSet  ( xvar , yvar   )
 
 xgauss = M.Gauss_pdf     ( 'GX' , xvar = xvar , mean = ( 5 , 4 , 6 ) , sigma = ( 0.5 , 0.1 , 2.5 ) )
 ygauss = M.Gauss_pdf     ( 'GY' , xvar = yvar , mean = ( 5 , 4 , 6 ) , sigma = ( 0.5 , 0.1 , 2.5 ) )
-gauss2 = xgauss*ygauss
+gauss2 = xgauss * ygauss
 
 NG        = 100 
 NG2       = 100
@@ -131,6 +131,7 @@ def test_GOF () :
     tconf = { 'nToys' : nToys , 'parallel' : True , 'silent' : True }
 
     gof_list = [
+        GnD.Chi2              ( **tconf ) ,
         GnD.KullbackLeibler   ( **tconf ) ,
         GnD.Jeffrey           ( **tconf ) ,
         GnD.JensenShannon     ( **tconf ) ,
@@ -274,7 +275,7 @@ def test_GOF () :
         config [ 'n_splits' ] =  2 ## ATTENTION !! 
         config [ 'nToys'    ] = 20 ## ATTENTION !!  
         gof    = GOF ( **config )
-        test   = gof , gof , 'ADVAL:PyTorch/Adam'
+        test   = gof , gof , 'ADVAL:PyTorch/Adam' 
         to_test.append ( test ) 
 
     # ==========================================================================
@@ -286,7 +287,7 @@ def test_GOF () :
         config [ 'n_splits' ] =  2 ## ATTENTION !! 
         config [ 'nToys'    ] = 20 ## ATTENTION !!  
         gof    = GOF ( **config )
-        test   = gof , gof , 'ADVAL:PyTorch/LBFGS'
+        test   = gof , gof , 'ADVAL:PyTorch/L-BFGS'
         to_test.append ( test ) 
 
     # ===========================================================================

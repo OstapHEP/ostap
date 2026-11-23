@@ -54,12 +54,11 @@ re_voting = re.compile (
 class Voting ( object ) :
     """ Encapsulates fold prediction aggregation (voting) strategies.
     """
-    
     # =========================================================================
     ## Initialize voting strategy.
     #  @param self Instance of the class.
     #  @param strategy Aggregation strategy name (e.g. 'arithmetic', 'mean', 'median', 'geometric', 
-    #                  'trim:1', 'truncated = 2').
+    #                  'trim:1:1', 'truncated = 2').
     def __init__ ( self, strategy = 'geometric' ) :
         """ Initialize voting strategy. """
         if not isinstance ( strategy , string_types ) :
@@ -570,7 +569,7 @@ class DensityReweighter ( Reweighter, abc.ABC ) :
         n_samples       = len ( X_orig_sub )
         ratios          = numpy.ones ( n_samples, dtype = numpy.float32 )
 
-        description = FOLD_symbol + self.symbol + ':'
+        description = FOLD_symbol + self.symbol + ' :'
          
         # ==================================================================================
         if self.__oof_mode : # MODE 1: Strict Out-Of-Fold (OOF) Evaluation =================

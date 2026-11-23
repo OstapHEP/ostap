@@ -52,8 +52,8 @@ method_LGBM        =  U.method_name ( 'LightGBM/Iterative' )
 method_XGB         =  U.method_name ( 'XGBoost/Iterative'  )
 method_CATB        =  U.method_name ( 'CatBoost/Iterative' )
 method_TORCH       =  U.method_name ( 'PyTorch/Iterative'  )
-method_TORCH_ADAM  =  U.method_name ( 'PyTorch/Adam/Iterative'  )
-method_TORCH_LBFGS =  U.method_name ( 'PyTorch/LBFGS/Iterative' )
+method_TORCH_ADAM  =  U.method_name ( 'PyTorch/Adam/Iterative'   )
+method_TORCH_LBFGS =  U.method_name ( 'PyTorch/L-BFGS/Iterative' )
 ##
 boosting_symbol = S.ladder if S.show and S.ladder  else 'Boosting'
 # =============================================================================

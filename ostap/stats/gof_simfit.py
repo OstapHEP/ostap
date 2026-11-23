@@ -30,7 +30,8 @@ from   ostap.logger.pretty      import pretty_float, format_pow10
 from   ostap.logger.colorized   import markup 
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
-from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, combine_pvalues, combine_methods 
+from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue
+from   ostap.stats.pvalues      import combine_pvalues, combine_methods 
 from   ostap.stats.utils        import ( full_header   , 
                                          t_header      , 
                                          format_pvalue , 

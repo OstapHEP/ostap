@@ -5,7 +5,8 @@
   1. `Ostap/Quantiles.h` - add `quantiles` methods for arbitrary quantiles `std::vector<double>` 
   1. `ECDF/WECDF`        - add `quantiles` methods for arbitrary quantiles `std::vector<double>` 
   1. Split `ADVAL_TORCH` into `Adam` and `LBFGS`
-
+  1. Factor-out all methods for combining several p-values into single global p-value into separate module `pvalues.py`
+  
 ## Bug fixes
 
 ## Backward incompatible

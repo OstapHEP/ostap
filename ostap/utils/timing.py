@@ -29,35 +29,43 @@ del getLogger
 clock_symbol = clock_symbol + ' ' if clock_symbol else '' 
 # =============================================================================
 ## format for timing prints 
-TIMING_FORMAT = '   Timing %-30s  WALL: %s | CPU: %s | CPU Load %.1f%%'
-START_FORMAT  = '   Start  %-30s'
+TIMING_FORMAT = ' Timing %-30s WALL: %-6s | CPU: %-6s | CPU Load: %6.1f%%'
+START_FORMAT  = ' Start  %-30s'
 # =============================================================================
 ONE_SECOND = 1 
 ONE_MINUTE = 60 * ONE_SECOND 
 ONE_HOUR   = 60 * ONE_MINUTE
 ONE_DAY    = 24 * ONE_HOUR 
+ONE_WEEK   =  7 * ONE_DAY 
 # =============================================================================
 ## format the time-delta 
 def format_time ( delta ) :
     """ format the time-delta
     """
-    if   delta <  0.1       : return "%.0fms" % ( delta * 1000 ) 
-    elif delta <    2       : return '%.2f"'  %   delta
-    elif delta <   10       : return '%.1f"'  %   delta
-    elif delta < ONE_MINUTE : return '%.0f"'  %   delta
-    elif delta < ONE_HOUR   :
-        minutes, seconds  = divmod ( delta , 60 )    
+    if   delta <  0.1 * ONE_SECOND : return "%.0fms" % ( delta * 1000 ) 
+    elif delta <    2 * ONE_SECOND : return '%.2f"'  %   delta
+    elif delta <   10 * ONE_SECOND : return '%.1f"'  %   delta
+    elif delta <        ONE_MINUTE : return '%.0f"'  %   delta
+    elif delta <        ONE_HOUR   :
+        minutes , seconds = divmod ( delta   , 60 )    
         return "%.0f'%.0f\""  % ( minutes , seconds )
-    elif delta < ONE_DAY    :
-        minutes, seconds  = divmod ( delta   , 60 )
-        hours  , minutes  = divmod ( minutes , 60 )        
+    elif delta <        ONE_DAY    :
+        minutes , seconds = divmod ( delta   , 60 )
+        hours   , minutes = divmod ( minutes , 60 )        
         return "%.0fh%.0f'%.0f\""  % ( hours, minutes , seconds )
-
-    minutes, seconds  = divmod ( delta   , 60 )
-    hours  , minutes  = divmod ( minutes , 60 )        
-    days   , hours    = divmod ( hours   , 24 )
-    return "%.0fd%.0fh%.0f'%.0f\""  % ( days , hours, minutes , seconds )
-
+    elif delta <        ONE_WEEK   :        
+        minutes , seconds = divmod ( delta   , 60 )
+        hours   , minutes = divmod ( minutes , 60 )        
+        days    , hours   = divmod ( hours   , 24 )
+        ##
+        return "%.0fd%.0fh%.0f'%.0f\""  % ( days , hours, minutes , seconds )
+    
+    minutes , seconds = divmod ( delta   , 60 )
+    hours   , minutes = divmod ( minutes , 60 )        
+    days    , hours   = divmod ( hours   , 24 )
+    weeks   , days    = divmod ( days    ,  7 ) 
+    ##
+    return "%.0fw%.0fd%.0fh%.0f'"  % ( weeks , days , hours , minutes )
 
 # =============================================================================
 ## @class Timer

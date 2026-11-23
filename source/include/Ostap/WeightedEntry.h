@@ -38,17 +38,23 @@ namespace Ostap
       // =======================================================================
     public :
       // =======================================================================
-      /// data 
-      inline Data          data    () const { return m_pair.first  ; }
-      /// data 
+      /// value 
       inline Data          value   () const { return m_pair.first  ; }
+      /// data == alias for value 
+      inline Data          data    () const { return m_pair.first  ; }
       /// weight 
       inline Weight        weight  () const { return m_pair.second ; }
       /// weight squared 
       inline Weight        weight2 () const { return m_pair.second * m_pair.second ; }
       /// conversion to the pair
       inline operator const Pair&  () const { return m_pair        ; }
+      // =======================================================================
+    public : 
       // =======================================================================      
+      /// access element by index ( 0: value, 1: weight)
+      inline double operator[] ( const std::size_t index ) const
+      { return 0 == index ? m_pair.first : 1 == index ? m_pair.second : 0.0 ; }
+      // =======================================================================
     public :
       // =======================================================================
       /// both data and weight are finite ?

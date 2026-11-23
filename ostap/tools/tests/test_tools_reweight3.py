@@ -302,26 +302,26 @@ if active_test ( random_freq ) and hasSkLearn () :
     cconf ['nToys'] = 20 
 
     logger.info ( 'Use SkLearn/HGBC  for dataset comparison' ) 
-    from ostap.stats.adval        import ADVAL_HGBC  as CMP1 
-    comparators .append ( CMP1 ( **cconf ) )
+    from ostap.stats.adval        import ADVAL_HGBC  as CMP
+    comparators .append ( CMP ( **cconf ) )
 
-if active_test ( random_freq ) and hasSkLearn () :
+if False and active_test ( random_freq ) and hasSkLearn () :
 
     cconf ['nToys'] = 20 
     
     logger.info ( 'Use SkLearn/GBC   for dataset comparison' ) 
-    from ostap.stats.adval        import ADVAL_GBC   as CMP2
-    comparators .append ( CMP2 ( **cconf ) ) 
+    from ostap.stats.adval        import ADVAL_GBC   as CMP
+    comparators .append ( CMP ( **cconf ) ) 
 
 if active_test ( random_freq ) and hasSkLearn () :
 
     cconf ['nToys'] = 20 
     
     logger.info ( 'Use SkLearn/RF    for dataset comparison' ) 
-    from ostap.stats.adval        import ADVAL_RF    as CMP3    
-    comparators .append  ( CMP3 ( **cconf ) )
+    from ostap.stats.adval        import ADVAL_RF    as CMP    
+    comparators .append  ( CMP ( **cconf ) )
 
-if active_test ( random_freq ) and hasPyTorch () :
+if False and active_test ( random_freq ) and hasPyTorch () :
     
     cconf ['nToys'] = 10 
 
@@ -600,14 +600,14 @@ if active_test ( random_freq ) and hasHepML () :
     # ========================================================================
     logger.info ( 'Use HepML    for control reweighting' ) 
     from ostap.tools.reweighters     import GBReweighter   as GBRW 
-    rw1 = DataReweighter ( GBRW                        , ## reweighter type 
-                           original         = mctree   ,
-                           target           = datatree ,
-                           target_variables = 'x,y,z'  ) 
+    rw = DataReweighter ( GBRW                        , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
     
     weight_GBRW = 'weight_GBRW'
-    with timing ( "GBRW reweight" , logger = logger ) :    
-        rw1.reweight ( mctree , name = weight_GBRW ) 
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_GBRW ) 
         weights.append ( weight_GBRW )
 
 # =============================================================================
@@ -617,82 +617,186 @@ if active_test ( random_freq ) and hasLightGBM()  :
     # =========================================================================
     logger.info ( 'Use LightBGM for control reweighting' ) 
     from ostap.tools.reweighters     import LightGBMDensityReweighter as  LGBM
-    rw2 = DataReweighter ( LGBM                        , ## reweighter type 
-                           original         = mctree   ,
-                           target           = datatree ,
-                           target_variables = 'x,y,z'  ) 
+    rw = DataReweighter ( LGBM                        , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
     
-    weight_LGBM = 'weight_LGBM'
-    with timing ( "LightGBM reweight" , logger = logger ) :    
-        rw2.reweight ( mctree , name = weight_LGBM ) 
+    weight_LGBM = 'weight_LGBMd'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_LGBM ) 
         weights.append ( weight_LGBM )
-
+    
 # =============================================================================
-## (3) home-made reweighter based on XGBoost  
+## (3) home-made reweighter based on LightGBM
+# =============================================================================
+if active_test ( random_freq ) and hasLightGBM()  : 
+    # =========================================================================
+    logger.info ( 'Use LightBGM for control reweighting' ) 
+    from ostap.tools.reweighters     import LightGBMIterativeReweighter as  LGBM
+    rw = DataReweighter ( LGBM                        , ## reweighter type 
+                           original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
+    
+    weight_LGBM = 'weight_LGBMi'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_LGBM ) 
+        weights.append ( weight_LGBM )
+        
+# =============================================================================
+## (4) home-made reweighter based on XGBoost  
 # =============================================================================
 if active_test ( random_freq ) and hasXGBoost () :
     # =========================================================================
     logger.info ( 'Use XGBoost  for control reweighting' ) 
     from ostap.tools.reweighters     import XGBoostDensityReweighter     as XGB
-    rw3 = DataReweighter ( XGB                         , ## reweighter type 
+    rw  = DataReweighter ( XGB                         , ## reweighter type 
                            original         = mctree   ,
                            target           = datatree ,
                            target_variables = 'x,y,z'  ) 
-    weight_XGB = 'weight_XGB'
-    with timing ( "XGBoost reweight" , logger = logger ) :    
-        rw3.reweight ( mctree , name = weight_XGB  ) 
+    weight_XGB = 'weight_XGBd'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_XGB  ) 
+        weights.append ( weight_XGB )
+
+        
+# =============================================================================
+## (5) home-made reweighter based on XGBoost  
+# =============================================================================
+if active_test ( random_freq ) and hasXGBoost () :
+    # =========================================================================
+    logger.info ( 'Use XGBoost  for control reweighting' ) 
+    from ostap.tools.reweighters     import XGBoostIterativeReweighter     as XGB
+    rw  = DataReweighter ( XGB                         , ## reweighter type 
+                           original         = mctree   ,
+                           target           = datatree ,
+                           target_variables = 'x,y,z'  ) 
+    weight_XGB = 'weight_XGBi'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_XGB  ) 
         weights.append ( weight_XGB )
 
 # =============================================================================
-## (4) home-made reweighter based on CatBoost  
+## (6) home-made reweighter based on CatBoost  
 # =============================================================================
 if active_test ( random_freq ) and hasCatBoost () : 
     # =========================================================================
     logger.info ( 'Use CatBoost for control reweighting' ) 
     from ostap.tools.reweighters     import CatBoostDensityReweighter   as CATB
-    rw4 = DataReweighter ( CATB                        , ## reweighter type 
-                           original         = mctree   ,
-                           target           = datatree ,
-                           target_variables = 'x,y,z'  ) 
+    rw = DataReweighter ( CATB                        , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
     
-    weight_CATB = 'weight_CATB'
-    with timing ( "CatBoost reweight" , logger = logger ) :    
-        rw4.reweight ( mctree , name = weight_CATB ) 
+    weight_CATB = 'weight_CATBd'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_CATB ) 
         weights.append ( weight_CATB )
 
 # =============================================================================
-## (5) home-made reweighter based on PyTorch
+## (7) home-made reweighter based on CatBoost  
+# =============================================================================
+if active_test ( random_freq ) and hasCatBoost () : 
+    # =========================================================================
+    logger.info ( 'Use CatBoost for control reweighting' ) 
+    from ostap.tools.reweighters     import CatBoostIterativeReweighter   as CATB
+    rw = DataReweighter ( CATB                        , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
+    
+    weight_CATB = 'weight_CATBi'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_CATB ) 
+        weights.append ( weight_CATB )
+        
+# =============================================================================
+## (8) home-made reweighter based on PyTorch
 # =============================================================================
 if active_test ( random_freq ) and hasPyTorch () :
     # =========================================================================
     logger.info ( 'Use PyTorch  for control reweighting' ) 
     from ostap.tools.reweighters     import PyTorchAdamDensityReweighter   as TORCH
-    rw5 = DataReweighter ( TORCH                       , ## reweighter type 
-                           original         = mctree   ,
-                           target           = datatree ,
-                           target_variables = 'x,y,z'  ) 
+    rw = DataReweighter ( TORCH                       , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
     
-    weight_TORCH = 'weight_TORCH'
-    with timing ( "PyTorch  reweight" , logger = logger ) :    
-        rw5.reweight ( mctree , name = weight_TORCH ) 
+    weight_TORCH = 'weight_ADAMd'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_TORCH ) 
+        weights.append ( weight_TORCH )
+        
+
+# =============================================================================
+## (9) home-made reweighter based on PyTorch
+# =============================================================================
+if active_test ( random_freq ) and hasPyTorch () :
+    # =========================================================================
+    logger.info ( 'Use PyTorch  for control reweighting' ) 
+    from ostap.tools.reweighters     import PyTorchAdamIterativeReweighter   as TORCH
+    rw = DataReweighter ( TORCH                       , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
+    
+    weight_TORCH = 'weight_ADAMi'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_TORCH ) 
+        weights.append ( weight_TORCH )
+
+
+# =============================================================================
+## (10) home-made reweighter based on PyTorch
+# =============================================================================
+if active_test ( random_freq ) and hasPyTorch () :
+    # =========================================================================
+    logger.info ( 'Use PyTorch  for control reweighting' ) 
+    from ostap.tools.reweighters     import PyTorchLBFGSDensityReweighter   as TORCH
+    rw = DataReweighter ( TORCH                       , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
+    
+    weight_TORCH = 'weight_LBFGSd'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_TORCH ) 
+        weights.append ( weight_TORCH )
+        
+# =============================================================================
+## (11) home-made reweighter based on PyTorch
+# =============================================================================
+if active_test ( random_freq ) and hasPyTorch () :
+    # =========================================================================
+    logger.info ( 'Use PyTorch  for control reweighting' ) 
+    from ostap.tools.reweighters     import PyTorchLBFGSIterativeReweighter   as TORCH
+    rw = DataReweighter ( TORCH                       , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          target_variables = 'x,y,z'  ) 
+    
+    weight_TORCH = 'weight_LBFGSi'
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
+        rw.reweight ( mctree , name = weight_TORCH ) 
         weights.append ( weight_TORCH )
 
 # =============================================================================
-## (6) home-made reweighter based on Logistic Regression 
+## (12) home-made reweighter based on Logistic Regression 
 # =============================================================================
 if active_test ( random_freq ) and hasSkLearn () : 
     # =========================================================================
     logger.info ( 'Use LogRegression for control reweighting' ) 
     from ostap.tools.reweighters     import LogRegressionDensityReweighter   as LOGREG
     
-    rw6 = DataReweighter ( LOGREG                      , ## reweighter type 
-                           original         = mctree   ,
-                           target           = datatree ,
-                           polynomials      = 4        , 
-                           target_variables = 'x,y,z'  ) 
+    rw = DataReweighter ( LOGREG                      , ## reweighter type 
+                          original         = mctree   ,
+                          target           = datatree ,
+                          polynomials      = 4        , 
+                          target_variables = 'x,y,z'  ) 
     
     weight_LOGREG = 'weight_LOGREG'
-    with timing ( "LogRegression reweight" , logger = logger ) :    
+    with timing ( "%s reweight" % rw.method , logger = logger ) :    
         rw6.reweight ( mctree , name = weight_LOGREG) 
         weights.append ( weight_LOGREG )
 

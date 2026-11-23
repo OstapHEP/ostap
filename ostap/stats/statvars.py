@@ -2387,7 +2387,7 @@ def data_slice ( data        ,
                                 prescale    = prescale   , 
                                 structured  = structured ,
                                 transpose   = transpose  , 
-                                progress    = prorgess   ,
+                                progress    = progress   ,
                                 use_frame   = use_frame  ) 
 
     assert isinstance ( data , ROOT.TTree ) , "Here data must be TTree: %s" % typename ( data ) 

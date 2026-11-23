@@ -436,6 +436,7 @@ def ecdf_factory ( klass , data , complementary = False ) :
     - see `Ostap.Math.ECDF`
     """
     return klass ( doubles  ( data ) , complementary )
+
 # =============================================================================
 ## Reduce empirical distribution function 
 #  @see Ostap::Math::ECDF    
@@ -470,6 +471,27 @@ def wecdf_reduce  ( wecdf ) :
                              wecdf.complementary() )
 
 Ostap.Math.WECDF.__reduce__ = wecdf_reduce
+
+
+# ==============================================================================
+## factory for unpickling of <code>Ostap::Math::WeightedEntry</code>
+#  @see Ostap::Math::WeighetdEntry
+def we_factory ( value , weight = 1  ) :
+    """ Factory for unpickling of <code>Ostap::Math::WeightedEntry</code>
+    - see Ostap::Math::WeightedEntry 
+    """
+    return Ostap.Math.WeightedEntry ( value , weight ) 
+    
+# =============================================================================
+## reduce <code>Ostap::Math::WeighedEntry</code>
+#  @see Ostap::Math::WeightedEntry
+def we_reduce ( v ) :
+    """ Reduce `Ostap.Math.WeighetdEntry`
+    - see Ostap.Math.WeightedEntry
+    """
+    return we_factory , ( v.value() , v.weight () )
+
+Ostap.Math.WeightedEntry.__reduce__ = we_reduce
 
 # ==============================================================================
 ## Reduce `Ostap::Math::EPDF` & `Ostap::Math::WEPDF`
@@ -742,6 +764,10 @@ _decorated_classes_  = (
     Ostap.Math.FloaterHormann          , 
     ##
     Ostap.Math.ECDF                    , 
+    Ostap.Math.WECDF                   , 
+    Ostap.Math.EPDF                    , 
+    Ostap.Math.WEPDF                   , 
+    Ostap.Math.WeightedEntry           , 
     ##
     Ostap.Kinematics.Dalitz0           , 
     Ostap.Kinematics.Dalitz            ,
@@ -814,10 +840,15 @@ _new_methods_       = (
     Ostap.Math.PhaseSpace3s            . __reduce__  , 
     Ostap.Math.PhaseSpaceNL            . __reduce__  ,
     ##
+    Ostap.Math.ECDF                    . __reduce__  , 
+    Ostap.Math.WECDF                   . __reduce__  , 
+    Ostap.Math.EPDF                    . __reduce__  , 
+    Ostap.Math.WEPDF                   . __reduce__  , 
+    Ostap.Math.WeightedEntry           . __reduce__  , 
+    ##
     )
 
 import ostap.math.more_reduce
-
 
 # =============================================================================
 if not '__main__' == __name__ :

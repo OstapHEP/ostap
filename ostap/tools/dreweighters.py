@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -52,10 +51,9 @@ method_XGB         =  U.method_name ( 'XGBoost/Density'  )
 method_CATB        =  U.method_name ( 'CatBoost/Density' )
 method_LOGREG      =  U.method_name ( 'Logistic/Density' )
 method_TORCH       =  U.method_name ( 'PyTorch/Density'  )
-method_TORCH_ADAM  =  U.method_name ( 'PyTorch/Adam/Density'  )
-method_TORCH_LBFGS =  U.method_name ( 'PyTorch/LBFGS/Density' )
-
-train_symbol       =  S.hammer_and_wrench if S.show and S.hammer_and_wrench else 'Train'
+method_TORCH_ADAM  =  U.method_name ( 'PyTorch/Adam/Density'   )
+method_TORCH_LBFGS =  U.method_name ( 'PyTorch/L-BFGS/Density' )
+train_symbol       =  S.hammer_and_wrench if S.show and S.hammer_and_wrench else U.symbol_name ( 'Train' ) 
 # =============================================================================
 # Global Configuration Constants
 # =============================================================================

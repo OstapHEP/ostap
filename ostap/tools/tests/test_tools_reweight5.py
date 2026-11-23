@@ -238,7 +238,8 @@ def run_reweight ( n_dim       = 3     ,
     reweighters = [ None ]
     reweighters = [] 
 
-    if False and active_test ( random_freq ) and hasCatBoost () :
+    """
+    if active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostDensityReweighter as CATB
         what = "Use CatBoostDensityReweighter" 
@@ -250,7 +251,7 @@ def run_reweight ( n_dim       = 3     ,
                         original = original1   )                           
             reweighters.append ( rw )
         
-    if False and active_test ( random_freq ) and hasCatBoost () :
+    if active_test ( random_freq ) and hasCatBoost () :
         
         from ostap.tools.reweighters  import CatBoostIterativeReweighter as CATB
         what = "Use CatBoostIterativeReweighter" 
@@ -262,8 +263,8 @@ def run_reweight ( n_dim       = 3     ,
                         original = original1 )        
             reweighters.append ( rw )
 
-            
-    if False and active_test ( random_freq ) and hasLightGBM () :
+    
+    if active_test ( random_freq ) and hasLightGBM () :
         
         from ostap.tools.reweighters  import LightGBMDensityReweighter as  LGBM
         what = "Use LightGBMDensityReweighter" 
@@ -275,8 +276,9 @@ def run_reweight ( n_dim       = 3     ,
                         original              = original1 )
             
             reweighters.append ( rw )
+    """
     
-    if False and active_test ( random_freq ) and hasLightGBM () :
+    if active_test ( random_freq ) and hasLightGBM () :
         
         from ostap.tools.reweighters  import LightGBMIterativeReweighter as  LGBM
         what = "Use LightGBMIterativeReweighter" 
@@ -290,7 +292,8 @@ def run_reweight ( n_dim       = 3     ,
             
             reweighters.append ( rw )
 
-    if False and active_test ( random_freq ) and hasXGBoost  () :
+    """
+    if active_test ( random_freq ) and hasXGBoost  () :
         
         from ostap.tools.reweighters  import XGBoostDensityReweighter as  XGB 
         what = "Use XGBoostDensityReweighter" 
@@ -304,7 +307,7 @@ def run_reweight ( n_dim       = 3     ,
             
             reweighters.append ( rw )
         
-    if False and active_test ( random_freq ) and hasXGBoost  () :
+    if active_test ( random_freq ) and hasXGBoost  () :
 
         from ostap.tools.reweighters  import XGBoostIterativeReweighter as  XGB
         what = "Use XGbBoostIterativeReweighter" 
@@ -433,7 +436,8 @@ def run_reweight ( n_dim       = 3     ,
                            target   = target ,
                            original = original1 )
             reweighters.append ( rw )
-            
+
+    """ 
     # =========================================================================
     ## A bit special comparator: Random Axes 
     # =========================================================================
@@ -460,8 +464,7 @@ def run_reweight ( n_dim       = 3     ,
                               G1D.EppsSingleton     () ) ,
               nAxes    =  8 if ( light or weak ) else 15 ,
               nToys    = 25 if ( light or weak ) else 64 ,              
-             progress = True ) 
-
+              progress = True ) 
     
     # =========================================================================
     ## Summary table 
@@ -490,7 +493,8 @@ def run_reweight ( n_dim       = 3     ,
                 ww   , expo = pretty_floats ( wmin , wmax , precision = 4 , with_sign = False , strip = True )
                 wmin , wmax = ww
                 wunit       =  ( '[%s]' % format_pow10 ( expo ) ) if expo else '' 
-                               
+
+            """
             for c in comparators :
                 
                 tv , pv = c.pvalue ( data1   = target          ,
@@ -512,13 +516,14 @@ def run_reweight ( n_dim       = 3     ,
             table = T.remove_empty_columns ( rows ) 
             table = T.table ( table , title = title , prefix = '# ' , alignment = 'clclccccccccccccccccccccccccc' )
             logger.info ( '%s\n%s' % ( title , table ) )
-
+            """
+            
             ## Random Axes comparator:
             _ , pv = ra.pvalue ( data1   = target   ,
                                  data2   = original ,
                                  weight2 = original_weight ) 
 
-            title = '%s Random Axes/%s ' % ( ra.symbol, ra.method ) 
+            title = '%s Random Axes/%s #axes=%d #comps=%d' % ( ra.symbol, ra.method , ra.nAxes, ra.nComps ) 
             logger.info ( '%s:\n%s' % ( title , ra.report ( pvalue = pv , title = title , prefix = '# ' ) ) ) 
             
         

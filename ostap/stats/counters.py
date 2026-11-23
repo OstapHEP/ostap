@@ -19,9 +19,11 @@ __all__     = (
     'SE'             , ## simple smart counter (1-bi histo)    C++ Ostap::StatEntity 
     'WSE'            , ## simple smart counter with weight :   C++ Ostap::WStatEntity 
     'NSE'            , ## simple smart running counter     :   c++ Ostap::NStatEntity
-    'EE'             , ## simple (binomial) efficinecy counter C++ Ostap::EffEntity
+    'EE'             , ## simple (binomial) efficiency counter C++ Ostap::EffEntity
     'table_counters' , ## make table of counters
     'EffCounter'     , ## simple counter for efficiency
+    'ECDF'           , ##          empirical cumulative distribution function 
+    'WECDF'          , ## weighted empirical cumulative distribution function 
     ) 
 # =============================================================================
 from   ostap.math.ve          import Ostap, VE
@@ -229,7 +231,7 @@ SE.count = staticmethod ( se_count )
 
 _new_methods_ += [
     SE.count ,
-    ]
+]
 
 # ============================================================================== 
 ## Build the single row from the counter 
@@ -636,7 +638,6 @@ Ostap.Math.WCovariances.table    = _covs_table_
 Ostap.Math.WCovariances.__str__  = _covs_table_
 Ostap.Math.WCovariances.__repr__ = _covs_table_
 
-
 _new_methods_ += [
     Ostap.Math.Covariance.table      ,
     Ostap.Math.Covariance.__str__    ,
@@ -767,6 +768,7 @@ _new_methods_ += [
 
 ECDF  = Ostap.Math. ECDF
 WECDF = Ostap.Math.WECDF 
+WE    = Ostap.Math.WeightedEntry
 
 # =============================================================================
 ## project (W)ECDF into 1D histogram 
@@ -793,19 +795,42 @@ def _ecdf_project_ ( ecdf , histo ) :
 #  data , weight = ecdf.raw_data () 
 #  @encode 
 def _ecdf_raw_data_ ( ecdf ) :
-    """ Get raw-data as numpy arrays from (W)ECDF
+    """ Get raw-data as contiguous numpy float copies from (W)ECDF
     >>> ecdf = ...
     >>> data , weight = ecdf.raw_data () 
     """
-    import numpy 
+    import numpy
+    
     if isinstance ( ecdf , WECDF ) :
-        data   = numpy.array ( [ v for v,_ in ecdf ] , dtype = float )
-        weight = numpy.array ( [ w for _,w in ecdf ] , dtype = float )
-    else : 
-        data   = numpy.array ( ecdf.data () , dtype = float )
-        weight = None 
-    ## 
-    return data , weight 
+        
+        # Collect values and weights in one pass; numpy.array with copy=True
+        # already produces C-contiguous float64 arrays
+        v_vals   = []
+        w_vals   = []
+        
+        v_append = v_vals.append
+        w_append = w_vals.append
+        
+        for v , w in ecdf :
+            v_append ( float ( v ) )
+            w_append ( float ( w ) )
+            
+        value  = numpy.array ( v_vals , dtype = numpy.float64 , copy = True )
+        weight = numpy.array ( w_vals , dtype = numpy.float64 , copy = True )
+        
+        return value, weight
+    
+    elif isinstance ( ecdf , ECDF ) :
+        
+        # Fetch raw data once and materialize a C-contiguous float64 copy
+        raw     = ecdf.data ()
+        value   = numpy.array ( raw , dtype = numpy.float64 , copy = True )
+        weight  = None
+        
+        return value, weight
+    
+    raise TypeError ( "Invalid (W)ECDF type: %s" % typename ( ecdf  ) ) 
+
 
 for t in ( ECDF , WECDF ) :
     t.__rshift__ = _ecdf_project_  
@@ -815,7 +840,36 @@ _new_methods_ += [
     ECDF  .__rshift__ , 
     WECDF .__rshift__ ,
 ]
+                      
+# =================================================================================
+## Iterate over (value, weight) pair for unpacking in Python
+def _we_iter_ ( self ) :
+    """ Iterate over (value, weight) pair for unpacking in Python
+    """
+    yield self.value  ()
+    yield self.weight ()
 
+# =================================================================================
+## length of WeightedEntry 
+def _we_len_ ( self ) : return 2
+
+# =================================================================================
+## getitem for WeightedEntry 
+def _we_getitem_ ( self , idx ) :
+    if   0 == idx : return self.value  ()
+    elif 1 == idx : return self.weight ()
+    raise IndexError ( "Ostap.Math.WeightedEntry index %s out of range [0,1]" % index )
+
+WE.__len__     = _we_len_
+WE.__getitem__ = _we_getitem_
+WE.__iter__    = _we_iter_
+
+_new_methods_ += [
+    WE.__len__     , 
+    WE.__getitem__ , 
+    WE.__iter__    ,
+]
+                      
 # ==============================================================================
 _new_methods_ = tuple ( _new_methods_ )
    
@@ -827,6 +881,7 @@ _decorated_classes_ = (
     EE    ,
     ECDF  , 
     WECDF ,
+    WE    , 
     Ostap.Math.Covariance   ,
     Ostap.Math.WCovariance  ,
     Ostap.Math.Covariances  ,

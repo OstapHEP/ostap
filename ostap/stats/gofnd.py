@@ -24,13 +24,13 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
     ## 
-    'MIX'                , ## Mixed Sample Goodness-of-fit method 
-    'PPD'                , ## Point-to-Point Dissimilarity Goodness-of-fit method 
+    'MIX'                , ## Mixed-Samples                Goodness-of-Fit method 
+    'PPD'                , ## Point-to-Point Dissimilarity Goodness-of-Fit method 
     'DNN'                , ## Distance-to-Nearest-Neighbor Goodness-Of-Fit method
     ##
     'USTAT'              , ## Alternative implementation of DNN method
-    'NLL'                , ## Use -log L as GoF estimator 
-    'AkaikeIC'           , ## Use Akaike IC  as GoF estimator 
+    'NLL'                , ## Use -log L       as GoF estimator 
+    'AkaikeIC'           , ## Use Akaike IC    as GoF estimator 
     'BayesianIC'         , ## Use Bayesian IC  as GoF estimator
     ## 
     'ADVAL_LightGBM'      , ## Use Adversarial Validation as GoF estimator 
@@ -52,7 +52,7 @@ __all__     = (
     'ZA'                 , ## ZA                GoF estimator
     'ZC'                 , ## ZC                GoF estimator
     ## 
-    ## some simble but crude estimators
+    ## Some simble, fast but crude estimators
     'KullbackLeibler'    , ## Very crude estimator based on Kullback-Leibler's divergency 
     'Jeffrey'            , ## Very crude estimator based on Jeffrey's divergency 
     'JensenShannon'      , ## Very crude estimator based on Jensen-Shannon divergency 
@@ -62,8 +62,9 @@ __all__     = (
     'Wasserstein'        , ## Very crude estimator based on Wasserstein's divergency 
     'Hellinger'          , ## Very crude estimator based on Hellinger's divergency 
     ##
-    'Chi2'               , ## Use binned chi2 as an estimator (1,2&3D) 
-)
+    'Chi2'               , ## Use binned chi2 as an estimator (1,2&3D)
+    # =========================================================================
+) # ===========================================================================
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
 from   ostap.core.cpu_info      import HAS_AVX2 

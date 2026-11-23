@@ -42,7 +42,7 @@ from   ostap.stats.utils        import ( nEff             ,
                                          p_header         , 
                                          clip_pvalue      , 
                                          format_pvalue    , 
-                                         format_nsigma    )
+                                         format_nsigma    ) 
 from   ostap.stats.counters     import SE, WSE, ECDF
 from   ostap.stats.tools        import hasSkLearn
 from   ostap.logger.pretty      import pretty_row 
@@ -547,6 +547,7 @@ def format_row ( tvalue    = None ,
     has_counter = not counter is None and isinstance ( counter , ( SE , WSE )  )
 
     if has_ecdf  and not has_counter  :
+        
         counter     = ecdf.counter ()
         has_counter = True 
         
@@ -721,56 +722,6 @@ def draw_ecdf ( ecdf          ,
     ## 
     return result, vline, hline 
 
-# =============================================================================
-from scipy.stats import combine_pvalues as _combine_pvs_ # ====================
-# =============================================================================
-## scipy methods used to combine p-values 
-combine_methods = 'fisher' , 'stouffer'
-# =============================================================================
-if Version ( "1.6"  ) <= Version ( scipy.__version__ ) : # ====================
-    # =========================================================================
-    combine_methods = combine_methods  + ( "tippett" , "mudholkar_george" ) 
-# ==============================================================================
-if Version ( "1.10" ) <= Version ( scipy.__version__ ) : # =====================
-    # ==========================================================================
-    ## combine p-values using certain combination method 
-    def _combine_pvalues ( data , method = "fisher" ) :
-        """ Combine p-values using certain combination method """
-        return _combine_pvs_ ( data , method = method ).pvalue
-    # ==========================================================================
-else : # =======================================================================
-    # ==========================================================================
-    ## combine p-values using certain method 
-    def _combine_pvalues ( data , method = "fisher" ) :
-        """ Combine p-values using certain method """
-        return _combine_pvs_ ( data , method = method ) [ 1 ]
-    
-# ==============================================================================
-## combine p-values 
-#  - use toys to propagate the uncertainties 
-def combine_pvalues ( pvalues ,
-                      method  ,
-                      tol     = 1.e-8 ,
-                      N       = 400   ) :
-    """ Combine p-values
-    - use toys to propagate the uncertainties 
-    """
-    from   scipy.stats              import combine_pvalues as _combine_pvs
-    ##
-    if any ( isinstance ( p , VE ) and 0 < p.cov2() and 0 <= p.value() <= 1 for p in pvalues ) :
-        pvs = [ clip_pvalue ( VE ( p ) , 0.5 ) for p in pvalues ]
-        ## toys
-        cnt = SE()
-        for i in range ( N )  :
-            ## sampled 
-            spv  = [ p.gauss ( accept = lambda v : 0 < v < 1 ) if 0 < p.cov2() else float ( p ) for p in pvs ]            
-            cnt += _combine_pvalues ( spv , method = method )
-
-        rms = cnt.rms()        
-        return VE ( cnt.mean() , rms * rms ) 
-    
-    pvs = ( min ( max ( tol , float ( p ) ) , 1 - tol ) for p in pvalues )            
-    return _combine_pvalues ( pvs , method = method )
 
 # ==============================================================================
 if '__main__' == __name__ :

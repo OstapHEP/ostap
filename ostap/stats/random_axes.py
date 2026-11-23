@@ -79,6 +79,7 @@ from   ostap.stats.pvalue     import make_permutations, permutation_symbol
 from   ostap.utils.config     import Config
 from   ostap.stats.gof        import AGoFnp
 from   ostap.stats.counters   import SE, EffCounter
+from   ostap.stats.pvalues    import combine_methods , combine_pvalues
 import ostap.stats.utils      as     U
 import ostap.logger.symbols   as     S 
 import numpy
@@ -453,7 +454,6 @@ class RandomAxes(AGoFnp,Config) :
         ## reset/re-create the counters 
         self.__counter.reset()  
         for c in self.__t_counters : c.reset()
-        self.__counter   = EffCounter  () 
         self.__pvalue    = None 
         
         if not self.weights_supported : 
@@ -498,7 +498,7 @@ class RandomAxes(AGoFnp,Config) :
             perm_data1 , perm_data2 = proj1 , proj2
         else :
             # Keep original feature matrices and project per axis inside each toy
-            proj1 = proj2 = None
+            proj1  = proj2 = None
             perm_data1 , perm_data2 = data1 , data2
 
         ## make permutations with LoopGC over toy stream
@@ -530,7 +530,8 @@ class RandomAxes(AGoFnp,Config) :
             ## update counters 
             for exc, counter in zip ( exceeds, self.t_counters ) : counter += exc
 
-            self.__counter += numpy.all ( exceeds )
+            ## any ? all ? 
+            self.__counter += numpy.any ( exceeds )
 
             ## clean up per-toy temporaries
             del tmatrix , tm_max , exceeds , ds1 , ds2
@@ -538,9 +539,7 @@ class RandomAxes(AGoFnp,Config) :
         if dense_proj :
             del proj1 , proj2
                         
-        pvals  = [ c.eff for c in self.t_counters ]
-        p_min  = min ( pvals , key = float )
-        pvalue = 1.0 - ( 1.0 - p_min ) ** len ( pvals )
+        pvalue        = self.__counter.eff 
         self.__pvalue = pvalue 
         
         return tvalue , pvalue 
@@ -596,32 +595,45 @@ class RandomAxes(AGoFnp,Config) :
         for cmp , pv in zip ( self.comparators ,
                               self.t_counters  ) : 
         
-            hdr , row = cmp.the_row ( pvalue    = pv.eff    ,
-                                      precision = precision ,
-                                      width     = width     )
+            hdr , row = cmp.the_row ( pvalue    = pv.eff      ,
+                                      precision = precision   ,
+                                      width     = width       )
             
             row = ( cmp.symbol , cmp.method ) + row
             
             rows.append ( row )
 
+        ## combination methods
+        crows = [] 
+        pvals = tuple ( p.eff for p in self.t_counters )
+        for method in combine_methods :
+            pval   = combine_pvalues ( pvals  , method )
+            pv     = U.clip_pvalue   ( pval   )
+            nsigma = U.significance  ( pv     )
+            pval   = U.format_pvalue ( pval   ) 
+            nsigma = U.format_nsigma ( nsigma )
+            row    = pval , nsigma
+            m      = U.method_name ( method.title() )
+            row    = ( S.o_plus , m )  + row
+            crows.append ( row ) 
             
         _ , row = self.the_row ( pvalue    = self.__pvalue , 
                                  precision = precision     ,
                                  width     = width         ) 
-        row   = ('',) * 6 + row
         
         first = header + hdr 
-        last  = ( self.symbol, self.method ) + row
-        rows  = [ first ] + sorted ( rows ) + [ last ]
+        last  = ( self.symbol, self.method ) + row        
+        rows  = [ first ] + \
+            sorted ( rows  , key = lambda row : row [ 1 ] ) +  \
+            sorted ( crows , key = lambda row : row [ 1 ] ) + [ last ]
         
         import ostap.logger.table as T
         rows  = T.remove_empty_columns ( rows )
-        title = title if title else '%s report' % typename ( self )  
+        title = title if title else '%s Random Axes/%s #axes=%d #comps=%d' % ( self.symbol, self.method , self.nAxes, self.nComps ) 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'llcccccccc' , style = style )
         
-    def __str__ ( self ) : return self.report ()
-    __repr__  = __str__
-
+    def __str__  ( self ) : return self.report ()
+    def __repr__ ( self ) : return self.report ()
 
 # =============================================================================
 if '__main__' == __name__ :

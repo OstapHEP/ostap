@@ -95,18 +95,18 @@ __all__     = (
     'symbol_ZC'           , ## symbol for Zhang ZC 
     'symbol_ZK'           , ## symbol fo Zhang ZK 
     ##
-    'method_LGBM'         , ##            LightGBM method 
-    'method_XGB'          , ##             XGBoost method 
-    'method_CATB'         , ##            CatBoost method 
-    'method_HGBC'         , ##  HistoGradientBoost method 
-    'method_GBC'          , ##       GradientBoost method 
-    'method_RF'           , ##        RandomForest method 
-    'method_LOGREG'       , ## Logistic Regression method 
-    'method_USTAT'        , ##               uStat method 
-    'method_CHI2'         , ##                Chi2 method 
-    'method_TORCH'        , ##             PyTorch method 
-    'method_TORCH_ADAM'   , ##        PyTorch/Adam method 
-    'method_TORCH_LBFGS'  , ##       PyTorch/LBFGS method 
+    'method_LGBM'         , ##                     LightGBM method 
+    'method_XGB'          , ##                      XGBoost method 
+    'method_CATB'         , ##                     CatBoost method 
+    'method_HGBC'         , ##           HistoGradientBoost method 
+    'method_GBC'          , ##                GradientBoost method 
+    'method_RF'           , ##                 RandomForest method 
+    'method_LOGREG'       , ##          Logistic Regression method 
+    'method_USTAT'        , ##                        uStat method 
+    'method_CHI2'         , ##                         Chi2 method 
+    'method_TORCH'        , ##                      PyTorch method 
+    'method_TORCH_ADAM'   , ##                 PyTorch/Adam method 
+    'method_TORCH_LBFGS'  , ##               PyTorch/L-BFGS method 
     ##
     'method_MIX'          , ##                 Mixed-Sample method 
     'method_PPD'          , ## Point-to-Point Dissimilarity method 
@@ -134,7 +134,7 @@ __all__     = (
     'method_ES'           , ##               Epps-Singleton method
     'method_RA'           , ##      Random Axes/Cramer-Wold method 
     ##
-    'method_NLL'          , ## Negative log-likelihood 
+    'method_NLL'          , ## Negative log-likelihood
     'method_AIC'          , ## Akaike IC
     'method_BIC'          , ## Bayesian IC'
     ##
@@ -155,6 +155,7 @@ from   ostap.utils.core       import typename
 from   ostap.stats.counters   import ECDF, WECDF 
 from   ostap.math.math_base   import data2vct, isfinite , FIRST_ENTRY , LAST_ENTRY
 from   ostap.math.ve          import VE
+from   ostap.math.math_ve     import significance
 import ostap.logger.symbols   as     S 
 import numpy, math 
 # =============================================================================
@@ -175,7 +176,7 @@ symbol_HGBC   = S.bar_chart    if S.show and S.bar_chart      else symbol_name (
 symbol_GBC    = S.nabla        if S.show and S.nabla          else symbol_name ( 'GBC'      ) 
 symbol_RF     = S.palm         if S.show and S.palm           else symbol_name ( 'RF'       )
 
-symbol_TORCH       = S.flashlight             if S.show and S.flashlight else symbol_name ( 'TORCH'    )
+symbol_TORCH       = S.flashlight             if S.show and S.flashlight                  else symbol_name ( 'TORCH'        )
 symbol_TORCH_ADAM  = S.flashlight+S.lightning if S.show and S.flashlight and S.lightning  else symbol_name ( 'TORCH/ADAM'   )
 symbol_TORCH_LBFGS = S.flashlight+S.gear      if S.show and S.flashlight and S.gear       else symbol_name ( 'TORCH/L-BFGS' )
 
@@ -1066,6 +1067,7 @@ def prepare_data ( data         ,
                          data2   = npdata2 ,
                          weight1 = weight1 , 
                          weight2 = weight2 ) 
+
 
 # ============================================================================
 if '__main__' == __name__ :

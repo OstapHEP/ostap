@@ -13,8 +13,8 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2023-12-06"
 __all__     = (
-    'AGoF'      , ## an abstract base cladd for Goodness-of-Fit estimators
-    'AGoFnp'    , ## an abstract base cladd for Goodness-of-Fit estimators
+    'AGoF'      , ## an abstract base class for Goodness-of-Fit estimators
+    'AGoFnp'    , ## an abstract base class for Goodness-of-Fit estimators
     )
 # =============================================================================
 from   ostap.utils.basic import classprop 

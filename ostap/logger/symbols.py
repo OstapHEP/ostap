@@ -179,6 +179,7 @@ __all__     = (
     'n_sigma_expr'        , ## f'#{greek_lower_sigma}' if show else '#sigma'
     ##  
     'oil_drum'            , ## 🛢️  (wide)
+    'o_plus'              , ## ⨁    
     ##
     'package'             , ## 📦    
     'palette'             , ## 🎨  (wide)
@@ -484,6 +485,7 @@ union            = '⋃'  if show else ''
 intersection     = '⋂'  if show else ''
 exclusive_or     = '⊻'  if show else '^'
 difference       = '⊻'  if show else '-'
+o_plus           = '⨁' if show else '+'
 
 iteration        = '々' if show else ''
 permille         = '‰'  if show else '/1000'
