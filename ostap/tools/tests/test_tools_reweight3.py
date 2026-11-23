@@ -343,7 +343,7 @@ comparators = tuple ( comparators )
 ## The table of global comparison statistics 
 header    = ( '#%s' % iteration , '#eff' , 'Comparator' ) + full_header 
 glob_stat = [ header ]
-alignment = 'lc' + 'c' * len ( comparators )           
+alignment = 'lcll' + 'c' * len ( comparators )           
 
 # =============================================================================
 ## Read data from DB

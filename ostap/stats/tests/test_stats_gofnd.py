@@ -131,7 +131,7 @@ def test_GOF () :
     tconf = { 'nToys' : nToys , 'parallel' : True , 'silent' : True }
 
     gof_list = [
-        GnD.Chi2              ( **tconf ) ,
+        GnD.Chi2              ( binning = (30,30) , **tconf ) ,
         GnD.KullbackLeibler   ( **tconf ) ,
         GnD.Jeffrey           ( **tconf ) ,
         GnD.JensenShannon     ( **tconf ) ,
@@ -219,8 +219,6 @@ def test_GOF () :
         gof    = GOF ( **config )
         test   = gof , gof , 'ADVAL:XBGoost'
         to_test.append ( test )             
-
-    to_test = []
     
     # ==========================================================================
     if hasCatBoost() : # =======================================================
