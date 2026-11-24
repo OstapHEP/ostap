@@ -44,15 +44,15 @@ __all__     = (
     ## 
     'fix_ppsrv'          , ## small fix for pp-server
     'pp_submit'          , ## fixed "submit" method for pp
-    ## 
+    ##
+    'random_python'      , ## Re-initialize random number generation for pytohon&numpy
+    'random_root'        , ## Re-initialize random number generation for ROOT&RooFit     
 )
 # =============================================================================
-import sys, socket, importlib
-
+import sys, os, socket, importlib
 # =============================================================================
 from ostap.logger.logger    import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
-else                      : logger = getLogger ( __name__               ) 
+logger = getLogger ( 'ostap.parallel.utils' )
 # =============================================================================
 ## Get the remove configuration for the remote host from the certain section of
 #  the configuration file 
@@ -217,64 +217,6 @@ def get_max_jobs_chunk ( jobs_chunk = None ) :
         return min ( lim , jobs_chunk )
     return lim
 
-
-# =============================================================================
-## Random number setting for parallel jobs
-#  - python
-#  - ROOT.gRandom
-#  - ROOT.RooRandom 
-#  @code
-#  jobid = ...
-#  random_random ( jobid ) 
-#  @endcode
-def random_random ( *jobid ) :
-    """ Random number setting for parallel jobs
-    - python
-    - ROOT.gRandom
-    - ROOT.RooRandom
-    >>> jobid = ...
-    >>> random_random ( jobid ) 
-    """
-    import time, random, ROOT, sys , os, socket   
-    ##
-    random.seed ()
-    ##
-    jhid = jobid 
-    jhid = jhid , os.getpid () , os.getppid() , os.uname()
-    jhid = jhid , socket.getfqdn ()
-    jhid = jhid , time.time ()
-    jhid = jhid , id ( ROOT )  , id ( sys )   , id ( random )
-    jhid = jhid , os.urandom ( 32 )
-    jhid = hash ( jhid ) 
-    ##
-    random.seed ( jhid )
-    ## 
-    njumps = jhid % 9967
-    for j in range ( njumps ) : random.uniform ( 0 , 1 )
-    ##
-    
-    ## sleep a bit (up to half a second) 
-    time.sleep ( random.uniform ( 0.05 , 0.5 ) )
-    
-    ## now  initialize ROOT
-    ROOT.gRandom.SetSeed ( abs ( jhid ) ) 
-
-    ## ... and Roofit
-    ROOT.RooRandom.randomGenerator().SetSeed ( abs ( jhid ) ) 
-
-    ## .. and numpy
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        import numpy as np
-        np.random.seed()
-        # =====================================================================
-    except ImportError : # ====================================================
-        # =====================================================================
-        pass
-    # 
-    state = random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
-    
 # =============================================================================
 ## ping the remote host 
 def ping ( host ) :
@@ -284,12 +226,16 @@ def ping ( host ) :
     import subprocess , shlex 
     command = "ping -c 1 -w 1 %s" % host 
     args    = shlex.split( command )
-    try:
+    # =========================================================================
+    try: # ====================================================================
+        # =====================================================================
         subprocess.check_call ( args                     ,
                                 stdout = subprocess.PIPE ,
                                 stderr = subprocess.PIPE )
-        return True 
-    except subprocess.CalledProcessError:
+        return True
+        # =====================================================================
+    except subprocess.CalledProcessError: # ===================================
+        # =====================================================================
         return False 
 
 # =============================================================================
@@ -496,10 +442,105 @@ def uimap  ( jobs ) :
                 lst.pop ( i ) 
                 yield  jobid, job 
                 break
-            
 
+# =============================================================================
+SEED_MAX       = 2**63
+SEED_MAX_NUMPY = 2**32 
+SEED_MAX_ROOT  = 2**32 - 1 
+# =============================================================================
+## Setup random numbers for python&numpy
+#  - if seed if positive integer number, if it used for python and numpy
+#  
+#  @see random.seed
+#  @see numpy.random.set_seed
+#
+#  @param seed   (INPUT) input seed
+#  @param salt   (INPUT) `salt`   for generation of proper seed
+#  @param pepper (INPUT) `pepper` for generation of proper seed
+#  @return the actual seed used to initializer python&numpy
+def random_python ( seed = None , *salt , **pepper ) :
+    """ Setup random numbers for python&numpy
+    - if `seed` is positive integer number, it it used for python and numpy,
+    otherwise `seed` if generated via `hash` from
+    
+    - `os.urandom`
+    - `salt`
+    - `pepper`
+    - `sys.environ`
 
+    
+    param `seed`   (INPUT) input seed
+    param `salt`   (INPUT) `salt`   for generation of proper seed
+    param `pepper` (INPUT) `pepper` for generation of proper seed
+    
+    - see `random.seed`
+    - see `numpy.random.seed`
+    
+    return the actual seed used to initializer python&numpy 
+    """
+
+    if not isinstance ( seed , int ) or not 1 <= seed <= SEED_MAX :
+
+        ## use system random 
+        seed = seed , os.urandom ( 16 )
+        seed = hash ( seed ) 
+
+        from   ostap.utils.basic          import main_process 
+        
+        ## some os-information *AND* salt 
+        seed = ( seed , os.getpid () , os.getppid () , main_process() ) + salt
+        seed = hash ( seed )
+        
+        for k , v in pepper.items () :
+            seed = seed , k , v
+            seed = hash ( seed )
             
+        for k , v in sys.environ.items () :
+            seed = seed , k , v
+            seed = hash ( seed )
+
+        seed = seed % SEED_MAX + 1
+        
+    random.seed ( seed )
+    
+    import numpy 
+    numpy.random.seed ( seed % SEED_MAX_NUMPY )
+
+    return seed 
+
+# =============================================================================
+## Setup random numbers for ROOT&RooFit 
+#  - if seed is positive integer number it is used, otherwise seed is generated 
+#  
+#  @see random.set_seed
+#  @see numpy.random.set_seed
+#
+#  @param seed   (INPUT) input seed
+#  @param salt   (INPUT) `salt`   for generation of proper seed
+#  @param pepper (INPUT) `pepper` for generation of proper seed
+#  @return the actual seed used to initializer python&numpy
+def random_root ( seed = None , *salt , **pepper ) :
+    """" Setup random numbers for ROOT&RooFit 
+     - if seed is positive integer number it is used, otherwise seed is  generated 
+    
+    param `seed`   (INPUT) input seed
+    param `salt`   (INPUT) `salt`   for generation of proper seed
+    param `pepper` (INPUT) `pepper` for generation of proper seed
+    
+    return the (long) seed used to initialize ROOT & RooFit 
+    """
+
+    long_seed = random_python ( seed , *salt , **pepper )
+
+    ## clip it 
+    short_seed = long_seed % SEED_MAX_ROOT + 1 
+
+    import ROOT 
+    ROOT.gRandom                     .SetSeed ( short_seed ) 
+    ROOT.RooRandom.randomGenerator() .SetSeed ( short_seed )
+    
+    return long_seed 
+
 # =============================================================================
 if '__main__' == __name__ :
     

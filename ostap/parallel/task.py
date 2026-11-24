@@ -52,11 +52,10 @@ from   ostap.logger.colorized   import attention
 from   ostap.utils.progress_bar import progress_bar 
 from   itertools                import repeat , count
 import ostap.io.zipshelve       as     DBASE 
-import sys, os, operator, abc, signal   
+import sys, os, operator, abc, signal, gc    
 # =============================================================================
 from   ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.task' )
-else                      : logger = getLogger ( __name__              )
+logger = getLogger ( 'ostap.parallel.task' )
 # ==============================================================================
 ## keyboard-interrupt tag 
 keyboard_interrupt = attention ( 'Keyboard Interrupt' )
@@ -569,7 +568,7 @@ class StatMerger(object) :
     #     ...
     #  @endcode 
     def __iter__  ( self ) :
-        """ Iterator over merged statictics :
+        """ Iterator over merged statistics :
         >>> merged = ...
         >>> for host , stat in merged :
         ...
@@ -834,15 +833,17 @@ def task_executor ( item ) :
     from ostap.utils.root_utils import Batch, ImplicitMT       
     from ostap.core.build_dir   import UseBuildDir
     from ostap.utils.cleanup    import CleanUpPID 
+    from ostap.utils.memory     import UseGC 
 
     batch_context      =      Batch  ( task.batch      ) if task.batch_set      else NoContext() 
     build_context      = UseBuildDir ( task.build      ) if task.build_set      else NoContext()
     implicitMT_context = ImplicitMT  ( task.implicitMT ) if task.implicitMT_set else NoContext()
-    ## 
+    ##    
     cleanup_context    = NoContext   () if main_process () else CleanUpPID () 
-
+    gc_context         = UseGC       () if main_process () else NoContext  ()
+    
     ## use clean, build & batch context 
-    with cleanup_context , implicitMT_context , build_context , batch_context :         
+    with cleanup_context , implicitMT_context , build_context , batch_context , gc_context :         
         ## perform remote  initialization (if needed) 
         task.initialize_remote ( jobid )         
         with Statistics ()  as stat :
@@ -878,10 +879,12 @@ def func_executor ( item ) :
     from ostap.utils.cleanup    import CleanUpPID
     from ostap.utils.root_utils import batch 
     from ostap.utils.basic      import NoContext
+    from ostap.utils.memory     import UseGC 
 
-    cleanup_context = NoContext () if main_process() else CleanUpPID() 
+    cleanup_context = NoContext () if main_process () else CleanUpPID () 
+    gc_context      = UseGC     () if main_process () else NoContext  ()
 
-    with cleanup_context , batch ( True ) :        
+    with cleanup_context , batch ( True ) , gc_context :        
         with Statistics ()  as stat :
             # ================================================================
             signal_sigint () 

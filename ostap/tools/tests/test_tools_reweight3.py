@@ -728,7 +728,6 @@ if active_test ( random_freq ) and hasPyTorch () :
         rw.reweight ( mctree , name = weight_TORCH ) 
         weights.append ( weight_TORCH )
         
-
 # =============================================================================
 ## (9) home-made reweighter based on PyTorch
 # =============================================================================
@@ -745,7 +744,6 @@ if active_test ( random_freq ) and hasPyTorch () :
     with timing ( "%s reweight" % rw.method , logger = logger ) :    
         rw.reweight ( mctree , name = weight_TORCH ) 
         weights.append ( weight_TORCH )
-
 
 # =============================================================================
 ## (10) home-made reweighter based on PyTorch
@@ -797,7 +795,7 @@ if active_test ( random_freq ) and hasSkLearn () :
     
     weight_LOGREG = 'weight_LOGREG'
     with timing ( "%s reweight" % rw.method , logger = logger ) :    
-        rw6.reweight ( mctree , name = weight_LOGREG) 
+        rw.reweight ( mctree , name = weight_LOGREG) 
         weights.append ( weight_LOGREG )
 
 # ============================================================================
@@ -812,7 +810,7 @@ for weight in weights :
     if weight and not weight in mctree :
         logger.info ( 'Weight `%s` is not in MC-tree!' % weight )
         continue 
-    
+
     title       = "MC-tree after %s reweighting" %  ( weight if weight else "NO" ) 
     logger.info ( '%s:\n%s' % ( title , mctree.table   ( variables = [ 'x' , 'y' , 'z' ] ,
                                                          title     = title    ,

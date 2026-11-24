@@ -189,7 +189,7 @@ class ADVAL_base (GoFnp):
                X_val   , Y_val   , W_val   , importance = False ) :
         return NotImplemented
 
-    
+    ## get t-value from LightGBM 
     def tvalue ( self               ,
                  data1              ,
                  data2              ,  * , 
@@ -239,14 +239,12 @@ class ADVAL_base (GoFnp):
                         
             W       = numpy.concatenate ( [ w1 , w2 ] )
 
-        from sklearn.model_selection import KFold
-        
         random_state = self.params.get ( 'random_state' , None )
         
         oof_preds    = numpy.zeros ( N , dtype = numpy.float32 )
         importances  = numpy.zeros ( X.shape [ 1 ] , dtype = numpy.float32 ) if importance else None
 
-        if 1 == self.n_splits :
+        if 1 >= self.n_splits :
             full_idx = numpy.arange ( N , dtype = numpy.intp )
             splits   = [ ( full_idx , full_idx ) ]
         else :

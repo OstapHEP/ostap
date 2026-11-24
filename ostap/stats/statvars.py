@@ -2370,12 +2370,12 @@ def data_slice ( data        ,
     ## Frame processing ? 
     if  use_frame and good_for_frame ( data , first , last  ) : 
         return F.frame_slice ( data                    ,
-                               expression              ,
+                               expressions             ,
                                cuts       = cuts       ,
                                prescale   = prescale   , 
                                structured = structured ,
                                transpose  = transpose  , 
-                               progress   = prorgess   )
+                               progress   = progress   )
     ## Parallel processing?
     elif parallel   and good_for_parallel ( data , first , last ) :
         from ostap.parallel.parallel_statvar import parallel_slice 

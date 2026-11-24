@@ -1973,7 +1973,7 @@ class SliceHelper(object) :
         ## get the weights 
         weights = None
         if self.cname :
-            weights = values [ cname ]
+            weights = values [ self.cname ]
             if numpy.all ( weights == 1 ) : weight = None
 
         return result, weights 

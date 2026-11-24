@@ -60,9 +60,11 @@ class GoFTask (Task) :
     def initialize_remote  ( self , jobid = -1 ) :
         """ Initialize the remote task, treat the random numbers  
         """
-        import random, ROOT
-        from ostap.parallel.utils import random_random
-        random_random ( jobid )  
+        ## 
+        import ROOT
+        from ostap.parallel.utils import random_root
+        random_root ( seed = None , jobid = jobid )
+        ## 
         if main_process () : return       
         return self.initialize_local() 
         

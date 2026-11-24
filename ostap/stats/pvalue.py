@@ -29,7 +29,7 @@ from   ostap.stats.utils        import weight_trivial , check_all
 from   ostap.stats.counters     import EffCounter, ECDF 
 from   ostap.utils.progress_bar import progress_bar
 import ostap.logger.symbols     as     S 
-import numpy, math, abc 
+import numpy, math, abc, gc  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -218,6 +218,7 @@ class PVALUE (abc.ABC) :
         self.weight1     = weight1
         self.weight2     = weight2
         self.random_seed = random_seed
+        #
         if description : self.description = description + ' ' + S.fixed_width ( self.gof.symbol , 4 ) + ':'
         else           : self.description =                     S.fixed_width ( self.gof.symbol , 4 ) + ':'
         
@@ -304,7 +305,7 @@ class PVALUE (abc.ABC) :
         return counter, numpy.asarray ( tvalues , dtype = float ) 
     
     # ========================================================================
-    ## Run N-toys/permutatino/bootstrappings/...
+    ## Run N-toys/permutations/bootstrappings/...
     @abc.abstractmethod 
     def run_toys ( self, N , silent = True , progress = False ) :
         """ Run N-toys/permutations/bootstrappings/...
@@ -366,6 +367,7 @@ class PERMUTATOR (PVALUE) :
             tvalues.append   ( tv  )
             counter += bool  ( self.t_value <= tv  )
             
+        gc.collect() 
         return counter , numpy.asarray ( tvalues , dtype = float )
 
 # =============================================================================
@@ -421,6 +423,7 @@ class BOOTSTRAPPER (PERMUTATOR) :
 
         for tv in tvalues : counter += bool ( self.t_value <= tv  )
         
+        gc.collect() 
         return counter , numpy.asarray ( tvalues , dtype = float )
     
 # =============================================================================
@@ -493,16 +496,16 @@ class TOYS (PVALUE) :
         """
         
         seed = self.random_seed
-        if not seed : seed = 0
         
-        import ROOT 
-        ROOT.gRandom                     .SetSeed ( seed ) 
-        ROOT.RooRandom.randomGenerator() .SetSeed ( seed )
+        from ostap.parallel.utils import random_root
+        random_root ( None , self.random_seed )
 
         counter = EffCounter ()
         tvalues = [] 
-        for i in progress_bar ( N , description = self.description , silent = not progress ) : 
-
+        for i in safe_loop ( progress_bar ( N ,
+                                            description = self.description ,
+                                            silent = not progress          ) ) : 
+            
             ## for consistency
             self.pdf.load_params ( self.parameters , silent = True )
             
@@ -520,6 +523,7 @@ class TOYS (PVALUE) :
         if not self.ecdf : self.ecdf = ECDF ( tvalues  , True ) 
         else             : self.ecdf.add ( data2vct ( tvalues )  )
 
+        gc.collect() 
         return counter, numpy.asarray ( tvalues , dtype = float ) 
 
 # ==============================================================================

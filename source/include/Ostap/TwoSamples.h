@@ -297,10 +297,10 @@ namespace Ostap
      *  @note Mood, A.M. (1954). "On the asymptotic efficiency of certain nonparametric
      *        two-sample tests". The Annals of Mathematical Statistics, 25(3): 514–522.
      */
-    double mood           ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double mood           ( const  ECDF& e1 , const  ECDF& e2 ) ;
     double mood           ( const WECDF& e1 , const WECDF& e2 ) ;
-    double mood           ( const ECDF&  e1 , const WECDF& e2 ) ;
-    double mood           ( const WECDF& e1 , const ECDF&  e2 ) ;
+    double mood           ( const  ECDF& e1 , const WECDF& e2 ) ;
+    double mood           ( const WECDF& e1 , const  ECDF& e2 ) ;
 
     // ========================================================================
     /** Van der Waerden (normal scores) two-sample location test statistic.
@@ -323,11 +323,10 @@ namespace Ostap
      *  @note Van der Waerden, B.L. (1952). "Order tests for the two-sample problem 
      *        and their power". Indagationes Mathematicae, 14: 453–458.
      */
-    double van_der_waerden ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double van_der_waerden ( const  ECDF& e1 , const  ECDF& e2 ) ;
     double van_der_waerden ( const WECDF& e1 , const WECDF& e2 ) ;
-    double van_der_waerden ( const ECDF&  e1 , const WECDF& e2 ) ;
-    double van_der_waerden ( const WECDF& e1 , const WECDF& e2 ) ;
-
+    double van_der_waerden ( const  ECDF& e1 , const WECDF& e2 ) ;
+    double van_der_waerden ( const WECDF& e1 , const  ECDF& e2 ) ;
 
     // ========================================================================
     /** Brunner-Munzel two-sample rank test statistic.
@@ -346,10 +345,10 @@ namespace Ostap
      *        asymptotic theory and a small-sample approximation". 
      *        Biometrical Journal, 42(1): 17–25.
      */
-    double brunner_munzel ( const ECDF&  e1 , const ECDF&  e2 ) ;
+    double brunner_munzel ( const  ECDF& e1 , const  ECDF& e2 ) ;
     double brunner_munzel ( const WECDF& e1 , const WECDF& e2 ) ;
-    double brunner_munzel ( const ECDF&  e1 , const WECDF& e2 ) ;
-    double brunner_munzel ( const WECDF& e1 , const ECDF&  e2 ) ;
+    double brunner_munzel ( const  ECDF& e1 , const WECDF& e2 ) ;
+    double brunner_munzel ( const WECDF& e1 , const  ECDF& e2 ) ;
 
     // =========================================================================
     /** @var EPPS_SINGLETON_FREQUENCIES
@@ -379,22 +378,22 @@ namespace Ostap
      *        Journal of Statistical Computation and Simulation, 26(3-4): 177–203.
      */
     double epps_singleton 
-    ( const Ostap::Math::ECDF&   e1    , 
-      const Ostap::Math::ECDF&   e2    ,
+    ( const ECDF&   e1 , 
+      const ECDF&   e2 ,
       const std::vector<double>& freqs = EPPS_SINGLETON_FREQUENCIES  ) ;
     double epps_singleton 
-    ( const Ostap::Math::WECDF&  e1    , 
-      const Ostap::Math::ECDF&   e2    ,
+    ( const WECDF&  e1 , 
+      const  ECDF&  e2 ,
       const std::vector<double>& freqs = EPPS_SINGLETON_FREQUENCIES  ) ;
     double epps_singleton 
-    ( const Ostap::Math::ECDF&   e1    , 
-      const Ostap::Math::WECDF&  e2    ,
+    ( const  ECDF&  e1 , 
+      const WECDF&  e2 ,
       const std::vector<double>& freqs = EPPS_SINGLETON_FREQUENCIES  ) ;
     double epps_singleton 
-    ( const Ostap::Math::WECDF&  e1    , 
-      const Ostap::Math::WECDF&  e2    ,
+    ( const WECDF&  e1 , 
+      const WECDF&  e2 ,
       const std::vector<double>& freqs = EPPS_SINGLETON_FREQUENCIES  ) ;
-
+    
     // ========================================================================
   } //                                        The end  of namespace Ostap::Math
   // ==========================================================================

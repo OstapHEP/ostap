@@ -143,18 +143,19 @@ to_install =  ( 'numpy'            , 'scipy'            ,
                 'psutil'           , 'more_itertools'   , 'packaging'  ,  
                 'tabulate'         , 'pathvalidate'  ,  
                 'sortedcontainers' ,  ## 'pragmastat'   ,
-                'zstandard'        , 'lzma'             ,
+                'zstandard'        , 'lzma'             ,                
                 'wcwidth'          , 
                 'pandas'           ,
                 'statsmodels'      , 
-                'sweetviz'         , 
+                'sweetviz'         ,
+                'h5py'             , 
                 'lightgbm'         , 
                 ## 'catboost'         ,                
                 'hep_ml'           )
 
 if ( 3 , 9  ) <= python_info : to_install += ( 'terminaltables3' , )
 else                         : to_install += ( 'terminaltables'  , )
-if ( 3 , 10 ) <= python_info : to_install += ( 'fasteners' , 'duckdb' )
+if ( 3 , 10 ) <= python_info : to_install += ( 'fasteners'       , 'duckdb' )
 ## if ( 3 , 12 ) <= python_info :
 to_install += ( 'xgboost'   ,  ) 
 
@@ -887,12 +888,35 @@ except ImportError : # ========================================================
     missing.append ( 'pandas' ) 
     logger.error ( message )
     row = attention ( 'pandas' ) , attention ( '---' ) , '' 
-    rows.append  ( row )
+    rows.append  ( row )    
     # =========================================================================
 except : # ====================================================================
     # =========================================================================
     missing.append ( 'pandas' ) 
     logger.error ( 'pandas  cannot be imported!' )
+
+# =============================================================================               
+try : # =======================================================================
+    # =========================================================================
+    import h5py
+    version = getattr ( h5py , '__version__' , unknown ) 
+    row = 'h5py' , version , h5py.__file__
+    rows.append  ( row )
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    message = """h5py cannot be imported!
+    h5py is useful for sorageof large (nympy) datasets 
+    """
+    missing.append ( 'h5py' ) 
+    logger.error ( message )
+    row = attention ( 'h5pys' ) , attention ( '---' ) , '' 
+    rows.append  ( row )    
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    missing.append ( 'h5py' ) 
+    logger.error ( 'h5py  cannot be imported!' )        
 # ============================================================================
 try : # =======================================================================
     # =========================================================================
