@@ -495,12 +495,13 @@ def random_python ( seed = None , *salt , **pepper ) :
             seed = seed , k , v
             seed = hash ( seed )
             
-        for k , v in sys.environ.items () :
+        for k , v in os.environ.items () :
             seed = seed , k , v
             seed = hash ( seed )
 
         seed = seed % SEED_MAX + 1
-        
+    
+    import random     
     random.seed ( seed )
     
     import numpy 

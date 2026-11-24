@@ -155,9 +155,8 @@ from   ostap.utils.core       import typename
 from   ostap.stats.counters   import ECDF, WECDF 
 from   ostap.math.math_base   import data2vct, isfinite , FIRST_ENTRY , LAST_ENTRY
 from   ostap.math.ve          import VE
-from   ostap.math.math_ve     import significance
 import ostap.logger.symbols   as     S 
-import numpy, math 
+import numpy, math
 # =============================================================================
 # logging 
 # =============================================================================

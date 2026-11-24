@@ -29,7 +29,7 @@ from   ostap.stats.utils        import weight_trivial , check_all
 from   ostap.stats.counters     import EffCounter, ECDF 
 from   ostap.utils.progress_bar import progress_bar
 import ostap.logger.symbols     as     S 
-import numpy, math, abc, gc  
+import ROOT, numpy, math, abc, gc  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -496,8 +496,10 @@ class TOYS (PVALUE) :
         """
         
         seed = self.random_seed
-        
-        from ostap.parallel.utils import random_root
+
+        import ROOT
+        import ostap.fitting.dataset    
+        from   ostap.parallel.utils import random_root
         random_root ( None , self.random_seed )
 
         counter = EffCounter ()
@@ -514,6 +516,7 @@ class TOYS (PVALUE) :
             counter += bool ( self.t_value > tv   ) ## NOTE THE SIGN HERE!
 
             tvalues.append ( tv ) 
+
 
             if isinstance  ( dset , ROOT.RooDataSet ) :
                 dset.clear ()
