@@ -1,0 +1,60 @@
+# =============================================================================
+# Job configuration for LXBATCH  (condor)
+# =============================================================================
+
+# executable              = ostap_cvmfs.sh
+executable              = ostap_conda.sh
+
+arguments               = $(ProcId)
+
+#JobBatchName            = ostap_cvmfs_test
+JobBatchName            = ostap_conda_test
+
+# Pass environment variables from submit host if needed (e.g. OSTAP_SOURCE, OSTAP_BRANCH)
+getenv                  = True
+
+# Include extra scripts/configs if not read directly from AFS/EOS:
+# transfer_input_files    = my_script.py
+
+# =============================================================================
+# Log files (make sure the 'logs' directory exists before submitting)
+# =============================================================================
+output                  = logs/job_$(ClusterId)_$(ProcId).out
+error                   = logs/job_$(ClusterId)_$(ProcId).err
+log                     = logs/job_$(ClusterId).log
+
+# =============================================================================
+# Job wall-time flavour:
+# espresso (20m), microcentury (1h), longlunch (2h),
+# workday (8h), tomorrow (1d), testmatch (3d), nextweek (1w)
+# =============================================================================
+# +JobFlavour             = "workday"
++JobFlavour             = "espresso"
+
+# =============================================================================
+# Request multiple CPU cores for a single multi-process job
+# =============================================================================
+request_cpus            = 12
+
+request_disk            = 10 GB
+
+# =============================================================================
+# Scale requested RAM with the number of worker processes
+# (each child process in Python/ROOT allocates its own memory)
+# =============================================================================
+request_memory          = 24 GB
+
+# =============================================================================
+# Transfer input files to the worker node scratch directory
+# =============================================================================
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+# =============================================================================
+## Submit 1 multi-process job (or use 'queue N' for N jobs with ProcId 0..N-1)
+# =============================================================================
+queue 1
+
+# =============================================================================
+##                                                                      The END
+# =============================================================================
