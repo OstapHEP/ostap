@@ -31,7 +31,7 @@ prefix_error='<<OSTAP WITH LCG ERROR>>'
 # (Works in bash, zsh, dash, sh)
 # =========================================================================
 if ! command -v canonical_path >/dev/null 2>&1; then
-printf "%s Use local 'canonical_path' function \n" "${prefix1}"
+printf "%s Use local 'canonical_path' function \n" "${prefix}"
 canonical_path() {
     # =====================================================================
     # 1. Use native realpath if available
@@ -530,9 +530,9 @@ env_after=$(printenv|sort)
 flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
 case "$flag" in
     1|true|yes)
-	if [ "$(type -t env_diff 2>/dev/null)" = "function" ]; then
-	    env_diff "${env_before}" "${env_after}"
-	fi 
+        if [ "$(type -t env_diff 2>/dev/null)" = "function" ]; then
+            env_diff "${env_before}" "${env_after}"
+        fi 
         ;;
 esac
 

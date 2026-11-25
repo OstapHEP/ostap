@@ -34,6 +34,7 @@ __all__     = (
     'prepare_data'          , ## Prepare two datasets for comparison    
     ##
     'clip_pvalue'         , ## clip-value
+    'significance'        , ## p-value -> significance 
     'format_pvalue'       , ## format pvalue as nice value in [%]
     'format_nsigma'       , ## format #sigma as nice value in [#sigma]
     ##
@@ -154,6 +155,7 @@ from   ostap.core.ostap_types import num_types, numpy_buffer_types, sized_types
 from   ostap.utils.core       import typename
 from   ostap.stats.counters   import ECDF, WECDF 
 from   ostap.math.math_base   import data2vct, isfinite , FIRST_ENTRY , LAST_ENTRY
+from   ostap.math.math_ve     import significance
 from   ostap.math.ve          import VE
 import ostap.logger.symbols   as     S 
 import numpy, math

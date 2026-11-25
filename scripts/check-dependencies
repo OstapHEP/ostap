@@ -1100,6 +1100,7 @@ if '__main__' == __name__ : # =================================================
     
     title = 'Ostap dependencies'
     import ostap.logger.table     as    T
+    rows  = sorted ( rows ) 
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lll' )
     logger.info ( '%s:\n%s' % ( title , table ) )
 

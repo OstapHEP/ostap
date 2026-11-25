@@ -5,7 +5,7 @@
 # =====================================================================
 env_start=$(printenv|sort)
 
-if [ -n "${PYTHONNOUSERSITE}" ]; then
+if [ -n "${PYTHONNOUSERSITE:-}" ]; then
     printf 'thisostap.sh: unset PYTHONNOUSERSITE %s\n' "${PYTHONNOUSERSITE}"
     unset PYTHONNOUSERSITE
 fi
@@ -258,7 +258,7 @@ env_end=$(printenv|sort)
 flag=$(echo "${show_environment:-true}" | tr '[:upper:]' '[:lower:]')
 case "$flag" in
     1|true|yes)
-	env_diff "${env_start}" "${env_end}" "Ostap: Environment change"
+        env_diff "${env_start}" "${env_end}" "Ostap: Environment change"
 esac
 
 # =====================================================================
