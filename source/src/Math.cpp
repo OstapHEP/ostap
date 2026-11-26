@@ -70,8 +70,8 @@ bool Ostap::Math::knuth_equal_to_double
 // ============================================================================
 bool Ostap::Math::islong ( const long double x ) 
 {
-  static constexpr long double s_min { std::numeric_limits<long>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<long>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<long>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<long>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -94,8 +94,8 @@ bool Ostap::Math::islong ( const double x ) { return islong ( 1.0L * x ) ; }
 bool Ostap::Math::isint ( const long double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<int>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<int>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<int>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<int>::max    () ) } ;
   //
   return
     x + 0.1L < s_min ? false :
@@ -117,8 +117,8 @@ bool Ostap::Math::isint ( const double x ) { return isint ( 1.0L * x ) ; }
 // ============================================================================
 bool Ostap::Math::isint ( const float x ) 
 {
-  static constexpr long double s_min { std::numeric_limits<int>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<int>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<int>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<int>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -132,8 +132,8 @@ bool Ostap::Math::isint ( const float x )
 bool Ostap::Math::isshort ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<short>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<short>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<short>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<short>::max    () ) } ;
   //
   return 
     x  + 0.1L < s_min ? false :
@@ -149,8 +149,8 @@ bool Ostap::Math::isshort ( const double x )
 bool Ostap::Math::islonglong ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<long long>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<long long>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<long long>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<long long>::max    () ) } ;
   //
   const long double x_ = x  ;
   return 
@@ -167,8 +167,8 @@ bool Ostap::Math::islonglong ( const double x )
 bool Ostap::Math::isuint ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<unsigned int>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<unsigned int>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<unsigned int>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<unsigned int>::max    () ) } ;
   //
   const long double x_ = x  ;
   return 
@@ -183,8 +183,8 @@ bool Ostap::Math::isuint ( const double x )
 bool Ostap::Math::isushort ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<unsigned short>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<unsigned short>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<unsigned short>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<unsigned short>::max    () ) } ;
   //
   const long double x_ = x  ;
   return 
@@ -201,8 +201,8 @@ bool Ostap::Math::isushort ( const double x )
 bool Ostap::Math::isulong ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<unsigned long>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<unsigned long>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<unsigned long>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<unsigned long>::max    () ) } ;
   //
   const long double x_ = x  ;
   return 
@@ -219,8 +219,8 @@ bool Ostap::Math::isulong ( const double x )
 bool Ostap::Math::isulonglong ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<unsigned long>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<unsigned long>::max    () } ;
+  static constexpr long double s_min { static_cast<long double> ( std::numeric_limits<unsigned long>::lowest () ) } ;
+  static constexpr long double s_max { static_cast<long double> ( std::numeric_limits<unsigned long>::max    () ) } ;
   //
   const long double x_ = x  ;
   return 
@@ -235,8 +235,8 @@ bool Ostap::Math::isulonglong ( const double x )
 bool Ostap::Math::isint8 ( const double x ) 
 {
   //
-  static constexpr double s_min { std::numeric_limits<std::int8_t>::lowest () } ;
-  static constexpr double s_max { std::numeric_limits<std::int8_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::int8_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::int8_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -250,8 +250,8 @@ bool Ostap::Math::isint8 ( const double x )
 bool Ostap::Math::isuint8 ( const double x ) 
 {
   //
-  static constexpr double s_min { std::numeric_limits<std::uint8_t>::lowest () } ;
-  static constexpr double s_max { std::numeric_limits<std::uint8_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::uint8_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::uint8_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -265,8 +265,8 @@ bool Ostap::Math::isuint8 ( const double x )
 bool Ostap::Math::isint16 ( const double x ) 
 {
   //
-  static constexpr double s_min { std::numeric_limits<std::int16_t>::lowest () } ;
-  static constexpr double s_max { std::numeric_limits<std::int16_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::int16_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::int16_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -280,8 +280,8 @@ bool Ostap::Math::isint16 ( const double x )
 bool Ostap::Math::isuint16 ( const double x ) 
 {
   //
-  static constexpr double s_min { std::numeric_limits<std::uint16_t>::lowest () } ;
-  static constexpr double s_max { std::numeric_limits<std::uint16_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::uint16_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::uint16_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -295,8 +295,8 @@ bool Ostap::Math::isuint16 ( const double x )
 bool Ostap::Math::isint32 ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::int32_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::int32_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::int32_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::int32_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -310,8 +310,8 @@ bool Ostap::Math::isint32 ( const double x )
 bool Ostap::Math::isuint32 ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::uint32_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::uint32_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::uint32_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::uint32_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -325,8 +325,8 @@ bool Ostap::Math::isuint32 ( const double x )
 bool Ostap::Math::isint64 ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::int64_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::int64_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::int64_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::int64_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -340,8 +340,8 @@ bool Ostap::Math::isint64 ( const double x )
 bool Ostap::Math::isuint64 ( const double x ) 
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::uint64_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::uint64_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::uint64_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::uint64_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -355,8 +355,8 @@ bool Ostap::Math::isuint64 ( const double x )
 bool Ostap::Math::ischar ( const double x ) 
 {
   //
-  static constexpr double s_min { std::numeric_limits<char>::lowest () } ;
-  static constexpr double s_max { std::numeric_limits<char>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<char>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<char>::max    () ) } ;
   //
   return 
     x + 0.1 < s_min ? false :
@@ -370,8 +370,8 @@ bool Ostap::Math::ischar ( const double x )
 bool Ostap::Math::isschar ( const double x ) 
 {
   //
-  static constexpr double s_min { std::numeric_limits<signed char>::lowest () } ;
-  static constexpr double s_max { std::numeric_limits<signed char>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<signed char>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<signed char>::max    () ) } ;
   //
   return 
     x + 0.1 < s_min ? false :
@@ -385,8 +385,8 @@ bool Ostap::Math::isschar ( const double x )
 bool Ostap::Math::isuchar ( const double x ) 
 {
   //
-  static constexpr double s_min { std::numeric_limits<unsigned char>::lowest () } ;
-  static constexpr double s_max { std::numeric_limits<unsigned char>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<unsigned char>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<unsigned char>::max    () ) } ;
   //
   return 
     x + 0.1 < s_min ? false :
@@ -399,8 +399,8 @@ bool Ostap::Math::isuchar ( const double x )
 bool Ostap::Math::isintmax  ( const double x )
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::intmax_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::intmax_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::intmax_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::intmax_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -413,8 +413,8 @@ bool Ostap::Math::isintmax  ( const double x )
 bool Ostap::Math::isuintmax  ( const double x )
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::uintmax_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::uintmax_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::uintmax_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::uintmax_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -427,8 +427,22 @@ bool Ostap::Math::isuintmax  ( const double x )
 bool Ostap::Math::issize  ( const double x )
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::size_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::size_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::size_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::size_t>::max    () ) } ;
+  //
+  return 
+    x + 0.1L < s_min ? false :
+    x - 0.1L > s_max ? false :
+    Ostap::Math::Lomont::compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ===========================================================================
+// Is floating value actually std::ptrdiff_t ?
+// ===========================================================================
+bool Ostap::Math::isptrdiff ( const double x )
+{
+  //
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::ptrdiff_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::ptrdiff_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -441,8 +455,8 @@ bool Ostap::Math::issize  ( const double x )
 bool Ostap::Math::isintptr  ( const double x )
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::intptr_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::intptr_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::intptr_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::intptr_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -455,8 +469,8 @@ bool Ostap::Math::isintptr  ( const double x )
 bool Ostap::Math::isuintptr  ( const double x )
 {
   //
-  static constexpr long double s_min { std::numeric_limits<std::uintptr_t>::lowest () } ;
-  static constexpr long double s_max { std::numeric_limits<std::uintptr_t>::max    () } ;
+  static constexpr double s_min { static_cast<long double> ( std::numeric_limits<std::uintptr_t>::lowest () ) } ;
+  static constexpr double s_max { static_cast<long double> ( std::numeric_limits<std::uintptr_t>::max    () ) } ;
   //
   return 
     x + 0.1L < s_min ? false :
@@ -670,15 +684,30 @@ std::intmax_t Ostap::Math::round ( const double x )
 std::intmax_t Ostap::Math::round ( const long double x ) 
 {
   //
-  static const std::intmax_t s_min { std::numeric_limits<std::intmax_t>::lowest ()     } ;
-  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    () - 1 } ;
+  static const std::intmax_t s_min  { std::numeric_limits<std::intmax_t>::lowest ()     } ;
+  static const std::intmax_t s_max  { std::numeric_limits<std::intmax_t>::max    () - 1 } ;
+  static const long double   ld_min { static_cast<long double> ( s_min ) } ;
+  static const long double   ld_max { static_cast<long double> ( s_max ) } ;
   //
   return
-    x <= s_min ? s_min :
-    x >= s_max ? s_max :
+    x <= ld_min ? s_min :
+    x >= ld_max ? s_max :
     std::intmax_t ( std::llround ( x ) ) ;
 }
 // ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Math::RoundMode::RoundMode
+( const  int target_mode )
+  : m_prev_mode ( std::fegetround () )
+  , m_active    ( 0 <= m_prev_mode   )
+{ if ( m_active && m_prev_mode != target_mode ) { std::fesetround ( target_mode ) ; } }
+// ============================================================================
+// destrructor 
+// ============================================================================
+Ostap::Math::RoundMode::~RoundMode ()
+{ if ( m_active ) { std::fesetround ( m_prev_mode ) ; } }
+// ==============================================================================
 /* Round half to even  
  *  Aka: 
  *  - convergent rounding
@@ -695,15 +724,15 @@ std::intmax_t Ostap::Math::round_half_even ( const double v )
   //
   static const std::intmax_t s_min { std::numeric_limits<std::intmax_t>::lowest ()     } ;
   static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    () - 1 } ;
+  static const long double ld_min  { static_cast<long double>( s_min ) } ;
+  static const long double ld_max  { static_cast<long double>( s_max ) } ;
   //
   const long double vv = v ; 
-  if      ( vv <= s_min ) { return s_min ; } 
-  else if ( vv >= s_max ) { return s_max ; }
+  if      ( vv <= ld_min ) { return s_min ; } 
+  else if ( vv >= ld_max ) { return s_max ; }
   //
-  const int           mode   = std::fegetround() ; 
-  if ( 0 <= mode ) { std::fesetround ( FE_TONEAREST ) ; }
-  const std::intmax_t result = std::lrint ( v ) ;
-  if ( 0 <= mode ) { std::fesetround ( mode ) ; }
+  RoundMode guard { FE_TONEAREST } ;
+  const std::intmax_t result = std::llrint ( vv ) ;
   return result ; 
 }
 // ============================================================================

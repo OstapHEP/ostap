@@ -1,7 +1,11 @@
+# v3.8.6.30
+
 ## New features 
 
 ## Bug fixes 
 
+  1. Fix warnings and compilatr errors for MacOS
+  
 ## Backward incompartible
 
 # v3.8.6.28

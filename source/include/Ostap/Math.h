@@ -404,7 +404,9 @@ namespace Ostap
     /// Is floating value actually std::uintmax_t ? 
     bool isuintmax ( const double x ) ; 
     /// Is floating value actually std::size_t  ? 
-    bool issize    ( const double x ) ; 
+    bool issize    ( const double x ) ;
+    /// Is floating value actually std::ptrdiff_t ?
+    bool isptrdiff ( const double x ) ;
     // ========================================================================
     /// Is floating value actually std::intptr_t 
     bool isintptr  ( const double x ) ; 
@@ -412,7 +414,30 @@ namespace Ostap
     /// Is floating value actually std::uintptr_t 
     bool isuintptr ( const double x ) ; 
     // ========================================================================
-    
+    /** @class RoundMode
+     *  Round-mode guard
+     *  @see std::fegetround
+     *  @see std::fesetround
+     */    
+    class RoundMode
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// constructor 
+      explicit RoundMode ( const  int target_mode ) ;
+      /// destructor 
+      ~RoundMode () ;
+      // ======================================================================      
+      RoundMode           ( const RoundMode& ) = delete;
+      RoundMode& operator=( const RoundMode& ) = delete;
+      // ======================================================================      
+    private :
+      // ======================================================================
+      int  m_prev_mode ;
+      bool m_active    ;    
+      // ======================================================================
+    };        
     // ========================================================================    
     /** check if the double value is actually equal to the integer value  
      *  @param val value to be compared with the integer 
