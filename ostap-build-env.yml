@@ -1,71 +1,64 @@
-name: ostap-test-env
-
-# Recommended channels for ROOT, Ostap, and scientific stack
+name: ostap-dev
 channels:
   - conda-forge
-  - defaults
-
 dependencies:
-  # ROOT framework from conda-forge
-  - "root>=6.28"
-
-  # Target Python runtime
-  - "python>=3.10"
-
-  # Build tools
+  # C/C++ build tools and CMake
   - c-compiler
   - cxx-compiler
-  - ccache
   - cmake
+  - make
   - ninja
+  - pkg-config
 
-  # GSL & friends
+  # Core C/C++ and ROOT dependencies
+  - root_base
   - gsl
-  - openblas
+  - libdb
+  - libblas * *openblas
+  - libcblas * *openblas
+  - liblapack * *openblas
+  - libopenblas
 
-  # Core numerical and scientific packages
-  - "numpy>=2.0"
-  - "scipy>=1.6"
-  - numba
+  # Base Python and packaging tools
+  - python
+  - pip
+  - wheel
+  - setuptools
   - cffi
+  - ipython
+
+  # Scientific stack and Ostap dependencies
+  - numpy
+  - scipy
+  - numba
   - pandas
   - statsmodels
+  - h5py
+  - duckdb
+  - xgboost
+  - catboost
+  - lightgbm
   - sweetviz
+  - hep_ml
+  - pytorch
 
-  # Parallelization
+  # Parallelism and utilities
   - pathos
   - dill
   - multiprocess
   - ppft
-  - pox
   - joblib
   - ipyparallel
-  
-  # Utilities
-  - psutil
+  - zstandard
   - more-itertools
-  - py-cpuinfo
   - sortedcontainers
+  - psutil
+  - tabulate
+  - terminaltables
   - pathvalidate
   - packaging
-  - parallel 
-
-  # Tables
-  - terminaltables
-  - tabulate
-
-  # DB
-  - gdbm
-  - duckdb
   - fasteners
-
-  # Reweightings, GoF & Two-samples tests
-  - lightgbm
-  - xgboost
-  - hep_ml
-
-  # Auxiliary
-  - zstandard
+  - py-cpuinfo
 
   # Pip package manager and pip-only dependencies
   - pip
