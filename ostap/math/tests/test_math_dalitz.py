@@ -593,10 +593,237 @@ def test_dalitz10 () :
     graphs.append ( histos )
     graphs.append ( g1     )
     graphs.append ( g2     )
+    
+# =============================================================================
+
+# =============================================================================
+def test_dalitz11 ( n_trials = 500 ) :
+    """Check trigonometric identities cos^2(theta) + sin^2(theta) = 1 across
+    random Dalitz points in both the CM frame and subsystem rest frames, and
+    log phasespace3* normalization values as a regression guard.
+    """
+
+    logger = getLogger ( 'test_dalitz11' )
+
+    dd = Ostap.Kinematics.Dalitz ( 5.279 , 1.865 , 0.494 , 0.140 )
+
+    max_err_12 = 0.0
+    max_err_23 = 0.0
+    max_err_31 = 0.0
+
+    max_err_r12 = 0.0
+    max_err_r23 = 0.0
+    max_err_r31 = 0.0
+
+    # Tolerance is set comfortably above IEEE-754 double precision (~1e-15)
+    # while immediately catching any wrong G(...) mass-squared ordering or sign.
+    tol = 1e-11
+
+    for s1 , s2 , s3 in dd.random ( n_trials ) :
+
+        # CM-frame angles: cos_* and sin2_* must satisfy cos^2 + sin2 == 1
+        c12 = dd.cos_12  ( s1 , s2 )
+        s2_ = dd.sin2_12 ( s1 , s2 )
+        err_12 = abs ( c12 * c12 + s2_ - 1.0 )
+        max_err_12 = max ( max_err_12 , err_12 )
+        assert err_12 < tol , f"cos12^2 + sin2_12 != 1: err={err_12!r}, s1={s1!r}, s2={s2!r}"
+
+        c23 = dd.cos_23  ( s1 , s2 )
+        s2_ = dd.sin2_23 ( s1 , s2 )
+        err_23 = abs ( c23 * c23 + s2_ - 1.0 )
+        max_err_23 = max ( max_err_23 , err_23 )
+        assert err_23 < tol , f"cos23^2 + sin2_23 != 1: err={err_23!r}, s1={s1!r}, s2={s2!r}"
+
+        c31 = dd.cos_31  ( s1 , s2 )
+        s2_ = dd.sin2_31 ( s1 , s2 )
+        err_31 = abs ( c31 * c31 + s2_ - 1.0 )
+        max_err_31 = max ( max_err_31 , err_31 )
+        assert err_31 < tol , f"cos31^2 + sin2_31 != 1: err={err_31!r}, s1={s1!r}, s2={s2!r}"
+
+        # Subsystem rest-frame angles (R12, R23, R31)
+        err_r12 = abs ( dd.cos_31_R12 ( s1 , s2 ) ** 2 + dd.sin2_31_R12 ( s1 , s2 ) - 1.0 )
+        max_err_r12 = max ( max_err_r12 , err_r12 )
+        assert err_r12 < tol , f"cos_31_R12^2 + sin2 != 1: err={err_r12!r}, s1={s1!r}, s2={s2!r}"
+
+        err_r23 = abs ( dd.cos_12_R23 ( s1 , s2 ) ** 2 + dd.sin2_12_R23 ( s1 , s2 ) - 1.0 )
+        max_err_r23 = max ( max_err_r23 , err_r23 )
+        assert err_r23 < tol , f"cos_12_R23^2 + sin2 != 1: err={err_r23!r}, s1={s1!r}, s2={s2!r}"
+
+        err_r31 = abs ( dd.cos_23_R31 ( s1 , s2 ) ** 2 + dd.sin2_23_R31 ( s1 , s2 ) - 1.0 )
+        max_err_r31 = max ( max_err_r31 , err_r31 )
+        assert err_r31 < tol , f"cos_23_R31^2 + sin2 != 1: err={err_r31!r}, s1={s1!r}, s2={s2!r}"
+
+    M  , m1 , m2 , m3 = dd.M () , dd.m1 () , dd.m2 () , dd.m3 ()
+    K  = Ostap.Kinematics
+
+    rows = [
+        ( 'Check'                        , 'Max / Value' ) ,
+        ( '|cos12^2 + sin2_12 - 1|'     , '%.3e' % max_err_12  ) ,
+        ( '|cos23^2 + sin2_23 - 1|'     , '%.3e' % max_err_23  ) ,
+        ( '|cos31^2 + sin2_31 - 1|'     , '%.3e' % max_err_31  ) ,
+        ( '|cos_31_R12^2 + sin2 - 1|'   , '%.3e' % max_err_r12 ) ,
+        ( '|cos_12_R23^2 + sin2 - 1|'   , '%.3e' % max_err_r23 ) ,
+        ( '|cos_23_R31^2 + sin2 - 1|'   , '%.3e' % max_err_r31 ) ,
+        ( 'phasespace3'                 , '%.12g' % K.phasespace3  ( M , m1 , m2 , m3 ) ) ,
+        ( 'phasespace3s'                , '%.12g' % K.phasespace3s ( M , m1 , m2 , m3 ) ) ,
+        ( 'phasespace3a'                , '%.12g' % K.phasespace3a ( M , m1 , m2 , m3 ) ) ,
+        ( 'phasespace3i'                , '%.12g' % K.phasespace3i ( M , m1 , m2 , m3 ) ) ,
+    ]
+
+    title = 'Identities & PS3 (%s)' % dd
+    table = T.table ( rows , title = title , alignment = 'll' , prefix = '# ' )
+    logger.info ( 'Test %s\n%s' % ( title , table ) )
+    
+# =============================================================================
+def test_dalitz12 () :
+    """Verify the 3x3 non-symmetric Gram determinant Gram::G(p1, p2, p3, q1, q2, q3)
+    against an explicit matrix determinant built from Lorentz dot products.
+    This specifically guards against index typos in the 3x3 cofactor/Sarrus
+    expansion (such as a12 * a23 * a31 vs a12 * a23 * a21).
+    """
+
+    logger = getLogger ( 'test_dalitz12' )
+
+    # Use distinct non-orthogonal 4-vectors so every off-diagonal entry is non-zero
+    # and the determinant is sensitive to permutations/signs of every term.
+    vectors_p = (
+        LV (  1.2 , -0.7 ,  2.1 ,  4.5 ) ,
+        LV ( -0.8 ,  1.5 ,  0.9 ,  3.8 ) ,
+        LV (  0.4 , -1.1 , -1.6 ,  5.2 ) ,
+    )
+    vectors_q = (
+        LV (  0.9 ,  0.6 , -1.2 ,  4.1 ) ,
+        LV ( -1.3 , -0.4 ,  1.7 ,  3.6 ) ,
+        LV (  0.7 ,  1.2 ,  0.5 ,  4.9 ) ,
+    )
+
+    def det3 ( m ) :
+        # Standard determinant of a 3x3 list-of-lists matrix m[i][j]
+        return (
+            m[0][0] * ( m[1][1] * m[2][2] - m[1][2] * m[2][1] )
+          - m[0][1] * ( m[1][0] * m[2][2] - m[1][2] * m[2][0] )
+          + m[0][2] * ( m[1][0] * m[2][1] - m[1][1] * m[2][0] )
+        )
+
+    Gram = Ostap.Kinematics.Gram
+    max_rel_err = 0.0
+    rows = [ ( 'Case (p, q)' , 'Gram::G' , 'det3(p_i*q_j)' , 'Rel. diff' ) ]
+
+    # Test both identical and distinct (p, q) tuples to cover symmetric and
+    # genuinely non-symmetric Gram determinants.
+    pairs = (
+        ( 'same (p, p)'    , vectors_p , vectors_p ) ,
+        ( 'distinct (p, q)' , vectors_p , vectors_q ) ,
+        ( 'swapped (q, p)'  , vectors_q , vectors_p ) ,
+    )
+
+    for label , vp , vq in pairs :
+        g_val = Gram.G ( vp[0] , vp[1] , vp[2] , vq[0] , vq[1] , vq[2] )
+        mat   = [ [ vp[i].Dot ( vq[j] ) for j in range ( 3 ) ] for i in range ( 3 ) ]
+        d_val = det3 ( mat )
+
+        scale    = max ( abs ( g_val ) , abs ( d_val ) , 1.0 )
+        rel_diff = abs ( g_val - d_val ) / scale
+        max_rel_err = max ( max_rel_err , rel_diff )
+
+        assert rel_diff < 1e-12 , (
+            f"Gram::G mismatch for {label}: Gram.G={g_val!r}, det3={d_val!r}, rel={rel_diff!r}"
+        )
+
+        rows.append ( (
+            label ,
+            '%+.12g' % g_val ,
+            '%+.12g' % d_val ,
+            '%.3e'   % rel_diff ,
+        ) )
+
+    title = 'Gram::G 3x3 check'
+    table = T.table ( rows , title = title , alignment = 'lccc' , prefix = '# ' )
+    logger.info ( 'Test %s\n%s' % ( title , table ) )
+    
+    
+    
+    # =============================================================================
+def test_dalitz13 ( n_samples = 64 ) :
+    """Check zero-mass configurations (all zero, one zero, two zero, all
+    non-zero) and kinematic boundary limits (s1_minmax_for_s_s2 /
+    s2_minmax_for_s_s1) near the minimum and maximum allowed values of the
+    partner invariant.
+    """
+
+    logger = getLogger ( 'test_dalitz13' )
+
+    # Mass configurations matching plots d0..d7 in this module:
+    # d0: (0,0,0), d1..d3: two zero masses, d4..d6: one zero mass, d7: all non-zero.
+    cases = (
+        ( 'd0 (0,0,0)'     , Ostap.Kinematics.Dalitz ( 1.0 , 0.0 , 0.0 , 0.0 ) ) ,
+        ( 'd1 (0.2,0,0)'   , Ostap.Kinematics.Dalitz ( 1.0 , 0.2 , 0.0 , 0.0 ) ) ,
+        ( 'd2 (0,0.2,0)'   , Ostap.Kinematics.Dalitz ( 1.0 , 0.0 , 0.2 , 0.0 ) ) ,
+        ( 'd3 (0,0,0.2)'   , Ostap.Kinematics.Dalitz ( 1.0 , 0.0 , 0.0 , 0.2 ) ) ,
+        ( 'd4 (0.2,0.2,0)' , Ostap.Kinematics.Dalitz ( 1.0 , 0.2 , 0.2 , 0.0 ) ) ,
+        ( 'd5 (0.2,0,0.2)' , Ostap.Kinematics.Dalitz ( 1.0 , 0.2 , 0.0 , 0.2 ) ) ,
+        ( 'd6 (0,0.2,0.2)' , Ostap.Kinematics.Dalitz ( 1.0 , 0.0 , 0.2 , 0.2 ) ) ,
+        ( 'd7 (0.2,0.2,0.2)', Ostap.Kinematics.Dalitz ( 1.0 , 0.2 , 0.2 , 0.2 ) ) ,
+    )
+
+    rows = [ ( 'Case' , 's1_mm@s2_min' , 's2_mm@s1_max' , 'Max trig err' ) ]
+    tol  = 1e-10
+
+    for label , dd in cases :
+        s_val = dd.s ()
+        s2_lo , s2_hi = dd.s2_min () , dd.s2_max ()
+        s1_lo , s1_hi = dd.s1_min () , dd.s1_max ()
+
+        # Slightly nudge away from exact endpoint singularities so finite-precision
+        # roots in triangle/Kallen functions remain well-behaved while probing
+        # near-boundary kinematics.
+        eps2 = max ( 1e-9 * ( s2_hi - s2_lo ) , 1e-12 )
+        eps1 = max ( 1e-9 * ( s1_hi - s1_lo ) , 1e-12 )
+
+        p1 = dd.s1_minmax_for_s_s2 ( s_val , s2_lo + eps2 )
+        p2 = dd.s2_minmax_for_s_s1 ( s_val , s1_hi - eps1 )
+        s1_at_s2_min = ( p1.first , p1.second )
+        s2_at_s1_max = ( p2.first , p2.second )
+
+        assert s1_at_s2_min[0] <= s1_at_s2_min[1] + 1e-12 , (
+            f"{label}: inverted s1_minmax_for_s_s2 at s2_min: {s1_at_s2_min}"
+        )
+        assert s2_at_s1_max[0] <= s2_at_s1_max[1] + 1e-12 , (
+            f"{label}: inverted s2_minmax_for_s_s1 at s1_max: {s2_at_s1_max}"
+        )
+
+        # Sample interior points and verify cos^2 + sin2 == 1 across all mass
+        # combinations, including zero-mass limits.
+        max_trig = 0.0
+        for s1 , s2 , s3 in dd.random ( n_samples ) :
+            for c_fn , s2_fn in (
+                ( dd.cos_12  , dd.sin2_12 ) ,
+                ( dd.cos_23  , dd.sin2_23 ) ,
+                ( dd.cos_31  , dd.sin2_31 ) ,
+            ) :
+                err = abs ( c_fn ( s1 , s2 ) ** 2 + s2_fn ( s1 , s2 ) - 1.0 )
+                max_trig = max ( max_trig , err )
+                assert err < tol , (
+                    f"{label}: trig identity failed: err={err!r}, s1={s1!r}, s2={s2!r}"
+                )
+
+        rows.append ( (
+            label ,
+            '[%.5g, %.5g]' % ( s1_at_s2_min[0] , s1_at_s2_min[1] ) ,
+            '[%.5g, %.5g]' % ( s2_at_s1_max[0] , s2_at_s1_max[1] ) ,
+            '%.3e'         % max_trig ,
+        ) )
+
+    title = 'Zero-mass & boundary check'
+    table = T.table ( rows , title = title , alignment = 'lccc' , prefix = '# ' )
+    logger.info ( 'Test %s\n%s' % ( title , table ) )
+    
+    
 
 # =============================================================================
 if '__main__' == __name__ :
     
+    """
     test_dalitz1  ()
     test_dalitz2  ()
     test_dalitz3  ()
@@ -609,6 +836,11 @@ if '__main__' == __name__ :
 
     test_dalitz9  ()
     test_dalitz10 ()
+    """
+    test_dalitz11 () 
+    test_dalitz12 ()
+    test_dalitz13 ()
+    
 
 
 # =============================================================================

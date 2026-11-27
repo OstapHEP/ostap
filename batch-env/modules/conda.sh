@@ -98,6 +98,7 @@ conda_bootstrap_base() {
   conda config --file "$condarc" --add channels conda-forge
   conda config --file "$condarc" --add channels conda-pypi
   conda config --file "$condarc" --set channel_priority strict
+  conda config --file "$condarc" --set plugins.conda_pypi_pip_warning false
   set -u 
 
   # Accept Anaconda Terms of Service in the isolated prefix if conda tos is present.
@@ -134,6 +135,11 @@ conda_install_tmp() {
   set +u
   conda activate "$env_name"
   set -u
+
+  # Print a formatted table for a specific environment name or prefix path
+  set +u 
+  conda list -n "$env_name"
+  set -u 
 
   export BATCH_CONDA_ENV="$env_name"
 }
@@ -181,6 +187,11 @@ conda_install_yml() {
     conda install -y "$@" >/dev/null
     set -u 
   fi
+
+  # Print a formatted table for a specific environment name or prefix path
+  set +u 
+  conda list -n "$env_name"
+  set -u 
 
   export BATCH_CONDA_ENV="$env_name"
 }

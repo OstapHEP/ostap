@@ -205,23 +205,20 @@ double Ostap::Kinematics::Gram::G
   //
   return a11 * a22 - a12 * a21 ;
 }
+
+
 // ============================================================================
-/*  non-symmetric Gram determinant
- *  \f[ G \left(\begin{array}{lll} p_1 , & p_2, & p_3 \\
- *                                 q_1 , & q_2, & q_3 \end{array}\right) 
- *  = \left| \begin{array}{lll}
- *  p_1q_1 & p_1q_2 & p_1q_3 \\
- *  p_2q_1 & p_2q_2 & p_2q_3 \\
- *  p_3q_1 & p_3q_2 & p_3q_3 \end{array} \right| \f]
- */
+// Evaluate the 3x3 non-symmetric Gram determinant det(p_i * q_j).
+// Watch the second positive term: it must be a12 * a23 * a31 (not a21),
+// otherwise the determinant is wrong for non-symmetric 4-vector sets.
 // ============================================================================
-double Ostap::Kinematics::Gram::G 
-( const Ostap::LorentzVector& p1 , 
+double Ostap::Kinematics::Gram::G
+( const Ostap::LorentzVector& p1 ,
   const Ostap::LorentzVector& p2 ,
   const Ostap::LorentzVector& p3 ,
   const Ostap::LorentzVector& q1 ,
   const Ostap::LorentzVector& q2 ,
-  const Ostap::LorentzVector& q3 ) 
+  const Ostap::LorentzVector& q3 )
 {
   //
   const long double a11 = p1 * q1 ;
@@ -234,14 +231,15 @@ double Ostap::Kinematics::Gram::G
   const long double a32 = p3 * q2 ;
   const long double a33 = p3 * q3 ;
   //
-  return 
+  return
     a11 * a22 * a33 +
-    a12 * a23 * a21 + 
+    a12 * a23 * a31 +
     a13 * a32 * a21 -
-    a13 * a22 * a31 - 
-    a21 * a12 * a33 - 
-    a11 * a23 * a32 ;  
+    a13 * a22 * a31 -
+    a21 * a12 * a33 -
+    a11 * a23 * a32 ;
 }
+
 // ============================================================================
 /*  non-symmetric Gram determinant
  *  \f[ G \left(\begin{array}{llll} p_1 , & p_2,& p_3, &p_4 \\

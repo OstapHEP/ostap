@@ -320,6 +320,12 @@ namespace Ostap
         covariance ( 1 , 1 ) * _ay * _ay       ;  
     }
     // ========================================================================
+    // Compute the variance of transverse momentum pt = sqrt(px^2 + py^2) for
+    // matrix expression inputs via first-order covariance propagation:
+    //   d(pt)/d(px) = px / pt (_ax),  d(pt)/d(py) = py / pt (_ay),
+    //   d(pt)/d(pz) = 0,              d(pt)/d(E)  = 0.
+    // Note the mixed term weight: 2.0 * _ax * _ay (not _ay * _ay).
+    // ========================================================================
     template <class C, class T, class B, class R>
     inline double
     sigma2pt
@@ -333,7 +339,7 @@ namespace Ostap
       //
       return 
         covariance ( 0 , 0 ) * _ax * _ax       + 
-        covariance ( 0 , 1 ) * _ay * _ay * 2.0 +
+        covariance ( 0 , 1 ) * _ax * _ay * 2.0 +
         covariance ( 1 , 1 ) * _ay * _ay       ;
     }
     // ========================================================================
@@ -371,7 +377,7 @@ namespace Ostap
     {
       const double s2pt = sigma2pt ( momentum , covariance ) ;
       return _sqrt_ ( s2pt ) ;
-    }
+    }    
     // ========================================================================
     /** evaluate the dispersion of rapidity from the particle 4-vector and 
      *  the covariance matrix

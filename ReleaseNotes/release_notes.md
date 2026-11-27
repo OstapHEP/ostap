@@ -4,7 +4,9 @@
    1. add some stubs for batch-scripts 
      
 ## Bug fixes 
-
+   
+   1. Fix some sad typos in `Ostap/Kinematics.h` & `Ostap/Dalitz.h`
+   
 ## Backward incompartible
 
 

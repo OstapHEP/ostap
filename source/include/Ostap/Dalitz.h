@@ -60,7 +60,7 @@ namespace Ostap
       // ======================================================================
       /// maximal value of s1: \f$ \left. s_1\right|_{max} =  (M-m_3)^2 \f$
       inline double s1_max ( const double M ) const { const double d = M - m3 () ; return d * d ; }
-      /// maximal value of s2: \f$ \left. s_1\right|_{max} =  (M-m_1)^2 \f$
+      /// maximal value of s2: \f$ \left. s_2\right|_{max} =  (M-m_1)^2 \f$
       inline double s2_max ( const double M ) const { const double d = M - m1 () ; return d * d ; }
       /// maximal value of s3: \f$ \left. s_3\right|_{max} =  (M-m_2)^2 \f$
       inline double s3_max ( const double M ) const { const double d = M - m2 () ; return d * d ; }
@@ -71,7 +71,7 @@ namespace Ostap
       inline double m2sq   () const { return m_cache [ 4 ] ; }
       /// \f$ m_3^2\f$ precalculated 
       inline double m3sq   () const { return m_cache [ 5 ] ; }
-      /// sum of squared masses  \f$  m_1^2+m_2^1+m_3^3\f$ 
+      /// sum of squared masses  \f$  m_1^2+m_2^2+m_3^2\f$ 
       inline double summ2  () const { return m_cache [ 6 ] ; }
       /// sum of masses  \f$  m_1 + m_2 + m_3 \f$ 
       inline double summ   () const { return m_cache [ 7 ] ; }
@@ -770,7 +770,7 @@ namespace Ostap
         const double s1 , 
         const double s2 ) const ;
       // =====================================================================
-      /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
+      /** \f$ \cos \zeta_{1(3)}^{3} \f$ 
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
@@ -803,7 +803,7 @@ namespace Ostap
         const double s1 , 
         const double s2 ) const ;
       // =====================================================================
-      /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
+      /** \f$ \cos \zeta_{1(2)}^{3} \f$ 
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
@@ -1119,7 +1119,7 @@ namespace Ostap
       // ======================================================================
     public: // trivial getters 
       // ====================================================================== 
-      /// \f$ s =  (p_1 + p^2 + p^3)^2 \f$
+      /// \f$ s =  (p_1 + p_2 + p_3)^2 \f$
       inline double s      () const  { return S ()  ; }
       inline double sqs    () const  { return m_M   ; }
       ///   total mass 
@@ -1131,7 +1131,7 @@ namespace Ostap
       // ======================================================================
       /// maximal value of s1: \f$ \left. s_1\right|_{max} =  (M-m_3)^2 \f$
       inline double s1_max () const { return m_cache2 [ 0 ] ; }
-      /// maximal value of s2: \f$ \left. s_1\right|_{max} =  (M-m_1)^2 \f$
+      /// maximal value of s2: \f$ \left. s_2\right|_{max} =  (M-m_1)^2 \f$
       inline double s2_max () const { return m_cache2 [ 1 ] ; }
       /// maximal value of s3: \f$ \left. s_3\right|_{max} =  (M-m_2)^2 \f$
       inline double s3_max () const { return m_cache2 [ 2 ] ; }
@@ -1676,7 +1676,7 @@ namespace Ostap
       inline double cos_zeta323 ( const double s1 , const double s2 ) const 
       { return cos_zeta323 ( s () , s1 , s2 ) ; }
       // =====================================================================
-      /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
+      /** \f$ \cos \zeta_{1(3)}^{3} \f$ 
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
@@ -1703,7 +1703,7 @@ namespace Ostap
       inline double cos_zeta312 ( const double s1 , const double s2 ) const 
       { return cos_zeta312 ( s () , s1 , s2 ) ; }
       // =====================================================================
-      /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
+      /** \f$ \cos \zeta_{1(2)}^{3} \f$ 
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
@@ -1848,6 +1848,10 @@ namespace Ostap
       // ======================================================================
     public: // 1-dimension 
       // ======================================================================
+      // 1D Dalitz phase-space densities dR_3 / ds_i with respect to each
+      // squared invariant: s2 = (p2 + p3)^2, s3 = (p3 + p1)^2, s1 = (p1 + p2)^2.
+      // Parameter names match the integration variables used in Dalitz.cpp.
+      // ======================================================================
       /** Dalitz density in 1-dimension:
        *  \f$  \frac{{\mathrm{d}} R_3}{{\mathrm{d}} s_2} = 
        *  \frac{\pi^2}{2ss_2}
@@ -1855,7 +1859,7 @@ namespace Ostap
        *  \lambda^{1/2} ( s_2, m_2^2, m_3^2) 
        *  \f$ 
        */
-      double dRds2   ( const double s1 ) const ;
+      double dRds2   ( const double s2 ) const ;
       // ======================================================================
       /** Dalitz density in 1-dimension:
        *  \f$  \frac{{\mathrm{d}} R_3}{{\mathrm{d}} s_3} = 
@@ -1873,7 +1877,7 @@ namespace Ostap
        *  \lambda^{1/2} ( s_1, m_1^2, m_2^2) 
        *  \f$ 
        */
-      double dRds1   ( const double s2 ) const ;
+      double dRds1   ( const double s1 ) const ;
       // ======================================================================
     public: // Dalitz density as function of masses 
       // ======================================================================

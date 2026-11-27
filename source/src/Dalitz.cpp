@@ -1,3 +1,9 @@
+
+
+
+
+
+
 // ============================================================================
 // Include files
 // ============================================================================
@@ -205,7 +211,7 @@ Ostap::Kinematics::Dalitz0::s1_minmax_for_s_s2
       s_equal ( s2 , s_max ) ? std::make_pair ( 0.0 , 0.0 ) : std::make_pair ( 0.0 , ( s - s2 ) * ( s2 - m3sq () ) / s2 )  ;
   }
   // two masses are zero 
-  else if ( m23_zero ) 
+  else if ( m23_zero )
   {
     const double s_min = 0 ;
     const double s_max = s2_max ( sqs ) ;
@@ -214,13 +220,15 @@ Ostap::Kinematics::Dalitz0::s1_minmax_for_s_s2
     else if ( s_equal ( s2 , s_min )   ) { return std::make_pair ( m1 () , s ) ; }
     else if ( s_equal ( s2 , s_max )   ) { const double q = m1 () * sqs ; return std::make_pair ( q , q ) ; }
     //
+    // Because sc = -0.5 / a < 0 and d >= 0, sc * (-b + d) is the smaller root
+    // and sc * (-b - d) is the larger root; return (min, max) in ascending order.
     const double a  = 1 ;
     const double b  = s2 - s - m1sq () ;
     const double c  = s * m1sq () ;
     const double d  = std::sqrt ( b * b - 4  * a * c  )  ;
     const double sc =  -0.5 / a ;
     //
-    return std::make_pair ( sc * ( -b - d ) , sc * ( -b + d ) ) ;
+    return std::make_pair ( sc * ( -b + d ) , sc * ( -b - d ) ) ;
   }
   // two masses are zero 
   else if ( m31_zero ) 
@@ -229,11 +237,13 @@ Ostap::Kinematics::Dalitz0::s1_minmax_for_s_s2
     const double s_min = m2sq () ;
     const double s_max = s       ;
     //
-    return 
-      s2 < s_min || s2 > s_max  ? s_BAD :
-      s_equal ( s2 , s_min )    ? std::make_pair ( s_max , s_max ) :
-      s_equal ( s2 , s_max )    ? std::make_pair ( s_min , s_min ) :
-      std::make_pair ( s * s_min /  s2 , s + s_min - s2 ) ; 
+    if      ( s2 < s_min || s2 > s_max ) { return s_BAD ; }
+    else if ( s_equal ( s2 , s_min )   ) { return std::make_pair ( s_max , s_max ) ; }
+    else if ( s_equal ( s2 , s_max )   ) { return std::make_pair ( s_min , s_min ) ; }
+    //
+    const double lo = s * s_min / s2 ;
+    const double hi = s + s_min - s2 ;
+    return lo <= hi ? std::make_pair ( lo , hi ) : std::make_pair ( hi , lo ) ;
   }
   //
   // generic case 
@@ -256,7 +266,7 @@ Ostap::Kinematics::Dalitz0::s1_minmax_for_s_s2
   const double q1 = s_a - ( b - c ) / ( 2 * s2 ) ;
   const double q2 = s_a - ( b + c ) / ( 2 * s2 ) ;
   //
-  return std::make_pair ( q2 , q1 ) ;
+  return q2 <= q1 ? std::make_pair ( q2 , q1 ) : std::make_pair ( q1 , q2 ) ;
 }
 // ============================================================================
 // Dalitz plot boundaries \f$ s_2^{min/max} ( s , s_1 ) \f$ 
@@ -303,8 +313,8 @@ Ostap::Kinematics::Dalitz0::s2_minmax_for_s_s1
       s_equal ( s1 , s_min ) ? std::make_pair ( 0.0 , 0.0 ) :
       s_equal ( s1 , s_max ) ? std::make_pair ( 0.0 , 0.0 ) : std::make_pair ( 0.0 , ( s - s1 ) * ( s1 - m1sq () ) / s1 )  ;
   }
-  //
-  else if ( m12_zero ) 
+  // two masses are zero
+  else if ( m12_zero )
   {
     const double s_min = 0               ;
     const double s_max = s1_max ( sqs )  ;
@@ -313,25 +323,29 @@ Ostap::Kinematics::Dalitz0::s2_minmax_for_s_s1
     else if ( s_equal ( s1 , s_min )   ) { return std::make_pair ( m1 () , s ) ; }
     else if ( s_equal ( s1 , s_max )   ) { const double q = m3 () * sqs ; return std::make_pair ( q , q ) ; }
     //
+    // Return (min, max) in ascending order (sc < 0 flips the sign of d).
     const double a  = 1 ;
     const double b  = s1 - s - m3sq () ;
     const double c  = s * m3sq () ;
     const double d  = std::sqrt ( b * b - 4  * a * c  )  ;
     const double sc =  -0.5 / a ;
     //
-    return std::make_pair ( sc * ( -b - d ) , sc * ( -b + d ) ) ;
+    return std::make_pair ( sc * ( -b + d ) , sc * ( -b - d ) ) ;
   }
+  // two masses are zero
   else if ( m31_zero ) 
   {
     //
     const double s_min = m2sq () ;
     const double s_max = s       ;
     //
-    return 
-      s1 < s_min || s1 > s_max  ? s_BAD :
-      s_equal ( s1 , s_min )    ? std::make_pair ( s_max , s_max ) :
-      s_equal ( s1 , s_max )    ? std::make_pair ( s_min , s_min ) :
-      std::make_pair ( s * s_min /  s1 , s + s_min - s1 ) ; 
+    if      ( s1 < s_min || s1 > s_max ) { return s_BAD ; }
+    else if ( s_equal ( s1 , s_min )   ) { return std::make_pair ( s_max , s_max ) ; }
+    else if ( s_equal ( s1 , s_max )   ) { return std::make_pair ( s_min , s_min ) ; }
+    //
+    const double lo = s * s_min / s1 ;
+    const double hi = s + s_min - s1 ;
+    return lo <= hi ? std::make_pair ( lo , hi ) : std::make_pair ( hi , lo ) ;
   }
   //
   const double s_a       = m3sq () + m2sq()  ;
@@ -352,7 +366,7 @@ Ostap::Kinematics::Dalitz0::s2_minmax_for_s_s1
   const double q1 = s_a - ( b - c ) / ( 2 * s1 ) ;
   const double q2 = s_a - ( b + c ) / ( 2 * s1 ) ;
   //
-  return std::make_pair ( q2 , q1 ) ; 
+  return q2 <= q1 ? std::make_pair ( q2 , q1 ) : std::make_pair ( q1 , q2 ) ; 
 }
 // ============================================================================
 /** the first x-variable is just \f$ x_1 = \cos_{R23}(12) \f$ 
@@ -605,66 +619,63 @@ double Ostap::Kinematics::Dalitz0::cos_31
   //
   return f / std::sqrt ( f1 * f2 ) ;
 }
+
 // ============================================================================
-/*  \f$ \theta^{*}_{12}\f$ is angle between 
- *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
- *   \f$ \sin^2 \theta^{*}_{12} = 
- *   -4s \frac{ G(s_1,s_2,s, m_2^2, m_1^2,m_3^2) }
- *   {\lambda(s, m_1^2, s2) \lambda(s, m_2^2, s3)} \f$
- */
+// Compute sin^2(theta*_12) in the center-of-mass frame using Byckling &
+// Kajantie Eq. (V.1.5): -4 * s * G(s1, s2, s, m2^2, m1^2, m3^2) / (f1 * f2).
+// Keep the squared-mass order (m2sq(), m1sq(), m3sq()) consistent with
+// Dalitz0::inside(...) so the tetrahedron determinant matches the
+// (s1, s2, s) invariant assignment and satisfies cos_12^2 + sin2_12 == 1.
 // ============================================================================
-double Ostap::Kinematics::Dalitz0::sin2_12 
-( const double s  , 
-  const double s1 , 
-  const double s2 ) const 
+double Ostap::Kinematics::Dalitz0::sin2_12
+( const double s  ,
+  const double s1 ,
+  const double s2 ) const
 {
   const double s3_ = s3 ( s ,  s1 , s2 ) ;
   const double f1  = Ostap::Kinematics::triangle ( s , m1sq () , s2  ) ;
   const double f2  = Ostap::Kinematics::triangle ( s , m2sq () , s3_ ) ;
-  const double g   = Ostap::Kinematics::G (  s1 , s2 , s , m1sq () , m2sq () , m3sq () ) ;
+  const double g   = Ostap::Kinematics::G (  s1 , s2 , s , m2sq () , m1sq () , m3sq () ) ;
   //
   return -4 * s * g / ( f1 * f2 ) ;
 }
+
 // ============================================================================
-/*  \f$ \theta^{*}_{23}\f$ is angle between 
- *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
- *   \f$ \sin^2 \theta^{*}_{23} = 
- *   -4s \frac{ G(s_2,s_3,s, m_3^2, m_2^2,m_1^2) }
- *   {\lambda(s, m_2^2, s3 ) \lambda(s, m_3^2, s1 ) } \f$
- */
+// Compute sin^2(theta*_23) in the center-of-mass frame for the (2, 3) pair:
+// invariant s2 = (p2 + p3)^2, partner squared mass s3_ = (p3 + p1)^2, and
+// squared masses (m2sq(), m3sq(), m1sq()) in the corresponding cyclic order.
 // ============================================================================
-double Ostap::Kinematics::Dalitz0::sin2_23 
-( const double s  , 
-  const double s1 , 
-  const double s2 ) const 
+double Ostap::Kinematics::Dalitz0::sin2_23
+( const double s  ,
+  const double s1 ,
+  const double s2 ) const
 {
   const double s3_ = s3 ( s , s1 , s2 ) ;
   const double f1  = Ostap::Kinematics::triangle ( s , m2sq () , s3_  ) ;
   const double f2  = Ostap::Kinematics::triangle ( s , m3sq () , s1   ) ;
-  const double g   = Ostap::Kinematics::G (  s2 , s3_ , s , m2sq () , m3sq () , m1sq () ) ;
+  const double g   = Ostap::Kinematics::G (  s2 , s3_ , s , m3sq () , m2sq () , m1sq () ) ;
   //
   return -4 * s * g / ( f1 * f2 ) ;
 }
+
 // ============================================================================
-/*   \f$ \theta^{*}_{31}\f$ is angle between 
- *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
- *   \f$ \sin^2 \theta^{*}_{31} = 
- *   -4s \frac{ G(s_3,s_1,s, m_1^2, m_3^2,m_2^2) }
- *   {\lambda(s, m_3^2, s1 ) \lambda(s, m_1^2, s2 ) } \f$
- */
+// Compute sin^2(theta*_31) in the center-of-mass frame for the (3, 1) pair:
+// invariant s3_ = (p3 + p1)^2, partner squared mass s1 = (p1 + p2)^2, and
+// squared masses (m1sq(), m3sq(), m2sq()) in the corresponding cyclic order.
 // ============================================================================
-double Ostap::Kinematics::Dalitz0::sin2_31 
-( const double s  , 
-  const double s1 , 
-  const double s2 ) const 
+double Ostap::Kinematics::Dalitz0::sin2_31
+( const double s  ,
+  const double s1 ,
+  const double s2 ) const
 {
   const double s3_ = s3 ( s , s1 , s2 ) ;
   const double f1  = Ostap::Kinematics::triangle ( s , m3sq ()  , s1  ) ;
   const double f2  = Ostap::Kinematics::triangle ( s , m1sq () , s2  ) ;
-  const double g   = Ostap::Kinematics::G (  s3_ , s1 , s , m3sq () , m1sq () , m2sq () ) ;
+  const double g   = Ostap::Kinematics::G (  s3_ , s1 , s , m1sq () , m3sq () , m2sq () ) ;
   //
   return -4 * s * g / ( f1 * f2 ) ;
 }
+
 // =============================================================================
 // total momentum in (1,2) restframe
 // =============================================================================
@@ -1191,7 +1202,7 @@ double Ostap::Kinematics::Dalitz::dRds2   ( const double s2 ) const
   const double f1 = Ostap::Kinematics::triangle ( s2 , s ()    , m1sq () ) ;
   if ( f1 <= 0 ) {  return 0 ; }
   const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;  
-  if ( f1 <= 0 ) {  return 0 ; }
+  if ( f2 <= 0 ) {  return 0 ; }
   //
   static const double s_norm = 0.25 * s_pi2 ;
   //
@@ -1214,7 +1225,7 @@ double Ostap::Kinematics::Dalitz::dRds3   ( const double s3 ) const
   const double f1 = Ostap::Kinematics::triangle ( s3 , s ()   , m2sq () ) ;
   if ( f1 <= 0 ) {  return 0 ; }
   const double f2 = Ostap::Kinematics::triangle ( s3 , m3sq() , m1sq () ) ;  
-  if ( f1 <= 0 ) {  return 0 ; }
+  if ( f2 <= 0 ) {  return 0 ; }
   //
   static const double s_norm = 0.25 * s_pi2 ;
   //
@@ -1237,7 +1248,7 @@ double Ostap::Kinematics::Dalitz::dRds1   ( const double s1 ) const
   const double f1 = Ostap::Kinematics::triangle ( s1 , s ()   , m3sq () ) ;
   if ( f1 <= 0 ) {  return 0 ; }
   const double f2 = Ostap::Kinematics::triangle ( s1 , m1sq() , m2sq () ) ;  
-  if ( f1 <= 0 ) {  return 0 ; }
+  if ( f2 <= 0 ) {  return 0 ; }
   //
   static const double s_norm = 0.25 * s_pi2  ;
   //

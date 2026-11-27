@@ -67,7 +67,7 @@ tmp_trap_add() {
 # ============================================================================
 batch_tmp_init() {
   local base_dir
-  base_dir=$(mktemp -d "${TMPDIR:-/tmp}/OSTAP-BATCH.XXXXXX")
+  base_dir=$(mktemp -d -t "ostap-$(date '+%Y-%b-%d')-OSTAP-BATCH-XXXXXX")
   BATCH_TMP_DIRS+=("$base_dir")
   export BATCH_TMP_DIR="$base_dir"
 
