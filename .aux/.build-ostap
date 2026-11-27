@@ -301,7 +301,7 @@ fi
 # =========================================================================
 ## Environment sanitization
 # =========================================================================
-if [ -n "${PYTHONNOUSERSITE}" ]; then
+if [ -n "${PYTHONNOUSERSITE:-}" ]; then
     printf "%s unset PYTHONNOUSERSITE %s\n" "${prefix1}" "${PYTHONNOUSERSITE}"
     unset PYTHONNOUSERSITE
 fi
