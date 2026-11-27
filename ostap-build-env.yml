@@ -1,6 +1,8 @@
 name: ostap-dev
 channels:
   - conda-forge
+  - conda-pypi 
+  
 dependencies:
   # C/C++ build tools and CMake
   - c-compiler
