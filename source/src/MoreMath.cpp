@@ -4447,8 +4447,8 @@ double Ostap::Math::cn
   else if ( s_zero  ( m     ) ) { return std::cos  ( u ) ; }
   else if ( s_zero  ( 1 - m ) ) { return      sech ( u ) ; }
   else if ( s_equal ( m , 1 ) ) { return      sech ( u ) ; }
-  else if ( u < 0             ) { return    cn ( u , m ) ; }
-  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  else if ( u < 0             ) { return  cn ( -u , m  ) ; }
+  else if ( m < 0 || 1 < m    ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
   // reduce the argument
   if ( s_pi_2 < u ) 
@@ -4459,20 +4459,20 @@ double Ostap::Math::cn
       else if ( s_equal ( u , 3 * KK ) ) { return u - 3 * KK ; }
       else if ( s_equal ( u , 4 * KK ) ) { return  1         ; }
       else if ( 4 * KK < u )
-                {      
-                  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) ) ;
-                  return cn ( uk , m ) ;
-                }
+      {      
+	const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) ) ;
+	return cn ( uk , m ) ;
+      }
       else if ( 2 * KK < u )
-                {      
-                  const double uk = 4 * KK - u ;
-                  return cn ( uk , m ) ;
-                }
+      {      
+	const double uk = 4 * KK - u ;
+	return cn ( uk , m ) ;
+      }
       else if ( KK < u )
-                {
-          const double uk = 2 * KK - u ;
-                  return - cn ( uk , m ) ;      
-                }
+      {
+	const double uk = 2 * KK - u ;
+	return - cn ( uk , m ) ;      
+      }
     }
   //
   return std::cos ( am ( u , m ) ) ;
@@ -4513,7 +4513,7 @@ double Ostap::Math::sc
   else if ( s_zero  ( 1 - m ) ) { return std::sinh ( u ) ; }
   else if ( s_equal ( m , 1 ) ) { return std::sinh ( u ) ; }
   else if ( u < 0             ) { return - sc ( -u , m ) ; }
-  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  else if ( m < 0 || 1 < m    ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
   // reduce the argument
   if ( s_pi_2 < u ) 
@@ -4522,7 +4522,7 @@ double Ostap::Math::sc
     if ( 4 * KK < u  ) 
     {      
       const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
-      return sn ( uk , m ) ;
+      return sc ( uk , m ) ;
     }
   } ;
   //
@@ -5904,7 +5904,7 @@ Ostap::Math::geometric_mean
   const std::complex<double> r { std::sqrt ( a * b ) } ;
   //
   if      (           d2 < d1                              ) { return r ; }
-  else if ( s_equal ( d2 , d2 ) && 0 < std::imag ( b / a ) ) { return r ; }
+  else if ( s_equal ( d1 , d2 ) && 0 < std::imag ( b / a ) ) { return r ; }
   //
   return -r ;
 }
@@ -6866,7 +6866,7 @@ double Ostap::Math::bring   ( const double x )
   { return 20  *std::pow ( z , 3 )        ; } ;
   
   long double r = x0 ;
-  for ( unsigned short n ; n < 100 ; ++n )
+  for ( unsigned short n = 0 ; n < 100 ; ++n )
     {
       const long double fn = fun  ( r ) ;
       if ( s_zero ( fn ) ) { return r ; }      // RETURN
@@ -6930,7 +6930,7 @@ std::complex<double> Ostap::Math::bring   ( const std::complex<double>& x )
   { return 20.  *std::pow ( z , 3 )          ; } ;
   
   std::complex<double> r = x0 ;
-  for ( unsigned short n ; n < 100 ; ++n )
+  for ( unsigned short n = 0 ; n < 100 ; ++n )
     {
       const std::complex<double> fn = fun  ( r ) ;
       
@@ -8645,7 +8645,7 @@ double Ostap::Math::chi2_prob
   if      ( chi2 < 0 || !nDoF ) { return s_QUIETNAN ; }
   else if ( s_zero ( chi2 )   ) { return 1          ; }
   //
-  return gamma_inc_P ( 0.5 * chi2 , 0.5 * nDoF ) ;
+  return gamma_inc_P ( 0.5 * nDoF , 0.5 * chi2 ) ;
 }
 // ===========================================================================
   

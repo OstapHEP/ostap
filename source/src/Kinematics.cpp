@@ -1078,6 +1078,10 @@ double Ostap::Kinematics::phasespace3
  *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
  *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
  *
+ * Three-body phase space, analytic symmetric expression via elliptic
+ * integrals and Jacobi zeta function Z(beta, k) (Davydychev & Delbourgo,
+ * hep-th/0311075), normalized consistently with phasespace3i / phasespace3a.
+ *
  *  @see A.Davydychev and R.Delbourgo,
  *       "Explicitly symmetrical treatment of three body phase space",
  *        J.Phys. A37 (2004) 4871, arXiv:hep-th/0311075",
@@ -1092,81 +1096,111 @@ double Ostap::Kinematics::phasespace3
  */
 // ============================================================================
 double Ostap::Kinematics::phasespace3s
-( const double x  , 
-  const double m1 , 
-  const double m2 , 
-  const double m3 ) 
+( const double x  ,
+  const double m1 ,
+  const double m2 ,
+  const double m3 )
 {
-  //
-  static const double s_norm = 0.125 * s_pi2  ;
-  //
+  
+  static constexpr long double s_norm = 0.25L * s_pi2 ;
+
   const double xm1 = std::max ( 0.0 , m1 ) ;
   const double xm2 = std::max ( 0.0 , m2 ) ;
   const double xm3 = std::max ( 0.0 , m3 ) ;
-  //
-  if ( x <= xm1 + xm2 + xm3 ) { return 0 ; }
-  //
-  if ( s_zero ( xm1 ) ) { return phasespace3 ( x ,  m2 ,  m3 ) ; }
-  if ( s_zero ( xm2 ) ) { return phasespace3 ( x , xm1 ,  m3 ) ; }
-  if ( s_zero ( xm3 ) ) { return phasespace3 ( x , xm1 , xm2 ) ; }
-  //
-  { // Treat tiny masses 
+
+  if ( x <= xm1 + xm2 + xm3 ) { return 0.0 ; }
+
+  // Zero-mass cases: delegate directly to explicit lower-arity phasespace3 overloads.
+  const bool z1 = s_zero ( xm1 ) || s_equal ( x , x + xm1 ) ;
+  const bool z2 = s_zero ( xm2 ) || s_equal ( x , x + xm2 ) ;
+  const bool z3 = s_zero ( xm3 ) || s_equal ( x , x + xm3 ) ;
+
+  if ( z1 && z2 && z3 ) { return phasespace3 ( x ) ; }
+  if ( z1 && z2       ) { return phasespace3 ( x , xm3 ) ; }
+  if ( z1 && z3       ) { return phasespace3 ( x , xm2 ) ; }
+  if ( z2 && z3       ) { return phasespace3 ( x , xm1 ) ; }
+  if ( z1             ) { return phasespace3 ( x , xm2 , xm3 ) ; }
+  if ( z2             ) { return phasespace3 ( x , xm1 , xm3 ) ; }
+  if ( z3             ) { return phasespace3 ( x , xm1 , xm2 ) ; }
+
+  { // Tiny-mass limits: match the existing threshold convention in Kinematics.cpp.
     const double xmax = x * 1.e-12 ;
-    //
     if ( xm1 < xmax ) { return phasespace3 ( x , xm2 , xm3 ) ; }
     if ( xm2 < xmax ) { return phasespace3 ( x , xm1 , xm3 ) ; }
     if ( xm3 < xmax ) { return phasespace3 ( x , xm1 , xm2 ) ; }
-    //
+
     const double mmax = std::max ( xm1 , std::max ( xm2 , xm3 ) ) * 1.e-12 ;
-    //
     if ( xm1 < mmax ) { return phasespace3 ( x , xm2 , xm3 ) ; }
     if ( xm2 < mmax ) { return phasespace3 ( x , xm1 , xm3 ) ; }
     if ( xm3 < mmax ) { return phasespace3 ( x , xm1 , xm2 ) ; }
-    //
   }
-  //
 
-  const long double M     = x     ;
-  const long double p2    = M * M ;
-  //
-  const long double Qp = 
-    ( M + xm1 + xm2 + xm3 ) *
-    ( M + xm1 - xm2 - xm3 ) *
-    ( M - xm1 + xm2 - xm3 ) *
-    ( M - xm1 - xm2 + xm3 ) ;
-  //
-  const long double Qm = 
-    ( M - xm1 - xm2 - xm3 ) *
-    ( M - xm1 + xm2 + xm3 ) *
-    ( M + xm1 - xm2 + xm3 ) *
-    ( M + xm1 + xm2 - xm3 ) ;
-  //
-  const long double k = std::sqrt ( Qm / Qp ) ;
-  //
-  const long double sqrt_Qp  = std::sqrt ( Qp ) ;
-  //
-  const long double m1sq = xm1 * xm1 ;
-  const long double m2sq = xm2 * xm2 ;
-  const long double m3sq = xm3 * xm3 ;
-  //
-  const long double sin_phi1 = sqrt_Qp / ( p2 + m1sq - m2sq - m3sq ) ;
-  const long double sin_phi2 = sqrt_Qp / ( p2 - m1sq + m2sq - m3sq ) ;
-  const long double sin_phi3 = sqrt_Qp / ( p2 - m1sq - m2sq + m3sq ) ;
-  //
-  const long double KZ1 = 
-    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi1 ) , k ) /
-    ( sin_phi1 * sin_phi1 ) ;
-  const long double KZ2 = 
-    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi2 ) , k ) /
-    ( sin_phi2 * sin_phi2 ) ;
-  const long double KZ3 =
-    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi3 ) , k ) / 
-    ( sin_phi3 * sin_phi3 ) ;
-  //
-  const double E_minus_K = - Ostap::Math::elliptic_KmE ( k ) ;
-  //
-  return ( sqrt_Qp * ( p2 + m1sq + m2sq + m3sq ) * E_minus_K
-           +    Qp * (      KZ1  + KZ2  + KZ3  ) ) * s_norm / p2;
+  const long double l_x  = static_cast<long double> ( x   ) ;
+  const long double l_m1 = static_cast<long double> ( xm1 ) ;
+  const long double l_m2 = static_cast<long double> ( xm2 ) ;
+  const long double l_m3 = static_cast<long double> ( xm3 ) ;
+
+  const long double p2   = l_x  * l_x  ;
+  const long double m1sq = l_m1 * l_m1 ;
+  const long double m2sq = l_m2 * l_m2 ;
+  const long double m3sq = l_m3 * l_m3 ;
+
+  // Eq. (1.8)
+  const long double Qp =
+    ( l_x + l_m1 + l_m2 + l_m3 ) *
+    ( l_x + l_m1 - l_m2 - l_m3 ) *
+    ( l_x - l_m1 + l_m2 - l_m3 ) *
+    ( l_x - l_m1 - l_m2 + l_m3 ) ;
+
+  const long double Qm =
+    ( l_x - l_m1 - l_m2 - l_m3 ) *
+    ( l_x - l_m1 + l_m2 + l_m3 ) *
+    ( l_x + l_m1 - l_m2 + l_m3 ) *
+    ( l_x + l_m1 + l_m2 - l_m3 ) ;
+
+  if ( Qp <= 0.0L || Qm <= 0.0L ) { return 0.0 ; }
+
+  const long double sqrt_Qp = std::sqrt ( Qp ) ;
+  const long double k2      = std::min ( Qm / Qp , 1.0L - 1.0e-18L ) ;
+  const long double k       = std::sqrt ( k2 ) ;
+
+  // Eqs. (4.20)-(4.21): sin(phi_i) and cos(phi_i)
+  const long double d1 = p2 + m1sq - m2sq - m3sq ;
+  const long double d2 = p2 - m1sq + m2sq - m3sq ;
+  const long double d3 = p2 - m1sq - m2sq + m3sq ;
+
+  const long double sin_phi1 = sqrt_Qp / d1 ;
+  const long double sin_phi2 = sqrt_Qp / d2 ;
+  const long double sin_phi3 = sqrt_Qp / d3 ;
+
+  const long double cos_phi1 = 2.0L * ( l_x * l_m1 - l_m2 * l_m3 ) / d1 ;
+  const long double cos_phi2 = 2.0L * ( l_x * l_m2 - l_m3 * l_m1 ) / d2 ;
+  const long double cos_phi3 = 2.0L * ( l_x * l_m3 - l_m1 * l_m2 ) / d3 ;
+
+  // elliptic_KZ(beta, k) = K(k) * Z(beta, k) for beta in [0, pi/2];
+  // use Z(pi/2 + delta, k) = -Z(pi/2 - delta, k) (eq. A.7) when cos(phi) < 0.
+  auto kz_over_sin2 = [&k] ( const long double sp , const long double cp ) -> long double
+  {
+    const long double s_clamped = std::clamp ( sp , -1.0L , 1.0L ) ;
+    const long double s2        = s_clamped * s_clamped ;
+    if ( s2 <= 1.0e-36L ) { return 0.0L ; }
+    const long double beta = std::asin ( std::abs ( s_clamped ) ) ;
+    const long double kz   = static_cast<long double>
+      ( Ostap::Math::elliptic_KZ ( beta , k ) ) ;
+    const long double kz_signed = ( cp >= 0.0L ) ? kz : -kz ;
+    return kz_signed / s2 ;
+  } ;
+
+  const long double K_val = static_cast<long double>( Ostap::Math::elliptic_K ( k ) ) ;
+  const long double E_val = static_cast<long double>( Ostap::Math::elliptic_E ( k ) ) ;
+
+  // Eq. (5.13) with normalization s_norm / p2 where s_norm = 0.25 * s_pi2
+  const long double term_E = sqrt_Qp * ( p2 + m1sq + m2sq + m3sq ) * ( E_val - K_val ) ;
+  const long double term_Z = Qp * ( kz_over_sin2 ( sin_phi1 , cos_phi1 )
+                                  + kz_over_sin2 ( sin_phi2 , cos_phi2 )
+                                  + kz_over_sin2 ( sin_phi3 , cos_phi3 ) ) ;
+
+  return static_cast<double>( 0.5L * s_norm * ( term_E + term_Z ) / p2 ) ;
 }
 // ============================================================================
 /*  three-body phase space, analytic non-symmetric expression via 
@@ -1264,6 +1298,8 @@ double Ostap::Kinematics::phasespace3a
                     PImK1 * Pi1_factor + 
                     PImK2 * Pi2_factor )  / ( sqrt_Qp * p2 ) ;
 }
+// ============================================================================
+
 // ============================================================================
 /*  non-relativistic three-body phase space, 
  *  good approximation when 

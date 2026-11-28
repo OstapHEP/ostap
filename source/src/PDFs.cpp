@@ -4535,29 +4535,6 @@ Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
   RooAbsReal&          x         ,
   RooAbsReal&          threshold ,
   RooAbsReal&          scale     ,
-  const Ostap::Math::PhaseSpace3s& left ) 
-  : PhaseSpaceLeft ( name , title , x , threshold , scale , Ostap::Math::PhaseSpaceLeft ( left ) )
-{}
-// ============================================================================
-// Left-edge of N-body phase space 
-// ============================================================================
-Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  RooAbsReal&          threshold ,
-  const Ostap::Math::PhaseSpace3s& left ) 
-  : PhaseSpaceLeft ( name , title , x , threshold , RooFit::RooConst ( 1.0 )  , Ostap::Math::PhaseSpaceLeft ( left  ) )
-{}
-// ============================================================================
-// Left-edge of N-body phase space 
-// ============================================================================
-Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  RooAbsReal&          threshold ,
-  RooAbsReal&          scale     ,
   const unsigned short N         )
   : PhaseSpaceLeft ( name , title , x , threshold , scale , Ostap::Math::PhaseSpaceLeft ( 10 , N ) )
 {}

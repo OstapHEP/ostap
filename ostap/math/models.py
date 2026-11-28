@@ -42,8 +42,7 @@ import  ROOT, random, numpy, array
 # logging 
 # =============================================================================
 from   ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.models' )
-else                       : logger = getLogger ( __name__            )
+logger = getLogger ( 'ostap.math.models' )
 # =============================================================================
 # helper adapter for 1D-functions 
 class _WO1_ (object)  :
@@ -1182,8 +1181,9 @@ for model in ( Ostap.Math.Chebyshev               ,
                Ostap.Math.GramCharlierA           ,
                Ostap.Math.PhaseSpace2             ,
                Ostap.Math.sPhaseSpace2            ,
-               Ostap.Math.PhaseSpace3             ,
                Ostap.Math.PhaseSpace3s            ,
+               Ostap.Math.PhaseSpace3a            ,
+               Ostap.Math.PhaseSpace3i            ,
                Ostap.Math.PhaseSpaceLeft          ,
                Ostap.Math.PhaseSpaceRight         ,
                Ostap.Math.PSDalitz                ,
@@ -2623,8 +2623,9 @@ _decorated_classes_ = set( [
     Ostap.Math.GramCharlierA          ,
     Ostap.Math.PhaseSpace2            ,
     Ostap.Math.sPhaseSpace2           ,
-    Ostap.Math.PhaseSpace3            ,
     Ostap.Math.PhaseSpace3s           ,
+    Ostap.Math.PhaseSpace3a           ,
+    Ostap.Math.PhaseSpace3i           ,
     Ostap.Math.PhaseSpaceLeft         ,
     Ostap.Math.PhaseSpaceRight        ,
     Ostap.Math.PSDalitz               ,

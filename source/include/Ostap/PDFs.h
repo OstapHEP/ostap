@@ -3347,22 +3347,7 @@ namespace Ostap
         const char*          title     ,
         RooAbsReal&          x         ,
         RooAbsReal&          threshold ,
-        const Ostap::Math::PhaseSpace3& left ) ;
-      /// constructor from all parameters
-      PhaseSpaceLeft
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          threshold ,
-        RooAbsReal&          scale     ,
-        const Ostap::Math::PhaseSpace3s& left ) ;
-      /// constructor from all parameters
-      PhaseSpaceLeft 
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          threshold ,
-        const Ostap::Math::PhaseSpace3s& left ) ;
+        const Ostap::Math::PhaseSpace3& left ) ;      
       /// constructor from all parameters
       PhaseSpaceLeft
       ( const char*          name      ,
@@ -3379,8 +3364,9 @@ namespace Ostap
         RooAbsReal&          threshold ,
         const unsigned short N         ) ;
       /// "copy constructor"
-      PhaseSpaceLeft ( const PhaseSpaceLeft& right     ,
-                       const char*           name  = 0 )  ;
+      PhaseSpaceLeft
+      ( const PhaseSpaceLeft& right     ,
+	const char*           name  = 0 )  ;
       /// destructor
       virtual ~PhaseSpaceLeft() ;
       /// clone

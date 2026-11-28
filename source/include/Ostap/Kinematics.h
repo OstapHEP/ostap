@@ -1140,10 +1140,13 @@ namespace Ostap
       const double m2 ) ; 
     // =========================================================================
     /** three-body phase space
-     *  @param x the mass of the system 
+     *  @param x  the mass of the system 
      *  @param m1 the mass of the 1st particle 
      *  @param m2 the mass of the 2nd particle 
-     *  @param m3 the mass of the 3rd particle 
+     *  @param m3 the mass of the 3rd particle
+     *  @see  Ostap::Math::phasepsace3s     
+     *  @see  Ostap::Math::phasepsace3a
+     *  @see  Ostap::Math::phasepsace3i     
      */
     double phasespace3 
     ( const double x  , 
@@ -1198,7 +1201,7 @@ namespace Ostap
       const double m2 , 
       const double m3 ) ;
     // =========================================================================
-    /** three-body phase space, analytic nonsymmetric expression via 
+    /** three-body phase space, analytic (non-symmetric) expression via 
      *  elliptic  integrals 
      *  @param x the mass of the system 
      *  @param m1 the mass of the 1st particle 

@@ -261,6 +261,89 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class PhaseSpace3
+     *  Helper virtual base-class for 3-body phasespace 
+     *  @see Ostap::Kinematics::phasespace3     
+     *  @see Ostap::Kinematics::phasespace3i     
+     *  @see Ostap::Kinematics::phasespace3a     
+     *  @see Ostap::Kinematics::phasespace3s     
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-10-31
+     */
+    class PhaseSpace3
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from three masses
+       *  @param m1 the mass of the first  particle
+       *  @param m2 the mass of the second particle
+       *  @param m3 the mass of the third  particle
+       */
+      PhaseSpace3 
+      ( const double         m1 = 0 ,
+        const double         m2 = 0 ,
+        const double         m3 = 0 ) ;
+      // ======================================================================
+      /// virtual destructor 
+      virtual ~PhaseSpace3() ;
+      /// clone method 
+      virtual  PhaseSpace3* clone () const = 0 ;
+      // ======================================================================      
+    public: 
+      // ======================================================================
+      /// evaluate 3-body phase space
+      virtual double operator ()
+      ( const double x    ) const = 0 ;
+      /// get the tag 
+      virtual std::size_t tag () const = 0 ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline double m1   () const { return m_m1        ; }
+      inline double m2   () const { return m_m2        ; }
+      inline double m3   () const { return m_m3        ; }
+      inline double m1sq () const { return m_m1 * m_m1 ; }
+      inline double m2sq () const { return m_m2 * m_m2 ; }
+      inline double m3sq () const { return m_m3 * m_m3 ; }
+      // ======================================================================
+      /// low edge 
+      inline double lowEdge   () const { return m_m1 + m_m2 + m_m3 ; }
+      /// threshold == lowEdge 
+      inline double threshold () const { return lowEdge() ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// get the integral between low and high limits
+      double integral
+      ( const double low  ,
+	const double high ) const;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///  set the first mass 
+      bool setM1  ( const double value ) ; // set the  first mass 
+      ///  set the second mass 
+      bool setM2  ( const double value ) ; // set the second mass 
+      ///  set the third mass 
+      bool setM3  ( const double value ) ; // set the  third mass 
+     // ======================================================================
+    protected : 
+      // ======================================================================
+      /// the mass of the first particle
+      double         m_m1 { 0 } ; // the mass of the first particle
+      /// the mass of the second particle
+      double         m_m2 { 0 } ; // the mass of the second particle
+      /// the mass of the third particle
+      double         m_m3 { 0 } ; // the mass of the third  particle
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace  {} ; // integration workspace
+      // ======================================================================
+    } ;          
+    // ========================================================================
     /** @class PhaseSpace3s
      *  Symmetric form of 3-body phase space 
      *  @see Davydychev, A and Delbourgo, R., 
@@ -286,7 +369,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-10-31
      */
-    class PhaseSpace3s
+    class PhaseSpace3s : public PhaseSpace3
     {
       // ======================================================================
     public:
@@ -301,29 +384,17 @@ namespace Ostap
         const double         m2 = 0 ,
         const double         m3 = 0 ) ;
       // ======================================================================
+      PhaseSpace3s ( const PhaseSpace3& ) ;
+      /// clone method 
+      PhaseSpace3s* clone () const override ;
+      // ======================================================================
     public:
       // ======================================================================      
       /// evaluate 3-body phase space
-      double evaluate    ( const double x ) const ;
+      double evaluate           ( const double x ) const ;
       /// evaluate 3-body phase space
-      double operator () ( const double x ) const { return  evaluate ( x )  ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double m1 () const { return m_m1 ; }
-      double m2 () const { return m_m2 ; }
-      double m3 () const { return m_m3 ; }
-      // ======================================================================
-      /// low edge 
-      double lowEdge   () const { return m_m1 + m_m2 + m_m3 ; }
-      /// threshold == lowEdge 
-      double threshold () const { return lowEdge() ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      inline double operator () ( const double x ) const override
+      { return  evaluate ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -332,7 +403,7 @@ namespace Ostap
        *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
        *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
        *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
-       *  @see Ostap::Kinematics::phasespace3
+       *  @see Ostap::Kinematics::phasespace3s
        */
       static double phasespace
       ( const double x  , 
@@ -342,40 +413,18 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      ///  set the first mass 
-      bool setM1  ( const double value ) ; // set the  first mass 
-      ///  set the second mass 
-      bool setM2  ( const double value ) ; // set the second mass 
-      ///  set the third mass 
-      bool setM3  ( const double value ) ; // set the  third mass 
-     // ======================================================================
-    public:
-      // ======================================================================
       /// get the tag 
-      std::size_t tag ()  const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the mass of the first particle
-      double         m_m1 { 0 } ; // the mass of the first particle
-      /// the mass of the second particle
-      double         m_m2 { 0 } ; // the mass of the second particle
-      /// the mass of the third particle
-      double         m_m3 { 0 } ; // the mass of the third  particle
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace  {} ; // integration workspace
+      std::size_t tag ()  const override ;
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class PhaseSpace3
-     *  Function to represent three-body phase space
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
+    /** @class PhaseSpace3a
+     *  Three-body phase space, analytic non-symmetric expression via 
+     *  @see Ostap::Kinematics::phasespace3a    
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-10-31
      */
-    class  PhaseSpace3
+    class PhaseSpace3a : public PhaseSpace3
     {
       // ======================================================================
     public:
@@ -384,109 +433,93 @@ namespace Ostap
        *  @param m1 the mass of the first  particle
        *  @param m2 the mass of the second particle
        *  @param m3 the mass of the third  particle
-       *  @param l1 the angular momentum between 1st and 2nd particle
-       *  @param l2 the angular momentum between the pair and 3rd particle
        */
-      PhaseSpace3
+      PhaseSpace3a 
       ( const double         m1 = 0 ,
         const double         m2 = 0 ,
-        const double         m3 = 0 ,
-        const unsigned short l1 = 0 ,
-        const unsigned short l2 = 0 ) ;
+        const double         m3 = 0 ) ;
       // ======================================================================
-      /** constructor from three masses
-       *  @param l1 the angular momentum between 1st and 2nd particle
-       *  @param l2 the angular momentum between the pair and 3rd particle
+      PhaseSpace3a ( const PhaseSpace3& ) ;
+      // ======================================================================
+      /// clone method 
+      PhaseSpace3a* clone () const override ;
+      // ======================================================================
+    public:
+      // ======================================================================      
+      /// evaluate 3-body phase space
+      double evaluate           ( const double x ) const ;
+      /// evaluate 3-body phase space
+      inline double operator () ( const double x ) const override
+      { return  evaluate ( x )  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** three-body phase space, analytic non-symmetric expression via 
+       *  elliptic  integrals 
+       *  @see Ostap::Kinematics::phasespace3a
        */
-      PhaseSpace3
-      ( const PhaseSpace3s&  ps3    , 
-        const unsigned short l1 = 0 ,
-        const unsigned short l2 = 0 ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** evaluate 3-body phase space
-       *  \f[ R_3 ( M ) = \frac{pi^2}{4M^2}\int_{m2+m3}^{M-m_1} \drac{ds_2}{s_2}
-       *   \lambda^{1/2}\left ( s_2 , M^2   , m_1^2\right) 
-       *   \lambda^{1/2}\left ( s_2 , m_2^2 , m_3^2\right) 
-       *  \f] 
-       *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
-       *              London, New York, Sydney, Toronto, 1973, Eq. (V.2.17)
-       */
-      double evaluate    ( const double x ) const ;
-      // ======================================================================
-      /** evaluate 3-body phase space
-       *  \f[ R_3 ( M ) = \frac{pi^2}{4M^2}\int_{m2+m3}^{M-m_1} \drac{ds_2}{s_2}
-       *   \lambda^{1/2}\left ( s_2 , M^2   , m_1^2\right) 
-       *   \lambda^{1/2}\left ( s_2 , m_2^2 , m_3^2\right) 
-       *  \f] 
-       *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
-       *              London, New York, Sydney, Toronto, 1973, Eq. (V.2.17)
-       */
-      double operator () ( const double x ) const { return evaluate  ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double m1 () const { return m_m1 ; }
-      double m2 () const { return m_m2 ; }
-      double m3 () const { return m_m3 ; }
-      // ======================================================================
-      /// low edge 
-      double lowEdge   () const { return m_m1 + m_m2 + m_m3 ; }
-      /// threshold == lowEdge 
-      double threshold () const { return lowEdge() ; }
-      // ======================================================================
-      /// get l1 
-      unsigned short l1 () const { return m_l1 ; } // get l1 
-      /// get l2
-      unsigned short l2 () const { return m_l2 ; } // get l2
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// helper phase space ("23L")
-      double ps2_aux  ( const double m12  ) const ;
-      /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      ///  set the first mass 
-      bool setM1  ( const double value ) ; // set the  first mass 
-      ///  set the second mass 
-      bool setM2  ( const double value ) ; // set the second mass 
-      ///  set the third mass 
-      bool setM3  ( const double value ) ; // set the  third mass 
+      static double phasespace
+      ( const double x  , 
+        const double m1 , 
+        const double m2 , 
+        const double m3 ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the tag 
-      std::size_t tag ()  const ;
+      std::size_t tag ()  const override ;
+      // ======================================================================
+    } ;    
+    // ========================================================================
+    /** @class PhaseSpace3i
+     *  Three-body phase space via explicit numeric integration 
+     *  @see Ostap::Kinematics::phasespace3i
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-10-31
+     */
+    class PhaseSpace3i : public PhaseSpace3
+    {
       // ======================================================================
     public:
       // ======================================================================
-      /// the mass of the first particle
-      double         m_m1 { 0 } ; // the mass of the first particle
-      /// the mass of the second particle
-      double         m_m2 { 0 } ; // the mass of the second particle
-      /// the mass of the third particle
-      double         m_m3 { 0 } ; // the mass of the third  particle
-      /// the orbital momentum of the first pair
-      unsigned short m_l1 { 0 } ; // the orbital momentum of the first pair
-      /// the orbital momentum between the pair and the third particle
-      unsigned short m_l2 { 0 } ; // the orbital momentum between the pair and the third particle
+      /** constructor from three masses
+       *  @param m1 the mass of the first  particle
+       *  @param m2 the mass of the second particle
+       *  @param m3 the mass of the third  particle
+       */
+      PhaseSpace3i 
+      ( const double         m1 = 0 ,
+        const double         m2 = 0 ,
+        const double         m3 = 0 ) ;
+      // ======================================================================
+      PhaseSpace3i ( const PhaseSpace3& ) ;
+      // ======================================================================
+      /// clone method 
+      PhaseSpace3i* clone () const override ;
+      // ======================================================================
+    public:
       // ======================================================================      
-    private:
+      /// evaluate 3-body phase space
+      double evaluate           ( const double x ) const ;
+      /// evaluate 3-body phase space
+      inline double operator () ( const double x ) const override
+      { return  evaluate ( x )  ; }
       // ======================================================================
-      /// the temporary mass
-      mutable double m_tmp { 0 } ; /// the temporary mass
+    public:
       // ======================================================================
-    private:
+      /** three-body phase space via explicit numerical integration  
+       *  @see Ostap::Kinematics::phasespace3i
+       */
+      static double phasespace
+      ( const double x  , 
+        const double m1 , 
+        const double m2 , 
+        const double m3 ) ;
       // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace  ;    // integration workspace
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace2 ;    // integration workspace
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag ()  const override ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -607,10 +640,9 @@ namespace Ostap
        */
       enum Case
       {
-	Generic    , 
-	TwoBody    , 
-	ThreeBody  , 
-	ThreeBodyS
+	Generic   , 
+	TwoBody   , 
+	ThreeBody
       } ;
       // ======================================================================
     public:
@@ -631,10 +663,6 @@ namespace Ostap
       /// special case: true 3-body phases pace 
       PhaseSpaceLeft 
       ( const PhaseSpace3&  ps2        , 
-        const double        scale =  1 ) ;
-      /// special case: true 3-body phasespace 
-      PhaseSpaceLeft 
-      ( const PhaseSpace3s& ps3        , 
         const double        scale =  1 ) ;
       /// special case: L from N phasespace 
       PhaseSpaceLeft 
@@ -667,11 +695,15 @@ namespace Ostap
       // ======================================================================
     public: // integrals
       // ======================================================================
-      double integral   ( const double xmin , const double xmax ) const ;
+      double integral
+      ( const double xmin ,
+	const double xmax ) const ;
       // ======================================================================
     public:
       // ======================================================================
+      /// change threshold 
       bool setThreshold ( const double x ) ;
+      /// change scale 
       bool setScale     ( const double x ) ;
       // ======================================================================
     public:
@@ -680,8 +712,7 @@ namespace Ostap
       Case ps_case () const 
       {
         return 
-          m_ps3  ? ThreeBody  :
-          m_ps3s ? ThreeBodyS :
+          m_ps3  ? ThreeBody :
           m_ps2  ? TwoBody    : Generic ;
       }
       // ======================================================================
@@ -693,11 +724,9 @@ namespace Ostap
     public: // get specific phase space object (if defined) 
       // ======================================================================
       /// get true two-body   phase space (if defined) 
-      const PhaseSpace2*  ps2 () const { return m_ps2.get () ; }      
+      const PhaseSpace2* ps2 () const { return m_ps2.get () ; }      
       /// get true three-body phase space (if defined) 
-      const PhaseSpace3*  ps3 () const { return m_ps3.get () ; }
-      /// get true three-body phase space (if defined) 
-      const PhaseSpace3s* ps3s() const { return m_ps3s.get() ; }
+      const PhaseSpace3* ps3 () const { return m_ps3.get () ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -711,11 +740,9 @@ namespace Ostap
     private:
       // ======================================================================
       /// true 2-body phase-space 
-      std::unique_ptr<PhaseSpace2>   m_ps2  { nullptr } ;
+      std::unique_ptr<PhaseSpace2>  m_ps2  { nullptr } ;
       /// true 3-body phase-space 
-      std::unique_ptr<PhaseSpace3>   m_ps3  { nullptr } ;
-      /// true 3-body phase-space 
-      std::unique_ptr<PhaseSpace3s>  m_ps3s { nullptr } ;
+      std::unique_ptr<PhaseSpace3>  m_ps3  { nullptr } ;
       // ======================================================================
     private:
       // ======================================================================

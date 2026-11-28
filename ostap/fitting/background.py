@@ -66,15 +66,15 @@ from   ostap.logger.utils       import print_args
 import ROOT, math, re 
 # =============================================================================
 from   ostap.logger.logger      import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
-else                       : logger = getLogger ( __name__             )
+logger = getLogger ( 'ostap.fitting.background' )
 # =============================================================================
 ## list of "left" phase space functions 
 PSL = ( Ostap.Math.PhaseSpaceLeft ,
         Ostap.Math.PhaseSpaceNL   ,
         Ostap.Math.PhaseSpace2    ,
-        Ostap.Math.PhaseSpace3    ,
-        Ostap.Math.PhaseSpace3s   )
+        Ostap.Math.PhaseSpace3s   ,
+        Ostap.Math.PhaseSpace3a   ,
+        Ostap.Math.PhaseSpace3i   )
 # =============================================================================
 models  = []
 
@@ -1848,7 +1848,7 @@ class PSLeft_pdf(PDF1) :
     
     @property
     def threshold ( self ) :
-        """``threshold'' : threshold position, same as ``left''"""
+        """`threshold' : threshold position, same as ``left''"""
         return self.left
     @threshold.setter
     def threshold ( self , value ) :
@@ -1856,7 +1856,7 @@ class PSLeft_pdf(PDF1) :
         
     @property
     def phasespace ( self ) :
-        """``phasespace'' : phase space object (or number of particles)"""
+        """`phasespace' : phase space object (or number of particles)"""
         return self.__phasespace
 
 models.append ( PSLeft_pdf ) 
@@ -2403,16 +2403,18 @@ class PSSmear_pdf ( PDF1 ) :
 #  that returns object of the type :
 #  - Ostap::Math::PhaseSpaceNL    
 #  - Ostap::Math::PhaseSpace2    
-#  - Ostap::Math::PhaseSpace3    
 #  - Ostap::Math::PhaseSpace3s    
+#  - Ostap::Math::PhaseSpace3a    
+#  - Ostap::Math::PhaseSpace3i    
 #  - Ostap::Math::PhaseSpaceLeft
 #
 #  The phase-space-based PDF is required to have constructor with keyword
 #  <code>phasespace</code>
 #  @see Ostap::Math::PhaseSpaceNL    
 #  @see Ostap::Math::PhaseSpace2    
-#  @see Ostap::Math::PhaseSpace3    
 #  @see Ostap::Math::PhaseSpace3s    
+#  @see Ostap::Math::PhaseSpace3a    
+#  @see Ostap::Math::PhaseSpace3i    
 #  @see Ostap::Math::PhaseSpaceLeft
 class PSSmear2_pdf ( PDF1 ) :
     """ Usefull class to represent `smear' phase space function
@@ -2435,8 +2437,9 @@ class PSSmear2_pdf ( PDF1 ) :
     that returns object of the type :
     - `Ostap.Math.PhaseSpaceNL`    
     - `Ostap.Math.PhaseSpace2`    
-    - `Ostap.Math.PhaseSpace3`    
     - `Ostap.Math.PhaseSpace3s`    
+    - `Ostap.Math.PhaseSpace3a`    
+    - `Ostap.Math.PhaseSpace3i`    
     - `Ostap.Math.PhaseSpaceLeft`
     """
     def __init__ ( self          ,
@@ -2478,15 +2481,20 @@ class PSSmear2_pdf ( PDF1 ) :
             m1 , m2 = ps0.m1() , ps0.m2() 
             PS = lambda x : Ostap.Math.PhaseSpace2 ( m1 + x , m2 )
             
-        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace3     ) :
-
-            m1 , m2 , m3 = ps0.m1() , ps0.m2() , ps0.m3() 
-            PS = lambda x : Ostap.Math.PhaseSpace3 ( m1 + x , m2 , m3 )
-            
         elif isinstance  ( ps0 , Ostap.Math.PhaseSpace3s    ) :
 
             m1 , m2 , m3 = ps0.m1() , ps0.m2() , ps0.m3() 
             PS = lambda x : Ostap.Math.PhaseSpace3s ( m1 + x , m2 , m3 )
+
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace3a    ) :
+
+            m1 , m2 , m3 = ps0.m1() , ps0.m2() , ps0.m3() 
+            PS = lambda x : Ostap.Math.PhaseSpace3a ( m1 + x , m2 , m3 )
+
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace3i    ) :
+
+            m1 , m2 , m3 = ps0.m1() , ps0.m2() , ps0.m3() 
+            PS = lambda x : Ostap.Math.PhaseSpace3i ( m1 + x , m2 , m3 )
             
         elif isinstance  ( ps0 , Ostap.Math.PhaseSpaceLeft  ) :
             

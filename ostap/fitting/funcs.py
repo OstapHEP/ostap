@@ -53,13 +53,14 @@ def make_tf1 ( func  ,
     if ( 6 , 32 ) <= root_info :
         
         addToGlobList = int ( ROOT.TF1.EAddToList.kAdd ) 
-        ownership     = False
+        ## ownership     = False
+        ownership     = True 
         
-        tf1 = ROOT.TF1 ( name ,
-                         func ,
-                         xmin ,
-                         xmax ,
-                         npar = npar ,
+        tf1 = ROOT.TF1 ( name          ,
+                         func          ,
+                         xmin          ,
+                         xmax          ,
+                         npar          = npar ,
                          addToGlobList = addToGlobList )
         
         ROOT.SetOwnership ( tf1, ownership  )

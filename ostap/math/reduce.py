@@ -618,11 +618,12 @@ def _rm_ps2_reduce_ ( o ) :
     return root_factory , ( type ( o ) , o.m1 () , o.m2() )
 Ostap.Math.PhaseSpace2.__reduce__ = _rm_ps2_reduce_
 # =============================================================================
-## reduce PhaseSpace3
+## reduce PhaseSpace3(s,a,i)
 def _rm_ps3_reduce_ ( o ) :
     return root_factory , ( type ( o ) , o.m1 () , o.m2() , o.m3 () )
-Ostap.Math.PhaseSpace3 .__reduce__ = _rm_ps3_reduce_
 Ostap.Math.PhaseSpace3s.__reduce__ = _rm_ps3_reduce_
+Ostap.Math.PhaseSpace3a.__reduce__ = _rm_ps3_reduce_
+Ostap.Math.PhaseSpace3i.__reduce__ = _rm_ps3_reduce_
 # =============================================================================
 ## reduce PhaseSpaceNL
 def _rm_psnl_reduce_ ( o ) :
@@ -780,8 +781,9 @@ _decorated_classes_  = (
     Ostap.Math.CutOffStudent           ,
     ##
     Ostap.Math.PhaseSpace2             , 
-    Ostap.Math.PhaseSpace3             , 
     Ostap.Math.PhaseSpace3s            , 
+    Ostap.Math.PhaseSpace3a            , 
+    Ostap.Math.PhaseSpace3i            , 
     Ostap.Math.PhaseSpaceNL            , 
     )
 
@@ -836,8 +838,9 @@ _new_methods_       = (
     Ostap.Math.CutOffGauss             . __reduce__  , 
     Ostap.Math.CutOffStudent           . __reduce__  ,
     Ostap.Math.PhaseSpace2             . __reduce__  , 
-    Ostap.Math.PhaseSpace3             . __reduce__  , 
     Ostap.Math.PhaseSpace3s            . __reduce__  , 
+    Ostap.Math.PhaseSpace3a            . __reduce__  , 
+    Ostap.Math.PhaseSpace3i            . __reduce__  , 
     Ostap.Math.PhaseSpaceNL            . __reduce__  ,
     ##
     Ostap.Math.ECDF                    . __reduce__  , 

@@ -2,11 +2,13 @@
 ## New features 
 
    1. add some stubs for batch-scripts 
-     
+   1. improve treatment of 3-body phase-spaces: ensure consistent results between analytic (symmetric and non-symmetric) expressions via elliptic functions, as well as explicit numerical integration
+   
 ## Bug fixes 
    
    1. Fix some sad typos in `Ostap/Kinematics.h` & `Ostap/Dalitz.h`
-   
+   1. Fix long standing problem with analytic symmetric 3-body phase space  
+ 
 ## Backward incompartible
 
 
