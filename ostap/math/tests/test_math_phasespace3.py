@@ -63,24 +63,20 @@ def test_phasespace3 ( ) :
     
     masses = ( 3 , 1 , 0.1 )
 
-    ps1 = Ostap.Math.PhaseSpace3  ( *masses ) ## "defautl" expression 
-    ps2 = Ostap.Math.PhaseSpace3s ( *masses ) ## analysitical      symemtric 
-    ps3 = Ostap.Math.PhaseSpace3a ( *masses ) ## analytical    non-symmetric 
-    ps4 = Ostap.Math.PhaseSpace3i ( *masses ) ## numerical       integration
+    ps2 = Ostap.Math.PhaseSpace3s ( *masses ) ## analytical     symemtric 
+    ps3 = Ostap.Math.PhaseSpace3a ( *masses ) ## analytical non-symmetric 
+    ps4 = Ostap.Math.PhaseSpace3i ( *masses ) ## numerical    integration
     
     with use_canvas( 'test_phasespace3' , wait = 1 ) :
         
-        ps1.draw (          xmin = ps1.threshold()     , xmax = 50 , linecolor=2 , linewidth = 2 )
-        logger.info ( 'Red    line - 3-body phase space (default expression)' )
+        ps2.draw    ( 'same' , xmin = ps2.threshold () , xmax = 50 , linecolor = 2 , linewidth = 2 , linestyle = 9 )
+        logger.info ( 'Red   line -     symmetric expression of 3-body phase space via elliptic integrals' )
         
-        ps2.draw ( 'same' , xmin = ps1.threshold()     , xmax = 50 , linecolor=4 , linewidth = 2 , linestyle = 9 )
-        logger.info ( 'Blue   line -     symmetric expression of 3-body phase space via elliptic integrals' )
+        ps3.draw    ( 'same' , xmin = ps2.threshold () , xmax = 50 , linecolor = 4 , linewidth = 2 , linestyle = 9 )
+        logger.info ( 'Blue  line - non-symmetric expression of 3-body phase space via elliptic integrals' )
         
-        ps3.draw ( 'same' , xmin = ps1.threshold()     , xmax = 50 , linecolor=4 , linewidth = 2 , linestyle = 9 )
-        logger.info ( 'Green  line - non-symmetric expression of 3-body phase space via elliptic integrals' )
-        
-        ps4.draw ( 'same' , xmin = ps1.threshold()     , xmax = 50 , linecolor=4 , linewidth = 2 , linestyle = 9 )
-        logger.info ( 'Yellow line - explicit numerical integration' )
+        ps4.draw    ( 'same' , xmin = ps2.threshold () , xmax = 50 , linecolor = 3 , linewidth = 2 , linestyle = 9 )
+        logger.info ( 'Green line - explicit numerical integration' )
 
 keep = []
 # =============================================================================
@@ -170,11 +166,16 @@ def test_phasespace3_compare () :
         keep.append ( fun2 )
         keep.append ( fun3 )
         keep.append ( fun4 )
-        
-        f1_draw ( fun1 ,          line_color = 2  , linewidth = 2 , xmin = xmin , xmax = 40 )
-        f1_draw ( fun2 , 'same' , line_color = 3  , linewidth = 2 , xmin = xmin , xmax = 40 )
+
+        logger.info ( 'Black line -       default expression of 3-body phase' )
+        logger.info ( 'Red   line -     symmetric expression of 3-body phase space via elliptic integrals' )
+        logger.info ( 'Blue  line - non-symmetric expression of 3-body phase space via elliptic integrals' )
+        logger.info ( 'Green line - explicit numerical integration' )
+
+        f1_draw ( fun1                            , linewidth = 2 , xmin = xmin , xmax = 40 )
+        f1_draw ( fun2 , 'same' , line_color = 2  , linewidth = 2 , xmin = xmin , xmax = 40 )
         f1_draw ( fun3 , 'same' , line_color = 4  , linewidth = 2 , xmin = xmin , xmax = 40 )
-        f1_draw ( fun4 , 'same' , line_color = 5  , linewidth = 2 , xmin = xmin , xmax = 40 )
+        f1_draw ( fun4 , 'same' , line_color = 3  , linewidth = 2 , xmin = xmin , xmax = 40 )
 
 # =============================================================================
 def test_phasespace3_numbers ( seed = 42 ) :
@@ -187,7 +188,7 @@ def test_phasespace3_numbers ( seed = 42 ) :
 
     rng    = random.Random(seed)
         
-    for _ in range ( 50 ) :
+    for _ in range ( 100 ) :
         
         x     = rng.uniform ( xmin , xmax )
         
@@ -203,10 +204,10 @@ def test_phasespace3_numbers ( seed = 42 ) :
         
         perms = { Ostap.Kinematics.phasespace3s ( x, *p ) for p in itertools.permutations ( masses) }
         
-        logger.info ( f"x={x:5.1f} | i={v_i:.6e} | s={v_s:.6e} | a={v_a:.6e} | perm_spread={max(perms)-min(perms):.2e} | diff={diff:e}" )
+        logger.info ( f"x={x:5.1f} | i={v_i:.6e} | s={v_s:.6e} | a={v_a:.6e} | perm_spread={max(perms)-min(perms):.2e} | max-min={diff:e}" )
 
 # =============================================================================
-def test_phasespace3_timing ( n_cases = 500 , n_x = 200 , seed = 42 ):
+def test_phasespace3_timing ( n_cases = 100 , n_x = 500 , seed = 42 ):
 
     logger = getLogger('test_phasespace3a_timing')
     rng    = random.Random(seed)
@@ -228,11 +229,13 @@ def test_phasespace3_timing ( n_cases = 500 , n_x = 200 , seed = 42 ):
 
     # Warmup before timing so one-time initialization does not skew measurements.
     for x, masses in cases:
+
+        y     = rng.uniform ( 1.001 * threshold , 9.999 * threshold ) 
         
-        Ostap.Kinematics.phasespace3  ( x , *masses )
-        Ostap.Kinematics.phasespace3s ( x , *masses )
-        Ostap.Kinematics.phasespace3a ( x , *masses )
-        Ostap.Kinematics.phasespace3i ( x , *masses )
+        Ostap.Kinematics.phasespace3  ( y , *masses )
+        Ostap.Kinematics.phasespace3s ( y , *masses )
+        Ostap.Kinematics.phasespace3a ( y , *masses )
+        Ostap.Kinematics.phasespace3i ( y , *masses )
 
     with timing('phasespace3'  , logger = logger ) as timer_d:
         for x, masses in cases: Ostap.Kinematics.phasespace3s(x, *masses)
@@ -264,9 +267,9 @@ if '__main__' == __name__ :
 
 
     test_phasespace3               ()
-    ## test_phasespace3s_permutations ()
-    ## test_phasespace3i_permutations ()
-    ## test_phasespace3a_permutations ()
+    test_phasespace3s_permutations ()
+    test_phasespace3i_permutations ()
+    test_phasespace3a_permutations ()
     test_phasespace3_compare       ()
     test_phasespace3_numbers       ()
     test_phasespace3_timing        ()
